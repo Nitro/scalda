@@ -4,9 +4,6 @@ name := "topic_models"
 
 version := "0.7.1"
 
-lazy val jvmVer = com.nitro.build.Runtime.Jvm7
-
-
 scalaVersion := "2.10.5"
 
 crossScalaVersions := Seq("2.10.5", "2.11.6")
