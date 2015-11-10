@@ -1,0 +1,141 @@
+364 Jain and Waibel 
+Incremental Parsing by Modular Recurrent 
+Connectionist Networks 
+Ajay N. Jain Alex H. Waibel 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+ABSTRACT 
+We present a novel, modular, recurrent connectionist network architec- 
+ture which learns to robustly perform incremental parsing of complex 
+sentences. From sequential input, one word at a time, our networks 
+learn to do semantic role assignment, noun phrase attachment, and 
+clause saucture recognition for sentences with passive consauctions and 
+center embedded clauses. The networks make syntactic and semantic 
+predictions at every point in time, and previous predictions are revised 
+as expectations are affirmed or violated with the arrival of new infoma- 
+rion. Our networks induce their own grammar rules for dynamically 
+transforming an input sequence of words into a syntactic/semantic in- 
+terpretafion. These networks generalize and display tolerance to input 
+which has been corrupted in ways common in spoken language. 
+1 INTRODUCTION 
+Previously, we have reported on experiments using connectionist models for a small pars- 
+ing task using a new network formalism which extends back-propagation to better fit the 
+needs of sequential symbolic domains such as parsing (Jain, 1989). We showed that con- 
+nectionist networks could learn the complex dynamic behavior needed in parsing. The 
+task included passive sentences which require dynamic incorporation of previously un- 
+seen right context information into partially built syntactic/semantic interpretations. The 
+trained parsing network exhibited predictive behavior and was able to modify or confirm 
+Incremental Parsing by Modular Recurrent Connectionist Networks 365 
+Interclause Units 
+Clause 1 
+Phrase 
+Word Level 
+Clause Structure Units ]1 
+! 
+I I 
+Phrase N J 
+Word Units 
+Figure 1: High-level Parsing Architecture. 
+hypotheses as sentences were sequentially processed. It was also able to generalize well 
+and tolerate ill-formed input. 
+In this paper, we describe work on extending our parsing architecture to grammatically 
+complex sentences. 1 The paper is organized as follows. First, we briefly outline the 
+network formalism and the general architecture. Second, the parsing task is defined and 
+the procedure for constructing and training the parser is presented. Then the dynamic 
+behavior of the parser is illustrated, and the performance is characterized. 
+2 NETWORK ARCHITECTURE 
+We have developed an extension to back-propagation networks which is specifically 
+designed to perform tasks in sequential domains requiring symbol manipulation (Jain, 
+1989). It is substantially different from other connectionist approaches to sequential 
+problems (e.g. Elman, 1988; Jordan, 1986; Waibel et al., 1989). There are four major 
+features of this formalism. One, units retain partial activation between updates. They 
+can respond to repetitive weak stimuli as well as singular sharp stimuli. Two, units 
+are responsive to both static activation values of other units and their dynamic changes. 
+Three, well-behaved symbol buffers can be constructed using groups of units whose 
+connections are gated by other units. Four, the formalism supports recurrent networks. 
+The networks are able to learn complex time-varying behavior using a gradient descent 
+procedure via error back-propagation. 
+Figure 1 shows a high-level diagram of the general parsing architecture. It is organized 
+into five hierarchical levels: Word, Phrase, Clause Structure, Clause Roles, and Inter- 
+1Another presentation of this work appears in Jain and Waibel (1990). 
+366 Jain and Waibel 
+clause. The description will proceed bottom up. A word is presented to the network by 
+stimulating its associated word unit for a short time. This produces a pattern of activation 
+across the feature units which represents the meaning of the word. The connections from 
+the word units to the feature units which encode semantic and syntactic information about 
+words are compiled into the network and are fixed. 2 The Phrase level uses the sequence 
+of word representations from the Word level to build contiguous phrases. Connections 
+from the Word level to the Phrase level are modulated by gating units which learn the 
+required conditional assignment behavior. The Clause Structure level maps phrases into 
+the constituent clauses of the input sentence. The Clause Roles level describes the roles 
+and relationships of the phrases in each clause of the sentence. The final level, Inter- 
+clause, represents the interrelationships among the clauses. The following section defines 
+a parsing task and gives a detailed description of the construction and training of a parsing 
+network which performs the task. 
+3 INCREMENTAL PARSING 
+In parsing spoken language, it is desirable to process input one word at a time as words 
+are produced by the speaker and to incrementally build an output representation. This 
+allows tight bi-directional coupling of the parser to the underlying speech recognition 
+system. In such a system, the parser processes information as soon as it is produced and 
+provides predictive information to the recognition system based on a rich representation 
+of the current context. As mentioned earlier, our previous work applying connectionist ar- 
+chitectures to a parsing task was promising. The experiment described below extends our 
+previous work to grammatically complex sentences requiting a significant scale increase. 
+3.1 Parsing Task 
+The domain for the experiment was sentences with up to three clauses including non- 
+trivial center-embedding and passive constructions? Here are some example sentences: 
+� Fido dug up a bone near the tree in the garden. 
+� I know the man who John says Mary gave the book. 
+� The dog who ate the snake was given a bone. 
+Given sequential input, one word at a time, the task is to incrementally build a represen- 
+tation of the input sentence which includes the following information: phrase structure, 
+clause structure, semantic role assignment, and interclause relationships. Figure 2 shows 
+a representation of the desired parse of the last sentence in the list above. 
+2Conneaionist networks have been used for lexical acquisition successfully (Miikkulainen and Dyer, 1989). 
+However, in building large systems, it makes sense from an efficiency perspective to precompile as much lexical 
+information as possible into a network. This is a pragmatic design choice in building large systems. 
+3The training set contained over 200 sentences. These are a subset of the sentences which form the example 
+set of a parser based on a left associative grammar (Hausser, 1988). These sentences are grammatically 
+interesting, but they do not reflect the statistical structure of common speech. 
+Incremental Parsing by Modular Recurrent Connectionist Networks 367 
+[Clause 1: 
+[Clause 2: 
+[The dog RECIP] [was given ACTION] [a bone PATIENT]] 
+[who AGENT] [ate ACTION] [the snake PATIENT] 
+(RELATIVE to Clause 1, Phrase 1)] 
+Figure 2: Representation of an Example Sentence. 
+3.2 Constructing the Parser 
+The architecture for the network follows that given in Figure 1. The following paragraphs 
+describe the detailed network structure bottom up. The constraints on the numbers of 
+objects and labels are fixed for a particular network, but the architecture itself is scalable. 
+Wherever possible in the network consauction, modularity and architectural constraints 
+have been exploited to minimize training time and maximize generalization. A network 
+was constructed from three separate recurrent subnetworks trained to perform a portion 
+of the parsing task on the training sentences. The performance of the full network will 
+be discussed in detail in the next section. 
+The Phrase level contains three types of units: phrase block units, gating units, and hidden 
+units. There are 10 phrase blocks, each being able to capture up to 4 words forming 
+a phrase. The phrase blocks contain sets of units (called slots) whose target activation 
+patterns correspond to word feature patterns of words in phrases. Each slot has an 
+associated gating unit which learns to conditionally assign an activation pattern from the 
+feature units of the Word level to the slot. The gating units have input connections from 
+the hidden units. The hidden units have input connections from the feature units, gating 
+units, and phrase block units. The direct recurrence between the gating and hidden units 
+allows the gating units to learn to inhibit and compete with one another. The indirect 
+recurrence arising from the connections between the phrase blocks and the hidden units 
+provides the context of the current input word. The target activation values for each 
+gating unit are dynamically calculated during training; each gating unit must learn to 
+become active at the proper time in order to perform the phrasal parsing. Each phrase 
+block with its associated gating and hidden units has its weights slaved to the other phrase 
+blocks in the Phrase level. Thus, if a particular phrase cons auction is only present in one 
+position in the training set, all of the phrase blocks still learn to parse the consauction. 
+The Clause Roles level also has shared weights among separate clause modules. This 
+level is trained by simulating the sequential building and mapping of clauses to sets of 
+units containing the phrase blocks for each clause (see Figure 1). There are two types 
+of units in this level: labeling units and hidden units. The labeling units learn to label 
+the phrases of the clauses with semantic roles and attach phrases to other (within-clause) 
+phrases. For each clause, there is a set of units which assigns role labels (agent, patient, 
+recipient, action) to phrases. There is also a set of units indicating phrasal modification. 
+The hidden units are recurrently connected to the labeling units to provide context and 
+competition as with the Phrase level; they also have 

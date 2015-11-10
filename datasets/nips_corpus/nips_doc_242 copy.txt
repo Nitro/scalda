@@ -1,0 +1,147 @@
+574 Nowlan 
+Maximum Likelihood Competitive Learning 
+Steven J. Nowlan 1 
+Department of Computer Science 
+University of Toronto 
+Toronto, Canada 
+M5S 1A4 
+ABSTRACT 
+One popular class of unsupervised algorithms are competitive algo- 
+rithms. In the traditional view of competition, only one competitor, 
+the winner, adapts for any given case. I propose to view compet- 
+itive adaptation as attempting to fit a blend of simple probability 
+generators (such as gaussians) to a set of data-points. The maxi- 
+mum likelihood fit of a model of this type suggests a softer form 
+of competition, in which all competitors adapt in proportion to 
+the relative probability that the input came from each competitor. 
+I investigate one application of the soft competitive model, place- 
+ment of radial basis function centers for function interpolation, and 
+show that the soft model can give better performance with little 
+additional computational cost. 
+I INTRODUCTION 
+Interest in unsupervised learning has increased recently due to the application of 
+more sophisticated mathematical tools (Linsker, 1988; Plumbley and Fallside, 1988; 
+Sanger, 1989) and the success of several elegant simulations of large scale self- 
+organization (Linsker, 1986; Kohonen, 1982). One popular class of unsupervised 
+algorithms are competitive algorithms, which have appeared as components in a 
+variety of systems (Von der Malsburg, 1973; Fukushima, 1975; Grossberg, 1978). 
+Generalizing the definition of Rumelhart and Zipser (1986), a competitive adaptive 
+system consists of a collection of modules which are structurally identical except, 
+possibly, for random initial parameter variation. A set of rules is defined which 
+allow the modules to compete in some way for the right to respond to some subset 
+1 The author is visiting the University of Toronto while completing a PhD at Carnegie Mellon 
+University. 
+Maximum Likelihood Competitive Learning 575 
+of the inputs. Typically a module is a single unit, but this need not be the case. 
+Often, parameter restrictions are used to prevent uninteresting representations in 
+which the entire set of input patterns are represented by one module. 
+Most of the work on competitive systems, especially within the neural network liter- 
+ature, has focused on a fairly extreme form of competition in which only the winner 
+of the competition for a particular case is updated. Variants on this theme are 
+the schemes in which, in addition to the winner, all of the losers are updated in 
+some uniform fashion 2. Within the statistical pattern recognition literature (Duda 
+and Hart, 1973; McLachlan and Basford, 1988) a rather different form of compe- 
+tition is frequently encountered. In this form, which will be referred to as soft 
+competition, all competitors are updated but the amount of update is proportional 
+to how well each competitor did in the competition for the current case. Under a 
+statistical model, this soft form of competition performs exact gradient descent 
+in likelihood, while the more traditional winner-take-all, or hard competition, is 
+an approximation to gradient descent in likelihood. 
+In this paper I demonstrate the superiority of soft competitive learning by com- 
+paring hard and soft algorithms in a classification application. The classifica- 
+tion network consists of a layer of Radial Basis Functions (RBF's) followed by a 
+layer of linear units which attempt to find a least mean square (LMS) fit to the 
+desired output function (Broomhead and Lowe, 1988; Lee and Kill, 1988; Niranjan 
+and Fallside, 1988). A network of this type can form a smooth approximation to 
+an arbitrary function, with the RBF centers serving as control points for fitting 
+the function (Keeler and Kowalski, 1989; Poggio and Girosi, 1989). A competitive 
+learning component adjusts the centers of the RBF's in an unsupervised fashion, 
+before the weights to the output units are adapted. Comparisons of hard and soft 
+algorithms for placing the RBF's on a hand-drawn digit recognition problem and 
+a subset of a speaker independant vowel recognition problem suggest that the soft 
+algorithm is superior. Comparisons are also made with more traditional classifiers 
+on the same problems. 
+2 COMPETITIVE PLACEMENT OF RBF'S 
+Radial Basis Function networks have been shown to be quite effective for some tasks, 
+however a major limitation is that a very large number of RBF's may be required 
+in high dimensional spaces. One method for using RBF's places the centers of the 
+RBF's at the interstices of some coarse lattice defined over the input space (Broom- 
+head and Lowe, 1988). If we assume the lattice is uniform with k divisions along 
+each dimension, and the dimensionality of the input space is d, a uniform lattice 
+would require k d RBF's. This exponential growth makes the use of such a uniform 
+lattice impractical for any high dimensional space. Another choice is to center the 
+RBF's on the first n training samples, but this method is subject to sampling error, 
+2The feature maps of Kohonen (1982) are actually a special case in which a few units are 
+adapted at once, however the units which are adapted in addition to the winner are selected by a 
+neighbourhood function rather than by how well they represent the current data. 
+576 Nowlan 
+and a very large number of samples can be required to adequately represent the 
+distribution of inputs. This is particularly true in high dimensional spaces where it 
+is extremely difficult to visualize the input distribution and determine whether the 
+training examples adequately represent this distribution. 
+Moody and Darken (1988) have suggested a method in which a much smaller number 
+of RBF's are used, however the centers of these RBF's are allowed to adapt to the 
+input samples, so they learn to represent only the part of the input space actually 
+represented by the data. The adaptive strategy also allows the center of each RBF 
+to be determined by a large number of training samples, greatly reducing sampling 
+error. In their method, an unsupervised algorithm (a version of k-means) is used 
+to select the centers of the RBF's and some ad hoc heuristics are suggested for 
+adjusting the size of the RBF's to get a smooth interpolator. The weights from the 
+hidden to the output layer are adapted to minimize a Least Mean Square (LMS) 
+criterion. Moody and Darken were able to attain performance levels equivalent to a 
+multi-layer Back Propagation network on a chaotic time series prediction task and 
+a vowel discrimination task. Significant savings in training time were also reported. 
+The k-means algorithm used by Moody and Darken can be easily reformulated as a 
+form of competitive adaptation. In the basic k-means algorithm (Duda and Hart, 
+1973) the training samples are first assigned to the class of the closest mean. The 
+means are then recomputed as the average of the samples in their class. This two 
+step process is repeated until the means stop changing. This is simply the batch 
+version of a competitive learning scheme in which the activity of each competing 
+unit is proportional to the distance between its weight vector and the current input 
+vector, and the winning unit on each case adapts by adding a portion of the current 
+input to its weight vector (with appropriate normalization). 
+We will now consider a statistical formalization of a competitive process for placing 
+the centers of RBF's. Let each competing unit represent a radially symmetric 
+(spherical) gaussian probability distribution, with the weight vector of the unit 
+representing the center or mean of the gaussian. The probability that the gaussian 
+associated with unit j generated an input vector a} is 
+I - (' 
+p(Me) - e , (1) 
+Ko' i 
+where K is a normalization constant, and the covariance matrix is aI. 
+A collection of M such units is a model of the input distribution. The parameters 
+of these M gaussians can be adjusted so that the overall average likelihood of gen- 
+erating the training examples is maximized. The likelihood of generating a set of 
+observations {, 2,... ,n} from the current model is 
+k 
+where P() is the probability of generating observation  under the current model. 
+(For mathematical convenience we usually work with log L.) If gaussian i is selected 
+Maximum Likelihood Competitive Learning 577 
+with probability ri and a sample is drawn from the selected gaussian, the probability 
+of observing x is 
+N 
+P(::) =  ',p,(':) (3) 
+where pi(':) is the probability of observing ,: under gaussian distribution i. The 
+summation in (3) is awkward to work with, and frequently one of the pi('k) is much 
+larger than any of the others. Therefore, a convenient approximation for (3) is 
+(rk) 
+= MAXi=z'i pi(x) 
+(4) 
+This is equivalent to assigning all of the responsibility for an observation to the 
+gaussian with the highest probability of generating that observation. This approxi- 
+mation is frequently referred to as the winner-take-all assumption. It may also be 
+regarded as a hard competitive decision among the gaussians. When we use (3) 
+directly, all of the gaussians share responsibility for each observation in proportion 
+to their probability of generating the observation. This sharing of responsibility can 
+be regarded as a soft competitive decision among the gaussians. 
+The maximum likelihood estimate for the mean of each gaussian in our model can 
+be found by evaluating/9 log L//9fij = O. We will consider a simple model in which 
+we assume that rj and rj are the same for all of the gaussians, and compare the 
+hard and soft estimates for/. 
+With the hard approximation, substituting (4) in (2), the maximum likelihood 
+estimate of/ has the simple form 
+- (5) 
+where Cj is the set of cases closest to gaussian j, and Nj is the size of this set. This 
+is identical to the expression for fij in the k-means algorithm. 
+Rather than using the approximation in (4) we can find the exact maximum like- 
+

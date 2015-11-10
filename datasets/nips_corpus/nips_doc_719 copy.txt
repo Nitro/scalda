@@ -1,0 +1,165 @@
+Learning Classification with Unlabeled Data 
+Virginia R. de Sa 
+desa@cs. rochester. edu 
+Department of Computer Science 
+University of Rochester 
+Rochester, NY 14627 
+Abstract 
+One of the advantages of supervised learning is that the final error met- 
+ric is available during training. For classifiers, the algorithm can directly 
+reduce the number of misclassifications on the training set. Unfortu- 
+nately, when modeling human learning or constructing classifiers for au- 
+tonomous robots, supervisory labels are often not available or too ex- 
+pensive. In this paper we show that we can substitute for the labels by 
+making use of structure between the pattern distributions to different sen- 
+sory modalities. We show that minimizing the disagreement between the 
+outputs of networks processing patterns from these different modalities is 
+a sensible approximation to minimizing the number of misclassifications 
+in each modality, and leads to similar results. Using the Peterson-Barney 
+vowel dataset we show that the algorithm performs well in finding ap- 
+propriate placement for the codebook vectors particularly when the con- 
+fuseable classes are different for the two modalities. 
+1 INTRODUCTION 
+This paper addresses the question of how a human or autonomous robot can learn to classify 
+new objects without experience with previous labeled examples. We represent objects 
+with n-dimensional pattern vectors and consider piecewise-linear classifiers consisting of 
+a collection of (labeled) codebook vectors in the space of the input patterns (See Figure 1). 
+The classification boundaries are given by the voronoi tessellation of the codebook vectors. 
+Patterns are said to belong to the class (given by the label) of the codebook vector to which 
+they are closest. 
+112 
+Learning Classification with Unlabeled Data 113 
+ XA � o 
+o 
+o 
+Figure 1: A piecewise-linear classifier in a 2-Dimensional input space. The circles represent data 
+samples from two classes (filled (A) and not filled (B)). The X's represent codebook vectors (They 
+are labeled according to their class A and B). Future patterns are classified according to the label of 
+the closest codebook vector. 
+In [de Sa and Ballard, 1993] we showed that the supervised algorithm LVQ2.1[Kohonen, 
+1990] moves the codebook vectors to minimize the number of misclassified patterns. The 
+power of this algorithm lies in the fact that it directly minimizes its final error measure (on 
+the training set). The positions of the codebook vectors are placed not to approximate the 
+probability distributions but to decrease the number of misclassifications. 
+Unfortunately in many situations labeled training patterns are either unavailable or ex- 
+pensive. The classifier can not measure its classification performance while learning (and 
+hence not directly maximize it). One such unsupervised algorithm, Competitive Learn- 
+ing[Grossberg, 1976; Kohonen, 1982; Rumelhart and Zipser, 1986], has unlabeled code- 
+book vectors that move to minimize a measure of the reconstruction cost. Even with sub- 
+sequent labeling of the codebook vectors, they are not well suited for classification because 
+they have not been positioned to induce optimal borders. 
+Supervised Unsupervised Self-Supervised 
+- implausible label - limited power - derives label from a 
+co-occuring input to 
+nCOWn another modality 
+Tget 000 O 0 
+000 000 
+� � 
+� � � � 
+� � 
+� � 
+� � 
+Input Input Input I Int 2 
+Figure 2: 
+The idea behind the algorithm 
+This paper presents a new measure for piecewise-linear classifiers receiving unlabeled pat- 
+terns from two or more sensory modalities. Minimizing the new measure is an approxi- 
+mation to minimizing the number of misclassifications directly. It takes advantage of the 
+structure available in natural environments which results in sensations to different sensory 
+modalities (and sub-modalities) that are correlated. For example, hearing mooing and 
+114 de Sa 
+P 
+o.5 
+o. 
+0.3 
+0.2 
+-2 -1 o 
+P 
+0.5 
+0.4 
+-'2 ' - 1 
+'(CB)p(x2CB) 
+0 1 2 3 4 
+Figure 3: This figure shows an example world as sensed by two different modalities. If modality A 
+receives a pattern from its Class A distribution, modality 2 receives a pattern from its own class A 
+distribution (and the same for Class B). Without receiving information about which class the patterns 
+came from, they must try to determine appropriate placement of the boundaries b and b2. P(Ci) is 
+the prior probability of Class i and p(xyICi) is the conditional density of Class i for modality j 
+seeing cows tend to occur together. So, although the sight of a cow does not come with an 
+internal homuncular cow label it does co-occur with an instance of a moo. The key 
+is to process the moo sound to obtain a self-supervised label for the network processing 
+the visual image of the cow and vice-versa. See Figure 2. 
+2 USING MULTI-MODALITY INFORMATION 
+One way to make use of the cross-modality structure is to derive labels for the codebook 
+vectors (after they have been positioned either by random initialization or an unsupervised 
+algorithm). The labels can be learnt with a competitive learning algorithm using a network 
+such as that shown in Figure 4. In this network the hidden layer competitive neurons repre- 
+sent the codebook vectors. Their weights from the input neurons represent their positions 
+in the respective input spaces. Presentation of the paired patterns results in activation of 
+the closest codebook vectors in each modality (and O's elsewhere). Co-occurring code- 
+book vectors will then increase their weights to the same competitive output neuron. After 
+several iterations the codebook vectors are given the (arbitrary) label of the output neuron 
+to which they have the strongest weight. We will refer to this as the labeling algorithm. 
+2.1 MINIMIZING DISAGREEMENT 
+A more powerful use of the extra information is for better placement of the codebook 
+vectors themselves. 
+In [de Sa, 1994] we derive an algorithm that minimizes 1 the disagreement between the 
+outputs of two modalities. The algorithm is originally derived not as a piecewise-linear 
+classifier but as a method of moving boundaries for the case of two classes and an agent 
+with two 1-Dimensional sensing modalities as shown in Figure 3. 
+Each class has a particular probability distribution for the sensation received by each modal- 
+ity. If modality 1 experiences a sensation from its pattern A distribution, modality 2 expe- 
+riences a sensation from its own pattern A distribution. That is, the world presents patterns 
+the goal is actually to find a non-trivial local minimum (for details see [de Sa, 1994]) 
+Learning Classification with Unlabeled Data 115 
+Output (Class) 
+ Implicit Labeling 
+Hidden Layer 
+Codebook 
+Ve21ri ((X7) 
+Modality/Network 1 
+Modality/Network 2 
+Figure 4: This figure shows a network for learning the labels of the codebook vectors. The weight 
+vectors of the hidden layer neurons represent the codebook vectors while the weight vectors of the 
+connections from the hidden layer neurons to the output neurons represent the output class that each 
+codebook vector currently represents. In this example there are 3 output classes and two modalities 
+each of which has 2-D input patterns and 5 codebook vectors. 
+from the 2-D joint distribution shown in Figure 5a) but each modality can only sample its 
+1-D marginal distribution (shown in Figure 3 and Figure 5a)). 
+We show [de Sa, 1994] that minimizing the disagreement error -- the proportion of pairs 
+of patterns for which the two modalities output different labels d 
+E(bl, b2)=Pr{xl <bl & x2>bl}+Pr{xl >bl & x2<b2} (1) 
+E(bl, b2) = f(xl, x2)dxldX2 + f(xl, x2)dxl dx2 (2) 
+2 1 
+(where f(x1, x2) = P(CA)p(xi [CA)p(x21CA) + P(CB)p(xl ICB)p(x2ICa) is the joint probability 
+density for the two modalities) in the above problem results in an algorithm that corresponds 
+to the optimal supervised algorithm except that the label for each modality's pattern is 
+the hypothesized output of the other modality. 
+Consider the example illustrated in Figure 5. In the supervised case (Figure 5a)) the labels 
+are given allowing sampling of the actual marginal distributions. For each modality, the 
+number of misclassifications can be minimized by setting the boundaries for each modality 
+at the crossing points of their marginal distributions. 
+However in the self-supervised system, the labels are not available. Instead we are given 
+the output of the other modality. Consider the system from the point of view of modality 
+2. Its patterns are labeled according to the outputs of modality 1. This labels the patterns 
+in Class A as shown in Figure 5b). Thus from the actual Class A patterns, the second 
+modality sees the labeled distributions shown. Letting a be the fraction of misclassified 
+patterns from Class A, the resulting distributions are given by (1 - a)P(CA)p(x2ICA) and 
+(a)P( CA)p(x2ICA). 
+Similarly Figure 5c) shows the effect on the patterns in class B. Letting b be the frac- 
+tion of Class B patterns misclassified, the distributions are given by (1 -b)P(CB)p(x21CB) 
+116 de Sa 
+and (b)P(CB)p(x21CB). Combining the effects on both classes results in the labeled 
+distributions shown in Figure 5d). The apparent Class A distribution is given by 
+(1 - a)P(C,)p(x21C,) + (b)P(CB)p(x2[C and the apparent Class B distribution by 
+(a)P(C,)p(x2[C,) + (1 -b)P(C)p(x21C). Notice that even though the approximated dis- 
+tributions may be discrepant, if a -- b, the crossing point will be close. 
+Simultaneously the second modality is labeling the patterns to the first modality. At each 
+iteration of the algorithm both borders move according to the samples from the apparent 
+marginal distributions. 
+- P(CA)p(x21CA) - P(CA)p(xllCA) - (a)P(CA}p(x2.1CA} 
+- p - P(CB)p(xllCB) - (1-a)P(CA)p(x21CA) 
+b) 
+- (1-b)P(CB)p(x2.1CB) - (a)P(CA)p(x2.1CA)+(1-b)P(CB)p(x21CB) 
+- (b)P(CB)p(x21C. B) 
+Figure 5: This figure shows an example of the join

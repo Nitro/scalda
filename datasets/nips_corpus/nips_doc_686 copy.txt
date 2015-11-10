@@ -1,0 +1,175 @@
+Interposing an ontogenic model between 
+Genetic Algorithms and Neural Networks 
+Richard K. Belew 
+rikcs. ucsd. edu 
+Cognitive Computer Science Research Group 
+Computer Science/ Engr. Dept. (0014) 
+University of California- San Diego 
+La Jolla, CA 92093 
+Abstract 
+The relationships between learning, development and evolution in 
+Nature is taken seriously, to suggest a model of the developmental 
+process whereby the genotypes manipulated by the Genetic Algo- 
+rithm (GA) might be expressed to form phenotypic neural networks 
+(NNet) that then go on to learn. ONTOL is a grammar for gener- 
+ating polynomial NNets for time-series prediction. Genomes corre- 
+spond to an ordered sequence of ONTOL productions and define a 
+grammar that is expressed to generate a NNet. The NNet's weights 
+are then modified by learning, and the individual's prediction error 
+is used to determine GA fitness. A new gene doubling operator 
+appears critical to the formation of new genetic alternatives in the 
+preliminary but encouraging results presented. 
+I Introduction 
+Two natural phenomena, the learning done by individuals' nervous systems and the 
+evolution done by populations of individuals, have served as the basis of distinct 
+classes of adaptive algorithms, neural networks (NNets) and Genetic Algorithms 
+(GAs), resp. Interactions between learning and evolution in Nature suggests that 
+combining NNet and GA algorithmic techniques might also yield interesting hybrid 
+algorithms. 
+99 
+100 Belew 
+Dimension 
+x 
+X X- X 
+t-2 t-I t 
+D 
+2 
+X t ='W4Xt_ 2 + W3Xt_Xt_ I + 
+ t e 
+e 
+x? 
+w2Xt-2 + WlX t-I + Wo 
+Figure 1: Polynomial networks 
+Taking the analogy to learning and evolution seriously, we propose that the missing 
+feature is a the developmental process whereby the genotypes manipulated by the 
+GA are ezpressed to form phenotypic NNets that then go on to learn. Previous 
+attempts to use the GA to search for good NNet topologies have foundered exactly 
+because they have assumed an overly direct genotype-to-phenotype correspondence. 
+This research is therefore consistent with other NNet research the physiology of 
+neural development [3] as well as those into constructive methods for changing 
+network topologies adaptively during the training process [4]. Additional motivation 
+derives from the growing body of neuroscience demonstrating the importance of 
+developmental processes as the shapers of effective learning networks. Cognitively, 
+the resolution of false dicotomies like nature/nurture and nativist/empiricist 
+also depends on a richer language for describing the way genetically determined 
+characteristics and within-lifetime changes by individuals can interact. 
+Because GAs and NNets are each complicated technologies in their own right, and 
+because the focus of the current research is a model of development that can span 
+between them, three major simplifications have been imposed for the preliminary 
+research reported here. First, in order to stay close to the mathematical theory of 
+functional approximation, we restrict the form of our NNets to what can be called 
+polynomials networks (cf. [7]). That is, we will consider networks with a first 
+layer of linear units (i.e., terms in the polynomial that are simply weighted input 
+X), a second layer with units that form products of first-layer units, a third layer 
+with units that form products of second-layer units, etc.; see Figure 1, and below 
+for an example. As depicted in Figure 1 the space of polynomial networks can be 
+viewed as two-dimensional, parameterized by dimension (i.e., how much history of 
+the time series is used) and degree. 
+There remains the problem of finding the best parameter values for this particular 
+polynomial form. Much of classicial optimization theory and more recent NNet 
+research is concerned with various methods for performing this task. Previous re- 
+Interposing an ontogenic model between Genetic Algorithms and Neural Networks 101 
+search has demonstrated that the global sampling behavior of the GA works very 
+effectively with any gradient, local search technique [2]. The second major sim- 
+plification, then, is that for the time being we use only the most simple-minded 
+gradient method: first-order, fixed-step gradient descent. Analytically, this is the 
+most tractible, and the general algorithm design can readily replace this with any 
+other local search technique. 
+The final simplification is that we focus on one of the most parsimonious of prob- 
+lems, time series prediction: The GA is used to evolve NNets that are good at 
+predicting X+x given access to an unbounded history X, X_, X-2, .... Polyno- 
+mial approximations of an arbitrary time series can vary in two dimensions: the 
+extent to which they rely on this history, and (e.g., how far back in time), and 
+in their degree. The Stone-Weierstrauss Aproximation Theorem guarantees that, 
+within this two-dimensional space, there exists some polynomial that will match 
+the desired temporal sequence to arbitrarily precision. The problem, of course, is 
+that over a history H and allowing m degree terms there exists O(H m) terms, far 
+too many to search effectively. From the perspective of function approximation, 
+then, this work corresponds to a particular heuristic for searching for the correct 
+polynomial form, the parameters of which will be tuned with a gradient technique. 
+2 Expression of the ONTOL grammar 
+Every multi-cellular organism has the problem of using a single genetic description 
+contained in the first germ cell as specification for all of its various cell types. The 
+genome therefore appears to contain a set of developmental instructions, subsets of 
+which become relevant to the particular context in which each developing cell finds 
+itself. If we imagine that each cell type is a unique symbol in some alphabet, and 
+that the mature organism is a string of symbols, it becomes very natural to model 
+the developmental process as a (context-sensitive) grammar generating this string 
+[6, 5]. The initial germ cell becomes the start symbol. A series of production rules 
+specify the expansion (mitosis) of this non-terminal (cell) into two other symbols 
+that then develop according to the same set of genetically-determined rules, until 
+all cells are in a mature, terminal state. 
+ONTOL is a grammar for generating cells in the two-dimensional space of poly- 
+nomial networks. The left hand side (LHS) of productions in this grammar define 
+conditions on the cells' internal Clock state and on the state of its eight Moore 
+neighbors. The RHS of the production defines one of five cell-state update actions 
+that are performed if the LHS condition is satisfied: A cell can mitosize either left or 
+down (MLe.ft, MDown), meaning that this adjacent cell now becomes filled with 
+an identical copy; Die (i.e., disappear entirely); Tick (simply decrement its inter- 
+nal Clock state); or Terminate (cease development). Only terminating cells form 
+synaptic connections, and only to adjacent neighbors. 
+The developmental process is begun by placing a single gamete cell at the origin of 
+the 2d polyspace, with its Clock state initialized to a maximal value MaxClock = 4; 
+this state is decremented every time a gene is fired. If and when a gene causes this 
+cell to undergo mitosis, a new cell, either to the left or below the originial cell, is 
+created. Critically, the same set of genetic instructions contained in the original 
+gametic cell are used to control transitions of all its progeny cells (much like a 
+102 Belew 
+B B 
+B B 
+B B 
+B B 
+B B 
+1 
+1 
+B B B 
+1 B 
+1 B 
+B 
+B 
+B 
+Figure 
+Deg=l Dim=l 
++4.00 
+Deg=2 Dim=l 
+2: Logistic genome, engineered 
+cellular automaton's transition table), even though the differing contexts of each 
+cell are likely to cause different genes to be applied in different cells. Figure 2 shows 
+a trace of this developmental process: each snap-shot shows the Clock states of all 
+active (non-terminated) cells, the coordinates of the cell being expressed, and the 
+gene used to control its expression. 
+3 Experimental design 
+Each generation begins by developing and evaluating each genotype in the popu- 
+lation. First, each genome in the population is expressed to form an executable 
+Lisp lambda expression computing a polynomial and a corresponding set of initial 
+weights for each of its terms. If this expression can be performed successfully and 
+the individual is viable (i.e., their genomes can be interpretted to build well-formed 
+networks), the individual is exposed to NTrain sequential instances of the time 
+series. Fitness is then defined to be its cumulative error on the next NTest time 
+steps. 
+After the entire population has been evaluated, the next generation is formed ac- 
+cording to a relatively conventional genetic algorithm: more successful individuals 
+are differentially reproduced and genetic operators are applied to these to experi- 
+ment with novel, but similar, alternatives. Each genome is cloned zero, one or more 
+times using a proportional selection algorithm that guarantees the expected number 
+of offspring is proportional to an individual's relative fitness. 
+Variation is introduced into the population by mutation and recombination genetic 
+operators that explore new genes and genomic combinations. Four types of mutation 
+were applied, with the probability of a mutation proportional to genome length. 
+First, some random portion of an extant gene might be randomly altered, e.g., 
+changing an initial weight, adding or deleting a constraint on a condition, changing 
+the gene's action. Because a gene's order in the genome can affect its probability 
+of being expressed, a second form of mutation permutes the order of the genes on 
+Interposing an ontogenic model between Genetic Algorithms and Neural Networks 103 
+Min 
+Avg ..... 
+2.5 
+2 
+1.5 
+0.5 
+! I i I I I I 
+100 200 300 400 500 600 700 
+Generations 
+800 
+Figure 3: Poulation Minimum and Average Fitness 
+t

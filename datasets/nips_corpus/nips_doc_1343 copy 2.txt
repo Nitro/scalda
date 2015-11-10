@@ -1,0 +1,126 @@
+Learning to Schedule Straight-Line Code 
+Eliot Moss, Paul Utgoff, John Cavazos 
+Doina Precup, Darko Stefanovi(: 
+Dept. of Comp. Sci., Univ. of Mass. 
+Amherst, MA 01003 
+Carla Brodley, David Scheeff 
+Sch. of Elec. and Comp. Eng. 
+Purdue University 
+W. Lafayette, IN 47907 
+Abstract 
+Program execution speed on modem computers is sensitive, by a factor of 
+two or more, to the order in which instructions are presented to the proces- 
+sor. To realize potential execution efficiency, an optimizing compiler must 
+employ a heuristic algorithm for instruction scheduling. Such algorithms 
+are painstakingly hand-crafted, which is expensive and time-consuming. We 
+show how to cast the instruction scheduling problem as a learning task, ob- 
+taining the heuristic scheduling algorithm automatically. Our focus is the 
+narrower problem of scheduling straight-line code (also called basic blocks 
+of instructions). Our empirical results show that just a few features are ad- 
+equate for quite good performance at this task for a real modem processor, 
+and that any of several supervised learning methods perform nearly opti- 
+mally with respect to the features used. 
+1 Introduction 
+Modem computer architectures provide semantics of execution equivalent to sequential exe- 
+cution of instructions one at a time. However, to achieve higher execution efficiency, they 
+employ a high degree of internal parallelism. Because individual instruction execution times 
+vary, depending on when an instruction's inputs are available, when its computing resources 
+are available, and when it is presented, overall execution time can vary widely. Based on just 
+the semantics of instructions, a sequence of instructions usually has many permutations that 
+are easily shown to have equivalent meaning---but they may have considerably different exe- 
+cution time. Compiler writers therefore include algorithms to schedule instructions to achieve 
+low execution time. Currently, such algorithms are hand-crafted for each compiler and target 
+processor. We apply learning so that the scheduling algorithm is constructed automatically. 
+Our focus is local instruction scheduling, i.e., ordering instructions within a basic block. A 
+basic block is a straight-line sequence of code, with a conditional or unconditional branch 
+instruction at the end. The scheduler should find optimal, or good, orderings of the instructions 
+prior to the branch. It is safe to assume that the compiler has produced a semantically correct 
+sequence of instructions for each basic block. We consider only reorderings of each sequence 
+930 E. Moss, P. Utgoff, J. Cavazos, D. Precup, D. Stefanovid, C. Brodley and D. Scheeff 
+(not more general rewritings), and only those reorderings that cannot affect the semantics. 
+The semantics of interest are captured by dependences of pairs of instructions. Specifically, 
+instruction lj depends on (must follow) instruction//if: it follows//in the input block and has 
+one or more of the following dependences on//: (a) lj uses a register used by//and at least one 
+of them writes the register (condition codes, if any, are treated as a register); (b) lj accesses a 
+memory location that may be the same as one accessed by h, and at least one of them writes 
+the location. From the input total order of instructions, one can thus build a dependence DAG, 
+usually a partial (not a total) order, that represents all the semantics essential for scheduling 
+the instructions of a basic block. Figure 1 gives a sample basic block and its DAG. The task of 
+scheduling is to find a least-cost total order of each block's DAG. 
+X=V; 1: STQ R1, X 
+y = ,p; 2: LDQ R2, 0(RI0) 
+P =P+I; 3: STQ R2, Y 
+4: ADDQ RI0, RI0,8 
+Not Available Available 
+(a) C Code (b) Insauction Sequence to be Scheduled (c) Dependence Dag of Instructions (d) Partial Schedule 
+Figure 1: Example basic block code, DAG, and partial schedule 
+2 Learning to Schedule 
+The learning task is to produce a scheduling procedure to use in the performance task of 
+scheduling instructions of basic blocks. One needs to transform the partial order of instruc- 
+tions into a total order that will execute as efficiently as possible, assuming that all memory 
+references hit in the caches. We consider the class of schedulers that repeatedly select the 
+apparent best of those instructions that could be scheduled next, proceexling from the beginning 
+of the block to the end; this greedy approach should be practical for everyday use. 
+Because the scheduler selects the apparent best from those instructions that could be selected 
+next, the learning task consists of learning to make this selection well. Hence, the notion 
+of 'apparent best instruction' needs to be acquired. The process of selecting the best of the 
+alternatives is like finding the maximum of a list of numbers. One keeps in hand the current 
+best, and proceeds with pairwise comparisons, always keeping the better of the two. One 
+can view this as learning a relation over triples (P, li, lj), where P is the partial schedule (the 
+total order of what has been scheduled, and the partial order remaining), and I is the set of 
+instructions from which the selection is to be made. Those triples that belong to the relation 
+define pairwise preferences in which the first instruction is considered preferable to the second. 
+Each triple that does not belong to the relation represents a pair in which the first instruction is 
+not better than the second. 
+One must choose a representation in which to state the relation, create a process by which cor- 
+rect examples and counter-examples of the relation can be inferred, and modify the expression 
+of the relation as needed. Let us consider these steps in greater detail. 
+2.1 Representation of Scheduling Preference 
+The representation used here takes the form of a logical relation, in which known examples 
+and counter-examples of the relation are provided as triples. It is then a matter of constructing 
+or revising an expression that evaluates to TRUE if (P, li, lj) is a member of the relation, and 
+FALSE if it is not. If (P, li,lj) is considered to be a member of the relation, then it is safe to 
+infer that (P, lj, li) is not a member. 
+For any representation of preference, one needs to represent features of a candidate instruction 
+and of the partial schedule. There is some art in picking useful features for a state. The method 
+Learning to Schedule Straight-Line Code 931 
+used here was to consider the features used in a scheduler (called DEC below) supplied by 
+the processor vendor, and to think carefully about those and other features that should indicate 
+predictive instruction characteristics or important aspects of the partial schedule. 
+2.2 Inferring Examples and Counter-Examples 
+One would like to produce a preference relation consistent with the examples and counter- 
+examples that have been inferred, and that generalizes well to triples that have not been seen. 
+A variety of methods exist for learning and generalizing from examples, several of which are 
+tested in the experiments below. Of interest here is how to infer the examples and counter- 
+examples needed to drive the generalization process. 
+The focus here is on supervised learning (reinforcement learning is mentioned later), in which 
+one provides a process that produces correctly labeled examples and counter-examples of the 
+preference relation. For the instruction-scheduling task, it is possible to search for an optimal 
+schedule for blocks of ten or fewer instructions. From an optimal schedule, one can infer 
+the correct preferences that would have been needed to produce that optimal schedule when 
+selecting the best instruction from a set of candidates, as described above. It may well be that 
+there is more than one optimal schedule, so it is important only to infer a preference for a pair 
+of instructions when the first can produce some schedule better than any the second can. 
+One should be concerned whether training on preference pairs from optimally scheduled small 
+blocks is effective, a question the experiments address. It is worth noting that for programs 
+studied below, 92% of the basic blocks are of this small size, and the average block size is 
+4.9 instructions. On the other hand, larger blocks are executed more often, and thus have 
+disproportionate impact on program execution time. One could learn from larger blocks by 
+using a high quality scheduler that is not necessarily optimal. However, the objective is to be 
+able to learn to schedule basic blocks well for new architectures, so a useful learning method 
+should not depend on any pre-existing solution. Of course there may be some utility in trying to 
+improve on an existing scheduler, but that is not the longer-term goal here. Instead, we would 
+like to be able to construct a scheduler with high confidence that it produces good schedules. 
+2.3 Updating the Preference Relation 
+A variety of learning algorithms can be brought to bear on the task of updating the expression 
+of the preference relation. We consider four methods here. 
+The first is the decision tree induction program ITI (Utgoff, Berkman & Clouse, in press). Each 
+triple that is an example of the relation is translated into a vector of feature values, as described 
+in more detail below. Some of the features pertain to the current partial schedule, and others 
+pertain to the pair of candidate instructions. The vector is then labeled as an example of the 
+relation. For the same pair of instructions, a second triple is inferred, with the two instructions 
+reversed. The feature vector for the triple is constructed as before, and labeled as a counter- 
+example of the relation. The decision tree induction program then constructs a tree that can be 
+used to predict whether a candidate triple is a member of the relation. 
+The second method is table lookup (TLU), using a table indexed by the feature values of a 
+triple. The table has one cell for every po

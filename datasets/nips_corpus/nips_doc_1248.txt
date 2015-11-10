@@ -1,0 +1,180 @@
+A spike based learning 
+VLSI 
+neuron 
+in analog 
+Philipp Hfliger 
+Institute of Neuroinformatics 
+ETHZ/UNIZ 
+Gloriastrasse 32 
+CH-8006 Zfirich 
+Switzerland 
+e-mail: hafiiger@neuroinf. ethz.ch 
+tel: ++41 i 257 26 84 
+Misha Mahowald 
+Institute of Neuroinformatics 
+ETHZ/UNIZ 
+Gloriastrasse 32 
+CH-8006 Zfirich 
+Switzerland 
+e-mail: misha@neuroinf. ethz.ch 
+tel: ++41 i 257 26 84 
+Lloyd Watts 
+Arithmos, Inc. 
+2730 San Tomas Expressway, Suite 210 
+Santa Clara, CA 95051-0952 
+USA 
+e-mail: lloyd@arithmos.com 
+tel: 408 982 4490, x219 
+Abstract 
+Many popular learning rules are formulated in terms of continu- 
+ous, analog inputs and outputs. Biological systems, however, use 
+action potentials, which are digital-amplitude events that encode 
+analog information in the inter-event interval. Action-potential 
+representations are now being used to advantage in neuromorphic 
+VLSI systems as well. We report on a simple learning rule, based 
+on the Riccati equation described by Kohonen [1], modified for 
+action-potential neuronal outputs. We demonstrate this learning 
+rule in an analog VLSI chip that uses volatile capacitive storage for 
+synaptic weights. We show that our time-dependent learning rule 
+is sufficient to achieve approximate weight normalization and can 
+detect temporal correlations in spike trains. 
+A Spike Based Learning Neuron in Analog VLSI 693 
+1 INTRODUCTION 
+It is an ongoing debate how information in the nervous system is encoded and carried 
+between neurons. In many subsystems of the brain it is now believed that it is done 
+by the exact timing of spikes. Furthermore spike signals on VLSI chips allow the 
+use of address-event busses to solve the problem of the large connectivity in neural 
+networks [3, 4]. For these reasons our artificial neuron and others [2] use spike signals 
+to communicate. Additionally the weight updates at the synapses are determined 
+by the relative timing of presynaptic and postsynaptic spikes, a mechanism that 
+has recently been discovered to operate in cortical synapses [5, 7, 6]. 
+Weight normalization is a useful property of learning rules. In order to perform the 
+normalization, some information about the whole weight vector must be available 
+at every synapse. We use the neuron's output spikes (The neuron's output is the 
+product of the weight and the input vector), which retrogradely propagate through 
+the dendrites to the synapses (as has been observed in biological neurons [5]). In 
+our model approximate normalization is an implicit property of the learning rule. 
+2 THE LEARNING RULE 
+Figure 1: 
+r - 0.83s 
+presynaptic spikes 
+correlation signal 
+-synaptic weight 
+postsynaptic spikes 
+1 2! 0,13! 0, 
+t 1,0 
+7 8 9 10 
+1,1 ! 2,1 
+! 2,0 
+A snapshot of the simulation variables involved at one synapse. With 
+The core of the learning rule is a local 'correlation signal' c at every synapse. It 
+records the 'history' of presynaptic spikes. It is incremented by 1 with every presy- 
+naptic spike and decays in time with time constant -: 
+c(tm,o) =o 
+,,,,,,,_, ....  (1) 
+C(tm,n) -- e . C(tm,n-1) + I , n > 0 , tm,n <_ tin+l,0 
+t,o is the time of the m'th postsynaptic spike and tm,n (n > 0) is the time of the 
+n'th presynaptic spike after the m'th postsynaptic spike. The weight changes when 
+the cell fires an action potential: 
+694 P. Hiifiiger, M. Mahowald and L. Watts 
+w(tm,o) = w(tm_,o) + - 
+s = max{v 't.-l,v < t.,o} 
+(2) 
+where w is the weight at this synapse. tm-l,s means the last event (presynaptic 
+or postsynaptic spike) before the m'th postsynaptic spike. c and/ are parameters 
+influencing learning speed and weight vector normalization (see (5)). 
+Our learning rule is designed to react to temporal correlations between spikes in 
+the input signals. However, to show the normalizing of the weights we analyze its 
+behavior by making some simplifying assumptions on the input and output signals; 
+e.g. the intervals of the presynaptic and the postsynaptic spike train are Poisson 
+distributed and there is no correlation between single spikes. Therefore we can 
+represent the signals by their instantaneous average frequencies O and [. Now the 
+simplified learning rule can be written as: 
+6 al(O)[-/0 (3) 
+l(O) = Or(1- e -o-aT) (4) 
+l(O) represents the average percentage to which the correlation signal is reduced 
+between weight updates (output spikes). So when the neuron's average firing rate 
+fulfills O >> 1�, one can approximate l(O) m 1. (3) is thus reduced to the Riccati 
+equation described by Kohonen [1]. This rule would not be Hebbian, but normalizes 
+the weight vector (see (5)). Note that if the correlation signal does not decay, then 
+our rule matches exactly the Riccati equation. We will further refer to it as the 
+I then l(O) m Or, which is a 
+Modified Riccati Rule (MRR). Whereas if O << 7 
+Hebbian learning rule also described in [1]. 
+If we assume that the spiking mechanism preserves O = '[ and insert it in (3), it 
+follows for the equilibrium state: 
+(5) 
+Since l(O) < I the weight vector will never be longer than V/. This property also 
+holds when the simplifying assumptions are removed. The vector will always be 
+smaller, as it is with no decay of the correlation signals, since the decay only affects 
+the incrementing part of the rule. 
+Matters get much more complicated with the removal of the assumption of the 
+pre- and postsynaptic trains being independently Poisson distributed. With an 
+integrate-and-fire neuron for instance, or if there exist correlations between spikes 
+of the input trains, it is no longer possible to express what happens in terms of rate 
+A Spike Based Learning Neuron in Analog VLSI 695 
+coding only (with / and O). (3) is still valid as an approximation but temporal 
+relationships between pre- and postsynaptic spikes become important. Presynaptic 
+spikes immediately followed by an action potential will have the strongest increasing 
+effect on the synapse's weight. 
+3 IMPLEMENTATION IN ANALOG VLSI 
+We have implemented a learning rule in a neuron circuit fabricated in a 2.0um 
+CMOS process. This neuron is a preliminary design that conforms only approxi- 
+mately to the MRR. The neuron uses an integrate-and-fire mechanism to generate 
+action potentials (Figure 2). 
+Figure 2: Integrate-and-fire neuron. The soma capacitor holds the somatic mem- 
+brane voltage. This voltage is compared to a threshold thresh with a differential 
+pair. When it crosses this threshold it gets pulled up through the mirrored current 
+from the differential pair. This same current gets also mirrored to the right and 
+starts to pull up a second leaky capacitor (setback) through a small W/L transistor, 
+so this voltage rises slowly. This capacitor voltage finally opens a transistor that 
+pulls soma back to ground where it restarts integrating the incoming current. The 
+parameters tonic+ and tonic- are used to add or subtract a constant current to 
+the soma capacitor. tref allows the spike-width to be changed. 
+Not shown, but also part of the neuron, are two non-learning synapses: one ex- 
+citatory and one inhibitory. Each of three learning synapses contains a storage 
+capacitor for the synaptic weight and for the correlation signal (Figure 3). 
+The correlation signal c is simplified to a binary variable in this implementation. 
+When an input spike occurs, the correlation signal is set to 1. It is set to 0 whenever 
+the neuron produces an output-spike or after a fixed time-period (T in (7)) if there 
+is no other input spike: 
+=o 
+(6) 
+C(tm,n) = 1 , n > 0 , tm,n <_ tin+l,0 
+This approximation unfortunately tends to eliminate differences between highly 
+active inputs and weaker inputs. Nevertheless the weight changes with every output 
+spike: 
+696 P. Hiifiiger, M. Mahowald and L. Watts 
+w$O  
+weight 
+Figure 3: The CMOS learning-synapse incorporates the learning mechanism. The 
+weight capacitor holds the weight, the corr capacitor stores the correlation signal 
+representation. The magnitude of the weight increment and decrement are com- 
+puted by a differential pair (upper left w50). These currents are mirrored to the 
+synaptic weight and gated by digital switches encoding the state of the correlation 
+signal and of the somatic action potential. The correlation signal reset is medi- 
+ated by a leakage transistor, decayin, which has a tonic value, but is increased 
+dramatically when the output neuron fires. 
+if C(tm-l,s) ---- 1 and tm,o - tm-l,s < T 
+otherwise 
+(7) 
+w is the weight on one synapse, c is the correlation signal of that synapse, and c is 
+a parameter that controls how fast the weight changes. (See in the previous section 
+for a description of tm,n.) The weight, w5o, is the equilibrium value of the synaptic 
+weight when the occurrence of an input spike is fifty percent correlated with the 
+occurrence of an output spike. This implementation differs from the Riccati rule in 
+that either the weight increment or the weight decrement, but not both, are executed 
+upon each output spike. Also, the weight increment is a function of the synaptic 
+weight. The circuit was implemented this way to try and achieve an equilibrium 
+value for the synaptic weight equal to the fraction of the time that the input neuron 
+fired relative to the times the output neuron fired. This is the correct equilibrium 
+value for the synaptic weight in the Riccati rule. The evolution of a synaptic weight 
+is depicted in Figure 4. 
+The synaptic weight vector normalization in this implementation is accurate only 
+when the assumptions of the design are met. These assumptions are that there is 
+one or fewer input spikes per synapse for every output spike. This assumption is 
+easier to meet when there are many synapses formed with the neuron, so that spikes 
+from multiple inputs combine to drive the cell to threshold. Since we have only 
+three synapses, this approximation is usually violated. Nevertheless, the weights 
+compete with one another and therefore the length of the weight vector is limited. 
+Competiti

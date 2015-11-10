@@ -1,0 +1,195 @@
+Using Prior Knowledge in a NNPDA to Learn 
+Context-Free Languages 
+Sreerupa Das 
+Dept. of Comp. Sc. &; 
+Inst. of Cognitive Sc. 
+University of Colorado 
+Boulder, CO 80309 
+C. Lee Giles* 
+NEC Research Inst. 
+4 Independence Way 
+Princeton, NJ 08540 
+Guo-Zheng Sun 
+*Inst. for Adv. Comp. Studies 
+University of Maryland 
+College Park, MD 20742 
+Abstract 
+Although considerable interest has been shown in language inference and 
+automata induction using recurrent neural networks, success of these 
+models has mostly been limited to regular languages. We have previ- 
+ously demonstrated that Neural Network Pushdown Automaton (NNPDA) 
+model is capable of learning deterministic context-free languages (e.g., 
+anb n and parenthesis languages) from examples. However, the learning 
+task is computationally intensive. In this paper we discus some ways in 
+which a priori knowledge about the task and data could be used for efficient 
+learning. We also observe that such knowledge is often an experimental 
+prerequisite for learning nontrivial languages (eg. a n b ncb mam). 
+I INTRODUCTION 
+Language inference and automata induction using recurrent neural networks has 
+gained considerable interest in the recent years. Nevertheless, success of these mod- 
+els has been mostly limited to regular languages. Additional information in form of 
+a priori knowledge has proved important and at times necessary for learning com- 
+plex languages (Abu-Mostafa 1990; A1-Mashouq and Reed, 1991; Omlin and Giles, 
+1992; Towell, 1990). They have demonstrated that partial information incorporated 
+in a connectionist model guides the learning process through constraints for efficient 
+learning and better generalization. 
+We have previously shown that the NNPDA model can learn Deterministic Context 
+65 
+66 Das, Giles, and Sun 
+Output push 
+I ' 
+pop or no-op 
+State(t+l) [ Action 
+OOO O 
+copy 
+--OO0 OO 
+State Neurons Input Neurons 
+State(t) Input(t) 
+higher order 
+weights 
+O0' 
+Read Neurons 
+Top -of-stack(t) 
+copy 
+Top-of-stack 
+External 
+stack 
+alphabets on the 
+stack 
+Figure 1: The figure shows the architecture of a third-order NNPDA. Each weight 
+relates the product of Input(t), State(t) and Top-of-Stack information to the 
+State(t+1). Depending on the activation of the Action Neuron, stack action 
+(namely, push, pop or no operation) is taken and the Top-of-Stack (i.e. value 
+of Read Neurons) is updated. 
+Free Languages (DCFLs) from a finite set of examples. However, the learning task 
+requires considerable amount of time and computational resources. In this paper 
+we discuss methods in which a priori knowledge, may be incorporated in a Neural 
+network Pushdown Automaton (NNPDA) described in (Das, Giles and Sun, 1992; 
+Giles et al, 1990; Sun et al, 1990). 
+2 THE NEURAL NETWORK PUSHDOWN AUTOMATA 
+2.1 ARCHITECTURE 
+The description of the network architecture is necessarily brief, for further details 
+see the references above. The network consists of a set of recurrent units, called 
+state neurons and an external stack memory. One state neuron is designated as the 
+output neuron. The state neurons get input (at every time step) from three sources: 
+from their own recurrent connections, from the input neurons and from the read 
+neurons. The input neurons register external inputs which consist of strings of 
+characters presented one at a time. The read neurons keep track of the symbol(s) 
+on top of the stack. One non-recurrent state neuron, called the action neuron, 
+indicates the stack action (push, pop or no-op) at any instance. The architecture 
+is shown in Figure 1. 
+The stack used in this model is continuous. Unlike an usual discrete stack where an 
+element is either present or absent, elements in a continuous stack may be present 
+in varying degrees (values between [0, 1]). A continuous stack is essential in order 
+Using Prior Knowledge in a NNPDA to Learn Context-Free Languages 67 
+to permit the use of a continuous optimization method during learning. The stack 
+is manipulated by the continuous valued action neuron. A detailed discussion on 
+the operations may be found in (Das, Giles and Sun, 1992). 
+2.2 LEARNABLE CLASS OF LANGUAGES 
+The class of language learnable by the NNPDA is a proper subset of deterministic 
+context-free languages. A formal description of a Pushdown Automaton (PDA) 
+requires two distinct sets of symbols - one is the input symbol set and the other 
+is the stack symbol set 1. We have reduced the complexity of this PDA model in 
+the following ways: First, we use the same set of symbols for the input and the 
+stack. Second, when a push operation is performed the symbol pushed on the stack 
+is the one that is available as the current input. Third, no epsilon transitions are 
+allowed in the NNPDA. Epsilon transition is one that performs state transition and 
+stack action without reading in a new input symbol. Unlike a deterministic finite 
+state automata, a deterministic PDA can make epsilon transitions under certain 
+restrictions x. Although these simplifications reduce the language class learnable by 
+NNPDA, nevertheless the languages in this class retain essential properties of CFLs 
+and is therefore more complex than any regular language. 
+2.3 TRAINING 
+The activation of the state neurons s at time step t q- 1 may be formulated as follows 
+(we will only consider third order NNPDA in this paper): 
+si(t + 1)=g (]] ]] wijilsj(t)ii(t)rl(t)) 
+(1) 
+where g(x) = fracl/1 + exp(-x), i is the activation of the input neurons and r is 
+the activation of the read neuron and W is the weight matrix of the network. We 
+use a localized representation for the input and the read symbols. During training, 
+input sequences are presented one at a time and activations are allowed to propagate 
+until the end of the string is reached. Once the end is reached the activation of the 
+output neuron is matched with the target (which is 1.0 for positive string and 0.0 for 
+a negative string) The learning rule used in the NNPDA is a significantly enhanced 
+extension to Real Time Recurrent Learning (Williams and ZipseL 1989). 
+2.4 OBJECTIVE FUNCTION 
+The objective function used to train the network consists of two error terms: one for 
+positive strings and the other for negative strings. For positive strings we require 
+(a) the NNPDA must reach a final state and (b) the stack must be empty. This 
+criterion can be reached by minimizing the error function: 
+1 
+Error = [(- 
+(2) 
+where So(l) is the activation of an output neuron and L(I) is the stack length, after 
+a string of length I has been presented as input a character at a time. For negative 
+1For details refer to (Hopcroft, 1979). 
+68 Das, Giles, and Sun 
+avg of total parenthesis postfix a n b n 
+presentations w IL w/o IL w IL w/o IL w IL w/o IL 
+# of strings 2671 5644 8326 15912 108200 >200000 
+# of character 10628 29552 31171 82002 358750 >700000 
+Table 1: Effect of Incremental Learning (IL) is displayed in this table. The number 
+of strings and characters required for learning the languages are provided here. 
+parenthesis a n b n 
+w SSP w/o SSP w SSP w/o SSP 
+epochs 50-80 50-80 150-250 150-250 
+generalization 100% 100% 100% 98.97% 
+number of units 1+1 2 1+1 2 
+a n bn cb m a m a n +m bn c m 
+w SSP w/o SSP w SSP w/o SSP 
+epochs 150 *** 150-250 *** 
+generalization 96.02% *** 100% *** 
+number of units 1+1 *** 1+1 *** 
+Table 2: This table provides some statistics on epochs, generalization and number 
+of hidden units required for learning with and without selective string presentation 
+(SSP). 
+strings, the error function is modified as: 
+Error = { ;o(1)- L(I) if (so(l)- L(I)) > 0.0 
+else 
+(3) 
+Equation (2) reflects the criterion that, for a negative pattern we require either the 
+final state so(l) = 0.0 or the stack length L(l) to be greater than 1.0 (only when 
+so(l) = 1.0 and the stack length L(l) is close to zero, the error is high). 
+3 BUILDING IN PRIOR KNOWLEDGE 
+In practical inference tasks it may be possible to obtain prior knowledge about the 
+problem domain. In such cases it often helps to build in knowledge into the system 
+under study. There could be at least two different types of knowledge available 
+to a model (a) knowledge that depends on the training data with absolutely no 
+knowledge about the automaton, and (b) partial knowledge about the automaton 
+being inferred. Some of ways in which knowledge can be provided to the model are 
+discussed below. 
+3.1 KNOWLEDGE FROM THE DATA 
+3.1.1 Incremental Learning 
+Incremental Learning has been suggested by many (Elman, 1991; Giles et al, 1990, 
+Sun et al, 1990), where the training examples are presented in order of increasing 
+Using Prior Knowledge in a NNPDA to Learn Context-Free Languages 69 
+0.9 
+0.8 
+0.7 
+0.6 
+0.5 
+0.4 
+0.3 
+0.2 
+with SSP 
+without SSP ----' 
+0,1 I I ! 
+0 50 100 150 200 250 
+epochs 
+Figure 2: Faster convergence using selective string presentation (SSP) for parenthe- 
+sis language task. 
+length. This model of learning starts with a training set containing short simple 
+strings. Longer strings are added to the training set as learning proceeds. 
+We believe that incremental learning is very useful when (a) the data presented 
+contains structure, and (b) the strings learned earlier embody simpler versions of 
+the task being learned. Both these conditions are valid for context-free languages. 
+Table 1 provides some results obtained when incremental learning was used. The 
+figures are averages over several pairs of simulations, each of which were initialized 
+with the same initial random weights. 
+3.1.2 Selective Input Presentation 
+Our training data contained both positive and negative examples. One problem 
+with training on incorrect strings is that, once a symbol in the string is reached 
+that makes it negative, no further information is gained by processing the rest of 
+the string. For example, the fifth a in the string aaaaba... makes the string a 
+negative example of the language ab ', irrespective of what follows it. In order to 
+

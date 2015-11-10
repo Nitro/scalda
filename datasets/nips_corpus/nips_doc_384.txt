@@ -1,0 +1,144 @@
+Real-time autonomous robot navigation using 
+VLSI neural networks 
+Lionel Tarassenko 
+Michael Brownlow Gillian Marshall* 
+Department of Engineering Science 
+Oxford University, Oxford, OX1 3PJ, UK 
+Jon Tombs 
+Alan Murray 
+Department of Electrical Engineering 
+Edinburgh University, Edinburgh, EH9 3JL, UK 
+Abstract 
+We describe a real time robot navigation system based on three VLSI 
+neural network modules. These are a resistive grid for path planning, a 
+nearest-neighbour classifier for localization using range data from a time- 
+of-flight infra-red sensor and a sensory-motor associative network for dy- 
+namic obstacle avoidance. 
+I INTRODUCTION 
+There have been very few demonstrations of the application of VLSI neural networks 
+to real world problems. Yet there are many signal processing, pattern recognition 
+or optimization problems where a large number of competing hypotheses need to 
+be explored in parallel, most often in real time. The massive parallelism of VLSI 
+neural network devices, with one multiplier circuit per synapse, is ideally suited to 
+such problems. In this paper, we present preliminary results from our design for a 
+real time robot navigation system based on VLSI neural network modules. This is a 
+*Also: RSRE, Great Malvern, Worcester, WR14 3PS 
+422 
+Real-time Autonomous Robot Navigation Using VLSI Neural Networks 423 
+real world problem which has not been fully solved by traditional AI methods; even 
+when partial solutions have been proposed and implemented, these have required 
+vast computational resources, usually remote from the robot and linked to it via an 
+umbilical cord. 
+2 OVERVIEW 
+The aim of our work is to develop an autonomous vehicle capable of real-time 
+navigation, including obstacle avoidance, in a known indoor environment. The 
+obstacles may be permanent (static) or unexpected and dynamic (for example, 
+in an automated factory environment, the walls ard machines are permanent but 
+people, other moving vehicles and packages are not.) There are three neural network 
+modules at the heart of our navigation system: a localization module (to determine, 
+at any time, the robot's position within the environment), an obstacle detection 
+module and a path planning module (to compute a path to the goal which avoids 
+obstacles). These modules perform low-level processing in real time which can then 
+be decoupled from higher level processing to be carried out by a simple controller. 
+It is our view that such a hybrid system is the best way to realise the computational 
+potential of artificial neural networks for solving a real world problem such as this 
+without compromising overall system performance. 
+A short description of each module is now given. In each case, the general principles 
+are first outlined and, where applicable, the results of our preliminary work are then 
+reported. 
+3 PATH PLANNING 
+The use of resistive grids for parallel analog computation was first suggested by Horn 
+in the mid-seventies (Horn, 1974) and the idea has since been exploited by Mead and 
+co-workers, for example in a silicon retina (Mead and Mahowald, 1988). Although 
+these resistive grids cannot be said to be neural networks in the conventional sense, 
+they also perform parallel analog computation and they have the same advantages, 
+in terms of speed and fault-tolerance, as any hardware realisation of neural networks. 
+We have taken the resistive grid concept and applied it to the path planning prob- 
+lem, here taken to be the computation of an obstacle-avoiding path, in a structured 
+environment, from the robot's initial (or present) position (P) to its goal (G). In our 
+approach, the robot's working domain is discretized and mapped onto a resistive 
+grid of hexagonal or rectangular cells - see Figure 1 which shows the test environ- 
+ment for Autonomous Guided Vehicles (AGV's) in the Oxford Robotics Laboratory. 
+Each resistor in the grid has a value of/to, unless it is part of a region of the grid 
+corresponding to an obstacle, in which case its resistance is infinite 
+The principle of the method is perhaps best understood by considering a continuous 
+analog of the resistive grid (for example, a sheet of material of uniform resistivity in 
+which holes have been cut to represent the obstacles). The current streamlines re- 
+sulting from the application of an external source between P and G skirt around the 
+obstacles; if we follow one of these streamlines from P to G, we will obtain a guaran- 
+teed collision-free path since current cannot flow into the obstacles (Tarassenko and 
+424 Tarassenko, Brownlow, Marshall, Tombs, and Murray 
+Blake, 1991). For simple cases such as circularly symmetric conductivity distribu- 
+tions in 2D, Laplace's equation can be solved in order to calculate the value of the 
+potential V at every point within the workspace. Following a current streamline is 
+then simply a matter of performing gradient descent in V. 
+Figure 1: The Oxford test environment for AGV's mapped out as a hexagonal 
+resistive grid. The resistors corresponding to the four pillars in the middle are open 
+circuits. Note that the pillars are enlarged in their grid representation in order to 
+take into account the mobile robot's finite size. 
+It is not possible, however, to solve Laplace's equation analytically for realistic en- 
+vironments. With the resistive grid, the problem is discretized and mapped onto a 
+hardware representation which can be implemented in VLSI. As soon as an external 
+source of power is connected between P and G, the resistive network settles into 
+the state of least power dissipation and the node voltages can be read out (hard- 
+ware computation of Kirchhoff's equations). The path from P to G is computed 
+incrementally from local voltage measurements: for each node, the next move is 
+identified by measuring the voltage drop AVn between that node and each of its 
+nearest neighhours (n = 6 for a hexagonal grid) and then selecting the node cor- 
+responding to (AV,)ma. This is illustrated by the example of a robot in a maze 
+(Figure 2). As above, the resistors shown shaded are open circuits whilst all other 
+resistors are set to be equal to R0. The robot is initially placed at the centre of the 
+maze (P) and a path has to be found to the goal in the top left-hand corner (G). The 
+solid line shows the path resulting from a single application of the voltage between 
+P and G. The dotted line shows the (optimal) path computed by re-applying the 
+Real-time Autonomous Robot Navigation Using VLSI Neural Networks 425 
+voltage at every node as the robot moves towards the goal. As already indicated, 
+this is actually how we intend to use the resistive grid planner in practice, since 
+this approach also allows us to re-compute the robot's path whenever unexpected 
+obstacles appear in the environment (see Section 5). 
+Figure 2: Path from middle of maze (P) to top left-hand corner (G) 
+3.1 VLSI IMPLEMENTATION 
+The VLSI implementation of the resistive grid method will allow us to solve the path 
+planning for complex environments in real time. MOS switches are ideal implemen- 
+tations of the binary resistors in the grid. Each transistor can be programmed to 
+be either open (R) or closed (R0) from a RAM cell connected to its gate. With 
+the incremental computation of the path described above, the selection of the next 
+move is a matter of identifying the largest of six voltages. Of course, the nearest 
+neighbour voltages and that of the P node could be read out through an A/D con- 
+verter and the decision made off-chip. We favour a full hardware solution instead, 
+whereby the maximum voltage difference is directly identified on-chip. 
+4 LOCALIZATION 
+The autonomous robot should at any time be able to work out its position in 
+the workspace so that the path to the goal can be updated if required. The grid 
+representation of the environment used for the path planner can also be employed 
+426 Tarassenko, Brownlow, Maxshall, Tombs, and Murray 
+for localization purposes, in which case localization becomes, in the first instance, 
+a matter of identifying the nearest node in the grid at any time during navigation. 
+This task can be performed by harnessing the pattern recognition capabilities of 
+neural networks. The room environment is learnt by recording a 360 � range scan 
+at every node during a training phase prior to navigation. During navigation, the 
+nearest node is identified using a minimum-distance classifier implemented on a 
+single-layer neural network working on dense input data (one range value every 3 � , 
+say). In order to solve the localization problem in real-time, we have designed a time- 
+of-flight optical rangefinder, which uses near infra-red light, amplitude-modulated 
+at a frequency of just above 5 MHz, together with a heterodyne mixing technique. 
+Our design is capable of resolving phase shifts in the received light signal of the 
+order of 0.1 � over a 50 dB dynamic range. 
+The rotating optical scanner gives a complete 360 � scan approximately every second 
+during navigation. The minimum-distance classifier is used to compare this scan x 
+with the k patterns ui recorded at each node during training. If we use a Euclidean 
+metric for the comparison, this is equivalent to identifying the pattern ui for which: 
+II x - [I = = [[ x II = -2ux + II u, II = (1) 
+is a minimum. The first term in the above equation is the same for all i and can be 
+ignored. We can therefore write: 
+I(--2w/Tx + u) = w/Tx + Wio (2) 
+gi(x) = -- 
+where gi(x) is a linear discriminant function, wi = ui and wi0 = -�u. Thus each 
+wi vector is one of the learnt patterns ui and the discriminant gi(x) matches the 
+input x with ui, point by point. If we let wi = {T/j} and x = {Vj} and assume 
+that there are n range values in each scan, then we can write: 
+j--fl. 
+gi(x) =  5qj V + Wio (3) 
+j=l 
+Thus the synaptic weights are an exact copy of the patterns recorded at each grid 
+point during learning and the neurons can be th

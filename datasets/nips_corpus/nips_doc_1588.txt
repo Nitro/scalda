@@ -1,0 +1,130 @@
+A Micropower CMOS Adaptive Amplitude and 
+Shift Invariant Vector Quantiser 
+Richard J. Coggins, Raymond J.W. Wang and Marwan A. Jabri 
+Computer Engineering Laboratory 
+School of Electrical and Information Engineering, J03 
+University of Sydney, 2006, Australia. 
+{richattic, jwwang, marwan} @sedal.usyd.edu.au 
+Abstract 
+In this paper we describe the architecture, implementation and experi- 
+mental results for an Intracardiac Electrogram (ICEG) classification and 
+compression chip. The chip processes and vector-quantises 30 dimen- 
+sional analogue vectors while consuming a maximum of 2.5 W power 
+for a heart rate of 60 beats per minute (1 vector per second) from a 3.3 V 
+supply. This represents a significant advance on previous work which 
+achieved ultra low power supervised morphology classification since the 
+template matching scheme used in this chip enables unsupervised blind 
+classification of abnormal rhythms and the computational support for low 
+bit rate data compression. The adaptive template matching scheme used 
+is tolerant to amplitude variations, and inter- and intra-sample time shifts. 
+1 INTRODUCTION 
+Implantable cardioverter defibrillators (ICDs) are devices used to monitor the electrical 
+activity of the heart muscle and to apply appropriate levels of electrical stimulation if ab- 
+normal conditions are detected. Despite the considerable success of ICDs they suffer from 
+a number of limitations including an inability to detect and treat some abnormal heart 
+rhythms and limited data recording capabilities. 
+We have previously shown that micropower analogue Multi-Layer Perceptron (MLP) neu- 
+ral networks can be trained to separate such arrhythmia [4]. However, MLPs are best suited 
+to learning the boundary between classes whereas a vector quantization scheme allows a 
+measure of the probability density of the morphological types to be estimated. 
+Many analogue vector quantiser (VQ) chips have been reported in the literature. For ex- 
+ample, a 16x256 500 kHz 50 mW 2 m CMOS vector A/D converter [10] and a 16 x 16 
+300 kHz 0.7 mW 2 m CMOS analogue VQ [1]. These correspond to an energy per match 
+672 R. d. Coggins, R. d. W. Wang and M. A. dabri 
+per dimension of 24 pJ and 9 pJ respectively. The integrated circuit (IC) described in 
+this paper is distinguished from these approaches in that it is specifically targeted for the 
+low power, low bandwidth application of ICEG classification and compression. Our chip 
+achieves vector matching (without the winner take all function) to 7 bit 30 dimensional 
+vectors with three coefficient linear prediction, at an energy consumption of 15 pJ per tem- 
+plate per dimension using a 1.2/m CMOS process. Although this figure is greater than 
+that for [1] it should be noted that in [1] the mean absolute error metric is used rather than 
+the squared Euclidean distance and no provision is provided for linear transformation of 
+the incoming analogue vector. 
+2 ADAPTIVE DATA COMPRESSION 
+Recording of ICEGs in ICDs is currently very limited due to the amount of memory avail- 
+able and the power/area cost of implementing all but the simplest compression techniques. 
+Micropower template matching however, enables large amounts of the signal to be encoded 
+as template indices plus amplitude parameters. Effective compression of the ICEG requires 
+adaptation to the short term non-stationary behaviour of the ICEG [2]. In particular, short 
+term amplitude variations, lag variation, phase variation and ectopic beats (which origi- 
+nate from the ventricles of the heart and have differing morphology) reduce the achievable 
+compression. The impact of ectopic beats can be reduced by increasing the number of 
+templates. This can often be achieved without increasing the code book search complexity 
+by using associated timing features. The amplitude and shift variations require short term 
+adaptation of the template matching in order to minimise the residual error and hence raise 
+the compression ratio at fixed distortion. 
+2.1 Amplitude and Shift Invariant Matching 
+In order to facilitate analogue implementation, a backward prediction procedure is used 
+rather than the usual forward prediction [8]. This approach allows the incoming analogue 
+template to be manipulated in the analogue domain for amplitude and shift invariance pur- 
+poses. Consider the long term backward prediction problem described by, 
+rb(T) -- :(T) -- box(T q- ) -- b I {X(T q- O q- 1) - x(n + c - 1)} (1) 
+2 
+where rb (n) denotes the backward residuals, : is a template which is a function of previous 
+beats, x(c) is the sampled ICEG signal, c the time index, n is the template index and bo and 
+bl are the amplitude and phase coefficients respectively. bo scales the current beat to match 
+the template and hence is an amplitude term. bl scales the central difference of the current 
+beat and is a function of the amplitude and phase corrections required to minimise the 
+residuals. To see why this is a phase term consider the Taylor expansion of Ax(t + ok) to 
+the first derivative term around t, 
+Ax(t + )) = Ax(t) + A)x' (t) (2) 
+where b is a small phase shift of x(t) and A is the amplitude factor. When b is due to 
+T where T is the sampling period. Provided that x(t) is 
+sampling jitter then, -- _< b <_ �, 
+sampled according to the Nyquist criterion, b is sufficiently small for the first derivative 
+term to adequately account for the sampling jitter. Hence, bl accounts for the residual error 
+remaining after optimisation of the integer a. a is approximately determined by the beat 
+detector of the ICD which attempts to detect the fiducial point of heart beats using filters 
+and comparators. bo and bl can be determined by minimising the squared error between 
+the current signal window and the previously recorded template which in this case has a 
+closed form solution in terms of correlation coefficients. However, in Section 3 we present 
+an alternative iterative procedure suited to low-power analogue implementations. 
+Micropower CMOS Adaptive Amplitude and Shift Invariant Vector Quantiser 673 
+3 SYSTEM ARCHITECTURE & IMPLEMENTATION 
+� --q I I I-I�l I I I I I 
+Figure 1: Left: Block diagram of the adaptive linear transform VQ chip. Middle: Floorplan 
+of the chip. Right: Photomicrograph of the chip. 
+The ICEG is first high pass filtered to remove the DC and then is bandpass filtered to 
+prevent aliasing and enhance the high frequency component for beat detection. (This is 
+the filtering approach already existing in an ICD and therefore not implemented by us). 
+This then feeds the discrete time analogue delay line, which is continuously sampling the 
+signal at 250 Hz. The analogue samples are then transformed by a two layer network. The 
+first layer implements the linear prediction by adjusting the amplitude b0 and the phase 
+of the analogue vector. Note that the phase consists of two components, the coarse part 
+o corresponding to sample lags and the fine part b corresponding to intra-sample lags. The 
+second layer calculates the distance between the linearly predicted vector and the template 
+w(n) to be matched. A comparator is provided so that a match to within a given threshold 
+may be detected. 
+3.1 Chip Architecture 
+Input to the IC is via a single analogue channel which is sampled by a bucket brigade 
+device of length 30. The resultant 30 dimensional analogue vector is adaptively linear 
+transformed to facilitate a shift and scale invariant match to a digital (7 bit per dimension) 
+template. The IC generates digital representations of the square of the Euclidean distance 
+between the transformed analogue vector and the digital template. A block diagram of the 
+IC appears in Figure 1. The IC has been fabricated. Performance figures in this paper are 
+based on measurements of the chip fabricated in a 1.21m CMOS MOSIS process. 
+The block diagram shows the input signal being sampled by the bucket brigade device 
+(BBD)[4]. The signal is sampled at a rate of 250 Hz. Existing circuitry in the defibrillator 
+detects the peak of the heart beat and hence indicates a coarse alignment (due to detection 
+jitter) to the template stored in the template DACs (TDACs). The BBD continues to sample 
+until the coarse alignment is attained at which point the IC is biased up. The BBD now 
+contains a segment of the ICEG corresponding to one heart beat. The digital error output is 
+then monitored with the linear transform blocks configured to 1:1 mappings until an error 
+minimum is detected indicating optimal sampling alignment. The three linear transform 
+coefficient DACs (CDACs) which are common to the 30 linear transfor[n, blocks may then 
+be adapted to further reduce the matching error. The transformation can be represented by 
+/(n) = aox(n - 1) + ax(n) + ax(n + 1) where a0 corresponds to CDAC0 etc. This 
+constitutes a general linear long term prediction [8]. Constraining CDAC0 and CDAC2 to 
+be equal magnitudes and opposite signs results in a minimisation of errors due to phase 
+and amplitude variation and a simpler adaptation procedure. The matching error is com- 
+puted via the squarer blocks and the summing node. The matching error consists of both a 
+magnitude and exponent thereby increasing the dynamic range of the error representation. 
+674 R. J. Coggins, R. J. W. Wang and M. A. Jabri 
+The magnitude is the output of the squarer block. The exponent is determined by control 
+of a current reference in the squaring circuit. A reference DAC and precision current com- 
+parator provide the means of successive approximation A/D conversion of the matching 
+error current Inn. Using this scheme heart beat morphology can be classified by loading 
+different templates (TDAC values). A stream of beats may be compressed by identify- 
+ing matches with continuously updated representations of previous beats. Close matches 
+are encoded by an index and an amplitude coefficent while poor matches are encoded by 
+quantised residuals w

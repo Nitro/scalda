@@ -1,0 +1,171 @@
+618 
+NEURAL NETWORKS FOR MODEL 
+MATCHING AND PERCEPTUAL 
+O RG ANI Z ATI O N 
+Gene Gindi 
+EE Department 
+Yale University 
+New Haven, CT 06520 
+Eric Mjolsness 
+CS Department 
+Yale University 
+New Haven, CT 06520 
+P. Anandan 
+CS Department 
+Yale University 
+New Haven, CT 06520 
+ABSTRACT 
+We introduce an optimization approach for solving problems in com- 
+puter vision that involve multiple levels of abstraction. Our objective 
+functions include compositional and specialization hierarchies. We cast 
+vision problems as inexact graph matching problems, formulate graph 
+matching in terms of constrained optimization, and use analog neural 
+networks to perform the optimization. The method is applicable to per- 
+ceptual grouping and model matching. Preliminary experimental results 
+are shown. 
+I Introduction 
+The minimization of objective functions is an attractive way to formulate and solve 
+visual recognition problems. Such formulations are parsimonious, being expressible 
+in several lines of algebra, and may be converted into artificial neural networks 
+which perform the optimization. Advantages of such networks including speed, 
+parallelism, cheap analog computing, and biological plausibility have been noted 
+[Hopfield and Tank, 1985]. 
+According to a common view of computational vision, recognition involves the con- 
+struction of abstract descriptions of data governed by a data base of models. Ab- 
+stractions serve as reduced descriptions of complex data useful for reasoning about 
+the objects and events in the scene. The models indicate what objects and properties 
+may be expected in the scene. The complexity of visual recognition demands that 
+the models be organized into compositional hierarchies which express object-part 
+relationships and specialization hierarchies which express object-class relationships. 
+In this paper, we describe a methodology for expressing model-based visual recog- 
+nition as the constrained minimization of an objective function. Model-specific 
+objective functions are used to govern the dynamic grouping of image elements into 
+recognizable wholes. Neural networks are used to carry out the minimization. 
+�This work was supported in part by AFOSR grant F49620-88-C-0025, and by DARPA grant 
+DAAA15-87-K-0001, by ONR grant N00014-86-0310. 
+Model Matching and Perceptual Organization 619 
+Previous work on optimization in vision has typically been restricted to computa- 
+tions occuring at a single of level of abstraction and/or involving a single model 
+[Barrow and Poppiestone, 1971,Hummel and Zucker, 1983,Terzopoulos, 1986]. For 
+example, surface interpolation schemes, even when they include discontinuities 
+[Terzopoulos, 1986] do not include explicit models for physical objects whose surface 
+characteristics determine the expected degree of smoothness. By contrast, hetero- 
+geneous and hierarchical model-bases often occur in non-optimization approaches 
+to visual recognition [Hanson and Riseman, 1986] including some which use neural 
+networks [Ballard, 1986]. We attempt to obtain greater expressability and efficiency 
+by incorporating hierarchies of abstraction into the optimization paradigm. 
+2 Casting Model Matching as Optimization 
+We consider a type of objective function which, when minimized by a neural 
+network, is capable of expressing many of the ideas found in Frame systems 
+in Artificial Intelligence [Minsky, 1975]. These Frameville objective functions 
+[Mjolsness et al., 1988,Mjolsness et al., 1989] are particularly well suited to appli- 
+cations in model-based vision, with frames acting as few-parameter abstractions of 
+visual objects or perceptual groupings thereof. Each frame contains real-valued pa- 
+rameters, pointers to other frames, and pointers to predefined models (e.g. models 
+of objects in the world) which determine what portion of the objective function acts 
+upon a given frame. 
+2.1 Model Matching as Graph Matching 
+Model matching involves finding a match between a set of frames, ultimately derived 
+from visual data, and the predefined static models. A set of pointers represent 
+object-part relationships between frames, and are encoded as a graph or sparse 
+matrix called ina. That is, inaij -- 0 unless frame j is in frame i as one of its 
+parts, in which case inaij -- I is a pointer from j to i. The expected object- 
+part relationships between the corresponding models is encoded as a fixed graph 
+or sparse matrix INA. A form of inexact graph-matching is required: ina should 
+follow INA as much as is consistent with the data. 
+A sparse match matrix M (0 _< Mai _ 1) of dynamic variables represents the 
+correspondence between model c and frame i. To find the best match between the 
+two graphs one can minimize a simple objective function for this match matrix, due 
+to Hopfield [Hopfield, 1984] (see also [Feldman et al., 1988,Malsburg, 1986]), which 
+just counts the number of consistent rectangles (see Figure la): 
+E(M) = -   INAc,inaijMo, iMj. (1) 
+ct ij 
+This expression may be understood as follows: For model a and frame i, the match 
+value Mc, i is to be increased if the neighbors of a (in the INA graph) match to the 
+neighbors of i (in the ina graph). 
+620 Mjolsness, Ginall and Anandan 
+INA 
+Model 
+side 
+a 1.4 
+Data 
+side 
+Figure 1: (a) Examples of Frameville rectangle rule. Shows the rectangle re- 
+lationship between frames (triangles) representing a wing of a plane, and the plane 
+itself. Circles denote dynamic variables, ovals denote models, and triangles denote 
+frames. For the plane and wing models, the first few parameters of a frame are 
+interpreted as position, length, and orientation. (b) Frameville sibling compe- 
+tltion among parts. The match variables along the shaded lines (M3,9 and M2,7) 
+are suppressed in favor of those along the solid lines (M2,9 and M3,7). 
+Note that E(M) as defined above can be trivially minimized by setting all the el- 
+ements of the match matrix to unity. However, to do so will violate additional 
+syntactic constraints of the form h(M) = 0 which are imposed on the optimization, 
+either exactly [Platt and Bart, 1988] or as penalty terms [Hopfield and Tank, 1985] 
+_Ch2 
+2 (M) added to the objective function. Originally the syntactic constraints 
+simply meant that each frame should match one model and vice versa, as in 
+[ttopfield and Tank, 1985]. But in Frameville, a frame can match both a model 
+and one of its specializations (described later), and a single model can match any 
+number of instances or frames. In addition one can usually formulate constraints 
+stating that if a model matches a frame then two distinct parts of the same model 
+must match two distinct part frames and vice-versa. We have found the following 
+Model Matching and Perceptual Organization 621 
+formulation to be useful: 
+ INAaMai -  inaijMj = O, �/3, i (2) 
+E inaiiMai- E INAaMj = O, �o,j (3) 
+where the first sum in each equation is necessary when several high-level models 
+(or frames) share a part. (It turns out that the first sums can be forced to zero 
+or one by other constraints.) The resulting competition is illustrated in Figure lb. 
+Another constraint is that M should be binary-valued, i.e., 
+Mai(1 - Mai ) = 0, 
+(4) 
+but this constraint can also be handled by a special analog gain term in 
+the objective function [Hopfield and Tank, 1985] together with a penalty term 
+c  ai Mai(1 - Mai). 
+In Frameville, the ina graph actually becomes variable, and is determined by a dy- 
+namic grouping or perceptual organization process. These new variables require 
+new constraints, starting with inaij (1 - inaij): 0, and including many high-level 
+constraints which we now formulate. 
+2.2 Frames and Objective Functions 
+Frames can be considered as bundles i of real-valued parameters Fir, where p 
+indexes the different parameters of a frame. For efficiency in computing complex 
+arithmetic relationships, such as those involved in coordinate transformations, an 
+analog representation of these parameters is used. A frame contains no information 
+concerning its match criteria or control flow; instead, the match criteria are ex- 
+pressed as objective functions and the control flow is determined by the particular 
+choice of a minimization technique. 
+In Figure la, in order for the rectangle (1,4, 9, 2) to be consistent, the parameters 
+F4p and F9p should satisfy a criterion dictated by models I and 2, such as a restric- 
+tion on the difference in angles appropriate for a mildly swept back wing. Such a 
+constraint results in the addition of the following term to the objective function: 
+ INAainaijMaiMjHa(17i,) (5) 
+where Ha (ffi,/j) measures the deviation of the parameters of the data frames from 
+that demanded by the models. The term H can express coordinate transformation 
+arithmetic (e.g. HO(xi,xj): 1/2[xi- xj - Ax�]2), and its action on a frame if/ 
+is selectively controlled or gated by M and ina variables. This is a fundamental 
+extension of the distance metric paradigm in pattern recognition; because of the 
+complexity of the visual world, we use an entire database of distance metrics H a/. 
+622 Mjolsness, Ginall and Anandan 
+plane 
+ISA 
+prop 6 
+4 '6,4 
+M4,4 
+INA 6,: jet 4 ina4,9 
+wing 2 
+)ropwing 
+INA 
+4,5 
+12, 9 
+jetwing 5 
+5,9 
+Figure 2: Frameville specialization hierarchy. The plane model specializes 
+along IS4 links to a propeller plane or a jet plane and correspondingly the wing 
+model specializes to prop-wing or jet-wing. Sibling match variables M6,4 and M4,4 
+compete as do M7,9 and M5,9. The winner in these competitions is determined by 
+the consistency of the appropriate rectangles, e.g. if the 4-4-9-5 rectangle is more 
+consistent than the 6-4-9-7 rectangle, then the jet model is favored over the prop 
+model. 
+We index the models (and, indirectly, the data base of H metrics) by introducing 
+a static graph of pointers IS4 to act as both a specialization hierarchy and a 
+discrimination network for visual recognition. A frame may 

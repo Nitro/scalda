@@ -1,0 +1,175 @@
+Boltzmann Chains and Hidden 
+Markov Models 
+Lawrence K. Saul and Michael I. Jordan 
+lksaulpsyche.mit. edu, j ordanpsyche.mit. edu 
+Center for Biological and Computational Learning 
+Massachusetts Institute of Technology 
+79 Amherst Street, E10-243 
+Cambridge, MA 02139 
+Abstract 
+We propose a statistical mechanical framework for the modeling 
+of discrete time series. Maximum likelihood estimation is done via 
+Boltzmann learning in one-dimensional networks with tied weights. 
+We call these networks Boltzmann chains and show that they 
+contain hidden Markov models (HMMs) as a special case. Our 
+framework also motivates new architectures that address partic- 
+ular shortcomings of HMMs. We look at two such architectures: 
+parallel chains that model feature sets with disparate time scales, 
+and looped networks that model long-term dependencies between 
+hidden states. For these networks, we show how to implement 
+the Boltzmann learning rule exactly, in polynomial time, without 
+resort to simulated or mean-field annealing. The necessary com- 
+putations are done by exact decimation procedures from statistical 
+mechanics. 
+1 INTRODUCTION AND SUMMARY 
+Statistical models of discrete time series have a wide range of applications, most 
+notably to problems in speech recognition (Juang &: RabineL 1991) and molecular 
+biology (Baldi, Chauvin, Hunkapiller, &: McClure, 1992). A common problem in 
+these fields is to find a probabilistic model, and a set of model parameters, that 
+436 Lawrence K. Saul, Michael L Jordan 
+account for sequences of observed data. Hidden Markov models (HMMs) have been 
+particularly successful at modeling discrete time series. One reason for this is the 
+powerful learning rule (Baum, 1972), a special case of the Expectation-Maximization 
+(EM) procedure for maximum likelihood estimation (Dempster, Laird, & Rubin, 
+1977). 
+In this work, we develop a statistical mechanical framework for the modeling of 
+discrete time series. The framework enables us to relate HMMs to a large family 
+of exactly solvable models in statistical mechanics. The connection to statistical 
+mechanics was first noticed by Sourlas (1989), who studied spin glass models of 
+error-correcting codes. We view the estimation procedure for HMMs as a special 
+(and particularly tractable) case of the Boltzmann learning rule (Ackley, Hinton, & 
+Sejnowski, 1985; Byrne, 1992). 
+The rest of this paper is organized as follows. In Section 2, we review the modeling 
+problem for discrete time series and establish the connection between HMMs and 
+Boltzmann machines. In Section 3, we show how to quickly determine whether 
+or not a particular Boltzmann machine is tractable, and if so, how to efficiently 
+compute the correlations in the Boltzmann learning rule. Finally, in Section 4, 
+we look at two architectures that address particular weaknesses of HMMs: the 
+modelling of disparate time scales and long-term dependencies. 
+2 MODELING DISCRETE TIME SERIES 
+� L 
+A discrete time series is a sequence of symbols {3t}t= in which each symbol belongs 
+to a finite countable set, i.e. jt  {1, 2,..., m}. Given one long sequence, or perhaps 
+many shorter ones, the modeling task is to characterize the probability distribution 
+from which the time series are generated. 
+2.1 HIDDEN MARKOV MODELS 
+A first-order Hidden Markov Model (HMM) is characterized by a set of n hidden 
+states, an alphabet of m symbols, a transmission matrix aii,, an emission matrix 
+bij, and a prior distribution ri over the initial hidden state. The sequence of states 
+(i/)= and symbols ' 
+(3)= is modeled to occur with probability 
+P({ii,jt)) - 7riaiiai:i3...aiL_iLbijbi:j: ...biLj. (1) 
+The modeling problem is to find the parameter values (aii,, bij, 7ri) that maximize 
+the likelihood of observed sequences of training data. We will elaborate on the 
+learning rule in section 2.3, but first let us make the connection to a well-known 
+family of stochastic neural networks, namely Boltzmann machines. 
+2.2 BOLTZMANN MACHINES 
+Consider a Boltzmann machine with m-state visible units, n-state hidden units, tied 
+weights, and the linear architecture shown in Figure 1. This example represents the 
+simplest possible Boltzmann chain, one that is essentially equivalent to a first- 
+order HMM unfolded in time (MacKay, 1994). The transition weights Aii' connect 
+adjacent hidden units, while the emission weights Bij connect each hidden unit to 
+Boltzmann Chains and Hidden Markov Models 43 7 
+( (-% visible 
+7 T units 
+ hidden 
+Aii,-'Aii,'- units 
+Figure 1: Boltzmann chain with n-state hidden units, m-state visible units, transi- 
+tion weights Aii,, emission weights Bij, and boundary weights II i. 
+its visible counterpart. In addition, boundary weights IIi model an extra bias on 
+the first hidden unit. Each configuration of units represents a state of energy 
+L-1 L 
+7Y[{Q, j}] =-IIi, - E Aiti,+ - E Bi,3,, (2) 
+�=1 �=1 
+where{it ({jr }=1)is the sequence of states over the hidden (visible)units. The 
+},%1 
+probability to find the network in  prficular configuration is given by 
+1 
+P({it,jt}) = 2e -, (3) 
+where fl = 1IT is the inverse temperature, and the partition function 
+Z=  e - (4) 
+{it,jr) 
+is the sum over states that normalizes the Boltzmann distribution, eq. (3). 
+Comparing this to the HMM distribution, eq. (1), it is clear that any first-order 
+HMM can be represented by the Boltzmann chain of figure 1, provided we take 1 
+Aii' =Tln aii,, Bij =Tln bij, i =Tln i. (5) 
+Later, in Section 4, we will consider more complicated chains whose architectures 
+address particular shortcomings of HMMs. For now, however, let us continue to 
+develop the example of figure 1, making explicit the connection to HMMs. 
+2.3 LEARNING RULES 
+In the framework of Boltzmann learning (Williams & Hinton, 1990), the data for 
+our problem consist of sequences of states over the visible units; the goal is to find 
+the weights (fiji', Bij, IIi) that maximize the likelihood of the observed data. The 
+likelihood of a sequence {jr) is given by the ratio 
+P({it,jt}) _ e-V/Z Zc 
+r({jt)) = = z' (6) 
+ Note, however, that the reverse statement--that for any set of parameters, this Boltz- 
+mann chain can be represented as an HMM--is not true. The weights in the Boltzmann 
+chain represent arbitrary energies between 4-oo, whereas the HMM parameters represent 
+probabilities that are constrained to obey sum rules, such as i' aiit= l. The Boltzmann 
+chain of figure 1 therefore has slightly more degrees of freedom than a first-order HMM. 
+An interpretation of these extra degrees of freedom is given by MacKay (1994). 
+438 Lawrence K. Saul, Michael L Jordan 
+where Z, is the clamped partition function 
+= 
+Note that the sum in Z� is only over the hidden states in the network, while the 
+visible states are clamped to the observed values {j}. 
+The Boltzmann learning rule adjusts the weights of the network by gradient-ascent 
+on the log-likelihood. For the example of figure 1, this leads to weight updates 
+L-1 
+AAa, = r//5'y. [(,+)-(&,+)]; (8) 
+=1 
+L 
+=1 
+= - (10) 
+where 5ij stands for the Kronecker delta hnction,  is a learning rate, and (.) and 
+(.) denote expectations over the free and clamped Boltzmann distributions. 
+The Boltzmann learning rule may also be derived as an Expectation-Maximization 
+(EM) algorithm. The EM procedure is an alternating two-step method for max- 
+imum likelihood estimation in probability models with hidden and observed vari- 
+ables. For Boltzmann machines in general, neither the step nor the M-step can 
+be done exactly; one must estimate the necessary statistics by Monte Carlo sim- 
+ulation (Ackley et al., 108a) or mean-field theory (Peterson & Anderson, 1987). 
+In certain special ces (e.g. trees and chains), however, the necessary statistics 
+can be computed to perform an exact step ( shown below). While the M- 
+step in these Boltzmann machines cannot be done exactly, the weight updates can 
+be approximated by gradient descent. This leads to learning rules in the form of 
+eqs. (8-10). 
+HMMs may be viewed  a special ce of Boltzmann chains for Which both the 
+E-step and the M-step are analytically tractable. In this ce, the maximization in 
+the M-step is performed subject to the constraints i en' = 1, i, ea,, = 1, and 
+j es = 1. These constraints imply Z = 1 and lead to closed-form equations 
+for the weight updates in HMMs. 
+3 EXACT METHODS FOR BOLTZMANN LEARNING 
+The key technique to compute partition functions and correlations in Boltzmann 
+chains is known as decimation. The idea behind decimation 2 is the following. Con- 
+sider three units connected in series, as shown in Figure 2a. Though not directly 
+connected, the end units have an effective interaction that is mediated by the middle 
+one. In fact, the two weights in series exert the same influence as a single effective 
+weight, given by 
+rCAO) +rCA () +15B d 
+2A related method, the transfer matrix, is described by Stolorz (1994). 
+Boltzmann Chains and Hidden Markov Models 439 
+A(1) 
+ii' 
+Bi , -- 
+A( 2 ) 
+Si 
+A( l ) 
+ii (1) 
+_ I i' 
+(a) (b) (c) 
+Figure 2: Decimation, pruning, and joining in Boltzmann machines. 
+Replacing the weights in this way amounts to integrating out, or decimating, the 
+degree of freedom represented by the middle unit. An analogous rule may be derived 
+for the situation shown in Figure 2b. Summing over the degrees of freedom of the 
+dangling unit generates an effective bias on its parent, given by 
+eBB' -- E eB'J' (12) 
+J 
+We call this the pruning rule. Another type of equivalence is shown in Figure 2c. 
+The two weights in parallel have the same effect as the sum total weight 
+Aa, = AJ,)+ AI?. (13) 
+We call this the joining rule. It holds trivially for biases as well as weights. 
+The rules for decimating, pruning, and joining have simple analogs in other types 
+of networks (e.g. the law for combining resistors in electric circuits), and the strat- 
+egy for exploiting them is a familiar one. S

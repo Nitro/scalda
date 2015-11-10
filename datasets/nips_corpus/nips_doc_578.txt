@@ -1,0 +1,151 @@
+Filter Selection Model for Generating 
+Visual Motion Signals 
+Steven J. Nowlan* 
+CNL, The Salk Institute 
+P.O. Box 85800, San Diego, CA 
+92186-5800 
+Terrence J. Sejnowski 
+CNL, The Salk Institute 
+P.O. Box 85800, San Diego, CA 
+92186-5800 
+Abstract 
+Neurons in area MT of primate visual cortex encode the velocity 
+of moving objects. We present a model of how MT cells aggregate 
+responses from V1 to form such a velocity representation. Two 
+different sets of units, with local receptive fields, receive inputs 
+from motion energy filters. One set of units forms estimates of local 
+motion, while the second set computes the utility of these estimates. 
+Outputs from this second set of units gate the outputs from the 
+first set through a gain control mechanism. This active process 
+for selecting only a subset of local motion responses to integrate 
+into more global responses distinguishes our model from previous 
+models of velocity estimation. The model yields accurate velocity 
+estimates in synthetic images containing multiple moving targets 
+of varying size, luminance, and spatial frequency profile and deals 
+well with a number of transparency phenomena. 
+I INTRODUCTION 
+Humans, and primates in general, are very good at complex motion processing 
+tasks such as tracking a moving target against a moving background under varying 
+luminance. In order to accomplish such tasks, the visual system must integrate 
+many local motion estimates from cells with limited spatial receptive fields and 
+marked orientation selectivity. These local motion estimates are sensitive not just 
+*Current address, Synaptics Inc., 2698 Orchard Parkway, San Jose, CA 95134. 
+369 
+370 Nowlan and Sejnowski 
+to the velocity of a visual target, but also to many other features of the target such 
+as its spatial frequency profile or local edge orientation. As a result, the integration 
+of these motion signals cannot be performed in a fixed manner, but must be a 
+dynamic process dependent on the visual stimulus. 
+Although cells with motion-sensitive responses are found in primary visual cortex 
+(V1 in primates), mounting physiological evidence suggests that the integration of 
+these responses to produce responses which are tuned primarily to the velocity of a 
+visual target first occurs in primate visual area MT (Albright 1992, Maunsell and 
+Newsome 1987). We propose a computational model for integrating local motion 
+responses to estimate the velocity of objects in the visual scene. These velocity 
+estimates may be used for eye tracking or other visuo-motor skills. Previous com- 
+putational approaches to this problem (Grzywacz and Yuille 1990, Heeger 1987, 
+Heeger 1992, Horn and Schunk 1981, Nagel 1987) have primarily focused on how 
+to combine local motion responses into local velocity estimates at all points in an 
+image (the velocity flow field). We propose that the integration of local motion 
+measurements may be much simpler, if one does not try to integrate across all of 
+the local motion measurements but only a subset. Our model learns to estimate 
+the velocity of visual targets by solving the problems of what to integrate and how 
+to integrate in parallel. The trained model yields accurate velocity estimates from 
+synthetic images containing multiple moving targets of varying size, luminance, and 
+spatial frequency profile. 
+2 THE MODEL 
+The model is implemented as a cascade of networks of locally connected units 
+which has two parallel processing pathways (figure 1). All stages of the model 
+are represented as layers of units with a roughly retinotopic organization. The 
+figure schematically represents the activity in the model at one instant of time. 
+Conceptually, it is easier to think of the model as computing evidence for particular 
+velocities in an image rather than computing velocity directly. Processing in the 
+model may be divided into 3 stages, to be described in more detail below. In the 
+first stage, the input intensity image is converted into 36 local motion images (9 
+of which are shown in the figure) which represent the outputs of 36 motion energy 
+filters from each region of the input image. In the second stage, the operations of in- 
+tegration and selection are performed in parallel. The integration pathway combines 
+information from motion energy filters tuned to different directions and spatial and 
+temporal frequencies to compute the local evidence in favor of a particular velocity. 
+The selection pathway weights each region of the image according to the amount of 
+evidence for a particular velocity that region contains. In the third stage, the global 
+evidence for a visual target moving at a particular velocity vk (t) is computed as a 
+sum over the product of the outputs of the integration and selection pathways: 
+via(t) =  Ii(x,y,t)$1(x,y,t) (1) 
+where I(x,y,t) is the local evidence for velocity k computed by the integration 
+pathway from region (x, y) at time t, and $ (x, y, t) is the weight assigned by the 
+selection pathway to that region. 
+Filter Selection Model for Generating Visual Motion Signals 371 
+Integration 
+Input Motion Energy iiiiii!i!!ii!!ii''i!ii!ii!i  
+4 directions ]:''-' 'z.-.  3. . J 
+(8 x 8) 
+Figure 1: Diagram of motion processing model. Processing proceeds 
+from left to right in the model, but the integration and selection stages 
+operate in parallel. Shading within the boxes indicates different levels of 
+activity at each stage. The responses shown in the diagram are intended 
+to be indicative of the responses at different stages of the model but do 
+not represent actual responses from the model. 
+2.1 LOCAL MOTION ESTIMATES 
+The first stage of processing is based on the motion energy model (Adelson and 
+Bergen 1985, Watson 1985). This model relies on the observation that an intensity 
+edge moving at a constant velocity produces a line at a particular orientation in 
+space-time. This means that an oriented space-time filter will respond most strongly 
+to objects moving at a particular velocity. 1 A motion energy filter uses the squared 
+outputs of a quadrature pair (900 out of phase) of oriented filters to produce a 
+phase independent local velocity estimate. The motion energy model was selected 
+as a biologically plausible model of motion processing in mammalian V1, based 
+primarily on the similarity of responses of simple and complex cells in cat area V1 
+to the output of different stages of the motion energy model (Heeger 1992, Grywacz 
+and Yuille 1990, Emerson 1987). 
+The particular filters used in our model had spatial responses similar to a two- 
+dimensional Gabor filter, with the physiologically more plausible temporal responses 
+suggested by Adelson and Bergen (1985). The motion energy layer was divided into 
+a grid of 49 by 49 receptive field locations and at each grid location there were 
+filters tuned to four different directions of motion (up, down, left, and right). For 
+each direction of motion there were nine different filters representing combinations 
+of three spatial and three temporal frequencies. The filter center frequency spac- 
+ings were I octave spatially and 1.5 octaves temporally. The filter parameters and 
+spacings were chosen to be physiologically realistic, and were fized during training 
+of the model. In addition, there was a correspondence between the size of the filter 
+These filters actually respond most strongly to a narrow band of spatial frequencies 
+(SF) and temporal frequencies (TF), which represent a range of velocities, v = TF/SF. 
+372 Nowlan and Sejnowski 
+Integration I ta Local 
+========================..-':=':==..-'=.-..' i: Competition 
+i!11111:i!ii:i 3 unit pools 
+l'::' :::..-.:. :------ 
+l'::/':-- � ::' .:5-.::.'7: 
+Motion Energy llllllllllIW!lE 
+(49x 49) Ill#ll 
+Output 
+(8 x 8) (33 units) 
+Figure 2: Diagram of integration and selection processing stages. Dif- 
+ferent shadings for units in the integration and output pools correspond 
+to different directions of motion. Only two of the selection layers are 
+shown and the backgrounds of these layers are shaded to match their 
+corresponding integration and output units. See text for description of 
+architecture. 
+receptive fields and the spatial frequency tuning of the filters with lower frequency 
+filters having larger spatial extent to their receptive fields. This is also similar to 
+what has been found in visual cortex (Maunsell and Newsome, 1987). 
+The input intensity image is first filtered with a difference of gaussians filter which 
+is a simplification of retinal processing and provides smoothing and contrast en- 
+hancement. Each motion energy filter is then convolved with the smoothed input 
+image producing 36 motion energy responses at each location in the receptive field 
+grid which serve as the input to the next stage of processing. 
+2.2 INTEGRATION AND SELECTION 
+The integration and selection pathways are both implemented as locally connected 
+networks with a single layer of weights. The integration pathway can be thought of 
+as a layer of units organized into a grid of 8 by 8 receptive field locations (figure 2). 
+Units at each receptive field location look at all 36 motion energy measurements 
+from each location within a 9 by 9 region of the motion energy receptive field 
+grid. Adjacent receptive field locations receive input from overlapping regions of 
+the motion energy layer. 
+At each receptive field location in the integration layer there is a pool of 33 integra- 
+tion units (9 units in one of these pools are shown in figure 2). These units represent 
+motion in 8 different directions with units representing four different speeds for each 
+direction plus a central unit indicating no motion. These units form a log polar rep- 
+resentation of the local velocity at that receptive field location, since as one moves 
+out along any arm of the pool of units each unit represents a speed twice as large 
+as the preceding unit in that arm. All of the integration pool

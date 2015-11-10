@@ -1,0 +1,185 @@
+Performance Through Consistency: 
+MS-TDNNs for Large Vocabulary 
+Continuous Speech Recognition 
+Joe Tebelskis and Alex Waibel 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+Connectionist speech recognition systems are often handicapped by 
+an inconsistency between training and testing criteria. This prob- 
+lem is addressed by the Multi-State Time Delay Neural Network 
+(MS-TDNN), a hierarchical phoneme and word classifier which uses 
+DTW to modulate its connectivity pattern, and which is directly 
+trained on word-level targets. The consistent use of word accu- 
+racy as a criterion during both training and testing leads to very 
+high system performance, even wilh limited training data. Until 
+now, the MS-TDNN has been applied primarily to small vocabu- 
+lary recognition and word spotting tasks. In this paper we apply 
+the architecture to large vocabulary continuous speech recognition, 
+and demonstrate that our MS-TDNN outperforms all other sys- 
+tems that have been tested on the CMU Conference Registration 
+database. 
+1 INTRODUCTION 
+Neural networks hold great promise in the area of speech recognition. But in order 
+to fulfill their promise, they must be used properly. One obvious conditim} of 
+proper use is that both training and testing should use a consistent error crite- 
+rion. Unfortunately, in speech recognition, this ol>vious condition is often violatcd: 
+networks are frequently trained using phoneme-level criteria (phoneme classifical ion 
+696 
+MS-TDNN's for Large Vocabulary Continuous Speech Recognition 697 
+or acoustic prediction), while the testing criterion is word recognition accuracy. If 
+phoneme recognition were perfect, then word recognition would also be perfect; but 
+of course this is not the case, and the errors which are inevitably made are optimized 
+for the wrong criterion, resulting in suboptimal word recognition accuracy. 
+The Multi-State Time Delay Neural Network (MS-TDNN) has recently been pro- 
+posed as a solution to this problem [1]. The MS-TDNN is a hierarchically structured 
+classifier which consistently uses word accuracy as a criterion for both training and 
+testing. It has so far yielded excellent results on small vocabulary recognition [1, 2, 3] 
+and a word spotting task [4]. In the present paper, we review the MS-TDNN archi- 
+tecture, discuss its application to large vocabulary continuous speech recognition, 
+and present some favorable experimental results on this task. 
+2 
+RESOLVING INCONSISTENCIES: 
+MS-TDNN ARCHITECTURE 
+In this section we motivate the design of our MS-TDNN by showing how a series of 
+intermediate designs resolve successive inconsistencies. 
+The preliminary system architecture, shown in Figure l(a), simply consists of a 
+phoneme classifier, in this case a TDNN, whose outputs are copied into a DTW 
+matrix, in which continuous speech recognition is performed. Many existing systems 
+are based on this type of approach. While this is fine for bootstrapping purposes, 
+the design is ultimately suboptimal because the training criterion is inconsistcnt 
+with the testing criterion: phoneme classification is not word classification. 
+To address this inconsistency we must train the network explicitly to perform word 
+classification. To this end, we define a word layer with one unit for each word in the 
+vocabulary; the idea is illustrated in Figure 1 (b) for the word cat. We correlate the 
+activation of the word unit with the associated DTW score by establishing connec- 
+tions from the DTW alignment path to the word unit. Also, we give the phonemes 
+within a word independently trainable weights, to enhance word discrimination (for 
+example, to discriminate cat from mat it may be useful to give special emphasis 
+to the first phoneme); these weights are tied over all frames in which the phoneme 
+occurs. Thus a word unit is an ordinary unit, except that its connectivity to the 
+preceding layer is determined dynamically, and its net input should be normalized 
+by the total duration of the word. The word unit is trained on a target of 1 or 
+0, depending if the word is correct or incorrect for the current segment of speech, 
+and the resulting error is backpropagated through the entire network. Thus, word 
+discrimination is treated very much like phoneme discrimination. 
+Although network (b) resolves the original inconsistency, it now suffers from a sec- 
+ondary one - namely, that the weights leading to a word unit are used during 
+training but ignored during testing, since DTW is still performed entirely in the 
+DTW layer. We resolve this inconsistency by pushing down these weights one 
+level, as shown in Figure 1(c). Now the phoneme activations are no longer directly 
+copied into the DTW layer, but instead are modulated by a weight and bias before 
+being stored there (DTW units are linear); and the word unit has constant weights, 
+and no bias. During word-level training, error is still backpropagated from targets 
+at the word level, but biases and weights are modified only at the DTW level and 
+698 Tebelskis and Waibel 
+ in 
+<l teeee eee.) 
+ ,, 
+[Speech:CAT I 
+(a) 
+-CAT  
+Speech: CAT 
+Test 
+(b) 
+Word 
+DTW 
+TDNN 
+CAT 
+�.eeeee..) 
+/ ,. 
+Speech: CAT 
+CAT 
+2 
+Speech: CAT' 
+(c) (d) 
+st 
+Train 
+Figure 1' Resolving inconsistencies: (a) TDNN+DTW. (b) Adding word layer. 
+(c) Pushing down weights. (d) Linear word units, for continuous speech recognition. 
+MS-TDNN's for Large Vocabulary Continuous Speech Recognition 699 
+below. Note that this transformed network is not exactly equivalent to the pre- 
+vious one, but it preserves the properties that there are separate learned weights 
+associated with each phoneme, and there is an effective bias for each word. 
+Network (c) is still flawed by a minor inconsistency, arising from its sigmoidal word 
+unit. The problem does not exist for isolated word recognition, since any mono- 
+tonic function (sigmoidal or otherwise) will correlate the highest word activation 
+with the highest DTW score. However, for continuous speech recognition, which 
+concatenates words into a sentence, the optimal sum of sigmoids may not corre- 
+spond to the optimal sigmoid of a sum, leading to an inconsistency between word 
+and sentence recognition. Linear word units, as shown in (d), resolve this prob- 
+lem; in practice we have found that linear word units perform slightly better than 
+sigmoidal word units. 
+The resulting architecture is called a Multi-State TDNN because it integrates 
+the DTW alignment of multiple states into a TDNN to perform word classification. 
+While an MS-TDNN for small vocabulary recognition can be based on word models 
+with non-shared states [4], a large vocabulary MS-TDNN must be based on shared 
+units of speech, such as phonemes. In our system, the TDNN (first three layers) 
+is shared by all words in the vocabulary, while each word requires only one non- 
+shared weight and bias for each of its phonemes. Thus the number of parameters in 
+the MS-TDNN remains moderate even for a large vocabulary, and it can make the 
+most of limited training data. Moreover, new words can be added to the vocabulary 
+without retraining, by simply defining a new DTW layer for each new word, with 
+incoming weights and biases initialized to 1.0 and 0.0, respectively. 
+Given constant weights under the word layer, word level training is really just an- 
+other way of viewing DTW level training; but the former is conceptually simpler 
+because there is a single binary target for each word, which makes word level dis- 
+crimination very straightforward. For a large vocabulary, discriminating against all 
+incorrect words would be very expensive, so we discriminate against only a small 
+number of close matches (typically 1). 
+Word level training yields better word classification than phoneme level training. 
+In one experiment, for example, we bootstrapped our system with phoneme level 
+training (as shown in Figure la), and found that word recognition accuracy asymp- 
+toted at 71% on a test set. We then continued training from the word level (as 
+shown in Figure ld), and found that word accuracy improved to 81% on the test 
+set. It is worth noting that in an intermediate experiment, even when we held the 
+DTW layer's incoming weights and biases constant (at 1.0 and 0.0 respectively), 
+thus adding no new trainable parameters to the system, we found that word level 
+training still improved the word accuracy from 71% to 75% on the test set, as a 
+consequence of word-level discrimination. 
+3 BALANCING THE TRAINING SET 
+The MS-TDNN must be first bootstrapped with phoneme level training. In our 
+early experiments we had difficulty bootstrapping the TDNN, not only because our 
+training set was unbalanced, but also because the vast majority of phoneroes wcre 
+being trained on a target of 0, so that the negative training was overwhelming and 
+700 Tebelskis and Waibel 
+A 
+E 
+O 
+N 
+T 
+Y 
+Z 
+N O N A T Y E T 
+0 0 0 � 0 0 0 0 
+0 0 0 0 0 0 � 0 
+0 � 0 0 0 0 0 0 
+t 0 � 0 0 0 0 0 
+0 0 0 0 � 0 0 � 
+0 0 0 0 0 � 0 0 
+0 0 0 0 0 0 0 0 
+A 
+E 
+O 
+N 
+T 
+Y 
+Z 
+Scale backprop error by: 
+N O N A T Y E T 
+-1/7 -1/7 -U7 1.0 -1/7 -1/7 -1/7 -1/7 
+-1/7 -1/7 -1/7 -1/7 -1/7 -1/7 1.0 -U7 
+1/2 -1/6 1/2-1/6-1/6-1/6-1/6 -1 
+-1/6 -U6-U6-1/6 1/2-1-1/6 1/2 
+-1/8 -1/8 -1/8 -1/8 -1/8 -1 -1/8 -1/8 
+Figure 2: Balancing the training set: No not yet. 
+defeating the positive training. In order to address these problems, we normalized 
+the amount of error backpropagated from each phoneme unit so that the relative 
+influence of positive and negative training was balanced out over the entire training 
+set. 
+This apparently novel technique is illustrated in Figure 2. Given the utterance No 
+not yet, for example, we observe that there are two frames each of N and T, 
+one frame of several other phoneroes, and zero of others. Bascd on these counts, 
+we compute a backpropagation scaling factor for each phoneme in each frame, as 
+shown in the bottom h

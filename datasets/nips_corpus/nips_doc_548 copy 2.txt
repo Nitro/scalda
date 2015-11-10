@@ -1,0 +1,154 @@
+Fault Diagnosis of Antenna Pointing Systems 
+using Hybrid Neural Network and Signal 
+Processing Models 
+Padhraic Smyth, Jeff Mellstrom 
+Jet Propulsion Laboratory 238-420 
+California Institute of Technology 
+Pasadena, CA 91109 
+Abstract 
+We describe in this paper a novel application of neural networks to system 
+health monitoring of a large antenna for deep space communications. The 
+paper outlines our approach to building a monitoring system using hybrid 
+signal processing and neural network techniques, including autoregressive 
+modelling, pattern recognition, and Hidden Markov models. We discuss 
+several problems which are somewhat generic in applications of this kind 
+-- in particular we address the problem of detecting classes which were 
+not present in the training data. Experimental results indicate that the 
+proposed system is sufficiently reliable for practical implementation. 
+1 Background: The Deep Space Network 
+The Deep Space Network (DSN) (designed and operated by the Jet Propulsion Lab- 
+oratory (JPL) for the National Aeronautics and Space Administration (NASA)) is 
+unique in terms of providing end-to-end telecommunication capabilities between 
+earth and various interplanetary spacecraft throughout the solar system. The 
+ground component of the DSN consists of three ground station complexes located 
+in California, Spain and Australia, giving full 24-hour coverage for deep space com- 
+munications. Since spacecraft are always severely limited in terms of available 
+transmitter power (for example, each of the Voyager spacecraft only use 20 watts 
+to transmit signals back to earth), all subsystems of the end-to-end communica- 
+tions link (radio telemetry, coding, receivers, amplifiers) tend to be pushed to the 
+667 
+668 Smyth and Mellstrom 
+absolute limits of performance. The large steerable ground antennas (70m and 34m 
+dishes) represent critical potential single points of failure in the network. In partic- 
+ular there is only a single 70m antenna at each complex because of the large cost 
+and calibration effort involved in constructing and operating a steerable antenna 
+of that size -- the entire structure (including pedestal support) weighs over 8,000 
+tons. 
+The antenna pointing systems consist of azimuth and elevation axes drives which 
+respond to computer-generated trajectory commands to steer the antenna in real- 
+time. Pointing accuracy requirements for the antenna are such that there is little 
+tolerance for component degradation. Achieving the necessary degree of positional 
+accuracy is rendered difficult by various non-linearities in the gear and motor ele- 
+ments and environmental disturbances such as gusts of wind affecting the antenna 
+dish structure. Off-beam pointing can result in rapid fall-off in signal-to-noise ratios 
+and consequent potential loss of irrecoverable scientific data from the spacecraft. 
+The pointing systems are a complex mix of electro-mechanical and hydraulic com- 
+ponents. A faulty component will manifest itself indirectly via a change in the char- 
+acteristics of observed sensor readings in the pointing control loop. Because of the 
+non-linearity and feedback present, direct causal relationships between fault condi- 
+tions and observed symptoms can be difficult to establish -- this makes manual fault 
+diagnosis a slow and expensive process. In addition, if a pointing problem occurs 
+while a spacecraft is being tracked, the antenna is often shut-down to prevent any 
+potential damage to the structure, and the track is transferred to another antenna 
+if possible. Hence, at present, diagnosis often occurs after the fact, where the orig- 
+inal fault conditions may be difficult to replicate. An obvious strategy is to design 
+an on-line automated monitoring system. Conventional control-theoretic models 
+for fault detection are impractical due to the difficulties in constructing accurate 
+models for such a non-linear system -- an alternative is to learn the symptom-fault 
+mapping directly from training data, the approach we follow here. 
+2 Fault Classification over Time 
+2.1 Data Collection and Feature Extraction 
+The observable data consists of various sensor readings (in the form of sampled 
+time series) which can be monitored while the antenna is in tracking mode. The 
+approach we take is to estimate the state of the system at discrete intervals in time. 
+A feature vector  of dimension k is estimated from sets of successive windows 
+of sensor data. A pattern recognition component then models the instantaneous 
+estimate of the posterior class probability given the features, p(wil), 1 < i < m. 
+Finally, a hidden Markov model is used to take advantage of temporal context and 
+estimate class probabilities conditioned on recent past history. This hierarchical 
+pattern of information flow, where the time series data is transformed and mapped 
+into a categorical representation (the fault classes) and integrated over time to 
+enable robust decision-making, is quite generic to systems which must passively 
+sense and monitor their environment in real-time. 
+Experimental data was gathered from a new antenna at a research ground-station 
+at the Goldstone DSN complex in California. We introduced hardware faults in a 
+Fault Diagnosis of Antenna Pointing Systems 669 
+controlled manner by switching faulty components in and out of the control loop. 
+Obtaining data in this manner is an expensive and timeconsuming procedure since 
+the antenna is not currently instrumented for sensor data acquisition and is located 
+in a remote location of the Mojave Desert in Southern California. Sensor variables 
+monitored included wind speed, motor currents, tachometer voltages, estimated 
+antenna position, and so forth, under three separate fault conditions (plus normal 
+conditions). 
+The time series data was segmented into windows of 4 seconds duration (200 sam- 
+ples) to allow reasonably accurate estimates of the various features. The features 
+consisted of order statistics (such as the range) and moments (such as the vari- 
+ance) of particular sensor channels. In addition we also applied an autoregressive- 
+exogenous (ARX) modelling technique to the motor current data, where the ARX 
+coefficients are estimated on each individual 4-second window of data. The autore- 
+gressive representation is particularly useful for discriminative purposes (Eggers and 
+Khuon, 1990). 
+2.2 State Estimation with a Hidden Markov Model 
+If one applies a simple feed-forward network model to estimate the class probabilities 
+at each discrete time instant t, the fact that faults are typically correlated over time 
+is ignored. Rather than modelling the temporal dependence of features, p((t)l_(t- 
+1),... ,_(0)), a simpler approach is to model temporal dependence via the class 
+variable using a Hidden Markov Model (HMM). The m classes comprise the Markov 
+model states. Components of the Markov transition matrix A (of dimension m x m) 
+are specified subjectively rather than estimated from the data, since there is no 
+reliable database of fault-transition information available at the component level 
+from which to estimate these numbers. The hidden component of the HMM model 
+arises from the fact that one cannot observe the states directly, but only indirectly 
+via a stochastic mapping from states to symptoms (the features). For the results 
+reported in this paper, the state probability estimates at time t are calculated using 
+all the information available up to that point in time. The probability state vector 
+is denoted by p(s(t)). The probability estimate of state i at time t can be calculated 
+recursively via the standard HMM equations: 
+ii(t)yi(t) 
+6(t) = A.p(s(t- 1)) and p(si(t)) = jm=l ij(t)yj(t) 
+where the estimates are initialised by a prior probability vector p(s(0)), the ui(t) 
+are the components of u(t), 1 _< i _< m, and the yi(t) are the likelihoods 
+produced by the particular classifier being used (which can be estimated to within 
+a normalising constant by 
+2.3 Classification Results 
+We compare a feedforward multi-layer perceptron model (single hidden layer with 12 
+sigmoidal units, trained using the squared error objective function and a conjugate- 
+gradient version of backpropagation) and a simple maximum-likelihood Gaussian 
+classifier (with an assumed diagonal covariance matrix, variances estimated from 
+the data), both with and without the HMM component. Table 1 summarizes the 
+670 Srnyth and Meilstrom 
+Esti mated 
+probability 
+of true 
+class 
+(Normal) 
+1 
+0.8 
+0.6 
+0.4 
+0.2 
+o 
+o 
+..... neural+Markov 
+neural 
+i i i 
+210 420 630 80 
+Time (seconds) 
+Figure 1' Stabilising effect of Markov component 
+overall classification accuracies obtained for each of the models -- these results are 
+for models trained on data collected in early 1991 (450 windows) which were then 
+field-tested in real-time at the antenna site in November 1991 (596 windows). There 
+were 12 features used in this particular experiment, including both ARX and time- 
+domain features. Clearly, the neural-Markov model is the best model in the sense 
+that no samples at all were misclassified -- it is significantly better than the simple 
+Gaussian classifier. Without the Markov component, the neural model still classified 
+quite well (0.84% error rate). However all of its errors were false alarms (the classifier 
+decision was a fault label, when in reality conditions were normal) which are highly 
+undesirable from an operational viewpoint -- in this context, the Markov model 
+has significant practical benefit. Figure i demonstrates the stabilising effect of the 
+Markov model over time. The vertical axis corresponds to the probability estimate 
+of the model for the true class. Note the large fluctuations and general uncertainty 
+in the neural output (due to the inherent noise in the feature data) compared to 
+the stability when temporal context is modelled. 
+Table 1: Classification results for different models 
+Percentage error rate in Field

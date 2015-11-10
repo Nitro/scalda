@@ -1,0 +1,153 @@
+Networks with Learned Unit Response Functions 
+John Moody and Norman Yarvin 
+Yale Computer Science, 51 Prospect St. 
+P.O. Box 2158 Yale Station, New Haven, CT 06520-2158 
+Abstract 
+Feedforward networks composed of units which compute a sigmoidal func- 
+tion of a weighted sum of their inputs have been much investigated. We 
+tested the approximation and estimation capabilities of networks using 
+functions more complex than sigmoids. Three classes of functions were 
+tested: polynomials, rational functions, and flexible Fourier series. Un- 
+like sigmoids, these classes can fit non-monotonic functions. They were 
+compared on three problems: prediction of Boston housing prices, the 
+sunspot count, and robot arm inverse dynamics. The complex units at- 
+tained clearly superior performance on the robot arm problem, which is 
+a highly non-monotonic, pure approximation problem. On the noisy and 
+only mildly nonlinear Boston housing and sunspot problems, differences 
+among the complex units were revealed; polynomials did poorly, whereas 
+rationals and flexible Fourier series were comparable to sigmoids. 
+1 Introduction 
+A commonly studied neural architecture is the feedforward network in which each 
+unit of the network computes a nonlinear function g(x) of a weighted sum of its 
+inputs x = wtu. Generally this function is a sigmoid, such as g(x) = tanh x or 
+g(x) = 1/(1 + e(-�)). To these we compared units of a substantially different 
+type: they also compute a nonlinear function of a weighted sum of their inputs, 
+but the unit response function is able to fit a much higher degree of nonlinearity 
+than can a sigmoid. The nonlinearities we considered were polynomials, rational 
+functions (ratios of polynomials), and flexible Fourier series (sums of cosines.) Our 
+comparisons were done in the context of two-layer networks consisting of one hidden 
+layer of complex units and an output layer of a single linear unit. 
+1048 
+Networks with Learned Unit Response Functions 1049 
+This network architecture is similar to that built by projection pursuit regression 
+(PPR) [1, 2], another technique for function approximation. The one difference is 
+that in PPR the nonlinear function of the units of the hidden layer is a nonparamet- 
+ric smooth. This nonparametric smooth has two disadvantages for neural modeling: 
+it has many parameters, and, as a smooth, it is easily trained only if desired output 
+values are available for that particular unit. The latter property makes the use of 
+smooths in multilayer networks inconvenient. If a parametrized function of a type 
+suitable for one-dimensional function approximation is used instead of the nonpara- 
+metric smooth, then these disadvantages do not apply. The functions we used are 
+all suitable for one-dimensional function approximation. 
+2 Representation 
+A few details of the representation of the unit response functions are worth noting. 
+Polynomials: Each polynomial unit computed the function 
+g(x) = alx q- a2x 2 + ... + anx n 
+with x = w'u being the weighted sum of the input. A zero'th order term was not 
+included in the above formula, since it would have been redundant among all the 
+units. The zero'th order term was dealt with separately and only stored in one 
+location. 
+Rationals: A rational function representation was adopted which could not have 
+zeros in the denominator. This representation used a sum of squares of polynomials, 
+as follows: 
+ao + a l x q- ... q- an xn 
+g(x) = 1 + (bo + blx) 2 q- (bx + bax2) 2 q- (b4x q- bsx 2 q- b6x a q- b?x4) 2 q- ... 
+This representation has the qualities that the denominator is never less than 1, 
+and that n parameters are used to produce a denominator of degree n. If the above 
+formula were continued the next terms in the denominator would be of degrees eight, 
+sixteen, and thirty-two. This powers-of-two sequence was used for the following 
+reason: of the 2(n - m) terms in the square of a polynomial p = a,nx ' + ... + a,x ', 
+it is possible by manipulating a,n...a, to determine the n - m highest coefficients, 
+with the exception that the very highest coefficient must be non-negative. Thus 
+if we consider the coefficients of the polynomial that results from squaring and 
+adding together the terms of the denominator of the above formula, the highest 
+degree squared polynomial may be regarded as determining the highest half of the 
+coefficients, the second highest degree polynomial may be regarded as determining 
+the highest half of the rest of the coefficients, and so forth. This process cannot set 
+all the coefficients arbitrarily; some must be non-negative. 
+Flexible Fourier series: The flexible Fourier series units computed 
+g(x) -  ai cos(bix + ci) 
+i--0 
+where the amplitudes ai, frequencies bi and phases ci were unconstrained and could 
+assume any value. 
+1050 
+Moody and Yarvin 
+Sigmoids: We used the standard logistic function: 
+g(x) = 1/(1 + e (-�)) 
+Training Method 
+All the results presented here were trained with the Levenberg-Marquardt modifi- 
+cation of the Gauss-Newton nonlinear least squares algorithm. Stochastic gradient 
+descent was also tried at first, but on the problems where the two were compared, 
+Levenberg-Marquardt was much superior both in convergence time and in quality of 
+result. Levenberg-Marquardt required substantially fewer iterations than stochas- 
+tic gradient descent to converge. However, it needs O(p 2) space and O(p2n) time 
+per iteration in a network with p parameters and n input examples, as compared 
+to O(p) space and O(pn) time per epoch for stochastic gradient descent. Further 
+details of the training method will be discussed in a longer paper. 
+With some data sets, a weight decay term was added to the energy function to be 
+optimized. The added term was of the form  i--1 w/2. When weight decay was 
+used, a range of values of  was tried for every network trained. 
+Before training, all the data was normalized: each input variable was scaled so that 
+its range was (-1,1), then scaled so that the maximum sum of squares of input 
+variables for any example was 1. The output variable was scaled to have mean zero 
+and mean absolute value 1. This helped the training algorithm, especially in the 
+case of stochastic gradient descent. 
+4 Results 
+We present results of training our networks on three data sets: robot arm inverse 
+dynamics, Boston housing data, and sunspot count prediction. The Boston and 
+sunspot data sets are noisy, but have only mild nonlinearity. The robot arm inverse 
+dynamics data has no noise, but a high degree of nonlinearity. Noise-free problems 
+have low estimation error. Models for linear or mildly nonlinear problems typically 
+have low approximation error. The robot arm inverse dynamics problem is thus a 
+pure approximation problem, while performance on the noisy Boston and sunspots 
+problems is limited more by estimation error than by approximation error. 
+Figure la is a graph, as those used in PPR, of the unit response function of a one- 
+unit network trained on the Boston housing data. The x axis is a projection (a 
+weighted sum of inputs wTu) of the 13-dimensional input space onto 1 dimension, 
+using those weights chosen by the unit in training. The y axis is the fit to data. The 
+response function of the unit is a sum of three cosines. Figure lb is the superposition 
+of five graphs of the five unit response functions used in a five-unit rational function 
+solution (RMS error less than 2%) of the robot arm inverse dynamics problem. The 
+domain for each curve lies along a different direction in the six-dimensional input 
+space. Four of the five fits along the projection directions are non-monotonic, and 
+thus can be fit only poorly by a sigmoid. 
+Two different error measures are used in the following. The first is the RMS error, 
+normalized so that error of 1 corresponds to no training. The second measure is the 
+Networks with Learned Unit Response Functions 1051 
+Boston housing fit to data Robot arm fit to data 
+1 '' ' I '' ' ' I '' ' ' I' ' ' I' ' ' ' I ' ' ' ' ' I ' I  I ' 
+� '- ;,.'. 
+� :.';.' ... � 
+' 5C.= ,:... 
+-1.0 -0.5 0.0 O� 10 - - 
+projection projection 
+Figure 1: a b 
+square of the normalized RMS error, otherwise known as the fraction of explained 
+variance. We used whichever error measure was used in earlier work on that data 
+set. 
+4.1 Robot arm inverse dynamics 
+This problem is the determination of the torque necessary at the joints of a two- 
+joint robot arm required to achieve a given acceleration of each segment of the 
+arm, given each segment's velocity and position. There are six input variables to 
+the network, and two output variables. This problem was treated as two separate 
+estimation problems, one for the shoulder torque and one for the elbow torque. The 
+shoulder torque was a slightly more difficult problem, for almost all networks. The 
+1000 points in the training set covered the input space relatively thoroughly. This, 
+together with the fact that the problem had no noise, meant that there was little 
+difference between training set error and test set error. 
+Polynomial networks of limited degree are not universal approximators, and that 
+is quite evident on this data set; polynomial networks of low degree reached their 
+minimum error after a few units. Figure 2a shows this. If polynomial, cosine, ra- 
+tional, and sigmoid networks are compared as in Figure 2b, leaving out low degree 
+polynomials, the sigmoids have relatively high approximation error even for net- 
+works with 20 units. As shown in the following table, the complex units have more 
+parameters each, but still get better performance with fewer parameters total. 
+Type Units Parameters Error 
+degree 7 polynomial 5 65 .024 
+degree 6 rational 5 95 .027 
+2 term cosine 6 73 .020 
+sigmoid 10 81 .139 
+sigmoid 20 161 .119 
+Since the training set is noise-free, these errors represent pure approximation error. 
+1052 Moody and Yarvin 
+Robot arm dynamics (test set) Robot arm dynamics (test s

@@ -1,0 +1,139 @@
+Mapping a manifold of perceptual observations 
+Joshua B. Tenenbaum 
+Department of Brain and Cognitive Sciences 
+Massachusetts Institute of Technology, Cambridge, MA 02139 
+j bt @psyche. mi t. edu 
+Abstract 
+Nonlinear dimensionality reduction is formulated here as the problem of trying to 
+find a Euclidean feature-space embedding of a set of observations that preserves 
+as closely as possible their intrinsic metric structure- the distances between points 
+on the observation manifold as measured along geodesic paths. Our isometric 
+feature mapping procedure, or isomap, is able to reliably recover low-dimensional 
+nonlinear structure in realistic perceptual data sets, such as a manifold of face 
+images, where conventional global mapping methods find only local minima. 
+The recovered map provides a canonical set of globally meaningful features, 
+which allows perceptual transformations such as interpolation, extrapolation, and 
+analogy - highly nonlinear transformations in the original observation space - to 
+be computed with simple linear operations in feature space. 
+1 Introduction 
+In psychological or computational research on perceptual categorization, it is generally taken 
+for granted that the perceiver has a priori access to a representation of stimuli in terms of 
+some perceptually meaningful features that can support the relevant classification. However, 
+these features will be related to the raw sensory input (e.g. values of retinal activity or image 
+pixels) only through a very complex transformation, which must somehow be acquired 
+through a combination of evolution, development, and learning. Fig. 1 illustrates the feature- 
+discovery problem with an example from visual perception. The set of views of a face from 
+all possible viewpoints is an extremely high-dimensional data set when represented as image 
+arrays in a computer or on a retina; for example, 32 x 32 pixel grey-scale images can be 
+thought of as points in a 1,024-dimensional observation space. The perceptually meaningful 
+structure of these images, however, is of much lower dimensionality; all of the images in 
+Fig. 1 lie on a two-dimensional manifold parameterized by viewing angle. A perceptual 
+system that discovers this manifold structure has learned a model of the appearance of 
+this face that will support a wide range of recognition, classification, and imagery tasks 
+(some demonstrated in Fig. 1), despite the absence of any prior physical knowledge about 
+three-dimensional object geometry, surface texture, or illumination conditions. 
+Learning a manifold of perceptual observations is difficult because these observations 
+Mapping a Manifold of Perceptual Observations 683 
+azimuth 
+Figure 1: Isomap recovers a global topographic map of face images varying in two viewing 
+angle parameters, azimuth and elevation, Image interpolation (A), extrapolation (B), and 
+analogy (C) can then be carried out by linear operations in this feature space. 
+usually exhibit significant nonlinear structure. Fig. 2A provides a simplified version of 
+this problem. A flat two-dimensional manifold has been nonlinearly embedded in a three- 
+dimensional observation space,  and must be unfolded by the learner. For linearly 
+embedded manifolds, principal component analysis (PCA) is guaranteed to discover the 
+dimensionality of the manifold and produce a compact representation in the form of an 
+orthonormal basis. However, PCA is completely insensitive to the higher-order, nonlinear 
+structure that characterizes the points in Fig. 2A or the images in Fig. 1. 
+Nonlinear dimensionality reduction - the search for intrinsically low-dimensional struc- 
+tures embedded nonlinearly in high-dimensional observations - has long been a goal of 
+computational learning research. The most familiar nonlinear techniques, such as the 
+self-organizing map (SOM; Kohonen, 1988), the generative topographic mapping (GTM; 
+Bishon, Svensen, & Williams, 1998), or autoencoder neural networks (DeMers & Cottrell, 
+1993), try to generalize PCA by discovering a single global low-dimensional nonlinear 
+model of the observations. In contrast, local methods (Bregler & Omohundro, 1995; Hin- 
+ton, Revow, & Dayan, 1995) seek a set of low-dimensional models, usually linear and 
+hence valid only for a limited range of data. When appropriate, a single global model is 
+Given by a: = z cos(z), a:2 = z sin(z), 3 = Z2, for z E [3r/2, 9r/2], z2 E [0, 15]. 
+684 J. B. Tenenbaum 
+lO 
+o 
+B 
+10 
+0 
+- 0 
+C 
+0 10  0 ' O' 0'10 
+Figure 2: A nonlinearly embedded manifold may create severe local minima fortop-down 
+mapping algorithms. (A) Raw data. (B) Best SOM fit. (C) Best GTM fit. 
+more revealing and useful than a set of local models. However, local linear methods are in 
+general far more computationally efficient and reliable than global methods. 
+For example, despite the visually obvious structure in Fig. 2A, this manifold was not 
+successfuly modeled by either of two popular global mapping algorithms, SOM (Fig. 2B) 
+and GTM (Fig. 2C), under a wide range of parameter settings. Both of these algorithms 
+try to fit a grid of predefined (usually two-dimensional) topology to the data, using greedy 
+optimization techniques that first fit the large-scale (linear) structure of the data, before 
+making small-scale (nonlinear) refinements. The coarse structure of such folded data sets 
+as Fig. 2A hides their nonlinear structure from greedy optimizers, virtually ensuring that 
+top-down mapping algorithms will become trapped in highly suboptimal solutions. 
+Rather than trying to force a predefined map onto the data manifold, this paper shows how a 
+perceptual system may map a set of observations in a bottom-up fashion, by first learning 
+the topological structure of the manifold (as in Fig. 3A) and only then learning a metric map 
+of the data (as in Fig. 3C) that respects this topology. The next section describes the goals and 
+steps of the mapping procedure, and subsequent sections demonstrate applications to two 
+challenging learning tasks: recovering a five-dimensional manifold embedded nonlinearly 
+in 50 dimensions, and recovering the manifold of face images depicted in Fig. 1. 
+2 Isometric feature mapping 
+We assume our data lie on an unknown manifold M embedded in a high-dimensional 
+observation space X. Let z � denote the coordinates of the ith observation. We seek a 
+mapping f: X  Y from the observation space X to a low-dimensional Euclidean feature 
+space Y that preserves as well as possible the intrinsic metric structure of the observations, 
+i.e. the distances between observations as measured along geodesic (locally shortest) paths 
+of M. The isometric feature mapping, or isomap, procedure presented below generates 
+an implicit description of the mapping f, in terms of the corresponding feature points 
+t � = f(z �) for sufficiently many observations z �. Explicit parametric descriptions 
+1 
+of f or f- can be found with standard techniques of function approximation (Poggio & 
+Girosi, 1990) that interpolate smoothly between the known corresponding pairs {a(i), t(i) }. 
+A Euclidean map of the data's intrinsic geometry has several important properties. First, 
+intrinsically similar observations should map to nearby points in feature space, support- 
+ing efficient similarity-based classification and informative visualization. Moreover, the 
+geodesic paths of the manifold, which are highly nonlinear in the original observation space, 
+should map onto straight lines in feature space. Then perceptually natural transformations 
+along these paths, such as the interpolation, extrapolation and analogy demonstrated in 
+Figs. 1A-C, may be computed by trivial linear operations in feature space. 
+Mapping a Manifold of Perceptual Observations 685 
+A 
+10  
+o: 
+0 10' 0'10 
+B 
+4 
+2 
+ ; ' -' ' ' 0 
+Manifold Distance 
+C 
+Figure 3: The results of the three-step isomap procedure. (A) Discrete representation of 
+manifold in Fig. 2A. (B) Correlation between measured graph distances and true mani- 
+fold distances. (C) Correspondence of recovered two-dimensional feature points {h, 
+(circles) with original generating vectors {z, z2} (line ends). 
+The isomap procedure consists of three main steps, each of which might be carried out by 
+more or less sophisticated techniques. The crux of isomap is finding an efficient way to 
+compute the true geodesic distance between observations, given only their Euclidean dis- 
+tances in the high-dimensional observation space. Isomap assumes that distance between 
+points in observation space is an accurate measure of manifold distance only locally and 
+must be integrated over paths on the manifold to obtain global distances. As preparation for 
+computing manifold distances, we first construct a discrete representation of the manifold 
+in the form of a topology-preserving network (Fig. 3A). Given this network representation, 
+we then compute the shortest-path distance between any two points in the network using 
+dynamic programming. This polynomial-time computation provides a good approximation 
+to the actual manifold distances (Fig. 3B) without having to search over all possible paths in 
+the network (let alone the infinitely many paths on the unknown manifold!). Finally, from 
+these manifold distances, we construct a global geometry-preserving map of the observa- 
+tions in a low-dimensional Euclidean space, using multidimensional scaling (Fig. 3C). The 
+implementation of this procedure is detailed below. 
+Step 1: Discrete representation of manifold (Fig. 3A). From the input data of n observations 
+{z (]), ..., z() }, we randomly select a subset of r points to serve as the nodes {g(0,..., g(,') } of the 
+topology-preserving network. We then construct a graph G over these nodes by connecting g(i) and 
+g(s) if and only if there exists at least one x (k) whose two closest nodes (in observation space) are g(i) 
+and g(J) (Martinetz & Schulten, 1994). The resulting graph for the data i

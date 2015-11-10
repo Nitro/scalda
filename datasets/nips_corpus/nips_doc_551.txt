@@ -1,0 +1,160 @@
+A Neurocomputer Board Based on the ANNA 
+Neural Network Chip 
+Eduard SSckinger, Bernhard E. Boser, and Lawrence D. Jackel 
+AT&T Bell Laboratories 
+Crawfords Corner Road, Holmdel, NJ 07733 
+Abstract 
+A board is described that contains the ANNA neural-network chip, and a 
+DSP32C digital signal processor. The ANNA (Analog Neural Network 
+Arithmetic unit) chip performs mixed analog/digital processing. The 
+combination of ANNA with the DSP allows high-speed, end-to-end ex- 
+ecution of numerous signal-processing applications, including the prepro- 
+cessing, the neural-net calculations, and the postprocessing steps. The 
+ANNA board evaluates neural networks 10 to 100 times faster than the 
+DSP alone. The board is suitable for implementing large (million con- 
+nections) networks with sparse weight matrices. Three applications have 
+been implemented on the board: a convolver network for slant detection 
+of text blocks, a handwritten digit recognizer, and a neural network for 
+recognition-based segmentation. 
+I INTRODUCTION 
+Many researchers have built neural-network chips, but few chips have been installed 
+in board-level systems, even though this next level of integration provides insights 
+and advantages that can't be attained on a chip testing station. Building a board 
+demonstrates whether or not the chip can be effectively integrated into the larger 
+systems required for real applications. A board also exposes bottlenecks in the 
+system data paths. Most importantly, a working board moves the neural-network 
+chip from the realm of a research exercise, to that of a practical system, readily 
+available to users whose primary interest is actual applications. An additional 
+bonus of carrying the integration to the board level is that the chip designer can 
+gain the user feedback that will assist in designing new chips with greater utility. 
+773 
+774 Siickinger, Boser, and Jackel 
+32 BIT DATA BUS 
+DATA 
+SRAM 
+ADDR 
+STATE WEIGHT 
+ANNA 
+MICRO CODE 
+CODER 
+DATA 
+DSP32C 
+ADDR 
+24 BIT ADDRESS BUS 
+Figure 1: Block Diagram of the ANNA Board 
+2 ARCHITECTURE 
+The neurocomputer board contains a special purpose chip called ANNA (Boser 
+et al., 1991), for the parallel evaluation of neuron functions (a squashing function 
+applied to a weighted sum) and a general purpose digital signal processor, DSP32C. 
+The board also contains interface and clock synchronization logic as well as 1 MByte 
+of static memory, SRAM (see Fig. 1). Two version of this board with two different 
+bus interfaces have been built: a double height VME board (see Fig. 2) and a 
+PC/AT board (see Fig. 3). 
+The ANNA neural network chip is an ALU (Arithmetic and Logic Unit) special- 
+ized for neural network functions. It contains a 12-bit wide state-data input, a 
+12-bit wide state-data output, a 12-bit wide weight-data input, and a 37-bit micro- 
+instruction input. The instructions that can be executed by the chip are the fol- 
+lowing (parameters are not shown): 
+RFSl{ Write weight values from the weight-data input into the dynamic on-chip 
+weight storage. 
+SttIFT Shift on-chip barrel shifter to the left and load up to four new state values 
+from state-data input into the right end of the shifter. 
+STORE Transfer state vector from the shifter into the on-chip state storage and/or 
+into the state-data latches of the arithmetic unit. 
+�AL� Calculate eight dot-products between on-chip weight vectors and the contents 
+of the above mentioned data latches; subsequently evaluate the squashing func- 
+tion. 
+OUT Transfer the results of the calculation to the state-data output. 
+A Neurocomputer Board Based on the ANNA Neural Network Chip 775 
+Figure 2: ANNA Board with VME Bus Interface 
+Figure 3: ANNA Board with PC/AT Bus Interface 
+776 Siickinger, Boser, and Jackel 
+I 
+Figure 4: Photo Micrograph of the ANNA Chip 
+Some of the instructions (like SHIFT and CALC) can be executed in parallel. The 
+barrel shifter at the input as well as the on-chip state storage make the ANNA 
+chip very effective for evaluating locally-connected, weight-sharing networks such 
+as feature extraction and time-delay neural networks (TDNN). 
+The ANNA neural network chip, implemented in a 0.9um CMOS technology, con- 
+tains 180,000 transistors on a 4.5 x 7mm  die (see Fig. 4). The chip implements 
+4,096 physical synapses which can be time multiplexed in order to realize networks 
+with many more than 4,096 connections. The resolution of the synaptic weights is 
+6 bits and that of the states (input/output of the neurons) is 3 bits. Additionally, 
+a 4-bit scaling factor can be programmed for each neuron to extend the dynamic 
+range of the weights. The weight values are stored as charge packets on capacitors 
+and are periodically refreshed by two on chip 6-bit D/A converter. The synapses 
+are realized by multiplying 3-bit D/A converters (analog weight times digital state). 
+The analog results of this multiplication are added by means of current summing 
+and then converted back to digital by a saturating 3-bit A/D converter. Although 
+the chip uses analog computing internally, all input/output is digital. This combines 
+the advantages of the high synaptic density, the high speed, and the low power of 
+analog with the ease of interfacing to a digital system like a digital signal processor 
+(DSP). 
+The 32-bit floating-point digital signal processor (DSP32C) on the same board 
+runs at 40 MHz without wait states (100ns per instruction) and is connected to 
+1 MByte of static RAM. The DSP has several functions: (1) It generates the micro 
+instructions for the ANNA chip. (2) It is responsible for accessing the pixel, feature, 
+and weight data from the memory and then storing the results of the chip in the 
+memory. (3) If the precision of the ANNA chip is not sufficient the DSP can do the 
+calculations with 32-bit floating-point precision. (4) Learning algorithms can be run 
+A Neurocomputer Board Based on the ANNA Neural Network Chip 777 
+on the DSP. (5) The DSP is useful as a pre- and post-processor for neural networks. 
+In this way a whole task can be carried out on the board without exchanging 
+intermediate results with the host. 
+As shown by Fig. 1 ANNA instructions are supplied over the DSP address bus, while 
+state and weight data is transferred over the data bus. This arrangement makes 
+it possible to supply or store ANNA data and execute a micro instruction simul- 
+taneously, i.e., using only one DSP instruction. The ANNA clock is automatically 
+generated whenever the DSP issues a micro instruction to the ANNA chip. 
+3 PERFORMANCE 
+Using a DSP for supplying micro instructions as well as accessing the data from the 
+memory makes the board very flexible and fairly simple. Both data and instruction 
+flow to and from the ANNA chip are under software control and can be programmed 
+using the C or DSP32C assembly language. 
+Because of DSP32C features such as one-instruction 32-bit memory-to-memory 
+transfer with auto increment and overhead free looping, ANNA instruction se- 
+quences can be generated at a rate of approximately 5 MIPS. A similar rate of 
+5 MByte/s is achieved for reading and writing ANNA data from and to the mem- 
+ory. 
+The speed of the board depends on the application and how well it makes use 
+of the chip's parallelism and ranges between 30 MC/s and 400 MC/s. For concrete 
+examples see the section on Applications. Compared to the DSP32C which performs 
+at about 3 MC/s (for sparsely connected networks) the board with the ANNA chip 
+is 10 to 100 times faster. 
+The speed of the board is not limited by the ANNA chip but by the above mentioned 
+data rates. The use of a dedicated hardware sequencer will improve the speed by 
+up to ten times. The board can thus be used for prototyping an application, before 
+building more specialized hardware. 
+4 SOFTWARE 
+To make the board easily usable we implemented a LISP interpreter on the host 
+computer (a SUN workstation) which allows us to make remote procedure calls 
+(RPC) to the ANNA board. After starting the LISP interpreter on the host it will 
+download the DSP object code to the board and start the main program on the 
+DSP. Then, the DSP will transfer the addresses of all procedures that are available 
+to the user to the LISP interpreter. From then on, all these procedures can be called 
+as LISP functions of the form (==> anna procedure parameter(s)) from the host. 
+Parameters and return value are handled automatically by the LISP interpreter. 
+Three ways of using the ANNA board are described. The first two methods do not 
+require DSP programming; everything is controlled from the LISP interpreter. The 
+third method requires DSP programming and results in maximum speed for any 
+application. 
+778 Sckinger, Boser, and Jackel 
+1. The simplest way to use the board together with this LISP interpreter is to 
+call existing library functions on the board. For example a neural network for 
+recognizing handwritten digits can be called as follows: 
+(==> anna down-weight weight-matrix) 
+(setq class (==> axma down-rec-up digit-pattern)) 
+The first LISP function activates the down-weight function on the ANNA board 
+that transfers the LISP matrix, weight-matrix, to the board. This function defines 
+all the weights of the network and has to be called only once. The second LISP 
+function calls the down-rec-up function which takes the digit-pattern (pixel image) 
+as an input, downloads this pattern, runs the recognizer, and uploads the class 
+number (0 ... 9). 
+This method requires no knowledge of the ANNA or DSP instruction set. The 
+library functions are fast since they have been optimized by the implementer. At 
+the moment library functions for nonlinear convolution, character recognition, and 
+testing are available. 
+2. If a function which is not part of the library has to be implemented, an ANNA 
+program must be written. A collection of LISP functions (ANNANAS), support the 
+translation of symbolic ANNA program into micro code. The micro code is then 
+run on the ANNA ch

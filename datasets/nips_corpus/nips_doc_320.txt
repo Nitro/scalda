@@ -1,0 +1,164 @@
+Evaluation of Adaptive Mixtures 
+of Competing Experts 
+Steven J. Nowlan and Geoffrey E. Hinton 
+Computer Science Dept. 
+University of Toronto 
+Toronto, ONT M5S 1A4 
+Abstract 
+We compare the performance of the modular architecture, composed of 
+competing expert networks, suggested by Jacobs, Jordan, Nowlan and 
+Hinton (1991) to the performance of a single back-propagation network 
+on a complex, but low-dimensional, vowel recognition task. Simulations 
+reveal that this system is capable of uncovering interesting decompositions 
+in a complex task. The type of decomposition is strongly influenced by 
+the nature of the input to the gating network that decides which expert 
+to use for each case. The modular architecture also exhibits consistently 
+better generalization on many variations of the task. 
+I Introduction 
+If back-propagation is used to train a single, multilayer network to perform different 
+subtasks on different occasions, there will generally be strong interference effects 
+which lead to slow learning and poor generalization. If we know in advance that a set 
+of training cases may be naturally divided into subsets that correspond to distinct 
+subtasks, interference can be reduced by using a system (see Fig. 1) composed of 
+several different expert networks plus a gating network that decides which of the 
+experts should be used for each training case. 
+Systems of this type have been suggested by a number of authors (Hampshire and 
+Waibel, 1989; Jacobs, Jordan and Barto, 1990; Jacobs et al., 1991) (see also the 
+paper by Jacobs and Jordan in this volume (1991)). Jacobs, Jordan, Nowlan and 
+Hinton (1991) show that this system can be trained by performing gradient descent 
+774 
+Evaluation of Adaptive Mixtures of Competing Experts 775 
+:02 
+Expert 2 
+Expert 1 
+Expert 3 
+I' 
+Input 
+I 
+x 1 x2 x3 
+Gating 
+Network 
+Input 
+Figure 1: A system of expert and gating networks. Each expert is a feedforward 
+network and all experts receive the same input and have the same number of out- 
+puts. The gating network is also feedforward and may receive a different input than 
+the expert networks. It has normalized outputs pj = exp(xj)/-iexp(xi), where 
+xj is the total weighted input received by output unit j of the gating network. pj 
+can be viewed as the probability of selecting expert j for a particular case. 
+in the following error function: 
+E c = - log  p � -I1'-''11=/2'= (1) 
+i 
+where E c is the error on training case c, p? is the output of the gating network for 
+expert i, a is the desired output vector and /c is the output vector of expert i, and 
+a is constant. 
+The error defined by Equation I is simply the negative log probability of generating 
+the desired output vector under a mixture of gaussians model of the probability 
+distribution of possible output vectors given the current input. The output vector 
+of each expert specifies the mean of a multidimensional gaussian distribution. These 
+means are a function of the inputs to the experts. The outputs of the gating network 
+specify the mixing proportions of the experts, so these too are determined by the 
+current input. 
+During learning, the gradient descent in E has two effects. It raises the mixing 
+proportion of experts that do better than average in predicting the desired output 
+vector for a particular case, and it also makes each expert better at predicting the 
+desired output for those cases for which it has a high mixing proportion. The result 
+of these two effects is that, after learning, the gating network nearly always assigns 
+a mixing proportion near I to one expert on each case. So towards the end of 
+the learning, each expert can focus on modelling the cases it is good at without 
+interference from the cases for which it has a negligible mixing proportion. 
+776 Nowlan and Hinton 
+In this paper, we compare mixtures of experts to single back-propagation networks 
+on a vowel recognition task. We demonstrate that the mixtures are better at 
+fitting the training data and better at generalizing than comparable single back- 
+propagation networks. 
+2 Data and Experimental Procedures 
+The data used in these experiments consisted of the frequencies of the first and 
+second formants for 10 vowels from 75 speakers (32 Males, 28 Females, and 15 
+Children) (Peterson and Barney, 1952). 1 The vowels, which were uttered in an 
+hVd context, were {heed, hid, head, had, bud, hod, hawed, hood, who'd, heard}. The 
+word list was repeated twice by each speaker, with the words in a different random 
+order for each presentation. The resulting spectrograms were hand segmented and 
+the frequencies of the formants extracted from the middle portion of the vowel. 
+The simulations were performed using a conjugate gradient technique, with one 
+weight change after each pass through the training set. For the back-propagation 
+experiments, each simulation was initialised randomly with weight values in the 
+range [-0.5, 0.5]. For the mixture systems, the last layer of weights in the gating 
+network was always initialised to 0 so that all experts initially had equal a priori 
+selection probabilities, pi,, while all other weights in the gating and expert networks 
+were initialized randomly with values in the range [-0.5, 0.5] to break symmetry. 
+The value of r used was 0.25 for all of the mixture simulations. In all cases, the 
+input formant values were linearly scaled by dividing them by 1000, so the first 
+formant was in the range (0, 1.5) and the second was in the range (0, 4). 
+Two sets of experiments were performed: one in which the performance of different 
+systems on the training data was compared and a second in which the ability of 
+different systems to generalize was compared. 
+Five different types of input were used in each set of experiments: 
+1. Frequencies of first and second formants only (Form.). 
+2. Form. plus a localist encoding of the speaker identity (Form. + Speaker ID). 
+3. Form. plus a localist encoding of whether the speaker was a male, female, or 
+child (Form. + MFC). 
+4. Form. plus the minimum and maximum frequency for the first and second 
+formant (as real values) over all samples from the speaker (Form. + Range). 
+5. Form. + MFC + Range. 
+For the simulations in which a single back-propagation network was used the net- 
+work received the entire set of input values. However, for the mixture systems the 
+expert networks saw only the formant fi'equencies, while the gating network saw 
+everything but the formant frequencies (except of course when the input consisted 
+only of the formant frequencies). 
+Obtained, with thanks, from Ray Watrous, who originally obtained the data from Ann 
+Syrdal at AT&T Bell Labs. 
+Evaluation of Adaptive Mixtures of Competing Experts 777 
+Type of Input  Experts # Hid per Expert #.Hid Gating 
+Form. 20 3 - 5 10 
+Form. + Speaker ID 10 25 0 
+Form. + MFC 10 25 0 
+Form. + MFC + Range 10 25 5 
+Form. + Range 10 25 5 
+Table 1: Summary of mixture architecture used with each type of input. 
+Type of Input Mixture Error % BP Error % Sig.(p) 
+Formants only 13.9 q- 0.9 21.8 q- 0.6 >> 0.9999 
+Form. + Speaker ID 4.6 q- 0.7 6.2 q- 0.6 > 0.97 
+Form. + MFC 13.0 q- 0.4 15.4 q- 0.3 >> 0.9999 
+Form. + MFC + Range 5.6 q- 0.6 13.1 q- 1.0 >> 0.9999 
+Form. + Range 11.6 q- 0.9 13.5 q- 0.4 > 0.998 
+Table 2: Performance comparison of associative mixture systems and single back- 
+propagation networks on vowel classification task. Results reported are based on an 
+average over 25 simulations for each back-propagation network or mixture system. 
+The BP networks used in the single network simulations contained one layer of 
+hidden units? In the mixture systems, the expert networks also contained one 
+layer of hidden units although the number of hidden units in each expert varied. 
+The gating network in some cases contained hidden units, while in other cases it 
+did not (see Table 1). Further details of the simulations may be found in (Nowlan, 
+1991). 
+3 Results of Performance Studies 
+In the set of performance experiments, each system was trained with the entire set 
+of 1494 tokens until the magnitude of the gradient vector was < 10 -8. The error 
+rate (as percent of total cases) was evaluated on the training data (generalization 
+studies are described in the next section). The very high degree of class overlap in 
+this task makes it extremely difficult to find good solutions with a gradient descent 
+procedure and this is reflected by the far from optimal average performance of all 
+systems on the training data (see Table 2). For purposes of comparison, the best 
+performance ever obtained on this vowel data using speaker dependant classification 
+methods is about 2.5% (Gerstman, 1968; Watrous, 1990). 
+Table 2 reveals that in every case the mixture system performs significantly better a 
+than a single network given the same input. The most striking, and interesting, 
+2The number of hidden units was selected by performing a number of initial simulations 
+with different numbers of hidden units for each network and choosing the smallest number 
+which gave near optimal performance. These numbers were 50, 150, 60, 150, and 80 
+respectively for the five types of input listed above. 
+aBased on a t-test with 48 degrees of freedom. 
+778 Nowlan and Hinton 
+Spec. # % Male % Female % Child % Total 
+0 0.0 0.0 6.7 1.3 
+4 3.1 3.6 0.0 2.7 
+5 84.4 17.8 0.0 42.7 
+7 9.4 7.1 6.7 8.0 
+8 3.1 42.9 0.0 17.3 
+9 0.0 28.6 86.7 28.0 
+Table 3: Speaker decomposition in terms of Male, Female and Child categories for 
+a mixture with speaker identity as input to the gating network. 
+result in Table 2 is contained in the fourth row of the table. While the associative 
+mixture architecture is able to combine the two separate cues of MFC categories and 
+speaker formant range quite effectively, the single back-propagation network fails 
+to do so. The combination of these two different cues in the associative mixture 
+system was obtained by a hierarchical training procedure in which three d

@@ -1,0 +1,155 @@
+Experiences with Bayesian Learning in a 
+Real World Application 
+Peter Sylmcek, Georg Dorffner 
+Austrian Research Institute for Artificial Intelligence 
+Schottengasse 3, A-1010 Vienna Austria 
+peter, georg@ai.univie.ac. at 
+Peter Rappelsberger 
+Institute for Neurophysiology at the University Vienna 
+Wihringer Strafie 17, A-1090 Wien 
+Peter. Rappelsberger@univie. ac.at 
+Josef Zeitlhofer 
+Department of Neurology at the AKH Vienna 
+W/ihringer Gfirtel 18-20, A-1090 Wien 
+Josef. Zeitlhofer@univie.ac.at 
+Abstract 
+This paper reports about an application of Bayes' inferred neu- 
+ral network classifiers in the field of automatic sleep staging. The 
+reason for using Bayesian learning for this task is two-fold. First, 
+Bayesian inference is known to embody regularization automati- 
+cally. Second, a side effect of Bayesian learning leads to larger 
+variance of network outputs in regions without training data. This 
+results in well known moderation effects, which can be used to 
+detect outliers. In a 5 fold cross-validation experiment the full 
+Bayesian solution found with R. Neals hybrid Monte Carlo algo- 
+rithm, was not better than a single maximum a-posteriori (MAP) 
+solution found with D.J. MacKay's evidence approximation. In a 
+second experiment we studied the properties of both solutions in 
+rejecting classification of movement artefacts. 
+Experiences with Bayesian Learning in a Real World Application 
+1 Introduction 
+965 
+Sleep staging is usually based on rules defined by Rechtschaffen and Kales (see [8]). 
+Rechtschaffen and Kales rules define 4 sleep stages, stage one to four, as well as rapid 
+eye movement (REM) and wakefulness. In [1] J. Bentrup and S. Ray report that 
+every year nearly one million US citizens consulted their physicians concerning their 
+sleep. Since sleep staging is a tedious task (one all night recording on average takes 
+about 3 hours to score manually), much effort was spent in designing automatic 
+sleep stagers. 
+Sleep staging is a classification problem which was solved using classical statistical 
+techniques or techniques emerged from the field of artificial intelligence (AI). Among 
+classical techniques especially the k nearest neighbor technique was used. In [1] 
+J. Bentrup and S. Ray report that the classical technique outperformed their AI 
+approaches. Among techniques from the field of AI, researchers used inductive 
+learning to build tree based classifiers (e.g. ID3, C4.5) as reported by M. Kubat et. 
+al. in [4]. Neural networks have also been used to build a classifier from training 
+examples. Among those who used multi layer perceptron networks to build the 
+classifier, the work of R. Schaltenbrand et. al. seems most interesting. In [10] they 
+use a separate network to refuse classification of too distant input vectors. The 
+performance usually reported is in the range of 
+Which enhancements to these approaches can 
+with hopefully better performance? According 
+75 to 85 percent. 
+be made to get a reliable system 
+to S. Roberts et. al. in [9], outlier 
+detection is important to get reliable results in a critical (e.g. medical) environment. 
+To get reliable results one must refuse classification of dubious inputs. Those inputs 
+are marked separately for further inspection by a human expert. To be able to 
+detect such dubious inputs, we use Bayesian inference to calculate a distribution 
+over the neural network weights. This approach automatically incorporates the 
+calculation of confidence for each network estimate. Bayesian inference has the 
+flirther advantage that regularization is part of the learning algorithm. Additional 
+methods like weight decay penalty and cross validation for decay parameter tuning 
+are no longer needed. Bayesian inference for neural networks was among others 
+investigated by D.J. MacKay (see [5]), Thodberg (see [11]) and Buntine and Weigend 
+(see [3]). 
+The aim of this paper is to study how Bayesian inference leads to probabilities for 
+(;lasses, which together with doubt levels allow to refuse classification of outliers. 
+As we are interested in evaluating the resulting performance, we use a comparative 
+method on the same data set and use a significance test, such that the effect of the 
+method can easily be evaluated. 
+2 Methods 
+In this section we give a short description of the inference techniques used to perform 
+the experiments. We have used two approaches using neural networks as classifiers 
+and an instance based approach in order to make the performance estimates com- 
+parable to other methods. 
+2.1 Architecture for polychotomous classification 
+For polychotomous classification problems usually a 1-of-c target coding scheme is 
+used. Usually it is sufficient to use a network architecture with one hidden layer. In 
+[2] pp. 237-240, C. Bishop gives a general motivation for the softmax data model, 
+966 P. Sykacek; G. Dorffner, P. Rappelsberger and J. Zeitlhofer 
+which should be used if one wants the network outputs to be probabilities for classes. 
+If we assume that the class conditional densities, p(z [ Ck), of the hidden unit acti- 
+vation vector, z, are from the general family of exponential distributions, then using 
+the transformation in (1), allows to interpret the network outputs as probabilities 
+for classes. This transformation is known as normalized exponential or softmax 
+activation function. 
+exp(a) (1) 
+p(Ck [z_) - ,/, exp(a,) 
+In 1) the value a is the value at output node k before applying softmax activa- 
+tion. Softmax transformation of the activations in the output layer is used for both 
+network approaches used in this paper. 
+2.2 Bayesian Inference 
+In [6] D.J. MacKay uses Bayesian inference and marginalization to get moderated 
+probabilities for classes in regions where the network is uncertain about the class 
+label. In conjunction with doubt levels this allows to suppress a classification of 
+such patterns. A closer investigation of this approach showed that marginalization 
+leads to moderated probabilities, but the degree of moderation heavily depends on 
+the direction in which we move away from the region with sufficient training data. 
+Therefore one has to be careful about whether the moderation effect should be used 
+for outliers detection. 
+A Bayesian solution for neural networks is a posterior distribution over weight space 
+calculated via Bayes' theorem using a prior over weights. 
+p(w 1 7) ) _ p(7) ] w)p(w) 
+p(V) (2) 
+In (2), w is the weight vector of the network and 7) represents the training data. 
+Two different possibilities are known to calculate the posterior in (2). In [5] D.J. 
+MacKay derives an analytical expression assuming a Gaussian distribution. In [7] 
+R. Neal uses a hybrid Monte Carlo method to sample from the posterior. For one 
+input pattern, the posterior over weight space will lead to a distribution of network 
+outputs. 
+For a classification problem, following MacKay [6], the network estimate is calcu- 
+lated by marginalization over the output distribution. 
+P(C1 I 30,7)) --.f P(C1 [ x,w)p(w_ I 7))dw 
+- f Y(-X'w)p(w--17))dw 
+(3) 
+In general, the distribution over output activations will have small variance in re- 
+gions well represented in the training data and large variance everywhere else. The 
+reason for that is the influence of the likelihood term p(7) I w), which forces the 
+network mapping to lie close to the desired one in regions with training data, but 
+which has no influence on the network mapping in regions without training data. 
+At least for for generalized linear models applied to regression, this property is 
+quantifiable. In [12] C. Williams et.al. showed that the error bar is proportional to 
+the inverse input data density p(x_)-l. A similar relation is also plausible for the 
+output activation in classification problems. 
+Experiences with Bayesian Learning in a Real World Application 967 
+Due to the nonlinearity of the softmax transformation, marginalization will moder- 
+ate probabilities for classes. Moderation will be larger in regions with large variance 
+of the output activation. Compared to a decision made with the most probable 
+weight, the network guess for the class label will be less certain. This moderation 
+effect allows to reject classification of outlying patterns. 
+Since upper integral can not be solved analytically for classification problems, there 
+a.re two possibilities to solve it. In [6] D.J. MacKay uses an approximation. Using 
+hybrid Monte Carlo sampling as an implementation of Bayesian inference (see R. 
+Neal in [7]), there is no need to perform upper integration analytically. The hybrid 
+Monte Carlo algorithm samples from the posterior and upper integral is calculated 
+as a. finite sum. 
+L 
+P(C Ix, D)m -' y(x, wi) (4) 
+Assuming, that the posterior over weights is represented exactly by the sampled 
+weights, there is no need to limit the number of hidden units, if a correct (scaled) 
+prior is used. Consequently in the experiments the network size was chosen to be 
+large. We used 25 hidden units. Implementation details of the hybrid Monte Carlo 
+algorithm may be found in [7]. 
+2.3 The Competitor 
+The classifier, used to give performance estimates to compare to, is built as a two 
+layer perceptron network with softmax transformation applied to the outputs. As 
+an error function we use the cross entropy error including a consistent weight decay 
+penalty, as it is e.g. proposed by C. Bishop in [2], pp. 338. The decay parameters 
+are estimated with D.J. MacKay's evidence approximation ( see [5] for details). 
+Note that the restriction of D.J. MacKay's implementation of Bayesian learning, 
+which has no solution to arrive at moderated probabilities in 1-of-c classification 
+problems, do not apply here since we use only one MAP value. The key problem 
+with this approach is the Gaussian approximation of the posterior over weights, 
+which is used to derive the most probable decay parameters. This approximation is 
+certainly only valid if the number of netw

@@ -1,0 +1,159 @@
+Probabilistic Modeling for Face Orientation 
+Discrimination' 
+� 
+Learning from Labeled and Unlabeled Data 
+Shumeet Baluja 
+balujacs.cmu.edu 
+Justsystem Pittsburgh Research Center & 
+School of Computer Science, Carnegie Mellon University 
+Abstract 
+This paper presents probabilistic modeling methods to solve the problem of dis- 
+criminating between five facial orientations with very little labeled data. Three 
+models are explored. The first model maintains no inter-pixel dependencies, the 
+second model is capable of modeling a set of arbitrary pair-wise dependencies, 
+and the last model allows dependencies only between neighboring pixels. We 
+show that for all three of these models, the accuracy of the learned models can 
+be greatly improved by augmenting a small number of labeled training images 
+with a large set of unlabeled images using Expectation-Maximization. This is 
+important because it is often difficult to obtain image labels, while many unla- 
+beled images are readily available. Through a large set of empirical tests, we 
+examine the benefits of unlabeled data for each of the models. By using only 
+two randomly selected labeled examples per class, we can discriminate between 
+the five facial orientations with an accuracy of 94%; with six labeled examples, 
+we achieve an accuracy of 98%. 
+1 Introduction 
+This paper examines probabilistic modeling techniques for discriminating between five 
+face orientations: left profile, left semi-profile, frontal, right semi-profile, and right profile. 
+Three models are explored: the first model represents no inter-pixel dependencies, the sec- 
+ond model is c,,apable of modeling a set of arbitrary pair-wise dependencies, and the last 
+model allows'p,endencies only between neighboring pixels. 
+Models which capture inter-pixel dependencies can provide better classification perfor- 
+mance than those that do not capture dependencies. The difficulty in using the more com- 
+plex models, however, is that as more dependencies are modeled, more parameters must be 
+estimated - which requires more training data. We show that by using Expectation-Maxi- 
+mization, the accuracy of what is learned can be greatly improved by augmenting a small 
+number of labeled training images with unlabeled images, which are much easier to obtain. 
+The remainder of this section describes the problem of face orientation discrimination in 
+detail. Section 2 provides a brief description of the probabilistic models explored. Section 3 
+presents results with these models with varying amounts of training data. Also shown is 
+how Expectation-Maximization can be used to augment the limited labeled training data 
+with unlabeled training data. Section 4 briefly discusses related work. Finally, Section 5 
+closes the paper with conclusions and suggestions for future work. 
+Probabilistic Modeling for Face Orientation Discrimination 855 
+1.1 Detailed Problem Description 
+The interest in face orientation discrimination arises from two areas. First, the rapid 
+increase in the availability of inexpensive cameras makes it practical to create systems 
+which automatically monitor a person while using a computer. By using motion, color, 
+and size cues, it is possible to quickly find and segment a person's face when he/she is sit- 
+ting in front of a computer monitor. By determining whether the person is looking directly 
+at the computer, or is staring away from the computer, we can provide feedback to any 
+user interface that could benefit from knowing whether a user is paying attention or is dis- 
+tracted (such as computer-based tutoring systems for children, computer games, or even 
+car-mounted cameras that monitor drivers). 
+Second, to perform accurate face detection for use in video-indexing or content-based 
+image retrieval systems, one approach is to design detectors specific to each face orienta- 
+tion, such as [Rowley et al., 1998, Sung 1996]. Rather than applying all detectors to every 
+location, a face-orientation system can be applied to each candidate face location to 
+ronte the candidate to the appropriate detector, thereby reducing the potential for false- 
+positives, and also reducing the computational cost of applying each detector. This 
+approach was taken in [Rowley et al., 1998]. 
+For the experiments in this paper, each image to be classified is 20x20 pixels. The face is 
+centered in the image, and comprises most of the image. Sample faces are shown in 
+Figure 1. Empirically, our experiments show that accurate pose discrimination is possible 
+from binary versions of the images. First, the images were histogram-equalized to values 
+between 0 and 255. This is a standard non-linear transformation that maps an approxi- 
+mately equal number of pixels to each value within the 0-255 range. It is used to improve 
+the contrast in images. Second, to binarize the images, pixels with intensity above 128 
+were mapped to a value of 255, otherwise the pixels were mapped to a value of 0. 
+Frontal .... 
+Right 
+Half Profile 
+Right Profile, 
+Left 
+Half Profile 
+Left Profile 
+Original Binary 
+Figure 1:4 images of 
+each of the 5 classes to be 
+discriminated. Note the 
+variability in the images. 
+Left: Original Images. 
+Right: Images after 
+histogram equalization 
+and binary quantization. 
+2 Methods Explored 
+This section provides a description of the probabilistic models explored: Naive-Bayes, 
+Dependency Trees (as proposed by [Chow and Liu, 1968]), and a dependence network 
+which models dependencies only between neighboring pixels. For more details on using 
+Bayesian multinets (independent networks trained to model each class) for classifica- 
+tion in a manner very similar to that used in this paper, see [Friedman, et al., 1997]. 
+2.1 The Naive-Bayes Model 
+The first, and simplest, model assumes that each pixel is independent of every other pixel. 
+Although this assumption is clearly violated in real images, the model often yields good 
+results with limited training data since it requires the estimation of the fewest parameters. 
+Assuming that each image belongs exclusively to one of the five face classes to be dis- 
+856 S. Baluja 
+criminated, the probability of the image belonging to a particular class is given as follows: 
+P(Classcllmage ) = 
+P(ImagelClassc) x P(Classc) 
+P(Image) 
+400 
+P(ImageIClassc) = I-I P(Pixel, IClassc) 
+,=1 
+P(PixeltIClass c) is estimated directly from the training data by: 
+P(Pixel, lClassO - 
+k+ 
+Z Pixel, x P(Class�llmage ) 
+Tra,nmglmages 
+2k +  P(Class cllmage) 
+Tra,n,nglmages 
+Since we are only counting examples from the training images, P(Classcllmage) is 
+known. The notation P(Classc[Image ) is used to represent image labels because it is con- 
+venient for describing the counting process with both labeled and unlabeled data (this will 
+be described in detail in Section 3). With the labeled data, P(Classcllmage) {0,1 }. Later, 
+P(Class cllmage) may not be binary; instead, the probability mass may be divided between 
+classes. Pixelt {0,1 } since the images are binary. k is a smoothing constant, set to 0.001. 
+When used for classification, we compute the posterior probabilities and take the maxi- 
+mum, Cpredicted, where: Cpred, cte d = argmax c P(Classcllmage) -= P(ImagelClassc) � For sim- 
+plicity, P(Classc) is assumed equal for all c; P(Irnage) is a normalization constant which 
+can be ignored since we are only interested in finding the maximum posterior probability. 
+2.2 Optimal Pair-Wise Dependency Trees 
+We wish to model a probability distribution P(X 1 ..... X4oolClassc), where each X corre- 
+sponds to a pixel in the image. Instead of assuming pixel independence, we restrict our 
+model to the following form: 
+P(X 1 ...X n Class c) 
+i=1 
+where Hx, is Xi's single parent variable. We require that there be no cycles in these 
+parent-of' relationships: formally, there must exist some permutation m = (ml, ..., mr) of 
+(1 ..... n) such that (nx, = 3) = m(,) < mO') for all i. In other words, we restrict P' to 
+factorizations representable by Bayesian networks in which each node (except the root) 
+has one parent, i.e., tree-shaped graphs. 
+A method for finding the optimal model within these restrictions is presented in [Chow 
+and Liu, 1968]. A complete weighted graph G is created in which each variable X i is rep- 
+resented by a corresponding vertex Vi, and in which the weight Wij for the edge between 
+vertices V i and V: is set to the mutual information I(Xi,X: ) between X i and X: The edges 
+� . J . J . J' 
+in the maximum spanning tree of G determine an optimal set of (n- 1) conditional probabil- 
+ities with which to construct a tree-based model of the original probability distribution. 
+We calculate the probabilities P(Xi) and P(Xi, X:) directly from the dataset. From these, 
+we calculate the mutual information, I(Xi, Xj), be{ween all pairs of variables X i and Xj: 
+P(X i = a, 5/= b) 
+/(X/,5) = ZP(Xi=o, 5= b)'l�gp(xl=a).piS=b) 
+a,b 
+The maximum spanning tree minimizes the Kullback-Leibler divergence D(PIIP') between 
+Probabilistic Modeling for Face Orientation Discrimination 857 
+the true and estimated distributions: 
+D(P IIP') = P(X)log P(X) 
+. P'(X) 
+x 
+as shown in [Chow & Liu, 1968]. Among all distributions of the same form, this distribu- 
+tion maximizes the likelihood of the data when the data is a set of empirical observations 
+drawn from any unknown distribution. 
+2.3 Local Dependency Models 
+Unlike the Dependency Trees presented in the previous section, the local dependency net- 
+works only model dependencies between adjacent pixels. The most obvious dependencies 
+to model are each pixel's eight neighbors. The dependencies are shown graphically in Fig- 
+ure 2(left). The difficulty with the above representation is that two pixels may be depen- 
+dent upon each other (if this above model was represented as a Bayesian network, it would 
+contain cycles). Therefore, to avoid problems with circular dependencies, we use the fol- 
+lowing model instead. Each pixel is still c

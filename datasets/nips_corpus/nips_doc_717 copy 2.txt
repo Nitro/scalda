@@ -1,0 +1,172 @@
+Two Iterative Algorithms for Computing 
+the Singular Value Decomposition from 
+Input[Output Samples 
+Terence D. Sanger 
+Jet Propulsion Laboratory 
+MS 303-310 
+4800 Oak Grove Drive 
+Pasadena, CA 91109 
+Abstract 
+The Singular Value Decomposition (SVD) is an important tool for 
+linear algebra and can be used to invert or approximate matrices. 
+Although many authors use SVD synonymously with Eigen- 
+vector Decomposition or Principal Components Transform, it 
+is important to realize that these other methods apply only to 
+symmetric matrices, while the SVD can be applied to arbitrary 
+nonsquare matrices. This property is important for applications to 
+signal transmission and control. 
+I propose two new algorithms for iterative computation of the SVD 
+given only sample inputs and outputs from a matrix. Although 
+there currently exist many algorithms for Eigenvector Decomposi- 
+tion (Sanger 1989, for example), these are the first true sample- 
+based SVD algorithms. 
+1 INTRODUCTION 
+The Singular Value Decomposition (SVD) is a method for writing an arbitrary 
+nonsquare matrix as the product of two orthogonal matrices and a diagonal matrix. 
+This technique is an important component of methods for approximating near- 
+singular matrices and computing pseudo-inverses. Several efficient techniques exist 
+for finding the SVD of a known matrix (Golub and Van Loan 1983, for example). 
+144 
+Singular Value Decomposition 145 
+I I 
+I I 
+I I 
+u 
+Figure 1: Representation of the plant matrix P as a linear system mapping inputs 
+u into outputs y. L'$_ is the singular value decomposition of P. 
+However, for certain signal processing or control tasks, we might wish to find the 
+SVD of an unknown matrix for which only input-output samples are available. 
+For example, if we want to model a linear transmission channel with unknown 
+properties, it would be useful to be able to approximate the SVD based on samples 
+of the inputs and outputs of the channel. If the channel is time-varying, an iterative 
+algorithm for approximating the SVD might be able to track slow variations. 
+2 THE SINGULAR VALUE DECOMPOSITION 
+The SVD of a nonsymmetric matrix P is given by P = L'S_R where L and / are 
+matrices with orthogonal rows containing the left and right singular vectors, and 
+$ is a diagonal matrix of singular values. The inverse of P can be computed by 
+inverting $, and approximations to P can be formed by setting the values of the 
+smallest elements of $ to zero. 
+For a memoryless linear system with inputs u and outputs y - Pu, we can write 
+y = L'S_Ru which shows that / gives the input transformation from inputs 
+to internal modes, $ gives the gain of the modes, and L  gives the output 
+transformation which determines the effect of each mode on the output. Figure 1 
+shows a representation of this arrangement. 
+The goal of the two algorithms presented below is to train two linear neural networks 
+N and G to find the SVD of P. In particular, the networks attempt to invert P 
+by finding orthogonal matrices N and G such that NG  p-l, or PNG = I. A 
+particular advantage of using the iterative algorithms described below is that it is 
+possible to extract only the singular vectors associated with the largest singular 
+values. Figure 2 depicts this situation, in which the matrix $ is shown smaller to 
+indicate a small number of significant singular values. 
+There is a close relationship with algorithms that find the eigenvalues of a symmetric 
+matrix, since any such algorithm can be applied to ppT = LTS2L and pTp = 
+_RTS2_R in order to find the left and right singular vectors. But in a behaving animal 
+or operating robotic system it is generally not possible to compute the product with 
+P, since the plant is an unknown component of the system. In the following, I will 
+present two new iterative algorithms for finding the singular value decomposition 
+146 Sanger 
+Figure 2: Loop structure of the singular value decomposition for control. The 
+plant is P -- L'$_R, where R determines the mapping from control variables to 
+system modes, and L T determines the outputs produced by each mode. The optimal 
+sensory network is G - L, and the optimal motor network is N -/iT$ -1. /i and L 
+are shown as trapezoids to indicate that the number of nonzero elements of $ (the 
+modes) may be less than the number of sensory variables y or motor variables u. 
+of a matrix P given only samples of the inputs u and outputs y. 
+3 
+THE DOUBLE GENERALIZED HEBBIAN 
+ALGORITHM 
+The first algorithm is the Double Generalized Hebbian Algorithm (DGHA), and it 
+is described by the two coupled difference equations 
+AG = ?(zy ' - LT[zzT]G) (1) 
+: '7(zu - LT[z]v (2) 
+where LT[ ] is an operator that sets the above diagonal elements of its matrix 
+argument to zero, y - Pu, z = Gy, and '7 is a learning rate constant. 
+Equation 1 is the Generalized Hebbian Algorithm (Sanger 1989) which finds the 
+eigenvectors of the autocorrelation matrix of its inputs y. For random uncorrelated 
+inputs u, the autocorrelation of y is E[yy r] = LrS2L, so equation 1 will cause 
+G to converge to the matrix of left singular vectors L. Equation 2 is related to 
+the Widrow-Hoff (1960) LMS rule for approximating u ' from z, but it enforces 
+orthogonality of the columns of N. It appears similar in form to equation 1, except 
+that the intermediate variables z are computed from y rather than u. A graphical 
+representation of the algorithm is given in figure 3. Equations 1 and 2 together 
+cause N to converge to /Tq-1 SO that the combination NG - trTS-1L is an 
+approximation to the plant inverse. 
+Theorem 1: (Sanger 1993) If y - Pu, z: Gy, and E[uu T]: I, then equations 1 
+and 2 converge to the left and right singular vectors of P. 
+Singular Value Decomposition 147 
+U ..I Y 
+l, P 
+Figure 3: Graphic representation of the Double Generalized Ilebbian Algorithm. 
+G learns according to the usual GIlA rule, while N learns using an orthogonalized 
+form of the Widrow-Iloff LMS Rule. 
+Proof: 
+After convergence of equation 1, E[zz r] will be diagonal, so that E[LT[zzr]] = 
+E[zz:r]. Consider the Widrow-Iloff LMS rule for approximating u  from z: 
+zxv = ?(zu _ zrvr). (3) 
+After convergence of G, this will be equivalent to equation 2, and will converge to 
+the same attractor. The stable points of 3 occur when E[uz :r - Nzz r] = 0, for 
+which N = _R'S -1 
+The convergence behavior of the Double Generalized Hebbian Algorithm is shown in 
+figure 4. Results are measured by computing B -- GPN and determining whether 
+B is diagonal using a score 
+The reduction in e is shown as a function of the number of (u, y) examples given to 
+the network during training, and the curves in the figure represent the average over 
+100 training runs with different randomly-selected plant matrices P. 
+Note that the Double Generalized Hebbian Algorithm may perform poorly in the 
+presence of noise or uncontrollable modes. The sensory mapping G depends only on 
+the outputs y, and not directly on the plant inputs u. So if the outputs include noise 
+or autonomously varying uncontrollable modes, then the mapping G will respond 
+to these modes. This is not a problem if most of the variance in the output is due 
+the inputs u, since in that case the most significant output components will reflect 
+the input variance transmitted through P. 
+4 THE ORTHOGONAL ASYMMETRIC ENCODER 
+The second algorithm is the Orthogonal Asymmetric Encoder (OAE) which is de- 
+scribed by the equations 
+AG - ?(y' - LT[5]G) (4) 
+148 Sanger 
+�'? 1 Double Generalized Hebbian Algorithm 
+0.6 
+0.5 10x10 
+0.3 � 
+0.2 � 
+0,1 � 
+50 100 150 200 250 300 350 400 450 500 550 500 650 700 750 800 850 gO0 9 
+Example 
+Figure 4: Convergence of the Double Generalized Itebbian Algorithm averaged over 
+100 random choices of 3x3 or 10x10 matrices P. 
+where i = Nu. 
+AN r = 7(Gy- LT[GGr]i)u r 
+(5) 
+This algorithm uses a variant of the Backpropagation learning algorithm (Rumelhart 
+et al. 1986). It is named for the Encoder problem in which a three-layer network is 
+trained to approximate the identity mapping but is forced to use a narrow bottleneck 
+layer. I define the Asymmetric Encoder Problem as the case in which a mapping 
+other than the identity is to be learned while the data is passed through a bottleneck. 
+The Orthogonal Asymmetric Encoder (OAE) is the special case in which the 
+hidden units are forced to be uncorrelated over the data set. Figure 5 gives a 
+graphical depiction of the algorithm. 
+Theorem 2: (Sanger 1993) Equations  and 5 converge to the left and right singular 
+vectors of P. 
+Proof: 
+Suppose z has dimension m. If P = LTSi where the elements of S are distinct, 
+and E[uu T] = I, then a well-known property of the singular value decomposition 
+(Golub and Van Loan 1983, , for example) shows that 
+Z[llPu - c Null] (6) 
+is minimized when G  = LmU, N  = V-Rm, and U and V are any m x m matrices 
+for which UV -- ImS[r. (Lm and -Rm signify the matrices of only the first m 
+columns of L  or rows of R.) If we want E[zz '] to be diagonal, then U and V must 
+be diagonal. OAE accomplishes this by training the first hidden unit as if m -- 1, 
+the second as if m - 2, and so on. 
+For the case m -- 1, the error 6 is minimized when G is the first left singular vector 
+of P and N is the first right singular vector. Since this is a linear approximation 
+problem, there is a single global minimum to the error surface 6, and gradient 
+descent using the backpropagation algorithm will converge to this solution. 
+Singular Value Decomposition 149 
+Figure 5: The Orthogonal Asymmetric Encoder algorithm computes a forward ap- 
+proximation to the plant P through a bottleneck layer of hidden units. 
+After convergence, the remaining error is E[II(P-G r Nr)ull]. If we decompose the 
+plant matrix as 
+where li and ri are the rows of L and _R, and si are the diagonal elements of S, then 
+the remaining error is 
+i=2 
+which is equivalent to the original plant matrix with the f

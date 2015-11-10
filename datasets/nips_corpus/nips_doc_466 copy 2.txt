@@ -1,0 +1,155 @@
+A Network of Localized Linear Discriminants 
+Martin S. Glassman 
+Siemens Corporate Research 
+755 College Road East 
+Princeton, NJ 08540 
+msg@ siemens.siemens.com 
+Abstract 
+The localized linear discriminant network (LLDN) has been designed to address 
+classification problems containing relatively closely spaced data from different 
+classes (encounter zones [1], the accuracy problem [2]). Locally trained hyper- 
+plane segments are an effective way to define the decision boundaries for these 
+regions [3]. The LLD uses a modified perceptron training algorithm for effective 
+discovery of separating hyperplane/sigmoid units within narrow boundaries. The 
+basic unit of the network is the discriminant receptive field (DRF) which combines 
+the LLD function with Gaussians representing the dispersion of the local training 
+data with respect to the hyperplane. The DRF implements a local distance mea- 
+sure [4], and obtains the benefits of networks of localized units [5]. A constructive 
+algorithm for the two-class case is described which incorporates DRF's into the 
+hidden layer to solve local discrimination problems. The output unit produces a 
+smoothed, piecewise linear decision boundary. Preliminary results indicate the 
+ability of the LLDN to efficiently achieve separation when boundaries are narrow 
+and complex, in cases where both the standard multilayer perceptron (MLP) 
+and k-nearest neighbor (KNN) yield high error rates on training data. 
+1 The LLD Training Algorithm and DRF Generation 
+The LLD is defined by the hyperplane normal vector V and its midpoint M (a translated 
+origin [1] near the center of gravity of the training data in feature space). Incremental 
+corrections to V and M accrue for each training token feature vector Yj in the training 
+set, as illustrated in figure 1 (exaggerated magnitudes). The surface of the hyperplane is 
+appropriately moved either towards or away from Yj by rotating V, and shifting M along 
+1102 
+A Network of Localized Linear Discriminants 1103 
+the axis defined by V M is always shifted towards Yj in the radial direction Rj (which is 
+the componerit of Dj orthogonal to V, where Dj = Y. - M): 
+TOKEN ON CORRECT SIDE OF HYPERPLANE I 
+TOKEN ON WRONG SIDE OF HYPERPLANE I 
+Figure l: LLD incremental correction vectors associated with training token Yj are shown 
+above, and the corresponding LLD update rules below: 
+J J 
+J J 
+The batch mode summation is over tokens in the loc training set, and n is the iteration 
+index. The polarity of &Vj and i is set by Sc (c = the class of Yj), where Sc = 1 if Yj is 
+classified cogectly, and Sc = -1 if not. Coections for each token are scaled by a sigmoidal 
+eor te: ej = 1/(1 + exp((Sc/X) [ rj I)), a function of the distance of me token to 
+the plane, the sign of So and a data-dependent scaling parameter: X = I r[ - ][, where 
+ is a fixed (experimental) scaling parameten e scaling of the sigmoid is propoffional 
+to  estimate of the boundaw region width along the is of V. B c is a weighted average 
+of the class c token vectors: c(n + 1) = (1 - a)c(n) + aWc j6c 6j,c(n)(n), where Ej, c 
+is a sigmoid with the same scaling as ej, except that it is centered on Bc instead of M, 
+emphasizing tokens of class c nearest the hypedlane surface. For small 's, B c will settle 
+near the cluster center of gravity, and for large 's, B c will approach the tokens closest to 
+the hypedlane surface. (The rate of the movement ofB c is limited by the vflue of a, which 
+is not critical.) e inverse of the number of tokens in class c, Wo balances the weight 
+of the coections from each class. If a more Bayesian-like solution is required, the slope 
+of e can be made class dependent (for example, raplacing  with c  Wc). Since the 
+slope of the sigmoid eor te is limited d distribmion dependent, the use of w o along 
+with the nonlinear weighting of tokens near the hypedlane surface, is impoffant for the 
+development of separating planes in relatively naow boundaries (the assumption is that 
+the distributions near these boundies are non-Gaussian). e setting of  simultaneously 
+(for convenience) controls the focus on the inner edges of the class clusters and the slope 
+of the sigmoid relative to the distance between the inner edges, with some resultant control 
+over generalization peffoance. This local scaling of the eor also aids the convergence 
+rate. The range of good values for  has been found to be reasonably wide, d idemical 
+1104 Glassman 
+values have been used successfully with speech, ecg, and synthetic data; it could also 
+be set/optimized using cross-validation. Separate adaptive learning rates (Iz(n), 7(n), and 
+/3(n)) are used in order to take advantage of the distinct nature of the geometric function of 
+each component. Convergence is also improved by maintaining M within the local region; 
+this controls the rate at which the hyperplane can sweep through the boundary region, 
+making the effect of AV more predictable. The LLD normal vector update is simply: 
+(n + 1) -- ((n) + A)/ll(n ) + A11, so that V is always normalized to unit magnitude. 
+The midpoint is just shifted: /0(n + 1) =/0(n) + A/O k + A/p. 
+lamb da 
+Bk, c,  
+Mk 
+Oj,k,c 
+lambda: estimate of the 
+boundary region width 
+sigma(V): dispersion of 
+the training data in the 
+discriminant direction 
+(v) 
+sigma(R): dispersion of 
+the training data in all 
+directiona orthogonal to 
+Figure 2: Vectors and parameters associated with the DRF for class c, for LLD k 
+DRF's are used to localize the response of the LLD to the region of feature space in which 
+it was trained, and are constructed after completion of LLD training. Each DRF represents 
+one class, and the localizing component of the DRF is a Gaussian function based on simple 
+statistics of the training data for that class. Two measures of the dispersion of the data are 
+used: O'v (normal dispersion), obtained using the mean average deviation of the lengths of 
+Pj,t:,c, and o'R (radial dispersion), obtained correspondingly using the Oj,k,c'S. (As shown, 
+Pi,k,c is the normal component, and Oi&c the radial component of Yj - Ba,c.) The output in 
+response to an input ,ector Yj from the class c DRF associated with the LLD k is 
+d 2 2 . 
+.i,,c = �k,c(ej,-O.5)/ exp(/ ,j,,c+d,,j,,c ), e, = 1/(l +exp((rl/,kk) l [[j-l] I)) 
+Two components of the DRF incorporate the LLD discriminant; one is the sigmoid error 
+function used in training the LLD but shifted down to a value of zero at the hyperplane 
+surface.' The other is �a,c, which is 1 if Yj is on the class c side of LLD k, and zero if 
+not. (In retrospect, for generalization performance, it may not be desirable to introduce 
+this discontinuity to the discriminant component.) The contribution of the Gaussian is 
+based on the normal and radial dispersion weighted distances of the input vector to B a,c: 
+dp,j,t:,c = and. d.,j,a,c = 
+2 Network Construction 
+Segmentation of the boundary between classes is accomplished by growing LLD's within 
+the boundary region. An LLD is initialized using a closely spaced pair of tokens from each 
+class. The LLD is grown by adding nearby tokens to the training set, using the k-nearest 
+neighbors to the LLD midpoint at each growth stage as candidates for permanent inclusion. 
+Candidate DRF's are generated after incremental training of the LLD to accommodate each 
+A Network of Localized Linear Discriminants 1105 
+new candidate token. Two error measures are used to assess the effect of each candidate, the 
+peak value of ej over the local training set, and , which is a measure of misclassification 
+error due to the receptive fields of the candidate DRF's extending over the entire training 
+set. The candidate token with the lowest average  is permanently added, as long as both 
+its ej and  are below fixed thresholds. Growth the the LLD is halted if no candidate has 
+both error measures below threshold. The e i and r thresholds directly affect the granularity 
+of the DRF representation of the data; they need to be set to minimize the number of DRF's 
+generated, while allowing sufficient resolution of local discrimination problems. They 
+should perhaps be adaptive so as to encourage coarse grained solutions to develop before 
+fine grain structure. 
+Figure 3: Four snapshots in the growth of an LLD/DRF pain The upper two are close- 
+ups. The initial LLD/DRF pair is shown in the upper left, along with the seed pain Filled 
+rectangles and ellipses represent the tokens from each class in the permanent local training 
+set at each stage. The large markers are the B points, and the cross is the LLD midpoint. 
+The amplitude of the DRF outputs are coded in greyscale. 
+1106 Glassman 
+At this point the DRF's are fixed and added to the network; this represents the addition of 
+two new localized features available for use by the network's output layer in solving the 
+global discrimination problem. In this implementation, the output layer is a single LLD 
+used to generate a two-class decision. The architecture is shown below: 
+INPUT 
+DATA 
+LLD'S 
+DRF'S' 
+I Bk,O // 
+I / '. Vk 
+I ,/ k,1 
+FEATURES / 
+OUTPUT 
+DISCRIMINANT 
+FUNCTION 
+(LLD W! 51GMOID) 
+ERROR MEASURE ON 
+TRAINING TOKENS 
+USED TO SEED NEW 
+LLD'S OR HALT 
+TRAINING 
+Figure 4: LLDN architecture for a two-dimensional, two-class problem 
+The ouput unit is completely retrained after addition of a new DRF pair, using the entire train- 
+ing set. The output of the network to the input Y/is: qi = 1/(1 +exp ((r//X o)r[(/- aM])), 
+where Xo: Ir[/f0 - and (i: [j, 1 ..... (i,p] is the p dimensional vector of DRF 
+outputs presented to the output unit. � is the output LLD normal vector, aM the midpoint, 
+and 13c'S the cluster edge points in the internal feature space. The output error for each 
+token is then used to select a new seed pair for development of the next LLD/DRF pain 
+If all tokens are classified with sufficient confidence, of course, construction of the LLDN 
+is co

@@ -1,0 +1,168 @@
+Efficient Pattern Recognition Using 
+New Transformation Distance 
+a 
+Patrice Slmard Yann Le Cun John Denker 
+AT&T Bell Laboratories, 101 Crawford Corner Road, Holmdel, NJ 07724 
+Abstract 
+Memory-based classification algorithms such as radial basis func- 
+tions or K-nearest neighbors typically rely on simple distances (Eu- 
+clidean, dot product...), which are not particularly meaningful on 
+pattern vectors. More complex, better suited distance measures are 
+often expensive and rather ad-hoc (elastic matching, deformable 
+templates). We propose a new distance measure which (a) can be 
+made locally invariant to any set of transformations of the input 
+and (b) can be computed efficiently. We tested the method on 
+large handwritten character databases provided by the Post Office 
+and the NIST. Using invariances with respect to translation, rota- 
+tion, scaling, shearing and line thickness, the method consistently 
+outperformed all other systems tested on the same databases. 
+1 INTRODUCTION 
+Distance-based classification algorithms such as radial basis functions or K-nearest 
+neighbors often rely on simple distances (such as Euclidean distance, Hamming 
+distance, etc.). As a result, they suffer from a very high sensitivity to simple 
+transformations of the input patterns that should leave the classification unchanged 
+(e.g. translation or scaling for 2D images). This is illustrated in Fig. 1 where an 
+unlabeled image of a 9 must be classified by finding the closest prototype image 
+out of two images representing respectively a 9 and a 4. According to the 
+Euclidean distance (sum of the squares of the pixel to pixel differences), the 4 
+is closer even though the 9 is much more similar once it has been rotated and 
+thickened. The result is an incorrect classification. The key idea is to construct a 
+distance measure which is invariant with respect to some chosen transformations 
+such as translation, rotation and others. The special case of linear transformations 
+has been well studied in statistics and is sometimes referred to as Procrustes analysis 
+5O 
+Efficient Pattern Recognition Using a New Transformation Distance 51 
+Pattern to 
+be classified 
+Prototype A 
+Prototype B 
+Figure 1: What is a good similarity measure.9 According to the Euclidean distance 
+the pattern to be classified is more similar to prototype B. A better distance measure 
+would find that prototype A is closer because it differs mainly by a rotation and a 
+thickness transformation, two transformations which should leave the classification 
+invariant. 
+(Sibson, 1978). It has been applied to on-line character recognition (Sinden and 
+Wilfong, 1992). 
+This paper considers the more general case of non-linear transformations such as 
+geometric transformations of gray-level images. Remember that even a. simple 
+image translation corresponds to a highly non-linear transformation in the high- 
+dimensional pixel space 1. In previous work (Simard et al., 1992b), we showed how 
+a neural network could be trained to be invariant with respect to selected transfor- 
+mations of the input. We now apply similar ideas to distance-based classifiers. 
+When a pattern P is transformed (e.g. rotated) with a transformation s that depends 
+on one parameter c (e.g. the angle of the rotation), the set of all the transformed 
+patterns $p -- {x 13G such that x - s(G,P)} is a one-dimensional curve in the 
+vector space of the inputs (see Fig. 2). In certain cases, such as rotations of 
+digitized images, this curve must be made continuous using smoothing techniques 
+(see (Simard et al., 1992b)). When the set of transformations is parameterized by 
+n parameters ai (rotation, translation, scaling, etc.), $p is a manifold of at most n 
+dimensions. The patterns in $p that are obtained through small transformations 
+of P, i.e. the part of $p that is close to P, can be approximated by a plane 
+tangent to the manifold $p at the point P. Small transformations of P can bc 
+obtained by adding to P a linear combination of vectors that span the tangent 
+plane (tangent vectors). The images at the bottom of Fig. 2 were obtained by that 
+procedure. Tangent vectors for a transformation s can easily be computed by finite 
+difference (evaluating Os(o, P)/Oa); more details can be found in (Simard et al., 
+1992b; Simard et al., 1992a). 
+As we mentioned earlier, the Euclidean distance between two patterns P and E 
+is in general not appropriate because it is sensitive to irrelevant transformations 
+of P and of E. In contrast, the distance (E, P) defined to be the minimal dis- 
+tance between the two manifolds $p and $z is truly invariant with respect to the 
+transformation used to generate $p and $z. Unfortunately, these manifolds have 
+no analytic expression in general, and finding the distance between them is a hard 
+optimization problem with multiple local minima.. Besides, true invariance is not 
+If the image of a 3 is translated vertically upward, the middle top pixel will oscilla. te 
+from black to white three times. 
+52 Simard, Cun, and Denker 
+� -15 * -7.5' 
+P 
+7.5' 
+True rotations of P 
+Transformations o P 
+Pixel space 
+(z=-0.2 c=-0.1 
+p o:=0.1 0:=0.2 P T.V. 
+Figure 2: Top' Small rotations of an original digitized image of the digit 3. 
+Middle: Representation of the effect of the rotation in pixel space (if there were 
+only 3 pixels). Bottom: Images obtained by moving along the tangent to the 
+transformation curve for the same original digitized image P by adding various 
+amounts (a) of the tangent vector (T.V.). 
+necessarily desirable since a rotation of a 6 into a 9 does not preserve the correct 
+classification. 
+Our approach consists of approximating the non-linear manifold $p and $z by 
+linear surfaces and computing the distance D(E, P) defined to be the minimum 
+distance between them. This solves three problems at once: 1) linear manifolds 
+have simple analytical expressions which can be easily computed and stored, 2) 
+finding the minimum distance between linear manifolds is a simple least squares 
+problem which can be solved efticiently and, 3) this distance is locally invaria.nt but 
+not globally invariant. Thus the distance between a 6 and a slightly rota. ted 6 
+is small but the distance between a 6 and a 9 is large. The different, distances 
+between P and E are represented schematically in Fig. 3. 
+The figure represents two patterns P and E in 3-dimensional space. The manifolds 
+generated by s are represented by one-dimensional curves going through E and P 
+respectively. The linear approximations to the manifolds are represented by lines 
+tangent to the curves at E and P. These lines do not intersect in 3 dimensions and 
+the shortest distance between them (uniquely defined) is D(E, P). The distance 
+between the two non-linear transformation curves D(E, P) is also shown on the 
+figure. 
+An efticient implementation of the tangent distance D(E, P) will be given in the 
+Efficient Pattern Recognition Using a New Transformation Distance 53 
+between P and E 
+P 
+Tangent Distance 
+Sp 
+E 
+Distance between S E 
+S r, and S E 
+Figure 3: Illustration of the Euclidean distance and the tangent distance between 
+P and E 
+next section. Although the tangent distance can be applied to any kind of pat- 
+terns represented as vectors, we have concentrated our efforts on applications to 
+image recognition. Comparison of tangent distance with the best known competing 
+method will be described. Finally we will discuss possible variations on the tangent 
+distance and how it can be generalized to problems other than pattern recognition. 
+2 IMPLEMENTATION 
+In this section we describe formally the computation of the tangent distance. Let 
+the function s which map u, G to s(G, u) be a differentiable transformation of the 
+input space, depending on a vector  of parameter, verifying s(6', u) = u. 
+If u is a 2 dimensional image for instance, s(G,u) could be a rotation of u by 
+the angle . If we are interested in all transformations of images which conserve 
+distances (isometry), s(G, u) would be a rotation by txr followed by a translation 
+by az, ay of the image u. In this case G = (cr, az, ay) is a vector of parameters of 
+dimension 3. In general, G = (ix0,..., am-1) is of dimension m. 
+Since s is differentiable, the set S = {z ] 3 for which z = s(G, u)} is a differen- 
+tiable manifold which can be approximated to the first order by a hyperplane T. 
+This hyperplane is tangent to $, at u and is generated by the columns of matrix 
+Os(,u) _ 0s(, u) Os(,u)l (1) 
+- oa0 ' J 
+which are vectors tangent to the manifold. If E and P are two patterns to be 
+compared, the respective tangent planes TE and Tp can be used to define a. new 
+distance D between these two patterns. The tangent distance D(E, P) between E 
+nd P is defined by 
+D(E, P) = min [Ix - yll (2) 
+zT,yT, 
+The equation of the tangent planes TB and Tp is given by: 
+E'(WE) - E+ Ls5s (3) 
+= P + (4) 
+54 Simard, Cun, and Denker 
+where LE and L, are the matrices containing the tangent vectors (see Eq. 1) and 
+the vectors GE and ct, are the coordinates of E t and pt in the corresponding tangent 
+planes. The quantities Lm and Lp are attributes of the patterns so in many cases 
+they can be precomputed and stored. 
+Computing the tangent distance 
+D(E,P) = min IIE'()- P'(v)ll 2 (5) 
+amounts to solving a linear let squares problem. The optimality condition is that 
+the partial derivatives of D(E, P) with respect to v and s should be zero: 
+OD(E,P) 
+ass : - : o 
+an(s,P) 
+: - s'(as)) : o 
+Substituting E  nd P by their expressions yields to the following linear system of 
+equations, which we must solve for p nd $' 
+The solution of this system is 
+LEEL $ -- _ _ 
+5)(s P) 
+- - : - LspLppLE)S 
+decompositions of LSE and Lpp cn be precomput. ed. The most expenstve part. 
+solving this system is ewluting LEp (LpE cn be obtMned by transposing LEp). 
+It requires E X p dot products, where E ls the number of tngent vec

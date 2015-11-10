@@ -1,0 +1,173 @@
+Predicting the Risk of Complications in Coronary 
+Artery Bypass Operations using Neural Networks 
+Richard P. Lippmann, Linda Kukolich 
+MIT Lincoln Laboratory 
+244 Wood Street 
+Lexington, MA 02173-0073 
+Dr. David Shahian 
+Lahey Clinic 
+Burlington, MA 01805 
+Abstract 
+Experiments demonstrated that sigmoid multilayer perceptron (MLP) 
+networks provide slightly better risk prediction than conventional 
+logistic regression when used to predict the risk of death, stroke, and 
+renal failure on 1257 patients who underwent coronary artery bypass 
+operations at the Lahey Clinic. MLP networks with no hidden layer and 
+networks with one hidden layer were trained using stochastic gradient 
+descent with early stopping. MLP networks and logistic regression used 
+the same input features and were evaluated using bootstrap sampling 
+with 50 replications. ROC areas for predicting mortality using 
+preoperative input features were 70.5% for logistic regression and 
+76.0% for MLP networks. Regularization provided by early stopping 
+was an important component of improved performance. A simplified 
+approach to generating confidence intervals for MLP risk predictions 
+using an auxiliary confidence MLP was developed. The confidence 
+MLP is trained to reproduce confidence intervals that were generated 
+during training using the outputs of 50 MLP networks trained with 
+different bootstrap samples. 
+1 INTRODUCTION 
+In 1992 there were roughly 300,000 coronary artery bypass operations performed in the 
+United States at a cost of roughly $44,000 per operation. The $13.2 billion total cost of 
+these operations is a significant fraction of health care spending in the United States. This 
+has led to recent interest in comparing the quality of cardiac surgery across hospitals using 
+risk-adjusted procedures and large patient populations. It has also led to interest in better 
+assessing risks for individual patients and in obtaining improved understanding of the pa- 
+tient and procedural characteristics that affect cardiac surgery outcomes. 
+1056 Richard P. Lippmann, Linda Kukolich, David Shahian 
+INPUT 
+FEATURES 
+SELECT 
+FEATURES 
+AND 
+REPLACE 
+MISSING 
+FEATURES 
+CLASSIFY 
+CONFIDENCE 
+NETWORK 
+RISK 
+PROBABILITY 
+Figure 1. Block diagram of a medical risk predictor. 
+CONFIDENCE 
+INTERVAL 
+This paper describes a experiments that explore the use of neural networks to predict the 
+risk of complications in coronary artery bypass graft (CABG) surgery. Previous approaches 
+to risk prediction for bypass surgery used linear or logistic regression or a Bayesian ap- 
+proach which assumes input features used for risk prediction are independent (e.g. Ed- 
+wards, 1994; Marshall, 1994; Higgins, 1992; O'Conner, 1992). Neural networks have the 
+potential advantages of modeling complex interactions among input features, of allowing 
+both categorical and continuous input features, and of allowing more flexibility in fitting 
+the expected risk than a simple linear or logistic function. 
+2 RISK PREDICTION AND FEATURE SELECTION 
+A block diagram of the medical risk prediction system used in these experiments is shown 
+in Figure 1. Input features from a patient's medical record are provided as 105 raw inputs, 
+a smaller subset of these features is selected, missing features in this subset are replaced 
+with their most likely values from training data, and a reduced input feature vector is fed to 
+a classifier and to a confidence network. The classifier provides outputs that estimate the 
+probability or risk of one type of complication. The confidence network provides upper and 
+lower bounds on these risk estimates. Both logistic regression and multilayer sigmoid neu- 
+ral network (MLP) classifiers were evaluated in this study. Logistic regression is the most 
+common approach to risk prediction. It is structurally equivalent to a feed-forward network 
+with linear inputs and one output unit with a sigmoidal nonlinearity. Weights and offsets are 
+estimated using a maximum likelihood criterion and iterative batch training. The refer- 
+ence logistic regression classifier used in these experiments was implemented with the S- 
+Plus glm function (Mathsoft, 1993) which uses iteratively reweighted least squares for 
+training and no extra regularization such as weight decay. Multilayer feed-forward neural 
+networks with no hidden nodes (denoted single-layer MLPs) and with one hidden layer and 
+from 1 to 10 hidden nodes were also evaluated as implemented using LNKnet pattern clas- 
+siftcation software (Lippmann, 1993). An MLP committee classifier containing eight mem- 
+bers trained using different initial random weights was also evaluated. 
+All classifiers were evaluated using a data base of 1257 patients who underwent coronary 
+artery bypass surgery from 1990 to 1994. Classifiers were used to predict mortality, post- 
+operative strokes, and renal failure. Predictions were made after a patient's medical history 
+was obtained (History), after pre-surgical tests had been performed (Post-test), immediately 
+before the operation (Preop), and immediately after the operation (Postop). Bootstrap sam- 
+pling (Efron, 1993) was used to assess risk prediction accuracy because there were so few 
+Predicting the Risk of Complications in Coronary Artery B)ass Operations 1057 
+patients with complications in this data base. The number of patients with complications 
+was 33 or 2.6% for mortality, 25 or 2.0% for stroke, and 21 or 1.7% for renal failure. All 
+experiments were performed using 50 bootstrap training sets where a risk prediction tech- 
+nique is trained with a bootstrap training set and evaluated using left-out patterns. 
+HISTORY 
+Age 
+COPD (Chronic Obs. Pul. Disease) 
+POST-TEST 
+Pulmonary Ventricular Congestion 
+X-ray Cardiomegaly 
+X-ray Pulmonary Edema 
+PREOP 
+NTG (Nitroglycerin) 
+IABP (Intraaortic Balloon Pump) 
+Urgency Status 
+MI When 
+POSTOP 
+Blood Used (Packed Cells) 
+Perfusion Time 
+NComplications 
+%Tme Hits 
+NHigh 
+27/674 4.0% 
+7/126 5.6% 
+8/71 11.3% 
+6/105 5.7% 
+6/21 26.6% 
+21/447 4.7% 
+11/115 6.6% 
+10/127 7.9% 
+7/64 10.9% 
+12/113 10.6% 
+9/184 4.9% 
+Figure 2. Features selected to predict mortality. 
+The initial set of 105 raw input features included binary (e.g. Male/Female), categorical 
+(e.g. MI When: none, old, recent, evolving), and continuous valued features (e.g. Perfusion 
+Time, Age). There were many missing and irrelevant features and all features were only 
+weakly predictive. Small sets of features were selected for each complication using the fol- 
+lowing procedures: (1) Select those 10 to 40 features experience and previous studies indi- 
+cate are related to each complication, (2) Omit features if a univariate contingency table 
+analysis shows the feature is not important, (3) Omit features that are missing for more than 
+5% of patients, (4) Order features by number of true positives, (5) Omit features that are 
+similar to other features keeping the most predictive, and (7) Add features incrementally as 
+a patient's hospital interaction progresses. This resulted in sets of from 3 to 11 features for 
+the three complications. Figure 2 shows the 11 features selected to predict mortality. The 
+first column lists the features, the second column presents a fraction equal to the number of 
+complications when the feature was high divided by the number of times this feature was 
+high (A threshold was assigned for continuous and categorical features that provided 
+good separation), and the last column is the second column expressed as a percentage. Clas- 
+sifters were provided identical sets of input features for all experiments. Continuous inputs 
+to all classifiers were normalized to have zero mean and unit variance, categorical inputs 
+ranged from -(D-1)/2 to (D-l)/2 in steps of 1.0, where D is the number of categories, and 
+binary inputs were -0.5 or 0.5. 
+3 PERFORMANCE COMPARISONS 
+Risk prediction was evaluated by plotting and computing the area under receiver operating 
+characteristic (ROC) curves and also by using chi-square tests to determine how accurately 
+classifiers could stratify subjects into three risk categories. Automated experiments were 
+performed using bootstrap sampling to explore the effect of varying the training step size 
+1058 Richard P. Lippmann, Linda Kukolich, David Shahian 
+lOO 
+80 
+60 
+40 
+20 
+o 
+0 20 40 
+60 80 100 0 20 40 60 80 100 
+% FALSE ALARMS (100 - Specificity) 
+Figure 3. Fifty preoperative bootstrap ROCs predicting mortality using an MLP 
+classifier with two hidden nodes and the average ROC (left), and average ROCS 
+for mortality using history, preoperative, and postoperative features (right). 
+from 0.005 to 0.1; of using squared-error, cross-entropy, and maximum likelihood cost 
+functions; of varying the number of hidden nodes from 1 to 8; and of stopping training after 
+from 5 to 40 epochs. ROC areas varied little as parameters were varied. Risk stratification, 
+which measures how well classifier outputs approximate posterior probabilities, improved 
+substantially with a cross-entropy cost function (instead of squared error), with a smaller 
+stepsize (0.01 instead of 0.05 or 0.1) and with more training epochs (20 versus 5 or 10). An 
+MLP classifier with two hidden nodes provided good overall performance across compli- 
+cations and patient stages with a cross-entropy cost function, a stepsize of 0.01, momentum 
+of 0.6, and stochastic gradient descent stopping after 20 epochs. A single-layer MLP pro- 
+vided good performance with similar settings, but stopping after 5 epochs. These settings 
+were used for all experiments. The left side of Figure 3 shows the 50 bootstrap ROCs cre- 
+ated using these settings for a two-hidden-node MLP when predicting mortality with pre- 
+operative features and the ROC created by averaging these curves. There is a large 
+variability in these ROCs due to the small amount of training data. The ROC area varies 
+from 67% to 85% ((---4.7) and the sensitivity with 20% false alarms varies from 30% to 
+79%. S

@@ -1,0 +1,160 @@
+Modelling Seasonality and Trends in Daily 
+Rainfall Data 
+Peter M Williams 
+School of Cognitive and Computing Sciences 
+University of Sussex 
+Falmer, Brighton BN1 9QH, UK 
+email: peterw @cogs.susx.ac.uk 
+Abstract 
+This paper presents a new approach to the problem of modelling daily 
+rainfall using neural networks. We first model the conditional distribu- 
+tions of rainfall amounts, in such a way that the model itself determines 
+the order of the process, and the time-dependent shape and scale of the 
+conditional distributions. After integrating over particular weather pat- 
+terns, we are able to extract seasonal variations and long-term trends. 
+1 Introduction 
+Analysis of rainfall data is important for many agricultural, ecological and engineering 
+activities. Design of irrigation and drainage systems, for instance, needs to take account 
+not only of mean expected rainfall, but also of rainfall volatility. In agricultural planning, 
+changes in the annual cycle, e.g. advances in the onset of winter rain, are significant in 
+determining the optimum time for planting crops. Estimates of crop yields also depend 
+on the distribution of rainfall during the growing season, as well as on the overall amount. 
+Such problems require the extrapolation of longer term trends as well as the provision of 
+short or medium term forecasts. 
+2 Occurrence and amount processes 
+Models of daily precipitation commonly distinguish between the occurrence process, i.e. 
+whether or not it rains, and the amount process, i.e. how much it rains, if it does. The 
+occurrence process is often modelled as a two-state Markov chain of first or higher order. 
+In discussion of [12], Katz traces this approach back to Quetelet in 1852. A first order 
+chain has been considered adequate for some weather stations, but second or higher order 
+models may be required for others, or at different times of year. Non-stationary Markov 
+chains have been used by a number of investigators, and several approaches have been taken 
+986 P. M. Williams 
+to the problem of seasonal variation, e.g. using Fourier series to model daily variation of 
+parameters [16, 12, 15]. 
+The amount of rain X on a given day, assuming it rains, normally has a roughly exponential 
+distribution. Smaller amounts of rain are generally more likely than larger amounts. Several 
+models have been used for the amount process. Katz & Parlange [9], for example, assume 
+that q/r has a normal distribution, where n is a positive integer empirically chosen to 
+minimise the skewness of the resulting historical distribution. But use has more commonly 
+been made of a gamma distribution [7, 8, 12] or a mixture of two exponentials [16, 15]. 
+3 Stochastic model 
+The present approach is to deal with the occurrence and amount processes jointly, by as- 
+suming that the distribution of the amount of rain on a given day is a mixture of a discrete 
+and continuous component. The discrete component relates to rainfall occurrence and the 
+continuous component relates to rainfall amount on rainy days. 
+We use a gamma distribution for the continuous componentJ This has density proportional 
+to z'-le - to within an adjustable scaling of the z-axis. The shape parameter v > 0 
+controls the ratio of standard deviation to mean. It also determines the location of the 
+mode, which is strictly positive if v > 1. For certain patterns of past precipitation, larger 
+amounts may be more likely on the following day than smaller amounts. Specifically the 
+distribution of the amount X of rain on a given day is modelled by the three parameter 
+family 
+z (1) 
+P(X > z) -- aF v, if x_>0 
+where 0 <_ a <_ 1 and v, 0 > 0 and 
+F(v, z) = F(v) -1 y'-Xe -y dy 
+is the incomplete gamma function. For c < 1, there is a discontinuity at x - 0 con'e- 
+sponding to the discrete component. Putting x - O, it is seen that c = P(X > O) is the 
+probability of rain on the day in question. The mean daily rainfall amount is cyO and the 
+variance is av{1 + v(1 - 00}02. 
+4 Modelling time dependency 
+The parameters , v, 0 determining the conditional distribution for a given day, are under- 
+stood to depend on the preceding pattern of precipitation, the time of year etc. To model 
+this dependency we use a neural network with inputs corresponding to the conditioning 
+events, and three outputs corresponding to the distributional parameters. 2 Referring to the 
+activations of the three output units as z ', z ' and z �, we relate these to the distributional 
+parameters by 
+1 
+a = v = exp z ' 0 = exp z � (2) 
+1 + exp z �' 
+in order to ensure an unconstrained parametrization with 0 < a < 1 and v, 0 > 0 for any 
+real values of z a , z v , z �. 
+lit would be straightforward to use a mixture of ganunas, or exponentials, with time-dependent 
+mixture components. A single gamma was chosen for simplicity to illustrate the approach. 
+2A similar approach to modelling conditional distributions, by having the network output distri- 
+butional parameters, is used, for example, by Ghahramani & Jordan [6], Nix & Weigend [10], Bishop 
+& Legleye [3], Williams [14], Baldi & Chauvin [2]. 
+Modelling Seasonality and Trends in Daily Rainfall Data 987 
+On the input side, we first need to make additional assumptions about the statistical proper- 
+ties of the process. Specifically it is assumed that the present is stochastically independent 
+of the distant past in the sense that 
+P(Xt > = P(gt > (t > T) (3) 
+for a sufficienfiy large number of days T. In fact the stronger assumption will be made that 
+P(Xt > = P(Xt > (t > T) (4) 
+where Rt -- (Xt > 0) is the event of rain on day t. This assumes that today's rainfall 
+mount depends stochastically only on the occurrence or non-occurrence of rain in the 
+recent past, and not on the actual amounts. Such a simplification is in line with previous 
+approaches [8, 16, 12]. For the present study T was taken to be 10. 
+To assist in modelling seasonal variations, cyclic variables sin r and cos r were also pro- 
+vided as inputs, where r = 2rt/D and D = 365.2422 is the length of the tropical year. 
+This corresponds to using Fourier series to model seasonality [16, 12] but with the num- 
+ber of harmonics adaptively determined by the model. 3 To allow for non-periodic non- 
+stationarity, the current value of t was also provided as input. 
+5 Model fitting 
+Suppose we are given a sequence of daily rainfall data of length N. Equation (4) implies 
+that the likelihood of the full data sequence (ZN-,..., ZO) factorises as 
+N-1 
+p(xN-,...,Xo;w)=p(XT-i,...,Xo) II P(xtlrt-'rt-T;W) (5) 
+t=T 
+where the likelihood p(xT-1,..., x0) of the initial sequence is not modelled and can be 
+considered as a constant (compare [14]). Our interest is in the likelihood (5) of the actual 
+sequence of observations, which is understood to depend on the variable weights w of the 
+neural network. Note that p(xt I rt-,..., rt-T; w) is computed by means of the neural 
+network outputs z, z', zt �, using weights w and the inputs corresponding to time t. 
+The log likelihood of the data can therefore be written, to within a constant, as 
+N--1 
+10gp(xN-,... ,X0; W) = E 10gp(xt ]rt-x,..., rt-T; w) 
+t=T 
+or, more simply, 
+N--1 
+t=T 
+(6) 
+where dependence of at, vt, Ot on w, and also on the data, is implicit. 
+To fit the model, it is useful to know the gradient VL(w). This can be computed using 
+backpropagation if we know the partial derivatives of L(w) with respect to network out- 
+puts. In view of (6) we can concentrate on a single observation and perform a summation. 
+3Note that both sin nr and cos nr can be expressed as non-linear functions of sin r and cos r, 
+which can be approximated by the network. 
+where from (1) 
+log(1 - ct) ifzt = 0 
+Lt(w)= logctt+(vt-1)logxt-vtlogOt-logF(vt)-xt/Ot ifxt >O (7) 
+988 P. M. Williams 
+Omitting subscript references to t for simplicity, and recalling the links between network 
+outputs and distributional parameters given by (2), we have 
+where 
+O L { -a ifx = 0 
+Oz, 1-c if x>0 
+OL { o 
+- 
+OL { 0 if a: = 0 
+= a: ira: > 0 
+Oz o v - 
+if a:= 0 
+if a: > 0 (8) 
+d r'(v) 
+= log - 
+is the digamma function of v. Efficient algorithms for computing log I'(v) in (7) and .,(v) 
+in (8) can be found in Press et al. [11] and Amos [1]. 
+6 Regularizafion 
+Since neural networks are universal approximators, some form of regularization is needed. 
+As in all statistical modelling, it is important to strike the right balance between jumping 
+to conclusions (overfitting) and refusing to learn from experience (underfitting). For this 
+purpose, each model was fitted using the techniques of [13] which automatically adapt the 
+complexity of the model to the information content of the data, though other comparable 
+techniques might be used. The natural interpretation of the regularizer is as a Bayesian 
+prior. The Bayesian analysis is completed by integration over weight space. In the present 
+case, this was achieved by fitting several models and taking a suitable mixture as the so- 
+lution. On account of the large datasets used, however, the results are not particularly 
+sensitive to this aspect of the modelling process. 
+7 Results for conditional distributions 
+The process was applied to daily rainfall data from 5 stations in south east England and 5 
+stations in central Italy. 4 The data covered approximately 40 years providing some 15,000 
+observations for each station. A simple fully connected network was used with a single 
+layer of 13 input units, 20 hidden units and 3 output units corresponding to the 3 parameters 
+of the conditional distribution shown in (2). As a consequence of the pruning features of the 
+regularizer, the models described here used an average of roughly 65 of the 343 available 
+parameters. 
+To illustrate the general nature of the results, Figure 1 shows an example from the analysis 
+of an early part of the Falmer series. It is worth observing the succession of 16 rainy days 
+from day 39 to day 54. The lefthand figure shows that the conditi

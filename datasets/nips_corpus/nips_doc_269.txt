@@ -1,0 +1,168 @@
+An Efficient Implementation of the Back-propagation Algorithm 801 
+An Efficient Implementation of 
+the Back-propagation Algorithm on 
+the Connection Machine CM-2 
+Xiru Zhang  
+Michael Mckenna Jill P. Mesirov David L. Waltz 
+Th/nk/ng Machines Corporation 
+245 First Street, Cambridge, MA 02142-1214 
+ABSTRACT 
+In this paper, we present a novel implementation of the widely used 
+Back-propagation neural net learning algorithm on the Connection 
+Machine CM-2 - a general purpose, massively parallel computer 
+with a hypercube topology. This implementation runs at about 180 
+million interconnections per second (IPS) on a 64K processor CM- 
+2. The main interprocessor communication operation used is 2D 
+nearest neighbor communication. The techniques developed here 
+can be easily extended to implement other algorithms for layered 
+neural nets on the CM-2, or on other massively parallel computers 
+which have 2D or higher degree connections among their processors. 
+I Introduction 
+High-speed simulation of large artificial neural nets has become an important tool 
+for solving real world problems and for studying the dynamic behavior of large 
+populations of interconnected processing elements [3, 2]. This work is intended to 
+provide such a simulation tool for a widely used neural net learning algorithm - the 
+Back-propagation (BP) algorithm.[7] 
+The hardware we have used is the Connection Machine � CM-2? On a 64K pro- 
+cessor CM-2 our implementation runs at 40 million Weight Update Per Second 
+1 This author is also a graduate student at Computer Science Department, Brandeis University, 
+Waltham, MA 02254-9110. 
+2 Connection Machine is a registered trademark of Thinking Machines Corporation. 
+802 Zhang, Mckenna, Mesirov and Waltz 
+(WUPS) a for training, or 180 million Interconnection Per Second (IPS) for forward- 
+pass, where IPS is defined in the DARPA NEVtA, NETWOtK STtmY [2] as the 
+number of multiply-and-add operations that can be performed in a second [on a 
+Back-propagation network]. We believe that the techniques developed here can be 
+easily extended to implement other algorithms for layered neural nets on the CM-2, 
+or other massively parallel machines which have 2D or higher degree connections 
+among their processors. 
+2 The Connection Machine 
+The Connection Machine CM-2 is a massively parallel computer with up to 65,536 
+processors. Each processor has a single-bit processing unit and 64K or 256K bits 
+of local RAM. The processors run in SIMD mode. They are connected in an n- 
+cube topology, which permits highly efficient n dimensional grid communications. 
+The system software also provides scan and spread operations - e.g., when n.m 
+processors are connected as an n x m 2D grid, the summation (product, max, 
+etc.) of a parallel variable value in all the processors on a row of the grid 4 takes 
+only O(logm) time. It is possible to turn off any subset of the processors so that 
+instructions will only be performed by those processors that are currently active. 
+On the CM-2, every 32 processors share a floating point processing unit; and a 32 
+bit number can be stored across 32 processors (i.e., one bit per processor). These 
+32 processors can each access this 32-bit number as if it were stored in its own 
+memory. This is a way of sharing data among processors locally. The CM-2 uses 
+a conventional computer such as a SUN-4, VAX or Symbolics Lisp Machine as a 
+front-end machine. Parallel extensions to the familiar programming languages LISP, 
+C, and FORTRAN, via the front-end, allow the user to program the Connection 
+Machine and the front-end system. 
+3 The Back-propagation Algorithm 
+The Back-propagation [7] algorithm works on layered, feed-forward networks (BP 
+net for short in the following discussion), where the processing units are arranged in 
+layers - there are an input layer, an output layer, and one or more hidden layers 
+(layers between the input and output layers). A BP net computes its output in 
+the following fashion: first an input pattern is set as the output of the units at the 
+input layer; then one layer at a time, from the input to hidden to output layer, 
+the units compute their outputs by applying an activation function to the weighted 
+sum of their inputs (which are the outputs of the unit at the lower layer(s) that are 
+connected to them). The weights come f_tom the links between the units. 
+The Back-propagation algorithm trains a BP net by adjusting the link weights 
+of the net using a set of training examples. Each training example consists of 
+3 This includes the time required to read in the input pattern, propagate activation forward 
+through the network, read in the ideal output pattern, propagate the error signal backward through 
+the network, compute the weight changes, and change the weights. 
+4 That is, to add together one value from each processor on a row of the grid and distribute 
+the sum into all the processors on the same row. 
+An Efficient Implementation of the Back-propagation Algorithm 803 
+i i � 
+m � � � � � 
+Output Layer 
+Hidden Layer 
+Input Layer 
+0 ' ' ' j ' ' m m-1 
+'igure 1: A 3-layer, fully-connected Back-propagation network that has the same num- 
+ber (m) of nodes at each layer. 
+an input pattern and an ideal output pattern that the user wants the network to 
+produce for that input. The weights are adjusted based on the difference between 
+the ideal output and the actual output of the net. This can be seen as a gradient 
+descent process in the weight space. 
+After the training is done, the BP net can be applied to inputs that are not in the 
+set of training examples. For a new input pattern IP, the network tends to produce 
+an output similar to the training example whose input is similar to IP. This can be 
+used for interpolation, approximation, or generalization from examples depending 
+on the goal of the user [4]. 
+4 The Implementation 
+In this section, we explain our implementation by presenting a simple example - 
+a three-layer fully-connected BP network that has the same number of nodes at 
+each layer. It is straightforward to extend it to general cases. For a more detailed 
+discussion, see reference [8]. 
+4.1 A Simple Case 
+Figure I shows a fully-connected 3-layer BP network with rn nodes on each layer. 
+In the following discussion, we will use Ni,j to denote the jth node (from the left) 
+on layer i, i E {0,1,2},j G {0,1, m- 1}; W i'j is the weight of the link from 
+� ' ' ' k,h 
+node Nk,h to node Ni,j, and 5i,j is the error at node Ni,j. 
+First, assume we have exactly m processors. We store a column of the network 
+in each processor. That is, processor j contains nodes No,j, N,j and N2,j. It also 
+contains the weights of the links going into Nx,j and N2,j (i.e., ' t,j ' 
+Wj, and W, for 
+804 Zhang, Mckenna, Mesirov and Waltz 
+.. -.p.r.o.c e s s o r s. 
+Link   _  . 
+Weights e e Output Node 
+_ 2,k S O O 
+W,J O O 
+Weights ) o o Hidden Nodes o 
+ 'S   __ In ut Nodes 
+      ..... :,..�. ........ 
+Multily-accumulat%rot,.te 
+F�gure 2: The layout of the example network. 
+k 6 {0, 1,...,m- 1}). See Figure 2. The Back-propagation algorithm consists 
+of three steps: (1) forward pass to compute the network output; (2) backward 
+propagation to compute the errors at each node; and (3) weight update to adjust 
+the weights based on the errors. These steps are implemented as follows: 
+4.X. Forwara P.ss: Otpt(V,.j) - 
+We implement forward ps as follows: 
+1. Set the input node values; there is one input node per processor. 
+2. In each processor, multiply the input node value by the link weight between the 
+input node and the hidden node that is in the same processor; then accumulate 
+the product in the hidden node. 
+3. Rotate the input node values - each processor sends its input node value to 
+its nearest left neighbor processor, the leftmost processor sends its value to 
+the rightmost processor; i.e., do a left-circular-shift. 
+4. Repeat the multiply-accumulate-rotate cycles in the above two steps (2-3) rn 
+times; every hidden node Nx,j will then contain =0 W, � Output(No,n). 
+Now apply the activation function F to that sum. (See Figure 2.) 
+5. Repeat steps 2-4 for the output layer, using the hidden layer as the input. 
+An Efficient Implementation of the Back-propagation Algorithm 805 
+4.1.2 Backward Propagation 
+For the output layer, 62,k, the error at each node Na,k, is computed by 
+2, = Output(N2, )' (1 - Output(N2,)) . (Target(N2, ) - Output(N2,k )), 
+where Target(N2,) is the ideal output for node N2,. This error can be computed 
+in place, i.e., no inter-processor communication is needed. For the hidden layer, 
+(1 
+= ' - ' 
+m-1 
+To compute =0 1j � 62, for the hidden nodes, we perform a multiplF- 
+accumulate-rotate operation silar to the forwd ps, but from the top down. 
+Notice that the weights between a hidden node and the output nodes are in differ- 
+ent processors. So, instead of rotating 62,'s at the output layer, we rotate the parti 
+sum of products for the hidden nodes: at the beginning every hidden node Nl,j has 
+an accumulator A with initi vue = 0 in processor j. We do a left-circular-shift 
+on the Aj's. When Aj moves to processor k, we set A5  A  1j � 6,. After 
+m-1 2,k 
+m rotations, A1 wi return to processor j and its value wi be =0 x,j ' ,' 
+4.1.3 Weight Update: AW i'1 Output(N,h) 
+,h = V' 5i,1 � 
+wi,j 
+wi'J is the weight increment for .. ,h, V is the learning rate and 5i,1 is the error 
+for node Ni,i, which is computed in the backward propagation step and is stored in 
+processor j. The weight update step is done  follows: 
+1. In each processor j, for the weights between the input layer and hidden layer, 
+compute weight update 
+-' o, = fl. x,j � Output(No,),  and add 
+'��O,k to 
+Wo,J ;6 
+,k 
+2. Rotate the input node values as in step 3 of the �orward pass. 
+3. Repeat the above two steps m times, until all the weights between the input 
+layer and the hidden layer are updated. 
+4. D

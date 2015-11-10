@@ -1,0 +1,178 @@
+The Relevance Vector Machine 
+Michael E. Tipping 
+Microsoft Research 
+St George House, 1 Guildhall Street 
+Cambridge CB2 3NH, U.K. 
+mtipping�microsoft. com 
+Abstract 
+The support vector machine (SVM) is a state-of-the-art technique 
+for regression and classification, combining excellent generalisation 
+properties with a sparse kernel representation. However, it does 
+suffer from a number of disadvantages, notably the absence of prob- 
+abilistic outputs, the requirement to estimate a trade-off parameter 
+and the need to utilise 'Mercer' kernel functions. In this paper we 
+introduce the Relevance Vector Machine (RVM), a Bayesian treat- 
+ment of a generalised linear model of identical functional form to 
+the SVM. The RVM suffers from none of the above disadvantages, 
+and examples demonstrate that for comparable generalisation per- 
+formance, the RVM requires dramatically fewer kernel functions. 
+I Introduction 
+In supervised learning we are given a set of examples of input vectors (Xn N 
+}n----! 
+along with corresponding targets N 
+(tn}n=l, the latter of which might be real values 
+(in regression) or class labels (classification). From this 'training' set we wish to 
+learn a model of the dependency of the targets on the inputs with the objective of 
+making accurate predictions of t for previously unseen values of x. In real-world 
+data, the presence of noise (in regression) and class overlap (in classification) implies 
+that the principal modelling challenge is to avoid 'over-fitting' of the training set. 
+A very successful approach to supervised learning is the support vector machine 
+(SVM) [8]. It makes predictions based on a function of the form 
+N 
+y(x) = wnK(x, xn) + w0, 
+(1) 
+n----1 
+where {wn} are the model 'weights' and K(., .) is a kernel function. The key feature 
+of the SVM is that, in the classification case, its target function attempts to minimise 
+the number of errors made on the training set while simultaneously maximising the 
+'margin' between the two classes (in the feature space implicitly defined by the 
+kernel). This is an effective 'prior' for avoiding over-fitting, which leads to good 
+generalisation, and which furthermore results in a sparse model dependent only on 
+a subset of kernel functions: those associated with training examples Xn that lie 
+either on the margin or on the 'wrong' side of it. State-of-the-art results have been 
+reported on many tasks where SVMs have been applied. 
+The Relevance Vector Machine 653 
+However, the support vector methodology does exhibit significant disadvantages: 
+Predictions are not probabilistic. In regression the SVM outputs a point 
+estimate, and in classification, a 'hard' binary decision. Ideally, we desire to 
+estimate the conditional distribution p(tlx ) in order to capture uncertainty 
+in our prediction. In regression this may take the form of 'error-bars', but it 
+is particularly crucial in classification where posterior probabilities of class 
+membership are necessary to adapt to varying class priors and asymmetric 
+misclassification costs. 
+Although relatively sparse, SVMs make liberal use of kernel functions, the 
+requisite number of which grows steeply with the size of the training set. 
+It is necessary to estimate the error/margin trade-off parameter 'C' (and 
+in regression, the insensitivity parameter 'e' too). This generally entails a 
+cross-validation procedure, which is wasteful both of data and computation. 
+The kernel function K(-,-) must satisfy Mercer's condition. 
+In this paper, we introduce the 'relevance vector machine' (RVM), a probabilistic 
+sparse kernel model identical in functional form to the SVM. Here we adopt a 
+Bayesian approach to learning, where we introduce a prior over the weights governed 
+by a set of hyperparameters, one associated with each weight, whose most probable 
+values are iteratively estimated from the data. Sparsity is achieved because in 
+practice we find that the posterior distributions of many of the weights are sharply 
+peaked around zero. Furthermore, unlike the support vector classifier, the non- 
+zero weights in the RVM are not associated with examples close to the decision 
+boundary, but rather appear to represent 'prototypical' examples of classes. We 
+term these examples 'relevance' vectors, in deference to the principle of automatic 
+relevance determination (ARD) which motivates the presented approach [4, 6]. 
+The most compelling feature of the RVM is that, while capable of generalisation per- 
+formance comparable to an equivalent SVM, it typically utilises dramatically fewer 
+kernel functions. Furthermore, the RVM suffers from none of the other limitations 
+of the SVM outlined above. 
+In the next section, we introduce the Bayesian model, initially for regression, and 
+define the procedure for obtaining hyperparameter values, and thus weights. In 
+Section 3, we give brief examples of application of the RVM in the regression case, 
+before developing the theory for the classification case in Section 4. Examples of 
+RVM classification are then given in Section 5, concluding with a discussion. 
+2 Relevance Vector Regression 
+Given a dataset of input-target pairs (Xn, t, v 
+)n----l, we follow the standard formula- 
+tion and assume p(t]x) is Gaussian Af(t]y(x), a2). The mean of this distribution for 
+a given x is modelled by y(x) as defined in (1) for the SVM. The likelihood of the 
+dataset can then be written as 
+P(tlw, a2)=(2ra)-N/exp{ 21[]t - ,I'w)]12 }, (2) 
+where t - (tl ... tN), w -- (Wo... WN) and  is the N x (N q- 1) 'design' matrix 
+with nm = K(xn, xm-1) and (I)nl ---- 1. Maximum-likelihood estimation of w and 
+ from (2) will generally lead to severe overfitting, so we encode a preference for 
+smoother functions by defining an ARD Gaussian prior [4, 6] over the weights: 
+N 
+P(Wle) -- H Jr(Wi10' O/1)' (3) 
+i----0 
+654 M. E. Tipping 
+with c a vector of N + 1 hyperparameters. This introduction of an individual hy- 
+perparameter for every weight is the key feature of the model, and is ultimately 
+responsible for its sparsity properties. The posterior over the weights is then ob- 
+tained from Bayes' rule: 
+with 
+{1 
+p(wlt, a,a 2) = (2r)-(N+l)/21l-1/2 exp -(w -/./)Ty]--l(w -- 
+, (4) 
+=(?B+A) -1, 
+/ = TBt, 
+where we have defined A = diag(a0, al,..., aN) and B = 
+also treated as a hyperparameter, which may be estimated from the data. 
+By integrating out the weights, we obtain the marginal likelihood, or evidence [2], 
+for the hyperparameters: 
+p(tla,a 2) = (2r)-/2lB-1 + A-IT1-1/2 exp -t (B -1 + ,I,A- . 
+(7) 
+For ideal Bayesian inference, we should define hyperpriors over e and a , and 
+integrate out the hyperparameters too. However, such marginalisation cannot be 
+performed in closed-form here, so we adopt a pragmatic procedure, based on that 
+of MacKay [2], and optimise the marginal likelihood (7) with respect to 
+which is essentially the type H maximum likelihood method [1]. This is equivalent 
+to finding the maximum of p(e, alt), assuming a uniform (and thus improper) 
+hyperprior. We then make predictions, based on (4), using these maximising values. 
+(5) 
+(6) 
+Note that a 2 is 
+2.1 Optimising the hyperparameters 
+Values of e, and a 2 which maximise (7) cannot be obtained in closed form, and 
+we consider two alternative formulae for iterative re-estimation of e,. First, by 
+considering the weights as 'hidden' variables, an EM approach gives: 
+1 1 
+onew . _-- . 
+i <W/2> p(w{t,o,er 2) ii q- ] (8) 
+Second, direct differentiation of (7) and rearranging gives: 
+onew i 
+i --- 
+/, (9) 
+where we have defined the quantities 7i = 1 - cqZ, which can be interpreted as a 
+measure of how 'well-determined' each parameter w is by the data [2]. Generally, 
+this latter update was observed to exhibit faster convergence. 
+For the noise variance, both methods lead to the same re-estimate: 
+((72) new -- lit - 'ulI2/(N - (10) 
+i 
+In practice, during re-estimation, we find that many of the ai approach infinity, 
+and from (4), p(wiJt, c,a 2) becomes infinitely peaked at zero -- implying that 
+the corresponding kernel functions can be 'pruned'. While space here precludes a 
+detailed explanation, this occurs because there is an 'Occam' penalty to be paid for 
+smaller values of ai, due to their appearance in the determinant in the marginal 
+likelihood (7). For some ai, a lesser penalty can be paid by explaining the data 
+with increased noise a 2, in which case those ai  c. 
+The Relevance Vector Machine 655 
+3 Examples of Relevance Vector Regression 
+3.1 Synthetic example: the 'sinc' function 
+The function sinc(x) = [Xl --1 sin [x I is commonly used to illustrate support vector 
+regression [8], where in place of the classification margin, the e-insensitive region is 
+introduced, a 'tube' of +e around the function within which errors are not penalised. 
+In this case, the support vectors lie on the edge of, or outside, this region. For 
+example, using linear spline kernels and with e = 0.01, the approximation of sinc(x) 
+based on 100 uniformly-spaced noise-free samples in [-10, 10] utilises 39 support 
+vectors [8]. 
+By comparison, we approximate the same function with a relevance vector model 
+utilising the same kernel. In this case the noise variance is.fixed at 0.012 and a 
+alone re-estimated. The approximating function is plotted in Figure I (left), and 
+requires only 9 relevance vectors. The largest error is 0.0087, compared to 0.01 in 
+the SV case. Figure I (right) illustrates the case where Gaussian noise of standard 
+deviation 0.2 is added to the targets. The approximation uses 6 relevance vectors, 
+and the noise is automatically estimated, using (10), as a = 0.189. 
+1 
+0.8 
+0.6 
+0.4 
+0.2 
+o 
+-0.2 
+-lO 
+1.2 
+0.8 . ,,/ . 
+0.(5 , 
+0.4. , 
+0.2     
+0.2 � 
+0.4 -10 - 0 5 10 
+Figure 1' Relevance vector approximation to sinc(x): noise-free data (left), and with 
+added Gaussian noise of a = 0.2 (right). The estimated functions are drawn as solid lines 
+with relevance vectors shown 

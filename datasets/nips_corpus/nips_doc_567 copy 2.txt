@@ -1,0 +1,141 @@
+Software for ANN training on a Ring Array Processor 
+Phil Kohn, Jeff Biimes, Nelson Morgan, James Beck 
+International Computer Science Institute, 
+1947 Center St., Berkeley CA 94704, USA 
+Abstract 
+Experimental research on Artificial Neural Network (ANN) algorithms requires 
+either writing variations on the same program or making one monolithic program 
+with many parameters and options. By using an object-oriented library, the size 
+of these experimental programs is reduced while making them easier to read, 
+write and modify. An efficient and flexible realization of this idea is Connection- 
+ist Layered Object-oriented Network Simulator (CLONES). CLONES runs on 
+UNIX  workstations and on the 100-1000 MFLOP Ring Array Processor (RAP) 
+that we built with ANN algorithms in mind. In this report we describe CLONES 
+and show how it is implemented on the RAP. 
+1 Overview 
+As we continue to experiment with Artificial Neural Networks (ANNs) to generate phoneme 
+probabilities for speech recognition (Bourlard & Morgan, 1991), two things have become 
+increasingly clear: 
+1. Because of the diversity and continuing evolution of ANN algorithms, the program- 
+ming environment must be both powerful and flexible. 
+2. These algorithms are very computationally intensive when applied to large databases 
+of training patterns. 
+Ideally we would like to implement and test ideas at about the same rate that we come up 
+with them. We have approached this goal both by developing application specific parallel 
+UNIX is a trademark of AT&T 
+781 
+782 Kohn, Bilmes, Morgan, and Beck 
+RAP 8yMtelll 
+/.E,rd 
+CN$-1 fstm 
+System P'formance Languages Supportexl 
+Assem C C++ Mather )Mather 
+Desktop RAP + 
+100 MFLOP 
+Sun 4/330 H�st 
+Networked RAP 
+1 GFLOP 
+(1-10 Boards) 
+SparcStation + 
+Figure 1' Hardware and software configurations 
+hardware, the Ring Array Processor (RAP) (Morgan et al., 1990; Beck, 1990; Morgan et al., 
+1992), and by building an object-oriented software environment, the Connectionist Layered 
+Obj ect-oriented Network Simulator (CLONES) (Kohn, 1991). B y using an object-oriented 
+library, the size of experimental ANN programs can be greatly reduced while making them 
+easier to read, write and modify. CLONES is written in C++ and utilizes libraries previously 
+written in C and assembler. 
+Our ANN research currently encompasses two hardware platforms and several languages, 
+shown in Figure 1. Two new hardware platforms, the SPERT board (Asanovid et al., 1991) 
+and the CNS-1 system are in design (untilled check marks), and will support source code 
+compatibility with the existing machines. The SPERT design is a custom VLSI parallel 
+processor installed on an SBUS card plugged into a SPARC workstation. Using variable 
+precision fixed point arithmetic, a single SPERT board will have performance comparable 
+to a 10 board RAP system with 40 processors. The CNS-1 system is based on multiple 
+VLSI parallel processors interconnected by high speed communication rings. 
+Because the investment in software is generally large, we insiston source level compatibility 
+across hardware platforms at the level of the system libraries. These libraries include matrix 
+and vector classes that free the user from concern about the hardware configuration. It is 
+also considered important to allow routines in different languages to be linked together. 
+This includes support for Sather, an object-oriented language that has been developed at 
+ICSI for workstations. The parallel version of Sather, called pSather, will be supported on 
+Software 'br ANN training on a Ring Array Processor 783 
+the CNS- 1. 
+CLONES is seen as the ANN researcher's interface to this multiplatform, multilanguage 
+environment. Although CLONES is an application written specifically for ANN algorithms, 
+it's object-orientation gives it the ability to easily include previously developed libraries. 
+CLONES currently runs on UNIX workstations and the RAP; this paper focuses on the 
+RAP implementation. 
+2 RAP hardware 
+The RAP consists of cards that are added to a UNIX host machine (currently a VME based 
+Sun SPARC). A RAP card has four 32 MFlop Digital Signal Processor (DSP) chips (TI 
+TMS320C30), each with its own local 256KB or 1MB of fast static RAM and 16MB of 
+DRAM. 
+Instead of sharing memory, the processors communicate on a high speed ring that shifts 
+data in a single machine cycle. For each board, the peak transfer rate between 4 nodes 
+is 64 million words/sec (256 Mbytes/second). This is a good balance to the 64 million 
+multiply-accumulates per second (128 MFLOPS) peak performance of the computational 
+elements. 
+Up to 16 of these boards can be interconnected and used as one Single Program operating 
+on Multiple Data stream (SPMD) machine. In this style of parallel computation, all the 
+processors run the same program and are doing the same operations to different pieces of the 
+same matrix or vector 2. The RAP can run other styles of parallel computation, including 
+pipelines where each processor is doing a different operation on different data streams. 
+However, for fully connected back-propagation networks, SPMD parallelism works well 
+and is also much easier to program since there is only one flow of control to worry about. 
+A reasonable design for networks in which all processors need all unit outputs is a single 
+broadcast bus. However, this design is not appropriate for other related algorithms such 
+as the backward phase of the back-propagation learning algorithm. By using a ring, back- 
+propagation can be efficiently parallelized without the need to have the complete weight 
+matrix on all processors. The number of ring operations required for each complete matrix 
+update cycle is of the same order as the number of units, not the square of the number of 
+units. It should also be noted that we are using a stochastic or on-line learning algorithm. 
+The training examples are not dividing among the processors then the weights batch updated 
+after a complete pass. All weights are updated for each training example. This procedure 
+greatly decreases the training time for large redundant training sets since more steps are 
+being taken in the weight-space per training example. 
+We have empirically derived formulae that predict the performance improvement on back- 
+propagation training as a function of the number of boards. Theoretical peak performance is 
+128 MFlops/board, with sustained performance of 30-90% for back-propagation problems 
+of interest to us. Systems with up to 40 nodes have been tested, for which throughputs 
+The hardware does not automatically keep the processors in lock step; for example, they may 
+become out of sync because of branches conditioned on the processor's node number or on the 
+data. However, when the processors must communicate with each other through the ring, hardware 
+synchronization automatically occurs. A node that attempts to read before data is ready, or to write 
+when there is already data waiting, will stop executing until the data can be moved. 
+784 Kohn, Bilmes, Morgan, and Beck 
+of up to 574 Million Connections Per Second (MCPS) have been measured, as well as 
+learning rates of up to 106 Million Connection Updates Per Second (MCUPS) for training. 
+Practical considerations such as workstation address space and clock skew restrict current 
+implementations to 64 nodes, but in principle the architecture scales to about 16,000 nodes 
+for back-propagation. 
+We now have considerable experience with the RAP as a day-to-day computational tool for 
+our research. With the aid of the RAP hardware and software, we have done network training 
+studies that would have over a century on a UNIX workstation such as the SPARCstation-2. 
+We have also used the RAP to simulate variable precision arithmetic to guide us in the 
+design of higher performance hardware such as SPERT. 
+The RAP hardware remains very flexible because of the extensive use of programmable 
+logic arrays. These parts are automatically downloaded when the host machine boots up. 
+By changing the download files, the functionality of the communications ring and the host 
+interface can be modified or extended without any physical changes to the board. 
+3 RAP software 
+The RAP DSP software is built in three levels (Kohn & Bilmes, 1990; Bilmes & Kohn, 
+1990). At the lowest level are hand coded assembler routines for matrix, vector and ring 
+operations. Many standard matrix and vector operations are currently supported as well 
+as some operations specialized for efficient back-propagation. These matrix and vector 
+routines do not use the communications ring or split up data among processing nodes. 
+There is also a UNIX compatible library including most standard C functions for file, math 
+and string operations. All UNIX kernel calls (such as file input or output) cause requests 
+to be made to the host SPARC over the VMEbus. A RAP da:mon process running under 
+UNIX has all of the RAP memory mapped into its virtual address space. It responds to the 
+RAP system call interrupts (from the RAP device driver) and can access RAP memory with 
+a direct memory copy function or assignment statement. 
+An intermediate level consists of matrix and vector object classes coded in C++. A 
+programmer writing at this level or above can program the RAP as if it were a conventional 
+serial machine. These object classes divide the data and processing among the available 
+processing nodes, using the communication ring to redistribute data as needed. For example, 
+to multiply a matrix by a vector, each processor would have its own subset of the matrix 
+rows that must be multiplied. This is equivalent to partitioning the output vector elements 
+among the processors. If the complete output vector is needed by all processors, a ring 
+broadcast routine is called to redistribute the part of the output vector from each processor 
+to all the other processors. 
+The top level of RAP software is the CLONES environment. CLONE

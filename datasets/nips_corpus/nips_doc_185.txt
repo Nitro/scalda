@@ -1,0 +1,157 @@
+218 Bengio, De Mori and Cardin 
+Speaker Independent Speech Recognition with 
+Neural Networks and Speech Knowledge 
+Yoshua Bengio Renato De Mori 
+Dept Computer Science Dept Computer Science 
+McGill University McGill University 
+Montreal, Canada H3A2A7 
+Regis Cardin 
+Dept Computer Science 
+McGill University 
+ABSTRACT 
+We attempt to combine neural networks with knowledge from 
+speech science to build a speaker independent speech recogni- 
+tion system. This knowledge is utilized in designing the 
+preprocessing, input coding, output coding, output supervision 
+and architectural constraints. To handle the temporal aspect 
+of speech we combine delays, copies of activations of hidden 
+and output units at the input level, and Back-Propagation for 
+Sequences (BPS), a learning algorithm for networks with local 
+self-loops. This strategy is demonstrated in several experi- 
+ments, in particular a nasal discrimination task for which the 
+application of a speech theory hypothesis dramatically im- 
+proved generalization. 
+1 INTRODUCTION 
+The strategy put forward in this research effort is to combine the flexibility 
+and learning abilities of neural networks with as much knowledge from speech 
+science as possible in order to build a speaker independent automatic speech 
+recognition system. This knowledge is utilized in each of the steps in the con- 
+struction of an automated speech recognition system: preprocessing, input 
+coding, output coding, output supervision, architectural design. In particular 
+Speaker Independent Speech Recognition 219 
+for preprocessing we explored the advantages of various possible ways of pro- 
+cessing the speech signal, such as comparing an ear model rs. Fast Fourier 
+Transform (FFT), or compressing the frame sequence in such a way as to 
+conserve an approximately constant rate of change. To handle the temporal 
+aspect of speech we propose to combine various algorithms depending of the 
+demands of the task, including an algorithm for a type of recurrent network 
+which includes only self-loops and is local in space and time (BPS). This stra- 
+tegy is demonstrated in several experiments, in particular a nasal discrimina- 
+tion task for which the application of a speech theory hypothesis drastically 
+improved generalization. 
+2 Application of Speech Knowledge 
+2.1 Preprocessing 
+Our previous work has shown us that the choice of preprocessing significantly 
+influences the performance of a neural network recognizer. (e.g., Bengio & 
+De Mori 1988) Different types of preprocessing processes and acoustic 
+features can be utilized at the input of a neural network. We used several 
+acoustic features (such as counts of zero crossings), filters derived from the 
+FFT, energy levels (of both the signal and its derivative) and ratios (Gori, 
+Bengio & De Mori 1989), as well as an ear model and synchrony detector. 
+Ear model rs. FFT 
+We performed experiments in speaker-independent recognition of 10 english 
+vowels on isolated words that compared the use of an ear model with an FFT 
+as preprocessing. The FFT was done using a mel scale and the same number 
+of filters (40) as for the ear model. The ear model was derived from the one 
+proposed by Seneft (1985). Recognition was performed with a neural network 
+with one hidden layer of 20 units. We obtained 87% recognition with the FFT 
+preprocessing rs. 96% recognition with the ear model (plus synchrony detec- 
+tor to extract spectral regularity from the instantaneous output of the ear 
+model)(Bengio, Cosi, De Mori 1989). This was an example of the successful 
+application of knowledge about human audition to the automatic recognition 
+of speech with machines. 
+Compression in time resulting in constant rate of change 
+The motivation for this processing step is the following. The rate of change of 
+the speech signal, (as well as the output of networks performing 
+acoustic phonetic mappings) varies a lot. It would be nice to have more tem- 
+poral precision in parts of the signal where there is a lot of variation (bursts, 
+fast transitions) and less temporal precision in more stable parts of the signal 
+(e.g., vowels, silence). 
+Given a sequence of vectors (parameters, which can be acoustic parameters, 
+such as spectral coefficients, as well as outputs from neural networks) we 
+transform it by compressing it in time in order to obtain a shorter sequence 
+where frames refer to segments of varying length of the original sequence. 
+220 Bengio, De Mori and Cardin 
+Very simple Algorithm that maps sequence X(t) --. sequence Y(t) where X and 
+Y are vectors: 
+{ Accumulate and average X(t), X(t+l)...X(t+n) in Y(s) as 
+long as the sum of the Distance(X(t),X(t+l)) + ... + 
+Distance(X(t+n-1),X(t+n)) is less than a threshold. 
+When this threshold is reached, 
+tt+n+l; 
+s.--s+l; } 
+The advantages of this system are the following: 1) more temporal precision 
+where needed, 2) reduction of the dimensionality of the problem, 3) constant 
+rate of change of the resulting signal so that when using input windows in a 
+neural net, the windows may have less frames, 4) better generalization since 
+several realizations of the same word spoken at different rates of speech tend 
+to be reduced to more similar sequences. 
+Initial results when this system is used to compress spectral parameters (24 
+mel-scaled FFT filters + energy) computed every 5 ms were interesting. The 
+task was the classification of phonemes into 14 classes. The size of the data- 
+base was reduced by 30%. The size of the window was reduced (4 frames in- 
+stead of 8), hence the network size was reduced as well. Half the size of the 
+window was necessary in order to obtain similar performance on the training 
+set. Generalization on the test set was slightly better (from 38% to 33% clas- 
+sification error by frame). The idea to use a measure of rate of change to 
+process speech is not new (Atal, 1983) but we believe that it might be particu- 
+larly useful when the recognition device is a neural network with an input of 
+several frames of acoustic parameters. 
+2.2 Input coding 
+Our previous work has shown us that information should be as easily accessi- 
+ble as possible to the network. For example, compression of the spectral in- 
+formation into cepstrum coefficients (with first few coefficients having very 
+large variance) resulted in poorer performance with respect to experiments 
+done with the spectrum itself. The recognition was performed with a neural 
+network where units compute the sigmoid of the weighted sum of their inputs. 
+The task was the broad classification of phonemes in 4 classes. The error on 
+the test set increased from 15% to 20% when using cepstral rather than spec- 
+tral coefficients. 
+Another example concerns the recognition experiments for which there is a 
+lot of variance in the quantities presented in the input. A grid representation 
+with coarse coding improved learning time as well as generalization (since the 
+problem became more separable and thus the network needed less hidden un- 
+its). (Bengio, De Mori, 1988). 
+2.3 Output coding 
+We have chosen an output coding scheme based on phonetic features defined 
+by the way speech is produced. This is generally more difficult to learn but 
+results in better generalization, especially with respect to new sounds that had 
+Speaker Independent Speech Recognition 221 
+not been seen by the network during the training. We have demonstrated this 
+with experiments on vowel recognition in which the networks were trained to 
+recognized the place and the manner of articulation (Bengio, Cosi, De Mori 
+89). In addition the resulting representation is more compact than when using 
+one output for each phoneme. However, this representation remains mean- 
+ingful i.e. each output can be attributed a meaning almost independently of 
+the values of the other outputs. 
+In general, an explicit representation is preferred to an arbitrary and compact 
+one (such as a compact binary coding of the classes). Otherwise, the network 
+must perform an additional step of encoding. This can be costly in terms of 
+the size of the networks, and generally also in terms of generalization (given 
+the need for a larger number of weights). 
+2.4 Output supervision 
+When using a network with some recurrences it is not necessary that supervi- 
+sion be provided at every frame for every output (particularly for transition 
+periods which are difficult to label). Instead the supervision should be provid- 
+ed to the network when the speech signal clearly corresponds to the categories 
+one is trying to learn. We have used this approach when performing the 
+discrimination between /b/ and /d/ with the BPS (Back Propagation for Se- 
+quences) algorithm (self-loop only, c.f. section 3.3). 
+Giving additional information to the network through more supervision (with 
+extra output units) improved learning time and generalization ( c.f..section 4). 
+2.5 Architectural design 
+Hypothesis about the nature of the processing to be performed by the network 
+based on speech science knowledge enables to put constraints on the architec- 
+ture. These constraints result in a network that generalizes better than a fully 
+connected network. This strategy is most useful when the speech recognition 
+task has been modularized in the appropriate way so that the same architec- 
+tural constraints do not have to apply to all of the subtasks. Here are several 
+examples of application of modularization. We initially explored modulariza- 
+tion by acoustic context (different networks are triggered when various acous- 
+tic contexts are detected)(Bengio, Cardin, De Mori, Merlo 89) We also imple- 
+mented modularisation by independent articulatory features (vertical and hor- 
+izontal place of articulation) (in Bengio, Cosi, De Mori, 89). Another type of 
+modularization, by subsets of phonemes, was explored by several researchers, 
+in particular Alex Waibel (Waibel 88). 
+3 Temporal aspect of the speech recognition task 
+Both of the algorithms presente

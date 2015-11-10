@@ -1,0 +1,151 @@
+Probabilistic methods for Support Vector 
+Machines 
+Peter Sollich 
+Department of Mathematics, King's College London 
+Strand, London WC2R 2LS, U.K. Email: peter.sollich@kcl.ac.uk 
+Abstract 
+I describe a framework for interpreting Support Vector Machines 
+(SVMs) as maximum a posterJori (MAP) solutions to inference 
+problems with Gaussian Process priors. This can provide intuitive 
+guidelines for choosing a 'good' SVM kernel. It can also assign 
+(by evidence maximization) optimal values to parameters such as 
+the noise level C which cannot be determined unambiguously from 
+properties of the MAP solution alone (such as cross-validation er- 
+ror). I illustrate this using a simple approximate expression for the 
+SVM evidence. Once C has been determined, error bars on SVM 
+predictions can also be obtained. 
+I Support Vector Machines: A probabilistic flamework 
+Support Vector Machines (SVMs) have recently been the subject of intense re- 
+search activity within the neural networks community; for tutorial introductions 
+and overviews of recent developments see [1, 2, 3]. One of the open questions that 
+remains is how to set the 'tunable' parameters of an SVM algorithm: While meth- 
+ods for choosing the width of the kernel function and the noise parameter C (which 
+controls how closely the training data are fitted) have been proposed [4, 5] (see 
+also, very recently, [6]), the effect of the overall shape of the kernel function remains 
+imperfectly understood [1]. Error bars (class probabilities) for SVM predictions -- 
+important for safety-critical applications, for example -- are also difficult to obtain. 
+In this paper I suggest that a probabilistic interpretation of SVMs could be used to 
+tackle these problems. It shows that the SVM kernel defines a prior over functions 
+on the input space, avoiding the need to think in terms of high-dimensional feature 
+spaces. It also allows one to define quantities such as the evidence (likelihood) for a 
+set of hyperparameters (C, kernel amplitude K0 etc). I give a simple approximation 
+to the evidence which can then be maximized to set such hyperparameters. The 
+evidence is sensitive to the values of C and K0 individually, in contrast to properties 
+(such as cross-validation error) of the deterministic solution, which only depends 
+on the product CKo. It can therefore be used to assign an unambiguous value to 
+C, from which error bars can be derived. 
+350 P Sollich 
+I focus on two-class classification problems. Suppose we are given a set D of n 
+training examples (xi,yi) with binary outputs Yi = q-1 corresponding to the two 
+classes. The basic SVM idea is to map the inputs x onto vectors 4(x) in some 
+high-dimensional feature space; ideally, in this feature space, the problem should be 
+linearly separable. Suppose first that this is true. Among all decision hyperplanes 
+w.qb(x) q- b = 0 which separate the training examples (i.e. which obey yi(w.c(xi) q- 
+b) ) 0 for all xi  Dx, Dx being the set of training inputs), the SVM solution is 
+chosen as the one with the largest margin, i.e. the largest minimal distance from 
+any of the training examples. Equivalently, one specifies the margin to be one and 
+minimizes the squared length of the weight vector ]lw] ]' [1], subject to the constraint 
+that yi(w.c(xi) + b) _> I for all i. If the problem is not linearly separable, 'slack 
+variables' i _> 0 are introduced which measure how much the margin constraints 
+are violated; one writes yi(w'c(xi) + b) > I - i. To control the amount of slack 
+1 
+allowed, a penalty term Cii is then added to the objective function ]]w] , 
+with a penalty coefficient C. Training examples with yi(w. c(xi) + b) _> I (and 
+hence i = 0) incur no penalty; all others contribute C[1 -yi(w.c(xi) q- b)] each. 
+This gives the SVM optimization problem: Find w and b to minimize 
+-I1,,,11 + c + 
+2 
+(1) 
+where l(z) is the (shifted) 'hinge loss', l(z) = (1 - z)O(1 - z). 
+To interpret SVMs probabilistically, one can regard (1) as defining a (negative) 
+log-posterior probability for the parameters w and b of the SVM, given a training 
+set D. The first term gives the prior Q(w,b) - exp(-�llwl[ ' 1 2 --2 
+-b B ). This 
+is a Gaussian prior on w; the components of w are uncorrelated with each other 
+and have unit variance. I have chosen a Gaussian prior on b with variance B'; 
+the fiat prior implied by (1) can be recovered I by letting B - oe. Because only 
+the 'latent variable' values 0(x) = w.qb(x) + b -- rather than w and b individually 
+-- appear in the second, data dependent term of (1), it makes sense to express 
+the prior directly as a distribution over these. The 0(x) have a joint Gaussian 
+distribution because the components of w do, with covariances given by (O(x)O(x)) 
+= ((qb(x).w)(w-qb(x'))) q- B ' = c(x).c(x') + B '. The SVM prior is therefore simply 
+a Gaussian process (GP) over the functions 0, with covariance function K(x, x ) = 
+qb(x) .b(x') q- B ' (and zero mean). This correspondence between SVMs and GPs 
+has been noted by a number of authors, e.g. [6, 7, 8, 9, 10]. 
+The second term in (1) becomes a (negative) log-likelihood if we define the proba- 
+bility of obtaining output y for a given x (and 0) as 
+Q(y-rkllx, O) - n(C) exp[-Cl(yO(x))] 
+(2) 
+We set n(C) = 1/[1 q- exp(-2C)] to ensure that the probabilities for y - :t:1 
+never add up to a value larger than one. The likelihood for the complete data set 
+is then Q(D[O) = rli Q(yi[xi,O)Q(xi), with some input distribution Q(I) which 
+remains essentially arbitrary at this point. However, this likelihood function is not 
+normalized, because 
+v(O(x)) = Q(llx, O ) + Q(-l[x,O) = n(C){exp[-Cl(O(x))] + exp[-Cl(-O(x))]} < 1 
+In the probabilistic setting, it actually makes more sense to keep B finite (and small); 
+for B --> o, only training sets with all yi equal have nonzero probability. 
+Probabilistic Methods for Support Vector Machines 351 
+except when 10(x)] = 1. To remedy this, I write the actual probability model as 
+P(D,O) = Q(DIO)Q(O)/Af(D ). 
+(3) 
+Its posterior probability P(OID) Q(DIO)Q(O) is independent 9f the normalization 
+factor Af(D); by construction, the MAP value of 0 is therefore the SVM solution. 
+The simplest choice of Af(D) which normalizes P(D, O) is D-independent: 
+Af = N = fdOO(O)N(O), N(O) = fdxO(x)v(O(x)). 
+(4) 
+Conceptually, this corresponds to the following procedure of sampling from P(D, 0): 
+First, sample 0 from the GP prior Q(O). Then, for each data point, sample x from 
+Q(x). Assign outputs y = +1 with probability Q(y[x,O), respectively; with the 
+remaining probability 1- v(O(x)) (the 'don't know' class probability in [11]), restart 
+the whole process by sampling a new 0. Because v(O(x)) is smallest 2 inside the 'gap' 
+[0(x)[ < 1, functions 0 with many values in this gap are less likely to 'survive' until 
+a dataset of the required size n is built up. This is reflected in an n-dependent 
+factor in the (effective) prior, which follows from (3,4) as P(O) O(O)N(O). 
+Correspondingly, in the likelihood 
+P(ylx, O) = O(ylx, O)/v(O(x)), P(xlO )  O(x)v(O(x)) 
+(5) 
+(which now is normalized over y = +1), the input density is influenced by the 
+function 0 itself; it is reduced in the 'uncertainty gaps' [O(x)l < 1. 
+To summarize, eqs. (2-5) define a probabilistic data generation model whose MAP 
+solution 0* = argmax P(OID ) for a given data set D is identical to a standard 
+SVM. The effective prior P(O) is a GP prior modified by a data set size-dependent 
+factor; the likelihood (5) defines not just a conditional output distribution, but also 
+an input distribution (relative to some arbitrary Q(x)). All relevant properties of 
+the feature space are encoded in the underlying GP prior Q(0), with covariance 
+matrix equal to the kernel K(x, x). The log-posterior of the model 
+1 fdxdx, O(x)K-l(x,x,)O(x,)_Cil(yiO(xi))+const (6) 
+lnP(O[O) = - 
+is just a transformation of (1) from w and b to 0. By differentiating w.r.t. the 
+O(x) for non-training inputs, one sees that its maximum is of the standard form 
+O*(X) -- 5-]iotiYiK(x, xi); for yiO*(Xi) > 1, < 1, and = 1 one has ci = 0, ci = C and 
+ci E [0, C] respectively. I will call the training inputs xi in the last group marginal; 
+they form a subset of all support vectors (the xi with ci > 0). The sparseness of 
+the SVM solution (often the number of support vectors is << n) comes from the 
+fact that the hinge loss l(z) is constant for z > 1. This contrasts with other uses 
+of GP models for classification (see e.g. [12]), where instead of the likelihood (2) 
+a sigmoidal (often logistic) 'transfer function' with nonzero gradient everywhere is 
+used. Moreover, in the noise free limit, the sigmoidal transfer function becomes a 
+step function, and the MAP values 0* will tend to the trivial solution O*(x) = O. 
+This illuminates from an alternative point of view why the margin (the 'shift' in 
+the hinge loss) is imtortant for SVMs. 
+Within the probabilistic framework, the main effect of the kernel in SVM classi- 
+fication is to change the properties of the underlying GP prior Q(O) in P(O) 
+2This is true for C > In 2. For smaller C, v(O(x)) is actually higher in the gap, and the 
+model makes less intuitive sense. 
+352 P. Sollich 
+(b) 
+c) 
+(d) 
+(g) 
+(e) 
+(h) 
+i) 
+Figure 1: Samples from SVM priors; the input space is the unit square [0, 1] 2. 
+3d plots are samples O(x) from the underlying Gaussian process prior Q(O). 2d 
+greyscale plots represent the output distributions obtained when O(x) is used in the 
+likelihood model (5) with C = 2; the greyscale indicates the probability of y = 1 
+(black: 0, white: 1). (a,b) Exponential (Ornstein-Uhlenbeck) kernel/covariance 
+function K0 exp(-]x -x'l/1), giving rough O(x) and decision boundaries. Length 
+scale 1 = 0.1, K0 = 10. (c) Same with K0 = 1, i.e. with a reduced amplitude of 0(x); 
+note how, in a sample from the prior corresponding to this new kernel, the grey 
+'uncertainty gaps' (given roughly by IO(x)l < 1) between regions of definite outp

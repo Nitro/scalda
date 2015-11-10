@@ -1,0 +1,168 @@
+Ensemble Learning 
+for Multi-Layer Networks 
+David Barber* 
+Christopher M. Bishop t 
+Neural Computing Research Group 
+Department of Applied Mathematics and Computer Science 
+Aston University, Birmingham B4 7ET, U.K. 
+http://www. ncrg. aston. ac. uk/ 
+Abstract 
+Bayesian treatments of learning in neural networks are typically 
+based either on local Gaussian approximations to a mode of the 
+posterior weight distribution, or on Markov chain Monte Carlo 
+simulations. A third approach, called ensemble learning, was in- 
+troduced by Hinton and van Camp (1993). It aims to approximate 
+the posterior distribution by minimizing the Kullback-Leibler di- 
+vergence between the true posterior and a parametric approximat- 
+ing distribution. However, the derivation of a deterministic algo- 
+rithm relied on the use of a Gaussian approximating distribution 
+with a diagonal covariance matrix and so was unable to capture 
+the posterior correlations between parameters. In this paper, we 
+show how the ensemble learning approach can be extended to full- 
+covariance Gaussian distributions while remaining computationally 
+tractable. We also extend the framework to deal with hyperparam- 
+eters, leading to a simple re-estimation procedure. Initial results 
+from a standard benchmark problem are encouraging. 
+I Introduction 
+Bayesian techniques have been successfully applied to neural networks in the con- 
+text of both regression and classification problems (MacKay 1992; Neal 1996). In 
+contrast to the maximum likelihood approach which finds only a single estimate 
+for the regression parameters, the Bayesian approach yields a distribution of weight 
+parameters, p(wlD), conditional on the training data D, and predictions are ex- 
+*Present address: SNN, University of Nijmegen, Geert Grooteplein 21, Nijmegen, The 
+Netherlands. http: //www. mbfys. kun. nl/snn/email: davidbmbfys. kun. nl 
+tPresent address: Microsoft Research Limited, St George House, Cambridge CB2 3NH, 
+UK. http://www.research.microsoft. corn ema/l: cmbishopnicrosoft. corn 
+396 D. Barber and C. M. Bishop 
+pressed in terms of expectations with respect to the posterior distribution (Bishop 
+1995). However, the corresponding integrals over weight space are analytically in- 
+tractable. One well-established procedure for approximating these integrals, known 
+as Laplace's method, is to approximate the posterior distribution by a Gaussian, 
+centred at a mode of p(wlD), in which the covariance of the Gaussian is deter- 
+mined by the local curvature of the posterior distribution (MacKay 1995). The 
+required integrations can then be performed analytically. More recent approaches 
+involve Markov chain Monte Carlo simulations to generate samples from the poste- 
+rior (Neal 1996). However, such techniques can be computationally expensive, and 
+they also suffer from the lack of a suitable convergence criterion. 
+A thirl approach, called ensemble learning, was introduced by Hinton and van 
+Camp (1993) and again involves finding a simple, analytically tractable, approxi- 
+mation to the true posterior distribution. Unlike Laplace's method, however, the 
+approximating distribution is fitted globally, rather than locally, by minimizing a 
+Kullback-Leibler divergence. Hinton and van Camp (1993) showed that, in the case 
+of a Gaussian approximating distribution with a diagonal covariance, a determin- 
+istic learning algorithm could be derived. Although the approximating distribution 
+is no longer constrained to coincide with a mode of the posterior, the assumption 
+of a diagonal covariance prevents the model from capturing the (often very strong) 
+posterior correlations between the parameters. MacKay (1995) suggested a modifi- 
+cation to the algorithm by including linear preprocessing of the inputs to achieve a 
+somewhat richer class of approximating distributions, although this was not imple- 
+mented. In this paper we show that the ensemble learning approach can be extended 
+to allow a Gaussian approximating distribution with an general covariance matrix., 
+while still leading to a tractable algorithm. 
+1.1 The Network Model 
+We consider a two-layer feed-forward network having a single output whose value 
+is given by 
+H 
+f(x, w) ---- E via(ui'x) (1) 
+i----1 
+where w is a k-dimensional vector representing all of the adaptive parameters in the 
+model, x is the input vector, {ui),i - 1,..., H are the input-to-hidden weights, 
+and (vi),i - 1,..., H are the hidden-to-output weights. The extension to multi- 
+ple outputs is straightforward. For reasons of analytic tractability, we choose the 
+sigmoidal hidden-unit activation function er(a) to be given by the error function 
+er(a) = exp (-s2/2) ds (2) 
+which (when appropriately scaled) is quantitatively very similar to the standard 
+logistic sigmoid. Hidden unit biases are accounted for by appending the input 
+vector with a node that is always unity. In the current implementation there are 
+no output biases (and the output data is shifted to give zero mean), although the 
+formalism is easily extended to include adaptive output biases (Barber and Bishop 
+1997).-The data set consists of N pairs of input vectors and corresponding target 
+output values D - {x',t '},/ -- 1,...,N. We make the standard assumption 
+of Gaussian noise on the target values, with variance /-. The likelihood of the 
+training data is then proportional to exp(-/ED), where the training error ED is 
+1 
+E(w) = w) - 2 . (3) 
+Ensemble Lea ming for Multi-Layer Networks 397 
+The prior distribution over weights is chosen to be a Gaussian of the form 
+p(w) oc exp (-Ew(w)) 
+(4) 
+where Ew(w) = �wTAw, and A is a matrix of hyperparameters. The treatment of 
+/3 and A is dealt with in Section 2.1. From Bayes' theorem, the posterior distribution 
+over weights can then be written 
+1 
+p(wlD)- 2 exp (-/3ED(W)- Ew(w)) 
+(5) 
+where Z is a normalizing constant. Network predictions on a novel example are 
+given by the posterior average of the network output 
+(f(x)) = f f(x, w)p(wID) dw. 
+(6) 
+This represents an integration over a high-dimensional space, weighted by a pos- 
+terior distribution p(w[D) which is exponentially small except in narrow regions 
+whose locations are unknown a-priori. The accurate evaluation of such integrals is 
+thus very difficult. 
+2 'Ensemble Learning 
+Integrals of the form (6) may be tackled by approximating p(wID) by a simpler 
+distribution Q(w). In this paper we choose this approximating distribution to be 
+a Gaussian with mean W and covariance C. We determine the values of W and C 
+by minimizing the Kullback-Leibler divergence between the network posterior and 
+approximating Gaussian, given by 
+[ Q(w) 
+-- /Q(W)ln[p(-lD) } dw (7) 
+= / Q(w)lnQ(w)dw - / Q(w)lnp(wlD)dw. (8) 
+The first term in (8) is the negative entropy of a Gaussian distribution, and is easily 
+evaluated to give � In det (C) + const. 
+From (5) we see that the posterior dependent term in (8) contains two parts that 
+depend on the prior and likelihood 
+Q(w)Ew(w)dw + / Q(W)ED(W)dW. 
+(9) 
+Note that the normalization coefficient Z - in (5) gives rise to a constant additive 
+term in the KL divergence and so can be neglected. The prior term E(w) is 
+quadratic in w, and integrates to give Tr(CA) + �wTAw. This leaves the data 
+dependent term in (9) which we write as 
+N 
+L '- f Q(W)ED(w)dw -- - E/(x't) (10) 
+2 
+u=l 
+where 
+f Q(w)(i(x,w)f aw-,t f (11) 
+398 D. Barber and C. M. Bishop 
+For clarity, we concentrate only on the first term in (11), as the calculation of the 
+term linear in f(x, w) is similar, though simpler. Writing the Gaussian integral 
+over Q as an average, (), the first term of (11) becomes 
+H 
+E � 
+(12) 
+where 
+Oij ---- (Cvv - CvuCuu-lCuv)ij q- vivj (14) 
+q'o = C---C-,,=iCv=j,-C-- -, (15) 
+= -C - (16) 
+'ij 2Cuu u,v=jVi. 
+Although the remaining integration in (13) over u is not analytically tractable, we 
+can make use of the following result to reduce it to a one-dimensional integration 
+(a (z'a + ao) o' (z-b + bo))z = a(zlal + ao)a 
+v/lal 2 (1 q- Ibl 2) - (aTb) 2 
+(17) 
+where a and b are vectors and ao, b0 are scalar offsets. The average on the left of 
+(17) is over an isotropic multi-dimensional Gaussian, p(z) cr exp(-z'rz/2), while the 
+average on the right is over the one-dimensional Gaussian p(z) cr exp(-z2/2). This 
+result follows from the fact that the vector z only occurs through the scalar product 
+with a and b, and so we can choose a coordinate system in which the first two 
+components of z lie in the plane spanned by a and b. All orthogonal components 
+do not appear elsewhere in the integrand, and therefore integrate to unity. 
+The integral we desire, (13) is only a little more complicated than (17) and can be 
+evaluated by first transforming the coordinate system to an isotopic basis z, and 
+then differentiating with respect to elements of the covariance matrix to 'pull down' 
+the required linear and quadratic terms in the a-independent pre-factor of (13). 
+These derivatives can then be reduced to a form which requires only the numerical 
+evaluation of (17). We have therefore succeeded in reducing the calculation of the 
+KL divergence to analytic terms together with a single one-dimensional numerical 
+integration of the form (17), which we compute using Gaussian quadrature . 
+Similar techniques can be used to evaluate the derivatives of the KL divergence with 
+respect to the mean and covariance matrix (Barber and Bishop 1997). Together with 
+the KL divergence, these derivatives are then used in a scaled conjugate gradient 
+optimizer to find the parameters W and C that represent the best Gaussian fit. 
+The number of parameters in the covariance matrix scales quadratically with the 
+number of weight parameters. We therefore have also implemented a version with 
+Although (17) appears to depend on 4 parameters, it can be expressed in terms of 3 
+independent parameters. An alternative to performing quadrature during training would 
+therefore be to compute a 3-dimensional look-up t

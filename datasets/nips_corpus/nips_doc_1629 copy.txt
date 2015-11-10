@@ -1,0 +1,156 @@
+The Relaxed Online 
+Maximum Margin Algorithm 
+Yi Li and Philip M. Long 
+Department of Computer Science 
+National University of Singapore 
+Singapore 119260, Republic of Singapore 
+{ liyi, plong} @comp. nus. edu. sg 
+Abstract 
+We describe a new incremental algorithm for training linear thresh- 
+old functions: the Relaxed Online Maximum Margin Algorithm, or 
+ROMMA. ROMMA can be viewed as an approximation to the algorithm 
+that repeatedly chooses the hyperplane that classifies previously seen ex- 
+amples correctly with the maximum margin. It is known that such a 
+maximum-margin hypothesis can be computed by minimizing the length 
+of the weight vector subject to a number of linear constraints. ROMMA 
+works by maintaining a relatively simple relaxation of these constraints 
+that can be efficiently updated. We prove a mistake bound for ROMMA 
+that is the same as that proved for the perceptron algorithm. Our analysis 
+implies that the more computationally intensive maximum-margin algo- 
+rithm also satisfies this mistake bound; this is the first worst-case perfor- 
+mance guarantee for this algorithm. We describe some experiments us- 
+ing ROMMA and a variant that updates its hypothesis more aggressively 
+as batch algorithms to recognize handwritten digits. The computational 
+complexity and simplicity of these algorithms is similar to that of per- 
+ceptron algorithm, but their generalization is much better. We describe a 
+sense in which the performance of ROMMA converges to that of SVM 
+in the limit if bias isn't considered. 
+1 Introduction 
+The perceptron algorithm [10, 11] is well-known for its simplicity and effectiveness in the 
+case of linearly separable data. Vapnik' s support vector machines (SVM) [13] use quadratic 
+programming to find the weight vector that classifies all the training data correctly and 
+maximizes the margin, i.e. the minimal distance between the separating hyperplane and the 
+instances. This algorithm is slower than the perceptron algorithm, but generalizes better. 
+On the other hand, as an incremental algorithm, the perceptron algorithm is better suited 
+for online learning, where the algorithm repeatedly must classify patterns one at a time, 
+then finds out the correct classification, and then updates its hypothesis before making the 
+next prediction. 
+In this paper, we design and analyze a new simple online algorithm called ROMMA (the 
+Relaxed Online Maximum Margin Algorithm) for classification using a linear threshold 
+The Relaxed Online Maximum Margin Algorithm 499 
+function. ROMMA has similar time complexity to the perceptron algorithm, but its gener- 
+alization performance in our experiments is much better on average. Moreover, ROMMA 
+can be applied with kernel functions. 
+We conducted experiments similar to those performed by Cortes and Vapnik [2] and Freund 
+and Schapire [3] on the problem of handwritten digit recognition. We tested the standard 
+perceptron algorithm, the voted perceptron algorithm (for details, see [3]) and our new 
+algorithm, using the polynomial kernel function with d = 4 (the choice that was best 
+in [3]). We found that our new algorithm performed better than the standard perceptron 
+algorithm, had slightly better performance than the voted perceptron. 
+For some other research with aims similar to ours, we refer the reader to [9, 4, 5, 6]. 
+The paper is organized as follows. In Section 2, we describe ROMMA in enough detail 
+to determine its predictions, and prove a mistake bound for it. In Section 3, we describe 
+ROMMA in more detail. In Section 4, we compare the experimental results of ROMMA 
+and an aggressive variant of ROMMA with the perceptron and the voted perceptron algo- 
+rithms. 
+2 A mistake-bound analysis 
+2.1 The online algorithms 
+For concreteness, our analysis will concern the case in which instances (also called pat- 
+terns) and weight vectors are in R ' . Fix n G N. In the standard online learning model [7], 
+learning proceeds in trials. In the tth trial, the algorithm is first presented with an instance 
+t G R '. Next, the algorithm outputs a prediction )t of the classification of �t. Finally, 
+the algorithm finds out the correct classification Yt G {-1, 1}. If )t  Yt, then we say that 
+the algorithm makes a mistake. It is worth emphasizing that in this model, when making 
+its prediction for the tth trial, the algorithm only has access to instance-classification pairs 
+for previous trials. 
+All of the online algorithms that we will consider work by maintaining a weight vector 
+which is updated between trials, and predicting )t = sign(tt � a7t), where sign(z) is 1 if 
+is positive, -1 if z is negative, and 0 otherwise.  
+The perceptton 
+off with tl: 0. 
+by tt + 1 = tt + 
+algorithm. The perceptron algorithm, due to Rosenblatt [10, 11], starts 
+When its prediction differs from the label Yt, it updates its weight vector 
+Yt �t. If the prediction is correct then the weight vector is not changed. 
+The next three algorithms that we will consider assume that all of the data seen by the 
+online algorithm is collectively linearly separable, i.e. that there is a weight vector if such 
+that for all each trial t, Yt '- sign(if. at). When kernel functions are used, this is often the 
+case in practice. 
+The ideal online maximum margin algorithm. On each trial t, this algorithm chooses a 
+weight vector tt for which for all previous trials s _< t, sign(tt � a7s) = ys, and which 
+maximizes the minimum distance of any  to the separating hyperplane. It is known [ 1, 14] 
+that this can be implemented by choosing v7t to minimize [[tt]] subject to the constraints 
+that y (tt � a?) >_ 1 for all s _< t. These constraints define a convex polyhedron in weight 
+space which we will refer to as Pt. 
+The relaxed online maximum margin algorithm. This is our new algorithm. The first 
+difference is that trials in which mistakes are not made are ignored. The second difference 
+IThe prediction of 0, which ensures a mistake, is to make the proofs simpler. The usual mistake 
+bound proof for the perceptron algorithm goes through with this change. 
+500 Y. Li and P M. Long 
+is in how the algorithm responds to mistakes. The relaxed algorithm starts off like the ideal 
+algorithm. Before the second trial, it sets t2 to be the shortest weight vector such that 
+li (t2 � �1) _> 1. If there is a mistake on the second trial, it chooses ta as would the ideal 
+algorithm, to be the smallest element of 
+{t' Yl(Z' '1) _ 1} V1 {' Y2(-�2) _> 1}. 
+(1) 
+However, if the third trial is a mistake, then it behaves differently. Instead of choosing 
+to be the smallest element of 
+{-' Yl( ' '1) _ 1} F1 {t � y2(t. �'2) _> 1} F3 {t' ya(t-�3) _> 1}, 
+it lets 4 be the smallest element of 
+origin 
+Figure 1: In ROMMA, a convex 
+polyhedron in weight space is re- 
+placed with the halfspace with the 
+same smallest element. 
+IIall 2} n 1}. 
+This can be thought of as, before the third trial, replacing the polyhedron defined by (1) 
+with the halfspace {t � ta. tg >_ [[ta[[ 2} (see Figure 1). 
+Note that this halfspace contains the polyhedron 
+of (1); in fact, it contains any convex set whose 
+smallest element is ta. Thus, it can be thought of 
+as the least restrictive convex constraint for which 
+the smallest satisfying weight vector is ta. Let 
+us call this halfspace Ha. The algorithm contin- 
+ues in this manner. If the tth trial is a mistake, 
+then tt+ is chosen to be the smallest element of 
+Ht 91 { t � yt ( t . �t ) >_ 1}, and Ht + l is set to be 
+� _ t 1 2 
+{ t+'> [[ + [[ }. If the tth trial is not a 
+mistake, then tt+ = t and Ht+ -' Hr. We will 
+call Ht the old constraint, and {t � yt(t � 't) 2 1} 
+the new constraint. 
+Note that after each mistake, this algorithm needs only to solve a quadratic programming 
+problem with two linear constraints. In fact, there is a simple closed-form expression for 
+tt+ as a function of tt, :t and lit that enables it to be computed incrementally using time 
+similar to that of the perceptron algorithm. This is described in Section 3. 
+The relaxed online maximum margin algorithm with aggressive updating. The algo- 
+rithm is the same as the previous algorithm, except that an update is made after any trial in 
+which lit(tt � �t) < 1, not just after mistakes. 
+2.2 Upper bound on the number of mistakes made 
+Now we prove a bound on the number of mistakes made by ROMMA. As in previous 
+mistake bound proofs (e.g. [8]), we will show that mistakes result in an increase in a 
+measure of progress, and then appeal to a bound on the total possible progress. Our 
+proof will use the squared length of t as its measure of progress. 
+First we will need the following lemmas. 
+Lemma 1 On any run of ROMMA on linearly separable data, if trial t was a mistake, then 
+the new constraint is binding at the new weight vector, i.e. !It (tt+ � t) = 1. 
+Proof: For the purpose of contradiction suppose the new constraint is not binding at the 
+new weight vector tt+l. Since tt fails to satisfy this constraint, the line connecting t+l 
+and t intersects with the border hyperplane of the new constraint, and we denote the 
+intersecting point tq. Then tq can be represented as tq = at+(1 -ct)tt+i, 0 < ct < 1. 
+The Relaxed Online Maximum Margin Algorithm 501 
+Since the square of Euclidean length ll' II 2 is a convex function, the following holds: 
+llql[ = < llttll = + (1- )ll,t+ll = 
+-' 2 
+Since tt is the unique smallest member of Ht and t+  tt, we have I[tt][ = < []wt+l ]] , 
+which implies 
+llll = < II,t+11 = (2) 
+Since tt and tt+ are both in Ht, tq is too, and hence (2) contradicts the definition of 
+tt+. [-] 
+Lemma 2 On any run of ROMMA on linearly separable data, if trial t was a mistake, and 
+not the first one, then the old constraint is binding at the new weight vector, i.e. tt +  � tt = 
+-' 2 
+Ilwtll � 
+Proof: Let At be the plane of weight vectors that make the new constraint tight, i.e. At -- 
+= . --  be the element 
+{

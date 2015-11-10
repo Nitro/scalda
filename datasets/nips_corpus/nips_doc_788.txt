@@ -1,0 +1,168 @@
+Feature Densities are Required for 
+Computing Feature Correspondences 
+Subutai Ahmad 
+Interval Research Corporation 
+1801-C Page Mill Road, Palo Alto, CA 94304 
+E-mail: ahmad��nterval. com 
+Abstract 
+The feature correspondence problem is a classic hurdle in visual 
+object-recognition concerned with determining the correct mapping 
+between the features measured from the image and the features ex- 
+pected by the model. In this paper we show that determining good 
+correspondences requires information about the joint probability 
+density over the image features. We propose likelihood based 
+correspondence matching as a general principle for selecting op- 
+timal correspondences. The approach is applicable to non-rigid 
+models, allows nonlinear perspective transformations, and can op- 
+timally deal with occlusions and missing features. Experiments 
+with rigid and non-rigid 3D hand gesture recognition support the 
+theory. The likelihood based techniques show almost no decrease 
+in classification performance when compared to performance with 
+perfect correspondence knowledge. 
+I INTRODUCTION 
+The ability to deal with missing information is crucial in model-based vision sys- 
+tems. The feature correspondence problem is an example where the correct map- 
+ping between image features and model features is unknown at recognition time. 
+For example, imagine a network trained to map fingertip locations to hand gestures. 
+Given features extracted from an image, it becomes important to determine which 
+features correspond to the thumb, to the index finger, etc. so we know which input 
+units to clamp with which numbers. Success at the correspondence matching step 
+961 
+962 Ahmad 
+x 2  Class boundary 
+I Pl I 
+Class 1 
+Class 2 
+� p2 
+o I 
+Xl 
+Figure 1: An example 2D feature space. Shaded regions denote high probabil- 
+ity. Given measured values of 0.2 and 0.9, the points p and P2 denote possible 
+instantiations but p is much more likely. 
+is vital for correct classification. There has been much previous work on this topic 
+(Connell and Brady 1987; Segen 1989; Huttenlocher and Ullman 1990; Pope and 
+Lowe 1993) but a general solution has eluded the vision community. In this paper 
+we propose a novel approach based on maxinfizing the probability of a set of mod- 
+els generating the given data. We show that neural networks trained to estimate 
+the joint density between image features can be successfully used to recover the 
+optimal correspondence. Unlike other techniques, the likelihood based approach is 
+applicable to non-rigid models, allows perspective 3D transformations, and includes 
+a principled method for dealing with occlusions and missing features. 
+1.1 A SIMPLE EXAMPLE 
+Consider the idealized example depicted in Figure 1. The distribution of features is 
+highly non-uniform (this is typical of non-rigid objects). The classification boundary 
+is in general completely unrelated to the feature distribution. In this case, the 
+class (posterior) probability approaches 1 as feature x approaches 0, and 0 as it 
+approaches 1. Now suppose that two feature values 0.2 and 0.9 are measured from 
+an image. The task is to decide which value gets assigned to x and which value 
+gets assigned to x2. A common strategy is to select the correspondence which gives 
+the maximal network output (i.e. mammal posterior probability). In this example 
+(and in general) such a strategy will pick point p2, the wrong correspondence. This 
+is because the classifer output represents the probability of a class given a specific 
+feature assignment and specific values. The correspondence problem however, is 
+something completely different: it deals with the probability of getting the feature 
+assignments and values in the first place. 
+Feature Densities Are Required for Computing Feature Correspondences 963 
+2 
+LIKELIHOOD BASED CORRESPONDENCE 
+MATCHING 
+We can formalize the intuitive arguments in the previous section. Let C denote the 
+set of classes under consideration. Let X denote the list of features measured from 
+the image with correspondences unknown. Let A be the set of assignments of the 
+measured values to the model features. Each assignment a 6 A reflects a particular 
+choice of feature correspondences. ,Ve consider two different problems: the task of 
+choosing the best assignment a and the task of classifying the object given X. 
+Selecting the best correspondence is equivalent to selecting the permutation that 
+maximizes p(a[X, C). This can be re-written as: 
+p(alX, C) = p(X]a, O)p(alC) 
+p(XlC) 
+(1) 
+p(XIC ) is a normalization factor that is constant across all a and can be ignored. 
+Let xa denote a specific feature vector constructed by applying permutation a to 
+X. Then (1) is equivalent to maximizing: 
+p(alX, C) = P(xalC)p(alC) 
+(2) 
+p(alC) denotes our prior knowledge about possible correspondences. (For example 
+the knowledge that edge features cannot be matched to color features.) When no 
+prior knowledge is available this term is constant. We denote the assignment that 
+maximizes (2) the maximum likelihood correspondence match. Such a correspon- 
+dence maximizes the probability that a set of visual models generated a given set 
+of image features and will be the optimal correspondence in a Bayesian sense. 
+2.1 CLASSIFICATION 
+In addition to computing correspondences, we would like to classify a model from 
+the measured image features, i.e. compute p(CilX, C). The maximal-output based 
+solution is equivalent to selecting the class Ci that maximizes p(Cilxa, C) over all 
+assignments a and all classes Ci. It is easy to see that the optimal strategy is actually 
+to compute the following weighted estimate over all candidate assignments: 
+p(Ci[X,C) = Eap(OilX, a, C)p(Xla, C)p(alC) 
+p(XlC) 
+Classification based on (3) is equivalent to selecting the class that maximizes: 
+(3) 
+p(Clx, C)p(xlC)p(alC) 
+a 
+(4) 
+Note that the network output based solution represents quite a degraded estimate 
+of (4). It does not consider the input density nor perform a weighting over possible 
+964 Ahmad 
+correspondences. A reasonable approximation is to select the maximum likelihood 
+correspondence according to (2) and then use this feature vector in the classification 
+network. This is suboptimal since the weighting is not done but in our experience 
+it yields results that are very close to those obtained with (4). 
+3 
+COMPUTING CORRESPONDENCES WITH GBF 
+NETWORKS 
+In order to compute (2) and (4)we consider networks of normalized Gaussian basis 
+functions (GBF networks). The i'th output unit is computed as: 
+with: 
+y(x) = Ej wjb(x) 
+b(x) (5) 
+. rj exp[-  (xi- lUji) 2 
+b/(x) = rjn(x;/uj,j)= (2r) d/2 d 2o?i ] 
+1'-i k = 10'kj i 
+(6) 
+Here each basis function j is characterized by a mean vector pj and by crj, a vector 
+representing the diagonal covm'iance matrix. wji represents the weight from the 
+j'th Gaussian to the i'th output. rj is a weight attached to each basis function. 
+Such networks have been popular recently and have proven to be useful in a num- 
+ber of applications (e.g. (Roscheisen et al. 1992; Poggio and Edelman 1990). 
+For our current purpose, these networks have a number of advantages. Under 
+certain training regimes such as EM or soft clustering (Dempster et al. 1977; 
+Nowlan 1990) or an approximation such as K-Means (Neal and Hinton 1993), 
+the basis functions adapt to represent local probability densities. In particu- 
+lar p(xa[C)  Y',jbj(xa). If standard error gradient training is used to set the 
+weights wij then yi(Xa) , p(Ci[xa, C) Thus both (2) and (4) can be easilty com- 
+puted.(Ahmad and Tresp 1993) showed that such networks can effectively learn 
+feature density information for complex visual problems. (Poggio and Edelman 
+1990) have also shown that similar netvorks (with a different training regime) can 
+learn to approximate the complex mappings that arise in 3D recognition. 
+3.1 
+OPTIMAL CORRESPONDENCE MATCHING WITH 
+OCCLUSION 
+An additional advantage of GBF networks trained in this way is that it is possible 
+to obtain closed form solutions to the optimal classifier in the presence of missing 
+or noisy features. It is also possible to correctly compute the probability of feature 
+vectors containing missing dimensions. The solution consists of projecting each 
+Gaussian onto the non-missing dimensions and evaluating the resulting network. 
+Note that it is incorrect to simply substitute zero or any other single value for the 
+missing dimensions. (For lack of space we refer the reader to (Ahmad and Tresp 
+Feature Densities Are Required for Computing Feature Correspondences 965 
+'Your 
+rhumbsp pointing 
+Figure 2: Classifiers were trained to recognize these 7 gestures. a 3D computer 
+model of the hand is used to generate images of the hand in various poses. For 
+each training example, we randomly choose a 3D orientation and depth, compute 
+the 3D positions of the fingertips and project them onto 2D. There were 5 features 
+yielding a 10D input space. 
+1993) for further details.) Thus likelihood based approaches using GBF networks 
+can simultaneously optimally deal with occlusions and the correspondence problem. 
+4 EXPERIMENTAL RESULTS 
+We have used the task of 3D gesture recognition to compare likelihood based meth- 
+ods to the network output based technique. (Figure 2 describes the task.) We 
+considered both rigid and non-rigid gesture recognition tasks. We used a GBF 
+network with 10 inputs, 1050 basis functions and 7 output units. For comparision 
+we also trained a standard backpropagation network (BP) with 60 hidden units on 
+the task. For this task we assume that during training all feature correspondences 
+are known and that during training no feature values are noisy or missing. For this 
+task we assume that during training all feature correspondences are known and that 
+during training no feature values are noisy or missing. Classification performance 
+with full correspondence information on an independent test set is a

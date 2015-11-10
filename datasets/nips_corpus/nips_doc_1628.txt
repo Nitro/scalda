@@ -1,0 +1,127 @@
+Reinforcement Learning for 
+Spoken Dialogue Systems 
+Satinder Singh 
+AT&T Labs 
+Michael Kearns 
+AT&T Labs 
+Diane Litman 
+AT&T Labs 
+Marilyn Walker 
+AT&T Labs 
+{ baveja,mkearns,diane,walker} @ research.att.com 
+Abstract 
+Recently, a number of authors have proposed treating dialogue systems as Markov 
+decision processes (MDPs). However, the practical application of MDP algorithms 
+to dialogue systems faces a number of severe technical challenges. We have built a 
+general software tool (RLDS, for Reinforcement Learning for Dialogue Systems) 
+based on the MDP framework, and have applied it to dialogue corpora gathered 
+from two dialogue systems built at AT&T Labs. Our experiments demonstrate that 
+RLDS holds promise as a tool for browsing and understanding correlations in 
+complex, temporally dependent dialogue corpora. 
+1 Introduction 
+Systems in which human users speak to a computer in order to achieve a goal are called 
+spoken dialogue systems. Such systems are some of the few realized examples of open- 
+ended, real-time, goal-oriented interaction between humans and computers, and are therefore 
+an important and exciting testbed for AI and machine learning research. Spoken dialogue 
+systems typically integrate many components, such as a speech recognizer, a database back- 
+end (since often the goal of the user is to retrieve information), and a dialogue strategy. In 
+this paper we are interested in the challenging problem of automatically inferring a good 
+dialogue strategy from dialogue corpora. 
+Research in dialogue strategy has been perhaps necessarily ad-hoc due to the open-ended 
+nature of dialogue system design. For example, a common and critical design choice is be- 
+tween a system that always prompts the user to select an utterance from fixed menus (system 
+initiative), and one that attempts to determine user intentions from unrestricted utterances 
+(mixed initiative). Typically a system is built that explores a few alternative strategies, this 
+system is tested, and conclusions are drawn regarding which of the tested strategies is best 
+for that domain [4, 7, 2]. This is a time-consuming process, and it is difficult to rigorously 
+compare and evaluate alternative systems in this fashion, much less design improved ones. 
+Recently, a number of authors have proposed treating dialogue design in the formalism of 
+Markov decision processes (MDPs)[ 1, 3, 7]. In this view, the population of users defines the 
+stochastic environment, a dialogue system's actions are its (speech-synthesized) utterances 
+and database queries, and the state is represented by the entire dialogue so far. The goal is 
+to design a dialogue system that takes actions so as to maximize some measure of reward. 
+Viewed in this manner, it becomes possible, at least in principle, to apply the framework and 
+algorithms of reinforcement learning (RL) to find a good dialogue strategy. 
+However, the practical application of RL algorithms to dialogue systems faces a number of 
+severe technical challenges. First, representing the dialogue state by the entire dialogue so 
+Reinforcement Learning for Spoken Dialogte Systems 957 
+far is often neither feasible nor conceptually useful, and the so-called belief state approach 
+is not possible, since we do not even know what features are required to represent the belief 
+state. Second, there are many different choices for the reward function, even among systems 
+providing very similar services to users. Previous work [7] has largely dealt with these issues 
+by imposing a priori limitations on the features used to represent approximate state, and then 
+exploring just one of the potential reward measures. 
+In this paper, we further develop the MDP formalism for dialogue systems, in a way that does 
+not solve the difficulties above (indeed, there is no simple solution to them), but allows us 
+to attenuate and quantify them by permitting the investigation of different notions of approx- 
+imate state and reward. Using our expanded formalism, we give one of the first applications 
+of RL algorithms to real data collected from multiple dialogue systems. We have built a gen- 
+eral software tool (RLDS, for Reinforcement Learning for Dialogue Systems) based on our 
+framework, and applied it to dialogue corpora gathered from two dialogue systems built at 
+AT&T Labs, the TOOT system for voice retrieval of train schedule information [4] and the 
+ELVIS system for voice retrieval of electronic mail [7]. 
+Our experiments demonstrate that RLDS holds promise not just as a tool for the end-to- 
+end automated synthesis of complicated dialogue systems from passive corpora -- a holy 
+grail that we fall far short of here  -- but more immediately, as a tool for browsing 
+and understanding correlations in complex, temporally dependent dialogue corpora. Such 
+correlations may lead to incremental but important improvements in existing systems. 
+2 The TOOT and ELVIS Spoken Dialogue Systems 
+The TOOT and ELVIS systems were implemented using a general-purpose platform devel- 
+oped at AT&T, combining a speaker-independent hidden Markov model speech recognizer, 
+a text-to-speech synthesizer, a telephone interface, and modules for specifying data-access 
+functions and dialogue strategies. In TOOT, the data source is the Amtrak train schedule web 
+site, while in ELVIS, it is the electronic mail spool of the user. 
+In a series of controlled experiments with human users, dialogue data was collected from 
+both systems, resulting in 146 dialogues from TOOT and 227 dialogues from ELVIS. The 
+TOOT experiments varied strategies for information presentation, confirmation (whether and 
+how to confirm user utterances) and initiative (system vs. mixed), while the ELVIS experi- 
+ments varied strategies for information presentation, for summarizing email folders, and ini- 
+tiative. Each resulting dialogue consists of a series of system and user utterances augmented 
+by observations derived from the user utterances and the internal state of the system. The 
+system's utterances (actions) give requested information, ask for clarification, provide greet- 
+ings or instructions, and so on. The observations derived from the user's utterance include 
+the speech-recognizer output, the corresponding log-likelihood score, the semantic labels as- 
+signed to the recognized utterances (such as the desired train departure and arrival cities in 
+TOOT, or whether the user prefers to hear their email ordered by date or sender in ELVIS); 
+indications of user barge-ins on system prompts; and many more. The observations derived 
+from the internal state include the grammar used by the speech recognizer during the turn, 
+and the results obtained from a query to the data source. In addition, each dialogue has an 
+associated survey completed by the user that asks a variety of questions relating to the user's 
+experience. See [4, 7] for details. 
+3 Spoken Dialogue Systems and MDPs 
+Given the preceding discussion, it is natural to formally view a dialogue as a sequence d 
+� �., 
+ However, in recent work we have applied the methodology described here to significantly improve 
+the performance of a new dialogue system [5]. 
+958 S. Singh, M. Kearns, D. Litman and M. Walker 
+Here ai is the action taken by the system (typically a speech-synthesized utterance, and less 
+frequently, a database query) to start the ith exchange (or turn, as we shall call it), r7i consists 
+of all the observations logged by the system on this turn, as discussed in the last section, 
+and ri is the reward received on this turn. As an example, in TOOT a typical turn might 
+indicate that the action ai was a system utterance requesting the departure city, and the 7i 
+might indicate several observations: that the recognized utterance was New York, that the 
+log-likelihood of this recognition was -2.7, that there was another unrecognized utterance as 
+well, and so on. We will use d[i] to denote the prefix of d that ends following the ith turn, and 
+d. (a, r7, r) to denote the one-turn extension of dialogue d by the turn (a, r7, r). The scope of 
+the actions ai and observations r7i is determined by the implementation of the systems (e.g. 
+if some quantity was not logged by the system, we will not have access to it in the  in the 
+data). Our experimental results will use rewards derived from the user satisfaction surveys 
+gathered for the TOOT and ELVIS data. 
+We may view any dialogue d as a trajectory in a well-defined true MDP M. The states 2 
+of M are all possible dialogues, and the actions are all the possible actions available to the 
+spoken dialogue system (utterances and database queries). Now from any state (dialogue) d 
+and action a, the only possible next states (dialogues) are the one-turn extensions d- (a, G, r). 
+The probability of transition from d to d. (a, r7, r) is exactly the probability, over the stochastic 
+ensemble of users, that rYand r would be generated following action a in dialogue d. 
+It is in general impractical to work directly on M due to the unlimited size of the state (di- 
+alogue) space. Furthermore, M is not known in advance and would have to be estimated 
+from dialogue corpora. We would thus like to permit a flexible notion of approximate states. 
+We define state estimator sE to be a mapping from any dialogue d into some space $. For 
+example, a simple state estimator for TOOT might represent the dialogue state with boolean 
+variables indicating whether certain pieces of information had yet been obtained from the 
+user (departure and arrival cities, and so on), and a continuous variable tracking the average 
+log-likelihood of the recognized utterances so far. Then sE(d) would be a vector represent- 
+ing these quantities for the dialogue d. Once we have chosen a state estimator SE, we can 
+transform the dialogue d into an S-trajectory, starting from the initial empty state so  $: 
+so -a sE(d[1]) -a sE(d[2]) -+3 ' -'+, sE(d[t]) 
+where the notation -+, sv..(d[

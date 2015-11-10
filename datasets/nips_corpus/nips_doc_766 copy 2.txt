@@ -1,0 +1,151 @@
+When Will a Genetic Algorithm 
+Outperform Hill Climbing? 
+Melanie Mitchell 
+Santa Fe Institute 
+1660 Old Pecos Trail, Suite A 
+Santa Fe, NM 87501 
+John H. Holland 
+Dept. of Psychology 
+University of Michigan 
+Ann Arbor, MI 48109 
+Stephanie Forrest 
+Dept. of Computer Science 
+University of New Mexico 
+Albuquerque, NM 87131 
+Abstract 
+We analyze a simple hill-climbing algorithm (IMHC) that was pre- 
+viously shown to outperform a genetic algorithm (GA) on a simple 
+Royal load function. We then analyze an idealized genetic 
+algorithm (IGA) that is significantly faster than IMHC and that 
+gives a lower bound for GA speed. We identify the features of the 
+IGA that give rise to this speedup, and discuss how these features 
+can be incorporated into a real GA. 
+1 INTRODUCTION 
+Our goal is to understand the class of problems for which genetic algorithms (GA) 
+are most suited, and in particular, for which they will outperform other search 
+algorithms. Several studies have empirically compared GAs with other search and 
+optimization methods such as simple hill-climbing (e.g., Davis, 1991), simulated 
+annealing (e.g., Ingber & losen, 1992), linear, nonlinear, and integer programming 
+techniques, and other traditional optimization techniques (e.g., De Jong, 1975). 
+However, such comparisons typically compare one version of the GA with a second 
+algorithm on a single problem or set of problems, often using performance criteria 
+which may not be appropriate. These comparisons typically do not identify the 
+features that led to better performance by one or the other algorithm, making it 
+hard to distill general principles from these isolated results. In this paper we look in 
+depth at one simple hill-climbing method and an idealized form of the GA, in order 
+to identify some general principles about when and why a GA will outperform hill 
+climbing. 
+51 
+52 Mitchell, Holland, and Forrest 
+Figure 1: Royal Road function R. 
+In previous work we have developed a class of fitness landscapes (the Royal Road 
+functions; Mitchell, Forrest, & Holland, 1992; Forrest & Mitchell, 1993) designed to 
+be the simplest class containing the features that are most relevant to the perfor- 
+mance of the GA. One of our purposes in developing these landscapes is to carry 
+out systematic comparisons with other search methods. 
+A simple Royal Road function, R, is shown in Figure 1. R consists of a list of 
+partially specified bit strings (schemas) si in which '.' denotes a wild card (either 
+0 or 1). Each schema si is given with a coefficient ci. The order of a schema is 
+the number of defined (non-'.') bits. A bit string x is said to be an instance of a 
+schema s, x 6 s, if x matches s in the defined positions. The fitness R (x) of a bit 
+string x is defined as follows: 
+1 if z  s 
+R(z) = y. cii(z), where i(z) = 0 otherwise. 
+i 
+For example, if z is an instance of exactly two of the order-8 schemas, R (z) = 16. 
+Likewise, R(111... 1) = 64. 
+The Building Block Hypothesis (Holland, 1975/1992) states that the GA works well 
+when instances of low-order, short schemas (building blocks) that confer high fit- 
+ness can be recombined to form instances of larger schemas that confer even higher 
+fitness. Given this hypothesis, we initially expected that the building-block struc- 
+ture of R would lay out a royal road for the GA to follow to the optimal string. 
+We also expected that simple hill-climbing schemes would perform poorly since a 
+large number of bit positions must be optimized simultaneously in order to move 
+from an instance of a lower-order schema (e.g., 11111111'*...*) to an instance of a 
+higher-order intermediate schema (e.g., 11111111'******'11111111'*...*). How- 
+ever both these expectations were overturned (Forrest & Mitchell, 1993). In our 
+experiments, a simple GA (using fitness-proportionate selection with sigma scaling, 
+single-point crossover, and point mutation) optimized R quite slowly, at least in 
+part because of hitchhiking: once an instance of a higher-order schema is discov- 
+ered, its high fitness allows the schema to spread quickly in the population, with Os 
+in other positions in the string hitchhiking along with the ls in the schema's defined 
+positions. This slows down the discovery of schemas in the other positions, espe- 
+cially those that are close to the highly fit schema's defined positions. Hitchhiking 
+can in general be a serious bottleneck for the GA, and we observed similar effects 
+When Will a Genetic Algorithm Outperform Hill Climbing? 53 
+200 runs GA SAHC NAHC RMHC 
+Mea 61,334 (2304) > 256,000 (0) > 256,000 (0) 6179 (106) 
+Median 54,208 > 256,000 > 256,000 5775 
+Table 1: Mean and median number of function evaluations to find the optimum 
+string over 200 runs of the GA and of various hill-climbing algorithms on R1. The 
+standard error is given in parentheses. 
+in several variations of our original GA. 
+Our other expectation--that the GA would outperform simple hill-climbing on 
+these functions--was also proved wrong. Forrest and Mitchell (1993) compared 
+the GA's performance on a variation of R with three different hill-climbing meth- 
+ods: steepest ascent hill-climbing (SAHC), next-ascent hill-climbing (NAHC), and a 
+zero-temperature Monte Carlo method, which Forrest and Mitchell called random 
+mutation hill-climbing (RMHC). In RMHC, a string is chosen at random and its 
+fitness is evaluated. The string is then mutated at a randomly chosen single locus, 
+and the new fitness is evaluated. If the mutation leads to an equal or higher fitness, 
+the new string replaces the old string. This procedure is iterated until the optimum 
+has been found or a maximum number of function evaluations has been performed. 
+Here we have repeated these experiments for R1. The results (similar to those given 
+for R in Forrest & Mitchell, 1993) are given in Table 1. We compare the mean 
+and median number of function evaluations to find the optimum string rather than 
+mean and median absolute run time, because in almost all GA applications (e.g., 
+evolving neural-network architectures), the time to perform a function evaluation 
+vastly dominates the time required to execute other parts of the algorithm. For this 
+reason, we consider all parts of the algorithm excluding the function evaluations to 
+take negligible time. 
+The results on SAHC and NAHC were as expected--while the GA found the opti- 
+mum on R in an average of 61,334 function evaluations, neither SAHC nor NAHC 
+ever found the optimum within the maximum of 256,000 function evaluations. How- 
+ever, RMHC found the optimum on R in an average of 6179 function evaluations-- 
+nearly a factor of ten faster than the GA. This striking difference on landscapes orig- 
+inally designed to be royal roads for the GA underscores the need for a rigorous 
+answer to the question posed earlier: Under what conditions will a GA outperform 
+other search algorithms, such as hill climbing? 
+2 ANALYSIS OF RMHC AND AN IDEALIZED GA 
+To begin to answer this question, we analyzed the RMHC algorithm with respect to 
+R. Suppose the fitness function consists of N adjacent blocks of K ls each (in R, 
+N = 8 and K = 8). What is theexpected time (number of function evaluations) 
+E(K, N) to find the optimum string of all ls? We can first ask a simpler question: 
+what is the expected time E(K, 1) to find a single block of K ls? A Markov-chain 
+analysis (not given here) yields E(K, 1) slightly larger than 2 :, converging slowly 
+to 2 K from above as K -- oo (Richard Palmer, personal communication). For 
+54 Mitchell, Holland, and Forrest 
+example, for K = 8, E(K, 1) = 301.2. 
+Now suppose we want RMHC to discover a string with N blocks of K ls. The 
+time to discover a first block of K ls is E(K, 1), but, once it has been found, the 
+time to discover a second block is longer, since many of the function evaluations are 
+wasted on testing mutations inside the first block. The proportion of non-wasted 
+mutations is (KN - K)/KN; this is the proportion of mutations that occur in the 
+KN - K positions outside the first block. The expected time E(K, 2) to find a 
+second block is E(K, 1)+ E(K, 1)[KN/(KN- K)]. Similarly, the total expected 
+time is: 
+N N 
+E(K,N) = E(K, 1)+E(K, 1)N+...+E(K, 1)N_(N_i) 
+= E(K, 1)N 1+++...+ . (1) 
+(The actual value may be a bit larger, since E(K, 1) is the expected time to the first 
+block, whereas E(K, N) depends on the worst time for the N blocks.) Expression 
+(1) is approximately E(K, 1)N(IogN + 7), where 7 is Euler's constant. For K = 
+8, N = 8, the value of expression (1) is 6549. When we ran RMHC on the R 
+function 200 times, the average number of function evaluations to the optimum was 
+6179, which agrees reasonably well with the expected value. 
+Could a GA ever do better than this? There are three reasons why we might expect 
+a GA to perform well on R. First, at least theoretically the GA is fast because 
+of implicit parallelism (Holland, 1975/1992): each string in the population is an 
+instance of many different schemas, and if the population is large enough and is 
+initially chosen at random, a large number of different schemas--many more than 
+the number of strings in the population--are being sampled in parallel. This should 
+result in a quick search for short, low-order schemas that confer high fitness. Second, 
+fitness-proportionate reproduction under the GA should conserve instances of such 
+schemas. Third, a high crossover rate should quickly combine instances of low-order 
+schemas on different strings to create instances of longer schemas that confer even 
+higher fitness. Our previous experiments (Forrest k Mitchell, 1993) showed that 
+the simple GA departed from this in principle behavior. One major impediment 
+was hitchhiking, which limited implicit parallelism by luring certain schema regions 
+suboptimally. But if the GA worked exactly as described above, how quickly could 
+it find the optimal string of R ? 
+To answer this q

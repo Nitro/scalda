@@ -1,0 +1,173 @@
+Constructing Proofs in Symmetric Networks 
+Gadi Pinkas 
+Computer Science Department 
+Washington University 
+Campus Box 1045 
+St. Louis, MO 63130 
+Abstract 
+This paper considers the problem of expressing predicate calculus in con- 
+nectionist networks that are based on energy minimization. Given a first- 
+order-logic knowledge base and a bound k, a symmetric network is con- 
+structed (like a Boltzman machine or a Hopfield network) that searches 
+for a proof for a given query. If a resolution-based proof of length no 
+longer than k exists, then the global minima of the energy function that 
+is associated with the network represent such proofs. The network that 
+is generated is of size cubic in the bound k and linear in the knowledge 
+size. There are no restrictions on the type of logic formulas that can be 
+represented. The network is inherently fault tolerant and can cope with 
+inconsistency and nonmonotonicity. 
+1 Introduction 
+The ability to reason from acquired knowledge is undoubtedly one of the basic and 
+most important components of human intelligence. Among the major tools for 
+reasoning in the area of AI are deductive proof techniques. However, traditional 
+methods are plagued by intractability, inability to learn and adjust, as well as by 
+inability to cope with noise and inconsistency. A connectionist approach may be 
+the missing link: fine grain, massively parallel architecture may give us real-time 
+approximation; networks are potentially trainable and adjustable; and they may be 
+made tolerant to noise as a result of their collective computation. 
+Most connectionist reasoning systems that implement parts of first-order logic 
+(see for examples: [Hlldobler 90], [Shastri et al. 90]) use the spreading activation 
+paradigm and usually trade expressiveness with time efficiency. In contrast, this 
+217 
+218 Pinkas 
+paper uses the energy minimization paradigm (like [Derthick 88], [Ballard 86] and 
+[Pinkas 91c]), representing an intractable problem, but trading time with correct- 
+ness; i.e., as more time is given, the probability of converging to a correct answer 
+increases. 
+Symmetric connectionist networks used for constraint satisfaction are the 
+target platform [Hopfield 84b], [Hinton, Sejnowski 86], [Peterson, Hartman 89], 
+[Smolensky 86]. They are characterized by a quadratic energy function that should 
+be minimized. Some of the models in the family way be seen as performing a search 
+for a global roinimum of their energy function. The task is therefore to represent 
+logic deduction that is bound by a finite proof length as energy minimization (with- 
+out a bound on the proof length, the problem is undecidable). When a query is 
+clamped, the network should search for a proof that supports the query. If a proof 
+to the query exists, then every global minimum of the energy function associated 
+with the network represents a proof. If no proof exists, the global minima represent 
+the lack of a proof. 
+The paper elaborates the propositional case; however, due to space limitations, the 
+first-order (FOL) case is only sketched. For more details and full treatment of FOL 
+see [Pinkas 91j]. 
+2 Representing proofs of propositional logic 
+I'll start by assuming that the knowledge base is propositional. 
+The proof area: 
+A proof is a list of clauses ending with the query such that every clause used is 
+either an original clause, a copy (or weakening) of a clause that appears earlier in 
+the proof, or a result of a resolution step of the two clauses that appeared just 
+earlier. The proof emerges as an activation pattern on special unit structures called 
+the proof area, and is represented in reverse to the common practice (the query 
+appears first). For example: given a knowledge base of the following clauses: 
+1) A 
+2) -AvB vC 
+3) -B v D 
+4) v 
+we would like to prove the query D, by generating the following list of clauses: 
+1) D 
+� D 
+4) CV D 
+5) -A v C v D 
+6) -B V D 
+7) .--,A v B v C 
+(obtained by resolution of clauses 2 and 3 by canceling A). 
+(original clause no. 1). 
+(obtained by resolution of clauses 4 and 5 by canceling C). 
+(original clause no. 4). 
+(obtained by resolution of clauses 6 and 7 by canceling B). 
+(original clause no. 3). 
+(original clause no. 2). 
+Each clause in the proof is either an original clause, a copy of a clause from earlier 
+in the proof, or a resolution step. 
+The matrix C in figure 1, functions as a clause list. This list represents an ordered 
+set of clauses that form the proof. The query clauses are clamped onto this area 
+Constructing Proofs in Symmetric Networks 219 
+and activate hard constraints that force the rest of the units of the matrix to form 
+a valid proof (if it exists). 
+A 
+B 
+C 
+D 
+n 
+0 i� 
+0 E) 
+o !o:ie 
+o o e 
+k 
+1 2 3 4 k 1 2 3 4 k 1 2 
+o 
+o 
+P 7 
+k 
+k 
+o 
+o 
+o 
+K 
+Figure 1: The proof area for a propositional case 
+D 
+Variable binding is performed by dynamic allocation of instances using a technique 
+similar to [Anandan et al. 89] and [Barnden 91]. In this technique, if two symbols 
+need to be bound together, an instance is allocated from a pool of general purpose 
+instances, and is connected to both symbols. An instance can be connected to a 
+literal in a clause, to a predicate type, to a constant, to a function or to a slot 
+of another instance (for example, a constant that is bound to the first slot of a 
+predicate). 
+The clauses that participate in the proof are represented using a 3-dimensional 
+matrix (C'o,i,j) and a 2-dimensional matrix (Pij) as illustrated in figure 1. The 
+rows of C' represent clauses of the proof, while the rows of P represent atomic 
+220 Pinkas 
+propositions. The columns of both matrices represent the pool of instances used for 
+binding propositions to clauses. 
+A clause is a list of negative and positive instances that represent literals. The 
+instance thus behaves as a two-way pointer that binds composite structures like 
+clauses with their constituents (the atomic propositions). A row i in the matrix 
+C' represents a clause which is composed of pairs of instances. If the unit C'+jj is 
+set, then the matrix represents a positive literal in clause i. If PAj is also set, then 
+C'+,ij represents a positive literal of clause i that is bound to the atomic proposition 
+A. Similarly C-,ij represents a negative literal. 
+The first row of matrix C' in the figure is the query clause D. It contains only one 
+positive literal that is bound to atomic proposition D via instance 4. For another 
+example consider the third row of the C' which represents a clause of two literals: a 
+positive one that is bound to D via instance 4, and a negative one bound to A via 
+instance 1 (it is the clause A V D, generated as a result of a resolution step). 
+Participation in the proof: The vector IN represents whether clauses in C' 
+participate in the proof. In our example, all the clauses are in the proof; however, 
+in the general case some of the rows of C' may be meaningless. When INi is on, it 
+means that the clause i is in the proof and must be proved as well. Every clause that 
+participates in the proof is either a result of a resolution step (RESi is set), a copy 
+of a some clause (C'P is set), or it is an original clause from the knowledge base 
+(KBi is set). The second clause of C in figure 1 for example is an original clause 
+of the knowledge base. If a clause j is copied, it must be in the proof itself and 
+therefore INj is set. Similarly, if clause i is a result of a resolution step, then the two 
+resolved clauses must also be in the proof (INi+Lj and INi+2j) and therefore must 
+be themselves resolvents, copies or originals. This chain of constraints continues 
+until all constraints are satisfied and a valid proof is generated. 
+Posting a query: The user posts a query clamping its clauses onto the first rows 
+of C and setting the appropriate IN units. This indicates that the query clauses 
+participate in the proof and should be proved by either a resolution step, a copy 
+step or by an original clause. Figure 1 represents the complete proof for the query 
+D. We start by allocating an instance (4) for D in the P matrix, and clamping a 
+positive literal D in the first row of C' (C'+,,4); the rest of the first row's units are 
+clamped zero. The unit IN is biased (to have the value of one), indicating that 
+the query is in the proof; this cause a chain of constraints to be activated that are 
+satisfied only by a valid proof. If no proof exists, the INx unit will become zero; 
+i.e., the global minima is obtained by setting INx to zero despite the bias. 
+Representing resolutions steps: The vector RES is a structure of units that 
+indicates which are the clauses in C' that are obtained by a resolution step. If RESt 
+is set, then the ith row is obtained by resolving row i -- 1 of C' with row i -- 2. 
+Thus, the unit RES in figure 1 indicates that the clause D of the first row of 
+C' is a resolvent of the second and the third rows of C' representing -A V D and 
+A respectfully. Two literals cancel each other if they have opposite signs and are 
+represented by the same instance. In figure 1, literal A of the third row of C' and 
+literal A of the second row cancel each other, generating the clause of the first 
+row. 
+The rows of matrix R represent literals canceled by resolution steps. If row i of 
+Constructing Proofs in Symmetric Networks 221 
+C is the result of a resolution step, there must be one and only one instance j such 
+that both clause i + 1 and clause i + 2 include it with opposite signs. For example 
+(figure 1): clause D in the first row of C is the result of resolving clause A with 
+clause A � D which are in the second and third rows of C respectfully. Instance 1, 
+representing atomic proposition A, is the one that is canceled; R, is set therefore, 
+indicating that clause 1 is obtained by a resolution step that cancels the literals of 
+instance 1. 
+Copied and original clauses: The matrix D indicates which clauses are copied 
+to oth

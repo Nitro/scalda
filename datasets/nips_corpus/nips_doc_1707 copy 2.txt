@@ -1,0 +1,168 @@
+Learning Factored Representations for Partially 
+Observable Markov Decision Processes 
+Brian Sallans 
+Department of Computer Science 
+University of Toronto 
+Toronto M5S 2Z9 Canada 
+Gatsby Computational Neuroscience Unit* 
+University College London 
+London WC1N 3AR U.K. 
+sallans @ cs. toronto. edu 
+Abstract 
+The problem of reinforcement learning in a non-Markov environment is 
+explored using a dynamic Bayesian network, where conditional indepen- 
+dence assumptions between random variables are compactly represented 
+by network parameters. The parameters are learned on-line, and approx- 
+imations are used to perform inference and to compute the optimal value 
+function. The relative effects of inference and value function approxi- 
+mations on the quality of the final policy are investigated, by learning to 
+solve a moderately difficult driving task. The two value function approx- 
+imations, linear and quadratic, were found to perform similarly, but the 
+quadratic model was more sensitive to initialization. Both performed be- 
+low the level of human performance on the task. The dynamic Bayesian 
+network performed comparably to a model using a localist hidden state 
+representation, while requiring exponentially fewer parameters. 
+1 Introduction 
+Reinforcement learning (RL) addresses the problem of learning to act so as to maximize 
+a reward signal provided by the environment. Online RL algorithms try to find a policy 
+which maximizes the expected time-discounted reward. They do this through experience 
+by performing sample backups to learn a value function over states or state-action pairs. 
+If the decision problem is Markov in the observable states, then the optimal value function 
+over state-action pairs yields all of the information required to find the optimal policy for 
+the decision problem. When complete knowledge of the environment is not available, states 
+which are different may look the same; this uncertainty is called perceptual aliasing [1], 
+and causes decision problems to have dynamics which are non-Markov in the perceived 
+state. 
+* Correspondence address 
+Learning Factored Representations for POMDPs 1051 
+1.1 Partially observable Markov decision processes 
+Many interesting decision problems are not Markov in the inputs. A partially observable 
+Markov decision process (POMDP) is a formalism in which it is assumed that a process is 
+Markov, but with respect to some unobserved (i.e. hidden) random variable. The state of 
+the variable at time t, denoted s t, is dependent only on the state at the previous time step and 
+on the action performed. The currently-observed evidence is assumed to be independent of 
+previous states and observations given the current state. 
+The state of the hidden variable is not known with certainty, so a belief state is maintained 
+instead. At each time step, the beliefs are updated by using Bayes' theorem to combine the 
+belief state at the previous time step (passed through a model of the system dynamics) with 
+newly observed evidence. In the case of discrete time and finite discrete state and actions, a 
+POMDP is typically represented by conditional probability tables (CPTs) specifying emis- 
+sion probabilities for each state, and transition probabilities and expected rewards for states 
+and actions. This corresponds to a hidden Markov model (HMM) with a distinct transition 
+matrix for each action. The hidden state is represented by a single random variable that can 
+take on one of K values. Exact belief updates can be computed using Bayes' rule. 
+The value function is not over the discrete state, but over the real-valued belief state. It has 
+been shown that the value function is piecewise linear and convex [2]. In the worst case, 
+the number of linear pieces grows exponentially with the problem horizon, making exact 
+computation of the optimal value function intractable. 
+Notice that the localist representation, in which the state is encoded in a single random 
+variable, is exponentially inefficient: Encoding r bits of information about the state of the 
+process requires 2 n possible hidden states. This does not bode well for the abilities of 
+models which use this representation to scale up to problems with high-dimensional inputs 
+and complex non-Markov structure. 
+1.2 Factored representations 
+A Bayesian network can compactly represent the state of the system in a set of random 
+variables [3]. A two time-slice dynamic Bayesian network (DBN) represents the system at 
+two time steps [4]. The conditional dependencies between random variables from time t to 
+time t + 1, and within time step t, are represented by edges in a directed acyclic graph. The 
+conditional probabilities can be stored explicitly, or parameterized by weights on edges in 
+the graph. 
+If the network is densely-connected then inference is intractable [5]. Approximate infer- 
+ence methods include Markov chain Monte Carlo [6], variational methods [7], and belief 
+state simplification [8]. 
+In applying a DBN to a large problem there are three distinct issues to disentangle: How 
+well does a parameterized DBN capture the underlying POMDP; how much is the DBN 
+hurt by approximate inference; and how good must the approximation of the value function 
+be to achieve reasonable performance? We try to tease these issues apart by looking at the 
+performance of a DBN on a problem with a moderately large state-space and non-Markov 
+structure. 
+2 The algorithm 
+We use a fully-connected dynamic sigmoid belief network (DSBN) [9], with K units at 
+each time slice (see figure 1). The random variables si are binary, and conditional proba- 
+1052 B. Sallans 
+time t t+l 
+Figure 1: Architecture of the 
+dynamic sigmoid belief network. 
+Circles indicate random variables, 
+where a filled circle is observed 
+and an empty circle is unobserved. 
+Squares are action nodes, and dia- 
+monds are rewards. 
+bilities relating variables at adjacent time-steps are encoded in action-specific weights: 
+k=l 
+a t 
+where wik is the weight from the i th unit at time step t to the k th unit at time step t + 1, 
+assuming action a t is taken at time t. The nonlinearity is the usual sigmoid function: 
+a(z) = 1/1 + exp{-z}. Note that a bias can be incorporated into the weights by clamping 
+one of the binary units to 1. 
+The observed variables are assumed to be discrete; the conditional distribution of an output 
+given the hidden state is multinomial and parameterized by output weights. The probability 
+of observing an output with value I is given by: 
+P(o t l[{s K exp {rkK__l 
+= = (2) 
+__1  exp { 
+where o t E 0 and ukl denotes the output weight from hidden unit k to output value I. 
+2.1 Approximate inference 
+Inference in the fully-connected Bayesian network is intractable. Instead we use a varia- 
+tional method with a fully-factored approximating distribution: 
+K 
+P(stls*-X,a*-,o*)  Ps'  1-I/(1-/) 1-L (3) 
+k=l 
+where the/,t are variational parameters to be optimized. This is the standard mean-field 
+approximation for a sigmoid belief network [ 10]. The parameters/,t are optimized by iterat- 
+ing the mean-field equations, and converge in a few iterations. The values of the variational 
+parameters at time t are held fixed while computing the values for step t + 1. This is 
+analogous to running only the forward portion of the HMM forward-backward algorithm 
+[11]. 
+The parameters of the DSBN are optimized online using stochastic gradient ascent in the 
+2 exp] } 
+log-likelihood: 
+(4) 
+Learning Factored Representations for POMDPs 1053 
+where W and U are the transition and emission matrices respectively, aw and au are 
+learning rates, the vector/.t contains the fully-factored approximate belief state, and v is a 
+vector of zeros with a one in the o tth place. The notation [']k denotes the k th element of a 
+vector (or k  column of a matrix). 
+2.2 Approximating the value function 
+Computing the optimal value function is also intractable. If a factored state-space represen- 
+tation is appropriate, it is natural (if extreme) to assume that the state-action value function 
+can be decomposed in the same way: 
+K 
+q(vst,a t) qF(u, *) 
+k=l 
+This simplifying assumption is still not enough to make finding the optimal value func- 
+tion tractable. Even if the states were completely independent, each Qk would still be 
+piecewise-linear and convex, with the number of pieces scaling exponentially with the hori- 
+zon. We test two approximate value functions, a linear approximation: 
+K 
+and a quadratic approximation: 
+K 
+at) = E q3k,at tX + qk,t k + ba t 
+= + [q]t + 
+(6) 
+(7) 
+Where (I,, Q and b are parameters of the approximations. The notation [.]i denotes the 
+i t column of a matrix, [-]- denotes matrix transpose and � denotes element-wise vector 
+multiplication. 
+We update each term of the factored approximation with a modified Q-learning rule [12], 
+which corresponds to a delta-rule where the target for input/x is r t + ? maxa Qv(lu t+x , a)' 
+qk,a t 3-- qk,a  + O k EB 
+ba t t- bat + a EB 
+(8) 
+Here oz is a learning rate, ? is the temporal discount factor, and EB is the Bellman residual: 
+EB = r t + ?maxQr(/xt+, a) - Q'(txt, a t) (9) 
+a 
+3 Experimental results 
+The New York Driving task [ 13] involves navigating through slower and faster one-way 
+traffic on a multi-lane highway. The speed of the agent is fixed, and it must change lanes to 
+avoid slower cars and move out of the way of faster cars. If the agent remains in front of a 
+faster car, the driver of the fast car will honk its horn, resulting in a reward of -1.0. Instead 
+of colliding with a slower car, the agent can squeeze past in the same lane, resulting in a 
+reward of -10.0. A time step with no horns or lane-squeezes constitutes clear progress, 
+and is rewarded with +0.1. See [13] for a detailed description of this task. 
+1054 B. Sallans 
+Table 1: Sensory input for the New York driving task 
+Dimension ]Size[Values 
+Hear horn 2 yes, no 
+Gaze object 3 truck, shoulder, road 
+Gaze spe

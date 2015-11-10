@@ -1,0 +1,172 @@
+Advantage Updating Applied to 
+a Differential Game 
+Mance E. Harmon 
+Wright Laboratory 
+WL/AAAT Bldg. 635 2185 Avionics Circle 
+Wright-Patterson Air Force Base, OH 45433-7301 
+harmonme aa.wpafb.mil 
+Leemort C. Baird III* 
+Wright Laboratory 
+baird@cs.usafa.af. mil 
+A. Harry K!opf 
+Wright Laboratory 
+klopfah@aa.wpafb.mil 
+Category: Control, Navigation, and Planning 
+Keywords: Reinforcement Learning, Advantage Updating, 
+Dynamic Programming, Differential Games 
+Abstract 
+An application of reinforcement learning to a linear-quadratic, differential 
+game is presented. The reinforcement learning system uses a recently 
+developed algorithm, the residual gradient form of advantage updating. 
+The game is a Markov Decision Process (MDP) with continuous time, 
+states, and actions, linear dynamics, and a quadratic cost function. The 
+game consists of two players, a missile and a plane; the missile pursues 
+the plane and the plane evades the missile. The reinforcement learning 
+algorithm for optimal control is modified for differential games in order to 
+find the minimax point, rather than the maximum. Simulation results are 
+compared to the optimal solution, demonstrating that the simulated 
+reinforcement learning system converges to the optimal answer. The 
+performance of both the residual gradient and non-residual gradient forms 
+of advantage updating and Q-learning are compared. The results show that 
+advantage updating converges faster than Q-learning in all simulations. 
+The results also show advantage updating converges regardless of the time 
+step duration; Q-learning is unable to converge as the time step duration 
+[rows small. 
+U.S.A.F. Academy, 2354 Fairchild Dr. Suite 6K41, USAFA, CO 80840-6234 
+354 Mance E. Harmon, Leemon C. Baird III, A. Harry Klopf 
+I ADVANTAGE UPDATING 
+The advantage updating algorithm (Baird, 1993) is a reinforcement learning algorithm in 
+which two types of information are stored. For each state x, the value V(x) is stored, 
+representing an estimate of the total discounted return expected when starting in state x 
+and performing optimal actions. For each state x and action u, the advantage, A(x,u), is 
+stored, representing an estimate of the degree to which the expected total discounted 
+reinforcement is increased by performing action u rather than the action currently 
+considered best. The optimal value function V*(x) represents the true value of each state. 
+The optimal advantage function A (x,u) will be zero if u is the optimal action (because u 
+confers no advantage relative to itself) and A (x,u) will be negative for any supfimal u 
+(because a suptimal action has a negative advantage relative to the best action). The 
+optimal advantage function A* can be defined in terms of the optimal value function V*: 
+A'(x,u)= t[R(x,u)- V'(x)+ zV'(x ' )] 
+(1) 
+The definition of an advantage includes a 1/At term to ensure that, for small time step 
+duration At, the advantages will not all go to zero. 
+Both the value function and the advantage function are needed during learning, but after 
+convergence to optimality, the policy can be extracted from the advantage function alone. 
+The optimal policy for state x is any u that maximizes A*(x,u). The notation 
+Am,(x)=maxA(x,u) (2) 
+defines Amax(X). If Amax converges to zero in every state, the advantage function is said 
+to be normalized. Advantage updating has been shown to learn faster than Q-learning 
+(Watkins, 1989), especially for continuous-time problems (Baird, 1993). 
+If advantage updating (Baird, 1993) is used to control a deterministic system, there are two 
+equations that are the equivalent of the Bellman equation in value iteration (Bertsekas, 
+1987). These are a pair of two simultaneous equations (Baird, 1993): 
+1 
+A(x,u)-maxA(x,u')=(R+ ya'V(x')-V(x)) At 
+(3) 
+max A(x,u) = 0 (4) 
+where a time step is of duration At, and performing action u in state x results in a 
+reinforcement of R and a transition to state xt+At. The optimal advantage and value 
+functions will satisfy these equations. For a given A and V function, the Bellman 
+residual errors, E, as used in Williams and Baird (1993) and defined here as equations (5) 
+and (6).are the degrees to which the two equations are not satisfied: 
+E(x,,u)=(R(x,,u)+ ya'V(x,,a,)-V(x,))tt-A(x,,u)+maxA(x,,u' ) 
+(5) 
+E2 (x,u) = -max A(x,u) (6) 
+Advantage Updating Applied to a Differential Game 355 
+2 RESIDUAL GRADIENT ALGORITHMS 
+Dynamic programming algorithms can be guaranteed to converge to optimality when used 
+with look-up tables, yet be completely unstable when combined with function- 
+approximation systems (Baird & Harmon, In preparation). It is possible to derive an 
+algorithm that has guaranteed convergence for a quadratic function approximation system 
+(Bradtke, 1993), but that algorithm is specific to quadratic systems. One solution to this 
+problem is to derive a learning algorithm to perform gradient descent on the mean squared 
+Bellman residuals given in (5) and (6). This is called the residual gradient form of an 
+algorithm. 
+There are two Bellman residuals, (5) and (6), so the residual gradient algorithm must 
+perform gradient descent on the sum of the two squared Bellman residuals. It has been 
+found to be useful to combine reinforcement learning algorithms with function 
+approximation systems (Tesauro, 1990 & 1992). If function approximation systems are 
+used for the advantage and value functions, and if the function approximation systems are 
+parameterized by a set of adjustable weights, and if the system being controlled is 
+deterministic, then, for incremental learning, a given weight W in the function- 
+approximation system could be changed according to equation (7) on each time step: 
+2 
+a 
+AW= 
+2 8W 
+=-aE(x, u,) 8E(xu') - aE2(x,,u,) 8E2(x,,u,) 
+' 8W 8w 
+=-or( 1 (R+ yV(x,+)-V(x,))-A(x,,u,)+maxA(x,,u)) 
+3w 3w 3w + 3w 
+8maxA(x,,u) 
+-amaxA(x,,u)  
+As a simple, gradient-descent algorithm, equation (7) is guaranteed to converge to the 
+correct answer for a deterministic system, in the same sense that backpropagation 
+(Rumelhart, Hinton, Williams, 1986) is guaranteed to converge. However, if the system 
+is nondeterministic, then it is necessary to independently generate two different possible 
+next states xt+zlt for a given action ut performed in a given state xt. One xt+zlt must 
+be used to evaluate V(xt+zlt), and the other must be used to evaluate W V(x'+a' )' 
+This ensures that the weight change is an unbiased estimator of the true Bellman-residual 
+gradient, but requires a system such as in Dyna (Sutton, 1990) to generate the second 
+xt+zit. The differential game in this paper was deterministic, so this was not needed here. 
+356 Mance E. Harmon, Leemon C. Baird III, A. Harry Klopf 
+3 THE SIMULATION 
+3.1 GAME DEFINITION 
+We employed a linear-quadratic, differential game (Isaacs, 1965) for comparing Q-learning 
+to advantage updating, and for comparing the algorithms in their residual gradient forms. 
+The game has two players, a missile and a plane, as in games described by Rajan, Prasad, 
+and Rao (1980) and Millington (1991). The state x is a vector (Xm,Xp) composed of the 
+state of the missile and the state of the plane, each of which are composed of the position 
+and velocity of the player in two-dimensional space. The action u is a vector (Urn,Up) 
+composed of the action performed by the missile and the action performed by the plane, 
+each of which are the acceleration of the player in two-dimensional space. The dynamics 
+of the system are linear; the next state xt+ 1 is a linear function of the current state x t and 
+action ut. The reinforcement function R is a quadratic function of the accelerations and 
+the distance between the players. 
+R(x, u)= [distance 2 + (missile acceleration) 2 - 2(plane acceleration)2]At 
+= _ )2 2 _2u2p]A t 
+R(x,u) [(x, xp +u, 
+In equation (9), squaring a vector is equivalent to taking the dot product of the vector with 
+itself. The missile seeks to minimize the reinforcement, and the plane seeks to maximize 
+reinforcement. The plane receives twice as much punishment for acceleration as does the 
+missile, thus allowing the missile to accelerate twice as easily as the plane. 
+The value function V is a quadratic function of the state. 
+are weight matrices that change during learning. 
+V(x) = xDmxm + 
+In equation (10), D m and Dp 
+(10) 
+The advantage function A is a quadratic function of the state x and action u. The actions 
+are accelerations of the missile and plane in two dimensions. 
+A(x,u) = xrA,x, + xrB,C,u, + urC,u, + 
+x r r B r 
+(11) 
+The matrices A, B, and C are the adjustable weights that change during learning. 
+Equation (11) is the sum of two general quadratic functions. This would still be true if 
+the second and fifth terms were xBu instead of xBCu. The latter form was used to 
+simplify the calculation of the policy. Using the xBu form, the gradient is zero when 
+u=-C-1Bx/2. Using the xBCu form, the gradient of A(x,u) with respect to u is zero 
+when u=--Bx/2, which avoids the need to invert a matrix while calculating the policy. 
+3.2 THE BELLMAN RESIDUAL AND UPDATE EQUATIONS 
+Equations (5) and (6) define the Bellman residuals when maximizing the total discounted 
+reinforcement for an optimal control problem; equations (12) and (13) modify the 
+algorithm to solve differential games rather than optimal control problems. 
+Advantage Updating Applied to a Differential Game 357 
+E(x,,u,)=(R(x,,u,)+ 7V(x,+)-V(x,)) A--A(x,u)+minimax A(x,) 
+E 2 (x ,u ) = -minimax A(x, ) 
+The resulting weight update equation is: 
+AW = -o(( R + yatV(xt+at )- V(x, ) ) A-- A( xt,ut ) 
+-orninimax A( xt ) 
+cV(x,),) 1 
+9W ) At W 
+cminirnax A( x, ) 
+(12) 
+(13) 
+minimax A( x, ) ) 
+cminimax A(xt),) (14) 
+3W 
+For Q-learning, the residual-gradient form of the weight update equation is: 
+AW =-a(R + ?' minimax Q(x,+,)-Q(x,,u,)) 
+� (7  -)-minimax Q(x,+)----LQ(x,,u,)) 
+4 RESULTS 
+(15) 
+4.1 RESIDUAL GRADIENT ADVANTAGE UPDATING RESU

@@ -1,0 +1,145 @@
+804 
+INTRODUCTION TO A SYSTEM FOR IMPLEMENTING NEURAL NET 
+CONNECTIONS ON SIMD ARCHITECTURES 
+Sherryl Tomboulian 
+Institute for Computer Applications in Science and Engineering 
+NASA Langley Research Center, Hampton VA 23665 
+ABSTRACT 
+Neural networks have attracted much interest recently, and using parallel 
+architectures to simulate neural networks is a natural and necessary applica- 
+tion. The SIMD model of parallel computation is chosen, because systems of 
+this type can be built with large numbers of processing elements. However, 
+such systems are not naturally suited to generalized communication. A method 
+is proposed that allows an implementation of neural network connections on 
+massively parallel SIMD architectures. The key to this system is an algorithm 
+that allows the formation of arbitrary connections between the 'neurons '. A 
+feature is the ability to add new connections quickly. It also has error recov- 
+ery ability and is robust over a variety of network topologies. Simulations of 
+the general connection system, and its implementation on the Connection Ma- 
+chine, indicate that the time and space requirements are proportional to the 
+product of the average number of connections per neuron and the diameter of 
+the interconnection network. 
+INTRODUCTION 
+Neural Networks hold great promise for biological research, artificial intelli- 
+gence, and even as general computational devices. However, to study systems 
+in a realistic manner, it is highly desirable to be able to simulate a network 
+with tens of thousands or hundreds of thousands of neurons. This suggests the 
+use of parallel hardware. The most natural method of exploiting parallelism 
+would have each processor simulating a single neuron. 
+Consider the requirements of such a system. There should be a very large 
+number of processing elements which can work in parallel. The computation 
+that occurs at these elements is simple and based on local data. The processing 
+elements must be able to have connections to other elements. All connections 
+in the system must be able to be traversed in parallel. Connections must be 
+added and deleted dynamically. 
+Given current technology, the only type of parallel model that can be con- 
+structed with tens of thousands or hundreds of thousands of processors is an 
+SIMD architecture. In exchange for being able to build a system with so many 
+processors, there are some inherent limitations. SIMD stands for single instruc- 
+tion multiple data  which means that all processors can work in parallel, but 
+they must do exactly the same thing at the same time. This machine model 
+is sufficient for the computation required within a neuron, however in such a 
+system it is difficult to implement arbitrary connections between neurons. The 
+Connection Machine 2 provides such a model, but uses a device called the router 
+This work was supported by the National Aeronautics and Space Administration under 
+NASA Constract No. NASl-18010-7 while the author was in residence at ICASE. 
+� American Institute of Physics 1988 
+805 
+to deliver messages. The router is a complex piece of hardware that uses signif- 
+icant chip area, and without the additional hardware for the router, a machine 
+could be built with significantly more processors. Since one of the objectives is 
+to maximize the number of neurons it is desirable to eliminate the extra cost 
+of a hardware router and instead use a software method. 
+Existing software algorithms for forming connections on SIMD machines 
+are not sufficient for the requirements of a neural networks. They restrict the 
+form of graph (neural network) that can be embedded to permutations s'4 or 
+sorts 5'6�bd'th?, the methods are network specific, and adding a new connec- 
+tion is highly time consuming. 
+The software routing method presented here is a unique algorithm which al- 
+lows arbitrary neural networks to be embedded in machines with a wide variety 
+of network topologies. The advantages of such an approach are numerous: A 
+new connection can be added dynamically in the same amount of time that it 
+takes to perform a parallel traversal of all connections. The method has error 
+recovery ability in case of network failures. This method has relationships with 
+natural neural models. When a new connection is to be formed, the two neurons 
+being connected are activated, and then the system forms the connection with- 
+out any knowledge of the address of the neuron-processors and without any 
+instruction as to the method of forming the connecting path. The connections 
+are entirely distributed; a processor only knows that connections pass through 
+it - it doesn't know a connection's origin or final destination. 
+Some neural network applications have been implemented on massively par- 
+allel architectures, but they have run into restrictions due to communication. 
+An implementation on the Connection Machine s discovered that it was more 
+desirable to cluster processors in groups, and have each processor in a group 
+represent one connection, rather than having one processor per neuron, because 
+the router is designed to deliver one message at a time from each processor. This 
+approach is contrary with the more natural paradigm of having one processor 
+represent a neuron. The MPP 9, a massively parallel architecture with proces- 
+sors arranged in a mesh, has been used to implement neural nets �, but because 
+of a lack of generalized communication software, the method for edge connec- 
+tions is a regular communication pattern with all neurons within a specified 
+distance. This is not an unreasonable approach, since within the brain neurons 
+are usually locally connected, but there is also a need for longer connections 
+between groups of neurons. The algorithms presented here can be used on 
+both machines to facilitate arbitrary connections with an irregular number of 
+connections at each processor. 
+MACHINE MODEL 
+As mentioned previously, since we desire to build a system with an large 
+number of processing elements, the only technology currently available for build- 
+ing such large systems is the SIMD architecture model. In the SIMD model 
+there is a single control unit and a very large number of slave processors that 
+can execute the same instruction stream simultaneously. It is possible to disable 
+some processors so that only some execute an instruction, but it is not possible 
+to have two processor performing different instructions at the same time. The 
+processors have exclusively local memory which is small (only a few thousand 
+bits , and facilities for local indirect addressing. In this scheme 
+) t. hey have no 
+an snstrttctson involves both a particular operation code and the local memory 
+8O6 
+address. All processors must do this same thing to the same areas of their local 
+memory at the same time. 
+The basic model of computation is bit-serial - each instruction operates on 
+a bit at a time. To perform multiple bit operations, such as integer addition, 
+requires several instructions. This model is chosen because it requires less 
+hardware logic, and so would allow a machine to be built with a larger number 
+of processors than could otherwise be achieved with a standard word-oriented 
+approach. Of course, the algorithms presented here will also work for machines 
+with more complex instruction abilities; the machine model described satisfies 
+the minimal requirements. 
+An important requirement for connection formation is that the processors 
+are connected in some topology. For instance, the processors might be con- 
+nected in a grid so that each processor has a North, South, East, and West 
+neighbor. The methods presented here work for a wide variety of network 
+topologies. The requirements are: (1) there must be some path between any 
+two processors; (2) every neighbor link must be hi-directional, i.e. if A is a 
+neighbor of B, then B must be a neighbor of A; (3) the neighbor relations 
+between processors must have a consistent invertible labeling. A more pre- 
+cise definition of the labeling requirements can be found in n. It suffices that 
+most networks a2, including gd, hypercube, cube connected cycles as, shuffle 
+exchange , and mesh of trees are admissible under the scheme. Additional 
+requirements are that the processors be able to read from or write to their 
+neighbors' memories, and that at least one of the processors acts as a serial 
+port between the processors and the controller. 
+COMPUTATIONAL REQUIREMENTS 
+The machine model described here is sufficient for the computational re- 
+quirements of a neuron. Adopt the paradigm that each processor represents one 
+neuron. While several different models of neural networks exist with slightly 
+different features, they are all fairly well characterized by computing a sum or 
+product of the neighbors values, and if a certain threshold is exceeded, then 
+the processor neuron will fire, i.e. activate other neurons. The machine model 
+described here is more efficient at boolean computation, such as described by 
+McCulloch and Pitts 6, since it is bit serial. Neural net models using integers 
+and floating point arithmetic 7,s will also work but will be somewhat slower 
+since the time for computation is proportional to the number of bits of the 
+operands. 
+The only computational difficulty lies in the fact that the system is SIMD, 
+which means that the processes are synchronous. For some neural net models 
+this is sufficient xs however others require asynchronous behavior xT. This can 
+easily be achieved simply by turning the processors on and off based on a spec- 
+ified probability distribution. (For a survey of some different neural networks 
+see 19). 
+CONNECTION ASSUMPTIONS 
+Many models of neural networks assume fully connected systems. This 
+model is considered unrealistic, and the method presented here will work better 
+for models that contain more sparsely connected systems. While the method 
+will work for dense connections

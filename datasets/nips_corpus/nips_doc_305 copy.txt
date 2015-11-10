@@ -1,0 +1,140 @@
+Connectionist Music Composition Based on 
+Melodic and Stylistic Constraints 
+Michael C. Mozer 
+Department of Computer Science 
+and Institute of Cognitive Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+Todd Soukup 
+Department of Electrical 
+and Computer Engineering 
+University of Colorado 
+Boulder, CO 80309-0425 
+Abstract 
+We describe a recurrent connectionist network, called CONCERT, that uses a 
+set of melodies written in a given style to compose new melodies in that 
+style. CONCERT is an extension of a traditional algorithmic composition tech- 
+nique in which transition tables specify the probability of the next note as a 
+function of previous context. A central ingredient of CONCERT is the use of a 
+psychologically-grounded representation of pitch. 
+1 INTRODUCTION 
+In creating music, composers bring to bear a wealth of knowledge about musical conven- 
+tions. If we hope to build automatic music composition systems that can mimic the abili- 
+ties of human composers, it will be necessary to incorporate knowledge about musical 
+conventions into the systems. However, this knowledge is difficult to express: even hu- 
+man composers are unaware of many of the constraints under which they operate. 
+In this paper, we describe a connectionist network that composes melodies. The network 
+is called CONCERT, an acronym for connectionist composer of erudite tunes. Musical 
+knowledge is incorporated into CONCERT via two routes. First, CONCERT is trained on a 
+set of sample melodies from which it extracts rules of note and phrase progressions. 
+Second, we have built a representation of pitch into CONCERT that is based on psychologi- 
+cal studies of human perception. This representation, and an associated theory of gen- 
+eralization proposed by Shepard (1987), provides CONCERT with a basis for judging the 
+similarity among notes, for selecting a response, and for restricting the set of alternatives 
+that can be considered at any time. 
+2 TRANSITION TABLE APPROACHES TO COMPOSITION 
+We begin by describing a traditional approach to algorithmic music composition using 
+Markov transition tables. This simple but interesting technique involves selecting notes 
+sequentially according to a table that specifies the probability of the next note as a func- 
+789 
+790 Mozer and Soukup 
+tion of the current note (Dodge & Jerse, 1985). The tables may be hand-constructed ac- 
+cording to certain criteria or they may be set up to embody a particular musical style. In 
+the latter case, statistics are collected over a set of examples (hereafter, the training set) 
+and the table entries are defined to be the transition probabilities in these examples. 
+In melodies of any complexity, musical structure cannot be fully described by pairwise 
+statistics. To capture additional structure, the transition table can be generalized from a 
+two-dimensional array to n dimensions. In the n-dimensional table, often referred to as 
+a table of order n -1, the probability of the next note is indicated as a function of the pre- 
+vious n-1 notes. Unfortunately, extending the transition table in this manner gives rise 
+to two problems. First, the size of the table explodes exponentially with the amount of 
+context and rapidly becomes unmanageable. Second, a table representing the high-order 
+structure masks whatever low-order structure is present. 
+Kohonen (1989) has proposed a scheme by which only the relevant high-order structure 
+is represented. The scheme is symbolic algorithm that, given a training set of examples, 
+produces a collection of rules -- a context-sensitive grammar sufficient for reproduc- 
+ing most or all of the structure inherent in the set. However, because the algorithm at- 
+tempts to produce deterministic rules -- rules that always apply in a given context -- the 
+algorithm will not discover regularities unless they are absolute; it is not equipped to deal 
+with statistical properties of the data. Both Kohonen's musical grammar and the transi- 
+tion table approach suffer from the further drawback that a symbolic representation of 
+notes does not facilitate generalization. For instance, invariance under transposition is 
+not directly representable. In addition, other similarities are not encoded, for example, 
+the congruity of octaves. 
+Connectionist learning algorithms offer the potential of overcoming the various limita- 
+tions of transition table approaches and Kohonen musical grammars. Connectionist algo- 
+rithms are able to discover relevant structure and statistical regularities in sequences 
+(e.g., Elman, 1990; Mozer, 1989), and to consider varying amounts of context, noncon- 
+tiguous context, and combinations of low-order and high-order regularities. Connection- 
+ist approaches also promise better generalization through the use of distributed represen- 
+tations. In a local representation, where each note is represented by a discrete symbol, 
+the sort of statistical contingencies that can be discovered are among notes. However, in 
+a distributed representation, where each note is represented by a set of continuous feature 
+values, the sort of contingencies that can be discovered are among features. To the ex- 
+tent that two notes share features, featural regularities discovered for one note may 
+transfer to the other note. 
+3 THE CONCERT ARCHITECTURE 
+CONCERT is a recurrent network architecture of the sort studied by Elman (1990). A 
+melody is presented to it, one note at a time, and its task at each point in time is to predict 
+the next note in the melody. Using a training procedure described below, CONCERT'S 
+connection strengths are adjusted so that it can perform this task correctly for a set of 
+training examples. Each example consists of a sequence of notes, each note being 
+characterized by a pitch and a duration. The current note in the sequence is represented 
+in the input layer of CONCERT, and the prediction of the next note is represented in the 
+output layer. As Figure 1 indicates, the next note is encoded in two different ways: The 
+next-note-distributed (or NND) layer contains CONCERT'S internal representation of the 
+Connectionist Music Composition Based on Melodic and Stylistic Constraints 791 
+note, while the next-note-local (or NNL) layer contains one unit for each alternative. For 
+now, it should suffice to say that the representation of a note in the NND layer, as well as 
+in the input layer, is distributed, i.e., a note is indicated by a pattern of activity across the 
+units. Because such patterns of activity can be quite difficult to interpret, the NNL layer 
+provides an alternative, explicit representation of the possibilities. 
+Selector 
+(NNL)  
+Cm'rt Noe 
+Figure 1' The CONCERT Architecture 
+The context layer represents the the temporal context in which a prediction is made. 
+When a new note is presented in the input layer, the current context activity pattern is in- 
+tegrated with the new note to form a new context representation. Although CONCERT 
+could readily be wired up to behave as a k-th order transition table, the architecture is far 
+more general. The training procedure attempts to determine which aspects of the input 
+sequence are relevant for making future predictions and retain only this task-relevant in- 
+formation in the context layer. This contrasts with Todd's (1989) seminal work on con- 
+nectionist composition in which the recurrent context connections are prewired and fixed, 
+which makes the nature of the information Todd's model retains independent of the ex- 
+amples on which it is trained. 
+Once CONCERT has been trained, it can be run in composition mode to create new pieces. 
+This involves first seeding CONCERT with a short sequence of notes, perhaps the initial 
+notes of one of the training examples. From this point on, the output of CONCERT can be 
+fed back to the input, allowing CONCERT to continue generating notes without further 
+external input. Generally, the output of CONCERT does not specify a single note with ab- 
+solute certainty; instead, the output is a probability distribution over the set of candidates. 
+It is thus necessary to select a particular note in accordance with this distribution. This is 
+the role of the selection process depicted in Figure 1. 
+3.1 ACTIVATION RULES AND TRAINING PROCEDURE 
+The activation rule for the context units is 
+ci(n) = s[ywijxj(n) + Yvijc(n-1)l , (1) 
+where c i (n) is the activity of context unit i following processing of input note n (which 
+792 Mozer and Soukup 
+we refer to as step n ), x i (n) is the activity of input unit j at step n, wii is the connection 
+strength from unit j of the input to unit i of the context layer, and vii is the connection 
+strength from unit j to unit i within the context layer, and s is a sigmoid activation func- 
+tion rescaled to the range (-1,1). Units in the NND layer follow a similar rule: 
+nnd i (n ) -- s [Ztlij c j (tl ) ] , 
+where nnd i (n) is the activity of NND unit i at step n and uq is the strength of connection 
+from context unit j to NND unit i. 
+The transformation from the NND layer to the NNL layer is achieved by first computing 
+the distance between the NND representation, nnd(n), and the target (distributed) 
+representation of each pitch i, @i: 
+di = I nnd(n) - Oi I , 
+where I' I denotes the L2 vector norm. This distance is an indication of how well the 
+NND representation matches a particular pitch. The activation of the NNL unit 
+corresponding to pitch i, nnli, increases inversely with the distance: 
+!llll i (1 ) = e -a'/ye -a' . 
+J 
+This normalized exponential transform (proposed by Bridle, 1990, and Rumelhart, in 
+press) produces an activity pattern over the NNL units in which each unit has activity in 
+the range (0,1) and the activity of all units sums to 1. Consequently, the NNL activity 
+pattern can be interpreted as a probability distribution -- in this case, the probability that 
+the next note has a particular pitch. 
+CONCERT is trained using the back propagation unfolding-in-t

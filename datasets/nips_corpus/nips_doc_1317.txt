@@ -1,0 +1,148 @@
+On Efficient Heuristic Ranking of 
+Hypotheses 
+Steve Chien, Andre Stechert, nd Darren Mutz 
+Jet Propulsion Laboratory, California Institute of Technology 
+4800 Oak Grove Drive, M/S 525-3660, Pasadena, CA 91109-8099 
+steve.chien@jpl.nasa.gov, Voice: (818) 306-6144 FAX: (818) 306-6912 
+Content Areas: Applications (Stochastic Optimization) ,Model Selection Algorithms 
+Abstract 
+This paper considers the problem of learning the ranking of a set 
+of alternatives based upon incomplete information (e.g., a limited 
+number of observations). We describe two algorithms for hypoth- 
+esis ranking and their application for probably approximately cor- 
+rect (PAC) and expected loss (EL) learning criteria. Empirical 
+results are provided to demonstrate the effectiveness of these rank- 
+ing procedures on both synthetic datasets and real-world data from 
+a spacecraft design optimization problem. 
+I INTRODUCTION 
+In many learning applications, the cost of information can be quite high, imposing 
+a requirement that the learning algorithms glean as much usable information as 
+possible with a minimum of data. For example: 
+� In speedup learning, the expense of processing each training example can 
+be significant [Tadepalli92]. 
+� In decision tree learning, the cost of using all available training examples 
+when evaluating potential attributes for partitioning can be computation- 
+_ally expensive [Musick93]. 
+� In evaluating medical treatment policies, additional training examples im- 
+ply .suboptimal tr.e. atment of human .subjects. 
+� In data-poor applications, training data may be very scarce and learning 
+as well as possible from limited data may be key. 
+This paper provides a statistical decision-theoretic framework for the ranking of 
+parametric distributions. This framework will provide the answers to a wide range 
+of questions about algorithms such as: how much information is enough? At what 
+point do we have adequate information to rank the alternatives with some requested 
+confidence? 
+On Efficient Heuristic Ranking of Hypotheses 445 
+The remainder of this paper is structured as follows. First, we describe the hypoth- 
+esis ranking problem more formally, including definitions for the probably approxi- 
+mately correct (PAC) and expected loss (EL) decision criteria. We then define two 
+algorithms for establishing these criteria for the hypothesis ranking problem - a re- 
+cursive hypothesis selection algorithm and an adjacency based algorithm. Next, we 
+describe empirical tests demonstrating the effectiveness of these algorithms as well 
+as documenting their improved performance over a standard algorithm from the sta- 
+tistical ranking literature. Finally, we describe related work and future extensions 
+to the algorithms. 
+2 HYPOTHESIS RANKING PROBLEMS 
+Hypothesis ranking problems, an extension of hypothesis selection problems, are an 
+abstract class of learning problems where an algorithm is given a set of hypotheses 
+to rank according to expected utility over some unknown distribution, where the 
+expected utility must be estimated from training data. 
+In many of these applications, a system chooses a single alternative and never re- 
+visits the decision. However, some systems require the ability to investigate several 
+options (either serially or in parallel), such as in beam search or iterative broad- 
+ening, where the ranking formulation is most appropriate. Also, as is the case 
+with evolutionary approaches, a system may need to populate future alternative 
+hypotheses on the basis of the ranking of the current population[Goldberg89]. 
+In any hypothesis evaluation problem, always achieving a correct ranking is im- 
+possible in practice, because the actual underlying probability distributions are 
+unavailable and there is always a (perhaps vanishingly) small chance that the al- 
+gorithms will be unlucky because only a finite number of samples can be taken. 
+Consequently, rather than always requiring an algorithm to output a correct rank- 
+ing, we impose probabilistic criteria on the rankings to be produced. While several 
+families of such requirements exist, in this paper we examine two, the probably 
+approximately correct (PAC) requirement from the computational learning theory 
+community [Valiant84] and the expected loss (EL) requirement frequently used in 
+decision theory and gaming problems [Russell92]. 
+The expected utility of a hypothesis can be estimated by observing its values over a 
+finite set of training examples. However, to satisfy the PAC and EL requirements, 
+an algorithm must also be able to reason about the potential difference between 
+the estimated and true utilities of each hypotheses. Let Ui be the true expected 
+utility of hypothesis i and let /i be the estimated expected utility of hypothesis i. 
+Without loss of generality, let us presume that the proposed ranking of hypotheses 
+is U1 > U2 >, ..., > Uk- > Uk. The PAC requirement states that for some user- 
+specified e with probability I -4: 
+k--1 
+[(u, > (t) 
+i----1 
+Correspondingly, let the loss L of selecting a hypothesis H to be the best from a 
+set of k hypotheses H, ..., H& be as follows. 
+L(H, = - (2) 
+and let the loss RL of a ranking H,..., H& be as follows. 
+k--1 
+= L(H,, (a) 
+i=1 
+A hypothesis ranking algorithm which obeys the expected loss requirement must 
+produce rankings that on average have less than the requested expected loss bound. 
+446 S. Chien, A. Stechert and D. Mutz 
+Consider ranking the hypotheses with expected utilities: U1 - 1.0, U2 = 0.95, U3 -- 
+0.86. The ranking U2 > U1 > U3 is a valid PAC ranking for e = 0.06 but not for 
+e = 0.01 and has an observed loss of 0.05 + 0 = 0.05. 
+However, while the confidence in a pairwise comparison between two hypotheses is 
+well understood, it is less clear how to ensure that desired confidence is met in the 
+set of comparisons required for a selection or the more complex set of comparisons 
+required for a ranking. Equation 4 defines the confidence that Ui + e > Uj, when 
+the distribution underlying the utilities is normally distributed with unknown and 
+unequal variances. 
+(4) 
+where b represents the cumulative standard normal distribution function, and n, 
+ri_j, and o0i_j are the size, sample mean, and sample standard deviation of the 
+blocked differential distribution, respectively  . 
+Likewise, computation of the expected loss for serting an ordering between a pair 
+of hypotheses is well understood, but the estimation of expected lo for an entire 
+ranking is l clear. Equation 5 defines the expected loss for drawing the conclusion 
+Ui > Uj, again under the umption of normality (see [Chien95] for further details). 
+-o.(? 
+EL[Ui>U]= ,_e Si- 0,_  e_o.sdz (S) 
+s_ 
+In the next two subsections, we describe two interpretations for estimating the like- 
+lihood that an overall ranking satisfies the PAC or EL requirements by estimating 
+and combining pairwise PAC errors or EL estimates. Each of these interpretations 
+lends itself directly to an algorithmic implementation as described below. 
+2.1 RANKING AS RECURSIVE SELECTION 
+One way to determine a ranking Hi,..., Hk is to view ranking as recursive selection 
+from the set of remaining candidate hypotheses. In this view, the overall ranking 
+error, as specified by the desired confidence in PAC algorithms and the loss thresh- 
+hold in EL algorithms, is first distributed among k - I selection errors which are 
+then further subdivided into pairwise comparison errors. Data is then sampled un- 
+til the estimates of the pairwise comparison error (as dictated by equation 4 or 5) 
+satisfy the bounds set by the algorithm. 
+Thus, another degree of freedom in the design of recursive ranking algorithms is 
+the method by which the overall ranking error is ultimately distributed among 
+individual pairwise comparisons between hypotheses. Two factors influence the 
+way in which we compute error distribution. First, our model of error combination 
+determines how the error allocated for individual comparisons or selections combines 
+into overall ranking error and thus how many candidates are available as targets 
+for the distribution. Using Bonferroni's inequality, one combine errors additively, 
+but a more conservative approach might be to assert that because the predicted 
+best hypothesis may change during sampling in the worst case the conclusion 
+might depend on all possible pairwise comparisons and thus the error should be 
+distributed among all () pairs of hypotheses2). 
+1Note that in our approach we block examples to further reduce sampling complexity. 
+Blocking forms estimates by using the difference in utility between competing hypotheses 
+on each observed example. Blocking can significantly reduce the variance in the data when 
+the hypotheses are not independent. It is trivial to modify the formulas to address the 
+cases in which it is not possible to block data (see [Moore94, Chien95] for further details). 
+2For a discussion of this issue, see pp. 18-20 of [Gratch93]. 
+On Efficient Heuristic Ranking of Hypotheses 447 
+Second, our policy with respect to allocation of error among the candidate com- 
+parisons or selections determines how samples will be distributed. For example, in 
+some contexts, the consequences of early selections far outweigh those of later se- 
+lections. For these scenarios, we have implemented ranking algorithms that divide 
+overall ranking error unequally in favor of earlier selections 3. Also, it is possible to 
+divide selection error into pairwise error unequally based on estimates of hypothesis 
+parameters in order to reduce sampling cost (for example, [Gratch94] allocates error 
+rationally). 
+Within the scope of this paper, we only consider algorithms that: (1) combine 
+pairwise error into selection error additively, (2) combine selection error into overall 
+ranking error additively and (3) allocate error equally at each level. 
+One disadvantage of recursive selection is that once a hypothesis has been 

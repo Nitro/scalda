@@ -1,0 +1,139 @@
+Learning Global Direct Inverse Kinematics 
+David DeMers* 
+Computer Science & Eng. 
+UC San Diego 
+La Jolla, CA 92093-0114 
+Kenneth Kreutz-Deigado I 
+Electrical & Computer Eng. 
+UC San Diego 
+La Jolla, CA 92093-0407 
+Abstract 
+We introduce and demonstrate a bootstrap method for construction of an in- 
+verse function for the robot kinematic mapping using only sample configuration- 
+space/workspace data. Unsupervised learning (clustering) techniques are used on 
+pre-image neighborhoods in order to learn to partition the configuration space 
+into subsets over which the kinematic mapping is invertible. Supervised learn- 
+ing is then used separately on each of the partitions to approximate the inverse 
+function. The ill-posed inverse kinematics function is thereby regularized, and 
+a global inverse kinematics solution for the wristless Puma manipulator is devel- 
+oped. 
+1 INTRODUCTION 
+The robot forward kinematics function is a continuous mapping 
+f.�c_o n -.WC_X m 
+which maps a set of n joint parameters from the configuration space, C, to the m- 
+dimensional task space, W. If m _< n, the robot has redundant degrees-of-freedom 
+(dof's). In general, control objectives such as the positioning and orienting of the end- 
+effector are specified with respect to task space co-ordinates; however, the manipulator is 
+typically controlled only in the configuration space. Therefore, it is important to be able 
+to find some ' E � such that f(') is a particular target value 0 E 142. This is the inverse 
+kinematics problem. 
+*e-mail: demers@cs.ucsd.edu 
+le-mail: kreutzece.ucsd.edu 
+589 
+590 DeMers and Kreutz-Delgado 
+The inverse kinematics problem is ill-posed. If there are redundant dof's then the problem is 
+locally ill-posed, because the solution is non-unique and consists of a non-trivial manifold  
+in �. With or without redundant dof's, the problem is generally globally ill-posed because 
+of the existence of a finite set of solution branches there will typically be multiple 
+configurations which result in the same task space location. Thus computation of a direct 
+inverse is problematic due to the many-to-one nature (and therefore non-invertibility) of 
+the map f':. 
+The inverse problem can be solved explicitly, that is, in closed form, for only certain kinds 
+of manipulators. E.g. six dof elbow manipulators with separable wrist (where the first three 
+joints are used for positioning and the last three have a common origin and are used for 
+orientation), such as the Puma 560, are solvable, see (Craig, 86). The alternative to a closed 
+form solution is a numerical solution, usually either using the inverse of the JacobJan, which 
+is a Newton-style approach, or by using gradient descent (also a Jacobjan-based method). 
+These methods are iterative and require expensive Jacobian or gradient computation at each 
+step, thus they are not well-suited for real-time control. 
+Neural networks can be used to find an inverse by implementing either direct inverse 
+modeling (estimating the explicit function f-i) or differential methods. Implementations 
+of the direct inverse approach typically fail due to the non-linearity of the solution set 3, 
+or resolve this problem by restriction to a single solution a priori. However, such a prior 
+restriction of the solutions may not be possible or acceptable in all circumstances, and may 
+drastically reduce the dexterity and manipulability of the arm. 
+The differential approaches either find only the nearest local solution, or resolve the multi- 
+plicity of solutions at training time, as with Jordan's forward modeling (Jordan & Rumelhart, 
+1990) or the approach of (Nguyen & Patel, 1990). We seek to regularize the mapping in 
+such a way that all possible solutions are available at run-time, and can be computed 
+efficiently as a direct constant-time inverse rather than approximated by slower iterative 
+differential methods. To achieve the fast run-time solution, a significant cost in training 
+time must be paid; however, it is not unreasonable to invest resources in off-line learning 
+in order to attain on-line advantages. Thus we wish to gain the run-time computational 
+efficiency of a direct inverse solution while also achieving the benefits of the differential 
+approaches. 
+This paper introduces a method for performing global regularization; that is, identifying 
+the complete, finite set of solutions to the inverse kinematics problem for a non-redundant 
+manipulator. This will provide the ability to choose a particular solution at run time. 
+Resolving redundancy is beyond the scope of this paper; however, preliminary work on 
+a method which may be integrated with the work presented here is shown in (DeMers 
+& Kreutz-Delgado, 1991). In the remainder of this paper it will be assumed that the 
+manipulator does not have redundant dof's. It will also be assumed that all of the joints are 
+revolute, thus the configuration space is a subset of the n-torus, T 
+IGenerically of dimensionality equal to n - m. 
+:ZThe target values are assumed to be in the range of f,  E 3'V = f(C), so the existence of a 
+solution is not an issue in this paper. 
+attaining a network to minimize mean squared error with multiple target values for the same 
+input value results in a learned response of the average of the targets. Since the targets lie on a 
+number of non-linear manifolds (for the redundant case) or consist of a finite number of points (for 
+the non-redundant case), the average of multiple targets will typically not be a correct target. 
+Learning Global Direct Inverse Kinematics 591 
+2 TOPOLOGY OF THE KINEMATICS FUNCTION 
+The kinematics mapping is continuous and smooth and, generically, neighborhoods in 
+configuration space map to neighborhoods in the task space'*. The configuration space, 
+�, is made up of a finite number of disjoint regions or partitions, separated by n - 1 
+dimensional surfaces where the Jacobian loses rank (called critical surfaces), see (Burdick, 
+1988, Burdick, 1991). 
+Let f: T n  R n be the kinematic mapping. Then 
+k 
+w = f(c)= [.J .ei(ci) 
+i=1 
+where fi is the restriction of f to El, fi: Ei = O n/f -- [i n and the factor space O n/f is 
+locally diffeomorphic to [i n. The Ei are each a connected region such that 
+�' Ci, det(J('))  0 
+where J is the Jacobian of f, J = do f. Define 142i as f(C/). Generically, fi is one-to-one 
+and onto open neighborhoods of 14;?, thus by the inverse function theorem 
+3gi(a7) = f[- : Viii - �i, such that f o 
+In the general case, with redundant dof's, the kinematics over a single configuration-space 
+region can be viewed as a fiber bundle, where the fibers are homeomorphic to T n-'. 
+The base space is the reachable workspace (the image of �i under f). Solution branch 
+resolution can be done by identifying distinct connected open coordinate neighborhoods of 
+the configuration space which cover the workspace. Redundancy resolution can be done by 
+a consistent parameterization of the fibers within each neighborhood. In the case at hand, 
+without redundant dof's, the fibers are singleton sets and no resolution is needed. 
+In the remainder of this paper, we will use input/output data to identify the individual 
+regions, �i, of a non-redundant manipulator, over which the mapping fi : �i  Viii is 
+invertible. The input/output data will then be partitioned modulo the configuration regions 
+Ci, and each f-i approximated individually. 
+3 SAMPLING APPROACH 
+If the manipulator can be measured and a large sample of (', x-) pairs taken, stored such 
+that the 7 samples can be searched efficiently, a rough estimate of the inverse solutions at 
+a particular target point 0 may be obtained by finding all of the 'points whose image lies 
+within some e of Y'0. The pre-image of this e-ball will generically consist of several distinct 
+(distorted) balls in the configuration space. If the sampling is adequate then there will be 
+one such ball for each of the inverse solution branches. If each of the the points in each ball 
+is given a label for the solution branch, the labeled data may then be used for supervised 
+4This property fails when the manipulator is in a singular configuration, at which the Jacobian, 
+do f, loses rank. 
+SSince it is generically lame that J is non-singular. 
+592 DeMers and Kreutz-Delgado 
+learning of a classifier of solution branches in the configuration space. In this way we will 
+have bootstrapped our way to the development of a solution branch classifier. 
+Taking advantage of the continuous nature of the forward mapping, note that if 0 is slightly 
+perturbed by a jump to a neighboring target point then the pre-image balls will also be 
+perturbed. We can assign labels to the new data consistent with labels already assigned 
+to the previous data, by computing the distances between the new, unlabeled balls and the 
+previously labeled balls. Continuing in this fashion, 0 traces a path through the entire 
+workspace and solution branch labels may be given to all points in � which map to within 
+c of one of the selected � points along the sweep. 
+This procedure results in a significant and representative proportion of the data now being 
+labeled as to solution branch. Thus we now have labeled data (', , B(')), where 
+B(') = {1,..., k} indicates which of the k solution branches, Ci, the point 'is in. We 
+can now construct a classifier using supervised learning to compute the branches B(') for 
+a given '. Once an estimate of/(') is developed, we may use it to classify large amounts 
+of (', z-') data, and partition the data into k sets, one for each of the solution branches, �i. 
+4 RESOLUTION OF SOLUTION BRANCHES 
+We applied the above to the wristless Puma 560, a 3-R manipulator for end-effector 
+positioning in i 3. We took 40,000 samples of (', z-') points, and examined all points within 
+10cm of selected target values �i. The :F formed a grid of 90 locations in the workspace. 
+3,062 of the samples fell within 10 cm of on

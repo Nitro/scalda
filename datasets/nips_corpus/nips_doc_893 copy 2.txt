@@ -1,0 +1,179 @@
+New Algorithms for 
+2D and 3D Point Matching: 
+Pose Estimation and Correspondence 
+Steven G;old , Chien Ping Lu , Anand Rangarajan , 
+Suguna Pappu  and Eric Mjolsness ' 
+Department of Computer Science 
+Yale University 
+New Haven, CT 06520-8285 
+Abstract 
+A fundamental open problem in computer vision--determining 
+pose and correspondence between two sets of points in space-- 
+is solved with a novel, robust and easily implementable algorithm. 
+The technique works on noisy point sets that may be of unequal 
+sizes and may differ by non-rigid transformations. A 2D varia- 
+tion calculates the pose between point sets related by an affine 
+transformation--translation, rotation, scale and shear. A 3D to 3D 
+variation calculates translation and rotation. An objective describ- 
+ing the problem is derived from Mean field theory. The objective 
+is minimized with clocked (EM-like) dynamics. Experiments with 
+both handwritten and synthetic data provide empirical evidence 
+for the method. 
+I Introduction 
+Matching the representations of two images has long been the focus of much research 
+in Computer Vision, forming an essential component of many machine-based ob- 
+E-maJl address of authors: lastname-firstname@cs.yale.edu 
+2Department of Computer Science and Engineering, University of CaJifornia at San 
+Diego (UCSD), La Jolla, CA 92093-0114. E-mail: emj@cs.ucsd.edu 
+958 Steven Gold, Chien Ping Lu, Anand Rangarajan, Suguna Pappu, Eric Mjolsness 
+ject recognition systems. Critical to most matching techniques is the determination 
+of correspondence between spatially localized features within each image. This 
+has traditionally been considered a hard problem - especially when the issues of 
+noise, missing or spurious data, and non-rigid transformations are tackled [Grim- 
+son, 1990]. Many approaches have been tried, with tree-pruning techniques and 
+generalized Hough transforms being the most common. We introduce a new, ro- 
+bust and easily implementable algorithm to find such poses and correspondences. 
+The algorithm can determine non-rigid transformations between noisy 2D or 3D 
+spatially located unlabeled feature sets despite missing or spurious features. It is 
+derived by minimizing an objective function describing the problem with a combi- 
+nation of optimization techniques, incorporating Mean Field theory, slack variables, 
+iterative projective scaling, and clocked (EM-like) dynamics. 
+2 2D with Affine Transformations 
+2.1 Formulating the Objective 
+Our first algorithm calculates the pose between noisy, 2D point sets of unequal size 
+related by an affine transformation- translation, rotation, scale and shear. Given 
+two sets of points {Xj } and {Y:}, one can minimize the following objective to find 
+the affine transformation and permutation which best maps Y onto X: 
+J K J K 
+E2D(rn, t,A) = E YrnjllXi -t- AY112 + g(A) - o E 
+j=l k=l j=l k=l 
+with constraints: Vj K J 
+-]=l rn.i --< 1 , Vk -]= rnj _< 1 , Vjk rnj > 0 and 
+g(A) = 7a 2 + b 2 + Ac 2 
+A is decomposed into scale, rotation, vertical shear and oblique shear as follows: 
+where, 
+0 0a ) sa,(a) , = 
+' 0 e Ob ) Sh2(c) (cosh(c) sinh(c) 
+sinh(c) cosh(c) ) 
+R(O) is the standard 2x2 rotation matrix. g(A) serves to regularize the affine trans- 
+formation - bounding the scale and shear components. rn is a fuzzy correspondence 
+matrix which matches points in one image with corresponding points in the other 
+image. The constraints on rn ensure that each point in each image corresponds to 
+at most one point in the other image. However, partial matches are allowed, in 
+which case the sum of these partial matches may add up to no more than one. The 
+inequality constraint on rn permits a null match or multiple partial matches. 
+The a term biases the objective towards matches. The decomposition of A in the 
+above is not required, since A could be left as a 2x2 matrix and solved for directly in 
+the algorithm that follows. The decomposition just provides for more precise regu- 
+larization, i.e., specification of the likely kinds of transformations. Also Sh2 (c) could 
+New Algorithms for 2D and 3D Point Matching 959 
+be replaced by another rotation matrix, using the singular value decomposition of 
+A. 
+We transform the inequality constraints into equality constraints by introducing 
+slack variables, a standard technique from linear programming; 
+K 
+�J Z mj k _< 1 --- 
+k=l 
+and likewise for the column constraints. 
+K+I 
+�J Z mj = 1 
+k-1 
+An extra row and column are added to 
+the matrix m to hold the slack variables. Following the treatment in [Peterson and 
+Soderberg, 1989; Yuille and Kosowsky, 1994] we employ Lagrange multipliers and 
+an x log x barrier function to enforce the constraints with the following objective: 
+J K J K 
+E2D(m,t,A) = Z Z mj[lXj -t- AY112 + g(A) - a Z Z 
+j=l k=l j=lk=l 
+1 J+l K+I J K+I K J+l 
++Z Z mj(l�gm -- 1) + Zt9(Z m - 1) + Z Y(E m - 1) (1) 
+i=l =l = = = j= 
+In this objective we are looking for a saddle point. (1) is minimized with respect to 
+m, t, and A which are the correspondence matrix, translation, and affine transform, 
+and is maximized with respect to tt and y, the Lagrange multipliers that enforce 
+the row and column constraints for m. m is fuzzy, with the degree of fuzziness 
+dependent upon . 
+2.2 The Algorithm 
+The algorithm to minimize the above objective proceeds in two phases. In phase 
+one, while {t,A} are held fixed, m is initialized with a coordinate descent step, 
+described below, and then iteratively normalized across its rows and columns until 
+the procedure converges (iterative projective scaling). This phase is analogous to a 
+softmax update, except that instead of enforcing a one-way, winner-take-all (max- 
+imum) constraint, a two-way, assignment constraint is being enforced. Therefore 
+we describe this phase as a softassign. In phase two {t, A} are updated using co- 
+ordinate descent. Then/ is increased and the loop repeats. Let 72D be the above 
+objective (1) without the terms that enforce the constraints (i.e. the x log x barrier 
+function and the Lagrange parameters). 
+In phase one (softassign) m is updated via coordinate descent: 
+O2D  
+= exp(-/ J 
+J K 
+k=l Amiajk 
+Then m is iteratively normalized across j and k until j=l <  ' 
+mj k mj k 
+mjk  J+l ; mjk  K+I 
+jt=l mj'k k'=l mjk' 
+Using coordinate descent the {t, A} are updated in phe two. If a term of {A} 
+cannot be computed analytically (because of its regularization), Newton's method 
+960 Steven Gold, Chien Ping Lu, Anand Rangarajan, Suguna Pappu, Eric Mjolsness 
+is used to compute the root of the function. So if a is a term of {t, A} then in phase 
+two we update a such that o_.az _ O. Finally fl is increased and the loop repeats. 
+Oa -- 
+By setting the partial derivatives of E2D to zero and initializing the Lagrange pa- 
+rameters to zero, the algorithm for phase one may be derived. Beginning with a 
+small fl allows minimization over a fuzzy correspondence matrix m, for which a 
+global minimum is easier to find. Raising  drives the m's closer to 0 or 1, as the 
+algorithm approaches a saddle point. 
+3 3D with Rotation and Translation 
+The second algorithm solves the 3D-3D pose estimation problem with unknown 
+correspondence. Given two sets of 3D points {X 1} and {Y} find the rotation 
+translation T, and correspondence m that minimize 
+J K J K 
+EaD(m,T,R) = E E rnjk[[RXj + T- Ykl] 2 - o E E rnjk 
+j=lk=l j=lk=l 
+with the same constraint on the fuzzy correspondence matrix m as in 2D arline 
+matching. Note that there is no regularization term for the T - R parameters. 
+This algorithm also works in two phases. In the first, m is updated by a softassign 
+as was described for 2D affine matching. In the second phase, m is fixed, and the 
+problem becomes a 3D to 3D pose estimation problem formulated as a weighted least 
+squares problem. The rotation and translation are represented by a dual number 
+quaternion (r, s) which corresponds to a screw coordinate transform [Walker et al., 
+1991]. The rotation can be written as /E(r) = W(r)tQ(r) and the translation as 
+W(r)ts. Using these representations, the objective function becomes 
+J K 
+= m*llw(r)Q(r)z + w(r)'s- y, ll 
+j=l k=l 
+where x i = (Xi,O)' and y = (Y, 0)' are the quaternion representations of X 
+and Y, respectively. Using the properties that Q(a)b = W(b)a and Q(a)tQ(a) = 
+W(a)tW(a) = (aa)I, the objective function can be rewritten as 
+where 
+J K 
+C1 -- - E E rnjQ(y )tW(xj ) 
+C2 -- 
+j=l k=l 
+1 z K 
+j=l k=l 
+J K 
+Ca = EEmj(W(xj)-Q(y)). 
+j=l k=l 
+New Algorithms for 2D and 3D Point Matching 961 
+With this new representation, all the information, including the current fuzzy esti- 
+mate of the correspondence m are absorbed into the three 4-by-4 matrices C1, C2, Ca 
+in (2), which can be minimized in closed-form [Walker et al., 1991]. 
+4 Experimental Results 
+In this section we provide experimental results for both the 2D and 3D matching 
+problems. As an application of the 2D matching algorithm, we present results in 
+the context of handwritten character recognition. 
+4.1 Handwritten Character Data 
+The data were generated using an X-windows tool which enables us to draw an 
+image with the mouse on a writing pad on the screen. The contours of the images 
+are discretized and are expressed as a set of points in the plane. In the experiments 
+below, we generate 70 points per character on average. 
+The inputs to the point matching algorithm are the x-y coordinates generated by the 
+drawing program. No other pre-processing is done. The output is a correspondence 
+matrix and a pose. In Figures 1 and 2, we show the correspondences found between 
+several images drawn in this fashion.To make the actual point matches easier to 
+see, we have drawn the correspondences only for every other model point. 
+Figure 1: Correspondence of digits 
+In one experiment, we drew examples of individual digits, one as a model digit 
+and then many different variations of it. In Figure 1, it can be seen that

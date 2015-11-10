@@ -1,0 +1,157 @@
+Improved Hidden Markov Model 
+Speech Recognition Using 
+Radial Basis Function Networks 
+Elliot Singer and Richard P. Lippmann 
+Lincoln Laboratory, MIT 
+Lexington, MA 02173-9108, USA 
+Abstract 
+A high performance speaker-independent isolated-word hybrid speech rec- 
+ognizer was developed which combines Hidden Markov Models (HMMs) 
+and Radial Basis Function (RBF) neural networks. In recognition ex- 
+periments using a speaker-independent E-set database, the hybrid rec- 
+ognizer had an error rate of 11.5% compared to 15.7% for the robust 
+unimodal Gaussian HMM recognizer upon which the hybrid system was 
+based. These results and additional experiments demonstrate that RBF 
+networks can be successfully incorporated in hybrid recognizers and sug- 
+gest that they may be capable of good performance with fewer parameters 
+than required by Gaussian mixture classifiers. A global parameter opti- 
+mization method designed to minimize the overall word error rather than 
+the frame recognition error failed to reduce the error rate. 
+1 HMM/RBF HYBRID RECOGNIZER 
+A hybrid isolated-word speech recognizer was developed which combines neural 
+network and Hidden Markov Model (HMM) approaches. The hybrid approach is 
+an attempt to capitalize on the superior static pattern classification performance of 
+neural network classifiers [6] while preserving the temporal alignment properties of 
+HMM Viterbi decoding. Our approach is unique when compared to other studies 
+[2, 5] in that we use Radial Basis Function (RBF) rather than multilayer sigmoidal 
+networks. RBF networks were chosen because their static pattern classification 
+performance is comparable to that of other networks and they can be trained rapidly 
+using a one-pass matrix inversion technique [8]. 
+The hybrid HMM/RBF isolated-word recognizer is shown in Figure 1. For each 
+159 
+160 Singer and Lippmann 
+WORD 
+MODELS 
+BEST WORD MATCH 
+DECODE UNKNOWN uI'rERANCE 
+WEIGHTS 
+UNKNOWN 
+WORD - L AT TIME t I 
+BACKGROUND 
+NSE MODEL 
+NETWORK 
+OUTPUTS 
+BASIS FUNCTIONS 
+Figure 1: Block diagram of the hybrid recognizer for a two word vocabulary. 
+pattern presented at the input layer, the RBP network produces nodal outputs 
+which are estimates of Bayesian probabilities [9]. The RBF network consists of an 
+input layer, a hidden layer composed of Gaussian basis functions, and an output 
+layer. Connections from the input layer to the hidden layer are fixed at unity 
+while those from the hidden layer to the output layer are trained by minimizing 
+the overall mean-square error between actual and desired output values. Each 
+RBF output node has a corresponding state in a set of HMM word models which 
+represent the words in the vocabulary. HMM word models are left-to-right with 
+no skip states and have a one-state background noise model at either end. The 
+background noise models are identical for all words. In the simplified diagram of 
+Figure 1, the vocabulary consists of 2 E-set words and the HMMs contain 3 states 
+per word model. The number of RBF output nodes (classes) is thus equal to the 
+total number of HMM non-background states plus one to account for background 
+noise. In recognition, Viterbi decoders use the nodal outputs of the RBF network 
+as observation probabilities to produce word likelihood scores. Since the outputs of 
+the RBF network can take on any value, they were initially hard limited to 0.0 and 
+1.0. The transition probabilities estimated as part of HMM training are retained. 
+The final response of the recognizer corresponds to that word model which produces 
+the highest Viterbi likelihood. Note that the structure of the HMM/RBF hybrid 
+recognizer is identical to that of a tied-mixture HMM recognizer. For a discussion 
+and comparison of the two recognizers, see [10]. 
+Training of the hybrid recognizer begins with the preliminary step of training an 
+HMM isolated-word recognizer. The robust HMM recognizer used provides good 
+recognition performance on many standard difficult isolated-word speech databases 
+[7]. It uses continuous density, unimodal diagonal-covariance Gaussian classifiers 
+for each word state. Variances of all states are equal to the grand variance averaged 
+over all words and states. The trained HMM recognizer is used to force an alignment 
+of every training token and assign a label to each frame. Labels correspond to both 
+states of HMM word models and output nodes of the RBF network. 
+The Gaussian centers in the RBF hidden layer are obtained by performing k-means 
+Improved Hidden Markov Model Speech Recognition Using Radial Basis Function Networks 161 
+clustering on speech frames and separate clustering on noise frames, where speech 
+and noise frames are distinguished on the basis of the initial Viterbi alignment. The 
+RBF weights from the hidden layer to the output layer are computed by presenting 
+input frames to the RBF network and setting the desired network outputs to 1.0 
+for the output node corresponding to the frame label and 0.0 for all other nodes. 
+The RBF hidden node outputs and their correlations are accumulated across all 
+training tokens and are used to estimate weights to the RBF output nodes using a 
+fast one-pass algorithm [8]. Unlike the performance of the system reported in [5], 
+additional training iterations using the hybrid recognizer to label frames did not 
+improve performance. 
+2 DATABASE 
+All experiments were performed using a large, speaker-independent E-set (9 word) 
+database derived from the ISOLET Spoken Letter Database [4]. The training set 
+consisted of 1,080 tokens (120 tokens per word) spoken by 60 female and 60 male 
+speakers for a total of 61,466 frames. The test set consisted of 540 tokens (60 
+tokens per word) spoken by a different set of 30 female and 30 male speakers for 
+a total of 30,406 frames. Speech was sampled at 16 kHz and had an average SNR 
+of 31.5 dB. Input vectors were based on a mel-cepstrum analysis of the speech 
+waveform as described in [7]. The input analysis window was 20ms wide and was 
+advanced at 10ms intervals. Input vectors were created by adjoining the first 12 
+non-energy cepstral coefficients, the first 13 first-difference cepstral coefficients, and 
+the first 13 second-difference cepstral coefficients. Since the hybrid was based on 
+an 8 state-per-word robust HMM recognizer, the RBF network contained a total of 
+73 output nodes (72 speech nodes and 1 background node). The error rate of the 8 
+state-per-word robust HMM recognizer on the speaker-independent E-set task was 
+15.7%. 
+3 MODIFICATIONS TO THE HYBRID RECOGNIZER 
+The performance of the baseline HMM/RBF hybrid recognizer described in Sec- 
+tion 1 is quite poor. We found it necessary to select the recognizer structure carefully 
+and utilize intermediate outputs properly to achieve a higher level of performance. 
+A full description of these modifications is presented in [10]. Briefly, they include 
+normalizing the hidden node outputs to sum to 1.0, normalizing the RBF outputs 
+by the corresponding a priori class probabilities as estimated from the initial Viterbi 
+alignment, expanding the RBF network into three individually trained subnetworks 
+corresponding to the ceptrum, first difference cepstrum, and second difference cep- 
+strum data streams, setting a lower limit of 10 -5 on the values produced at the RBF 
+output nodes, adjusting a global scaling factor applied to the variances of the RBF 
+centers, and setting the number of centers to 33, 33, and 65 for the first, second, and 
+third subnets, respectively. The structure of the final hybrid recognizer is shown in 
+Figure 2. This recognizer has an error rate of 11.5% (binomial standard deviation 
+= -t-1.4) on the E-set test data compared to 15.7% (4-1.6) for the 8 state-per-word 
+unimodal Gaussian HMM recognizer, and 9.6% (4-1.3) for a considerably more com- 
+plex tied-mixture HMM recognizer [10]. The final hybrid system contained a total 
+of 131 Gaussians and 9,563 weights. On a SUN SPARCstation 2, training time for 
+162 
+Singer and Lippmann 
+the final hybrid recognizer was about 1 hour and testing time was about 10 minutes. 
+WORD MODELS 
+BEST WORD MATCH 
+DECODE UNKNOWN U i I,-RANCE 
+BACKGROUND 
+NOISE MODEL 
+CEPSTRA ZCEPSTRA 
+INPUT 
+Figure 2' Block diagram of multiple subnet hybrid recognizer. 
+4 GLOBAL OPTIMIZATION 
+In the hybrid recognizer described above, discriminative training is performed at 
+the frame level. A preliminary segmentation by the HMM recognizer assigns each 
+speech frame to a specific RBF output node or, equivalently, an HMM word state. 
+The RBF network weights are then computed to minimize the squared error be- 
+tween the network output and the desired output over all input frames. The goal of 
+the recognizer, however, is to classify words. To meet this goal, discriminant train- 
+ing should be performed on word-level rather than frame-level outputs. Recently, 
+several investigators have described techniques that optimize parameters based on 
+word-level discriminant criteria [1, 3]. These techniques seek to maximize a mutual 
+information type of criterion: 
+Lc 
+C = log L ' 
+where Lc is the likelihood score of the word model corresponding to the correct 
+result and L = Y'w Lw is the sum of the word likelihood scores for all models. By 
+computing OC/00, the gradient of C with respect to parameter 0, we can optimize 
+any parameter in the hybrid recognizer using the update equation 
+oc 
+where J is the new value of parameter 0, 0 is the previous value, and r/is a gain 
+term proportional to the learning rate. Following [1], we refer to the word-level 
+optimization technique as global optimization. 
+Improved Hidden Markov Model Speech Recognition Using Radial Basis Function Networks 163 
+To apply global optimization to the HMM/RBF hybrid recognizer, we derived the 
+formulas for the gradient of C with respect to wiij, the weight connecting RBF center 
+i to RBF output node j in subnet k; p, the RBF output normalization factor for 
+RBF output node j in subnet k; and 

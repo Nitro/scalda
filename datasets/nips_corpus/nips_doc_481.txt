@@ -1,0 +1,154 @@
+Learning in Feedforward Networks with Nonsmooth 
+Functions 
+Nicholas J. Redding* 
+Information Technology Division 
+Defence Science and Tech. Org. 
+P.O. Box 1600 Salisbury 
+Adelaide SA 5108 Australia 
+T. Downs 
+Intelligent Machines Laboratory 
+Dept of Electrical Engineering 
+University of Queensland 
+Brisbane Q 4072 Australia 
+Abstract 
+This paper is concerned with the problem of learning in networks where some 
+or all of the functions involved are not smooth. Examples of such networks are 
+those whose neural transfer functions are piecewise-linear and those whose error 
+function is defined in terms of the � norm. 
+Up to now, networks whose neural transfer functions are piecewise-linear have 
+received very little consideration in the literature, but the possibility of using an 
+earor function defined in terms of the � norm has received some attention. In 
+this latter work, however, the problems that can occur when gradient methods are 
+used for nonsmooth error functions have not been addressed. 
+In this paper we draw upon some recent results from the field of nonsmooth 
+optimi?ofion (NSO) to present an algorithm for the nonsmooth case. Our moti- 
+vation for this work arose out of the fact that we have been able to show that, 
+in backpropagation, an error function based upon the � norm overcomes the 
+difficulties which can occur when using the �2 norm. 
+1 INTRODUCTION 
+This paper is concerned with the problem of learning in networks where some or all of 
+the functions involved are not smooth. Examples of such networks are those whose neural 
+transfer functions are piecewise-linear and those whose error function is defined in terms 
+of the � norm. 
+*The author can be conmcd vh emafi at met address reddingO itd. dst o. oz. au. 
+1056 
+Learning in Feedforward Networks with Nonsmooth Functions 1057 
+Up to now, networks whose neural transfer functions are piecewise-linear have received 
+very little consideration in the literature, but the possibility of using an error function defined 
+in terms of the �oo norm has received some attention [1]. In the work described in [1], 
+however, the problems that can occur when gradient methods are used for nonsmooth error 
+functions have not been addressed. 
+In this paper we draw upon some recent results from the field of nonsmooth optimi?_a_fion 
+(NSO) to present an algorithm for the nonsmooth case. Our motivation for this work arose 
+out of the fact that we have been able to show [2] that an error function based upon the 
+norm overcomes the difficulties which can occur when using backpropagation's �2 norm 
+[4]. 
+The framework for NSO is the class of locally Lipschitzian functions [5]. Locally Lips- 
+chitzian functions are a broad class of functions that include, but are not limited to, smooth 
+(completely differenfiable) functions. (Note, however, that this framework does not include 
+step-functions.) We here present a method for training feedforward networks (FFNs) whose 
+behaviour can be described by a locally Lipschitzian function y = f(w, x), where the 
+input vector x = (a:, ..., a:,) is an element of the set of patterns X C It , w  It b is the 
+weight vector, and y  It'' is the m-dimensional output. 
+The possible networks that fit within the locally Lipschitzian framework include any network 
+that has a continuous, piecewise differenfiable description, i.e., continuous functions with 
+nondifferentiable points (nonsmooth functions). 
+Training a network involves the selection of a weight vector w* which minimizes an error 
+function E(w). As long as the error function E is locally Lipschitzian, then it can be trained 
+by the procedure that we will outline, which is based upon a new technique for NSO [6]. 
+In Section 2, a description of the difficulties that can occur when gradient methods are 
+applied to nonsmooth problems is presented. In Section 3, a short overview of the Bundle- 
+Trust algorithm [6] for NSO is presented. And in Section 4 details of applying a NSO 
+procedure to training networks with an �oo based error function are presented, along with 
+simulation results that demonstrate the viability of the technique. 
+2 FAILURE OF GRADIENT METHODS 
+Two difficulties which arise when gradient methods are applied to nonsmooth problems will 
+be discussed here. The first is that gradient descent sometimes fails to converge to a local 
+minimum, and the second relates to the lack of a stopping criterion for gradient methods. 
+2.1 THE JAMMING EFFECT 
+We will now show that gradient methods can fail to converge to a local minimum (the 
+jamming effect [7,8]). The particular example used here is taken from [9]. 
+Consider the following function, that has a minimum at the point w* = (0, 0): 
+f(w) = 3(w 2 + 24). (1) 
+If we start at the point w0 = (2, 1), it is easily shown that a steepest descent algorithm 2 
+would generate the sequence w = (2,-1)/3, w2 = (2, 1)/9, ..., so that the sequence 
+This is quite simple, using a theorem due to Krishnan [3]. 
+rhis is achieved by repeatedly performing a line search along the steepest descent direction. 
+1058 
+Redding and Downs 
+nond'erenliabl 
+Figure 1: A contour plot of the function f3. 
+{wk} oscillates between points on the two half-lines w = 2w2 and w = -2w2 for 
+w > 0, converging to the optimal point w* = (0, 0). Next, from the function f, create a 
+new function f2 in the following manner: 
+f2(w) =  = V/3(w + 2w). (2) 
+The gradient at any point of .t'2 is proportional to the gradient at the same point on fi, so 
+the sequence of points generated by a gradient descent algorithm starting from (2, 1) on f2 
+will be the same as the case for f, and will again converge 3 to the optimal point, again 
+w* = (0, 0). 
+Lastly, we shift the optimal point away from (0, 0), but keep a region including the sequence 
+{wk } unchanged to create a new function/3 (w): 
+{ q3(% 2+2w2 2) ifO<lw2l<2w, 
+f3(w) = + 411) elsewhere. (3) 
+The new function f3, depicted in fig. 1, is continuous, has a discontinuous derivative only 
+on the hail-line w < 0, w2 = 0, and is convex with a minimum as w --. -oo. In spite 
+of this, the steepest descent algorithm still converges to the now nonoptimal jamming 
+point (0, 0). A multitude of possible variations to f exist that will achieve a similar result, 
+but the point is clear: gradient methods can lead to trouble when applied to nonsmooth 
+problems. 
+This lesson is important, because the backpropagation learning algorithm is a smooth 
+gradient descent technique, and as such will have the difficulties described when it, or an 
+extension (eg., [1]), are applied to a nonsmooth problem. 
+2.2 STOPPING CRITERION 
+The second significant problem associated with smooth descent techniques in a nonsmooth 
+context occurs with the stopping criterion. In normal smooth circumstances, a stopping 
+aNote that for this new sequence of points, the gradient no longer converges to 0 at (0, 0), but 
+oscillates between the values x/(1, :i:1 ). 
+Learning in Feedforward Networks with Nonsmooth Functions 1059 
+criterion is determined using 
+IlV/ll < e, (4) 
+where e is a small positive q_ntity determined by the required accuracy. However, it is 
+frequently the case that the minimum of a nonsmooth function occurs at a nondifferenfiable 
+point or kink, and the gradient is of little value around these points. For example, the 
+gradient of f(tv) = [to[ has a magnitude of 1 no matter how close w is to the optimum at 
+3 NONSMOOTH OPTIMIZATION 
+For any locally Lipschitzian function f, the generalized directional derivative always exists, 
+and can be used to define a generalized gradient or subdifferential, denoted by Of, which 
+is a compact convex set s [5]. A particular element g  Of(w) is termed a subgradient of 
+f at w [5,10]. In situ_afions where f is strictly differentiable at w, the generalized gradient 
+of f at w is equal to the gradient, i.e., Of(w) - Vf(w). 
+We will now discuss the basic aspects of NSO and in particular the Bundle-Trust (BT) 
+algorithm [6]. 
+Quite naturally, subgradients in NSO provide a substitute for the gradients in standard 
+smooth optimization using gradient descent. Accordingly, in an NSO pure, we require 
+the following to be satisfied: 
+At every w, we can compute f(w) and any g  Of(w). 
+(5) 
+To overcome the jamming effect, however, it is not sufficient replace the gradient with 
+a subgradient in a gradient descent algorithm -- the strictly local information that this 
+provides about the function's behaviour can be misleading. For example, an approach like 
+this will not change the descent path taken from the starting point (2, 1) on the function fa 
+(see fig. 1). 
+The solution to this problem is to provide some smearing of the gradient information by 
+enriching the information at w with knowledge of its surroundings. This can be achieved 
+by replacing the strictly local subgradients g  Of(w) by LJvEB g  Of(v) where B is a 
+suitable neighbourhood of w, and then define the e-generalized gradient 0f(w) as 
+= U OS(v) 
+vEB(w,0 
+(6) 
+where e > 0 and small, and co denotes a convex hull. These ideas were first used by [7] 
+to overcome the lack of continuity in minimax problems, and have become the basis for 
+extensive work in NSO. 
+In an optimization prtwure, points in a sequence {wk, k = 0, 1,...} are visited until a 
+point is reached at which a stopping criterion is satisfied. In a NSO pure, this occurs 
+when a point wk is reached that satisfies the condition 0  Of(w), and the point is said 
+to be e-optimal. That is, in the case of convex f, the point w is e-optimal if 
+f(wt) < f(w) + 41w - w11 + e for all w  n 
+(7) 
+'*In other words, a set of vectors will define the generalized gradient of a nonsmooth function at a 
+single point, rather than a single vector in the case of smooth functions. 
+1060 Redding and Downs 
+and in the case of nonconvex f, 
+f(wt) < f(w) + llw -- wll + e for all w  a 
+(s) 
+where B is some neighbourhood of wk of nonzero dimension. Obviously, as e 

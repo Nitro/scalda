@@ -1,0 +1,166 @@
+Markov Random Fields Can Bridge Levels of 
+Abstraction 
+Paul R. Cooper 
+Institute for the Learning Sciences 
+Northwestern University 
+Evanston, IL 
+cooperils.nwu.edu 
+Peter N. Prokopowlcz 
+Institute for the Learning Sciences 
+Northwestern University 
+Evanston, IL 
+prokopowiczils.nwu.edu 
+Abstract 
+Network vision systems must make inferences from evidential informa- 
+tion across levels of representational abstraction, from low level invariants, 
+through intermediate scene segments, to high level behaviorally relevant 
+object descriptions. This paper shows that such networks can be realized 
+as Markov Random Fields (MRFs). We show first how to construct an 
+MRF functionally equivalent to a Hough transform parameter network, 
+thus establishing a principled probabilistic basis for visual networks. Sec- 
+ond, we show that these MRF parameter networks are more capable and 
+flexible than traditional methods. In particular, they have a well-defined 
+probabilistic interpretation, intrinsically incorporate feedback, and offer 
+richer representations and decision capabilities. 
+1 INTRODUCTION 
+The nature of the vision problem dictates that neural networks for vision must make 
+inferences from evidential information across levels of representational abstraction. 
+For example, local image evidence about edges might be used to determine the 
+occluding boundary of an object in a scene. This paper demonstrates that parameter 
+networks [Ballard, 1984], which use voting to bridge levels of abstraction, can be 
+realized with Markov Random Fields (MRFs). 
+We show two main results. First, an MRF is constructed with functionality formally 
+equivalent to that of a parameter net based on the Hough transform. Establishing 
+396 
+Markov Random Fields Can Bridge Levels of Abstraction 397 
+this equivalence provides a sound probabilistic foundation for neural networks for 
+vision. This is particularly important given the fundamentally evidential nature of 
+the vision problem. 
+Second, we show that parameter networks constructed from MRFs offer a more 
+flexible and capable framework for intermediate vision than traditional feedforward 
+parameter networks with threshold decision making. In particular, MRF parame- 
+ter nets offer a richer representational framework, the potential for more complex 
+decision surfaces, an integral treatment of feedback, and probabilistically justified 
+decision and training procedures. Implementation experiments demonstrate these 
+features. 
+Together, these results establish a basis for the construction of integrated network 
+vision systems with a single well-defined representation and control structure that 
+intrinsically incorporates feedback. 
+2 BACKGROUND 
+2.1 HOUGH TRANSFORM AND PARAMETER NETS 
+One approach to bridging levels of abstraction in vision is to combine local, highly 
+variable evidence into segments which can be described compactly by their pa- 
+rameters. The Hough transform offers one method for obtaining these high-level 
+parameters. Parameter networks implement the Hough transform in a parallel 
+feedforward network. The central idea is voting: local low-level evidence cast votes 
+via the network for compatible higher-level parameterized hypotheses. The clas- 
+sic Hough example finds lines from edges. Here local evidence about the direction 
+and magnitude of image contrast is combined to extract the parameters of lines 
+(e.g. slope-intercept), which are more useful scene segments. The Hough transform 
+is widely used in computer vision (e.g. [Bolle et al., 1988]) to bridge levels of 
+abstraction. 
+2.2 MARKOV RANDOM FIELDS 
+Markov Random Fields offer a formal foundation for networks [Geman and Geman, 
+1984] similar to that of the Boltzmann machine. MRFs define a prior joint prob- 
+ability distribution over a set X of discrete random variables. The possible values 
+for the variables can be interpreted as possible local features or hypotheses. Each 
+variable is associated with a node S in an undirected graph (or network), and can 
+be written as Xs. An assignment of values to all the variables in the field is called 
+a configuration, and is denoted w; an assignment of a single variable is denoted w. 
+Each fully-connected neighborhood C in a configuration of the field has a weight, 
+or clique potential, Vt. 
+We are interested in the probability distributions P over the random field X. 
+Markov Random Fields have a locality property: 
+p(x, - ,,,slX, - ,,,,,r 6 $,r : z) - P(X, - ,,,,IX, - ,,r 6 N,) (1) 
+that says roughly that the state of site is dependent only upon the state of its 
+neighbors (N,). MRFs can also be characterized in terms of an energy function U 
+398 Cooper and Prokopowicz 
+with a Gibb's distribution: 
+e-v(,o)/' 
+= z (2) 
+where T is the temperature, and Z is a normalizing constant. 
+If we are interested only in the prior distribution P(w), the energy function U is 
+defined as: 
+= vc() (a) 
+where G is the set of cliques defined by the neighborhood graph, and the V are 
+the clique potentials. Specifying the clique potentials thus provides a convenient 
+way to specify the global joint prior probability distribution P, i.e. to encode prior 
+domain knowledge about plausible structures. 
+Suppose we are instead interested in the distribution P(wlO ) on the field after an 
+observation O, where an observation constitutes a combination of spatially distinct 
+observations at each local site. The evidence from an observation at a site is denoted 
+P(O, lw) and is called a likelihood. Assuming likelihoods are local and spatially 
+distinct, it is reasonable to assume that they are conditionally independent. Then, 
+with Bayes' Rule we can derive: 
+U(ulO)-  V()- TS-.logP(Olw ) 
+cEC s6S 
+(4) 
+The MRF definition, together with evidence from the current problem, leaves a 
+probability distribution over all possible configurations. An algorithm is then 
+used to find a solution, normally the configuration of maximal probability, or 
+equivalently, minimal energy as expressed in equation 4. The problem of min- 
+imizing non-convex energy functions, especially those with many local minima, 
+has been the subject of intense scrutiny recently (e.g. [Kirkpatrick e al., 1983; 
+Hopfield and Tank, 1985]). In this paper we focus on developing MRF represen- 
+tations wherein the minimum energy configuration defines a desirable goal, not on 
+methods of finding the minimum. In our experiments have have used the determin- 
+istic Highest Confidence First (HCF) algorithm [Chou and Brown, 1990]. 
+MRFs have been widely used in computer vision applications, including image 
+restoration, segmentation, and depth reconstruction [Geman and Geman, 1984; 
+Marroquin, 1985; Chellapa and Jain, 1991]. All these applications involve flat rep- 
+resentations at a single level of abstraction. A novel aspect of our work is the 
+hierarchical framework which explicitly represents visual entities at different levels 
+of abstraction, so that these higher-order entities can serve as an interpretation of 
+the data as well as play a role in further constraint satisfaction at even higher levels. 
+3 
+CONSTRUCTING MRFS EQUIVALENT TO 
+PARAMETER NETWORKS 
+Here we define a Markov Random Field that computes a Hough transform; i.e. 
+it detects higher-order features by tallying weighted votes from low-level image 
+components and thresholding the sum. The MRF has one discrete variable for 
+Markov Random Fields Can Bridge Levels of Abstraction 399 
+Parameterized  
+segment wif i >O 
+Ltrmees ar sum and  
+i max Input nodes 
+High-level F. Clique potentials: 
+variable and I ...... I clique I V 
+label set  - Exists ] ...c 
+- Exists._.l...._-_.0__ .... 
+/r,. .... ............. 
+J | X E~e kl 
+' I % -E e k2 
+/ I % -E --e 0 
+low-level 
+variables and/' 
+max 
+Figure 1: Left: Hough-transform parameter net. Input determines confidence fi in 
+each low-level feature; these confidences are weighted (wi), summed, and thresh- 
+olded. Right: Equivalent MRF. Circles show variables with possible labels and 
+non-,ero unary clique potentials; lines show neighborhoods; potentials are for the 
+four labellings of the binary cliques. 
+the higher-order feature, whose possible values are ezists and doesn't ezist and one 
+discrete variable for each voting element, with the same two possible values. Such 
+a field could be replicated in space to compute many features simultaneously. 
+The construction follows from two ideas: first, the clique potentials of the network 
+are defined such that only two of the many configurations need be considered, the 
+other configurations being penalized by high clique potentials (i.e. low a priori 
+probability). One configuration encodes the decision that the higher-order feature 
+exists, the other that it doesn't exist. The second point is that the energy of the 
+doesn't exist configuration is independent of the observation, while the energy of 
+the exists configurations improves with the strength of the evidence. 
+Consider a parameter net for the Hough transform that represents only a single 
+parameterized image segment (e.g. a line segment) and a set of low-level features, 
+(e.g. edges) which vote for it ( Figure 1 left). The variables, labels, and neighbor- 
+hoods, of the equivalent MRF are defined in the right side of Figure 1 The clique 
+potentials, which depend on the Hough parameters, are shown in the right side of 
+the figure for a single neighborhood of the graph (There are four ways to label this 
+clique.) Unspecified unary potentials are zero. Evidence applies only to the labels 
+ei; it is the likelihood of making a local observation Oi: 
+P(Oi l ei) = e ''(f'-f') 
+(s) 
+In lemma 1, we show that the configuration we = Eee2...en, has an en- 
+ergy equal to the negated weighted sum of the feature inputs, and configuration 
+wo = -Ee-e-.... men has a constant energy equal to the negated Hough thresh- 
+old. Then, in lemma 2, we show that the clique potentials restrict the possible 
+configurations to only these two, so th

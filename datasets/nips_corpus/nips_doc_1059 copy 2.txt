@@ -1,0 +1,170 @@
+Experiments with Neural Networks for Real 
+Time Implementation of Control 
+P. K. Campbell, M. Dale, H. L. Ferni and A. Kowalczyk 
+Telstra Research Laboratories 
+770 Blackburn Road Clayton, Vic. 3168, Australia 
+[ p.campbell, m.dale, h.ferra, a. kowalczyk }@trl. oz. au 
+Abstract 
+This paper describes a neural network based controller for allocating 
+capacity in a telecommunications network. This system was proposed in 
+order to overcome a real time response constraint. Two basic 
+architectures are evaluated: 1) a feedforward network-heuristic and; 2) a 
+feedforward network-recurrent network. These architectures are 
+compared against a linear programming (LP) optimiser as a benchmark. 
+This LP optimiser was also used as a teacher to label the data samples 
+for the feedforward neural network training algorithm. It is found that 
+the systems are able to provide a traffic throughput of 99% and 95%, 
+respectively, of the throughput obtained by the linear progranuning 
+solution. Once trained, the neural network based solutions are found in a 
+fraction of the time required by the LP optimiser. 
+1 Introduction 
+Among the many virtues of neural networks are their efficiency, in terms of both execution 
+time and required memory for storing a structure, and their practical ability to approximate 
+complex functions. A typical drawback is the usually data hungry training algorithm. 
+However, if training data can be computer generated off line, then this problem may be 
+overcome. In many applications the algorithm used to generate the solution may be 
+impractical to implement in real time. In such cases a neural network substitute can 
+become crucial for the feasibility of the project. This paper presents preliminary results for 
+a non-linear optimization problem using a neural network. The application in question is 
+that of capacity allocation in an optical communications network. The work in this area is 
+continuing and so far we have only explored a few possibilities. 
+2 Application: Bandwidth Allocation in SDIt Networks 
+Synchronous Digital Hierarchy (SDH) is a new standard for digital transmission over 
+optical fibres [3] adopted for Australia and Europe equivalent to the SONET 
+(Synchronous Optical NETwork) standard in North America. The architecture of the 
+particular SDH network researched in this paper is shown in Figure 1 (a). 
+1) Nodes at the periphery of the SDH network are switches that handle individual 
+calls. 
+9 74 P. CAMPBELL, M. DALE, H. L. FERRY, A. KOWALCZYK 
+2) Each switch concentrates traffic for another switch into a number of streams. 
+3) 
+Each stream is then transferred to a Digital Cross-Connect (DXC) for switching and 
+transmission to its destination by allocating to it one of several alternative virtual 
+paths. 
+The task at hand is the dynamic allocation of capacities to these virtual paths in order to 
+maximize SDH network throughput. 
+This is a non-linear optimization task since the virtual path capacities and the constraints, 
+i.e. the physical limit on capacity of links between DXC's, are quantized, and the objective 
+function (Erlang blocking) depends in a highly non-linear fashion on the allocated 
+capacities and demands. Such tasks can be solved 'optimally' with the use of classical 
+linear programming techniques [5], but such an approach is time-consuming - for large 
+SDH networks the task could even require hours to complete. 
+One of the major features of an SDH network is that it can be remotely reconfigured using 
+software controls. Reconfiguration of the SDH network can become necessary when 
+traffic demands vary, or when failures occur in the DXC's or the links connecting them. 
+Reconfiguration in the case of failure must be extremely fast, with a need for restoration 
+times under 60 ms [1]. 
+(a) 
+) L6 
+L12 
+L9 
+f-] DXC (Digital () 
+Cross-Connect) 
+,lO 
+Switch 
+(b) 
+output: path 
+capacitios 
+o.o 
+synaptic woights 
+(22302) 
+hidden units: 
+'AND' gates 
+(110) 
+thresholds 
+(738, 67 uxl) 
+input 
+link offore, d 
+capacities traffic 
+Figure 1 
+(a) Example of an Inter-City SDH/SONET Network Topology used in experiments. 
+(b) Example of an architecture of the mask perceptton generated in experiments. 
+In our particular case, there are three virtual paths allocated between any pair of switches, 
+each using a different set of links between DXC's of the SDH network. Calls from one 
+switch to another can be sent along any of the virtual paths, leading to 126 paths in total (7 
+switches to 6 other switches, each with 3 paths). 
+The path capacities are normally set to give a predefined throughput. This is known as the 
+steady state. If links in the SDH network become partially damaged or completely cut, 
+the operation of the SDH network moves away from the steady state and the path 
+capacities must be reconfigured to satisfy the traffic demands subject to the following 
+constraints: 
+(i) Capacities have integer values (between 0 and 64 with each unit corresponding to a 
+2 Mb/s stream, or 30 Erlangs), 
+(ii) The total capacity of all virtual paths through any one link of the SDH network 
+Experiments with Neural Networks for Real Time Implementation of Control 9 75 
+cannot exceed the physical capacity of that link. 
+The neural network training data consisted of 13 link capacities and 42 traffic demand 
+values, representing situations in which the operation of one or more links is degraded 
+(completely or partially). The output data consisted of 126 integer values representing the 
+difference between the steady state path capacities and the final allocated path capacities. 
+3 Previous Work 
+The problem of optimal SDH network reconfiguration has been researched already. In 
+particular Gopal et. al. proposed a heuristic greedy search algorithm [4] to solve this non- 
+linear integer programming problem. Herzberg in [5] reformulated this non-linear integer 
+optimization problem as a linear programming (LP) task, Herzberg and Bye in [6] 
+investigated application of a simplex algorithm to solve the LP problem, whilst Bye [2] 
+considered an application of a Hopfield neural network for this task, and finally Leckie [8] 
+used another set of AI inspired heuristics to solve the optimization task. 
+All of these approaches have practical deficiencies; the linear programming is slow, while 
+the heuristic approaches are relatively inaccurate and the Hopfield neural network method 
+(simulated on a serial computer) suffers from both problems. 
+In a previous paper Campbell et al. [10] investigated application of a mask perceptton to 
+the problem of reconfiguration for a toy SDH network. The work presented here 
+expands on the work in that paper, with the idea of using a second stage mask perceptron 
+in a recurrent mode to reduce link violations/underutilizations. 
+4 The Neural Controller Architecture 
+Instead of using the neural network to solve the optimization task, e.g. as a substitute for 
+the simplex algorithm, it is taught to replicate the optimal LP solution provided by it. 
+We decided to use a two stage approach in our experiments. For the first stage we 
+developed a feedforward network able to produce an approximate solution. More 
+precisely, we used a collection of 2000 random examples for which the linear 
+programming solution of capacity allocations had been pre-computed to develop a 
+feedforward neural network able to approximate these solutions. 
+Then, for a new example, such an approximate neural network solution was rounded to 
+the nearest integer, to satisfy constraint (i), and used to seed the second stage providing 
+refinement and enforcement of constraint (ii). 
+For the second stage experiments we initially used a heuristic module based on the Gopal 
+et al. approach [4]. The heuristic firstly reduces the capacities assigned to all paths which 
+cause a physical capacity violation on any links, then subsequently increases the capacities 
+assigned to paths across links which are being under-utilized. 
+We also investigated an approach for the second stage which uses another feedforward 
+neural network. The teaching signal for the second stage neural network is the difference 
+between the outputs from the first stage neural network alone and the combined first stage 
+neural network/heuristic solution. This time the input data consisted of 13 link usage 
+values (either a link violation or underutilization) and 42 values representing the amount 
+of traffic lost per path for the current capacity allocations. The second stage neural 
+network had 126 outputs representing the correction to the first stage neural network's 
+outputs. 
+The second stage neural network is mn in a recurrent mode, adjusting by small steps the 
+currently allocated link capacities, thereby attempting to iteratively move closer to the 
+combined neural-heuristic solution by removing the link violations and under-utilizations 
+left behind by the first stage network. 
+The setup used during simulation is shown in Figure 2. For each particular instance tested 
+the network was initialised with the solution from the first stage neural network. The 
+offered traffic (demand) and the available maximum link capacities were used to 
+determine the extent of any link violations or underutilizations as well as the amount of 
+lost traffic (demand satisfaction). This data formed the initial input to the second stage 
+network. The outputs of the neural network were then used to check the quality of the 
+9 76 P. CAMPBELL, M. DALE, H. L. FERP, A. KOWALCZYK 
+solution, and iteration continued until either no link violations occurred or a preset 
+maximum number of iterations had been performed. 
+offered traffic 
+link capacities 
+computation of 
+constraint-demand 
+satisfaction 
+............. 
+solution 
+initialization: 
+solution (0) 
+from stage 1 
+t-l) 
+126 
+correction (t) 
+I error amplification 'demand satisfaction (t-ll 
+{ ] 42 inputs 
+linl. capacities . 
+violation/under utilization (t-l) 
+13 inputs 
+solution (t) 
+Figure 2. Recurrent Network u

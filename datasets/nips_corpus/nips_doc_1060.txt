@@ -1,0 +1,165 @@
+The Gamma MLP for Speech Phoneme 
+Recognition 
+Steve Lawrence Ah Chung Tsoi, Andrew D. Back 
+{lawrence, act, back}�elec. uq. edu. au 
+Department of Electrical and Computer Engineering 
+University of Queensland 
+St. Lucia Qld 4072 Australia 
+Abstract 
+We define a Gamma multi-layer perceptton (MLP) as an MLP 
+with the usual synaptic weights replaced by gamma filters (as pro- 
+posed by de Vries and Principe (de Vries and Principe, 1992)) and 
+associated gain terms throughout all layers. We derive gradient 
+descent update equations and apply the model to the recognition 
+of speech phonemes. We find that both the inclusion of gamma 
+filters in all layers, and the inclusion of synaptic gains, improves 
+the performance of the Gamma MLP. We compare the Gamma 
+MLP with TDNN, Back-Tsoi FIR MLP, and Back-Tsoi IIR MLP 
+architectures, and a local approximation scheme. We find that the 
+Gamma MLP results in an substantial reduction in error rates. 
+I INTRODUCTION 
+1.1 THE GAMMA FILTER 
+Infinite Impulse Response (IIR) filters have a significant advantage over Finite Im- 
+pulse Response (FIR) filters in signal processing: the length of the impulse response 
+is uncoupled from the number of filter parameters. The length of the impulse re- 
+sponse is related to the memory depth of a system, and hence IIR filters allow a 
+greater memory depth than FIR filters of the same order. However, IIR filters are 
+*http://.neci.nj.nec.com/homepages/larence 
+786 S. LAWRENCE, A. C. TSOI, A.D. BACK 
+not widely used in practical adaptive signal processing. This may be attributed 
+to the fact that a) there could be instability during training and b) the gradient 
+descent training procedures are not guaranteed to locate the global optimum in the 
+possibly non-convex error surface (Shynk, 1989). 
+De Vries and Principe proposed using gamma filters (de Vries and Principe, 1992), 
+a special case of IIR filters, at the input to an otherwise standard MLP. The gamma 
+filter is designed to retain the uncoupling of memory depth to the number of 
+rameters provided by IIR filters, but to have simple stability conditions. 
+The output of a neuron in a multi-layer perceptron is computed using 1 
+y ---- f kZ_i= 0 Wkil i . De Vries and Principe consider adding short 
+('NI-1 3)Yi (t-- j)) where 
+term memory with delays: y = f \z..i=o --=ogij( t-' -x 
+-- (j_l)!t j-1 j -- 1, ...,K The depth of the memory is controlled 
+by/z, and K is the order of the filter. For the discrete time case, we obtain the 
+recurrence relationf zo(t) = x(t) and zj(t) = (1 - lz)zj(t- 1) + laZj_l(t- 1) for 
+j = 1, ..., K. In this form, the gamma filter can be interpreted as a cascaded series 
+of filter modules, where each module is a first order IIR filter with the transfer func- 
+tion q_(�_,), where qzj(t) a__ zj(t + 1). We have a filter with K poles, all located 
+at I -/z. Thus, the gamma filter may be considered as a low pass filter for/z < 1. 
+The value of/z can be fixed, or it can be adapted during training. 
+2 NETWORK MODELS 
+Z z (' t) Z (' t) Synaplic 
+Figure 1: A gamma filter synapse with an associated gain term 'c'. 
+We have defined a gamma MLP as a multi-layer perceptron where every synapse 
+contains a gamma filter and a gain term, as shown in figure 1. The motivation 
+behind the inclusion of the gain term is discussed later. A separate  parameter 
+is used for each filter. Update equations are derived in a manner analogous to the 
+standard MLP and can be found in Appendix A. The model is defined as follows. 
+1where y is the output of neuron k in layer l, N is the number of neurons in layer l, 
+wi is the weight connecting neuron k in layer I to neuron i in layer I - 1, Y0 - I (bias), 
+and f is commonly a sigmoid function. 
+The Gamma MLP for Speech Phoneme Recognition 787 
+Definition I A Gamma MLP with L layers excluding the input layer (0, 1, ..., L), 
+gamma filters of order K, and No, N, ..., N� neurons per layer, is defined as 
+I_j_K 
+j-0 
+(1) 
+ea12_e-a/2 
+where y(t) = neuron output, c[i = synaptic gain, f(ct) = ,,/2+,-,/2, k = 
+1,2,...,Nt(neuron index), l = 0, 1,...,L(layer), and z}ijli=o = 1,w[ijli=o,jgo = 
+0, c[o I/=o = 1 (bias). 
+For comparison purposes, we have used the TDNN (Time Delay Neural Network) 
+architecture 2, the Back-Tsoi FIR a and IIR MLP architectures (Back and Tsoi, 
+1991a) where every synapse contains an FIR or IIR filter and a gain term, and the 
+local approximation algorithm used by Casdagli (k-NN LA) (Casdagli, 1991) 4. The 
+Gamma MLP is a special case of the IIR MLP. 
+3 TASK 
+3.1 MOTIVATION 
+Accurate speech recognition requires models which can account for a high degree 
+of variability in the data. Large amounts of data may be available but it may be 
+impractical to use all of the information in standard neural network models. 
+Hypothesis: As the complexity of a problem increases (higher dimensionality, greater 
+variety of training data), the error surface of a neural network becomes more com- 
+plex. It may contain a number of local minima 5 many of which may be much worse 
+than the global minimum. The training (parameter estimation) algorithms become 
+stuck in local minima which may be increasingly poor compared to the global 
+optimum. The problem suffers from the so called curse of dimensionality and the 
+2We use TDNN to refer to an MLP with a time window of inputs, not the replicated 
+architecture introduced by Lang (Langet al., 1990). 
+awe distinguish the Back-Tsoi FIR network from the Wan FIR network in that the 
+Wan architecture has no synaptic gains, and the update algorithms are different. The 
+Back-Tsoi update algorithm has provided better convergence in previous experiments. 
+4Casdagli created an affine model of the following form for each test pattern: yJ -- 
+O0 -{- Ei----1 ' j where k is the number of neighbors, j = 1,..., k, and n is the input 
+n OX i , 
+dimension. The resulting model is used to find y for the test pattern. 
+5We note that it can be difficult to distinguish a true local minimum from a long plateau 
+in the standard backpropagation algorithm. 
+788 S. LAWRENCE, A. C. TSOI, A.D. BACK 
+difficulty in optimizing a function with limited control over the nature of the error 
+surface. 
+We can identify two main reasons why the application of the Gamma MLP may 
+be superior to the standard TDNN for speech recognition: a) the gamma filtering 
+operation allows consideration of the input data using different time resolutions and 
+can account for more past history of the signal which can only be accounted for in 
+an FIR or TDNN system by increasing the dimensionality of the model, and b) 
+the low pass filtering nature of the gamma filter may create a smoother function 
+approximation task, and therefore a smoother error surface for gradient descent 6. 
+3.2 TASK DETAILS 
+Model Input Window 
+Target Function 
+Network Output 1 
+Network Output 2 
+: pr 
+heme(s) 
+Frames of RASTA data 
+lassification 1 
+Classification 0 
+phoneme 
+phoneme(s) I phoheme(s) 
+phoneme phoneme(s) 
+Sequence End 
+Figure 2: PLP input data format and the corresponding network target functions for the 
+phoneme aa. 
+Our data consists of phonemes extracted from the TIMIT database and organized 
+as a number of sequences as shown in figure 2 (example for the phoneme aa). 
+One model is trained for each phoneme. Note that the phonemes are classified in 
+context, with a number of different contexts, and that the surrounding phonemes 
+are labelled only as not belonging to the target phoneme class. Raw speech data 
+was pre-processed into a sequence of frames using the RASTA-PLP v2.0 software ?. 
+We used the default options for PLP analysis. The analysis window (frame) was 
+20 ms. Each succeeding frame overlaps with the preceding frame by 10 ms. 9 
+PLP coefficients together with the signal power are extracted and used as features 
+describing each frame of data. Phonemes used in the current tests were the vowel 
+aa and the fricative s. The phonemes were extracted from speakers coming 
+from the same demographic region in the TIMIT database. Multiple speakers were 
+used and the speakers used in the test set were not contained in the training set. 
+The training set contained 4000 frames, where each phoneme is roughly 10 frames. 
+The test set contained 2000 frames, and an additional validation set containing 2000 
+frames was used to control generalization. 
+6If we consider a very simple network and derive the relationship of the smoothness of 
+the required function approximation to the smoothness of the error surface this statement 
+appears to be valid. However, it is difficult to show a direct relationship for general 
+networks. 
+?Obtained from ftp://ftp.icsi.berkeley. edu/pub/speech/rasta2.0.tar. Z. 
+The Gamma MLP for Speech Phoneme Recognition 789 
+4 RESULTS 
+Two outputs were used in the neural networks as shown by the target functions in 
+figure 2, corresponding to the phoneme being present or not. A confidence criterion 
+was used: Ymaz x (Ymaz -Ymin) (for softmax outputs). The initial learning rate was 
+0.1, 10 hidden nodes were used, FIR and Gamma orders were 5 (6 taps), the TDNN 
+and k-NN models had an input window of 6 steps in time, the tanh activation func- 
+tion was used, target outputs were scaled between -0.8 and 0.8, stochastic update 
+was used, and initial weights were chosen from a set of candidates based on training 
+set performance. The learning rate was varied over time according to the schedule: 
+( c ) where = learning rate, r/0=initial 
+, = ,0/ + ) 
+ma(0,cl (n--ca N))  
+learning rate, N = total epochs, n = current epoch, Cl = 50, c2 = 0.65. This is 
+similar to the schedule proposed in (Darken and Moody, 1991) with an additional 
+term to decrease the learning rate towards zero over the final epochs 8. 
+'Prain Error % ] 2-NN I 5-NN I 1st layer All layers Gains, 1st layer Gains, all layers 
+FIR MLP 17.6 0.43 14.5 1.5 27.2 0.59 40.9 19.8 
+Gamma MLP 7.78 0.39 5.73 0.88 6.07 0.12 5.63 1.68 
+TDNN 14.4 0.86 
+k-NN LA 0 0 
+Test Error % I 2-NN

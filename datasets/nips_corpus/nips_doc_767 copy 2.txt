@@ -1,0 +1,139 @@
+The Power of Amnesia 
+Dana Ron Yoram Singer Naftali Tishby 
+Institute of Computer Science and 
+Center for Neural Computation 
+Hebrew University, Jerusalem 91904, Israel 
+Abstract 
+We propose a learning algorithm for a variable memory length 
+Markov process. Human communication, whether given as text, 
+handwriting, or speech, has multi characteristic time scales. On 
+short scales it is characterized mostly by the dynamics that gen- 
+erate the process, whereas on large scales, more syntactic and se- 
+mantic information is carried. For that reason the conventionally 
+used fixed memory Markov models cannot capture effectively the 
+complexity of such structures. On the other hand using long mem- 
+ory models uniformly is not practical even for as short memory as 
+four. The algorithm we propose is based on minimizing the sta- 
+tistical prediction error by extending the memory, or state length, 
+adaptively, until the total prediction error is sufficiently small. We 
+demonstrate the algorithm by learning the structure of natural En- 
+glish text and applying the learned model to the correction of cor- 
+rupted text. Using less than 3000 states the model's performance 
+is far superior to that of fixed memory models with similar num- 
+ber of states. We also show how the algorithm can be applied to 
+intergenic E. coli DNA base prediction with results comparable to 
+HMM based methods. 
+I Introduction 
+Methods for automatically acquiring the structure of the human language are at- 
+tracting increasing attention. One of the main difficulties in modeling the natural 
+language is its multiple temporal scales. As has been known for many years the 
+language is far more complex than any finite memory Markov source. -Yet Markov 
+176 
+The Power of Amnesia 177 
+models are powerful tools that capture the short scale statistical behavior of lan- 
+guage, whereas long memory models are generally impossible to estimate. The 
+obvious desired solution is a Markov source with a 'deep' memory just where it is 
+really needed. Variable memory length Markov models have been in use for language 
+modeling in speech recognition for some time [3, 4], yet no systematic derivation, 
+nor rigorous analysis of such learning mechanism has been proposed. 
+Markov models are a natural candidate for language modeling and temporal pattern 
+recognition, mostly due to their mathematical simplicity. It is nevertheless obvious 
+that finite memory Markov models can not in any way capture the recurslye nature 
+of the language, nor can they be trained effectively with long enough memory. The 
+notion of a variable length mentory seems to appear naturally also in the context of 
+universal coding [6]. This information theoretic notion is now known to be closely 
+related to efficient modeling [7]. The natural measure that appears in information 
+theory is the description length, as measured by the statistical predictability via 
+the Kullback- Liebler (KL) divergence. 
+The algorithm we propose here is based on optimizing the statistical prediction 
+of a Markov lnodel, measured by the instantaneous KL divergence of the following 
+symbols, or by the current statistical surprise of the model. The memory is extended 
+precisely when such a surprise is significant, until the overall statistical prediction 
+of the stochastic model is sufficiently good. We apply this algorithm successfully for 
+statistical language modeling. Here we demonstrate its ability for spelling correction 
+of corrupted English text. We also show how the algorithm can be applied to 
+intergenie E. coli DNA base prediction with results comparable to HMM based 
+methods. 
+2 Prediction Suffix Trees and Finite State Automata 
+Definitions and Notations 
+Let E be a finite alphabet. Denote by E* the set of all strings over E. A string 
+s, over E* of length n, is denoted by s = ss2...s. We denote by e the empty 
+string. The length of a string s is denoted by Is[ and the size of an alphabet E is 
+denoted by [E I. Let, Prefix(s): ss2... s_, denote the longest prefix of a string 
+s, and let Prefix*(s) denote the set of all prefixes of s, including the empty string. 
+Similarly, Suffix(s) = s2s3...s and Suffix*(s) is the set of all suffixes of s. A 
+set of strings is called a prefix free set if, V s  , s 2 � S' { s  } N Prefix* (s ) - 0. We 
+call a probability measure P, over the strings in E* proper if P(e) = 1, and for every 
+string s, oes P(srr) - P(s). Hence, for every prefix free set S, 2e$ P(s) _< l, 
+and specifically for every integer n >_ 0, 2eEn P(s) = 1. 
+Prediction Suffix Trees 
+A prediction suffix tree T over E, is a tree of degree [E I. The edges of the tree 
+are labeled by symbols from E, such that from every internal node there is at most 
+one outgoing edge labeled by each symbol. The nodes of the tree are labeled by 
+pairs (s, 72) where s is the string associated with the walk starting from that node 
+and ending in the root of the tree, and % : E -- [0, 1] is the output probability 
+function related with s satisfying oez %((r): 1. A prediction suffix tree induces 
+178 Ron, Singer, and Tishby 
+probabilities on arbitrary long strings in the following manner. The probability that 
+T generates a string w = ww2...w in E ', denoted by PT(W), is 
+where s o = e, and for 1 _< i _< n - 1, sJ is the string labeling the deepest node 
+reached by taking the walk corresponding to wx ... wi starting at the root of T. By 
+definition, a prediction suffix tree induces a proper measure over E , and hence for 
+every prefix free set of strings {wl,..., w}, i:1 PT(wi) -- 1, and specifically for 
+n _> 1, then -e: PT(S) = 1. An example of a prediction suffix tree is depicted 
+in Fig. 1 on theleft, where the nodes of the tree are labeled by the corresponding 
+suffix they present. 
+0.4 
+Figure 1: Right: A prediction suffix tree over E - {0, 1}. The strings written in 
+the nodes are the suffixes the nodes present. For each node there is a probability 
+vector over the next possible symbols. For example, the probability of observing 
+'1' after observing the string '010' is 0.3. Left: The equivalent probabilistic finite 
+automaton. Bold edges denote transitions with the symbol '1' and dashed edges 
+denote transitions with '0'. The states of the automaton are the leaves of the tree 
+except for the leaf denoted by the string 1, which was replaced by the prefixes of 
+the strings 010 and 110' 01 and 
+Finite State Automata and Markov Processes 
+A Probabilistic Finite Automaton (PFA) A is a 5-tuple (Q,E, r, 7, r), where Q is 
+a finite set of n states, E is an alphabet of size k, r � Q x E --+ Q is the transition 
+function, 3/ � Q x E  [0, 1] is the output probability function, and r � Q  [0, 1] 
+is the probability distribution over the starting states. The functions 3/ and r 
+must satisfy the following requirements: for every q  Q, -oes'Y(q, rr) -- 1, and 
+qeQ r(q) -- 1. The probability that A generates a string s = sxs2... s,  E  is 
+PA(S) : qOeQ r(q �) I-Iix 3/(qi-l, si), where qi+l : T(qi, si). 
+We are interested in learning a sub-class of finite state machines which have the 
+following property. Each state in a machine M belonging to this sub-class is labeled 
+by a string of length at most L over E, for some L >_ 0. The set of strings labeling 
+the states is suffix free. We require that for every two states ql, q2 G Q and for every 
+symbol rr  E, if r(q , rr) = q and qX is labeled by a string s , then q is labeled 
+The Power of Amnesia 179 
+by a string s 2 which is a suffix of S 1 .O'. Since the set of strings labeling the states 
+is suffix free, if there exists a string having this property then it is unique. Thus, 
+in order that r be well defined on a given set of string S, not only must the set be 
+suffix free, but it must also have the property, that for every string s in the set and 
+every symbol rr, there exists a string which is a suffix of set. For our convenience, 
+from this point on, if q is a state in Q then q will also denote the string labeling 
+that state. 
+A special case of these automata is she case in which Q includes all 2 � strings of 
+length L. These automata are known as Markov processes of order L. We are 
+interested in learning automata for which the lmmber of states, n, is actually much 
+smaller than 2 �, which means that few states have long memory and most states 
+have a short one. We refer to these autolnata as Markov processes with bounded 
+memory L. In the case of Markov processes of order L, the identity of the states 
+(i.e. the strings labeling the states) is known and learning such a process reduces to 
+approximating the output probability function. When learning Markov processes 
+with bounded memory, the task of a learning algorithm is much more involved since 
+it must reveal the identity of the states as well. 
+It can be shown that under a slightly more complicated definition of prediction 
+suffix trees, and assuming that the initial distribution on the states is the stationary 
+distribution, these two models are equivalent up to a grow up in size which is at 
+most linear in L. The proof of this equivalence is beyond the scope of this paper, yet 
+the transformation from a prediction suffix tree to a finite state automaton is rather 
+simple. Roughly speaking, in order to implement a prediction suffix tree by a finite 
+state automaton we define the leaves of the tree to be the states of the automaton. 
+If the transition function of the automaton, r(., .), can not be well defined on this 
+set of strings, we might, need to slightly expand the tree and use the leaves of the 
+expanded tree. The output probability function of the automaton, '/(., .), is defined 
+based on the prediction values of the leaves of the tree. i.e., for every state (leaf) 
+s, and every symbol rr, '/(s, rr): %(rr). The outgoing edges from the states are 
+defined as follows: r(q , rr) - q2 where q2 E Suffix(qrr). An example of a finite 
+state automaton which corresponds to the predict

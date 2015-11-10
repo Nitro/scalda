@@ -1,0 +1,142 @@
+Hierarchical Image Probability (HIP) Models 
+Clay D. Spence and Lucas Parra 
+Sarnoff Corporation 
+CN5300 
+Princeton, NJ 08543-5300 
+(cspence, lparra) @sarnoff. com 
+Abstract 
+We formulate a model for probability distributions on image spaces. We 
+show that any distribution of images can be factored exactly into condi- 
+tional distributions of feature vectors at one resolution (pyramid level) 
+conditioned on the image information at lower resolutions. We would 
+like to factor this over positions in the pyramid levels to make it tractable, 
+but such factoring may miss long-range dependencies. To fix this, we in- 
+troduce hidden class labels at each pixel in the pyramid. The result is 
+a hierarchical mixture of conditional probabilities, similar to a hidden 
+Markov model on a tree. The model parameters can be found with max- 
+imum likelihood estimation using the EM algorithm. We have obtained 
+encouraging preliminary results on the problems of detecting various ob- 
+jects in SAR images and target recognition in optical aerial images. 
+1 Introduction 
+Many approaches to object recognition in images estimate Pr(class [image). By con- 
+trast, a model of the probability distribution of images, PrOmage), has many attrac- 
+tive features. We could use this for object recognition in the usual way by training 
+a distribution for each object class and using Bayes' rule to get Pr(classlimage ) = 
+Pr0mage [ class) Pr(class)/Pr0mage ). Clearly there are many other benefits of having a 
+model of the distribution of images, since any kind of data analysis task can be approached 
+using knowledge of the distribution of the data. For classification we could attempt 'to de- 
+tect unusual examples and reject them, rather than trusting the classifier's output. We could 
+also compress, interpolate, suppress noise, extend resolution, fuse multiple images, etc. 
+Many image analysis algorithms use probability concepts, but few treat the distribution of 
+images. Zhu, Wu and Mumford [9] do this by computing the maximum entropy distribution 
+given a set of statistics for some features. This seems to work well for textures but it is not 
+clear how well it will model the appearance of more structured objects. 
+There are several algorithms for modeling the distributions of features extracted from the 
+image, instead of the image itself. The Markov Random Field (MRF) models are an ex- 
+ample of this line of development; see, e.g., [5, 4]. Unfortunately they tend to be very 
+expensive computationally. 
+In De Bonet and Viola's flexible histogram approach [2, 1], features are extracted at mul- 
+tiple image scales, and the resulting feature vectors are treated as a set of independent 
+Hierarchical Image Probability (HIP) Models 849 
+12 
+/ 
+Gaussian Feature 
+Pyramid Pyramid 
+I1 / >( F1 I I GO 
+ Subsampled 
+/ F's 
+Figure 1: Pyramids and feature notation. 
+samples drawn from a distribution. They then model this distribution of feature vectors 
+with Parzen windows. This has given good results, but the feature vectors from neighbor- 
+ing pixels are treated as independent when in fact they share exactly the same components 
+from lower-resolutions. To fix this we might want to build a model in which the features at 
+one pixel of one pyramid level condition the features at each of several child pixels at the 
+next higher-resolution pyramid level. The multiscale stochastic process (MSP) methods do 
+exactly that. Luettgen and Willsky [7], for example, applied a scale-space auto-regression 
+(AR) model to texture discrimination. They use a quadtree or quadtree-like organization 
+of the pixels in an image pyramid, and model the features in the pyramid as a stochastic 
+process from coarse-to-fine levels along the tree. The variables in the process are hidden, 
+and the observations are sums of these hidden variables plus noise. The Gaussian distribu- 
+tions are a limitation of MSP models. The result is also a model of the probability of the 
+observations on the tree, not of the image. 
+All of these methods seem well-suited for modeling texture, but it is unclear how we might 
+build the models to capture the appearance of more structured objects. We will argue below 
+that the presence of objects in images can make local conditioning like that of the flexible 
+histogram and MSP approaches inappropriate. In the following we present a model for 
+probability distributions of images, in which we try to move beyond texture modeling. 
+This hierarchical image probability (HIP) model is similar to a hidden Markov model on 
+a tree, and can be learned with the EM algorithm. In preliminary tests of the model on 
+classification tasks the performance was comparable to that of other algorithms. 
+2 Coarse-to-fine factoring of image distributions 
+Our goal will be to write the image distribution in a form similar to Pr(I)  
+Pr(Fo [ F1) Pr(F1 [ F2)..., where Fl is the set of feature images at pyramid level l. We 
+expect that the short-range dependencies can be captured by the model's distribution of 
+individual feature vectors, while the long-range dependencies can be captured somehow at 
+low resolution. The large-scale structures affect finer scales by the conditioning. 
+In fact we can prove that a coarse-to-fine factoring like this is correct. From an image I 
+we build a Gaussian pyramid (repeatedly blur-and-subsample, with a Gaussian filter). Call 
+the/-th level It, e.g., the original image is Io (Figure 1). From each Gaussian level It we 
+extract some set of feature images Ft. Sub-sample these to get feature images Gr. Note 
+that the images in Gt have the same dimensions as It+i. We denote by (t the set of images 
+containing It+i and the images in Gr. We further denote the mapping from It to 
+Suppose now that �o: Io  (o is invertible. Then we can think of �o as a change of vari- 
+850 C. D. Spence and L. Parra 
+ables. If we have a distribution on a space, its expressions in two different coordinate sys- 
+tems are related by multiplying by the Jacobian. In this case we get Pr(Io) = Io[ Pr((o). 
+Since o = (Go,I1), we can factor Pr(o) to get Pr(Io) = Io] Pr(Go [ I1) Pr(I1). If 
+l is invertible for all l  (0,..., L - 1) then we can simply repeat this change of variable 
+and factoring procedure to get 
+L-1 
+(1) 
+This is a very general result, valid for all Pr(I), no doubt with some rather mild restrictions 
+to make the change of variables valid. The restriction that l be invertible is strong, but 
+many such feature sets are known to exist, e.g., most wavelet transforms on images. We 
+know of a few ways that this condition can be relaxed, but further work is needed here. 
+3 The need for hidden variables 
+For the sake of tractability we want to factor Pr(G/I Ii+) over positions, something like 
+Pr(I)  1-Il 1-[x,+ Pr(gl(z)[ft+i (z)) where g/(z) and f/+ (z) are the feature vectors 
+at position z. The dependence of gl on f/+ expresses the persistence of image structures 
+across scale, e.g., an edge is usually detectable as such in several neighboring pyramid 
+levels. The flexible histogram and MSP methods share this structure. While it may be 
+plausible that f/+i (z) has a strong influence on gl (z), we argue now that this factorization 
+and conditioning is not enough to capture some properties of real images. 
+Objects in the world cause correlations and non-local dependencies in images. For exam- 
+ple, the presence of a particular object might cause a certain kind of texture to be visible 
+at level I. Usually local features f/+l by themselves will not contain enough information 
+to infer the object's presence, but the entire image Ii+i at that layer might. Thus gl (:c) is 
+influenced by more of Ii+x than the local feature vector. 
+Similarly, objects create long-range dependencies. For example, an object class might 
+result in a kind of texture across a large area of the image. If an object of this class is always 
+present, the distribution may factor, but if such objects aren't always present and can't 
+be inferred from lower-resolution information, the presence of the texture at one location 
+affects the probability of its presence elsewhere. 
+We introduce hidden variables to represent the non-local information that is not captured by 
+local features. They should also constrain the variability of features at the next finer scale. 
+Denoting them collectively by A, we assume that conditioning on A allows the distributions 
+over feature vectors to factor. In general, the distribution over images becomes 
+,L-1 
+/=0 zI+. 
+Pr(gt(a:) I ft+�),A)Pr(A [ I6)} Pr(IL). 
+(2) 
+As written this is absolutely general, so we need to be more specific. In particular we would 
+like to preserve the conditioning of higher-resolution information on coarser-resolution 
+information, and the ability to factor over positions. 
+Hierarchical Image Probability (HIP) Models 851 
+Al+2 
+Al+l 
+Ai 
+Figure 2: Tree structure of the conditional dependency between hidden variables in the HIP 
+model. With subsampling by two, this is sometimes called a quadtree structure. 
+As a first model we have chosen the following structure for our HIP model: 1 
+] 
+Pr(I) oc E H H [Pr(gt(:e)[ft+(:e),at(:e)) Pr(at(:)lat+l(:)) . (3) 
+Ao,...,Ar- /=0 zEIt+ 
+To each position :e at each level l we attach a hidden discrete index or label at (:e). The 
+resulting label image At for level l has the same dimensions as the images in 
+Since at (:e) codes non-local information we can think of the labels At as a segmentation 
+or classification at the/-th pyramid level. By conditioning at(z) on al+l (:e), we mean 
+that at (:e) is conditioned on at+l at the parent pixel of :e. This parent-child relationship 
+follows from the sub-sampling operation. For example, if we sub-sample by two in each 
+direction to get Gt from Ft, we condition the variable at at (:e, /) in level l on al+l at 
+location ([:e/2J, [//2J) in level/+ 1 (Figure 2). This gives the dependency graph of the 
+hidden variables a tree structure. Such a probabilistic

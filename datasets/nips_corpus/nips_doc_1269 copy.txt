@@ -1,0 +1,162 @@
+Multidimensional Triangulation and 
+Interpolation for Reinforcement Learning 
+Scott Davies 
+scottd@cs.cmu.edu 
+Department of Computer Science, Carnegie Mellon University 
+5000 Forbes Ave, Pittsburgh, PA 15213 
+1 
+Abstract 
+Dynamic Programming, Q-learning and other discrete Markov Decision 
+Process solvers can be applied to continuous d-dimensional state-spaces by 
+quantizing the state space into an array of boxes. This is often problematic 
+above two dimensions: a coarse quantization can lead to poor policies, and 
+fine quantization is too expensive. Possible solutions are variable-resolution 
+discretization, or function approximation by neural nets. A third option, 
+which has been little studied in the reintbrcement learning literature, is 
+interpolation on a coarse grid. In this paper we study interpolation tech- 
+niques that can result in vast improvements in the online behavior of the 
+resulting control systems: multilinear interpolation, and an interpolation 
+algorithm based on an interesting regular triangulation of d-dimensional 
+space. We adapt these interpolators under three reinforcement learning 
+paradigms: (i) offline value iteration with a known model, (ii) Q-learning, 
+and (iii) online value iteration with a previously unknown model learned 
+from data. We describe empirical results, and the resulting implications for 
+practical learning of continuous non-linear dynamic control. 
+GRID-BASED INTERPOLATION TECHNIQUES 
+Reinforcement learning algorithms generate functions that map states to cost-to- 
+go values. When dealing with continuous state spaces these functions must be 
+approximated. The following approximators are frequently used: 
+Fine grids may be used in one or two dimensions. Above two dimensions, 
+fine grids are too expensive. Value functions can be discontinuous, which 
+(as we will see) can lead to suboptimalities even with very fine discretization 
+in two dimensions. 
+Neural nets have been used in conjunction with TD [Sutton, 1988] and 
+Q-learning [Watkins, 1989] in very high dimensional spaces [Tesauro, 1991, 
+Crites and Barto, 1996]. While promising, it is not always clear that they 
+produce the accurate value functions that might be needed for fine near- 
+optimal control of dynamic systems, and the most commonly used methods 
+of applying value iteration or policy iteration with a neural-net value func- 
+tion are often unstable. [Boyan and Moore, 1995]. 
+1006 S. Davies 
+Interpolation over points on a coarse grid is another potentially useful approximator 
+for value functions that has been little studied for reinforcement learning. This 
+paper attempts to rectify this omission. Interpolation schemes may be particularly 
+attractive because they are local averagers, and convergence has been proven in 
+such cases for offline value iteration [Gordon, 1995]. 
+All of the interpolation methods discussed here split the state space into a regular 
+grid of d-dimensional boxes; data points are associated with the centers or the 
+corners of the resulting boxes. The value at a given point in the continuous state 
+space is computed as a weighted average of neighboring data points. 
+1.1 MULTILINEAR INTERPOLATION 
+When using multilinear interpolation, data points are situated at the corners of 
+the grid's boxes. The interpolated value within a box is an appropriately weighted 
+average of the 2 d datapoints on that box's corners. The weighting scheme assures 
+global continuity of the interpolated surface, and also guarantees that the interpo- 
+lated value at any grid corner matches the given value of that corner. 
+In one-dimensional space, multilinear interpolation simply involves piecewise linear 
+interpolations between the data points. In a higher-dimensional space, a recursive 
+(though not terribly efficient) implementation can be described as follows: 
+Pick an arbitrary axis. Project the query point along this axis to each of the two 
+opposite faces of the box containing the query point. 
+Use two (d- 1)-dimensional multihnear interpolations over the 2 `/- datapoints 
+on each of these two faces to calculate the values at both of these projected points. 
+Linearly interpolate between the two values generated in the previous step. 
+Multilinear interpolation processes 2 d data points for every query, which becomes 
+prohibitively expensive as d increases. 
+1.2 SIMPLEX-BASED INTERPOLATION 
+It is possible to interpolate over d + 1 of the data points for any given query in only 
+O(dlog d) time and still achieve a continuous surface that fits the datapoints exactly. 
+Each box is broken into d! hyperdimensional triangles, or simplexes, according to 
+the Coxeter-Freudenthal-Kuhn triangulation [Moore, 1992]. 
+Assume that the box is the unit hypercube, with one corner at (xx, x2,..., Xd) = 
+(0, 0,..., 0), and the diagonally opposite corner at (1, 1,..., 1). Then, each simplex 
+in the Kuhn triangulation corresponds to one possible permutation p of (1, 2,..., d), 
+and occupies the set of points satisfying the equation 
+0 5 xp(x) < xp(2) 5 ... 5 xp(d) < I. 
+Triangulating each box into d! simplexes in this manner generates a conformal mesh: 
+any two elements with a (d- 1)-dimensional surface in common have entire faces in 
+common, which ensures continuity across element boundaries when interpolating. 
+We use the Kuhn triangulation for interpolation as follows: 
+Translate and scale to a coordinate system in which the box containing the 
+query point is the unit hypercube. Let the new coordinate of the query point 
+be (as,..., as). 
+' This tells us the simplex of the 
+Use a sorting algorithm to rank as through as,/. 
+Kuhn triangulation in which the query point hes. 
+Triangulation and Interpolation for Reinforcement Learning 1007 
+Express (c,...,c) as a convex combination of the coordinates of the relevant 
+simplex's (d + 1) corners. 
+Use the coefficients determined in the previous step as the weights for a weighted 
+sum of the data values stored at the corresponding corners. 
+At no point do we explicitly represent the d! different simplexes. All of the above 
+steps can be performed in O(d) time except the second, which can be done in 
+O(d log d) time using conventional sorting routines. 
+2 PROBLEM DOMAINS 
+CAR ON HILL: In the Hillcar domain, the goal is to park a car near the top of 
+a one-dimensional hill. The hill is steep enough that the driver needs to back up in 
+order to gather enough speed to get to the goal. The state space is two-dimensional 
+(position,velocity). See [Moore and Atkeson, 1995] for further details, but note 
+that our formulation is harder than the usual formulation in that the goal region 
+is restricted to a narrow range of velocities around 0, and trials start at random 
+states. The task is specified by a reward of-1 for any action taken outside the goal 
+region, and 0 inside the goal. No discounting is used, and two actions are available: 
+maximum thrust backwards, and maximum thrust forwards. 
+ACROBOT: The Acrobot is a two-link planar robot acting in the vertical plane 
+under gravity with a weak actuator at its elbow joint joint. The shoulder is un- 
+actuated. The goal is to raise the hand to at least one link's height above the 
+unactuated pivot [Sutton, 1996]. The state space is four-dimensional: two angular 
+positions and two angular velocities. Trials always start from a stationary position 
+hanging straight down. This task is formulated in the same way as the car-on-the- 
+hill. The only actions allowed are the two extreme elbow torques. 
+3 APPLYING INTERPOLATION: THREE CASES 
+3.1 CASE I: OFFLINE VALUE ITERATION WITH A KNOWN 
+MODEL 
+First, we precalculate the effect of taking each possible action from each state cor- 
+responding to a datapoint in the grid. Then, as suggested in [Gordon, 1995], we use 
+these calculations to derive a completely discrete MDP. Taking any action from any 
+state in this MDP results in c possible successor states, where c is the number of 
+datapoints used per interpolation. Without interpolation, c is 1; with multilinear 
+interpolation, 2 d; with simplex-based interpolation, d + 1. 
+We calculate the optimal policy for this derived MDP offline using value itera- 
+tion [Ross, 1983]; because the value iteration can be performed on a completely 
+discrete MDP, the calculations are much less computationally expensive than they 
+would have been with many other kinds of function approximators. The value it- 
+eration gives us values for the datapoints of our grid, which we may then use to 
+interpolate the values at other states during online control. 
+3.1.1 Hillcar Results: value iteration with known model 
+We tested the two interpolation methods on a variety of quantization levels by 
+first performing value iteration offline, and then starting the car from 1000 random 
+states and averaging the number of steps taken to the goal from those states. We 
+also recorded the number of backups required before convergence, as well as the 
+execution time required for the entire value iteration on a 85 MHz Sparc 5. See 
+Figure 1 for the results. All steps-to-goal values are means with an expected error 
+of 2 steps. 
+1008 S. Davies 
+Grid size 
+Interpolation Method 112 212 512 3012 
+None 
+Steps to Goal: 237 131 133 120 
+Backups: 2.42K 15.4K 156K 14.3M 
+Time (sec): 0.4 1.0 4.1 192 
+MultiLin 
+Steps to Goal: 134 116 108 107 
+Backups: 4.84K 18.1K 205K 17.8M 
+Time (sec): 0.6 1.3 7.1 405 
+Simplex 
+Steps to Goal: 134 118 109 107 
+Backups: 6.17K 18.1K 195K 17.9M 
+Time (sec): 0.5 1.2 5.7 328 
+Figure 1: Hillcar: value iteration with known model 
+Grid size 
+Interpolation Method 84 94 104 114 124 134 144 154 
+None 
+Steps to Goal: - - 44089 - 26952 - > 100000 
+Backups: - - 280K - 622K - 1.42M 
+Time (sec): .. - - 15 - 30 - 53 
+MUi'tiLin 
+Steps to Goal: 3340 2006 1136 3209 1300 1820 1518 1802 
+Backups: 233K 1.01M 730K 2.01M 2.03M 3.74M 4.45M 6.78M 
+Time (sec): 17 43 42 83 99 164 197 284 
+Simplex 
+Steps to Goal: 4700 8007 2953 3209 4663 2733 1742 9613 
+Backups: 196K 1.16M 590K 2.28M 1.62M

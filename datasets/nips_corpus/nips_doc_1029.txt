@@ -1,0 +1,168 @@
+is 
+Learning long-term dependencies 
+not as difficult with NARX networks 
+Tsungnan Lin* 
+Department of Electrical Engineering 
+Princeton University 
+Princeton, NJ 08540 
+Bill G. Horne 
+NEC Research Institute 
+4 Independence Way 
+Princeton, NJ 08540 
+Peter Tifio 
+Dept. of Computer Science and Engineering 
+Slovak Technical University 
+Ilkovicova 3, 812 19 Bratislava, Slovakia 
+C. Lee Giles? 
+NEC Research Institute 
+4 Independence Way 
+Princeton, NJ 08540 
+Abstract 
+It has recently been shown that gradient descent learning algo- 
+rithms for recurrent neural networks can perform poorly on tasks 
+that involve long-term dependencies. In this paper we explore 
+this problem for a class of architectures called NARX networks, 
+which have powerful representational capabilities. Previous work 
+reported that gradient descent learning is more effective in .NARX 
+networks than in recurrent networks with hidden states. We 
+show that although NARX networks do not circumvent the prob- 
+lem of long-term dependencies, they can greatly improve perfor- 
+mance on such problems. We present some experimental 'results 
+that show that NARX networks can often retain information for 
+two to three times as long as conventional recurrent networks. 
+I Introduction 
+Recurrent Neural Networks (RNNs) are capable of representing arbitrary nonlin- 
+ear dynamical systems [19, 20]. However, learning simple behavior can be quite 
+*Also with NEC Research Institute. 
+tAlso with UMIACS, University of Maryland, College Park, MD 20742 
+5 78 T. LIN, B. G. HORNE, P. TI10, C. L. GILES 
+difficult using gradient descent. For example, even though these systems are Tur- 
+ing equivalent, it has been difficult to get them to successfully learn small finite 
+state machines from example strings encoded as temporal sequences. Recently, it 
+has been demonstrated that at least part of this difficulty can be attributed to 
+long-term dependencies, i.e. when the desired output at time T depends on inputs 
+presented at times t  T. In [13] it was reported that RNNs were able to learn short 
+term musical structure using gradient based methods, but had difficulty capturing 
+global behavior. These ideas were recently formalized in [2], which showed that if 
+a system is to robustly latch information, then the fraction of the gradient due to 
+information n time steps in the past approaches zero as n becomes large. 
+Several approaches have been suggested to circumvent this problem. For exam- 
+ple, gradient-based methods can be abandoned in favor of alternative optimization 
+methods [2, 15]. However, the algorithms investigated so far either perform just 
+as poorly on problems involving long-term dependencies, or, when they are better, 
+require far more computational resources [2]. Another possibility is to modify con- 
+ventional gradient descent by more heavily weighing the fraction of the gradient due 
+to information far in the past, but there is no guarantee that such a modified algo- 
+rithm would converge to a minima of the error surface being searched [2]. Another 
+suggestion has been to alter the input data so that it represents a reduced description 
+that makes global features more explicit and more readily detectable [7, 13, 16, 17]. 
+However, this approach may fail if short term dependencies are equally as impor- 
+tant. Finally, it has been suggested that a network architecture that operates on 
+multiple time scales might be useful [5, 6]. 
+In this paper, we also propose an architectural approach to deal with long-term 
+dependencies [11]. We focus on a class of architectures based upon Nonlinear Au- 
+toRegressive models with exogenous inputs (NARX models), and are therefore 
+called NARX networks [3, 14]. This is a powerful class of models which has recently 
+been shown to be computationally equivalent to Turing machines [18]. Further- 
+more, previous work has shown that gradient descent learning is more effective 
+in NARX networks than in recurrent network architectures with hidden states 
+when applied to problems including grammatical inference and nonlinear system 
+identification [8]. Typically, these networks converge much faster and generalize 
+better than other networks. The results in this paper give an explanation of this 
+phenomenon. 
+2 Vanishing gradients and long-term dependencies 
+Bengio et al. [2] have analytically explained why learning problems with long-term 
+dependencies is difficult. They argue that for many practical applications the goal 
+of the network must be to robustly latch information, i.e. the network must be 
+able to store information for a long period of time in the presence of noise. More 
+specifically, they argue that latching of information is accomplished when the states 
+of the network stay within the vicinity of a hyperbolic attractor, and robustness 
+to noise is accomplished if the states of the network are contained in the reduced 
+attracting set of that attractor, i.e. those set of points at which the eigenvalues of 
+the JacobJan are contained within the unit circle. 
+In algorithms such as Backpropagation Through Time (BPTT), the gradient of 
+the cost function function C is written assuming that the weights at different time 
+Learning Long-term Dependencies Is Not as Difficult with NARX Networks 5 79 
+u(k) u(k-) 
+uOc-2) yOc-3) y(k-2) y(k-1) 
+Figure 1: NARX network. 
+indices are independent and computing the partial gradient with respect to these 
+weights. The total gradient is then equal to the sum of these partial gradients. 
+It can be easily shown that the weight updates are proportional to 
+VwC = E (Yp(T) - dp) Vx(T)yp(T) [k Jx(T, 
+p '=1 
+where yp(T) and dp are the actual and desired (or target) output for the pth 
+pattern 1, x(t) is the state vector of the network at time t and Jx(T,T - v-) - 
+Vx()x(T) denotes the Jacobian of the network expanded over T - - time steps. 
+In [2], it was shown that if the network robustly latches information, then Jx(T, n) 
+is an exponentially decreasing function of n, so that lim_oo Jx(T,n) = 0 . This 
+implies that the portion of Vw C due to information at times - << T is insignificant 
+compared to the portion at times near T. This vanishing gradient is the essential 
+reason why gradient descent methods are not sufficiently powerful to discover a 
+relationship between target outputs and inputs that occur at a much earlier time. 
+3 NARX networks 
+An important class of discrete-time nonlinear systems is the Nonlinear AutoRegres- 
+sive with exogenous inputs (NARX) model [3, 10, 12, 21]: 
+y(t) = f (u(t- D,,),... ,u(t- 1),u(t),y(t- Dy),... ,y(t- 1)), 
+where u(t) and y(t) represent input and output of the network at time t, D, and Dy 
+are the input and output order, and f is a nonlinear function. When the function 
+f can be approximated by a Multilayer Perceptton, the resulting system is called a 
+NARX network [3, 14]. 
+In this paper we shall consider NARX networks with zero input order and a one 
+dimensional output. However there is no reason why our results could not be 
+extended to networks with higher input orders. Since the states of a discrete-time 
+tWe deal only with problems in which the target output is presented at the end of the 
+sequence. 
+580 T. LIN, B. G. HORNE, P. TIIO, C. L. GILES 
+1 
+oo 
+o 
+06  ' 
+o 
+o 
+o 
+02 
+o 
+?.7:F: ........  _ 
+0 10 20   
+/a) 
+(b) 
+Figure 2: Results for the latching problem. (a) Plots of J(t, n) as a function of n. 
+(b) Plots of the ratio ;= J(t,) as a function of n. 
+dynamical system can always be associated with the unit-delay elements in the 
+realization of the system, we can then describe such a network in a state space form 
++ { � (u(t), x(t)) 
+X_l(t) 
+i---- I (1) 
+i-2,... ,D 
+with y(t) = Xl(t + 1). 
+If the Jacobian of this system has all of its eigenvalues inside the unit circle at each 
+time step, then the states of the network will be in the reduced attracting set of some 
+hyperbolic attractor, and thus the system will be robustly latched at that time. As 
+with any other RNN, this implies that lim,-oo J,(t, n) = 0. Thus, NARX networks 
+will also suffer from vanishing gradients and the long-term dependencies problem. 
+However, we find in the simulation results that follow that NARX networks are 
+often much better at discovering long-term dependencies than conventional RNNs. 
+An intuitive reason why output delays can help long-term dependencies can be 
+found by considering how gradients are calculated using the Backpropagation 
+Through Time algorithm. BPTT involves two phases: unfolding the network in 
+time and backpropagating the error through the unfolded network. When a NARX 
+network is unfolded in time, the output delays will appear as jump-ahead connec- 
+tions in the unfolded network. Intuitively, these jump-ahead connections provide a 
+shorter path for propagating gradient information, thus reducing the sensitivity of 
+the network to long-term dependencies. However, this intuitive reasoning is only 
+valid if the total gradient through these jump-ahead pathways is greater than the 
+gradient through the layer-to-layer pathways. 
+It is possible to derive analytical results for some simple toy problems to show 
+that NARX networks are indeed less sensitive to long-term dependencies. Here 
+we give one such example, which is based upon the latching problem described 
+in [2]. Consider the one node autonomous recurrent network described by, x(t) = 
+tanh(wx(t - 1)) where w = 1.25, which has two stable fixed points at 4-0.710 
+and one unstable fixed point at zero. The one node, autonomous NARX network 
+x(t) = tanh (E D wrz(t- T)) has the same fixed points as long as Ef=l Wi = W. 
+Learning Long-term Dependencies Is Not as Difficult with NARX Networks 581 
+Assume the state of the network has reached equilibrium at the positive stable fixed 
+point and there are no external inputs. For simplicity, we only consider the JacobJan 
+J(t,n) - 
+ox(t-,), which will be a component of the gradient VwC. Figure 2a shows 
+plots of J(t,n) with respe

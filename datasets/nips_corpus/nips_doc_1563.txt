@@ -1,0 +1,188 @@
+Vertex Identification in High Energy 
+Physics Experiments 
+Gideon Dror* 
+Department of Computer Science 
+The Academic College of Tel-Aviv-Yaffo, Tel Aviv 64044, Israel 
+Halina Abramowicz t David Horn 
+School of Physics and Astronomy 
+Raymond and Beverly Sackler Faculty of Exact Sciences 
+Tel-Aviv University, Tel Aviv 69978, Israel 
+Abstract 
+In High Energy Physics experiments one has to sort through a high 
+flux of events, at a rate of tens of MHz, and select the few that are 
+of interest. One of the key factors in making this decision is the 
+location of the vertex where the interaction, that led to the event, 
+took place. Here we present a novel solution to the problem of 
+finding the location of the vertex, based on two feedforward neu- 
+ral networks with fixed architectures, whose parameters are chosen 
+so as to obtain a high accuracy. The system is tested on simu- 
+lated data sets, and is shown to perform better than conventional 
+algorithms. 
+I Introduction 
+An event in High Energy Physics (HEP) is the experimental result of an interaction 
+during the collision of particles in an accelerator. The result of this interaction is 
+the production of tens of particles, each of which is ejected in a different direction 
+and energy. Due to the quantum mechanical effects involved, the events differ from 
+one another in the number of particles produced, the types of particles, and their 
+energies. The trajectories of produced particles are detected by a very large and 
+sophisticated detector. 
+* gideon@server.mta.ac.il 
+t halina@post.tau.ac.il 
+ horn@neuron. t au. ac.il 
+Vertex Identification in High Energy Physics Experiments 869 
+Events are typically produced at a rate of 10 MHz, in conjunction with a data 
+volume of up to 500 kBytes per event. The signal is very small, and is selected from 
+the background by multilevel triggers that perform filtering either through hardware 
+or software. In the present paper we confront one problem that is of interest in these 
+experiments and is part of the triggering consideration. This is the location of the 
+vertex of the interaction. To be specific we will use a simulation of data collected by 
+the central tracking detector [1] of the ZEUS experiment [2] at the HEP laboratory 
+DESY in Hamburg, Germany. This detector, placed in a magnetic field, surrounds 
+the interaction point and is sensitive to the path of charged particles. It has a 
+cylindrical shape around the axis, z, where the interaction between the incoming 
+particles takes place. The challenge is to find an efficient and fast method to extract 
+the exact location of the vertex along this axis. 
+2 The Input Data 
+An example of an event, projected onto the z - 0 plane, is shown in Figure 1. Only 
+the information relevant to triggering is used and displayed. The relevant points, 
+which denote hits by the outgoing particles on wires in the detector, form five rings 
+due to the concentric structure of the detector. Several slightly curved particle 
+tracks emanating from the origin, which is marked with a q- sign, and crossing 
+all five rings, can easily be seen. Each track is made of 30-40 data points. All 
+tracks appear in this projection as arcs, and indeed, when viewed in 3 dimensions, 
+every particle follows a helical trajectory due to the solenoidal magnetic field in the 
+detector. 
+60 
+40 
+20 
+E 
+0 
+-2 
+-6( 
+-o-Ao-o b o ,o 6o 
+x [cml 
+Figure 1: A typical event projected onto the z - 0 plane. The dots, or hits, have 
+a two-fold ambiguity in the determination of the xy coordinates through which the 
+particle has moved. The correct solutions lie on curved tracks that emanate from 
+the origin. 
+Each physical hit is represented twice in Fig. 1 due to an inherent two-fold ambiguity 
+in the determination of its xy coordinates. The correct solutions form curved tracks 
+emanating from the origin. Some of those can be readily seen in the data. Due to 
+the limited time available for decision making at the trigger level, the z coordinate 
+is obtained from the difference in arrival times of a pulse at both ends of the CTD 
+and is available for only a fraction of these points. The hit resolution in xy is 
+ 230 tzm, while that of z-by-timing is _ 4 cm. The quality of the z coordinate 
+870 G. Dror, H. Abramowicz and D. Horn 
+information is exemplified in figure 2. Figure 2(a) shows points forming a track of 
+a single particle on the z = 0 projection. Since the corresponding track forms a 
+helix with small curvature, one expects a linear dependence of the z coordinate of 
+the hits on their radial position, r = V/X 2 + y2. Figure 2(b) compares the values of 
+r with the measured z values for these points. The scatter of the data around the 
+linear regression fit is considerable. 
+35 
+3O 
+25 
+E20 
+15 
+10 
+I I I 
+10 20 30 40 50 60 70 80 
+x [cm] 
+' 30 
+10 
+3O 
+r0 
+o  o 
+N 
+o 
+.>o 
+b) 
+5 30 5 i0 S5 /0 h 0 55 
+r [cm] 
+Figure 2: A typical example of uncertainties in the measured z values: (a) a single 
+track taken from the event shown in figure 1, (b) the z coordinate vs r = V/X 2 + y2 
+the distance from the z axis for the data points shown in (a). The full line is a 
+linear regression fit. 
+3 The Network 
+Our network is based on step-wise changes in the representation of the data, moving 
+from the input points, to local line segments and to global arcs. The nature of 
+the data and the problem suggest it is best to separate the treatment of the xy 
+coordinates from that of the z coordinate. Two parallel networks which perform 
+entirely different computations, form our final system. The first network, which 
+handles the xy information is responsible for constructing arcs that correctly identify 
+some of the particle tracks in the event. The second network uses this inforrnation 
+to evaluate the z location of the point where all tracks meet. 
+3.1 Arc Identification Network 
+The arc identification network processes information in a fashion akin to the method 
+visual information is processed by the primary visual system [3]. 
+The input layer for this network is made of a large number of neurons (several tens 
+of thousands) and corresponds to the function of the retina. Each input neuron 
+has its distinct receptive field. The sum of all fields covers completely the relevant 
+domain in the xy plane. This domain has 5 concentric rings, which show up in 
+figure 1. The total area of the rings is about 5000 cm 2, and covering it with 100000 
+input neurons leads to satisfactory resolution. A neuron in the input level fires 
+when a hit is present in its receptive field. We shall label each input neuron by the 
+(xy) coordinates of the center of its receptive field. 
+Neurons of the second layer are line segment detectors. Each second layer neuron 
+is labeled by (XYc), where (X, Y) are the coordinates of the center of the segment 
+Vertex Identification in High Energy Physics Experiments 8 71 
+and a denotes its orientation. The activation of second layer neurons is given by 
+vx�, = - o., 
+xy 
+(1) 
+where 
+1_ if r� <0.5cmArlt <2cm 
+Jxw,,x/= 1 if 0.5cm<r� <lcmArli<2cm (2) 
+0 otherwise 
+and g(x) is the standard Heaviside step function. ql and r� are the parallel and 
+perpendicular distances between (X, Y) and (x, y) with respect to the axis of the 
+line segment, defined by c. It is important to note that at this level, values of the 
+threshold 02 which are slightly lower than optimum are preferable, taking the risk 
+of obtaining superfluous line segments in order to reduce the probability of missing 
+one. Superfluous line segments are filtered out very efficiently in higher layers� 
+Figure 3 represents the output of the second layer neurons for the input illustrated 
+by the event of figure 1. An active second layer neuron (XYo) is represented in 
+this figure by a line segment centered at the point (X, Y) making an angle c with 
+the x axis. The length of the line segments is immaterial and was chosen only for 
+the purpose of visual clarity. 
+60 
+40 
+20 
+0 
+-20 
+-40 
+-60 
+-6o-o-o b o ,o 60 
+x [cml 
+Figure 3: Representation of the activity of second layer neurons XYo for the input 
+of figure 1 taken by plotting the appropriate line segments in the xy plane. At some 
+XY locations several line segments with different directions occur due to the rather 
+low threshold parameter used, 02 = 4. 
+Neurons of the third layer transform the representation of local line segments into 
+local arc segments. An arc which passes through the origin is uniquely defined by 
+its radius of curvature R and its slope at the origin. Thus, each third layer neuron 
+is labeled by , 0 i, where Inl - 1/R is the curvature and the sign of , determines 
+the orientation of the arc. 1 _ i _ 5 is an index which relates each arc segment to 
+the ring it belongs to. 
+The mapping between second and third layers is based on a winner-take-all mech- 
+anism. Namely, for a given local arc segment, we take the arc segment which is 
+closest to being tangent to the local arc segment. 
+Denoting the average radius of the ring i (i=1,2,..5) by ri and using fii = sin- (---  
+� 2 
+872 G. Dror, H. Abramowicz and D. Horn 
+the final expression for the activation of the third layer neurons is 
+Voi '- maxe -5 cos2(0 - 2fli - o 0 , (3) 
+where 5 = 5(X, Y, n, O, i) = v/(X - ri cos(0 - i))2 + (y _ ri sin(0 - i))2 is simply 
+the distance of the center of the receptive field of the (XYa) neuron to the 
+arc. 
+The fourth layer is the last one in the arc identification network. Neurons belonging 
+to this layer are global arc detectors. In other words, they detect projected tracks 
+on the z - 0 plane. A fourth level neuron is denoted by nO , where n and 0 have the 
+previous meaning, now describing global arcs. Fourth layer neurons are connected 
+to third layer neurons in a simple fashion, 
+Vo = g(Y 8,,8o,o,V,o,i - 04). (4) 
+Figure 4 represents the activity of fourth layer neurons. Each active neuron n0 is 
+equivalent in the xy plane to one arc appearing in the figure. 
+6O 
+2O 
+.o. 0 

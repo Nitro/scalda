@@ -1,0 +1,167 @@
+I I 
+A competitive modular connectionist architecture 
+Robert A. Jacobs and Michael I. Jordan 
+Department of Brain & Cognitive Sciences 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+Abstract 
+We describe a multi-network, or modular, connectionist architecture that 
+captures that fact that many tasks have structure at a level of granularity 
+intermediate to that assumed by local and global function approximation 
+schemes. The main innovation of the architecture is that it combines 
+associative and competitive learning in order to learn task decompositions. 
+A task decomposition is discovered by forcing the networks comprising the 
+architecture to compete to learn the training patterns. As a result of the 
+competition, different networks learn different training patterns and, thus, 
+learn to partition the input space. The performance of the architecture on 
+a what and where vision task and on a multi-payload robotics task 
+are presented. 
+1 INTRODUCTION 
+A dichotomy has arisen in recent years in the literature on nonlinear network learn- 
+ing rules between local approximation of functions and global approximation of 
+functions. Local approximation, as exemplified by lookup tables, nearest-neighbor 
+algorithms, and networks with units having local receptive fields, has the advantage 
+of requiring relatively few learning trials and tends to yield interpretable repre- 
+sentations. Global approximation, as exemplified by polynomial regression and 
+fully-connected networks with sigmoidal units, has the advantage of requiring less 
+storage capacity than local approximators and may yield superior generalization. 
+In this paper, we report a multi-network, or modular, connectionist architecture 
+that captures the fact that many tasks have structure at a level of granularity 
+intermediate to that assumed by local and global approximation schemes. It does so 
+767 
+768 Jacobs and Jordan 
+Expert 
+Network 1 
+Expert 
+Network 2 
+J Y2 
+� Y = glYl + gY 
+g I Gating 
+Network 
+g2 
+Figure 1: A Modular Connectionist Architecture 
+by combining the desirable features of the approaches embodied by these disparate 
+approximation schemes. In particular, it uses different networks to learn training 
+patterns from different regions of the input space. Each network can itself be a 
+local or global approximator for a particular region of the space. 
+2 A MODULAR CONNECTIONIST ARCHITECTURE 
+The technical issues addressed by the modular architecture are twofold: (a) de- 
+tecting that different training patterns belong to different tasks and (b) allocating 
+different networks to learn the different tasks. These issues are addressed in the 
+architecture by combining aspects of competitive learning and associative learning. 
+Specifically, task decompositions are encouraged by enforcing a competition among 
+the networks comprising the architecture. As a result of the competition, differ- 
+ent networks learn different training patterns and, thus, learn to compute different 
+functions. The architecture was first presented in Jacobs, Jordan, Nowlan, and Hin- 
+ton (1991), and combines earlier work on learning task decompositions in a modular 
+architecture by Jacobs, Jordan, and Barto (1991) with the mixture models view of 
+competitive learning advocated by Nowlan (1990) and Hinton and Nowlan (1990). 
+The architecture is also presented elsewhere in this volume by Nowlan and Hin- 
+ton (1991). 
+The architecture, which is illustrated in Figure 1, consists of two types of networks: 
+expert networks and a gating network. The expert networks compete to learn the 
+training patterns and the gating network mediates this competition. Whereas the 
+expert networks have an arbitrary connectivity, the gating network is restricted to 
+have as many output units as there are expert networks, and the activations of these 
+output units must be nonnegative and sum to one. To meet these constraints, we 
+use the softmax activation function (Bridle, 1989); specifically, the activation of 
+A Competitive Modular Connectionist Architecture 769 
+the ith output unit of the gating network, denoted gi, is 
+aS, 
+gi-- n 
+j=l 
+(1) 
+where si denotes the weighted sum of unit i's inputs and n denotes the number of 
+expert networks. The output of the entire architecture, denoted y, is 
+i=1 
+where yi denotes the output of the ith expert network. During training, the 
+weights of the expert and gating networks are adjusted simultaneously using the 
+backpropagation algorithm (le Cun, 1985; Parker, 1985; Rumelhart, Hinton, and 
+Williams, 1986; Werbos, 1974) so as to maximize the function 
+_ . IlY -Y,II 
+lnL lnEgie (3) 
+i=1 
+where y* denotes the target vector and a denotes a scaling parameter associated 
+with the ith expert network. 
+This architecture is best understood if it is given a probabilistic interpretation as an 
+associative gaussian mixture model (see Duda and Hart (1973) and McLachlan 
+and Basford (1988) for a discussion of non-associative gaussian mixture models). 
+Under this interpretation, the training patterns are assumed to be generated by 
+a number of different probabilistic rules. At each time step, a rule is selected 
+with probability gi and a training pattern is generated by the rule. Each rule is 
+characterized by a statistical model of the form y* = fi(x)+ei, where fi(x) is a fixed 
+nonlinear function of the input vector, denoted x, and ei is a random variable. If it 
+is assumed that ei is gaussian with covariance matrix a/ I, then the residual vector 
+Y* -- Yi is also gaussian and the cost function in Equation 3 is the log likelihood of 
+generating a particular target vector y*. 
+The goal of the architecture is to model the distribution of training patterns. This is 
+achieved by gradient ascent in the log likelihood function. To compute the gradient 
+consider first the partial derivative of the log likelihood with respect to the weighted 
+sum si at the i th output unit of the gating network. Using the chain rule and 
+Equation i we find that this derivative is given by: 
+OlnL 
+Osi = g(i Ix, y*) - gi (q) 
+where g(i [ x, y*) is the a posteriori probability that the i th expert network generates 
+the target vector: 
+gie-  IIY*-Y'II 
+g(ilx, y*) - . _11y._y11. (5) 
+ge  
+j=l 
+770 Jacobs and Jordan 
+Thus the weights of the gating network are adjusted so that the network's outputs-- 
+the a priori probabilities gi--move toward the a posteriori probabilities. 
+Consider now the gradient of the log likelihood with respect to the output of the 
+i th expert network. Differentiation of In L with respect to Yi yields: 
+0 In L (Y*  Yi) (6) 
+Oyi - g(ilx'Y*) ai 
+These derivatives involve the error term y* - Yi weighted by the a posterJori prob- 
+ability associated with the i tn expert network. Thus the weights of the network 
+are adjusted to correct the error between the output of the i tn network and the 
+global target vector, but only in proportion to the a posterJori probability. For each 
+input vector, typically only one expert network has a large a posteriori probability. 
+Consequently, only one expert network tends to learn each training pattern. In 
+general, different expert networks learn different training patterns and, thus, learn 
+to compute different functions. 
+3 THE WHAT AND WHERE VISION TASKS 
+We applied the modular connectionist architecture to the object recognition task 
+(what task) and spatial localization task (where task) studied by Rueckl, Cave, 
+and Kosslyn (1989). 1 At each time step of the simulation, one of nine objects is 
+placed at one of nine locations on a simulated retina. The what task is to identify 
+the object; the where task is to identify its location. 
+The modular architecture is shown in Figure 2. It consists of three expert networks 
+and a gating network. The expert networks receive the retinal image and a task 
+specifier indicating whether the architecture should perform the what task or 
+the where task at the current time step. The gating network receives the task 
+specifier. The first expert network contains 36 hidden units, the second expert 
+network contains 18 hidden units, and the third expert network doesn't contain any 
+hidden units (i.e., it is a single-layer network). 
+There are at least three ways that this modular architecture might successfully learn 
+the what and where tasks. One of the multi-layer expert networks could learn 
+to perform both tasks. Because this solution doesn't show any task decomposition, 
+we consider it to be unsatisfactory. A second possibility is that one of the multi- 
+layer expert networks could learn the what task, and the other multi-layer expert 
+network could learn the where task. Although this solution exhibits task decom- 
+position, a shortcoming of this solution is apparent when it is noted that, using the 
+retinal images designed by Rueckl et al. (1989), the where task is linearly separa- 
+ble. This means that the structure of the single-layer expert network most closely 
+matches the where task. Consequently, a third and possibly best solution would 
+be one in which one of the multi-layer expert networks learns the what task and 
+the single-layer expert network learns the where task. This solution would not 
+only show task decomposition but also the appropriate allocation of tasks to expert 
+networks. Simulation results show that the third possible solution is the one that 
+ For a detailed presentation of the application of an earlier modular architecture to the 
+what and where tasks see Jacobs, Jordan, and Barto (1991). 
+A Competitive Modular Connectionist Architecture 771 
+of output 
+units 
+5 X 5 retlnal matrix 
+Task spectfl el' 
+what where 
+I 
+760 -- - 0 ,aO -- - 0 
+I I I I 
+- '0 0-'-0 
+Figure 2: The Modular Architecture Applied to the What and Where Tasks 
+is always achieved. These results provide evidence that the modular architecture 
+is capable of allocating a different network to different tasks and of allocating a 
+network with 

@@ -1,0 +1,169 @@
+Inferring Ground Truth from Subjective 
+Labelling of Venus Images 
+Padhraic Smyth, Usama Fayyad 
+Jet Propulsion Laboratory 525-3660, 
+Caltech, 4800 Oak Grove Drive, 
+Pasadena, CA 91109 
+Michael Burl, Pietro Perona 
+Department of Electrical Engineering 
+Caltech, MS 116-81, 
+Pasadena, CA 91125 
+Pierre Baldi* 
+Jet Propulsion Laboratory 303-310, 
+Caltech, 4800 Oak Grove Drive, 
+Pasadena, CA 91109 
+Abstract 
+In remote sensing applications ground-truth data is often used 
+as the basis for training pattern recognition algorithms to gener- 
+ate thematic maps or to detect objects of interest. In practical 
+situations, experts may visually examine the images and provide a 
+subjective noisy estimate of the truth. Calibrating the reliability 
+and bias of expert labellers is a non-trivial problem. In this paper 
+we discuss some of our recent work on this topic in the context 
+of detecting small volcanoes in Magellan SAR images of Venus. 
+Empirical results (using the Expectation-Maximization procedure) 
+suggest that accounting for subjective noise can be quite signifi- 
+cant in terms of quantifying both human and algorithm detection 
+performance. 
+I Introduction 
+In certain pattern recognition applications, particularly in remote-sensing and med- 
+ical diagnosis, the standard assumption that the labelling of the data has been 
+*and Division of Biology, California Institute of Technology 
+1086 Padhraic Smyth, Usama Fayyad, Michael Burl, Pietro Perona, Pierre Baldi 
+carried out in a reasonably objective and reliable manner may not be appropriate. 
+Instead of ground truth one may only have the subjective opinion(s) of one or 
+more experts. For example, medical data or image data may be collected off-line 
+and some time later a set of experts analyze the data and produce a set of class 
+labels. The central problem is that of trying to infer the ground truth given the 
+noisy subjective estimates of the experts. When one wishes to apply a supervised 
+learning algorithm to the data, the problem is primarily twofold: (i) how to evaluate 
+the relative performance of experts and algorithms, and (ii) how to train a pattern 
+recognition system in the absence of absolute ground truth. 
+In this paper we focus on problem (i), namely the performance evaluation issue, and 
+in particular we discuss the application of a particular modelling technique to the 
+problem of counting volcanoes on the surface of Venus. For problem (ii), in previous 
+work we have shown that when the inferred labels have a probabilistic interpretation, 
+a simple mixture model argument leads to straightforward modifications of various 
+learning algorithms [1]. 
+It should be noted that the issue of inferring ground truth from subjective labels 
+has appeared in the literature under various guises. French [2] provides a Bayesian 
+perspective on the problem of combining multiple opinions. In the field of medical 
+diagnosis there is a significant body of work on latent variable models for inferring 
+hidden truth from subjective diagnoses (e.g., see Uebersax [3]). More abstract 
+theoretical models have also been developed under assumptions of specific labelling 
+patterns (e.g., Lugosi [4] and references therein). The contribution of this paper is 
+twofold: (i) this is the first application of latent-variable subjective-rating models 
+to a large-scale image analysis problem as far as we are aware, and (ii) the focus 
+of our work is on the pattern recognition aspect of the problem, i.e., comparing 
+human and algorithmic performance as opposed to simply comparing humans to 
+each other. 
+2 
+Background: Automated Detection of Volcanoes in 
+Radar Images of Venus 
+Although modern remote-sensing and sky-telescope technology has made rapid re- 
+cent advances in terms of data collection capabilities, image analysis often remains a 
+strictly manual process and much investigative work is carried out using hardcopy 
+photographs. The Magellan Venus data set is a typical example: between 1991 
+and 1994 the Magellan spacecraft transmitted back to earth a data set consisting 
+of over 30,000 high resolution (75m per pixel) synthetic aperture radar (SAR) im- 
+ages of the Venusian surface [5]. This data set is greater than that gathered by all 
+previous planetary missions combined planetary scientists are literally swamped 
+by data. There are estimated to be on the order of 106 small (less than 15km 
+in diameter) visible volcanoes scattered throughout the 30,000 images [6]. It has 
+been estimated that manually locating all of these volcanoes would require on the 
+order of 10 man-years of a planetary geologist's time to carry out -- our experience 
+has been that even a few hours of image analysis severely taxes the concentration 
+abilities of human labellers. 
+From a scientific viewpoint the ability to accurately locate and characterize the 
+Inferring Ground Truth front Subjective Labelling of Venus Images 1087 
+many volcanoes is a necessary requirement before more advanced planetary geology 
+studies can be carried out: analysis of spatial clustering patterns, correlation with 
+other geologic features, and so forth. From an engineering viewpoint, automation of 
+the volcano detection task presents a significant challenge to current capabilities in 
+computer vision and pattern recognition due to the variability of the volcanoes and 
+the significant background clutter present in most of the images. Figure I shows 
+a Magellan subimage of size 30km square containing at least 10 small volcanoes. 
+Volcanoes on Venus 
+:: 
+} .. 
+Figure 1: A 30km x 30kin region from the Magellan SAR data, which contains a 
+number of small volcanoes. 
+The purpose of this paper is not to describe pattern recognition methods for volcano 
+detection but rather to discuss some of the issues involved in collecting and cali- 
+brating labelled training data from experts. Details of a volcano detection method 
+using matched filtering, SVD projections and a Gaussian classifier are provided in 
+3 Volcano Labelling 
+Training examples are collected by having the planetary geologists examine an image 
+on the computer screen and then using a mouse to indicate where they think the 
+volcanoes (if any) are located. Typically it can take from 15 minutes to I hour to 
+label an image (depending on how many volcanoes are present), where each image 
+represents a 75km square patch on the surface of Venus. An image may contain on 
+the order of 100 volcanoes, although a more typical number is between 30 and 40. 
+There can be considerable ambiguity in volcano labelling: for the same image, 
+different scientists can produce different label lists, and even the same scientist 
+can produce different lists over time. To address this problem we introduced the 
+notion of having the scientists label training examples into quantized probability 
+1088 Padhraic Smyth, Usama Fayyad, Michael Burl, Piefro Perona, Pierre BaMi 
+bins or types, where the probability bins correspond to visually distinguishable 
+sub-categories of volcanoes. In particular, we have used 5 types: (1) summit pits, 
+bright-dark radar pair, and apparent topographic slope, all clearly visible, proba- 
+bility 0.98, (2) only 2 of the 3 criteria of type I are visible, probability 0.80, (3) no 
+summit pit visible, evidence of flanks or circular outline, probability 0.60, (4) only 
+a summit pit visible, probability 0.50, (5) no volcano-like features visible, probabil- 
+ity 0.0. These subjective probabilities correspond to the mean probability that a 
+volcano exists at a particular location given that it belongs to a particular type and 
+were elicited after considerable discussions with the planetary geologists. Thus, the 
+observed data for each ROI consists of labels/, which are noisy estimates of true 
+type t, which in turn is probabilistically related to the hidden event of interest, 
+v, the presence of a volcano: 
+T 
+p(vll_)- y]p(v]t)p(tll_) 
+(1) 
+t----1 
+where T is the number of types (and labels). The subjective probabilities described 
+above correspond to p(vlt )' to be able to infer the probability of a volcano given a 
+set of labels / it remains to estimate the p(tll_ ) terms. 
+4 
+Inferring the Label-Type Parameters via the EM 
+Procedure 
+We follow a general model for subjective labelling originally proposed by Dawid 
+and Skene [8] and apply it to the image labelling problem: more details on this 
+overall approach are provided in [9]. Let N be the number of local regions of 
+interest (ROI's) in the database (these are 15 pixel square image patches for the 
+volcano application). For simplicity we consider the case of just a single labeller who 
+labels a given set of regions of interest (ROIs) a number of times -- the extension 
+to multiple labellers is straightforward assuming conditional independence of the 
+labellings given the true type. Let nit be the number of times that ROI i is labelled 
+with label 1. Let Y/t denote a binary variable which takes value I if the true type of 
+volcano i is t*, and is 0 otherwise. We assume that labels are assigned independently 
+to a given ROI from one labelling to the next, given that the type is known. If the 
+true type t* is known then 
+T 
+p(observed labelsIt* , i) oc 1- P(llt)n' (2) 
+1----1 
+Thus, unconditionally, we have 
+p(observed labels, t* Ii)  
+p(t) p(llt) TM , (3) 
+t:l /:1 
+where Y/t = 
+independently of the others (no spatial correlation in terms of labels), 
+NT( T 
+p(observed labels, t)c II II p(t)1-p(l[t) TM 
+i t:l /:1 
+1 if t - t* and 0 otherwise. Assuming that each ROI is labelled 
+(4) 
+Inferring Ground Truth from Subjective Labelling of Venus Images 1089 
+Still assuming that the types t for each ROI are known (the Y/t), the maximum 
+likelihood estimators of p(llt ) and p(t) are 
+(5) 
+and 
+1 
+= 
+(6) 
+From Bayes' rule one can then show that 
+P(Y/t = llobserved data) 
+T 
+1-I p(llt),,p(t) (7) 
+1 
+where C is a normalization constant. Thus, given the observed data nit and the 
+parameters p(llt ) and p(t), one can infe

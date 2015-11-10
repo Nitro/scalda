@@ -1,0 +1,150 @@
+Analysis of Temporal-Difference Learning 
+with Function Approximation 
+John N. Tsitsiklis and Benjamin Van Roy 
+Laboratory for Information and Decision Systems 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+e-mail: jnt@mit.edu, bvr@mit.edu 
+Abstract 
+We present new results about the temporal-difference learning al- 
+gorithm, as applied to approximating the cost-to-go function of 
+a Markov chain using linear function approximators. The algo- 
+rithm we analyze performs on-line updating of a parameter vector 
+during a single endless trajectory of an aperiodic irreducible finite 
+state Markov chain. Results include convergence (with probability 
+1), a characterization of the limit of convergence, and a bound on 
+the resulting approximation error. In addition to establishing new 
+and stronger results than those previously available, our analysis 
+is based on a new line of reasoning that provides new intuition 
+about the dynamics of temporal-difference learning. Furthermore, 
+we discuss the implications of two counter-examples with regards 
+to the significance of on-line updating and linearly parameterized 
+function approximators. 
+1 INTRODUCTION 
+The problem of predicting the expected long-term future cost (or reward) of a 
+stochastic dynamic system manifests itself in both time-series prediction and con- 
+trol. An example in time-series prediction is that of estimating the net present 
+value of a corporation, as a discounted sum of its future cash flows, based on the 
+current state of its operations. In control, the ability to predict long-term future 
+cost as a function of state enables the ranking of alternative states in order to guide 
+decision-making. Indeed, such predictions constitute the cost-to-go function that is 
+central to dynamic programming and optimal control (Bertsekas, 1995). 
+Temporal-difference learning, originally proposed by Sutton (1988), is a method for 
+approximating long-term future cost as a function of current state. The algorithm 
+1076 J. N. Tsitsiklis and B. Van Roy 
+is recursive, efficient, and simple to implement. Linear combinations of fixed basis 
+functions are used to approximate the mapping from state to future cost. The 
+weights of the linear combination are updated upon each observation of a state 
+transition and the associated cost. The objective is to improve approximations 
+of long-term future cost as more and more state transitions are observed. The 
+trajectory of states and costs can be generated either by a physical system or a 
+simulated model. In either case, we view the system as a Markov chain. Adopting 
+terminology from dynamic programming, we will refer to the function mapping 
+states of the Markov chain to expected long-term cost as the cost-to-go function. 
+In this paper, we introduce a new line of analysis for temporal-difference learning. 
+In addition to providing new intuition about the dynamics of the algorithm, this 
+approach leads to a stronger convergence result than previously available, as well 
+as an interpretation of the limit of convergence and bounds on the resulting ap- 
+proximation error, neither of which have been available in the past. Aside from 
+the statement of results, we maintain the discussion at an informal level, and make 
+no attempt to present a complete or rigorous proof. The formal and more general 
+analysis based on our line of reasoning can found in (Tsitsiklis and Van Roy, 1996), 
+which also discusses the relationship between our results and other work involving 
+temporal-difference learning. 
+The convergence results assume the use of both on-line updating and linearly pa- 
+rameterized function approximators. To clarify the relevance of these requirements, 
+we discuss the implications of two counter-examples that are presented in (Tsitsiklis 
+and Van Roy, 1996). These counter-examples demonstrate that temporal-difference 
+learning can diverge in the presence of either nonlinearly parameterized function 
+approximators or arbitrary (instead of on-line) sampling distributions. 
+2 DEFINITION OF TD(A) 
+In this section, we define precisely the nature of temporal-difference learning, as ap- 
+plied to approximation of the cost-to-go function for an infinite-horizon discounted 
+Markov chain. While the method as well as our subsequent results are applicable to 
+Markov chains with fairly general state spaces, including continuous and unbounded 
+spaces, we restrict our attention in this paper to the case where the state space is 
+finite. Discounted Markov chains with more general state spaces are addressed in 
+(Tsitsiklis and Van Roy, 1996). Application of this line of analysis to the context of 
+undiscounted absorbing Markov chains can be found in (Bertsekas and Tsitsiklis, 
+1996) and has also been carried out by Gurvits (personal communication). 
+We consider an aperiodic irreducible Markov chain with a state space S - 
+{1,..., n}, a transition probability matrix P whose (i, j)th entry is denoted by Pij, 
+transition costs g(i,j) associated with each transition from a state i to a state j, 
+and a discount factor (  (0, 1). The sequence of states visited by the Markov chain 
+is denoted by {it ] t - 0, 1,...}. The cost-to-go function J* � S +  associated 
+with this Markov chain is defined by 
+J*(i) E 
+[t=o at g(it 
+,it+) l io = i] ' 
+Since the number of dimensions is finite, it is convenient to view J* as a vector 
+instead of a function. 
+We consider approximations of J* using a function of the form 
+(i,) = (,)(). 
+Analysis of Temporal-DiJerence Learning with Function Approximation 1077 
+Here, r -- (r(1),... ,r(K)) is a parameter vector and (I) is a n x K. We denote the 
+ith row of (I) as a (column) vector b(i). 
+Suppose that we observe a sequence of states it generated according to the transition 
+probability matrix P and that at time t the parameter vector r has been set to some 
+value ft. We define the temporal difference dt corresponding to the transition from 
+it to it+l by 
+d, = + rt) - 
+We define a sequence of eligibility vectors zt (of dimension K) by 
+t 
+k--0 
+The TD(A) updates are then given by 
+rt+l -- rt -t- '7tdtzt, 
+where r0 is initialized to some arbitrary vector, 7t is a sequence of scalar step 
+sizes, and A is a parameter in [0, 1]. Since temporal-difference learning is actually 
+a continuum of algorithms, parameterized by A, it is often referred to as TD(A). 
+Note that the eligibility vectors can be updated recursively according to Zt+l -- 
+cAzt + d)(it+l), initialized with z-1 = 0. 
+3 ANALYSIS OF TD(A) 
+Temporal-difference learning originated in the field of reinforcement learning. A 
+view commonly adopted in the original setting is that the algorithm involves look- 
+ing back in time and correcting previous predictions. In this context, the eligibility 
+vector keeps track of how the parameter vector should be adjusted in order to ap- 
+propriately modify prior predictions when a temporal-difference is observed. Here, 
+we take a different view which involves examining the steady-state behavior of 
+the algorithm and arguing that this characterizes the long-term evolution of the 
+parameter vector. In the remainder of this section, we introduce this view of TD(A) 
+and provide an overview of the analysis that it leads to. Our goal in this section is to 
+convey some intuition about how the algorithm works, and in this spirit, we main- 
+tain the discussion at an informal level, omitting technical assumptions and other 
+details required to formally prove the statements we make. These technicalities are 
+addressed in (Tsitsiklis and Van Roy, 1996), where formal proofs are presented. 
+We begin by introducing some notation that will make our discussion here more 
+concise. Let (1),..., (n) denote the steady-state probabilities for the process it. 
+We assume that (i) > 0 for all i  S. We define an n x n diagonal matrix D with 
+diagonal entries (1),..., (n). We define a weighted norm [[. [[D by 
+JJJJJ)=ies(i)J2(i) � 
+We define a projection matrix H by 
+IIJ -- arg _min ]lJ- 
+It is easy to show that H = ('D)-'D. 
+We define an operator T () � '  ', indexed by a parameter A � [0, 1) by 
+(T()J)(i)-(1-A) Z AmE tg(it'it+l)+m+lJ(im+l) lio=i ' 
+mO t=O 
+1078 J. N. Tsitsiklis and B. Van Roy 
+For A = 1 we define (TO)J)(i) = J*(i), so that limx,l(T(X)J)(i) '- (TO)J)(i). To 
+interpret this operator in a meaningful manner, note that, for each m, the term 
+itq-1) q- Ot m+lJ(im+l) ] io -- i] 
+is the expected cost to be incurred over m transitions plus an approximation to 
+the remaining cost to be incurred, based on J. This sum is sometimes called the 
+m-stage truncated cost-to-go. Intuitively, if J is an approximation to the cost- 
+to-go function, the m-stage truncated cost-to-go can be viewed as an improved 
+approximation. Since T � J is a weighted average over the m-stage truncated cost- 
+to-go values, T(X)J can also be viewed as an improved approximation to J*. A 
+property of T � that is instrumental in our proof of convergence is that T � is a 
+contraction of the norm ]1 ' liD. It follows from this fact that the composition liT (x) 
+is also a contraction with respect to the same norm, and has a fixed point of the 
+form q)r* for some parameter vector r*. 
+To clarify the fundamental structure of TD(A), we construct a process Xt = 
+(it,it+l,Zt). It is easy to see that Xt is a Markov process. In particular, zt+i 
+and it+l are deterministic functions of Xt and the distribution of it+2 only depends 
+on it+. Note that at each time t, the random vector Xt, together with the cur- 
+rent parameter vector rt, provides all necessary information for computing rt+. By 
+defining a function s with s(r, X) = (g(i, j) q-aJ(j, r) - J(i, r))z, where X = (i, j, z), 
+we can rewrite the TD(A) algorithm as 
+rt+l -- rt q- ffts(rt, Xt). 
+For any r, s(r, Xt) has a steady-state expectation, which we denote by 
+Eo[s(r, Xt)]. Intuitively, once Xt reaches steady-state, the TD(A) algorithm, in 
+an average sense, behaves li

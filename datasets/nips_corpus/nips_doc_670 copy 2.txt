@@ -1,0 +1,167 @@
+Q-Learning with Hidden-Unit Restarting 
+Charles W. Anderson 
+Department of Computer Science 
+Colorado State University 
+Fort Collins, CO 80523 
+Abstract 
+PlatCs resource-allocation network (RAN) (Platt, 1991a, 1991b) 
+is modified for a reinforcement-learning paradigm and to restart 
+existing hidden units rather than adding new units. After restart- 
+ing, units continue to learn via back-propagation. The resulting 
+restart algorithm is tested in a Q-learning network that learns to 
+solve an inverted pendulum problem. Solutions are found faster on 
+average with the restart algorithm than without it. 
+I Introduction 
+The goal of supervised learning is the discovery of a compact representation that 
+generalizes well. Such representations are typically found by incremental, gradient- 
+based search, such as error back-propagation. However, in the early stages of learn- 
+ing a control task, we are more concerned with fast learning than a compact rep- 
+resentation. This implies a local representation with the extreme being the mem- 
+orization of each experience. An initially local representation is also advantageous 
+when the learning component is operating in parallel with a conventional, fixed 
+controller. A learning experience should not generalize widely; the conventional 
+controller should be preferred for inputs that have not yet been experienced. 
+Platt's resource-allocation network (RAN) (Platt, 1991a, 1991b) combines gradient 
+search and memorization. RAN uses locally tuned (gaussian) units in the hidden 
+layer. The weight vector of a gaussian unit is equal to the input vector for which the 
+unit produces its maximal response. A new unit is added when the network's error 
+magnitude is large and the new unit's radial domain would not significantly overlap 
+domains of existing units. Platt demonstrated RAN on the supervised learning task 
+81 
+82 Anderson 
+of predicting values in the Mackey-Glass time series. 
+We have integrated Platt's ideas with the reinforcement-learning algorithm called 
+Q-learning (Watkins, 1989). One major modification is that the network has a 
+fixed number of hidden units, all in a single-layer, all of which are trained on every 
+step. Rather than adding units, the least useful hidden unit is selected and its 
+weights are set to new values, then continue the gradient-based search. Thus, the 
+unit's search is restarted. The temporal-difference errors control restart events in a 
+fashion similar to the way supervised errors control RAN's addition of new units. 
+The motivation for starting with all units present is that in a parallel implementa- 
+tion, the computation time for a layer of one unit is roughly the same as that for 
+a layer with all of the units. All units are trained from the start. Any that fail to 
+learn anything useful are re-allocated when needed. 
+Here the Q-learning algorithm with restarts is applied to the problem of learning 
+to balance a simulated inverted pendulum. In the following sections, the inverted 
+pendulum problem and Watkin's Q-Learning algorithm are described. Then the 
+details of the restart algorithm are given and results of applying the algorithm to 
+the inverted pendulum problem are summarized. 
+2 Inverted Pendulum 
+The inverted pendulum is a classic example of an inherently unstable system. The 
+problem can be used to study the difficult credit assignment problem that arises 
+when performance feedback is provided only by a failure signal. This problem has 
+often used to test new approaches to learning control (from early work by Widrow 
+and Smith, 1964, to recent studies such as Jordan and Jacobs, 1990, and Whitley, 
+Dominic, Das, and Anderson, 1993). It involves a pendulum hinged to the top 
+of a wheeled cart that travels along a track of limited length. The pendulum is 
+constrained to move within the vertical plane. The state is specified by the position 
+and velocity of the cart and the angle between the pendulum and vertical and the 
+angular velocity of the pendulum. 
+The only information regarding the goal of the task is provided by the failure signal, 
+or reinforcement, re, which signals either the pendulum falling past -t-12 � or the cart 
+hitting the bounds of the track at :kl m. The state at time t of the pendulum is 
+presented to the network as a vector, x, of the four state variables scaled to be 
+between 0 and 1. 
+For further details of this problem and other reinforcement learning approaches to 
+this problem, see Barto, Sutton, and Andere, on (1983) and Anderson (1987). 
+3 Q-Learning 
+The objective of many control problems is to optimize a performance measure over 
+time. For the inverted pendulum problem, we define a reinforcement signal to be -1 
+when the pendulum angle or the cart position exceed their bounds, and 0 otherwise. 
+The objective is to maximize the sum of this reinforcement signal over time. 
+Q-Learning with Hidden-Unit Restarting 83 
+If we had complete knowledge of state transition probabilities we could apply dy- 
+namic programming to find the sequence of pushes that maximize the sum of rein- 
+forcements. Reinforcement learning algorithms have been devised to learn control 
+strategies when such knowledge is not available. In fact, Watkins has shown that one 
+form of his Q-learning algorithm converges to the dynamic programming solution 
+(Watkins, 1989; Watkins and Dayan, 1992). 
+The essence of Q-learning is the learning and use of a Q function, Q(x, a), that is 
+a prediction of a weighted sum of future reinforcement given that action a is taken 
+when the controlled system is in a state represented by x. This is analogous to the 
+value function in dynamic programming. Specifically, the objective of Q-learning is 
+to form the following approximation: 
+Q(xt, at)  Z 7k rt+k+l 
+k--O 
+where 0 _( 7 < 1 is  discount rte nd rt is the reinforcement received t time t. 
+Wtkins (1989) presents  number of Mgorithms for djusting the prmeters of Q. 
+Here we focus on using error bck-propgtion to train  neurM network to learn the 
+Q function. For Q-learning, the following temporal-difference error (Sutton, 1988) 
+et = rt+ + 7max[Q(xt+,at+)] -Q(xt,at). 
+is derived by using max[Q(x,+, a+)]  an approximation to Z=0 7r++ � See 
+(Barto, Bradtke, and Singh, 1991) for further discussion of the relationships between 
+reinforcement learning and dynamic programming. 
+4 Q-Learning Network 
+For the inverted pendulum experiments reported here, a neural network with a 
+single hidden layer was used to learn the Q(x, a) function. As shown in Figure 1, 
+the network has four inputs for the four state variables of the inverted pendulum, 
+and two outputs corresponding to the two possible actions for this problem, similar 
+to Lin (1992). In addition to the weights shown, w and v, the two units in the 
+output layer each have a single weight with a constant input of 0.5. 
+The activation function of the hidden units is the approximate gaussian function 
+used by Platt. Let dj be the squared distance between the current input vector, x, 
+and the weights in hidden unit j. 
+dj -- E(Xi- Wj,i) 2 
+i--1 
+Here xi is the i tn component of x at the current time. The output, yj, 
+unit j is 
+{( 
+1 -- , if dj < p; 
+YJ - 0, otherwise, 
+of hidden 
+84 Anderson 
+x2 
+x3  \ 
+x 
+4 
+Figure 1: Q-Learning Network 
+Q(x,-lO) 
+Q(x,+10) 
+where p controls the radius of the region in which the unit's output is nonzero. 
+Unlike Platt, p is constant and equal for all units. 
+The output units calculate weighted sums of the hidden unit outputs and the 
+constant input. The output values are the current estimates of Q(x,-10) and 
+Q(x, 10), which are predictions of future reinforcement given the current observed 
+state of the inverted pendulum and assuming a particular action will be applied in 
+that state. 
+The action applied at each step is selected as the one corresponding to the larger 
+of Q(xt,-10) and Q(xt, 10). To explore the effects of each action, the action with 
+the lower Q value is applied with a probability that decreases with time: 
+1-0.5A , ifQ(x,,10)>Q(xt,-10); 
+P = 0.5A , otherwise, 
+10, with probability p; 
+at = -10, with probability 1 -p. 
+To update all weights, error back-propagation is applied at each step using the 
+following temporal-difference error 
+7max[Q(xt+l,a+l)]-Q(xt, at), if failure does not occur on step t + 1, 
+rt+l - Q(zt, at), if failure occurs on step t + 1. 
+Note that rt = 0 for all non-failure steps and drops out of the first expression. 
+Weights are updated by the following equations, assuming Unit j is the output unit 
+corresponding to the action taken, and all variables are for the current time t. 
+/Xw, = e y v, (z - 
+p 
+zX v,i = / e yi 
+In all experiments, p = 2, A = 0.99999, and 7 = 0.9. Values of/? and /?h are 
+discussed in Section 6. 
+Q-Learning with Hidden-Unit Restarting 85 
+5 Restart Algorithm 
+After weights are modified by back-propagation, conditions for a restart are checked. 
+If conditions are met, a unit is restarted, and processing continues with the next 
+time step. Conditions and primary steps of the restart algorithm appear below as 
+the numbered equations. 
+5.1 When to Restart 
+Several conditions must be met before a restart is performed. First, the magnitude 
+of the error, e, must be larger than usual. To detect this, exponentially-weighted 
+averages of the mean,/, and variance, ave, of et are maintained and used to calculate 
+a normalized error, e 
+(1 - c')' 
+,+ - +(1-)e, 
++ = cq-(1-c)e 2, 
+For our experiments, c = 0.99. 
+Now we can state the first restart condition. A restart is considered on steps for 
+which the magnitude of the error is greater than 0.01 and greater than a constant 
+factor of the error's standard deviation, i.e., whenever 
+letl > 0.01 and le, i > c.(1 a (1) 
+Of a small number of tested values, c - 0.2 resulted in the best performance. 
+Before choosing a unit to restart for this step, we determine whether or not the 
+current input vector is already covered by

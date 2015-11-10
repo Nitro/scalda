@@ -1,0 +1,138 @@
+Extended ICA Removes Artifacts from 
+Electroencephalographic Recordings 
+Tzyy-Ping Jung , Colin Humphries , Te-Won Lee , Scott Makeig 2'3, 
+Martin J. McKeown , Vicente Iragui 3, Terrence J. Sejnowski  
+Howard Hughes Medical Institute and Computational Neurobiology Lab 
+The Salk Institute, P.O. Box 85800, San Diego, CA 92186-5800 
+ j uag, colin, t ewon, SCOtt ,martin, t errysalk. edu 
+2Naval Health Research Center, P.O. Box 85122, San Diego, CA 92186-5122 
+SDepartment of Neurosciences, University of California San Diego, La Jolla, CA 92093 
+Abstract 
+Severe contamination of electroencephalographic (EEG) activity 
+by eye movements, blinks, muscle, heart and line noise is a serious 
+problem for EEG interpretation and analysis. Rejecting contami- 
+nated EEG segments results in a considerable loss of information 
+and may be impractical for clinical data. Many methods have been 
+proposed to remove eye movement and blink artifacts from EEG 
+recordings. Often regression in the time or frequency domain is 
+performed on simultaneous EEG and electrooculographic (EOG) 
+recordings to derive parameters characterizing the appearance and 
+spread of EOG artifacts in the EEG channels. However, EOG 
+records also contain brain signals [1, 2], so regressing out EOG ac- 
+tivity inevitably involves subtracting a portion of the relevant EEG 
+signal from each recording as well. Regression cannot be used to 
+remove muscle noise or line noise, since these have no reference 
+channels. Here, we propose a new and generally applicable method 
+for removing a wide variety of artifacts from EEG records. The 
+method is based on an extended version of a previous Indepen- 
+dent Component Analysis (ICA) algorithm [3, 4] for performing 
+blind source separation on linear mixtures of independent source 
+signals with either sub-Gaussian or super-Gaussian distributions. 
+Our results show that ICA can effectively detect, separate and re- 
+move activity in EEG records from a wide variety of artifactual 
+sources, with results comparing favorably to those obtained using 
+regression-based methods. 
+Extended ICA Removes Artifacts from EEG Recordings 895 
+1 Introduction 
+Eye movements, muscle noise, heart signals, and line noise often produce large and 
+distracting artifacts in EEG recordings. Rejecting EEG segments with artifacts 
+larger than an arbitrarily preset value is the most commonly used method for elim- 
+inating artifacts. However, when limited data are available, or blinks and muscle 
+movements occur too frequently, as in some patient groups, the amount of data 
+lost to artifact rejection may be unacceptable. Methods are needed for removing 
+artifacts while preserving the essential EEG signals. 
+Berg & Scherg [5] have proposed a spatio-temporal dipole model for eye-artifact re- 
+moval that requires a priori assumptions about the number of dipoles for saccade, 
+blink, and other eye-movements, and assumes they have a simple dipolaf structure. 
+Several other proposed methods for removing eye-movement artifacts are based on 
+regression in the time domain [6, 7] or frequency domain [8, 9]. However, simple 
+time-domain regression tends to overcompensate for blink artifacts and may intro- 
+duce new artifacts into EEG records [10]. The cause of this overcompensation is 
+the difference between the spatial EOG-to-EEG transfer functions for blinks and 
+saccades. Saccade artifacts arise from changes in orientation of the retinocorneal 
+dipole, while blink artifacts arise from alterations in ocular conductance produced 
+by contact of the eyelid with the cornea [11]. The transfer of blink artifacts to 
+the recording electrodes decreases rapidly with distance from the eyes, while the 
+transfer of saccade artifacts decreases more slowly, so that at the vertex the effect 
+of saccades on the EEG is about double that of blinks [11], while at frontal sites 
+the two effects may be near-equal. 
+Regression in the frequency domain [8, 9] can account for frequency-dependent 
+spatial transfer function differences from EOG to EEG, but is acausal and thus 
+unsuitable for real-time applications. Both time and frequency domain regression 
+methods depend on having a good regressor (e.g., an EOG), and share an inherent 
+weakness that spread of excitation from eye movements and EEG signals is bidirec- 
+tional. This means that whenever regression-based artifact removal is performed, a 
+portion of relevant EEG signals also contained in the EOG data will be cancelled out 
+along with the eye movement artifacts. Further, since the spatial transfer functions 
+for various EEG phenomena present in the EOG differ from the regression transfer 
+function, their spatial distributions after artifact removal may differ from the raw 
+record. Similar problems complicate removal of other types of EEG artifacts. Rel- 
+atively little work has been done on removing muscle activity, cardiac signals and 
+electrode noise from EEG data. Regressing out muscle noise is impractical since 
+regressing out signals from multiple muscle groups require multiple reference chan- 
+nels. Line noise is most commonly filtered out in the frequency domain. However, 
+current interest in EEG in the 40-80 Hz gamma band phenomena may make this 
+approach undesirable as well. 
+We present here a new and generally applicable method for isolating and removing 
+a wide variety of EEG artifacts by linear decomposition using a new Independent 
+Component Analysis (ICA) algorithm [4] related to a previous algorithm [3, 12]. 
+The ICA method is based on spatial filtering and does not rely on having a 
+cleanreference channel. It effectively decomposes multiple-channel EEG data 
+into spatially-fixed and temporally independent components. Clean EEG signals 
+can then be derived by eliminating the contributions of artifactual sources, since 
+their time courses are generally temporally independent from and differently dis- 
+tributed than sources of EEG activity. 
+896 T-P Jung, C. Humphries, T-W. Lee, S. Makeig, M. J. McKeown, V. Iragui and T. J. Sejnowski 
+Independent Component Analysis 
+Bell and Sejnowski [3] have proposed a simple neural network algorithm that blindly 
+separates mixtures, x, of independent sources, s, using infomax. They show that 
+maximizing the joint entropy, H(y), of the output of a neural processor minimizes 
+the mutual information among the output components, Yi = g(ui), where g(ui) is 
+an invertible bounded nonlinearity and u = Wx. This implies that the distribution 
+of the output yi approximates a uniform density. Independence is achieved through 
+the nonlinear squashing function which provides necessary higher-order statistics 
+through its Taylor series expansion. The learning rule can be derived by maximizing 
+output joint entropy, H(y), with respect to W [3], giving, 
+0H(Y) wTw ---- [I + pu T] W (1) 
+AYV x 0W  
+where i6i -- (O/Oui)ln(Oyi/Oui). The 'natural gradient' WTW term [13] avoids 
+matrix inversions and speeds convergence. The form of the nonlinearity g(u) plays 
+an essential role in the success of the algorithm. The ideal form for g() is the cu- 
+mulative density function (cdf) of the distributions of the independent sources. In 
+practice, if we choose g() to be a sigmoid function (as in [3]), the algorithm is then 
+limited to separating sources with super-Gaussian distributions. An elegant way of 
+generalizing the learning rule to sources with either sub- or super-Gaussian distri- 
+butions is to approximate the estimated probability density function (pdf) in the 
+form of a 4th-order Edgeworth approximation as derived by Girolami and Fyfe [14]. 
+For sub-Gaussians, the following approximation is possible: 
+For super-Gaussians, the same approximation becomes/5i = - tanh(ui) - ui. The 
+sign can be chosen for each component using its normalized kurtosis, k4(ui), giving, 
+AW x 0H(Y)wTw = [I - sign(k4)tanh(u)u T - uu T] W (2) 
+ow 
+Intuitively, for super-Gaussians the -tanh(u)u T term is an anti-Hebbian rule that 
+tends to minimize the variance of u, whereas for sub-Gaussians the corresponding 
+term is a Hebbian rule that tends to maximize its variance. 
+2.1 Applying ICA to artifact correction 
+The ICA algorithm is effective in performing source separation in domains where, 
+(1) the mixing medium is linear and propagation delays are negligible, (2) the time 
+courses of the sources are independent, and (3) the number of sources is the same 
+as the number of sensors, meaning if we employ N sensors the ICA algorithm can 
+separate N sources [3, 4, 12]. In the case of EEG signals [12], volume conduc- 
+tion is thought to be linear and instantaneous, hence assumption (1) is satisfied. 
+Assumption (2) is also reasonable because the sources of eye and muscle activity, 
+line noise, and cardiac signals are not generally time locked to the sources of EEG 
+activity which is thought to reflect activity of cortical neurons. Assumption (3) is 
+questionable since we do not know the effective number of statistically-independent 
+signals contributing to the scalp EEG. However, numerical simulations have con- 
+firmed that the ICA algorithm can accurately identify the time courses of activation 
+and the scalp topographies of relatively large and temporally-independent sources 
+from simulated scalp recordings, even in the presence of a large number of low-level 
+and temporally-independent source activities [16]. 
+For EEG analysis, the rows of the input matrix x are the EEG signals recorded at 
+different electrodes, the rows of the output data matrix u -- Wx are time courses of 
+activation of the ICA components, and the columns of the inverse matrix, W-, give 
+the projection strengths of the respective components onto the scalp sensors. The 
+Extended ICA Removes Artifacts from EEG Recordings 897 
+scalp topographies of the components provide evidence for their biological origin 
+(e.g., eye activity should project mainly to frontal sites). In general, and unlike 
+PCA, the component time courses of activation will be nonorthog

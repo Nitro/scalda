@@ -1,0 +1,165 @@
+Learning Model Bias 
+Jonathan Baxter 
+Department of Computer Science 
+Royal Holloway College, University of London 
+j onedes. rhbnc. ac. uk 
+Abstract 
+In this paper the problem of learning appropriate domain-specific 
+bias is addressed. It is shown that this can be achieved by learning 
+many related tasks from the same domain, and a theorem is given 
+bounding the number tasks that must be learnt. A corollary of the 
+theorem is that if the tasks are known to possess a common inter- 
+nal representation or preprocessing then the number of examples 
+required per task for good generahsation when learning n tasks si- 
+multaneously scales like O(a + ), where O(a) is a bound on the 
+minimum number of examples requred to learn a single task, and 
+O(a + b) is a bound on the number of examples required to learn 
+each task independently. An experiment providing strong qualita- 
+tive support for the theoretical results is reported. 
+I Introduction 
+It has been argued (see [6]) that the main problem in machine learning is the biasing 
+of a learner's hypothesis space sufficiently well to ensure good generahsation from 
+a small number of examples. Once suitable biases have been found the actual 
+learning task is relatively trivial. Exisiting methods of bias generally require the 
+input of a human expert in the form of heuristics, hints [1], domain knowledge, 
+etc. Such methods are clearly limited by the accuracy and reliabihty of the expert's 
+knowledge and also by the extent to which that knowledge can be transferred to the 
+learner. Here I attempt to solve some of these problems by introducing a method 
+for automatically learning the bias. 
+The central idea is that in many learning problems the learner is typically em- 
+bedded within an environment or domain of related learning tasks and that the 
+bias appropriate for a single task is likely to be appropriate for other tasks within 
+the same environment. A simple example is the problem of handwritten character 
+recognition. A preprocessing stage that identifies and removes any (small) rota- 
+tions, dilations and translations of an image of a character will be advantageous for 
+170 j. BAXTER 
+recognising all characters. If the set of all individual character recognition problems 
+is viewed as an environment of learning tasks, this preprocessor represents a bias 
+that is appropriate to all tasks in the environment. It is likely that there are many 
+other currently unknown biases that are also appropriate for this environment. We 
+would like to be able to learn these automatically. 
+Bias that is appropriate for all tasks must be learnt by sampling from many tasks. 
+If only a single task is learnt then the bias extracted is likely to be specific to that 
+task. For example, if a network is constructed as in figure I and the output nodes 
+are simultaneously trained on many similar problems, then the hidden layers are 
+more likely to be useful in learning a novel problem of the same type than if only a 
+single problem is learnt. In the rest of this paper I develop a general theory of bias 
+learning based upon the idea of learning multiple related tasks. The theory shows 
+that a learner's generalisation performance can be greatly improved by learning 
+related tasks and that if sufficiently many tasks are learnt the learner's bias can be 
+extracted and used to learn novel tasks. 
+Other authors that have empirically investigated the idea of learning multiple re- 
+lated tasks include [5] and [8]. 
+2 Learning Bias 
+For the sake of argument I consider learning problems that amount to minimizing 
+the mean squared error of a function h over some training set D. A more general 
+formulation based on statistical decision theory is given in [3]. Thus, it is assumed 
+that the learner receives a training set of (possibly noisy) input-output pairs D -- 
+((a:l, yl),..., (aZm, Ym)}, drawn according to a probability distribution P on X x Y 
+(X being the input space and Y being the output space) and searches through its 
+hypothesis space 7/ for a function h: X - Y minimizing the empirical error, 
+m 
+(h, D)-- 1 E(h(xi ) _ yi)2. (1) 
+rrt 
+i----1 
+The true error or generalisation error of h is the expected error under P: 
+E(h, P) = fx (h(x) - y)' dP(x, y). (2) 
+xY 
+The hope of course is that an h with a small empirical error on a large enough 
+training set will also have a small true error, i.e. it will genera!ise well. 
+I model the environment of the learner as a pair (P, Q) where P = {P} is a set of 
+learning tasks and Q is a probability measure on P. The learner is now supplied 
+not with a single hypothesis space 7/but with a hypothesis space family  -- {7/}. 
+Each 7/ E  represents a different bias the learner has about the environment. For 
+example, one 7/ may contain functions that are very smooth, whereas another 7/ 
+might contain more wiggly functions. Which hypothesis space is best will depend 
+on the kinds of functions in the environment. To determine the best 7/ E  for 
+(P, Q), we provide the learner not with a single training set D but with n such 
+training sets D1,..., Dn. Each Di is generated by first sampling from P according 
+to Q to give Pi and then sampling rrt times from X x Y according to Pi to give 
+Di -- ((Xil,Yil),...,(Xim, Yim). The learner searches for the hypothesis space 
+7/  with minimal empirical error on D1, ..., Dn, where this is defined by 
+1  inf (h, Di). (3) 
+*(7/,D1,...,Dn)- ni=l he 
+Learning Model Bias 171 
+Figure 1: Net for learning multiple tasks. Input xij from training set Di is prop- 
+agated forwards through the internal representation f and then only through the 
+output network gi. The error [gi(f(xij))- yij] 2 is similarly backpropagated only 
+through the output network 9i and then f. Weight updates are performed after all 
+training sets Di, ..., Dn have been presented. 
+The hypothesis space 7/with smallest empirical error is the one that is best able to 
+learn the n data sets on average. 
+There are two ways of measuring the true error of a bias learner. The first is how 
+well it generalises on the n tasks P1,..., P,, used to generate the training sets. 
+Assuming that in the process of minimising (3) the learner generates n functions 
+hi,..., h,, C 7/ with minimal empirical error on their respective training sets 1, the 
+learner's true error is measured by: 
+i----1 
+(4) 
+Note that in this case the learner's empirical er- 
+1 
+ror is given by D1,..., : Zi=l (hi, The second way 
+of measuring the generalisation error of a bias learner is to determine how good 7/ 
+is for learning novel tasks drawn from the environment (P, Q)' 
+z*(7/, Q): f, inf 
+h7-t 
+(5) 
+A learner that has found an 7/ with a small value of (5) can be said to have learnt 
+to learn the tasks in 7 > in general. To state the bounds ensuring these two types of 
+generalisation a few more definitions must be introduced. 
+Definition 1 Let  - {7/} be a hypothesis space family. Let  - {h  7/:7/  
+}. For any h: X -+ Y, define a map h: X x Y -+ [0, 1] by h(x, y) = (h(x)- y)2. 
+Note the abuse of notation: h stands for two different functions depending on its 
+argument. Given a sequence of n functions fz : (hl, . . . , hn) let fz: (X x y)n _ [0, 1] 
+1 n 
+be the function (Xl, yl,...,x,,yn) -+  i=l hi(xi,yl). Let 7/n be the set of all such 
+functions where the hi are all chosen from 7/. Let ]I = {7/n:7/  H}. For each 
+7/ E  define 7/*: P --> [0, 1] by 7/*(P)--infhet E(h,P)and let *: {7/*: 7/E }. 
+This assumes the infimum in (3) is attained. 
+172 J. BAXTER 
+Definition 2 Given a set of functions 7/from any space Z to [0, 1], and any prob- 
+ability measure on Z, define the pseudo-metric dp on 7/ by 
+ap(h, h'): fz lb(z) - h'(z)l 
+Denote the smallest e-cover of (7/,dp) by A/'(e, 7/, dp). Define the c-capacity of 7/ 
+by 
+c(e, 7/) 
+P 
+where the supremum is over all discrete probability measures P on g. 
+Definition 2 will be used to define the c-capacity of spaces such as Ilql* and [1I], 
+where from definition I the latter is [E ] = { E 7/': 7/E H}. 
+The following theorem bounds the number of tasks and examples per task required 
+to ensure that the hypothesis space learnt by a bias learner will, with high proba- 
+bility, contain good solutions to novel tasks in the same environment 2. 
+Theorem 1 Let the n training sets D1,..., Dn be generated by sampling n times 
+from the environment P according to Q to give P1,..., Pn, and then sampling m 
+times from each Pi to generate Di. Let : {7/} be a hypothesis space family and 
+^ 
+suppose a learner chooses 7/   minimizing (3) on D1, ..., Dn. For all e > 0 and 
+0<5<1, if 
+n --- 
+1 C (e, IE*)) 
+0 -ffln 3 ' 
+then 
+{ ^ ^ } 
+Pr D1,...,D,:IE*(7/,D1,...,D,,.)-E*(7-,Q)I>e <3. 
+The bound on m in theorem I is the also the number of examples required per 
+task to ensure generalisation of the first kind mentioned above. That is, it is 
+the number of examples required in each data set Di to ensure good generalisa- 
+tion on average across all n tasks when using the hypothesis space family SI. If 
+we let rn(, n, e, 5) be the number of examples required per task to ensure that 
+Pr{D1,...,Dn:ln(hl,...,hn, D1,...,Dn) - En(hl,...,hn, P1,...,Pn)l > e} < 
+5, where all hi 6 7/for some fixed 7/ 6  then 
+G(IFhn, e, 3) = re(H, 1, e, 3) 
+m ( lI-]I, n, e, 3 ) 
+represents the advantage in learning n tasks as opposed to one task (the ordinary 
+learning scenario). Can a( ,,e, 3) the ,-task gain of Using the fact [] that 
+c (e, ) _< c (e, [L) _< c (e, )  , 
+and the formula for m from theorem 1, we have, 
+1 _< G(It n, e, 3) _< n. 
+2The bounds in theorem 1 can be improved to O (3) if all 7 � H are convex and the 
+error is the squared loss [7]. 
+Learning Model Bias 173 
+Thus, at least in the worst case analysis here, learning n tasks in the same environ- 
+ment can result in anything from no gain at all to an n-fold reduction in the number 
+of examples required per task. In the next section a very intuitive analysis of the 
+conditions leading to the ext

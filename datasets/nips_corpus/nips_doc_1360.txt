@@ -1,0 +1,162 @@
+Hierarchical Non-linear Factor Analysis 
+and Topographic Maps 
+Zoubin Ghahramani and Geoffrey E. Hinton 
+Dept. of Computer Science, University of Toronto 
+Toronto, Ontario, M5S 3H5, Canada 
+http://www. cs. toronto. edu/neuron/ 
+zoubin, hinton)�cs. toronto. edu 
+Abstract 
+We first describe a hierarchical, generafive model that can be 
+viewed as a non-linear generalisation of factor analysis and can 
+be implemented in a neural network. The model performs per- 
+ceptual inference in a probabilistically consistent manner by using 
+top-down, bottom-up and lateral connections. These connections 
+can be learned using simple rules that require only locally avail- 
+able information. We then show how to incorporate lateral con- 
+nections into the generafive model. The model extracts a sparse, 
+distributed, hierarchical representation of depth from simplified 
+random-dot stereograms and the localised disparity detectors in 
+the first hidden layer form a topographic map. When presented 
+with image patches from natural scenes, the model develops topo- 
+graphically organised local feature detectors. 
+I Introduction 
+Factor analysis is a probabilistic model for real-valued data which assumes that 
+the data is a linear combination of real-valued uncorrelated Gaussian sources (the 
+factors). After the linear combination, each component of the data vector is also 
+assumed to be corrupted by additional Gaussian noise. A major advantage of this 
+generative model is that, given a data vector, the probability distribution in the 
+space of factors is a multivariate Gaussian whose mean is a linear function of the 
+data. It is therefore tractable to compute the posterior distribution exactly and to 
+use it when learning the parameters of the model (the linear combination matrix 
+and noise variances). A major disadvantage is that factor analysis is a linear model 
+that is insensitive to higher order statistical structure of the observed data vectors. 
+One way to make factor analysis non-linear is to use a mixture of factor analyser 
+modules, each of which captures a different linear regime in the data [3]. We can 
+view the factors of all of the modules as a large set of basis functions for describing 
+the data and the process of selecting one module then corresponds to selecting 
+an appropriate subset of the basis functions. Since the number of subsets under 
+consideration is only linear in the number of modules, it is still tractable to compute 
+Hierarchical Non-linear Factor Analysis and Topographic Maps 487 
+the full posterior distribution when given a data point. Unfortunately, this mixture 
+model is often inadequate. Consider, for example, a typical image that contains 
+multiple objects. To represent the pose and deformation of each object we want 
+a componential representation of the object's parameters which could be obtained 
+from an appropriate factor analyser. But to represent the multiple objects we need 
+several of these componential representations at once, so the pure mixture idea is 
+not tenable. A more powerful non-linear generalisation of factor analysis is to have 
+a large set of factors and to allow any subset of the factors to be selected. This 
+can be achieved by using a generatire model in which there is a high probability of 
+generating factor activations of exactly zero. 
+2 Rectified Gaussian Belief Nets 
+The Rectified Gaussian Belief Net (RGBN) uses multiple layers of units with states 
+that are either positive real values or zero [5]. Its main disadvantage is that com- 
+puting the posterior distribution over the factors given a data vector involves Gibbs 
+sampling. In general, Gibbs sampling can be very time consuming, but in practice 
+l0 to 20 samples per unit have proved adequate and there are theoretical reasons 
+for believing that learning can work well even when the Gibbs sampling fails to 
+reach equilibrium [10]. 
+We first describe the RGBN without considering neural plausibility. Then we show 
+how lateral interactions within a layer can be used to perform probabilistic infer- 
+ence correctly using locally available information. This makes the RGBN far more 
+plausible as a neural model than a sigmoid belief net [9, 8] because it means that 
+Gibbs sampling can be performed without requiring units in one layer to see the 
+total top-down input to units in the layer below. 
+The generafive model for RGBN's consists of multiple layers of units each of which 
+has a real-valued unrectified state, yj, and a rectified state, [yj]+, which is zero if 
+yj is negative and equal to yj otherwise. This rectification is the only non-linearity 
+in the network. 1 The value of yj is Gaussian distributed with a standard deviation 
+erj and a mean, 0j that is determined by the generatire bias, #oj, and the combined 
+effects of the rectified states of units, k, in the layer above: 
+= + gk[Uk]+ (1) 
+k 
+The rectified state [yj]+ therefore has a Gaussian distribution above zero, but all 
+of the mass of the Gaussian that falls below zero is concentrated in an infinitely 
+dense spike at zero as shown in Fig. la. This infinite density creates problems if we 
+attempt to use Gibbs sampling over the rectified states, so, following a suggestion 
+by Radford Neal, we perform Gibbs sampling on the unrectified states. 
+Consider a unit, j, in some intermediate layer of a multilayer RGBN. Suppose 
+that we fix the unrectified states of all the other units in the net. To perform Gibbs 
+sampling, we need to stochastically select a value for yj according to its distribution 
+given the unrectified states of all the other units. If we think in terms of energy 
+functions, which are equal to negative log probabilities (up to a constant), the 
+rectified states of the units in the layer above contribute a quadratic energy term 
+by determining 0j. The unrectified states of units, i, in the layer below contribute a 
+constant if [yj]+ is 0, and if [yj]+ is positive they each contribute a quadratic term 
+1The key arguments presented in this paper hold for general nonlinear belief networks 
+as long as the noise is Gaussian; they are not specific to the rectification nonlinearity. 
+488 Z. Ghahramani and G. E. Hinton 
+a 
+b 
+-3-2-1 0 1 2 3 
+Y 
+c 
+B�tt�m-u////t, 
+� �  ' Top-down 
+-3-2-1 0 1 2 3 
+Y 
+Figure 1: a) Probability den- 
+sity in which all the mass of a 
+Gaussian below zero has been 
+replaced by an infinitely dense 
+spike at zero. b) Schematic 
+of the density of a unit's un- 
+rectified state. �) Bottom- 
+up and top-down energy func- 
+tions corresponding to b. 
+because of the effect of [yj]+ on 
+5(y) = _ 9j)2 + (y,_ Ehgh,[yh]+)2 
+, 
+where h is an index over all the units in the same layer as j including j itself. Terms 
+that do not depend on yj have been omitted from Eq. 2. For values of yj below zero 
+there is a quadratic energy function which leads to a Gaussian distribution. The 
+same is true for values of yj above zero, but it is a different quadratic (Fig. lc). The 
+Gaussian distributions corresponding to the two quadratics must agree at yj = 0 
+(Fig. lb). Because this distribution is piecewise Gaussian it is possible to perform 
+Gibbs sampling exactly. 
+Given samples from the posterior, the generative weights of a RGBN can be learned 
+by using the online delta rule to maximise the log probability of the data? 
+/xgi =, (y, - 
+(3) 
+The variance of the local Gaussian noise of each unit, a, can also be learned by 
+an online rule, Arr = e [(yj - .0j)2 _ rr2.] Alternatively, rr can be fixed at 1 for 
+$ � 
+all hidden units anl the effective local noise level can be controlled by scaling the 
+generafive weights. 
+3 The Role of Lateral Connections in Perceptual Inference 
+In RGBNs and other layered belief networks, fixing the value of a unit in one layer 
+causes correlations between the parents of that unit in the layer above. One of 
+the main reasons why purely bottom-up approaches to perceptual inference have 
+proven inadequate for learning in layered belief networks is that they fail to take 
+into account this phenomenon, which is known as explaining away. 
+Lee and Seung (1997) introduced a clever way of using lateral connections to handle 
+explaining away effects during perceptual inference. Consider the network shown 
+in Fig. 2. One contribution, Ebe]ow, to the energy of the state of the network is 
+the squared difference between the unrectified states of the units in one layer, yj, 
+and the top-down expectations generated by the states of units in the layer above. 
+Assuming the local noise models for the lower layer units all have unit variance, and 
+2If Gibbs sampling has not been run long enough to reach equilibrium, the delta rule 
+follows the gradient of the penalized log probability of the data [10]. The penalty term is 
+the Kullback-Liebler divergence between the equilibrium distribution and the distribution 
+produced by Gibbs sampling. Other things being equal, the delta rule therefore adjusts 
+the parameters that determine the equilibrium distribution to reduce this penalty, thus 
+favouring models for which Gibbs sampling works quickly. 
+Hierarchical Non-linear Factor Analysis and Topographic Maps 489 
+ignoring biases and constant terms that are unaffected by the states of the units 
+- - Ek[yk]+ 
+/below '-  --  (4) 
+J J 
+Rearranging this expression and setting rj = gj and rnt = - ..j gjgtj we get 
+(5) 
+Shelow = -- - . 
+j  j  t 
+This energy function can be exactly implemented in a network with recognition 
+weights, D, and symmetric lateral interactions, mt. The lateral and recognition 
+connections allow a unit, k, to compute how Ebdo for the layer below depends on 
+its own state and therefore they allow it to follow the gradient of E or to perform 
+Gibbs sampling in E. 
+Figure 2: A small segment of a network, 
+showing the generative weights (dashed) and 
+the recognition and lateral weights (solid) 
+which implement perceptual inference and 
+correctly handle explaining away effects. 
+Seung's trick can be used in an RGBN and i

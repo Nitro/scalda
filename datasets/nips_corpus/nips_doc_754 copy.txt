@@ -1,0 +1,172 @@
+Exploiting Chaos to Control the Future 
+Gary W. Flake* 
+Guo-Zhen Sun t 
+Yee-Chun Lee t 
+Hsing-Hen Chen t 
+Institute for Advance Computer Studies 
+University of Maryland 
+College Park, MD 20742 
+Abstract 
+Recently, Ott, Grebogi and Yorke (OGY) [6] found an effective 
+method to control chaotic systems to unstable fixed points by us- 
+ing only small control forces; however, OGY's method is based on 
+and limited to a linear theory and requires considerable knowledge 
+of the dynamics of the system to be controlled. In this paper we use 
+two radial basis function networks: one as a model of an unknown 
+plant and the other as the controller. The controller is trained 
+with a recurrent learning algorithm to minimize a novel objective 
+function such that the controller can locate an unstable fixed point 
+and drive the system into the fixed point with no a priori knowl- 
+edge of the system dynamics. Our results indicate that the neural 
+controller offers many advantages over OGY's technique. 
+1 Introduction 
+Recently, Ott, Grebogi and Yorke (OGY) [6] proposed a simple but very good idea. 
+Since any small perturbation can cause a large change in a chaotic trajectory, it 
+is possible to use a very small control force to achieve a large trajectory modifi- 
+cation. Moreover, due to the ergodicity of chaotic motion, any state in a chaotic 
+*Department of Computer Science, peyote@umiacs.umd.edu 
+tLaboratory for Plasma Research 
+647 
+648 Flake, Sun, Lee, and Chen 
+attractor can be reached by a small control force. Since OGY published their work, 
+several experiments and simulations have proven the usefulness of OGY's method. 
+One prominent application of OGY's method is the prospect of controlling cardiac 
+chaos [1]. 
+We note that there are several unfavorable constraints on OGY's method. First, 
+it requires a priori knowledge of the system dynamics, that is, the location of 
+fixed points. Second, due to the limitation of linear theory, it will not work in the 
+presence of large noise or when the control force is as large as beyond the linear 
+region from which the control law was constructed. Third, although the ergodicity 
+theory guarantees that any state after moving away from the desired fixed point 
+will eventually return to its linear vicinity, it may take a very long time for this to 
+happen, especially for a high dimensional chaotic attractor. 
+In this paper we will demons[rate how a neural network (NN) can control a chaotic 
+system with only a small control force and be trained with only examples from 
+the state-space. To solve this problem, we introduced a novel objective function 
+which measures the distance between the current state and its previous average. 
+By minimizing this objective function, the NN can automatically locate the fixed 
+point. As a preliminary step, a training set is used to train a forward model for 
+the chaotic dynamics. The work of Jordan and Rumelhart [4] has shown that 
+control problems-can be mapped into supervised learning problems by coupling the 
+outputs of a controller NN (the control signals) to the inputs of a forward model 
+of a plant to form a multilayer network that is indirectly recurrent. A recurrent 
+learning algorithm is used to train the controller NN. To facilitate learning we use an 
+extended radial basis function (RBF) network for both the forward model and the 
+controller. To benchmark with OGY's result, the Hnon map is used as a numerical 
+example. The numerical results have shown the preliminary success of the proposed 
+scheme. Details will be given in the following sections. 
+In the next section we give our methodology and describe the general form of the 
+recurrent learning algorithm used in our experiments. In Section 3, we discuss RBF 
+networks and reintroduce a more powerful version. In Section 4, the numerical 
+results are presented in detail. Finally, in Section 5, we give our conclusions. 
+2 Recurrent Learning for Control 
+Let /(.) denote a NN whose output, fit, is composed through a plant, f(.), with 
+unknown dynamics. The output of the unknown plant (the state), �t+l, forms 
+part of the input for the NN at the next time step, hence the recurrency. At each 
+time step the state is also passed to an output function, (.), which computes the 
+sensation, fft+l. The time evolution of this system is more accurately described by 
+where Y'+x is the desired sensation for time t + 1 and t represents the trainable 
+weights for the network. Additionally, we define the temporally local and global 
+Exploiting Chaos to Control the Future 649 
+error functionMs 
+1 
+11y-7 -ff11 and E = Y]is__x 
+where N is the final time step for the system. 
+The real-time recurrent learning (RTRL) algorithm [9] for training the network 
+weights to minimize E is based on the fair assumption that minimizing the local 
+error functionMs with a small learning rate at each time step will correspond to 
+minimizing the global error. To derive the learning algorithm, we can imagine the 
+system consisting of the plant, controller, and error functionals as being unfolded 
+in time. From this perspective we can view each instance of the controller NN 
+as a separate NN and thus differentiate the error functionals with respect to the 
+network weights at different times. Hence, we now add a time index to tt to 
+represent this fact. However, when we use t without the time index, the term 
+should be understood to be time invariant. 
+We can now define the matrix 
+i=0 
+which further allows us to define 
+Odi _ Odi O ri (2) 
+: 
+i=1 
+Equation 2 is the gradient equation for the RTRL algorithm while Equation 3 is for 
+the backpropagation through time (BPTT) learning algorithm [7]. The gradients 
+defined by these equations are usually used with gradient descent on a multilayer 
+perceptron (MLP). We will use them on RBF networks. 
+3 The CNLS Network 
+The Connectionist Normalized Local Spline (CNLS) network [3] is an extension of 
+the more familiar radial basis function network of Moody and Darken [5]. The 
+forward operation of the network is defined by 
+() - Z(fi -n t- C . ( -- ti) ) /9i (;), 
+i 
+(4) 
+where 
+/ 2 
+exp(-/3ill- '11 ) 
+pi(?) = y]j exp(-/3j 11- % 112) ' 
+(5) 
+All of the equations in this section assume a single output. Generalizing them for 
+multiple outputs merely adds another index to the terms. For all of our simulations, 
+we choose to distribute the centers, 5i, based on a sample of the input space. 
+650 Flake, Sun, Lee, and Chen 
+Additionally, the basis widths,/?i, are set to an experimentally determined constant. 
+Because the output, b, is linear in the terms fi and , training them is very fast. 
+To train the CNLS network on a prediction problem we, can use a quadratic error 
+1 : _ 
+function of the form E = 5(y( ) q())2, where y() is the target function that 
+we wish to approximate. We use a one-dimensional Newton-like method [8] which 
+yields the update equations 
+OE 
+f/t+l _ fi t -- E 
+fit + 
+d./+l - ( - Z 
+= + - 
+The right-most update rules form the learning algorithm when using the CNLS 
+network for prediction, where r/is a learning rate that should be set below 1.0. The 
+left-most update rules describe a more general learning algorithm that can be used 
+when a target output is unknown. 
+When using the CNLS network architecture as part of a recurrent learning algorithm 
+we must be able to differentiate the network outputs with respect to the inputs. Note 
+that in Equations 1 and 2 each of the terms 0�t/0fft-x, 0fft-x/0-x, 0/0_x, 
+and O/Oi can either be exactly solved or approximated by differentiating a CNLS 
+network. Since the CNLS output is highly nonlinear in its inputs, computing these 
+partial derivatives is not quite as elegant as it would be in a MLP. Nevertheless, it 
+can be done. We skip the details and just show the end result: 
+0z 
+i=1 j=l 
+(6) 
+with *7 Y.p(x)i?(  �) and qi fi + c (. i). 
+4 Adaptive Control 
+By combining the equations from the last two sections, we can construct a recurrent 
+learning scheme for RBF networks in a similar fashion to what has been done with 
+MLP networks. To demonstrate the utility of our technique, we have chosen a well- 
+studied nonlinear plant that has been successfully modeled and controlled by using 
+non-neural techniques. Specifically, we will use the Hnon map as a plant, which 
+has been the focus of much of the research of OGY [6]. We also adopt some of their 
+notation and experimental constraints. 
+4.1 The Hanon Map 
+The H&non map [2] is described by the equations 
+xt+ = A- xt  + Byt 
+Yt+ l ---- Xt , 
+(7) 
+(8) 
+Exploiting Chaos to Control the Future 651 
+where A = A0 + p and p is a control parameter that may be modified at each time 
+step to coerce the plant into a desirable state. For all simulations we set A0 = 1.29 
+and B = 0.3 which gives the above equations a chaotic attracter that also contains 
+an unstable fixed point. Our goal is to train a CNLS network that can locate and 
+drive the map into the unstable fixed point and keep it there with only a minimal 
+amount of information about the plant and by using only small values of p. 
+The unstable fixed point (xr, Yr) in Equations 7 and 8 can be easily calculated as 
+x, = Yr m 0.838486. Forcing the Hanon map to the fixed point is trivial if the 
+controller is given unlimited control of the parameter. To make the problem more 
+realistic we define p* as the maximum magnitude that p can take and use the rule 
+below on the left 
+ifp>p* p iflpl<p* 
+P': - p* ifp<-p* P' = 0 iflp[>p* 
+while OGY use the rule on the right. The reason we avoid the second rule is that 
+it cannot be modeled by a CNLS network with any precision since it is step-like. 
+The next task is to define what it means to control the H&non map. Having 
+analytical knowledge of the fixed point in the attracter would make the job of the 
+controller much easier, but this is unrealistic in the case where the dynamics of 
+the plant to control are unknown. Instead, we use an error function that simply 
+

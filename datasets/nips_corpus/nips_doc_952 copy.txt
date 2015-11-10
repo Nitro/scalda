@@ -1,0 +1,143 @@
+Pattern Playback in the '90s 
+Malcolm Slaney 
+Interval Research Corporation 
+1801-C Page Mill Road, 
+Palo Alto, CA 94304 
+malcolm@interval.com 
+Abstract 
+Deciding the appropriate representation to use for modeling human 
+auditory processing is a critical issue in auditory science. While engi- 
+neers have successfully performed many single-speaker tasks with LPC 
+and spectrogram methods, more difficult problems will need a richer 
+representation. This paper describes a powerful auditory representation 
+known as the correlogram and shows how this non-linear representation 
+can be converted back into sound, with no loss of perceptually impor- 
+tant information. The correlogram is interesting because it is a neuro- 
+physiologically plausible representation of sound. This paper shows 
+improved methods for spectrogram inversion (conventional pattern 
+playback), inversion of a cochlear model, and inversion of the correlo- 
+gram representation. 
+1 INTRODUCTION 1 
+My interest in auditory models and perceptual displays [2] is motivated by the problem of 
+sound understanding, especially the separation of speech from noisy backgrounds and 
+interfering speakers. The correlogram and related representations are a pattern space 
+within which sounds can be understood and separated [3][4]. I am therefore interested 
+in resynthesizing sounds from these representations as a way to test and evaluate sound 
+separation algorithms, and as a way to apply sound separation to problems such as speech 
+enhancement. The conversion of sound to a correlogram involves the intermediate repre- 
+sentation of a cochleagram, as shown in Figure 1, so cochlear-model inversion is 
+addressed as one piece of the overall problem. 
+1. Much of this work was performed by Malcolm Slaney, Daniel Naar and Rich- 
+ard F. Lyon while all three were employed at Apple Computer. The mathematical 
+details of this work were presented at the 1994 ICASSP[1]. 
+828 Malcolm Slaney 
+Waveform 
+Cochleagram Correlogram 
+ I '':::; :...:.._.:�?:i!:. ::il  ......... . .................................. 
+...... 1 I 
+oo :?::::'':':'J:.-:l I Stions [/ ::::2::::': :':::.g 
+ lime 8  3 & 4 Auocorrolatlon Lag I 
+Figure 1. Three stages in low-level auditory perception are shown here. Sound waves are con- 
+vetted into a detailed representation with broad spectral bands, known as cochleagrams. The 
+correlogram then summarizes the periodicities in the cochleagram with short-time autocorrela- 
+tion. The result is a perceptual movie synchronized to the acoustic signal. The two inversion 
+problems addressed in this work are indicated with arrows from right to left. 
+There are three factors which can be used to judge the quality of an auditory model: psy- 
+choacoustic comparisons, neurophysiological plausibility, and does it represent the per- 
+ceptually relevant information? First, the correlogram has been shown to simply and 
+accurately predict human pitch perception [5]. The neurophysiological basis for the corre- 
+logram has not been found, but there are neural circuits performing the same calculation in 
+the mustached bat's echolocation system [6]. Finally, from an information representation 
+point of view, does the correlogram preserve the salient information? The results of this 
+paper show that no information has been lost. Since the psychoacoustic, neurophysiologi- 
+cal, and information representation measures are all positive, perhaps the correlogram is 
+the basis of most auditory processing. 
+The inversion techniques described here are important because they allow us to readily 
+evaluate the results of sound separation models that zero out unwanted portions of the 
+signal in the correlogram domain. This work extends the convex projection approach of 
+Irino [7] and Yang [8] by considering a different cochlear model, and by including the cor- 
+relogram inversion. The convex projection approach is well suited to filling in missing 
+information. While this paper only describes the process for one particular auditory 
+model, the techniques are equally useful for other models. 
+This paper describes three aspects of the problem: cochleagram inversion, conversion of 
+the correlogram into spectrograms, and spectrogram inversion. A number of reconstruc- 
+tion options are explored in this paper. Some are fast, while other techniques use time-con- 
+suming iterations to produce reconstructions perceptually equivalent to the original sound. 
+Fast versions of these algorithms could allow us to separate a speaker's voice from the 
+background noise in real time. 
+2 COCHLEAGRAM INVERSION 
+Figure 2 shows a block diagram of the cochlear model [9] that is used in this work. The 
+basis of the model is a bank of filters, implemented as a cascade of low-pass filters, that 
+splits the input signal into broad spectral bands. The output from each filter in the bank is 
+called a channel. The energy in each channel is detected and used to adjust the channel 
+gain, implementing a simple model of auditory sensitivity adaptation, or automatic gain 
+control (AGC). The half-wave rectifier (HWR) detection nonlinearity provides a wave- 
+form for each channel that roughly represents the instantaneous neural firing rate at each 
+position along the cochlea. 
+Cochlear 
+Filterbank 
+Detector 
+(HWR) 
+AdaPotration 
+AGC 
+Figure 2. Three stages of the simple cochlear model used in this paper are shown above. 
+Pattern Playback in the '90s 829 
+The cochleagram is converted back into sound by reversing the three steps shown in Fig- 
+ure 2. First the AGC is divided out, then the negative portions of each cochlear channel are 
+recovered by using the fact that each channel is spectrally limited. Finally, the cochlear fil- 
+ters are inverted by running the filters backwards, and then correcting the resulting spec- 
+tral slope. 
+The AGC stage in this cochlear model is controlled by its own output. It is a combination 
+of a multiplicative gain and a simple first-order filter to track the history of the output sig- 
+n fl. Since the controlling signal is directly available, the AGC can be inverted by tracking 
+the output history and then dividing instead of multiplying. The performance of this algo- 
+rithm is described by Naar [10] and will not be addressed here. It is worth noting that AGC 
+inversion becomes more difficult as the level of the input signal is raised, resulting in more 
+compression in the forward path. 
+The next stage in the inversion process can be done in one of two ways. After AGC inver- 
+sion, both the positive values of the signal and the spectral extant of the signal are known. 
+Projections onto convex sets [11], in this case defined by the positive values of the detec- 
+tor output and the spectral extant of the cochlear filters, can be used to find the original 
+signal. This is shown in the left half of Figure 3. Alternatively, the spectral projection filter 
+can be combined with the next stage of processing to make the algorithm more efficient. 
+The increased efficiency is due to better match between the spectral projection and the 
+cochlear filterbank, and due to the simplified computations within each iteration. This is 
+shown in the right half of Figure 3. The result is an algorithm that produces nearly perfect 
+results with no iterations at all. 
+Bank , - o 5 ]l 
+Inversi�n I . , I. I Inversi�n/u) AGC I l Filter ' 
+[Spectrall Inversi�nl ,.I Bank 
+- IPrbjecti�nJ ' Other --T]. InversionJ ) 
+e Channels --[ 
+o : 
+Figure 3. Them arc two ways to use convex projections to recover the information lost 
+by the detectors. The convcntionaJ aDDrOaCh is shown on the left. The right figure 
+shows a more efficient aDDrOaCh where the sp�ctr projection has been combined with 
+Finally, the multiple outputs from the cochlear filterbank are converted back into a single 
+waveform by correcting the phase and summing all channels. In the ideal case, each 
+cochlear channel contains a unique portion of the spectral energy, but with a bit of phase 
+delay and amplitude change. For example, if we run the signal through the same filter the 
+spectral content does not change much but both the phase delay and amplitude change will 
+be doubled. More interestingly, if we run the signal through the filter backwards, the for- 
+ward and backward phase changes cancel out. After this phase correction, we can sum all 
+channels and get back the original waveform, with a bit of spectral coloration. The spec- 
+tral coloration or tilt can be fixed with a simple filter. A more efficient approach to correct 
+the spectral tilt is to scale each channel by an appropriate weight before summing, as 
+shown in Figure 4. The result is a perfect reconstruction, over those frequencies where the 
+cochlear filters are non-zero. 
+Figure 5 shows results from the cochleagram inversion procedure. An impulse is shown on 
+the left, before and after 10 iterations of the HWR inversion (using the algorithm on the 
+right half of Figure 3). With no iterations the result is nearly perfect, except for a bit of 
+noise near the center. The overall curvature of the baseline is due to the fact that informa- 
+830 Malcolm Slaney 
+,., . Reversed Filter to -o o  = Scaling of [ Reversed 
+  Filter for Correct  Each  Filter for 
+-O Inversion 'RIt /, i-�O Channel i-- Inversion 
+Figure 4. Two approaches are shown here to invert the filterbank. The left diagram shows the 
+normal approach, the right figure shows a more efficient approach where the spectral-tilt filter 
+is converted to a simple multiplication. 
+tion near DC has been lost as it travels through the auditow system and there is no way to 
+recover it with the information that we have. A more interesting example is shown on the 
+right. Here the word tapl has been reconstructed, with and without the AGC inversion. 
+With the AGC inversion the result is nearly identical to the original. The auditow system 
+is very sensitive to onsets and quickly adapts to steady state soun

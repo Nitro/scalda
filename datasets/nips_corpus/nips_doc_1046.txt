@@ -1,0 +1,145 @@
+Using Pairs of Data-Points to Define 
+Splits for Decision Trees 
+Geoffrey E. Hinton 
+Department of Computer Science 
+University of Toronto 
+Toronto, Ontario, M5S 1A4, Canada 
+hinton@cs.toronto.edu 
+Michael Revow 
+Department of Computer Science 
+University of Toronto 
+Toronto, Ontario, M5S 1A4, Canada 
+revow@cs.toronto.edu 
+Abstract 
+Conventional binary classification trees such as CART either split 
+the data using axis-aligned hyperplanes or they perform a compu- 
+tationally expensive search in the continuous space of hyperplanes 
+with unrestricted orientations. We show that the limitations of the 
+former can be overcome without resorting to the latter. For every 
+pair of training data-points, there is one hyperplane that is orthog- 
+onal to the line joining the data-points and bisects this line. Such 
+hyperplanes are plausible candidates for splits. In a comparison 
+on a suite of 12 datasets we found that this method of generating 
+candidate splits outperformed the standard methods, particularly 
+when the training sets were small. 
+I Introduction 
+Binary decision trees come in many flavours, but they all rely on splitting the set of 
+k-dimensional data-points at each internal node into two disjoint sets. Each split is 
+usually performed by projecting the data onto some direction in the k-dimensional 
+space and then thresholding the scalar value of the projection. There are two 
+commonly used methods of picking a projection direction. The simplest method is 
+to restrict the allowable directions to the k axes defined by the data. This is the 
+default method used in CART [1]. If this set of directions is too restrictive, the 
+usual alternative is to search general directions in the full k-dimensional space or 
+general directions in a space defined by a subset of the k axes. 
+Projections onto one of the k axes defined by the the data have many advantages 
+508 G.E. HINTON, M. REVOW 
+over projections onto a more general direction: 
+It is very efficient to perform the projection for each of the data-points. We 
+simply ignore the values of the data-point on the other axes. 
+For N data-points, it is feasible to consider all possible axis-aligned pro- 
+jections and thresholds because there are only k possible projections and 
+for each of these there are at most N - 1 threshold values that yield dif- 
+ferent splits. Selecting from a fixed set of projections and thresholds is 
+simpler than searching the k-dimensional continuous space of hyperplanes 
+that correspond to unrestricted projections and thresholds. 
+Since a split is selected from only about Nk candidates, it takes only about 
+log 2 N + log2 k bits to define the split. So it should be possible to use many 
+more of these axis-aligned splits before overfitting occurs than if we use more 
+general hyperplanes. If the data-points are in general position, each subset 
+of size k defines a different hyperplane so there are N!/k!(N-k)! distinctly 
+different hyperplanes and if k << N it takes approximately k loga N bits 
+to specify one of them. 
+For some datasets, the restriction to axis-aligned projections is too limiting. This 
+is especially true for high-dimensional data, like images, in which there are strong 
+correlations between the intensities of neighbouring pixels. In such cases, many 
+axis-aligned boundaries may be required to approximate a planar boundary that 
+is not axis-aligned, so it is natural to consider unrestricted projections and some 
+versions of the CART program allow this. Unfortunately this greatly increases the 
+computational burden and the search may get trapped in local minima. Also signif- 
+icant care must be exercised to avoid overfitting. There is, however, an intermediate 
+approach which allows the projections to be non-axis-aligned but preserves all three 
+of the attractive properties of axis-aligned projections: It is trivial to decide which 
+side of the resulting hyperplane a given data-point lies on; the hyperplanes can be 
+selected from a modest-sized set of sensible candidates; and hence many splits can 
+be used before overfitting occurs because only a few bits are required to specify each 
+split. 
+2 Using two data-points to define a projection 
+Each pair of data-points defines a direction in the data space. This direction is a 
+plausible candidate for a projection to be used in splitting the data, especially if 
+it is a classification task and the two data-points are in different classes. For each 
+such direction, we could consider all of the N - 1 possible thresholds that would 
+give different splits, or, to save time and reduce complexity, we could only consider 
+the threshold value that is halfway between the two data-points that define the 
+projection. If we use this threshold value, each pair of data-points defines exactly 
+one hyperplane and we call the two data-points the poles of this hyperplane. 
+For a general k-dimensional hyperplane it requires O(k) operations to decide 
+whether a data-point, C, is on one side or the other. But we can save a factor 
+of k by using hyperplanes defined by pairs of data-points. If we already know the 
+distances of C from each of the two poles, A, B then we only need to compare 
+Using Pairs of Data Points to Define Splits for Decision Trees 509 
+Figure 1: A hyperplane orthogonal to the line joining points A and B. We can 
+quickly determine on which side a test point, C, lies by comparing the distances 
+AC and BC. 
+these two distances (see figure 1). 1 So if we are willing to do O(kN 2) operations to 
+compute all the pairwise distances between the data-points, we can then decide in 
+constant time which side of the hyperplane a point lies on. 
+As we are building the decision tree, we need to compute the gain in performance 
+from using each possible split at each existing terminal node. Since all the terminal 
+nodes combined contain N data-points and there are N(N - 1)/2 possible splits 2 
+this takes time O(N 3) instead of O(kN3). So the work in computing all the pairwise 
+distances is trivial compared with the savings. 
+Using the Minimum Description Length flamework, it is clear that pole-pair splits 
+can be described very cheaply, so a lot of them can be used before overfitting occurs. 
+When applying MDL to a supervised learning task we can assume that the receiver 
+gets to see the input vectors for free. It is only the output vectors that need to be 
+communicated. So if splits are selected from a set of N(N- 1)/2 possibilities that is 
+determined by the input vectors, it takes only about 2 log: N bits to communicate 
+a split to a receiver. Even if we allow all N - I possible threshold values along 
+the projection defined by two data-points, it takes only about 3 log: N bits. So the 
+number of these splits that can be used before overfitting occurs should be greater by 
+a factor of about k/2 or k/3 than for general hyperplanes. Assuming that k << N, 
+the same line of argument suggests that even more axis-aligned planes can be used, 
+but only by a factor of about 2 or 3. 
+To summarize, the hyperplanes planes defined by pairs of data-points are computa- 
+tionally convenient and seem like natural candidates for good splits. They overcome 
+the major weakness of axis-aligned splits and, because they can be specified in a 
+modest number of bits, they may be more effective than fully general hyperplanes 
+when the training set is small. 
+If the threshold value is not midway between the poles, we can still save a factor of k 
+but we need to compute (dc -dc)/2dAr instead of just the sign of this expression. 
+'Since we only consider splits in which the poles are in different classes, this number 
+ignores a factor that is independent of N. 
+510 G.E. HINTON, M. REVOW 
+3 Building the decision tree 
+We want to compare the pole-pair metlod of generating candidate hyperplanes 
+with the standard axis-aligned method and the method that uses unrestricted hy- 
+perplanes. We can see no reason to expect strong interactions between the method 
+of building the tree and the method of generating the candidate hyperplanes, but 
+to minimize confounding effects we always use exactly the same method of building 
+the decision tree. 
+We faithfully followed the method described in [1], except for a small modification 
+where the code that was kindly supplied by Leo Breiman used a slightly different 
+method for determining the amount of pruning. 
+Training a decision tree involves two distinct stages. In the first stage, nodes are 
+repeatedly split until each terminal node is pure which means that all of its data- 
+points belong to the same class. The pure tree therefore fits the training data 
+perfectly. A node is split by considering all candidate decision planes and choosing 
+the one that maximizes the decrease in impurity. Breiman et. al recommend using 
+the Gini index to measure impurity. 3 If p(j[t) is the probability of class j at node 
+t, then the Gini index is 1 - yj p2 (j I t). 
+Clearly the tree obtained at the end of the first stage will overfit the data and so in 
+the second stage the tree is pruned by recombining nodes. For a tree, Ti, with 
+terminal nodes we consider the regularized cost: 
+(1) 
+where E is the classification error and a is a pruning parameter. In weakest-link 
+pruning the terminal nodes are eliminated in the order which keeps (1) minimal as 
+a increases. This leads to a particular sequence, T = {T, T2, ...Tk} of subtrees, 
+in which [T[ > [T [... > [Tk [. We call this the main sequence of subtrees because 
+they are trained on all of the training data. 
+The last remaining issue to be resolved is which tree in the main sequence to use. 
+The simplest method is to use a separate validation set and choose the tree size 
+that gives best classification on it. Unfortunately, many of the datasets we used 
+were too small to hold back a reserved validation set. So we always used 10-fold 
+cross validation to pick the size of the tree. We first grew 10 different subsidiary 
+trees until their termi

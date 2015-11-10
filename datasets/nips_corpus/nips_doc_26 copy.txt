@@ -1,0 +1,145 @@
+622 
+LEARNING A COLOR ALGORITHM FROM EXAMPLES 
+Anya C. Hurlbert and Tomaso A. Poggio 
+Artificial Intelligence Laboratory and Department of Brain and Cognitive Sciences, 
+Massachusetts Institute of Technology, Cambridge, Massachusetts 02139, USA 
+ABSTRACT 
+A lightness algorithm that separates surface reflectance from illumination in a 
+Mondrian world is synthesized automatically from a set of examples, pairs of input 
+(image irradiance) and desired output (surface reflectance). The algorithm, which re- 
+sembles a new lightness algorithm recently proposed by Land, is approximately equiva- 
+lent to filtering the image through a center-surround receptive field in individual chro- 
+matic channels. The synthesizing technique, optimal linear estimation, requires only 
+one assumption, that the operator that transforms input into output is linear. This 
+assumption is true for a certain class of early vision algorithms that may therefore be 
+synthesized in a similar way from examples. Other methods of synthesizing algorithms 
+from examples, or learning, such as backpropagation, do not yield a significantly dif- 
+ferent or better lightness algorithm in the Mondrian world. The linear estimation and 
+backpropagation techniques both produce simultaneous brightness contrast effects. 
+The problems that a visual system must solve in decoding two-dimensional images 
+into three-dimensional scenes (inverse optics problems) are difficult: the information 
+supplied by an image is not sufficient by itself to specify a unique scene. To reduce 
+the number of possible interpretations of images, visual systems, whether artificial 
+or biological, must make use of natural constraints, assumptions about the physical 
+properties of surfaces and lights. Computational vision scientists have derived effective 
+solutions for some inverse optics problems (such as computing depth from binocular 
+disparity) by determining the appropriate natural constraints and embedding them in 
+algorithms. How might a visual system discover and exploit natural constraints on its 
+own? We address a simpler question: Given only a set of examples of input images and 
+desired output solutions, can a visual system synthesize, or learn, the algorithm that 
+converts input to output? We find that an algorithm for computing color in a restricted 
+world can be constructed from examples using standard techniques of optimal linear 
+estimation. 
+The computation of color is a prime example of the difficult problems of inverse 
+optics. We do not merely discriminate between different wavelengths of light; we assign 
+@ American Institute of Physics 1988 
+623 
+roughly constant colors to objects even though the light signals they send to our eyes 
+change as the illumination varies across space and chromatic spectrum. The compu- 
+tatjohn.1 goal underlying color constancy seems to be to extract the invariant surface 
+spectral reflectance properties from the image irradiance, in which reflectance and il-' 
+lumination are mixed 1. 
+Lightness algorithms 2-s, pioneered by Land, assume that the color of an object 
+can be specified by its lightness, or relative surface reflectance, in each of three inde- 
+pendent chromatic channels, and that lightness is computed in the same way in each 
+channel. Computing color is thereby reduced to extracting surface reflectance from the 
+image irradiance in a single chromatic channel. 
+The image irradiance, s t, is proportional to the product of the illumination inten- 
+sity e t and the surface reflectance r t in that channel: 
+st(x,y) - rt(x,y)et(x,y). (1) 
+This form of the image intensity equation is true for a Lambertinn reflectance model, 
+in which the irradiance s t has no specular components, and for appropriately chosen 
+color channels 9. Taking the logarithm of both sides converts it to a sum: 
+y) = r(x, y) + e(x,y), (2) 
+where s = log(s'), r = log(r') and e = log(e'). 
+Given s(x, y) alone, the problem of solving Eq. 2 for r(x, y) is underconstrained. 
+Lightness algorithms constrain the problem by restricting their domain to a world of 
+Mondrians, two-dimensional surfaces covered with patches of random colors 2 and by 
+exploiting two constraints in that world: (i) r'(x,y) is uniform within patches but 
+has sharp discontinuities at edges between patches and (ii) e'(x,y) varies smoothly 
+across the Mondrian. Under these constraints, lightness algorithms can recover a good 
+approximation to r(x, y) and so can recover lightness triplets that label roughly constant 
+colors l0 
+We ask whether it is possible to synthesize from examples an algorithm that ex- 
+tracts reflectance from image irradiance, and whether the synthesized algorithm will re- 
+semble existing lightness algorithms derived from an explicit analysis of the constraints. 
+We make one assumption, that the operator that transforms irradiance into reflectance 
+is linear. Under that assumption, motivated by considerations discussed later, we use 
+optimal linear estimation techniques to synthesize an operator from examples. The 
+examples are pairs of images: an input image of a Mondrian under illumination that 
+varies smoothly across space and its desired output image that displays the reflectance 
+of the Mondrian without the illumination. The technique finds the linear estimator 
+that best maps input into desired output, in the least squares sense. 
+For computational convenience we use one-dimensional training vectors that 
+represent vertical scan lines across the Mondrian images (Fig. 1). We generate many 
+624 
+Input data 
+0 SO lOG 150 200 .Se 300 
+correct illumination 
+60 
+0 $0 100 Z$O 200 250 300 
+output illumination 
+correct reflectance 
+tO0 I$0 00 250 700 
+output reflectance 
+a 
+b 
+c 
+Fig. 1. (a) The input data, a one-dimensional vector 320 pixels long. Its random 
+Mondrian reflectance pattern is superimposed on a linear illumination gradient with 
+a random slope and offset. (b) shows the corresponding output solution, on the left 
+the illumination and on the right reflectance. We used 1500 such pairs of input- 
+output examples (each different from the others) to train the operator shown in Fig. 
+2. (c) shows the result obtained by the estimated operator when it acts on the input 
+data (a), not part of the training set. On the left is the illumination and on the 
+right the reflectance, to be compared with (b). This result is fairly typical: in some 
+cases the prediction is even better, in others it is worse. 
+different input vectors s by adding together different random r and e vectors, according 
+to Eq. 2. Each vector r represents a pattern of step changes across space, corresponding 
+to one column of a reflectance image. The step changes occur at random pixels and 
+are of random amplitude between set minimum and maximum values. Each vector � 
+represents a smooth gradient across spa:e with a random offset and slope, corresponding 
+to one column of an illumination image. We then arrange the training vectors s and r 
+as the columns of two matrices S and R, respectively. Our goal is then to compute the 
+optimal solution � of 
+LS:R 
+where L is a linear operator represented a a matrix. 
+625 
+It is well known that the solution of this equation that is optimal in the least 
+squares sense is 
+L = RS + (4) 
+where S + is the Moore-Penrose pseudoinverse . We compute the pseudoinverse by 
+overconstraining the problem - using many more training vectors than there are number 
+of pixels in each vector - and using the straightforward formula that applies in the 
+overconstrained case 2: S + = sT(ssT)-. 
+The operator L computed in this way recovers a good approximation to the correct 
+output vector r when given a new s, not part of the training set, as input (Fig. lc). 
+A second operator, estimated in the same way, recovers the illumination e. Acting on 
+a random two-dimensional Mondrian L also yields a satisfactory approximation to the 
+correct output image. 
+Our estimation scheme successfully synthesizes an aigorithm that performs the 
+lightness computation in a Mondrian world. What is the algorithm and what is its 
+relationship to other lightness algorithms? To answer these questions we examine the 
+structure of the matrix L. We assume that, although the operator is not a convolution 
+operator, it should approximate one far from the boundaries of the image. That is, 
+in its central part, the operator should be space-invariant, performing the same action 
+on each point in the image. Each row in the central part of L should therefore be 
+the same as the row above but displaced by one element to the right. Inspection of 
+the matrix confirmes this expectation. To find the form of L in its center, we thus 
+average the rows there, first shifting them appropriately. The result, shown in Fig. 2, 
+is a space-invariant filter with a narrow positive peak and a broad, shallow, negative 
+surround. 
+Interestingly, the filter our scheme synthesizes is very similar to Land's mct recent 
+retinex operator 5, which divides the image irradiance at each pixel by a weighted 
+average of the irradiance at all pixels in a large surround and takes the logarithm of 
+that result to yield lightness 13. The lightness triplets computed by the retinex operator 
+agree well with human perception in a Mondrian world. The retinex operator and our 
+matrix L both differ from Land's earlier retinex algorithms, which require a non-linear 
+thresholding step to eliminate smooth gradients of illumination. 
+The shape of the filter in Fig. 2, particularly of its large surround, is also sugges- 
+tive of the nonclassical receptive fields that have been found in V4, a cortical area 
+implicated in mechanisms underlying color constancy 14-7 
+The form of the space-invariant filter is similar to that derived in our earlier formal 
+analysis of the lightness problem s It is qualitatively the same as that which results 
+from the direct application of regularization methods exploiting the spatial constraints 
+on reflectance and illumina

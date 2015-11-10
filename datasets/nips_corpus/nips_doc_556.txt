@@ -1,0 +1,161 @@
+Recurrent Eye Tracking Network Using a 
+Distributed Representation of Image Motion 
+P. A. Viola 
+Artificial Intelligence Laboratory 
+Massachusetts Institute of Technology 
+$. GI. Lisberger 
+Department of Physiology 
+W.M. Keck Foundation Center for Integrative Neuroscience 
+Neuroscience Graduate Program 
+University of California, San Francisco 
+T. 3. $ejnowski 
+Salk Institute, Howard Hughes Medical Institute 
+Department of Biology 
+University of California, San Diego 
+Abstract 
+We have constructed a recurrent network that stabilizes images of a moving 
+object on the retina of a simulated eye. The structure of the network 
+was motivated by the organization of the primate visual target tracking 
+system. The basic components of a complete target tracking system were 
+simulated, including visual processing, sensory-motor interface, and motor 
+control. Our model is simpler in structure, function and performance than 
+the primate system, but many of the complexities inherent in a complete 
+system are present. 
+380 
+Recurrent Eye Tracking Network Using a Distributed Representation of Image Motion 381 
+Visual 
+Processing 
+Retinotopic Eye 
+Maps Velocity 
+Motor 
+Interface 
+Estimate of 
+Retinal 
+Velocity 
+Motor 
+Conxol 
+I 
+Figure 1: The overall structure of the visual tracking model. 
+Target 
+J Eye 
+1 Introduction 
+The fovea of the primate eye has a high density of photoreceptors. Images that fall 
+within the fovea are perceived with high resolution. Perception of moving objects 
+poses a particular problem for the visual system. If the eyes are fixed a moving 
+image will be blurred. When the image moves out the of the fovea, resolution 
+decreases. By moving their eyes to loveate and stabilize targets, primates ensure 
+maximum perceptual resolution. In addition, active target tracking simplifies other 
+tasks, such as spatial localization and spatial coordinate transformations (Ballard, 
+1991). 
+Visual tracking is a feedback process, in which the eyes are moved to stabilize and 
+loveate the image of a target. Good visual tracking performance depends on accu- 
+rate estimates of target velocity and a stable feedback controller. Although many 
+visual tracking systems have been designed by engineers, the primate visual tracking 
+system has yet to be matched in its ability to perform in complicated environments, 
+with unrestricted targets, and over a wide variety of target trajectories. The study 
+of the primate oculomotor system is an important step toward building a system 
+that can attain primate levels of performance. The model presented here can accu- 
+rately and stably track a variety of targets over a wide range of trajectories and is 
+a first step toward achieving this goal. 
+Our model has four primary components: a model eye, a visual processing net- 
+work, a motor interface network, and a motor control network (see Figure 1). The 
+model eye receives a sequence of images from a changing visual world, synthetically 
+rendered, and generates a time-varying output signal. The retinal signal is sent to 
+the visual processing network which is similar in function to the motion processing 
+areas of the visual cortex. The visual processing network constructs a distributed 
+representation of image velocity. This representation is then used to estimate the 
+velocity of the target on the retina. The retinal velocity of the target forms the in- 
+put to the motor control network that drives the eye. The eye responds by rotating, 
+382 Viola, Lisberger, and Sejnowski 
+Motion Energy Output Unit 
+Combination 
+Layer 
+Space-time 
+Separable Units 
+ Space-- 
+Shared Spatial 
+Field 
+Figure 2: The structure of a motion energy unit. Each space-time separable unit 
+has a receptive field that covers 16 pixels in space and 16 steps in time (for a total 
+of 256 inputs). The shaded triangles denote complete projections. 
+which in turn affects incoming retinal signals. 
+If these networks function perfectly, eye velocity will match target velocity. Our 
+model generates smooth eye motions to stabili,e smoothly moving targets. It makes 
+no attempt to foreate the image of a target. In primates, eye motions that foreate 
+targets are called saccades. Saccadic mechanisms are largely separate from the 
+smooth eye motion system (Lisberger et. al. 1987). We do not address them here. 
+In contrast with most engineered systems, our model is adaptive. The networks 
+used in the model were trained using gradient descent . This training process 
+circumvented the need for a separate calibration of the visual tracking system. 
+2 Visual Processing 
+Network simulations were carried out with the SN2 neural network simulator. 
+Recurrent Eye Tracking Network Using a Distributed Representation of Image Motion 383 
+The middle temporal cortex (area MT) contains cells that are selective for the 
+direction of visual motion. The neurons in MT are organized into a retinotopic 
+map and small lesions in this area lead to selective impairment of visual tracking 
+in the corresponding regions of the visual field (Newsome and Pare, 1988). The 
+visual processing networks in our model contain directionally-selective processing 
+units that are arranged in a retinotopic map. The spatio-temporal motion energy 
+filter of AdeNon and Bergen (Adelson and Bergen, 1985) has many of the proper- 
+ties of directionally-selective cortical neurons; it is used as the basis for our visual 
+processing network. We constructed a four layer time-delay neural network that 
+implements a motion energy calculation. 
+A single motion-energy unit can be constructed from four intermediate units hav- 
+ing separable spatial and temporal filters. Adelson and Bergen demonstrate that 
+two spatial filters (of even and odd symmetry) and two temporal filters (temporal 
+derivatives for fast and slow speeds) are sufficient to detect motion. The filters 
+are combined to construct 4 intermediate units which project to a single motion 
+energy unit. Because the spatial and temporal properties of the receptive field are 
+separable, they can be computed separately and convolved together to produce the 
+final output. The temporal response is therefore the same throughout the extent of 
+the spatial receptive field. 
+In our model, motion energy units are implemented as backpropagation networks. 
+These units have a receptive field 16 pixels wide over a 16 time step window. Because 
+the input weights are shared, only 32 parameters were needed for each space-time 
+separable unit. Four space-time separable units project through a 16 unit combi- 
+nation layer to the output unit (see Figure 2). The entire network can be trained 
+to approximate a variety of motion-energy filters. 
+We trained the motion energy network in two different ways: as a single multilayered 
+network and in stages. Staged training proceded first by training intermediate units, 
+then, with the intermediate units fixed, by training the three layer network that 
+combines the intermediate units to produce a single motion energy output. The 
+output unit is active when a pattern in the appropriate range of spatial frequencies 
+moves through the receptive field with appropriate velocity. Many such units are 
+required for a range of velocities, spatial frequencies, and spatial locations. We 
+use six different types of motion energy units - each tuned to a different temporal 
+frequency - at each of the central 48 positions of a 64 pixel linear retina. The 6 
+populations form a distributed, velocity-tuned representation of image motion for 
+a total of 288 motion energy units. 
+In addition to the motion energy filters, static spatial frequency filters are also 
+computed and used in the interface network, one for each band and each position 
+for a total of 288 units. 
+We chose an adaptive network rather than a direct motion energy calculation be- 
+cause it allows us to model the dynamic nature of the visual signal with greater 
+flexibility. However, this raises complications regarding the set of training images. 
+Assuming 5 bits of information at each retinal position, there are well over 10 to 
+the 100th possible input patterns. We explored sine waves, random spots and a 
+variety of spatial pre-filters, and found low-pass filtered images of moving random 
+spots worked best. Typically we began the training process from a plausible set of 
+384 Viola, Lisberger, and Sejnowski 
+weights, rather than from random values, to prevent the network from settling into 
+an initial local minima. Taining proceeded for days until good performance was 
+obtained on a testing set. 
+Krauzhs and Lisberger (1989) have predicted that the visual stimulus to the visual 
+tracking system in the brain contains information about the acceleration and im- 
+pulse of the target as well as the velocity. Our motion energy networks are sensitive 
+to target acceleration, producing transients for accelerating stimuh. 
+The Interface Network 
+The function of the interface is to take the distributed representation of the image 
+motion and extract a single velocity estimate for the moving object. We use a 
+relatively simple method that was adequate for tracking single objects without other 
+moving distractors. The activity level of a single motion energy unit is ambiguous. 
+First, it is necessary for the object to have a feature that is matched to the spatial 
+frequency bandpass of the motion energy unit. Second, there is an array of units 
+for each spatial frequency and the object will stimulate only a few of these at any 
+given time. For instance, a large white object will have no features in its interior; a 
+unit with its receptive field located in the interior can detect no motion. Conversely, 
+detectors with receptive fields on the border between the object and the background 
+will be strongly stimulated. 
+We use two stages of processing to extract a velocity. In the first stage, the motion 
+energy in each spatial frequency band is estimated by summing the outputs of the 
+motion energy filters across the retin

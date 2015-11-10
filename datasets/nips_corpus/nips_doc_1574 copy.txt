@@ -1,0 +1,142 @@
+Graph Matching for Shape Retrieval 
+Benoit Huet, Andrew D.J. Cross and Edwin R. Hancock* 
+Department of Computer Science, University of York 
+York, Y01 5DD, UK 
+Abstract 
+This paper describes a Bayesian graph matching algorithm for 
+data-mining from large structural data-bases. The matching al- 
+gorithm uses edge-consistency and node attribute similarity to de- 
+termine the a posterJori probability of a query graph for each of the 
+candidate matches in the data-base. The node feature-vectors are 
+constructed by computing normalised histograms of pairwise ge- 
+ometric attributes. Attribute similarity is assessed by computing 
+the Bhattacharyya distance between the histograms. Recognition 
+is realised by selecting the candidate from the data-base which has 
+the largest a posterJori probability. We illustrate the recognition 
+technique on a data-base containing 2500 line patterns extracted 
+from real-world imagery. Here the recognition technique is shown 
+to significantly outperform a number of algorithm alternatives. 
+I Introduction 
+Since Barrow and Poppiestone [1] first suggested that relational structures could be 
+used to represent and interpret 2D scenes, there has been considerable interest in the 
+machine vision literature in developing practical graph-matching algorithms [8, 3, 
+10]. The main computational issues are how to compare relational descriptions when 
+there is significant structural corruption [8, 10] and how to search for the best match 
+[3]. Despite resulting in significant improvements in the available methodology for 
+graph-matching, there has been little progress in applying the resulting algorithms 
+to large-scale object recognition problems. Most of the algorithms developed in the 
+literature are evaluated for the relatively simple problem of matching a model-graph 
+against a scene known to contain the relevant structure. A more realistic problem is 
+that of taking a large number (maybe thousands) of scenes and retrieving the ones 
+that best match the model. Although this problem is key to data-mining from large 
+libraries of visual information, it has invariably been approached using low-level 
+feature comparison techniques. Very little effort [7, 4] has been devoted to matching 
+*corresponding author erh@cs.york.ac.uk 
+Graph Matching for Shape Retrieval 897 
+higher-level structural primitives such as lines, curves or regions. Moreover, because 
+of the perceived fragility of the graph matching process, there has been even less 
+effort directed at attempting to retrieve shapes using relational information. 
+Here we aim to fill this gap in the literature by using graph-matching as a means 
+of retrieving the shape from a large data-based that most closely resembles a query 
+shape. Although the indexation images in large data-bases is a problem of current 
+topicality in the computer vision literature [5, 6, 9], the work presented in this 
+paper is more ambitious. Firsfly, we adopt a structural abstraction of the shape 
+recognition problem and match using attributed relational graphs. Each shape in 
+our data-base is a pattern of line-segments. The structural abstraction is a nearest 
+neighbour graph for the centre-points of the line-segments. In addition, we exploit 
+attribute information for the line patterns. Here the geometric arrangement of the 
+line-segments is encapsulated using a histogram of Euclidean invariant pairwise (bi- 
+nary) attributes. For each line-segment in turn we construct a normalised histogram 
+of relative angle and length with the remaining line-segments in the pattern. These 
+histograms capture the global geometric context of each line-segment. Moreover, 
+we interpret the pairwise geometric histograms as measurement densities for the 
+line-segments which we compare using the Bhattacharyya distance. 
+Once we have established the pattern representation, we realise object recognition 
+using a Bayesian graph-matching algorithm. This is a two-step process. Firsfly, 
+we establish correspondence matches between the individual tokens in the query 
+pattern and each of the patterns in the data-base. The correspondences matches 
+are sought so as to maximise the a posterJori measurement probability. Once the 
+MAP correspondence matches have been established, then the second step in our 
+recognition architecture involves selecting the line-pattern from the data-base which 
+has maximum matching probability. 
+2 MAP Framework 
+Formally our recognition problem is posed as follows. Each ARG in the database is 
+a triple, G = (VG, EG, Aa), where Va is the set of vertices (nodes), EG is the edge 
+set (EG C Va x �), and Aa is the set of node attributes. In our experimental 
+example, the nodes represent line-structures segmented from 2D images. The edges 
+are established by computing the N-nearest neighbout graph for the line-centres. 
+Each node j E VG is characterised by a vector of attributes, x_j and hence Aa = 
+{_xj[j EVa}. In the work reported here the attribute-vector is represents the 
+contents of a normalised pairwise attribute histogram. 
+The data-base of line-patterns is represented by the set of ARG's/) = {G}. The 
+goal is to retrieve from the data-base /), the individual ARG that most closely 
+resembles a query pattern Q = (VQ, EQ, AQ). We pose the retrieval process as one 
+of associating with the query the graph from the data-base that has the largest a 
+posteriori probability. In other words, the class identity of the graph which most 
+closely corresponds to the query is 
+WQ = arg max P(G]Q) 
+However, since we wish to make a detailed structural comparison of the graphs, 
+rather than comparing their overall statistical properties, we must first establish 
+a set of best-match correspondences between each ARG in the data-base and the 
+query Q. The set of correspondences between the query Q and the ARG G is 
+a relation fG ' VG  VQ over the vertex sets of the two graphs. The mapping 
+function consists of a set of Cartesian pairings between the nodes of the two graphs, 
+898 B. Huet, A.D. J. Cross and E. R. Hancock 
+i.e. fG = {(a, cO;a E VG,c e VQ} C_ VG x VQ. Although this may appear to be a 
+brute force method, it must be stressed that we view this process of correspondence 
+matching as the final step in the filtering of the line-patterns. We provide more 
+details of practical implementation in the experimental section of this paper. 
+With the correspondences to hand we can re-state our maximum a posteriori prob- 
+ability recognition objective as a two step process. For each graph G in turn, we 
+locate the maximum a posterJori probability mapping function fG onto the query 
+Q. The second step is to perform recognition by selecting the graph whose mapping 
+function results in the largest matching probability. These two steps are succinctly 
+captured by the following statement of the recognition condition 
+WQ = arg max maxP(fG, IG', Q) 
+G'D fa' 
+This global MAP condition is developed into a useful local update formula by apply- 
+ing the Bayes formula to the a posterJori matching probability. The simplification 
+is as follows 
+p(AG, AQIfo)P(fGIVo, EG, V o, EQ)P(VG, EG)P(VQ, EQ) 
+P(foIG, Q) = P(G)P(Q) 
+The terms on the right-hand side of the Bayes formula convey the following 
+meaning. The conditional measurement density p(Aa,AQlfG) models the mea- 
+surement similarity of the node-sets of the two graphs. The conditional prob- 
+ability P(falE,EQ) models the structural similarity of the two graphs under 
+the current set of correspondence matches. The assumptions used in develop- 
+ing our simplification of the a posteriori matching probability are as follows. 
+Firstly, we assume that the joint measurements are conditionally independent 
+of the structure of the two graphs provided that the set of correspondences is 
+known, i.e. P(AG,AQlf,E,VG,EQ,VQ) = P(A,AQlfG). Secondly, we as- 
+sume that there is conditional independence of the two graphs in the absence of 
+correspondences. In other words, P(VG,EG, VQ,EQ) = P(VQ,EQ)P(VG,EG) and 
+P(G,Q) = P(G)P(Q). Finally, the graph priors P(VG,EG), P(VQ,EQ) P(G) and 
+P(Q) are taken as uniform and are eliminated from the decision making process. 
+To continue our development, we first focus on the conditional measurement density, 
+p(AG,AQ]fG) which models the process of comparing attribute similarity on the 
+nodes of the two graphs. Assuming statistical independence of node attributes, the 
+conditional measurement density p(A, AQlf), can be factorised over the Cartesian 
+pairs (a, c)  VG x VQ which constitute the the correspondence match fo in the 
+following manner 
+p(AG,AQlfG) = H p(_Xa,_XlfG(a ) = c) 
+(a,) � fa 
+As a result the correspondence matches may be optimised using a simple node-by- 
+node discrete relaxation procedure. The rule for updating the match assigned to 
+the node a of the graph G is 
+fo(a) = arg max _p(�.,_x,)lf(a ) = ct)P(foIEG,EQ) 
+In order to model the structural consistency of the set of assigned matches,we turn 
+to the framework recently reported by Finch, Wilson and Hancock [2]. This work 
+provides a framework for computing graph-matching energies using the weighted 
+Hamming distance between matched cliques. Since we are dealing with a large-scale 
+object recognition system, we would like to minimise the computational overheads 
+associated with establishing correspondence matches. For this reason, rather than 
+Graph Matching for Shape Retrieval 899 
+working with graph neighbourhoods or cliques, we chose to work with the relational 
+units of the smallest practical size. In other words we satisfy ourself with measuring 
+consistency at the edge level. For edge-units, the structural matching probability 
+P(fo[Vo, Eo, VQ, EQ) is computed from the formula 
+lnP(fGIVG,EG,VG,EQ) = ' ' {ln(1-Pe)sa,sb,a+lnPe(1-sa,sb,a)} 
+(a,b)GEG (o,)GE 2 
+where Pe is the probability of an error appearing on one of the edges of the matched 
+structure. The Sa,, are assignment variables which are used to represent the current 
+state

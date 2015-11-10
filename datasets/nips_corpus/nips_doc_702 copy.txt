@@ -1,0 +1,179 @@
+Event-Driven Simulation of Networks of 
+Spiking Neurons 
+Lloyd Watts 
+Synaptics Inc. 
+2698 Orchard Parkway 
+San Jose CA 95134 
+11oydsynapt ics. com 
+Abstract 
+A fast event-driven software simulator has been developed for sim- 
+ulating large networks of spiking neurons and synapses. The prim- 
+itive network elements are designed to exhibit biologically realis- 
+tic behaviors, such as spiking, refractoriness, adaptation, axonal 
+delays, summation of post-synaptic current pulses, and tonic cur- 
+rent inputs. The efficient event-driven representation allows large 
+networks to be simulated in a fraction of the time that would be 
+required for a full compartmental-model simulation. Correspond- 
+ing analog CMOS VLSI circuit primitives have been designed and 
+characterized, so that large-scale circuits may be simulated prior 
+to fabrication. 
+1 Introduction 
+Artificial neural networks typically use an abstraction of real neuron behaviour, 
+in which the continuously varying mean firing rate of the neuron is presumed to 
+carry the information about the neuron's time-varying state of excitation [1]. This 
+useful simplification allows the neuron's state to be represented as a time-varying 
+continuous-amplitude quantity. However, spike timing is known to be important in 
+many biological systems. For example, in nearly all vertebrate auditory systems, 
+spiral ganglion cells from the cochlea are known to phase lock to pure-tone stimuli 
+for all but the highest perceptible frequencies [2]. The barn owl uses axonal delays 
+to compute azimuthal spatial localization [3]. Studies in the cat [4] have shown that 
+927 
+928 Watts 
+relative timing of spikes is preserved even at the highest cortical levels. Studies in 
+the visual system of the blowfly [5] have shown that the information contained in 
+just three spikes is enough for the fly to make a decision to turn, if the visual input 
+is sparse. 
+Thus, it is apparent that biological neural systems exploit the spiking and time- 
+dependent behavior of the neurons and synapses to perform system-level computa- 
+tion. To investigate this type of computation, we need a simulator that includes 
+detailed neural behavior, yet uses a signal representation efficient enough to allow 
+simulation of large networks in a reasonable time. 
+2 Spike: Event-Driven Simulation 
+Spike is a fast event-driven simulator optimized for simulating networks of spiking 
+neurons and synapses. The key simplifying assumption in Spike is that all currents 
+injected into a cell are composed of piecewise-constant pulses (i.e., boxcar pulses), 
+and therefore all integrated membrane voltage trajectories are piecewise linear in 
+time. This very simple representation is capable of surprisingly complex and realistic 
+behaviors, and is well suited for investigating system-level questions that rely on 
+detailed spiking behavior. 
+The simulator operates by maintaining a queue of scheduled events. The occurrence 
+of one event (i.e., a neuron spike) usually causes later events to be scheduled in the 
+queue (i.e., end of refractory period, end of post-synaptic current pulse). The total 
+current injected into a cell is integrated into the future to predict the time of firing, 
+at which time a neuron spike event is scheduled. If any of the current components 
+being injected into the cell subsequently change, the spike event is rescheduled. The 
+simulator runs until the queue is empty or until the desired run-time has elapsed. 
+A similar event-driven neural simulator was developed by Pratt [6]. 
+The simulator output may be plotted by a number of commercially available plotting 
+programs, including Gnuplot, Mathematica, Xvgr, and Cview. 
+3 NeuraLOG: Neural Schematic Capture 
+NeuraLOG is a schematic entry tool, which allows the convenient entry of neural 
+circuit diagrams, consisting of neurons, synapses, test inputs, and custom symbols. 
+NeuraLOG is a customization of the program AnaLOG, by John Lazzaro and Dave 
+Gillespie. 
+The parameters of the neural elements are entered directly on the schematic dia- 
+gram; these parameters include the neuron refractory period, duration and intensity 
+of the post-synaptic current pulse following an action potential, saturation value of 
+summating post-synaptic currents, tonic input currents, axonal delays, etc. Cus- 
+tom symbols can be defined, so that arbitrarily complex hierarchical designs may 
+be made. It is common to create a complex neuron containing many neuron and 
+synapse primitive elements. Spiking inputs may be supplied as external stimuli for 
+the circuit in a number of different formats, including single spikes, periodic spike 
+trains, periodic bursts, poisson random spike trains, and gaussian-jittered periodic 
+Event-Driven Simulation of Networks of Spiking Neurons 929 
+spike trains. Textual input to Spike is also supported, to allow simulation of circuit 
+topologies that would be too time-consuming to enter graphically. 
+4 A Simple Example 
+A simple example of a neural circuit is shown in Figure 1. This circuit consists of 
+two neurons (the large disks), several synapses (the large triangles), and two tonic 
+inputs (the small arrows). The text strings associated with each symbol define 
+that symbol's parameters: neuron parameters are identifier labels (i.e., nl) and 
+refractory period in milliseconds (ms); synapse parameters are the value of the post- 
+synaptic current in nA, and the duration of the current pulse in ms, and an optional 
+saturation parameter, which indicates how many post-synaptic current pulses may 
+be superposed before saturation; the tonic input parameter is the injected current 
+in nA. Filled symbols (tonic inputs and synapses) indicate inhibitory behavior. 
+-.8 10 8 >- 
+-8 15)- 
+6.4)- 
+.13 2.5 
+-.001 >- 
+Figure 1: Graphical input representation of a simple neural circuit, as en- 
+tered in NeuraLOG. 
+The simulated behavior of the circuit is shown in Figure 2. The neuron n! exhibits 
+an adapting bursting behavior, as seen in the top trace of the plot. 
+The excitatory tonic current input to neuron n! causes nl to fire repeatedly. The 
+weakly excitatory synapse from n! to neuron n2 causes n2 to fire after many spikes 
+from nl. The synaptic current in the synapse from n! to n2 is plotted in the trace 
+labeled snln2. The strongly inhibitory synapse from n2 to n! causes n! to stop 
+firing after n2 fires a spike. The synaptic current in the synapse from n2 to n! is 
+plotted in the trace labeled sn2nl. The combination of the excitatory tonic input 
+to n! and the inhibitory feedback from n2 to n! causes the bursting behavior. 
+The adapting behavior is caused by the self-inhibitory accumulating feedback from 
+neuron n! to itself, via the summating inhibitory synapse in the top left of the 
+diagram. Each spike on n! causes a slightly increased inhibitory current into 
+which gradually slows the rate of firing with each successive pulse. The synaptic 
+current in this inhibitory synapse is plotted in the trace znlnl; it is similar to the 
+930 Watts 
+nl 
+n2 
+snlnl 
+sn2nl 
+snln2 
+0 10 20 30 40 50 60 70 
+Time (ms) 
+Figure 2: Simulation results for the circuit of Figure 1, showing adapting 
+bursting behavior. 
+current that would be generated by a cMcium-dependent potassium channel. 
+This simple example demonstrates that the summating synapse primitive can be 
+used to model a behavior that is not strictly synaptic in origin; it can be thought 
+of as a general time-dependent state variable. This example also illustrates the 
+principle that proper network topology (summating synapse in a negative feedback 
+loop) can lead to realistic system-level behavior (gradual adaptation), even though 
+the basic circuit elements may be rather primitive (boxcar current pulses). 
+5 Applications of the Simulation Tools 
+NeuraLOG and Spike have been used by the author to model spiking associative 
+memories, adaptive structures that learn to predict a time delay, and chaotic spiking 
+circuits. Researchers at Caltech [7, 8] and the Salk Institute have used the tools in 
+their studies of locust central pattern generators (CPGs) and cortical oscillations. 
+The cortical oscillation circuits contain a few hundred neurons and a few thousand 
+synapses. A CPG circuit, developed by Sylvie Ryckebusch, is shown in Figure 3; 
+the corresponding simulation output is shown in Figure 4. 
+NeuraLOG and Spike are distributed at no charge under the GNU licence. They 
+are currently supported on HP and Sun workstations. The tools are supplied with 
+a user's manual and working tutorial examples. 
+Event-Driven Simulation of Networks of Spiking Neurons 931 
+i11) 
+levi) 
+t #d; 
+levr 
+� dsl levi 
+ilr) 
+levr) 
+levr pirr.   
+� der levr)  
+Figure 3: Sylvie lyckebusch's locust CPG circuit. For clarity, the synapse 
+parameters have been omitted. 
+932 Watts 
+in 
+dfl 
+dsl 
+ill 
+levi 
+pirl 
+dfr 
+dsr 
+ilr 
+levr 
+pirr 
+J .I J J J J 
+� J J J .I J J J 
+J J J J J J J J J 
+J J J J J J J J J !' 
+0 20 40 60 80 100 
+Time (ms) 
+Figure 4: Simulation results for Sylvie Pyckebusch's locust CPG circuit. 
+6 The Link to Analog VLSI 
+Analog VLSI circuit primitives that can be modelled by Spike have been designed 
+and tested. The circuits are shown in Figure 5, and have been described previously 
+[9, 10]. These circuits have been used by workers at Caltech to implement VLSI 
+models of central pattern generators. The software simulation tools allow simulation 
+of complex neural circuits prior to fabrication, to improve the likelihood of success 
+on first silicon, and to allow optimization of shared parameters (bias wires). 
+7 Conclusion 
+NeuraLOG and Spike fill a need for a fast neural simulator that can model large 
+networks of biologically realistic spiking neurons. The simple computational prim- 
+itives within Spike can be used to create complex and realistic neural behaviors 
+in arbitrarily complex hierarchical designs. The tools are publicly available at no 
+charge. NeuraLOG and Spike have been used by a number of research labs for 
+

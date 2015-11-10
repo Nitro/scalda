@@ -1,0 +1,144 @@
+2O 
+ASSOCIATIVE LEARNING 
+VIA INHIBITORY SEARCH 
+David H. Ackley 
+Bell Communications Research 
+Cognitive Science Research Group 
+ABSTRACT 
+ALVIS is a reinforcement-based connectionist architecture that 
+learns associative maps in continuous multidimensional environ- 
+ments. The discovered locations of positive and negative rein- 
+forcements are recorded in do be and don't be subnetworks, 
+respectively. The outputs of the subnetworks relevant to the cur- 
+rent goal are combined and compared with the current location to 
+produce an error vector. This vector is backpropagated through 
+a motor-perceptual mapping network to produce an action vec- 
+tor that leads the system towards do-be locations and away from 
+don't-be locations. ALVIS is demonstrated with a simulated robot 
+posed a target-seeking task. 
+INTRODUCTION 
+The backpropagatlon algorithm or generalized delta rule (Rumelhart, Hinton, & 
+Williams, 1986) is sometimes criticized on the grounds that it is a supervised 
+learning algorithm, which requires a teacher to provide correct outputs, and 
+apparently leaves open the question of how the teacher learned the right answers. 
+However, work by Rumelhart (personal communication, 1987) and Miyata (1988) 
+has shown how the environment that a system is embedded in can serve as the 
+teacher. If, as in this paper, a backpropagation network is posed the task of 
+mapping from a vector t of robot arm joint angles to the resulting vector X of 
+arm coordinates in space (the 'forward kinematics problem), then input-output 
+training data can be obtained by supplying sets of joint angles to the arm and 
+observing the resulting configurations. 
+Although this environment as teacher strategy shows how a teacher can come to 
+possess useful information without an infinite regress learning it, it is not a complete 
+solution. There are problems for which the laws of physics of an environment 
+do not suffice to determine the solution. Suppose, for example, that a robot is 
+posed the problem of learning to reach for different positions in space depending 
+on which of a set of signals is currently presented, and that the only feedback 
+available from the environment is success or failure information about the current 
+arm configuration. 
+Associative Learning via Inhibitory Search 21 
+c b 
+d a 
+Figure 1. A trunk robot. 
+What is needed in such a case is a mechanism to search through the space of possi- 
+ble arm configurations, recording the successful configurations associated with the 
+various inputs. A�VIS  Associative Learning Via Inhibitory Search -- provides 
+one such mechanism. The next section applies backpropagation to the t? -- X map- 
+ping and shows how the resulting network can sometimes be used to solve X -- t 
+problems. The third section, Self-supervision and inhibitory search, integrates 
+that network into the overall A�VIS algorithm. The final section contains some 
+discussion and conclusions. An expanded version of this paper may be found in 
+Acldey (1988). 
+FORWARD AND INVERSE KINEMATICS 
+The inverse kinematics problem in controlling an arm is the problem of determining 
+what joint angles are needed to produce a specific position and orientation of a hand. 
+In the general case it is a difficult problem. An itch on your back suggests the kinds 
+of questions that arise. Which hand should you use? Should you go up from around 
+your waist, or down from over your shoulders? Can you be sure you know what 
+will work without actually trying it? 
+From a computational standpoint, forward kinematics  deciding where your limbs 
+will end up given a set of joint angles -- is an easier problem. 
+Figure 1 depicts the planar robot that was used in this work. I call it the trunk 
+robot. (The work discussed in Ackley (1988) also used a two-handed pincer 
+robot.) Of course, the trunk is a far cry from a real robot, and the only significant 
+constraint is that the possible joint angles are limited, but this suffices to pose 
+non-trivial kinematics problems. The trunk has five joints, and each joint angle is 
+limited to a range of 4 � to 176 � with respect to the previous limb. 
+I simulated a backpropagation network with five real-valued input units (the joint 
+angles), sixty hidden units in a single layer, and twelve linear output units (the 
+Cartesian joint positions). Joint angles were expressed in radians, so the range of 
+input unit values was from about 0.07 to about 3.07. The configuration vector X 
+was represented by twelve output units corresponding to six pairs of (,//) coordi- 
+22 Ackley 
+Figure 2. A logarithmic strobe display of the trunk's asymptotic convergence on 
+a specified position and orientation. The arm position is displayed after iterations 
+1,2,4, 8,... ,256. 
+nates, one pair for each joint a through f. With the trunk robot (though not with 
+the pincer) f and fy have constant values, since they end up being part of the 
+anchor. The state of an output unit equals the sum of its inputs, and the error 
+propagated out of an output unit equals the error propagated into it. 
+Errors were defined by the difference between the predicted configuration and the 
+actual configuration, and after extensive training on the trunk robot forward kine- 
+matics problem, the network achieved high accuracy over most of the joint ranges. 
+In typical backpropagation applications, once the desired mapping has been learned, 
+the backward error channels in the network are no longer used. However, suppose 
+some other error computation, different from that used to train the weights, was 
+then incorporated. Those errors can be propagated from the outputs of the trained 
+network all the way back to the inputs. The goal is no longer to change weights 
+in the network -- since they already represent a useful mapping -- but to use the 
+trained network to translate output-space errors, however defined, into errors at 
+the inputs to the network. 
+Figure 2 illustrates one use of this process, showing how a trained forward kine- 
+matics network can be used to perform a cheap kind of inverse kinematics. The 
+figure shows superimposed outputs of the trained network under the influence of 
+a task-specific error computation; in this case the trunk is trying to reduce the 
+distances between the front and back of a target arrow and the front and back 
+of its first arm section. The target arrow is defined by a head (h, hy) and a tail 
+(t,ty). The errors for output units a and % are defined by e(a) = h-a and 
+e(%) = by-%, the errors for output units b and by are defined by e(b) = t-b 
+and e(by) -- ty - by, and the errors at all other outputs are set to zero. 
+The algorithm used to generate this behavior has the following steps: 
+1. Compute errors for one or more output units based on the current positions 
+of the joints and the desired positioning and orienting information. If close 
+Associative Learning via Inhibitory Search 23 
+Figure 3. The trunk kinking itself. 
+enough to the target, exit, otherwise, store these errors on the selected 
+output units, and set the other error terms to zero. 
+2. Backpropagate the errors all the way through the network to the input 
+units. This produces an error term e(i) for each joint angle t i. Produce 
+new joint angles: t; - t i -- ke(ti) where k is a scaing constant. Clip the 
+joint angles against their minimum and maximum values. 
+3. Forward propagate through the network bosed on the new joint angles, to 
+produce new current positions for the joints. Go to step 1. 
+Whereos the training phose has forward propagation of activations (states) followed 
+by back propagation of errors, this usage reverses the order. Backpropagation of 
+errors is followed by changes in inputs followed by forward propagation of activa- 
+tions. This is a general gradient descent technique usable when a backpropagation 
+network can learn to map from a control space t to an error or evaJuation space X. 
+Figure 3 illustrates how gradient descent's familiar limitation can manifest itself: 
+The tazget is reachable but the robot fails to reach it. The initiaJ configuration 
+was such that while approaching the target, the trunk kinked itself too short to 
+reach. If the robot had thoughtto open t3 instead of closing it, it could have 
+succeeded. In that sense, the problem arises because the error computation only 
+specified errors for the tip of the trunk, and not for the rest of the arm. If, instead, 
+there were indications where a//of the joints were to be placed, failures due to local 
+minima could be greatly reduced. 
+SELF-SUPERVISION AND INHIBITORY SEARCH 
+The feedback control network of the previous section locally minimizes joint position 
+errors -- however they are generated -- by translating them into joint angle space 
+and moving downhill. A�VI$ uses the feedback control network for arm control; 
+this section shows how A�VI$ learns to generate appropriate joint position space 
+errors given only a reinforcement signal. There are two key points. The first is 
+this: Once an action producing a positive reinforcement hos somehow been found, 
+24 Ackley 
+the problem reduces to associative mapping between the input and the discovered 
+correct output. In ALVI$, do-be units are used to record such successes. The 
+second point is this: When negative reinforcement occurs, the current configuration 
+can be associated with the input in a behavior-reversed fashion -- as a place to 
+avoid in the future. In ALVI$, don't-be units are used to record such failures. 
+The overall idea, then, is to perform inhibitory search by remembering failures as 
+they occur and avoiding them in the future, and to perform associative learning 
+by remembering successful configurations as the search process uncovers them and 
+recreating them in the future. In effect, ALVIS constructs input-dependent attrac- 
+torsat arm configurations associated with success and repellots at configurations 
+associated with fa

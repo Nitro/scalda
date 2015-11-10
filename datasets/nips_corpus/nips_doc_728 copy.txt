@@ -1,0 +1,196 @@
+Two-Dimensional Object Localization by 
+Coarse-to-Fine Correlation Matching 
+Chien-Ping Lu and Eric Mjolsness 
+Department of Computer Science 
+Yale University 
+New Haven, CT 06520-8285 
+Abstract 
+We present a Mean Field Theory method for locating two- 
+dimensional objects that have undergone rigid transformations. 
+The resulting algorithm is a form of coarse-to-fine correlation 
+matching. We first consider problems of matching synthetic point 
+data, and derive a point matching objective function. A tractable 
+line segment matching objective function is derived by considering 
+each line segment as a dense collection of points, and approximat- 
+ing it by a sum of Gaussians. The algorithm is tested on real images 
+from which line segments are extracted and matched. 
+I Introduction 
+Assume that an object in a scene can be viewed as an instance of the model placed 
+in space by some spatial transformation, and object recognition is achieved by dis- 
+covering an instance of the model in the scene. Two tightly coupled subproblems 
+need to be solved for locating and recognizing the model: the correspondence prob- 
+lem (how are scene features put into correspondence with model features?), and the 
+localization problem (what is the transformation that acceptably relates the model 
+features to the scene features?). If the correspondence is known, the transformation 
+can be determined easily by least squares procedures. Similarly, for known trans- 
+formation, the correspondence can be found by aligning the model with the scene, 
+or the problem becomes an assignment problem if the scene feature locations are 
+jittered by noise. 
+985 
+986 Lu and Mjolsness 
+Several approaches have been proposed to solve this problem. Some tree-pruning 
+methods [1, 3] make hypotheses concerning the correspondence by searching over 
+a tree in which each node represents a partial match. Each partial match is then 
+evaluated through the pose that best fits it. In the generalized Hough transform or 
+equivalently template matching approach [7, 3], optimal transformation parameters 
+are computed for each possible pairing of a model feature and a scene feature, and 
+these optimal parameters then vote for the closest candidate in the discretized 
+transformation space. 
+By contrast with the tree-pruning methods and the generalized Hough transform, we 
+propose to formulate the problem as an objective function and optimize it directly 
+by using Mean Field Theory (MFT) techniques from statistical physics, adapted as 
+necessary to produce effective algorithms in the form of analog neural networks. 
+2 Point Matching 
+Consider the problem of locating a two-dimensional model object that is believed 
+to appear in the scene. Assume first that both the model and the scene are 
+represented by a set of points respectively, {xi} and {Ya}- The problem is to 
+recover the actual transformation (translation and rotation) that relates the two 
+sets of points. It can be solved by minimizing the following objective function 
+Ematch(Mia,O,t) ----- E Mia[[xi- ILoYa - t[[ 2 
+ia 
+(1) 
+where {Mi,} = M is a 0/1-valued match matrix representing the unknown cor- 
+respondence, R0 is a rotation matrix with rotation angle 0, and t is a translation 
+vector. 
+2.1 Constraints on match variables 
+We need to enforce some constraints on correspondence (match) variables Mia; 
+otherwise all Mia = 0 in (1). Here, we use the following constraint 
+= _> 0; (2) 
+ia 
+implying that there are exactly N matches among all possible matches, where N 
+is the number of the model features. Summing over permutation matrices obeying 
+this constraint, the effective objective function is approximately [5]: 
+1 
+F(O, t,/) - - E e-/511x'-ReY-tll' (3) 
+a 
+which has the same fixed points as 
+1 
+Spena,ty(U,/, t) -- Eraarch(M,/, t) +  E Mia(log Mia - 1), (4) 
+where Mi is treated as a continuous variable and is subject to the penalty function 
+z(log z - 1). 
+Two-Dimensional Object Localization by Coarse-to-Fine Correlation Matching 987 
+Figure 1: Assume that there is only translation between the model and the scene, 
+each containing 20 points. The objective functions at at different temperatures 
+(/-1): 0.0512 (top left), 0.0128 (top right), 0.0032 (bottom left) and 0.0008 (bot- 
+tom right), are plotted as energy surfaces of x and y components of translation. 
+Now, let $ = 1/2rr 2 and write 
+Epont(O, t) =  e- 'x'-R'Y -t (5) 
+ia 
+The problem then becomes that of maximizing Epoint, which in turn can be interpre- 
+tated as minimizing the Euclidean distance between two Gaussian-blurred images 
+containing the scene points xi and a transformed version of the model points ya. 
+Tracking the local maximum of the objective function from large a to small a, as in 
+deterministic annealing and other continuation methods, corresponds to a coarse- 
+to-fine correlation matching. See Figure 1 for a demonstration of a simpler case in 
+which only translation is applied to the model. 
+2.2 The descent dynamics 
+A gradient descent dynamics for finding the saddle point of the effective objective 
+function F is 
+ -- -mia(Xi - RoYa - t) 
+ia 
+ = -  -a(x - l0y - t/(l0+y), 
+ia 
+(6) 
+988 Lu and Mjolsness 
+where rnia -- {Mia}/ = e -llx'-Ry-tll2 is the soft correspondence associated 
+with Mia. Instead of updating t by descent dynamics, we can also solve for t 
+directly. 
+3 The Vernier Network 
+Though the effective objective is non-convex over translation at low temperatures, 
+its dependence on rotation is non-convex even at relatively high temperatures. 
+3.1 Hierachical representation of variables 
+We propose overcoming this problem by applying Mean Field Theory (MFT) to a 
+hierachical representation of rotation resulting from the change of variables [4] 
+B-1 
+0 = Xb(Ob +0b), 0  [--0,01, (7) 
+b=0 
+where 0 = r/2B,  = (b + �) are the constant centers of the intervals, and 0 
+are fine-scale vernier variables. The X's are binary variables (so Xb G {0, 1}) that 
+satisfy the winner-take-all (WTA) constraint  X - 1. 
+The essential reason that this hierarchical representation of 0 has fewer spurious 
+local minima than the conventional analog representation is that the change of 
+variables also changes the connectivity of the network's state space: big jumps in 0 
+can be achieved by local variations of X- 
+3.2 Vernier optimization dynamics 
+Epoint can be transformed as (see [6, 4])  
+/point ( 0, t) 
+Avbl 
+b b 
+b 
+1Notation: Coordinate descent with 2-phase clock q,(t): 
+(8) 
+� for clocked sum 
+ for a clamped variable 
+x A for a set of variables to be optimized analytically 
+(v, u) s for Hopfield/Grossberg dynamics 
+E(x, Y)o) for coordinate descent/scent on x, then y, iterated if necessary. Nested 
+angle brackets correspond to nested loops. 
+Two-Dimensional Object Localization by Coarse-to-Fine Correlation Matching 989 
+06. 0�%0. 
+oQ O � 
+O oO 
+Figure 2: Shown here is an example of matching a 20-point model to a scene with 
+66.7% spurious outliers. The model is represented by circles. The set of square dots 
+is an instance of the model in the scene. All other dots are outliers. From left to 
+right are configurations at the annealing steps 1, 10, and 51, respectively. 
+1 sinh(eub) 
+MI/_,T  XbE( + v, tb) + 7 (uvb - log ) 
+b b 
++WqA(x, 
+(9) 
+Each bin-specific rotation angle v can be found by the following fixed point equa- 
+tions 
+tb = rn, a(x,-- RvbYa) 
+a 
+ub : --fyrnia(xi -- Rvbya -- tb)(R.+ya) 
+ia 
+1 o 
+v = (O + ) - u tanh(e0u) = g(u). (10) 
+The algorithm is illustrated in Figure 2. 
+4 Line Segment Matching 
+In many vision problems, representation of images by line segments has the ad- 
+vantage of compactness and subpixel accuracy along the direction transverse to the 
+line. However, such a representation of an object may vary substantially from image 
+to image due to occlusions and different illumination conditions. 
+4.1 Indexing points on line segements 
+The problem of matching line segments can be thought of as a point matching 
+problem in which each line segment is treated as a dense collection of points. Assume 
+now that both the scene and the model are represented by a set of line segments 
+respectively, {si} and {ma}. Both the model and the scene line segments are 
+990 Lu and Mjolsness 
+Figure 3' Approximating �(t) by a sum of 3 Gaussians. 
+represented by their endpoints as si: (pi,Pti) and ma -- (qa, qt,), where pi,Pti, 
+and qa, q[ are the endpoints of the ith scene segment and the ath model segment, 
+respectively. The locations of the points on each scene segment and model segments 
+can be parameterized as 
+x i = si(u) = 
+Ya = ma(v) = 
+Pi + u(p'i - pi), u 6 [0, 1] and (11) 
+qa q- v(q'. --qa), V C [0, 1]. (12) 
+Now the model points and the scene points can be though of as indexed by i = 
+(i, u) and a = (a, v). Using this indexing, we have Ei  El lifO 1 dt and Ea c< 
+, I, fo 1 dv, where li = IIPi-p'll and l = Ilq,-q'll. The point matching objective 
+function (5) can be specialized to line segment matching as [5] 
+/01f01 
+Eseg(0, t): lila e 2211s'()-Rm*(v)-tl12du dv. (13) 
+ia 
+As a special case of point matching objective function, (13) can readily be trans- 
+formed to the vernier network previously developed for point matching problem. 
+4.2 Gaussian sum approximation 
+Note that, as in Figure 3 and [5], 
+1 if tC[0,1] 
+�(t) _= 0 otherwise 
+a i (c - t)  
+m Aexp 2 rr (14) 
+k--1 
+where by numerical minimization of the Euclidean distance between these two func- 
+tions of t, the parameters may be chosen as A1 - Aa: 0.800673, A2: 1.09862, 
+ax = 3 = 0.0929032,  = 0.237033, cx = 1 - ca = 0.116807, and c = 0.5. 
+Using this approximation, each finite double integral in (13) can be replaced by 
+ A/A, e 2 e --(-? 11sd')+Rm()-tl12dudv.(15) 
+C 2 TM 
+k,l=l 
+Each of these nine Gaussian integrals can be done exactly. Defining 
+vi,: si(c)- Roma(c,)- t (16) 
+i = p' - p,  = Ro(q'. - q), (17) 
+Two-Dimensional Object Localization by Coarse-to-Fine Co

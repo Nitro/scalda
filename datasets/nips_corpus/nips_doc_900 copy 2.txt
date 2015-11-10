@@ -1,0 +1,136 @@
+Learning Saccadic Eye Movements 
+Using Multiscale Spatial Filters 
+Rajesh P.N. Rao and Dana H. Ballard 
+Department of Computer Science 
+University of Rochester 
+Rochester, NY 14627 
+{rao, dana}cs. rochester. edu 
+Abstract 
+We describe a framework for learning saccadic eye movements using a 
+photometric representation of target points in natural scenes. The rep- 
+resentation takes the form of a high-dimensional vector comprised of the 
+responses of spatial filters at different orientations and scales. We first 
+demonstrate the use of this response vector in the task of locating pre- 
+viously foveated points in a scene and subsequently use this property in 
+a multisaccade strategy to derive an adaptive motor map for delivering 
+accurate saccades. 
+1 Introduction 
+There has been recent interest in the use of space-variant sensors in active vision systems 
+for tasks such as visual search and object tracking [14]. Such sensors realize the simultane- 
+ous need for wide field-of-view and good visual acuity. One popular class of space-variant 
+sensors is formed by log-polar sensors which have a small area near the optical axis of 
+greatly increased resolution (the fovea) coupled with a peripheral region that witnesses 
+a gradual logarithmic falloff in resolution as one moves radially outward. These sensors 
+are inspired by similar structures found in the primate retina where one finds both a 
+peripheral region of gradually decreasing acuity and a circularly symmetric area centralis 
+characterized by a greater density of receptors and a disproportionate representation in 
+the optic nerve [3]. The peripheral region, though of low visual acuity, is more sensitive 
+to light intensity and movement. 
+The existence of a region optimized for discrimination and recognition surrounded by a 
+region geared towards detection thus allows the image of an object of interest detected 
+in the outer region to be placed on the more analytic center for closer scrutiny. Such a 
+strategy however necessitates the existence of (a) methods to determine which location 
+in the periphery to loveate next, and (b) fast gaze-shifting mechanisms to achieve this 
+894 Rajesh P. N. Rao, Dana H. Ballard 
+foveation. In the case of humans, the where-to-look-next issue is addressed by both 
+bottom-up strategies such as motion or salience clues from the periphery as well as top- 
+down strategies such as search for a particular form or color. Gaze-shifting is accomplished 
+via very rapid eye movements called saccades. Due to their high velocities, guidance 
+through visual feedback is not possible and hence, saccadic movement is preprogrammed 
+or ballistic: a pattern of muscle activation is calculated in advance that will direct the 
+fovea almost exactly to the desired position [3]. 
+In this paper, we describe an iconic representation of scene points that facilitates top- 
+down foveal targeting. The representation takes the form of a high-dimensional vector 
+comprised of the responses of different order Gaussian derivative filters, which are known 
+to form the principal components of natural images [5], at variety of orientations and 
+scales. Such a representation has been recently shown to be useful for visual tasks ranging 
+from texture segmentation [7] to object indexing using a sparse distributed memory [11]. 
+We describe how this photometric representation of scene points can be used in locating 
+previously foveated points when a log-polar sensor is being used. This property is then 
+used in a simple learning strategy that makes use of multiple corrective saccades to 
+adaptively form a retinotopic motor map similar in spirit to the one known to exist in 
+the deep layers of the primate superior colliculus [13]. Our approach differs from previous 
+strategies for learning motor maps (for instance, [12]) in that we use the visual modality 
+to actively supply the necessary reinforcement signal required during the motor learning 
+step (Section 3.2). 
+2 The Multiscale Spatial Filter Representation 
+In the active vision framework, vision is seen as subserving a larger context of the encom- 
+passing behaviors that the agent is engaged in. For these behaviors, it is often possible 
+to use temporary, iconic descriptions of the scene which are only relatively insensitive 
+to variations in the view. Iconic scene descriptions can be obtained, for instance, by 
+employing a bank of linear spatial filters at a variety of orientations and scales. In our 
+approach, we use derivative of Gaussian filters since these are known to form the domi- 
+nant eigenvectors of natural images [5] and can thus be expected to yield reliable results 
+when used as basis functions for indexing . 
+The exact number of Gaussian derivative basis functions used is motivated by the need 
+to make the representations invariant to rotations in the image plane (see [11] for more 
+details). This invariance can be achieved by exploiting the property of steerability [4] 
+which allows filter responses at arbitrary orientations to be synthesized from a finite set 
+of basis filters. In particular, our implementation uses a minimal basis set of two first- 
+order directional derivatives at 0 � and 90 �, three second-order derivatives at 0 �, 60 � and 
+120 �, and four third-order derivatives oriented at 0 �, 45 �, 90 �, and 135 �. 
+0j 
+The response of an image patch I centered at (x0, y0) to a particular basis filter G i can 
+be obtained by convolving the image patch with the filter: 
+ri,j(xo,Yo) = (G? * I)(xo,yo) = G i (Xo - x, yo - y)I(x,y)dxdy (1) 
+In addition, these filters are endorsed by recent physiological studies [15] which show that 
+derivative-of-Gaussians provide the best fit to primate cortical receptive field profiles among the 
+different functions suggested in the literature. 
+Learning Saccadic Eye Movements Using Multiscale Spatial Filters 895 
+The iconic representation for the local image patch centered at (x0,Y0) is formed by 
+combining into a single high-dimensional vector the responses from the nine basis filters, 
+each (in our current implementation) at five different scales: 
+F(xo,Yo)=(ri,j,s), i=l,2,3;j=l,...,i+l;s=s,i,,...,s,x 
+(2) 
+where i denotes the order of the filter, j denotes the number of filters per order, and s 
+denotes the number of different scales. 
+The use of multiple scales increases the perspicuity of the representation and allows inter- 
+polation strategies for scale invariance (see [9] for more details). The entire representation 
+can be computed using only nine convolutions done at frame-rate within a pipeline image 
+processor with nine constant size 8 x 8 kernels on a five-level octave-separated low-pass- 
+filtered pyramid of the input image. 
+The 45-dimensional vector representation described above shares some of the favorable 
+matching properties that accrue to high-dimensional vectors (cf. [6]). In particular, the 
+distribution of distances between points in the 45-dimensional space of these vectors 
+approximates a normal distribution; most of the points in the space lie at approximately 
+the mean distance and are thus relatively uncorrelated to a given point [11]. As a result, 
+the multiscale filter bank tends to generate almost unique location-indexed signatures of 
+image regions which can tolerate considerable noise before they are confused with other 
+image regions. 
+2.1 Localization 
+Denote the response vector from an image point as F/and that from a previously foveated 
+model point as F,. Then one metric for describing the similarity between the two points 
+is simply the square of the Euclidean distance (or the sum-of-squared-differences) between 
+their response vectors di, = [l/- 'mll 2. The algorithm for locating model points in a 
+new scene can then be described as follows: 
+1. For the response vector representing a model point m, create a distance image 
+I, defined by 
+I, (x, y) = rnin[I,x - ldim, O] (3) 
+where/ is a suitably chosen constant (this makes the best match the brightest 
+point in I,). 
+2. Find the best match point (xb, yb) in the image using the relation 
+(x., y.) = argmax {I, (x, y) } (4) 
+Figure 1 shows the use of the localization algorithm for targeting the optical axis of a 
+uniform-resolution sensor in an example scene. 
+2.2 Extension to Space-Variant Sensing 
+The localization algorithm as presented above will obviously fail for sensors exhibiting 
+nonuniform resolution characteristics. However, the multiscale structure of the response 
+vectors can be effectively exploited to obtain a modified localization algorithm. Since 
+decreasing radial resolution results in an effective reduction in scale (in addition to some 
+896 Rajesh P. N. Rao, Dana H. Ballard 
+(a) (b) (c) (d) 
+Figure 1: Using response vectors to saccade to previously foveated positions. (a) Initial gaze 
+point. (b) New gaze point; (c) To get back to the original point, the distance image is 
+computed: the brightest spot represents the point whose response vector is closest to that of the 
+original gaze point; (d) Location of best match is marked and an oculomotor command at that 
+location can be executed to loveate that point. 
+other minor distortions) of previously foveated regions as they move towards the periph- 
+ery, the filter responses previously occuring at larger scales now occur at smaller scales. 
+Responses usually vary smoothly between scales; it is thus possible to establish a corre- 
+spondence between the two response vectors of the same point on an object imaged at 
+different scales by using a simple interpolate-and-compare scale matching strategy. That 
+is, in addition to comparing an image response vector and a model response vector di- 
+rectly as outlined in the previous section, scale interpolated versions of the image vector 
+are also compared with the original model response vector. In the simplest case, interpo- 
+lation amounts to shifting image response vectors by one scale and thus, responses from a 
+new image are compared with o

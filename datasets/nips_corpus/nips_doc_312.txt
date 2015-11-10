@@ -1,0 +1,156 @@
+VLSI Implementation of TInMANN 
+Matt Melton Tan Phan Doug Reeves 
+Electrical and Computer Engineering Dept. 
+North Carolina State University 
+Raleigh, NC 27(195-7911 
+Dave Van den Bout 
+Abstract 
+A massively parallel, all-digital, stochastic architecture -- TInMAN hi -- is 
+described which performs competitive and Kohonen types of learning. A 
+VLSI design is shown for a TlnMAhihl neuron which fits within a small, 
+inexpensive MOSIS TinyChip frame, yet which can be used to build larger 
+networks of several hundred neurons. The neuron operates at a speed of 
+15 MHz which allows the network to process 290,000 training examples 
+per second. Use of level sensitive scan logic provides the chip with 100% 
+fault coverage, permitting very reliable neural systems to be built. 
+1 INTRODUCTION 
+Uniprocessor simulation of neural networks has been the norm, but benefiting from 
+the parallelism in neural networks is impossible without specialized hardware. Most 
+hardware-based neural network simulators use a single high-speed ALU or multiple 
+DSP chips connected through communication buses. The first approach does not 
+allow exploration of the effects of parallelism, while the complex processors used in 
+the second approach hinder investigations into the minimal hardware needs of an 
+implementation. Such knowledge can be gained only if an implementation possess 
+the same characteristics as a neural network -- i.e. that it be built from many 
+simple, cooperating processing elements. However, constructing and connecting 
+large numbers of processing elements (or neurons) is difficult. Highly-connected, 
+densely-packed analog neurons can be practically realized on a single VLSI chip, 
+but interconnecting several such chips into a larger system would require many I/O 
+pins. In addition, external parasitic capacitances and noise can affect the reliable 
+transfer of data between the chips. These problems are avoided in neural systems 
+1046 
+VLSI Implementation of TInMANN 1047 
+based on noise-resistant digital signals that can be multiplexed over a small number 
+of wires. 
+The next section of this paper describes the basic theory, algorithm, and architecture 
+of the TInMANN digital neural network. The third section illustrates the VLSI 
+design of a TInMANN neuron that operates at 15 MHz, is completely testable, and 
+can be cascaded to form large Kohonen or competitive networks. 
+2 TInMANN ALGORITHM AND ARCHITECTURE 
+In the competitive learning algorithm (Rumelhart, 198�), training vectors of length 
+W, v= (v,v2,..., vw), are presented to a winner-take-all network of N neurons. 
+Each neuron i possesses a weight vector of length W, 
+and a winning neuron k is selected as the one whose weight vector is closest to the 
+current training vector. Neuron k is then moved closer to the training vector by 
+modifying its weights as follows 
+0<e<l, I<_j<_W. 
+If the network is trained with a set of vectors that are naturally clustered into 
+N groups, then each neural weight vector will eventually reside in the center of a 
+different group. Thereafter, an input vector applied to the network is encoded by 
+the neuron that has been sensitized to the cluster containing the input. 
+Kohonen's self-organizing feature maps (Kohonen, 1982) are trained using a gener- 
+alization of competitive learning where each neuron i is provided with an additional 
+X-element vector, x/= (t, zi2,..., zix), that defines its topological position with 
+relation to the other neurons in the network. As before, neuron k of the N neurons 
+wins if it is the closest to the current training vector, but the weight adjustment 
+now affects all neurons as determined by a decreasing function f of their topological 
+distance from neuron k and a threshold distance dr: 
+Ivij �: Ivij + . f([]x, - xili, dr). (vj - Ivij) 0 < e < 1, 1 <_ j <_ W, 1 <_ i <_ N. 
+This function allows the winning neuron to drag its neighbors toward a given section 
+of the input space so that topologically close neurons will eventually react similarly 
+to closely spaced input vectors. 
+The integer Markovgan learning algorithm of Figure I simplifies the Kohonen learn- 
+ing procedure by noting that the neuron weights slowly integrate the effects of 
+stimuli. This integration can be done by stochastically updating the weights with 
+a probability proportional to the neural input. The stochastic update of the neural 
+weights is done by generating two uncorrelated random numbers, R and R2, on the 
+interval [0, dr] that each neuron compares to its distance from the current training 
+vector and its topological distance from the winning neuron, respectively. A neuron 
+will try to increment or decrement the elements of its weight vector closer to the 
+training vector if the absolute value of the intervening distance is greater than R, 
+thus creating a total movement proportional to the distance when averaged over 
+many cycles. This movement is inversely modulated by the topological distance 
+to the winning neuron k via a comparison with R2. The total effect produced by 
+these two stochastic processes is equivalent to that produced in Kohonen's original 
+algorithm, but only simple additive operations are now needed. Figure 2 shows 
+1048 Melton, Phan, Reeves, and Van den Bout 
+for( i 1; i _< N; i 4= i +1 ) 
+for( j 4= ; j < w; j 4=+  ) 
+wi 4= random() 
+for( v (training set} ) 
+parallelfor( all neurons i ) 
+for( j 4= ; j < w; j 4= j+ 1 ) 
+d 4= d + I - wl 
+kl 
+for( i  1; i  N; i  i + 1 ) 
+i d < d ) 
+ki 
+parCelfor(  neurons i ) 
+d 0 
+fo(j;jx; j+ ) 
+fo(j  ;j w; j  j+  ) 
+R  random() 
+Ra  random() 
+parallelfor(  neurons i ) 
+/* stochastic weight update */ 
+i I -l >  .d d   ) 
+wi  wi+ sign( - wij) 
+Figure 1: The integer Markovian learning algorithm. 
+our simplified algorithm operates correctly on a problem that has often been solved 
+using Kohonen networks. 
+The integer Markovian learning algorithm is practical to implement since only sim- 
+ple neurons are needed to do the additive operations and a single global bus can 
+handle all the broadcast transmissions. The high-level architecture for such an im- 
+plementation is shown in Figure 3. TInMAhlhl consists of a global controller that 
+coordinates the actions of a linear array of neurons. The neurons contain circuitry 
+for comparing and updating their weights. and for enabling and disabling them- 
+selves during the conditional portions of the algorithm. The network topology is 
+configured by arranging the neurons in an X-dimensional space rather than by 
+storing a graph structure in the hardware. This allows the calculation of the topo- 
+logical distance between neurons using the same circuitry as is used in the weight 
+calculations. TInMANN performs the following operations for each training vector: 
+1. The global controller broadcasts the W elements of v while each neuron accu- 
+mulates in A the absolute value of the difference between the elements of its 
+weight vector (stored in the small, local RAM) and those of the training vector. 
+2. The global controller does a binary search for the neuron closest to the training 
+VLSI Implementation of TInMANN 1049 
+Figure 2: The evolution of 100 TInMANN neurons when learning a two- 
+dimensional vector quantization. 
+vector by broadcasting distance values bisecting the range containing the win- 
+ning neuron. The neurons do a comparison and signal on the wired-OR status 
+line if their distance is less than the broadcast value (i.e. the carry bit c is set). 
+Neurons with distances greater than the broadcast value are disabled by reset- 
+ting their e flags. However, if no neuron is left enabled, the controller restores 
+the enable bits and adjusts its search region (this action is needed on -, M/2 
+of the search steps, where M is the machine word length used by TInMANN). 
+The last neuron left enabled is the winner of the competition (ties are resolved 
+by the conditional logic in each neuron). 
+The topological vector of the winning neuron is broadcast to the other neurons 
+through gate G. The other neurons accumulate into A and store into T1 the 
+absolute value of the difference between their topological vectors and that of 
+the winning neuron. 
+Random number R2 is broadcast by the global controller and those neurons 
+having topological distances in T1 greater than R2 are disabled. The remaining 
+neurons each compute the distance between a component of their weight vector 
+and that of the training vector broadcast by the global controller. All neurons 
+whose calculated distances are greater than random number R1 broadcast by 
+the controller will increment or decrement their weight elements depending 
+on the carry bits left in the c flags during the distance calculations. Then 
+all neurons are re-enabled and this step is repeated for the remaining W- 1 
+elements of the training vector. 
+A single training vector can be processed in 11W + X + 2.5M + 15 clock cycles 
+(Van den Bout, 1989). A word-width of 10 bits and a clock cycle of 15 MHz would 
+allow TInMANN to learn at a rate of 200,000 three-dimensional vectors per second 
+or 290,000 one-dimensional vectors per second. 
+3 THE VLSI IMPLEMENTATION OF TInMANN 
+Figure 4 is a block diagram for the VLSI TInMANN neuron built from the compo- 
+nents listed in Table 1. The design was driven by the following requirements: 
+Size: The TInMANN neuron had to fit within a MOSIS TinyChip frame, so we 
+used small, dense, ripple-carry adders. A 10-bit word size was selected as a 
+1050 Melton, Phan, Reeves, and  den Bout 
+Global Controller .................... f:i:i:ili 
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 
+Figure 3: The TInMANN architecture. 
+Table 1: Components of the VLSI TInMANN neuron. 
+Component Function 
+AB Diff 10-bit, two's

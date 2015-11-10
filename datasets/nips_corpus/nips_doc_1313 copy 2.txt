@@ -1,0 +1,131 @@
+Learning to Order Things 
+William W. Cohen Robert E. Schapire Yoram Singer 
+AT&T Labs, 180 Park Ave., Florham Park, NJ 07932 
+{wcohen,schapire,singer} @research.att.com 
+Abstract 
+There are many applications in which it is desirable to order rather than classify 
+instances. Here we consider the problem of learning how to order, given feedback 
+in the form of preference judgments, i.e., statements to the effect that one instance 
+should be ranked ahead of another. We outline a two-stage approach in which one 
+first learns by conventional means a preference function, of the form PREF(u, v), 
+which indicates whether it is advisable to rank u before v. New instances are 
+then ordered so as to maximize agreements with the learned preference func- 
+tion. We show that the problem of finding the ordering that agrees best with 
+a preference function is NP-complete, even under very restrictive assumptions. 
+Nevertheless, we describe a simple greedy algorithm that is guaranteed to find a 
+good approximation. We then discuss an on-line learning algorithm, based on the 
+Hedge algorithm, for finding a good linear combination of ranking experts. 
+We use the ordering algorithm combined with the on-line learning algorithm to 
+find a combination of search experts, each of which is a domain-specific query 
+expansion strategy for a WWW search engine, and present experimental results 
+that demonstrate the merits of our approach. 
+1 Introduction 
+Most previous work in inductive learning has concentrated on learning to classify. However, 
+there are many applications in which it is desirable to order rather than classify instances. 
+An example might be a personalized email filter that gives a priority ordering to unread 
+mail. Here we will consider the problem of learning how to construct such orderings, given 
+feedback in the form of preference judgments, i.e., statements that one instance should be 
+ranked ahead of another. 
+Such orderings could be constructed based on a learned classifier or regression model, 
+and in fact often are. For instance, it is common practice in information retrieval to rank 
+documents according to their estimated probability of relevance to a query based on a 
+learned classifier for the concept relevant document. An advantage of learning orderings 
+directly is that preference judgments can be much easier to obtain than the labels required 
+for classification learning. 
+For instance, in the email application mentioned above, one approach might be to rank 
+messages according to their estimated probability of membership in the class of urgent 
+messages, or by some numerical estimate of urgency obtained by regression. Suppose, 
+however, that a user is presented with an ordered list of email messages, and elects to read 
+the third message first. Given this election, it is not necessarily the case that message three 
+is urgent, nor is there sufficient information to estimate any numerical urgency measures; 
+however, it seems quite reasonable to infer that message three should have been ranked 
+ahead of the others. Thus, in this setting, obtaining preference information may be easier 
+and more natural than obtaining the information needed for classification or regression. 
+452 W. W. Cohen, R. E. Schapire and Y. Singer 
+In the remainder of this paper, we will investigate the following two-stage approach to 
+learning how to order. In stage one, we learn a preference function, a two-argument 
+function PREF(u, v) which returns a numerical measure of how certain it is that u should 
+be ranked before v. In stage two, we use the learned preference function to order a set of 
+new instances U; to accomplish this, we evaluate the learned function PREF(u, v) on all 
+pairs of instances u, v E U, and choose an ordering of U that agrees, as much as possible, 
+with these pairwise preference judgments. This general approach is novel; for related work 
+in various fields see, for instance, references [2, 3, 1, 7, 10]. 
+As we will see, given an appropriate feature set, learning a preference function can be 
+reduced to a fairly conventional classification learning problem. On the other hand, finding 
+a total order that agrees best with a preference function is NP-complete. Nevertheless, we 
+show that there is an efficient greedy algorithm that always finds a good approximation to 
+the best ordering. After presenting these results on the complexity of ordering instances 
+using a preference function, we then describe a specific algorithm for learning a preference 
+function. The algorithm is an on-line weight allocation algorithm, much like the weighted 
+majority algorithm [9] and Winnow [8], and, more directly, Freund and Schapire's [4] 
+Hedge algorithm. We then present some experimental results in which this algorithm is 
+used to combine the results of several search experts, each of which is a domain-specific 
+query expansion strategy for a WWW search engine. 
+2 Preliminaries 
+Let X be a set of instances (possibly infinite). A preference function PREF is a binary 
+function PREF: X x X -- [0, 1]. A value of PREF(u, v) which is close to 1 or 0 is 
+interpreted as a strong recommendation that u should be ranked before v. A value close to 
+1/2 is interpreted as an abstention from making a recommendation. As noted above, the 
+hypothesis of our learning system will be a preference function, and new instances will be 
+ranked so as to agree as much as possible with the preferences predicted by this hypothesis. 
+In standard classification learning, a hypothesis is constructed by combining primitive 
+features. Similarly, in this paper, a preference function will be a combination of other 
+preference functions. In particular, we will typically assume the availability of a set of N 
+primitive preference functions R,..., Rv. These can then be combined in the usual ways, 
+e.g., with a boolean or linear combination of their values; we will be especially interested 
+in the latter combination method. 
+It is convenient to assume that the Ri's are well-formed in certain ways. To this end, we 
+introduce a special kind of preference function called a rank ordering. Let $ be a totally 
+ordered set  with ' >' as the comparison operator. An ordering function into $ is a function 
+f: X  $. The function f induces the preference function R., defined as 
+1 iff(u) > f(v) 
+.trf(., V) deal 0 if f(u) < f(v) 
+� otherwise. 
+We call Rf a rank ordering for X into $. If Rf(u, v) -- 1, then we say that u is preferred 
+to v, or u is ranked higher than v. 
+It is sometimes convenient to allow an ordering function to abstain and not give a 
+preference for a pair u, v. Let 4' be a special symbol not in $, and let f be a function into 
+S U {4'}. We will interpret the mapping f(u) = 4' to mean that u is unranked, and let 
+ if either u or v is unranked. 
+R(u, v) = 
+To give concrete examples of rank ordering, imagine learning to order documents based on 
+the words that they contain. To model this, let X be the set of all documents in a repository, 
+tThat is, for all pairs of distinct elements st, s2 E $, either st 
+Learning to Order Things 453 
+and for N words w,..., wv, let fi(u) be the number of occurrences of wi in u. Then 
+R f, will prefer u to v whenever wi occurs more often in u than v. As a second example, 
+consider a meta-search application in which the goal is to combine the rankings of several 
+WWW search engines. For N search engines el,..., ev, one might define fi so that 
+prefers u to v whenever u is ranked ahead of v in the list Li produced by the corresponding 
+search engine. To do this, one could let fi(u) = -k for the document u appearing in the 
+k-th position in the list Li, and let fi(tt) = qb for any document not appearing in 
+3 Ordering instances with a preference function 
+We now consider the complexity of finding the total order that agrees best with a learned 
+preference function. To analyze this, we must first quantify the notion of agreement between 
+a preference function PREF and an ordering. One natural notion is the following: Let X 
+be a set, PREF be a preference function, and let p be a total ordering of X, expressed 
+again as an ordering function (i.e., p(u) > p(v) iff u precedes v in the order). We define 
+AGREE(p, PREF) to be the sum of PREF(u, v) over all pairs u, v such that u is ranked 
+ahead of v by p: 
+AGREE(p, PREF) = E PREF(u, v). (1) 
+u,v:p(u)>p(v) 
+Ideally, one would like to find a p that maximizes AGREE(p, PREF). This general opti- 
+mization problem is of little interest since in practice, there are many constraints imposed 
+by learning: for instance PREF must be in some restricted class of functions, and will 
+generally be a combination of relatively well-behaved preference functions/i. A more 
+interesting question is whether the problem remains hard under such constraints. 
+The theorem below gives such a result, showing that the problem is NP-complete even if 
+PREF is restricted to be a linear combination of rank orderings. This holds even if all the 
+rank orderings map into a set $ with only three elements, one of which may or may not be 
+qb. (Clearly, if $ consists of more than three elements then the problem is still hard.) 
+Theorem 1 The following decision problem is NP-complete: 
+Input: A rational number to; a set X; a set $ with IS[ >_ 3; a collection of 
+N ordering functions fi : X --> S; and a preference function PREF defined as 
+PREF(u,v) -- -4N= wiR(u,v) where w = (wl,... ,WN) is a weight vector in [0, 1] N 
+with -?=1 wi = 1. 
+Question: Does there exist a total order p such that AGREE(p, PREF) _> ? 
+The proof (omitted) is by reduction from CYCLIC-ORDERING [5, 6]. 
+Although this problem is hard when IS[ >_ 3, it becomes tractable for linear combinations 
+of rank orderings into a set $ of size two. In brief, suppose one is given X, S and PREF as 
+in Theorem 1, save that $ is a two-element set, which we assume without loss of generality 
+to be $ = {0, 1}. Now define p(u) -- Yi Will(U). I

@@ -1,0 +1,166 @@
+Planning with an Adaptive World Model 
+Sebastian B. Thrun 
+German National Research 
+Center for Computer 
+Science (GMD) 
+D-5205 St. Augustin, FRG 
+Knut M511er 
+University of Bonn 
+Department of 
+Computer Science 
+D-5300 Bonn, FRG 
+Alexander Linden 
+German National Research 
+Center for Computer 
+Science (GMD) 
+D-5205 St. Augustin, FRG 
+Abstract 
+We present a new connectionist planning method [TML90]. By interaction 
+with an unknown environment, a world model is progressively construc- 
+ted using gradient descent. For deriving optimal actions with respect to 
+future reinforcement, planning is applied in two steps: an experience net- 
+work proposes a plan which is subsequently optimized by gradient descent 
+with a chain of world models, so that an optimal reinforcement may be 
+obtained when it is actually run. The appropriateness of this method is 
+demonstrated by a robotics application and a pole balancing task. 
+1 INTRODUCTION 
+Whenever decisions are to be made with respect to some events in the future, 
+planning has been proved to be an important and powerful concept in problem 
+solving. Planning is applicable if an autonomous agent interacts with a world, and 
+if a reinforcement is available which measures only the over-all performance of the 
+agent. Then the problem of optimizing actions yields the temporal credit assignment 
+problem [Sut84], i.e. the problem of assigning particular reinforcements to particular 
+actions in the past. The problem becomes more complicated if no knowledge about 
+the world is available in advance. 
+Many connectionist approaches so far solve this problem directly, using techniques 
+based on the interaction of an adaptive world model and an adaptive controller 
+[Bar89, Jot89, Mun87]. Although such controllers are very fast after training, trai- 
+ning itself is rather complex, mainly because of two reasons: a) Since future is not 
+considered explicitly, future effects must be directly encoded into the world model. 
+This complicates model training. b) Since the controller is trained with the world 
+model, training of the former lags behind the latter. Moreover, if there do exist 
+45O 
+Planning with an Adaptive World Model 451 
+Figure 1: The training of the model network is a system identification task. 
+Internal parameters are estimated by gradient descent, e.g. by backpropagation. 
+several optimal actions, such controllers will only generate at most one regardless of 
+all others, since they represent many-to-one functions. E.g., changing the objective 
+function implies the need of an expensive retraining. 
+In order to overcome these problems, we applied a planning technique to reinforce- 
+ment learning problems. A model network which approximates the behavior of the 
+world is used for looking ahead into future and optimizing actions by gradient des- 
+cent with respect to future reinforcement. In addition, an experience network is 
+trained in order to accelerate and improve planning. 
+2 LOOK-AHEAD PLANNING 
+2.1 SYSTEM IDENTIFICATION 
+Planning needs a world model. Training of the world model .is adopted from 
+[Bar89, Jor89, Mun87]. Formally, the world maps actions to subsequent states and 
+reinforcements (Fig. 1). The world model used here is a standard non-recurrent or 
+a recurrent connectionist network which is trained by backpropagation or related 
+gradient descent algorithms [WZ88, TS90]. Each time an action is performed on the 
+world their resulting state and reinforcement is compared with the corresponding 
+prediction by the model network. The difference is used for adapting the internal pa- 
+rameters of the model in small steps, in order to improve its accuracy. The resulting 
+model approximates the world's behavior. 
+Our planning technique relies mainly on two fundamental steps: Firstly, a plan is 
+proposed either by some heuristic or by a so-called ezperience network. Secondly, 
+this plan is optimized progressively by gradient descent in action space. First, we 
+will consider the second step. 
+2.2 PLAN OPTIMIZATION 
+In this section we show the optimization of plans by means of gradient descent. For 
+that purpose, let us assume an initial plan, i.e. a sequence of N actions, is given. The 
+first action of this plan together with the current state (and, in case of a recurrent 
+model network, its current context activations) are fed into the model network (Fig. 
+2). This gives us a prediction for the subsequent state and reinforcement of the world. 
+If we assume that the state prediction is a good estimation for the next state, we can 
+proceed by predicting the immediate next state and reinforcement from the second 
+action of the plan correspondingly. This procedure is repeated for each of the N 
+stages of the plan. The final output is a sequence of N reinforcement predictions, 
+which represents the quality of the plan. In order to maximize reinforcement, we 
+452 Thrun, Nr611er, and Linden 
+model network (N) ]- plan:/V  action 
+model network (2) l c plan: 2 na action 
+! 
+model network (1) [ c plan: 1 st action 
+(PLANNING RESULT) 
+ . context units 
+{recurrent netk,5l only) I 
+Figure 2: Looking ahead by the chain of model networks. 
+establish a differentiable reinforcement energy function Zrcinf, which measures the 
+deviation of predicted and desired reinforcement. The problem of optimizing plans 
+is transformed to the problem of minimizing Erein. Since both Erdnf and the chain 
+of model networks are differentiable, the gradients of the plan with respect to Erein s 
+can be computed. These gradients are used for changing the plan in small steps, 
+which completes the gradient descent optimization. 
+The whole update procedure is repeated either until convergence is observed or, 
+which makes it more convenient for real-time applications, a predefined number of 
+iterations - note that in the latter case the computational effort is linear in N. From 
+the planning procedure we obtain the optimized plan, the first action  of which is 
+then performed on the world. Now the whole procedure is repeated. 
+The gradients of the plan with respect to Erelnf can be computed either by back- 
+propagation through the chain of models or by a feed-forward algorithm which is 
+related to [WZ88, TS90]: 
+Hand in hand with the activations we propagate also the gradients 
+,J.' (r) = 0 activationj (r) (1) 
+- 0 action/(s) 
+through the chain of models. Here i labels all action input units and j all units of 
+the whole model network, r (l<r<N) is the time associated with the rth model of 
+the chain, and s (l<s<r) is the time of the sth action. Thus, for each action (�i, s) 
+its influence on later activations (�j, �r>_s) of the chain of networks, including all 
+predictions, is measured by ,J.',(r). 
+It has been shown in an earlier paper that this gradient can easily be propagated 
+forward through the network [TML90]: 
+o 
+j' 
+logistic'(netj(r)).  weightj., ,r) 
+IEpred(j) 
+if j action input unit 
+if r=l A j state/context input unit 
+if r>l A j state/context input unit 
+(j corresponding output unit of preceding model) 
+otherwise 
+(2) 
+If an unknown world is to be explored, this action might be disturbed by adding 
+small random variable. 
+Planning with an Adaptive World Model 453 
+The reinforcement energy to be minimized is defined as 
+N 
+-  gk(r) (reinf activationk(r)) 2 
+Zreln =  . - (3) 
+r=l k 
+(k numbers the reinforcement output units, reinf is the desired reinforcement va- 
+lue, usually �k: reinf--1, and g weights the reinforcement with respect to v and k, 
+in the simplest case g(v)=l.) Since Er,ln is differentiable, we can compute the gra- 
+dient of E,in with respect to each particular reinforcement prediction. From these 
+gradients and the gradients / of the reinforcement prediction units the gradients 
+(i = 0 actioni(s) -- -  g(v). (reinf - activations(v)) � /(v) (q) 
+'-'s 
+are derived which indicate how to change the plan in order to minimize 
+Variable plan lengths: The feed-forward manner of the propagation allows it 
+to vary the number of look-ahead steps due to the current accuracy of the model 
+network. Intuitively, if a model network has a relatively large error, looking far 
+into future makes little sense. A good heuristic is to avoid further look-ahead if the 
+current linear error (due to the training patterns) of the model network is larger 
+than the effect of the first action of the plan to the current predictions. This effect 
+is exactly the gradients (v). Using variable plan lengths might overcome the 
+difficulties in finding an appropriate plan length N a priori. 
+2.3 INITIAL PLANS - THE EXPERIENCE NETWORK 
+It remains to show how to obtain initial plans. There are several basic strategies 
+which are more or less problem-dependent, e.g. random, average over previous ac- 
+tions etc. Obviously, if some planning took place before, the problem of finding an 
+initial plan reduces to the problem of finding a simple action, since the rest of the 
+previous plan is a good candidate for the next initial plan. 
+A good way of finding this action is the experience network. This network is trai- 
+ned to predict the result of the planning procedure by observing the world's state 
+and, in the case of recurrent networks, the temporal context information from the 
+model network. The target values are the results of the planning procedure. Al- 
+though the experience network is trained like a controller [Bar89], it is used in a 
+different way, since outcoming actions are further optimized by the planning proce- 
+dure. Thus, even if the knowledge of the experience network lags behind the model 
+network's, the derived actions are optimized with respect to the knowledge of 
+the model network rather than the experience network. On the other hand, while 
+the optimization is gradually shifted into the experience network, planning can be 
+progressively shortened. 
+3 APPROACHING A ROLLING BALL WITH A ROBOT 
+ARM 
+We applied planning with an adaptive world model to a simulation of a real-

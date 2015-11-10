@@ -1,0 +1,163 @@
+A Connectionist Symbol Manipulator 
+That Discovers the Structure of 
+Context-Free Languages 
+Michael C. Mozer and Sreerupa Das 
+Department of Computer Science & 
+Institute of Cognitive Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+Abstract 
+We present a neural net architecture that can discover hierarchical and re- 
+cursire structure in symbol strings. To detect structure at multiple levels, 
+the architecture has the capability of reducing symbols substrings to single 
+symbols, and makes use of an external stack memory. In terms of formal 
+languages, the architecture can learn to parse strings in an LR(0) context- 
+free grammar. Given training sets of positive and negative exemplars, 
+the architecture has been trained to recognize many different grammars. 
+The architecture has only one layer of modifiable weights, allowing for a 
+straightforward interpretation of its behavior. 
+Many cognitive domains involve complex sequences that contain hierarchical or 
+recursire structure, e.g., music, natural language parsing, event perception. To il- 
+lustrate, the spider that ate the hairy fly is a noun phrase containing the embed- 
+ded noun phrase the hairy fly. Understanding such multilevel structures requires 
+forming reduced descriptions (Hinton, 1988) in which a string of symbols or states 
+(the hairy fly) is reduced to a single symbolic entity (a noun phrase). We present 
+a neural net architecture that learns to encode the structure of symbol strings via 
+such reduction transformations. 
+The difficult problem of extracting multilevel structure from complex, extended 
+sequences has been studied by Mozer (1992), Ring (1993), Rohwer (1990), and 
+Schmidhuber (1992), among others. While these previous efforts have made some 
+863 
+864 Mozer and Das 
+input 
+queue 
+default 
+unit demon units 
+symbol 1 symbol 2 
+stack units 
+Figure 1: The demon model. 
+progress, no one has claimed victory over the problem. Our approach is based on a 
+new perspective one of symbolic reduction transformations which affords a fresh 
+attack on the problem, 
+1 A BLACKBOARD ARCHITECTURE 
+Our inspiration is a blackboard style architecture that works as follows. The input, 
+a sequence of symbols, is copied onto a blackboard--a scratch pad memory--one 
+symbol at a time. A set of demons watch over the blackboard, each looking for a 
+specific pattern of symbols. When a demon observes its pattern, it fires, causing 
+the pattern to be replaced by a symbol associated with that demon, which we'll call 
+its identitl. This process continues until the entire input string has been read or no 
+demon can fire. The sequence of demon firings and the final blackboard contents 
+specify the structure of the input. 
+The model we present is a simplified version of this blackboard architecture. The 
+blackboard is implemented as a stack. Consequently, the demons have no control 
+over where they write or read a symbol; they simply push and pop symbols from 
+the stack. The other simplification is that the demon firing is based on template 
+matching, rather than a more sophisticated form of pattern matching. 
+The demon model is sketched in Figure 1. An input queue holds the input string 
+to be parsed, which is gradually transferred to the stack. The top k stack symbols 
+are encoded in a set of stack units; in the current implementation, k = 2. Each 
+demon is embodied by a special processing unit which receives input from the stack 
+units. The weights of each demon unit specify a pair of symbols, which the demon 
+unit matches against the two stack symbols. If there is a match, the demon unit 
+pops the top two stack symbols and pushes its identity. If no demon unit matches, 
+an additional unit, called the default unit, becomes active. The default unit is 
+responsible for transferring a symbol from the input queue onto the stack. 
+Connectionist Symbol Manipulator Discovers Structure of Context-Free Languages 865 
+S-&b 
+- - & X 
+X-Sb 
+Figure 2: The rewrite rules defining a grammar that generates strings of the form 
+ab and a parse tree for the string aabb. 
+2 PARSING CONTEXT-FREE LANGUAGES 
+Each demon unit reduces a pair of symbols to a single symbol. We can express 
+the operation of a demon as a rewrite rule of the form X --* a b, where the lower 
+case letters denote symbols in the input string and upper case letters denote the 
+demon identities, also symbols in their own right. The above rule specifies that 
+when the symbols a and b appear on the top of the stack, in that order, the X 
+demon unit should fire, erasing those two symbols and replacing them with an X. 
+Demon units can respond to internal symbols (demon identities) instead of input 
+symbols, allowing internal symbols on the right hand side of the rule. Demon units 
+can also respond to individual input symbols, achieving rules of the form X ---* a. 
+Multiple demon units can have the same identity, leading to rewrite rules of a 
+more general form, e.g., it ---, a b I Y c I d Z I a. This class of rewrite rules can 
+express a subset of context-free grammars. Figure 2 shows a sample grammar that 
+generates strings of the form a'b ' and a parse tree for the input string aabb. The 
+demon model essentially constructs such parse trees via the sequence of reduction 
+operations. 
+That each rule has only one or two symbols on the right hand side imposes no 
+limitation on the class of grammars that can be recognized. However, the demon 
+model does require certain knowledge about the grammars to be identified. First, 
+the maximum number of rewrite rules and the maximum number of rules having the 
+same left-hand side must be specified in advance. This is because the units have 
+to be allocated prior to learning. Second, the LR-class of the grammar must be 
+given. To explain, any context-free grammar can be characterized as LR(n), which 
+indicates that the strings of the grammar can be parsed from left to right with n 
+symbols of look ahead on the input queue. The demon model requires that n be 
+specified in advance. In the present work, we examine only LR(0) grammars, but 
+the architecture can readily be generalized to arbitrary n. 
+Giles et al. (1990), Sun et al. (1990), and Das, Giles, and Sun (1992) have previously 
+explored the learning of context-free grammars in a neural net. Their approach was 
+based on the automaton perspective of a recognizer, where the primary interest was 
+to learn the dynamics of a pushdown automaton. There has also been significant 
+work in context-free grammar inference using symbolic approaches. In general, these 
+approaches require a significant amount of prior information about the grammar 
+and, although theoretically sound, have not proven terribly useful in practice. A 
+promising exception is the recent proposal of Stolcke (1993). 
+866 Mozer and Das 
+3 CONTINUOUS DYNAMICS 
+So far, we have described the model in a discrete way: demon firing is all-or- 
+none and mutually exclusive, corresponding to the demon units achieving a unary 
+representation. This may be the desired behavior following learning, but neural net 
+learning algorithms like back propagation require exploration in continuous state 
+and weight spaces and therefore need to allow partial activity of demon units. The 
+continuous activation dynamics follow. 
+Demon unit i computes the distance between its weights, wl, and the input, x: 
+disti = bi[wl- x[ ', where bl is an adjustable bias associated with the unit. The 
+activity of unit i, denoted $i, is computed via a normalized exponential transform 
+(Bridle, 1990; Rumelhart, in press), 
+e-diatl 
+$i '- j e_dist $ , 
+which enforces a competition among the units. A special unit, called the default 
+unit, is designed to respond when none of the demons fire strongly. Its activity, 
+Zdel, is computed like that of any demon unit with diste! -- be I. 
+4 CONTINUOUS STACK 
+Because demon units can be partially active, stack operations need to be performed 
+partially. This can be accomplished with a continuous stack (Giles et al., 1990). 
+Unlike a discrete stack where an item is either present or absent, items can be 
+present to varying degrees. Each item on the stack has an associated thickness, a 
+scalar in the interval [0, 1] indicating what fraction of the item is present (Figure 3). 
+To understand how the thickness plays a role in processing, we digress briefly and 
+explain the encoding of symbols. Both on the stack and in the network, symbols 
+are represented by numerical vectors that have one component per symbol. The 
+vector representation of some symbol X, denoted rx, has value I for the component 
+corresponding to X and 0 for all other components. If the symbol has thickness t, 
+the vector representation is tr x. 
+Although items on the stack have different thicknesses, the network is presented 
+with composite $.vrnbols having thickness 1.0. Composite symbols are formed by 
+combining stack items. For example, in Figure 3, composite symbol I is defined as 
+the vector .2r x + .5r Z + .3r v. The input to the demon network consists of the top 
+two composite symbols on the stack. 
+The advantages of a continuous stack are twofold. First, it is required for network 
+learning; if a discrete stack were used, a small change in weights could result in a big 
+(discrete) change in the stack. This was the motivation underlying the continuous 
+stack used by Giles et al. Second, the continuous stack is differentiable and hence 
+allows us to back propagate error through the stack during learning. While we have 
+summarized this point in one sentence, the reader must appreciate the fact that it 
+is no small feat! Giles et al. did not consider back propagation through the stack. 
+Each time step, the network performs two operations on the stack: 
+Connectionist Symbol Manipulator Discovers Structure of Context-Free Languages 867 
+top of stack 
+X 
+composite z 
+symbol 1 
+v 
+composite x 
+symbol 2 
+Y 
+thickness 
+.2 
+.5 
+.4 
+.7 
+.4 
+Figure 3: A continuous stack. The symbols indicate 

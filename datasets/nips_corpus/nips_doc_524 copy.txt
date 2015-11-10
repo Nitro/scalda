@@ -1,0 +1,146 @@
+LEARNING UNAMBIGUOUS REDUCED 
+SEQUENCE DESCRIPTIONS 
+Jfirgen Schmidhuber 
+Dept. of Computer Science 
+University of Colorado 
+Campus Box 430 
+Boulder, CO 80309, USA 
+yirgan@ cs. colorado.edu 
+Abstract 
+Do you want your neural net algorithm to learn sequences? Do not lim- 
+it yourself to conventional gradient descent (or approximations thereof). 
+Instead, use your sequence learning algorithm (any will do) to implement 
+the following method for history compression. No matter what your fi- 
+nal goals are, train a network to predict its next input from the previous 
+ones. Since only unpredictable inputs convey new information, ignore all 
+predictable inputs but let all unexpected inputs (plus information about 
+the time step at which they occurred) become inputs to a higher-level 
+network of the same kind (working on a slower, self-adjusting time scale). 
+Go on building a hierarchy of such networks. This principle reduces the 
+descriptions of event sequences without loss of information, thus easing 
+supervised or reinforcement learning tasks. Alternatively, you may use 
+two recurrent networks to collapse a multi-level predictor hierarchy into a 
+single recurrent net. Experiments show that systems based on these prin- 
+ciples can require less computation per time step and many fewer training 
+sequences than conventional training algorithms for recurrent nets. Final- 
+ly you can modify the above method such that predictability is not defined 
+in a yes-or-no fashion but in a continuous fashion. 
+291 
+292 
+Schmidhuber 
+1 INTRODUCTION 
+The following methods for supervised sequence learning have been proposed: Simple 
+recurrent nets [7][3], time-delay nets (e.g. [2]), sequential recursDe auto-associative 
+memories [16], back-propagation through time or BPTT [21] [30] [33], Mozer's 'fo- 
+cused back-prop' algorithm [10], the IID- or RTRL-algorithm [19][1][34], its ac- 
+celerated versions [32][35][25], the recent fast-weight algorithm [27], higher-order 
+networks [5], as well as continuous time methods equivalent to some of the above 
+[14][15][4]. The following methods for sequence learning by reinforcement learning 
+have been proposed: Extended REINFORCE algorithms [31], the neural bucket 
+brigade algorithm [22], recurrent networks adjusted by adaptive critics [23](see also 
+[8]), buffer-based systems [13], and networks of hierarchically organized neuron-like 
+bigns [18]. 
+With the exception of [18] and [13], these approaches waste resources and limit 
+efficiency by focusing on every input instead of focusing only on relevant inputs. 
+Many of these methods have a second drawback as well: The longer the time lag 
+between an event and the occurrence of a related error the less information is carried 
+by the corresponding error information wandering 'back into time' (see [6] for a more 
+detailed analysis). [11], [12] and [20] have addressed the latter problem but not the 
+former. The system described by [18] on the other hand addresses both problems, 
+but in a manner much different from that presented here. 
+2 HISTORY COMPRESSION 
+A major contribution of this work is an adaptive method for removing redundant 
+information from sequences. This principle can be implemented with the help of 
+any of the methods mentioned in the introduction. 
+Consider a deterministic discrete time predictor (not necessarily a neural network) 
+whose state at time t of sequence p is described by an environmental input vector 
+zP(t), an internal state vector hP(t), and an output vector z(t). The environment 
+may be non-deterministic. At time 0, the predictor starts with z(0) and an internal 
+start state h(0). At time t _> 0, the predictor computes 
+z(t) 
+At time t > 0, the predictor furthermore computes 
+h'(t) = g((t- 1), h(t- 1)). 
+All information about the input at a given time te can be reconstructed from 
+te,f,g, eP(O),h(O), and the pairs (t,,e(t,)) for which 0 < t, _< te and z'(t, - 1)  
+z(t,). This is because if zP(t) = z(t + 1) at a given time t, then the predictor is 
+able to predict the next input from the previous ones. The new input is derivable 
+by means of f and g. 
+Information about the observed input sequence can be even further compressed 
+beyond just the unpredieted input vectors z(t,). It suffices to know only those 
+elements of the vectors z'(t) that were not correctly predicted. 
+This observation implies that we can discriminate one sequence from another by 
+knowing just the unpredicted inputs and the corresponding time steps at which they 
+Learning Unambiguous Reduced Sequence Descriptions 293 
+occurred. No information is lost if we ignore the expected inputs. We do not even 
+have to know f and g. I call this the principle of histor!l compression. 
+From a theoretical point of view it is important to know at what time an unexpected 
+input occurs; otherwise there will be a potential for ambiguities: Two different input 
+sequences may lead to the same shorter sequence of unpredicted inputs. With many 
+practical tasks, however, there is no need for knowing the critical time steps (see 
+section 5). 
+3 SELF-ORGANIZING PREDICTOR HIERARCHY 
+Using the principle of history compression we can build a self-organi.ing hierarchical 
+neural 'chunking' system . The basic task can be formulated as a prediction task. 
+At a given time step the goal is to predict the next input from previous inputs. If 
+there are external target vectors at certain time steps then they are simply treated 
+as another part of the input to be predicted. 
+The architecture is a hierarchy of predictors, the input to each level of the hierarchy 
+is coming from the previous level. Pi denotes the ith level network which is trained 
+to predict its own nezt input from its previous inputs 2. We take Pi to be one of 
+the conventional dynamic recurrent neural networks mentioned in the introduction; 
+however, it might be some other adaptive sequence processing device as well a. 
+At each time step the input of the lowest-level recurrent predictor P0 is the current 
+external input. We create a new higher-level adaptive predictor P+x whenever 
+the adaptive predictor at the previous level, P,, stops improving its predictions. 
+When this happens the weight-changing mechanism of P is switched off (to exclude 
+potential instabilities caused by ongoing modifications of the lower-level predictors). 
+If at a given time step P, (s _> 0) fails to predict its next input (or if we are at 
+the beginning of a training sequence which usually is not predictable either) then 
+P+i will receive as input the concatenation of this next input of P plus a unique 
+representation of the corresponding time step4; the activations of P+t's hidden and 
+output units will be updated. Otherwise P+i will not perform an activation update. 
+This procedure ensures that P+i is fed with an unambiguous reduced description s 
+of the input sequence observed by P. This is theoretically justified by the principle 
+of history compression. 
+In general, P,+ will receive fewer inputs over time than P,. With existing learning 
+iSee also [18] for a different hierarchical connectionlst chunking system based on similar 
+principles. 
+2Recently I became aware that Don Mathis had some related ideas (personal commu- 
+nication). A hierarchical approach to sequence generation was pursued by [9]. 
+For instance, we might employ the more limited feed-forward networks and a 'time 
+window' approach. In this case, the number of previous inputs to be considered as a basis 
+for the next prediction will remain fixed. 
+4A unique time representation is theoretically necessary to provide Po+l with unam- 
+biguous information about when the failure occurred (see also the last paragraph of section 
+2). A unique representation of the time that went by since the lazt unpredicted input oc- 
+curred will do as well. 
+Sin contrast, the reduced descriptions referred to by [11] are not unambiguous. 
+294 Schmidhuber 
+algorithms, the higher-level predictor should have less difficulties in learning to 
+predict the critical inputs than the lower-level predictor. This is because P+'s 
+'credit assignment paths' will often be short compared to those of P. This will 
+happen if the incoming inputs carry global temporal structure which has not yet 
+been discovered by P. (See also [18] for a related approach to the problem of credit 
+assignment in reinforcement learning.) 
+This method is a simplification and an improvement of the recent chunklng method 
+described by [24]. 
+A multi-level predictor hierarchy is a rather safe way of learning to deal with se- 
+quences with multi-level temporal structure (e.g speech). Experiments have shown 
+that multi-level predictors can quickly learn tasks which are practically unlearnable 
+by conventional recurrent networks, e.g. [6]. 
+4 COLLAPSING THE HIERARCHY 
+One disadvantage of a predictor hierarchy as above is that it is not known in advance 
+how many levels will be needed. Another disadvantage is that levels are explicitly 
+separated from each other. It may be possible, however, to collapse the hierarchy 
+into a single network as outlined in this section. See details in [26]. 
+We need two conventional recurrent networks: The automatizer A and the chunker 
+C, which correspond to a distinction between automatic and attended events. (See 
+also [13] and [17] which describe a similar distinction in the context of reinforcement 
+learning). At each time step A receives the current external input. A's error function 
+is threefold: One term forces it to emit certain desired target outputs at certain 
+times. If there is a target, then it becomes part of the next input. The second term 
+forces A at every time step to predict its own next non-target input. The third 
+(crucial) term will be explained below. 
+If and only if A makes an error concerning the first and second term of its error 
+function, the unpredicted input (including a potentially available teaching vector) 
+along with a unique representation of the

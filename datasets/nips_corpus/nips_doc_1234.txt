@@ -1,0 +1,139 @@
+MIMIC: Finding Optima by Estimating 
+Probability Densities 
+Jeremy S. De Bonet, Charles L. Isbell, Jr., Paul Viola 
+Artificial Intelligence Laboratory 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+Abstract 
+In many optimization problems, the structure of solutions reflects 
+complex relationships between the different input parameters. For 
+example, experience may tell us that certain parameters are closely 
+related and should not be explored independently. Similarly, ex- 
+perience may establish that a subset of parameters must take on 
+particular values. Any search of the cost landscape should take 
+advantage of these relationships. We present MIMIC, a framework 
+in which we analyze the global structure of the optimization land- 
+scape. A novel and efficient algorithm for the estimation of this 
+structure is derived. We use knowledge of this structure to guide a 
+randomized search through the solution space and, in turn, to re- 
+fine our estimate of the structure. Our technique obtains significant 
+speed gains over other randomized optimization procedures. 
+I Introduction 
+Given some cost function C(x) with local minima, we may search for the optimal 
+x in many ways. Variations of gradient descent are perhaps the most popular. 
+When most of the minima are far from optimal, the search must either include a 
+brute-force component or incorporate randomization. Classical examples include 
+Simulated Annealing (SA) and Genetic Algorithms (GAs) (Kirkpatrick, Gelatt and 
+Vecchi, 1983; Holland, 1975). In all cases, in the process of optimizing C(x) many 
+thousands or perhaps millions of samples of C(x) are evaluated. Most optimization 
+algorithms take these millions of pieces of information, and compress them into 
+a single point x--the current estimate of the solution (one notable exception are 
+GAs to which we will return shortly). Imagine splitting the search process into 
+two parts, both taking t/2 time steps. Both parts are structurally identical: taking 
+a description of C(), they start their search from some initial point. The sole 
+benefit enjoyed by the second part of the search over the first is that the initial 
+MIMIC: Finding Optima by Estimating Probability Densities 425 
+point is perhaps closer to the optimum. Intuitively, there must be some additional 
+information that could be learned from the first half of the search, if only to warn 
+the second half about avoidable mistakes and pitfalls. 
+We present an optimization algorithm called Mutual-Information-Maximizing In- 
+put Clustering (MIMIC). It attempts to communicate information about the cost 
+function obtained from one iteration of the search to later iterations of the search 
+directly. It does this in an efficient and principled way. There are two main com- 
+ponents of MIMIC: first, a randomized optimization algorithm that samples from 
+those regions of the input space most likely to contain the minimum for C(); second, 
+an effective density estimator that can be used to capture a wide variety of struc- 
+ture on the input space, yet is computable from simple second order statistics on 
+the data. MIMIC's results on simple cost functions indicate an order of magnitude 
+improvement in performance over related approaches. Further experiments on a 
+k-color map coloring problem yield similar improvements. 
+2 Related Work 
+Many well known optimization procedures neither represent nor utilize the struc- 
+ture of the optimization landscape. In contrast, Genetic Algorithms (GA) attempt 
+to capture this structure by an ad hoc embedding of the parameters onto a line (the 
+chromosome). The intent of the crossover operation in standard genetic algorithms 
+is to preserve and propagate a group of parameters that might be partially respon- 
+sible for generating a favorable evaluation. Even when such groups exist, many of 
+the offspring generated do not preserve the structure of these groups because the 
+choice of crossover point is random. 
+In problems where the benefit of a parameter is completely independent of the 
+value of all other parameters, the population simply encodes information about the 
+probability distribution over each parameter. In this case, the crossover operation 
+is equivalent to sampling from this distribution; the more crossovers the better the 
+sample. Even in problems where fitness is obtained through the combined effects of 
+clusters of inputs, the GA crossover operation is beneficial only when its randomly 
+chosen clusters happen to closely match the underlying structure of the problem. 
+Because of the rarity of such a fortuitous occurrence, the benefit of the crossover 
+operation is greatly diminished. As as result, GAs have a checkered history in 
+function optimization (Baum, Boneh and Garrett, 1995; Lang, 1995). One of our 
+goals is to incorporate insights from GAs in a principled optimization framework. 
+There have been other attempts to capture the advantages of GAs. Population 
+Based Incremental Learning (PBIL) attempts to incorporate the notion of a candi- 
+date population by replacing it with a single probability vector (Baluja and Caru- 
+ana, 1995). Each element of the vector is the probability that a particular bit in a 
+solution is on. During the learning process, the probability vector can be thought 
+of as a simple model of the optimization landscape. Bits whose values are firmly 
+established have probabilities that are close to I br 0. Those that are still unknown 
+have probabilities close to 0.5. 
+When it is the structure of the components of a candidate rather than the particular 
+values of the components that determines how it fares, it can be difficult to move 
+PBIL's representation towards a viable solution. Nevertheless, even in these sorts 
+of problems PBIL often out-performs genetic algorithms because those algorithms 
+are hindered by the fact that random crossovers are infrequently beneficial. 
+A very distinct, but related technique was proposed by Sabes and Jordan for a 
+426 J. S. de Bonet, (7. L. Isbell and P Viola 
+reinforcement learning task (Sabes and Jordan, 1995). In their framework, the 
+learner must generate actions so that a reinforcement function can be completely 
+explored. Simultaneously, the learner must exploit what it has learned so as to 
+optimize the long-term reward. Sabes and Jordan chose to construct a Boltzmann 
+distribution from the reinforcement function' p(z) = exP(ar--) where /(z) is the 
+reinforcement function for action X, T is the temperature, and ZT is a normalization 
+factor. They use this distribution to generate actions. At high temperatures this 
+distribution approaches the uniform distribution, and results in random exploration 
+of/(). At low temperatures only those actions which garner large reinforcement 
+are generated. By reducing T, the learner progresses from an initially randomized 
+search to a more directed search about the true optimal action. Interestingly, their 
+estimate for p(x) is to some extent a model of the optimization landscape which is 
+constructed during the learning process. To our knowledge, Sabes and Jordan have 
+neither attempted optimization over high dimensional spaces, nor attempted to fit 
+p(x) with a complex model. 
+3 MIMIC 
+Knowing nothing else about C(x) it might not be unreasonable to search for its 
+minimum by generating points from a uniform distribution over the inputs p(x). 
+Such a search allows none of the information generated by previous samples to effect 
+the generation of subsequent samples. Not surprisingly, much less work might be 
+necessary if samples were generated from a distribution, p�(x), that is uniformly 
+distributed over those x's where C(x) _< 0 and has a probability of 0 elsewhere. For 
+example, if we had access to p�(x) for OM -- minx C(x) a single sample would be 
+sufficient to find an optimum. 
+This insight suggests a process of successive approximation: given a collection of 
+points for which C(x) _< 00 a density estimator for p0o (x) is constructed. From this 
+density estimator additional samples are generated, a new threshold established, 
+01 = 00 - e, and a new density estimator created. The process is repeated until the 
+values of C(x) cease to improve. 
+The MIMIC algorithm begins by generating a random population of candidates 
+choosen uniformly from the input space. From this population the median fitness 
+is extracted and is denoted 00. The algorithm then proceeds: 
+1. Update the parameters of the density estimator of p�(x) from a sample. 
+2. Generate more samples from the distribution pO(x). 
+3. Set Oi+ 1 equal to the Nth percentile of the data. Retain only the points 
+less than 0i+1. 
+v 0 
+The alidity of this approach is dependent on two critical assumptions: p (x) can 
+be successfully approximated with a finite amount of data; and D(p�-(x)llpO(x)) is 
+small enough so that samples from pO (x) are also likely to be samples from pO-(x) 
+(where D(pllq) is the Kullback-Liebler divergence between p and q). Bounds on 
+these conditions can be used to prove convergence in a finite number of successive 
+approximation steps. 
+The performance of this approach is dependent on the nature of the density approx- 
+iraatop used. We have chosen to estimate the conditional distributions for every pair 
+of parameters in the representation, a total of O(n 2) numbers. In the next section 
+we will show how we use these conditionals distributions to construct a joint dis- 
+tribution which is closest in the KL sense to the true joint distribution. Such an 
+MIMIC: Finding Optima by Estimating Probability Densities 427 
+approximator is capable of representing clusters of highly related parameters. While 
+this might seem similar to the intuitive behavior of crossover, this representation is 
+strictly more powerful. More importantly, our clusters are learned from the data, 
+and are not pre-defined by the programmer. 
+4 Generating Events from Conditional Probabilities 
+The joint probability distribution over a set of rando

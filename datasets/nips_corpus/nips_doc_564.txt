@@ -1,0 +1,169 @@
+Visual Grammars and their Neural Nets 
+Eric Mjolsness 
+Department of Computer Science 
+Yale University 
+New Haven, CT 06520-2158 
+Abstract 
+I exhibit a systematic way to derive neural nets for vision problems. It 
+involves formulating a vision problem as Bayesian inference or decision 
+on a comprehensive model of the visual domain given by a probabilistic 
+grammar. 
+I INTRODUCTION 
+I show how systematically to derive optimizing neural networks that represent quan- 
+titative visual models and match them to data. This involves a design methodology 
+which starts from first principles, namely a probabilistic model of a visual domain, 
+and proceeds via Bayesian inference to a neural network which performs a visual 
+task. The key problem is to find probability distributions sufficiently intricate to 
+model general visual tasks and yet tractable enough for theory. This is achieved 
+by probabilistic and expressive grammars which model the image-formation pro- 
+cess, including heterogeneous sources of noise each modelled with a grammar rule. 
+In particular these grammars include a crucial relabelling rule that removes the 
+undetectable internal labels (or indices) of detectable features and substitutes an 
+uninformed labeling scheme used by the perceiver. 
+This paper is a brief summary of the contents of [Mjolsness, 1991]. 
+428 
+Visual Grammars and their Neural Nets 429 
+1 
+1 3 
+� � � � 
+instance � � � � 
+1 
+2 3 2 3 
+(unordered dots) (pexmuted dots) 
+Figure 1: Operation of random dot grammar. The first arrow illustrates dot place- 
+ment; the next shows dot jitter; the next arrow shows the pure, un-numbered fea- 
+ture locations; and the final arrow is the uninformed renumbering scheme of the 
+perceiver. 
+2 EXAMPLE: A RANDOM-DOT GRAMMAR 
+The first example grammar is a generative model of pictures consisting of a number 
+of dots (e.g. a sum of delta functions) whose relative locations are determined by 
+one out of M stored models. But the dots are subject to unknown independent jitter 
+and an unknown global translation, and the identities of the dots (their numerical 
+labels) are hidden from the perceiver by a random permutation operation. For 
+example each model might represent an imaginary asterism of equally bright stars 
+whose locations have been corrupted by instrument noise. One useful task would 
+be to recognize which model generated the image data. The random-dot grammar 
+is shown in (1). 
+model and F 0 
+location : root -+ instance of model a at x 
+0(x) = 
+dot P : instance(,x) -+ {dotloc(,m, im= x + u)} 
+locations 
+E({i.}) = -logri.a(i. - x- u.), 
+where <Urn >m =0 
+1 U 
+= m, 
+dot r' dotloc(a, m, i.,) dot(m, x.,) 
+jitter : -+ 
+scramble 
+all dots : -+ = 
+Es({x,)) = - log [Pr(P) rI, (x, - -.. P.,,x.)] 
+where P is a permutation 
+430 Mjolsness 
+The final joint probability distribution for this grammar allows recognition and 
+other problems to be posed as Bayesian inference and solved by neural network 
+optimization of 
+(1 1 ) 
+z..a,(., r, x)=  era,, 2N; Ixl' + 2lx, - x- ul' � (2) 
+A sum over all permutations has been approximated by the optimization over near- 
+permutations, as usual for Mean Field Theory networks [Yuille, 1990], resulting in 
+a neural network implementable as an analog circuit. The fact that P appears 
+only linearly in J7fina I makes the optimization problems easier; it is a generalized 
+assignment problem. 
+2.1 
+APPROXIMATE NEURAL NETWORK WITHOUT MATCH 
+VARIABLES 
+Short of approximating a P configuration sum via Mean Field Theory neural nets, 
+there is a simpler, cheaper, less accurate approximation that we have used on match- 
+ing problems similar to the model recognition problem (find c and x) for the dot- 
+matching grammar. Under this approximation, 
+argmax,xPr(ct'x[{xi))  argmax, x Z exp - 2]r Ixl = + Ixi - x - ul = 
+(3) 
+for T = 1. This objective function has a simple interpretation when err - oo: it 
+minimizes the Euclidean distance between two Gaussian-blurred images containing 
+the xi dots and a shifted version of the u, dots respectively: 
+argmin,,x f dz I G � 11 (z) - O � I2(z - x)l 2 
+= argmin,x f dz IGo/v � Y'.i 5(z - xi) - Go/v � E 5(z - x - u)l 2 
+= argmin, x [C1 - 2 Ei f a exp-3 [Iz - il  + I -  - ul]] 
+1  [2 
+= argmax,x mi exp - [xi - x - u m 
+(4) 
+Deterministic annealing from T =  down to T = 1, which is a good strategy for 
+finding global mima in equation (3), corresponds to a coarse-to-fine correlation 
+matching algorithm: the global shift x is computed by repeated local optimization 
+while gradually decreasing the Gaussian blurr parameter a down to 
+The approximation (3) has the effect of eliminating the discrete P,i variables, rather 
+than replacing them with continuous versions V,i. The same can be said for the 
+elastic net method [Durbin and Willshaw, 1987]. Compared to the elastic net, the 
+present objective function is simpler, more symmetric between rows and columns, 
+has a nicer interpretation in terms of known algorithms (correlation matching in 
+scale space), and is expected to be less accurate. 
+Visual Grammars and their Neural Nets 431 
+3 EXPERIMENTS IN IMAGE REGISTRATION 
+Equation (3) is an objective function for recovering the global two-dimensional (2D) 
+translation of a model consisting of arbitrarily placed dots, to match up with sim- 
+ilar dots with jittered positions. We use it instead to find the best 2D rotation 
+and horizontal translation, for two images which actually differ by a horizontal 
+SD translation with roughly constant camera orientation. The images consist of 
+line segments rather than single dots, some of which are missing or extra data. In 
+addition, there are strong boundary effects due to parts of the scene being trans- 
+lated outside the camera's field of view. The jitter is replaced by whatever po- 
+sitional inaccuracies come from an actual camera producing an 128 x 128 image 
+[Williams and Hanson, 1988] which is then processed by a high quality line-segment 
+finding algorithm [Burns, 1986]. Better results would be expected of objective func- 
+tions derived from grammars which explicitly model more of these noise processes, 
+such as the grammars described in Section 4. 
+We experimented with minimizing this objective function with respect to unknown 
+global translations and (sometimes) rotations, using the continuation method and 
+sets of line segments derived from real images. The results are shown in Figures 2, 
+3 and 4. 
+4 MORE GRAMMARS 
+Going beyond the random-dot grammar, we have studied several grammars of in- 
+creasing complexity. One can add rotation and dot deletion as new sources of noise, 
+or introduce a two-level hierarchy, in which models are sets of clusters of dots. In 
+[Mjolsness et al., 1991] we present a grammar for multiple curves in a single image, 
+each of which is represented in the image as a set of dots that may be hard to 
+group into their original curves. This grammar illustrates how flexible objects can 
+be handled in our formalism. 
+We approach a modest plateau of generality by augmenting the hierarchical version 
+of the random-dot grammar with multiple objects in a single scene. This degree of 
+complexity is sufficient to introduce many interesting features of knowledge repre- 
+sentation in high-level vision, such as multiple instances of a model in a scene, as 
+well as requiring segmentation and grouping as part of the recognition process. We 
+have shown [Mjolsness, 1991] that such a grammar can yield neural networks nearly 
+identical to the Frameville neural networks we have previously studied as a means 
+of mixing simple Artificial Intelligence frame systems (or semantic networks) with 
+optimization-based neural networks. What is more, the transformation leading to 
+Frameville is very natural. It simply pushes the permutation matrix as far back 
+into the grammar as possible. 
+432 Mjolsness 
+i%=.:'::iiii''i:. '.-':. :5:'-:' :i;.' ' ' ''.. '-. * -,, '.,,,... --...x,'.%.�.. 
+:.-. {i. ':'&i?:ii:ii:.v '' '%.N, ''' -.- - ''': 
+:.i5i.'i'::ii:..�--'x-%.', :'-. y.i:i-5:-: :.:-.' 
+: .: :::=:. %::.:.. .'. -::: ::::.-..... -. 
+:: i.::.-- o%-%'-..'..::::::::::.:.. 
+� o .. : : .. v .v.v.v -.....v... 
+� 'i.- ' :i!i!ii:.i .!-: .... 
+'-:. ,-'. '.:-,.ii:,<.: 'g''' ' 'i-{ i!iiiii:i ..,,-, .....e.. ,, ::':: 
+.:.:.'..::.'. - :i:':':5.' ' <.!  :i:i:!.i:.k'&,-' ' %. 
+� SiiSiiii:.:i:i:i!Z!::i:ii!i:!:i!:!:-iiii: --'.:'3:......'..... 
+Figure 2: A simple image registration problem. (a) Stair image. (b) Long line 
+segments derived from stair image. (c) Two unregistered line segment images de- 
+rived from two images taken from two horizontally translated viewpoints in three 
+dimensions. The images are a pair of successive frames in an image sequence. (d) 
+Registered viersions of same data: superposed long line segments extracted from 
+two stair images (taken from viewpoints differing by a small horizontal translation 
+in three dimensions) that have been optimally registered in two dimensions. 
+Visual Grammars and their Neural Nets 433 
+Figure 3. Continuation method (deterministic annealing). (a) Objective function at 
+er = .0863. (b) Objective function at er = .300. (c) Objective function at er = .105. 
+(d) Objective function at er = .0364. 
+434 Mjolsness 
+Figure 4: Image sequence displacement recovery. Frame 2 is matched to frames 3-8 
+in the stair image sequence. Horizontal displacements are recovered. Other starting 
+frames yield similar results except for frame 1, which was much worse. (a) Horizon- 
+tal displacement recovered, assuming no 2-d rotation. Recovered dispacement as 
+a function of frame number is monotonic. (b) Horizontal displacement recovered, 
+along with 2-d rotation which is found to be small except for the final frame. Dis- 
+placements are in qualitative agreement with (a), more so for small displacements. 
+(c) Objective function before and after displacemen

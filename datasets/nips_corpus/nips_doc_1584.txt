@@ -1,0 +1,152 @@
+Boxlets: a Fast Convolution Algorithm for 
+Signal Processing and Neural Networks 
+Patrice Y. Simard*, Lon Bottou, Patrick Haffner and Yann LeCun 
+AT&T Labs-Research 
+100 Schultz Drive, Red Bank, NJ 07701-7033 
+patrice@microsoft.corn 
+{leonb,haffner,yann} @research .att.com 
+Abstract 
+Signal processing and pattern recognition algorithms make exten- 
+sive use of convolution. In many cases, computational accuracy is 
+not as important as computational speed. In feature extraction, 
+for instance, the features of interest in a signal are usually quite 
+distorted. This form of noise justifies some level of quantization in 
+order to achieve faster feature extraction. Our approach consists 
+of approximating regions of the signal with low degree polynomi- 
+als, and then differentiating the resulting signals in order to obtain 
+impulse functions (or derivatives of impulse functions). With this 
+representation, convolution becomes extremely simple and can be 
+implemented quite effectively. The true convolution can be recov- 
+ered by integrating the result of the convolution. This method 
+yields substantial speed up in feature extraction and is applicable 
+to convolutional neural networks. 
+I Introduction 
+In pattern recognition, convolution is an important tool because of its translation 
+invariance properties. Feature extraction is a typical example: The distance between 
+a small pattern (i.e. feature) is computed at all positions (i.e. translations) inside a 
+larger one. The resulting distance image is typically obtained by convolving the 
+feature template with the larger pattern. In the remainder of this paper we will use 
+the terms image and pattern interchangeably (because of the topology implied by 
+translation invariance). 
+There are many ways to convolve images efficiently. For instance, a multiplication 
+of images of the same size in the Fourier domain corresponds to a convolution of 
+the two images in the original space. Of course this requires KN log N operations 
+(where N is the number of pixels of the image and K is a constant) just to go in and 
+out of the Fourier domain. These methods are usually not appropriate for feature 
+extraction because the feature to be extracted is small with respect to the image. 
+For instance, if the image and the feature have respectively 32 x 32 and 5 x 5 pixels, 
+* Now with Microsoft, One Microsoft Way, Redmond, WA 98052 
+572 P. Y. Sirnard, L. Bottou, P. Haffner and Y. Le Cun 
+the full convolution can be done in 25 x 1024 multiply-adds. In contrast, it would 
+require 2 x K x 1024 x 10 to go in and out of the Fourier domain. 
+Fortunately, in most pattern recognition applications, the interesting features are 
+already quite distorted when they appear in real images. Because of this inherent 
+noise, the feature extraction process can usually be approximated (to a certain de- 
+gree) without affecting the performance. For example, the result of the convolution 
+is often quantized or thresholded to yield the presence and location of distinctive 
+features [1]. Because precision is typically not critical at this stage (features are 
+rarely optimal, thresholding is a crude operation), it is often possible to quantize 
+the signals before the convolution with negligible degradation of performance. 
+The subtlety lies in choosing a quantization scheme which can speed up the con- 
+volution while maintaining the same level of performance. We now introduce the 
+convolution algorithm, from which we will deduce the constraints it imposes on 
+quantization. 
+The main algorithm introduced in this paper is based on a fundamental property of 
+convolutions. Assuming that f and # have finite support and that f denotes the 
+n-th integral of f (or the n-th derivative if n is negative), we can write the following 
+convolution identity: 
+(f,g) = f ,g= f,g (1) 
+where , denotes the convolution operator. Note that f or g are not necessarily 
+differentiable. For instance, the impulse function (also called Dirac delta function), 
+denoted 5, verifies the identity: 
+n mq-n 
+where 2 deno[es [he n-[h in[egral of [he delia hnc[ion, [ransla[ed by a (a(x) = 
+(x - a)). Equalions 1 and 2 are no[ new [o signal processing. Heckber[ has devel- 
+oped an effective filtering algori[hm [2] where [he filter  is a simple combina[ion 
+of polynomial of degree n - 1. Convolution be[ween a signal f and the filler  can 
+be writ[en  
+f*g = f ,g- (3) 
+where f is the n-th integral of the signal, and the n-th derivative of the filter 
+g can be written exclusively with delta functions (resulting from differentiating 
+n - 1 degree polynomials n times). Since convolving with an impulse function is 
+a trivial operation, the computation of Equation 3 can be carried out effectively. 
+Unfortunately, Heckbert's algorithm is limited to simple polynomial filters and is 
+only interesting when the filter is wide and when the Fourier transform is unavailable 
+(such as in variable length filters). 
+In contrast, in feature extraction, we are interested in small and arbitrary filters 
+(the features). Under these conditions, the key to fast convolution is to quantize 
+the images to combinations of low degree polynomials, which are differentiated, 
+convolved and then integrated. The algorithm is summarized by equation: 
+f,gm F,G=(F - *G-m) m+ (4) 
+where F and G are polynomial approximation of f and g, such that F - and 
+G - can be written as sums of impulse functions and their derivatives. Since the 
+convolution F - , G - only involves applying Equation 2, it can be computed quite 
+effectively. The computation of the convolution is illustrated in Figure 1. Let f 
+and g be two arbitrary 1-dimensionM signals (top of the figure). Let's assume that 
+f and g can both be approximated by partitions of polynomials, F and G. On 
+the figure, the polynomials are of degree 0 (they are constant), and are depicted in 
+the second line. The details on how to compute F and G will be explained in the 
+next section. In the next step, F and G are differentiated once, yielding successions 
+of impulse functions (third line in the figure). The impulse representation has the 
+advantage of having a finite support, and of being easy to convolve. Indeed two 
+impulse functions can be convolved using Equation 2 (4 x 3 = 12 multiply-adds on 
+the figure). Finally the result of the convolution must be integrated twice to yield 
+r,  = (r-, -)  (s) 
+Boxlets.' A Fast Convolution Algorithm 573 
+Original 
+Quantization 
+F I I , 
+Differentiation 
+' t 5 t 
+Convolution 
+Double 
+Integration 
+F*G 
+Figure 1: Example of convolution between 1-dimensional function f and #, where 
+the approximations of f and # are piecewise constant. 
+2 Quantization: from Images to Boxlets 
+The goal of this section is to suggest efficient ways to approximate an image f by 
+cover of polynomials of degree d suited for convolution. Let S be the space on 
+which f is defined, and let C: {ci} be apartition ors (ciO cj: 0 for i-7! j, 
+and Ui ci = s). For each ci, let Pi be a polynomial of degree d which minimizes 
+equation: 
+ei -- Of  (f(x) - pi(x))2dx (6) 
+ct 
+The uniqueness of pi is guaranteed if ci is convex. The problem is to find a cover 
+C which minimizes both the number of ci and '.i el. Many different compromises 
+are possible, but since the computational cost of the convolution is proportional 
+to the number of regions, it seemed reasonable to chose the largest regions with a 
+maximum error bounded by a threshold K. Since each region will be differentiated 
+and integrated along the directions of the axes, the boundaries of the cis are re- 
+stricted to be parallel to the axes, hence the appellation boxlet. There are still many 
+ways to compute valid partitions of boxlets and polynomials. We have investigated 
+two very different approaches which both yield a polynomial cover of the image in 
+reasonable time. The first algorithm is greedy. It uses a procedure which, starting 
+from a top left corner, finds the biggest boxlet ci which satisfies ei  lr without 
+overlapping another boxlet. The algorithm starts with the top left corner of the 
+image, and keeps a list of all possible starting points (uncovered top left corners) 
+sorted by X and Y positions. When the list is exhausted, the algorithm terminates. 
+Surprisingly, this algorithm can run in O(d(N + PlogN)), where N is the number 
+of pixels, P is the number of boxlets and d is the order of the polynomials pis. 
+Another much simpler algorithm consists of recursively splitting boxlets, starting 
+from a boxlet which encompass the whole image, until ei < It' for all the leaves 
+of the tree. This algorithm runs in O(dN), is much easier to implement, and is 
+faster (better time constant). Furthermore, even though the first algorithm yields 
+a polynomial coverage with less boxlets, the second algorithm yields less impulse 
+functions after differentiation because more impulse functions can be combined (see 
+next section). Both algorithms rely on the fact that Equation 6 can be computed 
+574 P E Simard, L. Bottou, P Haffner and E Le Cun 
+Figure 2: Effects of boxletization: original (top left), greedy (bottom left) with a 
+threshold of 10, 000, and recursive (top and bottom right) with a threshold of 10, 000. 
+in constant time. This computation requires the following quantities 
+degree 0 degree 1 
+(7) 
+to be pre-computed over the whole image, for the greedy algorithm, or over recur- 
+sively embedded regions, for the recursive algorithm. In the case of the recursive 
+algorithm these quantities are computed bottom up and very efficiently. To prevent 
+the sums to become too large a limit can be imposed on the maximum size of ci. 
+The coefficients of the polynomials are quickly evaluated by solving a small linear 
+system using the first two sums for polynomials of degree 0 (constants), the first 5 
+sums for polynomials of degree 1, and so on. 
+Figure 2 illustrates the results of the quantization algorithms. The top left corner 
+is a fraction of 

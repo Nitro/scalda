@@ -1,0 +1,160 @@
+Actor-Critic Algorithms 
+Vijay R. Konda John N. Tsitsiklis 
+Laboratory for Information and Decision Systems, 
+Massachusetts Institute of Technology, 
+Cambridge, MA, 02139. 
+konda@mit. edu, jnt@mit. edu 
+Abstract 
+We propose and analyze a class of actor-critic algorithms for 
+simulation-based optimization of a Markov decision process over 
+a parameterized family of randomized stationary policies. These 
+are two-time-scale algorithms in which the critic uses TD learning 
+with a linear approximation architecture and the actor is updated 
+in an approximate gradient direction based on information pro- 
+vided by the critic. We show that the features for the critic should 
+span a subspace prescribed by the choice of parameterization of the 
+actor. We conclude by discussing convergence properties and some 
+open problems. 
+1 Introduction 
+The vast majority of Reinforcement Learning (RL) [9] and Neuro-Dynamic Pro- 
+gramming (NDP) [1] methods fall into one of the following two categories: 
+(a) 
+(b) 
+Actor-only methods work with a parameterized family of policies. The gra- 
+dient of the performance, with respect to the actor parameters, is directly 
+estimated by simulation, and the parameters are updated in a direction of 
+improvement [4, 5, 8, 13]. A possible drawback of such methods is that the 
+gradient estimators may have a large variance. Furthermore, as the pol- 
+icy changes, a new gradient is estimated independently of past estimates. 
+Hence, there is no learning, in the sense of accumulation and consolida- 
+tion of older information. 
+Critic-only methods rely exclusively on value function approximation and 
+aim at learning an approximate solution to the Bellman equation, which will 
+then hopefully prescribe a near-optimal policy. Such methods are indirect 
+in the sense that they do not try to optimize directly over a policy space. A 
+method of this type may succeed in constructing a good approximation of 
+the value function, yet lack reliable guarantees in terms of near-optimality 
+of the resulting policy. 
+Actor-critic methods aim at combining the strong points of actor-only and critic- 
+only methods. The critic uses an approximation architecture and simulation to 
+learn a value function, which is then used to update the actor's policy parameters 
+Actor-Critic Algorithms 1009 
+in a direction of performance improvement. Such methods, as long as they are 
+gradient-based, may have desirable convergence properties, in contrast to critic- 
+only methods for which convergence is guaranteed in very limited settings. They 
+hold the promise of delivering faster convergence (due to variance reduction), when 
+compared to actor-only methods. On the other hand, theoretical understanding of 
+actor-critic methods has been limited to the case of lookup table representations of 
+policies [6]. 
+In this paper, we propose some actor-critic algorithms and provide an overview of 
+a convergence proof. The algorithms are based on an important observation. Since 
+the number of parameters that the actor has to update is relatively small (compared 
+to the number of states), the critic need not attempt to compute or approximate 
+the exact value function, which is a high-dimensional object. In fact, we show that 
+the critic should ideally compute a certain projection of the value function onto a 
+low-dimensional subspace spanned by a set of basis functions, that are completely 
+determined by the parameterization of the actor. Finally, as the analysis in [11] 
+suggests for TD algorithms, our algorithms can be extended to the case of arbitrary 
+state and action spaces as long as certain ergodicity assumptions are satisfied. 
+We close this section by noting that ideas similar to ours have been presented in 
+the simultaneous and independent work of Sutton et al. [10]. 
+2 
+Markov decision processes and parameterized family of 
+RSP's 
+Consider a Markov decision process with finite state space $, and finite action space 
+A. Let g: $ x A -> I be a given cost function. A randomized stationary policy (RSP) 
+is a mapping/ that assigns to each state x a probability distribution over the action 
+space A. We consider a set of randomized stationary policies IP - {/;8  In), 
+parameterized in terms of a vector 8. For each pair (x,u)  5' x A, lU(x,u) denotes 
+the probability of taking action u when the state x is encountered, under the policy 
+corresponding to 8. Let pxy (u) denote the probability that the next state is y, given 
+that the current state is x and the current action is u. Note that under any RSP, the 
+sequence of states {Xn) and of state-action pairs {Xn, Un) of the Markov decision 
+process form Markov chains with state spaces 5' and 5' x A, respectively. We make 
+the following assumptions about the family of policies IP. 
+(A1) 
+(A2) 
+For all x  5' and u  A the map 8 -> /(x,u) is twice differentiable 
+with bounded first, second derivatives. Furthermore, there exists a ll 
+valued function  (x, u) such that V/ (x, u) =/ (x, u) (x, u) where the 
+mapping 8  (x, u) is bounded and has first bounded derivatives for any 
+fixed x and u. 
+For each 8  I n , the Markov chains {Xn) and {Xn, Un) are irreducible and 
+aperiodic, with stationary probabilities r (x) and r/ (x, u) = r (x)/ (x, u), 
+respectively, under the RSP/. 
+In reference to Assumption (A1), note that whenever/(x,u) is nonzero we have 
+)(x,u) = /(x, u) = Vin/(x,u). 
+Consider the average cost function ,X: I '  I, given by 
+= g(x, 
+xS,uA 
+1010 V. R. Konda and J. N. Tsitsiklis 
+We are interested in minimizing A(9) over all 8. For each 9  ll n, let Vs ' $  lt 
+be the differential cost function, defined as solution of Poisson equation: 
+A(8) + Vs(x)= E ps(x,u) g(x,u)+ Epxv(u)Vs(y)]. 
+uA y 
+Intuitively, Vs (x) can be viewed as the disadvantage of state x: it is the expected 
+excess cost - on top of the average cost - incurred if we start at state x. It plays 
+role similar to that played by the more familiar value function that arises in total 
+or discounted cost Markov decision problems. Finally, for every O  ll n, we define 
+the q-function qs ' $ x A - ll, by 
+qs(x,u) = g(x,u) - A(O) + Epxv(u)Vs(y). 
+y 
+We recall the following result, as stated in [8]. (Different versions of this result have 
+been established in [3, 4, 5].) 
+Theorem 1. 
+t9 () _ E ris(x,u)qs(x,u)$(x,u ) (1) 
+where $(x, u) stands for the ith component of 
+In [8], the quantity qs(x,u) in the above formula is interpreted as the expected 
+excess cost incurred over a certain renewal period of the Markov chain Xn, 
+under the RSP Ps, and is then estimated by means of simulation, leading to actor- 
+only algorithms. Here, we provide an alternative interpretation of the formula in 
+Theorem 1, as an inner product, and thus derive a different set of algorithms, which 
+readily generalize to the case of an infinite space as well. 
+For any   ll n , we define the inner product (., ')s of two real valued functions ql, q2 
+on S x A, viewed as vectors in lll$1lAI, by 
+(ql, q2)s = E rio(x, u)ql (x, u)q2(x, u). 
+XU 
+With this notation we can rewrite the formula (1) as 
+(9OiA(O) = (qs,)s, i- 1,...,n. 
+Let ]]. Ils denote the norm induced by this inner product on lllSllAI. For each O  ll n 
+let s denote the span of the vectors $; i _( i _(n) in lllslll (This is same as 
+the set of all functions f on S x A of the form f(x,u) - 54 i$(x,u), for some 
+scalars O 1 ,... , On. ) 
+Note that although the gradient of A depends on the q-function, which is a vector 
+in a possibly very high dimensional space ltlSllAI, the dependence is only through 
+its inner products with vectors in s. Thus, instead of learning the function 
+it would suffice to learn the projection of qs on the subspace 
+Indeed, let IIs� ll [$t11  s be the projection operator defined by 
+Since 
+Ilsq = arg min Ilq- Oils. 
+it is enough to compute the projection of qs onto 
+Actor-Critic Algorithms 1 O11 
+3 Actor-critic algorithms 
+We view actor critic-algorithms as stochastic gradient algorithms on the parameter 
+space of the actor. When the actor parameter vector is ), the job of the critic is 
+to compute an approximation of the projection IIq of q onto . The actor uses 
+this approximation to update its policy in an approximate gradient direction. The 
+analysis in [11, 12] shows that this is precisely what TD algorithms try to do, i.e., 
+to compute the projection of an exact value function onto a subspace spanned by 
+feature vectors. This allows us to implement the critic by using a TD algorithm. 
+(Note, however, that other types of critics are possible, e.g., based on batch solution 
+of least squares problems, as long as they aim at computing the same projection.) 
+We note some minor differences with the common usage of TD. In our context, 
+we need the projection of q-functions, rather than value functions. But this is 
+easily achieved by replacing the Markov chain (xt) in [11, 12] by the Markov chain 
+(Xn, Un). A further difference is that [11, 12] assume that the control policy and 
+the feature vectors are fixed. In our algorithms, the control policy as well as the 
+features need to change as the actor updates its parameters. As shown in [6, 2], 
+this need not pose any problems, as long as the actor parameters are updated on a 
+slower time scale. 
+We are now ready to describe two actor-critic algorithms, which differ only as far 
+as the critic updates are concerned. In both variants, the critic is a TD algorithm 
+with a linearly parameterized approximation architecture for the q-function, of the 
+form 
+m 
+j=l 
+where r = (r,...,r m)  m denotes the parameter vector of the critic. The 
+features b, j = 1,... ,m, used by the critic are dependent on the actor parameter 
+vector ) and are chosen such that their span in ]$11AI, denoted by , contains 
+� . Note that the formula (2) still holds if II is redefined as projection onto  
+as long as  contains . The most straightforward choice would be to let m 

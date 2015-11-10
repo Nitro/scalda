@@ -1,0 +1,136 @@
+256 
+AN INFORMATION THEORETIC APPROACH TO 
+RULE-BASED CONNECTIONIST EXPERT SYSTEMS 
+Rodney M. Goodman, John W. Miller 
+Department of Electrical Engineering 
+Caltech 116-81 
+Pasadena, CA 91125 
+Padhraic Smyth 
+Communication Systems Research 
+Jet Propulsion Laboratories 238-420 
+4800 Oak Grove Drive 
+Pasadena, CA 91109 
+Abstract 
+We discuss in this paper architectures for executing probabilistic rule-bases in a par- 
+allel manner, using as a theoretical basis recently introduced information-theoretic 
+models. We will begin by describing our (non-neural) learning algorithm and theory 
+of quantitative rule modelling, followed by a discussion on the exact nature of two 
+particular models. Finally we work through an example of our approach, going from 
+database to rules to inference network, and compare the network's performance with 
+the theoretical limits for specific problems. 
+Introduction 
+With the advent of relatively cheap mass storage devices it is common in many 
+domains to maintain large databases or logs of data, e.g., in telecommunications, 
+medicine, finance, etc. The question naturally arises as to whether we can extract 
+models from the data in an automated manner and use these models as the basis 
+for an autonomous rational agent in the given domain, i.e., automatically generate 
+%xpert systems  from data. There are really two aspects to this problem: firsfly 
+learning a model and, secondly, performing inference using this model. What we 
+propose in this paper is a rather novel and hybrid approach to learning and in- 
+ference. EssentiMly we combine the qualitative knowledge representation ideas of 
+AI with the distributed computational advantages of connectionist models, using 
+an underlying theoretical basis tied to information theory. The knowledge repre- 
+sentation formalism we adopt is the rule-based representation, a scheme which is 
+well supported by cognitive scientists and AI researchers for modeling higher level 
+symbolic reasoning tasks. We have recently developed an information-theoretic al- 
+gorithm called ITRULE which extrazts an optimal set of probabilistic rules from a 
+given data set [1, 2, 3]. It must be emphasised that we do not use any form of neural 
+learning such as backpropagation in our approach. To put it simply, the ITRULE 
+learning algorithm is far more computationally direct and better understood than 
+(say) backpropagation for this particular learning task of finding the most infor- 
+mative individual rules without reference to their collective properties. Performing 
+useful inference with this model or set of rules, is quite a difficult problem. Exact 
+theoretical schemes such as maximum entropy (ME) are intractable for real-time 
+applications. 
+' An Information Theoretic Approach to Expert Systems 257 
+We have been investigating schemes where the rules represent links on a directed 
+graph and the nodes correspond to propositions, i.e., variable-value pairs. Our 
+approach is characterised by loosely connected, multiple path (arbitrary topology) 
+graph structures, with nodes performing local non-linear decisions as to their true 
+state based on both supporting evidence and their a priori bias. What we have in 
+fact is a recurrent neural network. What is different about this approach compared 
+to a standard connectionist model as learned by a weight-adaptation algorithm such 
+as BP? The difference lies in the semantics of the representation [4]. Weights such 
+as log-odds ratios based on log transformations of probabilities possess a clear mean- 
+ing to the user, as indeed do the nodes themselves. This explicit representation of 
+knowledge is a key requirement for any system which purports to perform reasoning, 
+probabilistic or otherwise. Conversely, the lack of explicit knowledge representation 
+in most current connectionist approaches, i.e., the black box  syndrome, is a ma- 
+jor limitation to their application in critical domains where user-confidence and 
+explanation facilities are key criteria for deployment in the field. 
+Learning the model 
+Consider that we have M observations or samples available, e.g., the number of 
+items in a database. Each sample datum is described in terms of N attributes 
+or features, which can assume values in a corresponding set of N discrete alpha- 
+bets. For example our data might be described in the form of 10-component binary 
+vectors. The requirement for discrete rather than continuous-valued attributes is 
+dictated by the very nature of the rule-based representation. In addition it is impor- 
+tant to note that we do not assume that the sample data is somehow exhaustive and 
+correctf There is a tendency in both the neural network and AI learning literature 
+to analyse learning in terms of learning a Boolean function from a truth table. The 
+implicit assumption is often made that given enough samples, and a good enough 
+learning algorithm we can always learn the function exactly. This is a fallacy, since 
+it depends on the feature representation. For any problem of interest there are 
+always hidden causes with a consequent non-zero Bayes misclassification risk, i.e., 
+the function is dependent on non-observable features (unseen columns of the truth 
+table). Only in artificial problems such as game playing is perfect  classification 
+possible -- in practical problems nature hides the real features. This phenomenon 
+is well known in the statistical pattern recognition literature and renders invalid 
+those schemes which simply try to perfectly classify or memorise the training data. 
+We use the following simple model of a rule, i.e., 
+If Y -- y then X = z with probability p 
+where X and Y are two attributes (random variables) with x and ybeing values 
+in their respective discrete alphabets. Given sample data as described earlier we 
+pose the problem as follows: can we find the bestrules from a given data set, 
+say the K best rules ? We will refer to this problem as that of qeneralised rule 
+induction, in or'der to distinguish it from the special case of deriving classification 
+258 Goodman, Miller and Smyth 
+rules. Clearly we require both a preference meure to rank the rules and a learning 
+algorithm which uses the preference measure to find the K best rules. 
+Let us define the information which the event y yields about the variable X, say 
+f(X;y). Based on the requirements that f(X;) is both non-negative and that 
+its expectation with respect to Y equals the average mutual information I(X; Y), 
+Blachman [5] sixowed that the only such function is the j-meure, which is defined 
+More recently we have shown that '(X; F) possesses unique properties as a rule 
+information measure [6]. In general the j-measure is the average change in bits 
+required to specify X between the a priori distribution (p(X)) and the a posteriori 
+distribution (p(XIF)). It can also be interpreted as a special ce of the cross-entropy 
+or binary discrimination (Kullback [7]) between these two distributions. We further 
+define J(X;F) as the average information content where J(X;y) -- p().j(X;y). 
+J(X; ) simply weights the instantaneous rule information j(X; F) by the probability 
+that the left-hand side will occur, i.e., that the rule will be fired. This definition 
+is motivated by considerations of learning useful rules in a resource-constrained 
+environment. A rule with high information content must be both a good predictor 
+and have a reonable probability of being fired, i.e., p(y) can not be too small. 
+Interestingly enough our definition of J(X; F) possesses a well-defined interpretation 
+in terms of classical induction theory, trading off hypothesis simplicity with the 
+goodness-of-fit of the hypothesis to the data [8]. 
+The ITRULE algorithm [1, 2, 3] uses the J-measure to derive the most informative 
+set of rules from an input data set. The algorithm produces a set of K probabilistic 
+rules, ranked in order of decreasing information content. The parameter K may be 
+user-defined or determined via some statistical significance test based on the size of 
+the sample data set available. The algorithm searches the space of possible rules, 
+traAing off generality of the rules with their predictiveness, and using information- 
+theoretic bounds to constrain the search space. 
+Using the Model to Perform Inference 
+Having learned the model we now have at our disposal a set of lower order con- 
+straints on the N-th order joint distribution in the form of probabilistic rules. This 
+is our a priori model. In a typical inference situation we are given some initial 
+conditions (i.e., some nodes are clamped), we are allowed to measure the state of 
+some other nodes (possibly at a cost), and we wish to infer the state or probability 
+of one more goal propositions or nodes from the available evidence. It is important 
+to note that this is a much more difficult and general problem than classification of 
+a single, fixed, goal variable, since both the initial conditions and goal propositions 
+may vary considerably from one problem instance to the next. This is the infer- 
+ence problem, determining an a posteriori distribution in the face of incomplete and 
+uncertain information. The exact maximum entropy solution to this problem is in- 
+An Information Theoretic Approach to Expert Systems 259 
+tractable and, despite the elegance of the problem formulation, stochastic relaxation 
+techniques (Geman [9]) are at present impractical for real-time robust applications. 
+Our motivation then is to perform an approximation to exact Bayesiax inference 
+in a robust manner. With this in mind we have developed two particular models 
+which we describe as the hypothesis testing network and the uncertainty network. 
+Principles of the Hypothesis Testing Network 
+In the first model under consideration each directed link from y to z is assigned a 
+weight corresponding to the weight of evidence of y on z. This idea is not necessarily 
+new, although our interpretation and approach is di

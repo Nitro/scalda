@@ -1,0 +1,148 @@
+Credit Assignment through Time: 
+Alternatives to Backpropagation 
+Yoshua Bengio * 
+Dept. Informatique et 
+Recherche Opdrationnelle 
+Universitd de Montrdal 
+Montreal, Qc H3C-3J7 
+Paolo Frasconi 
+Dip. di Sistemi e Informatica 
+Universit& di Firenze 
+50139 Firenze (Italy) 
+Abstract 
+Learning to recognize or predict sequences using long-term con- 
+text has many applications. However, practical and theoretical 
+problems are found in training recurrent neural networks to per- 
+form tasks in which input/output dependencies span long intervals. 
+Starting from a mathematical analysis of the problem, we consider 
+and compare alternative algorithms and architectures on tasks for 
+which the span of the input/output dependencies can be controlled. 
+Results on the new algorithms show performance qualitatively su- 
+perior to that obtained with backpropagation. 
+1 Introduction 
+Recurrent neural networks have been considered to learn to map input sequences to 
+output sequences. Machines that could efficiently learn such tasks would be useful 
+for many applications involving sequence prediction, recognition or production. 
+However, practical difficulties have been reported in training recurrent neural net- 
+works to perform tasks in which the temporal contingencies present in the in- 
+put/output sequences span long intervals. In fact, we can prove that dynamical 
+systems such as recurrent neural networks will be increasingly difficult to train with 
+gradient descent as the duration of the dependencies to be captured increases. A 
+mathematical analysis of the problem shows that either one of two conditions arises 
+in such systems. In the first case, the dynamics of the network allow it to reliably 
+store bits of information (with bounded input noise), but gradients (with respect 
+to an error at a given time step) vanish exponentially fast as one propagates them 
+*also, AT&T Bell Labs, Holmdel, NJ 07733 
+76 Bengio and Frasconi 
+backward in time. In the second case, the gradients can flow backward but the sys- 
+tem is locally unstable and cannot reliably store bits of information in the presence 
+of input noise. 
+In consideration of the above problem and the understanding brought by the theo- 
+retical analysis, we have explored and compared several alternative algorithms and 
+architectures. Comparative experiments were performed on artificial tasks on which 
+the span of the input/output dependencies can be controlled. In all cases, a dura- 
+tion parameter was varied, from T/2 to T, to avoid short sequences on which the 
+algorithm could much more easily learn. These tasks require learning to latch, i.e. 
+store bits of information for arbitrary durations (which may vary from example to 
+example). Such tasks cannot be performed by Time Delay Neural Networks or by 
+recurrent networks whose memories are gradually lost with time constants that are 
+fixed by the parameters of the network. 
+Of all the alternatives to gradient descent that we have explored, an approach based 
+on a probabilistic interpretation of a discrete state space, similar to hidden Markov 
+models (HMMs), yielded the most interesting results. 
+2 A Difficult Problem of Error Propagation 
+Consider a non-autonomous discrete-time system with additive inputs, such as a 
+recurrent neural network a with a continuous activation function: 
+at = M(at_)+ ut (1) 
+and the corresponding autonomous dynamics 
+at: M(at-) (2) 
+where M is a nonlinear map (which may have tunable parameters such as network 
+weights), and at G /n and ut G R r are vectors representing respectively the system 
+state and the external input at time t. 
+In order to latch a bit of state information one wants to restrict the values of the 
+system activity at to a subset S of its domain. In this way, it will be possible to 
+later interpret at in at least two ways: inside S and outside S. To make sure that at 
+remains in such a region, the system dynamics can be chosen such that this region 
+is the basin of attraction of an attractor X (or of an attractor in a sub-manifold or 
+subspace of at's domain). To erase that bit of information, the inputs may push 
+the system activity at out of this basin of attraction and possibly into another one. 
+In (Bengio, Simard, & Frasconi, 1994) we show that only two conditions can arise 
+when using hyperbolic attractors to latch bits of information in such a system. 
+Either the system is very sensitive to noise, or the derivatives of the cost at time t 
+with respect to the system activations a0 converge exponentially to 0 as t increases. 
+This situation is the essential reason for the difficulty in using gradient descent to 
+train a dynamical system to capture long-term dependencies in the input/output 
+sequences. 
+A first theorem can be used to show that when the state at is in a region where 
+IM'I > 1, then small perturbations grow exponentially, which can yield to a loss of 
+the information stored in the dynamics of the system: 
+Theorem 1 Assume x is a point of R'* such that there exists an open sphere U(x) 
+centered on x for which [M'(z) > i for all z 6 U(x). Then there exist y 6 U(x) 
+such that IIM(x)- M(y) l> llx- YlI- 
+Credit Assignment through Time: Alternatives to Backpropagation 77 
+A second theorem shows that when the state at is in a region where ]M[ < 1, the 
+gradients propagated backwards in time vanish exponentially fast: 
+Theorem 2 If the input ut is such that a system remains robustly latched 
+(]M(at)[ < 1) on attractor X after time O, then  -+ 0 as t  c. 
+Oao 
+See proofs in (Bengio, Simard, &; Frasconi, 1994). A consequence of these results 
+is that it is generally very difficult to train a parametric dynamical system (such 
+as a recurrent neural network) to learn long-term dependencies using gradient de- 
+scent. Based on the understanding brought by this analysis, we have explored and 
+compared several alternative algorithms and architectures. 
+3 Global Search Methods 
+Global search methods such as simulated annealing can be applied to this prob- 
+lem, but they are generally very slow. We implemented the simulated annealing 
+algorithm presented in (Corana, Marchesi, Martini, &; Ridella, 1987) for optimizing 
+functions of continuous variables. This is a batch learning algorithm (updating 
+parameters after all examples of the training set have been seen). It performs a cy- 
+cle of random moves, each along one coordinate (parameter) direction. Each point 
+is accepted or rejected according to the Metropolis criterion (Kirkpatrick, Gelatt, 
+& Vecchi, 1983). The simulated annealing algorithm is very robust with respect 
+to local minima and long plateaus. Another global search method evaluated in 
+our experiments is a multi-grid random search. The algorithm tries random points 
+around the current solution (within a hyperrectangle of decreasing size) and accepts 
+only those that reduce the error. Thus it is resistant to problems of plateaus but 
+not as much resistant to problems of local minima. Indeed, we found the multi-grid 
+random search to be much faster than simulated annealing but to fail on the parity 
+problem, probably because of local minima. 
+4 Time Weighted Pseudo-Newton 
+The time-weighted pseudo-Newton algorithm uses second order derivatives of the 
+cost with respect to each of the instantiations of a weight at different time steps to 
+try correcting for the vanishing gradient problem. The weight update for a weight 
+wi is computed as follows: 
+Awi(p) -- -- i x (3) 
+where Wit is the instantiation for time t of parameter wi, 1 is a global learning 
+rate and C(p) is he cos for paern p. In his way, each (temporal) contribution 
+Lo wi(p) is weighted by the inverse curvature wih respect to Wit. Like for the 
+pseudo-Newton algorithm of Becker and Le Cun (1988) we prefer using a diagonal 
+approximation of he Hessian which is cheap o compute and guaranteed o be 
+positive definite. 
+The constant p is introduced to preven w from becoming very large (when I a 
+is very small). We found [he performance of [his algori[hm [o be belief [han the 
+regular pseudo-Newton algori[hm, which is betlet than the simple s[ochasfic back- 
+propagation algorithm, bu all of these algorithms perform worse and worse as the 
+leng[h of the sequences is increased. 
+78 Bengio and Frasconi 
+Discrete Error Propagation 
+The discrete error propagation algorithm replaces sigmoids in the network by dis- 
+crete threshold units and attempts to propagate discrete error information back- 
+wards in time. The basic idea behind the algorithm is that for a simple discrete 
+element such as a threshold unit or a latch, one can write down an error propagation 
+rule that prescribes desired changes in the values of the inputs in order to obtain 
+certain changes in the values of the outputs. In the case of a threshold unit, such 
+a rule assumes that the desired change for the output of the unit is discrete (+2, 
+0 or -2). However, error information propagated backwards to such as unit might 
+have a continuous value. A stochastic process is used to convert this continuous 
+value into an appropriate discrete desired change. In the case of a self-loop, a clear 
+advantage of this algorithm over gradient back-propagation through sigmoid units 
+is that the error information does not vanish as it is repeatedly propagated back- 
+wards in time around the loop, even though the unit can robustly store a bit of 
+information. Details of the algorithm will appear in (Bengio, Simard, & Frasconi, 
+1994). This algorithm performed better than the time-weighted pseudo-Newton, 
+pseudo-Newton and back-propagation algorithms but the learning curve appeared 
+very irregular, suggesting that the algorithm is doing a local random search. 
+6 An EM Approach to Target Propagation 
+The most promising of the algorithms we studied was derived from the idea of 
+propagating targets instead of gradients. For this paper we restrict ourselves to 
+sequence classification. We assume a finite-state learning system with the st

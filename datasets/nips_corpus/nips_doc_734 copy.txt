@@ -1,0 +1,190 @@
+Neural Network Exploration Using 
+Optimal Experiment Design 
+David A. Cohn 
+Dept. of Brain and Cognitive Sciences 
+Massachusetts Inst. of Technology 
+Cambridge, MA 02139 
+Abstract 
+Consider the problem of learning input/output mappings through 
+exploration, e.g. learning the kinematics or dynamics of a robotic 
+manipulator. If actions are expensive and computation is cheap, 
+then we should explore by selecting a trajectory through the in- 
+put space which gives us the most amount of information in the 
+fewest number of steps. I discuss how results from the field of opti- 
+mal experiment design may be used to guide such exploration, and 
+demonstrate its use on a simple kinematics problem. 
+I Introduction 
+Most machine learning research treats the learner as a passive receptacle for data 
+to be processed. This approach ignores the fact that, in many situations, a learner 
+is able, and sometimes required, to act on its environment to gather data. 
+Learning control inherently involves being active; the controller must act in order 
+to learn the result of its action. When training a neural network to control a 
+robotic arm, one may explore by allowing the controller to flail for a length of 
+time, moving the arm at random through coordinate space while it builds up data 
+from which to build a model [Kuperstein, 1988]. This is not feasible, however, if 
+actions are expensive and must be conserved. In these situations, we should choose 
+a training trajectory that will get the most information out of a limited number of 
+steps. Manually designing such trajectories is a slow process, and intuitively good 
+trajectories often fail to sufficiently explore the state space [Armstrong, 1989]. In 
+679 
+680 Cohn 
+this paper I discuss another alternative for exploration: automatic, incremental 
+generation of training trajectories using results from optimal experiment design. 
+The study of optimal experiment design (OED) [Fedorov, 1972] is concerned with 
+the design of experiments that are expected to minimize variances of a parameter- 
+ized model. Viewing actions as experiments that move us through the state space, 
+we can use the techniques of OED to design training trajectories. 
+The intent of optimal experiment design is usually to maximize confidence in a 
+given model, minimize parameter variances for system identification, or minimize 
+the model's output variance. Armstrong [1989] used a form of OED to identify link 
+masses and inertial moments of a robot arm, and found that automatically gener- 
+ated training trajectories provided a significant improvement over human-designed 
+trajectories. Automatic exploration strategies have been tried for neural networks 
+(e.g. [Thrun and M611er, 1992], [Moore, 1994]), but use of OED in the neural net- 
+work community has been limited. Plutowski and White [1993] successfully used it 
+to filter a data set for maximally informative points, but its application to selecting 
+new data has only been proposed [MacKay, 1992], not demonstrated. 
+The following section gives a brief description of the relevant results from optimal 
+experiment design. Section 3 describes how these results may be adapted to guide 
+neural network exploration and Section 4 presents experimental results of imple- 
+menting this adaptation. Finally, Section 5 discusses implications of the results, 
+and logical extensions of the current experiments. 
+2 Optimal experiment design 
+Optimal experiment design draws heavily on the technique of Maximum Likelihood 
+Estimation (MLE) [Thisted, 1988]. Given a set of assumptions about the learner's 
+architecture and sources of noise in the output, MLE provides a statistical basis for 
+learning. Although the specific MLE techniques we use hold exactly only for linear 
+models, making certain computational approximations allows them to be used with 
+nonlinear systems such as neural networks. 
+We begin with a training set of input-output pairs (xi, Yi)i and a learner fw(). 
+We define fw(x) to be the learner's output given input x and weight vector w. 
+Under an assumption of additive Gaussian noise, the maximum likelihood estimate 
+for the weight vector, , is that which minimizes the sum squared error Ess = 
+y4=(f(xi) - yi) '. The estimate zb gives us an estimate of the output at a novel 
+input: 0 = f(x) (see e.g. Figure la). 
+MLE allows us to compute the variances of our weight and output estimates. Writ- 
+ing the output sensitivity asg(x) = cgf(x)/cgw, the covariances of  are 
+where the last approximation assumes local linearity of g(x). (For brevity, the 
+output sensitivity will be abbreviated to g(x) in the rest of the paper.) 
+Neural Network Exploration Using Optimal Experiment Design 681 
+1 
+0.7 
+0,25 
+0 
+0 
+0.25 
+0,5 
+xl 
+0.75 
+8 
+Y 
+.75 200-75 
+� 5x 2 0 . . 0.5x2 
+0.25 0.25 - 
+xl 0.75 
+0 xl O. 7 
+1 1 3 
+Figure 1: a) A set of training examples for a classification problem, and the net- 
+work's best fit to the data. b) Maximum likelihood estimate of the network's output 
+variance for the same problem. 
+For a given reference input xr, the estimated output variance is 
+var(xr) = g(x,)T 
+(1) 
+Output variance corresponds to the model's estimate of the expected squared dis- 
+tance between its output f (x) and the unknown true output y. Output variance 
+then, corresponds to the model's estimate of its mean squared error (MSE) (see Fig- 
+ure lb). If the estimates are accurate then minimizing the output variance would 
+correspond to minimizing the network's MSE. 
+In optimal experiment design, we estimate how adding a new training example is 
+expected to change the computed variances. Given a novel x+, we can use OED 
+to predict the effect of adding x+ and its as-yet-unknown y+ to the training 
+set. We make the assumption that 
+A+ -  + 9(+)9(+)T -, 
+which corresponds to assuming that our current model is already fairly good. Based 
+on this assumption, the new parameter variances will be 
+-1 
+A+ = A  - A;9(+1)(1 + 9(+)A9(+))9(+)  ; 
+Combined with Equation 1, this predicts that if we take a new example at x+, 
+the change in output variance at reference input x will be 
+5a() = (9()A;9(+))(l+9(+)A9(+)) 
+= cov(x,x+)(1 + vav(x+)) (2) 
+To minimize the expected value of vav(x), we should select x+ so as to maximize 
+the right side of Equation 2. For other interesting OED measures, see MacKay 
+[1992]. 
+682 Cohn 
+3 Adapting OED to Exploration 
+When building a world model, the learner is trying to build a mapping, e.g. from 
+joint angles to cartesian coordinates (or from state-action pairs to next states). If 
+it is allowed to select arbitrary joint angles (inputs) in successive time steps, then 
+the problem is one of selecting the next query to make ([Cohn, 1990], [Baum and 
+Lang, 1991]). In exploration, however, one's choices for a next input are constrained 
+by the current input. We cannot instantaneously teleport to remote parts of the 
+state space, but must choose among inputs that are available in the next time step. 
+One approach to selecting a next input is to use selective sampling: evaluate a num- 
+ber of possible random inputs, choose the one with the highest expected gain. In a 
+high-dimensional action space, this is inefficient. The approach followed here is that 
+of gradient search, differentiating Equation 2 and hillclimbing on 
+Note that Equation 2 gives the expected change in variance only at a single point 
+xr, while we wish to minimize the average variance over the entire domain. Ex- 
+plicitly integrating over the domain is intractable, so we must make do with an 
+approximation. MacKay [1992] proposed using a fixed set of reference points and 
+measuring the expected change in variance over them. This produces spurious lo- 
+cal maxima at the reference points, and has the undesirable effect of arbitrarily 
+quantizing the input space. Our approach is to iteratively draw reference points at 
+random (either uniformly or according to a distribution of interest), and compute 
+a stochastic approximation of Avar. 
+By climbing the stochastically approximated gradient, either to convergence or to 
+the horizon of available next inputs, we will settle on an input/action with a (locally) 
+optimal decrease in expected variance. 
+4 Experimental Results 
+In this section, I describe two sets of experiments. The first attempts to confirm 
+that the gains predicted by optimal experiment design may actually be realized in 
+practice, and the second studies the application of OED to a simple learning task. 
+4.1 Expected versus actual gain 
+It must be emphasized that the gains predicted by OED are expected gains. These 
+expectations are based on the relatively strong assumptions of MLE, which may 
+not strictly hold. In order for the expected gains to materialize, two bridges must 
+be crossed. First, the expected decrease in model variance must be realized as an 
+actual decrease in variance. Second, the actual decrease in model variance must 
+translate into an actual decrease in model MSE. 
+4.1.1 Expected decreases in variance -- actual decreases in variance 
+The translation from expected to actual changes in variance requires coordination 
+between the exploration strategy and the learning algorithm: to predict how the 
+variance of a weight will change with a new piece of data, the predictor must know 
+how the weight itself (and its neighboring weights) will change. Using a black 
+Neural Network Exploration Using Optimal Experiment Design 683 
+0.012 
+0.01 
+0.008 
+0.006 
+0.004 
+0. 002 
+/> ..... actual=expected 
+0.002 0.004 0.006 0.008 0.01 0.012 
+expected delta var 
+2.8 
+2.4 
+2 
+1.6 
+1.2 
+0.8 
+0.4 
+0 
+-0.4 
+xx x 
+x 
+x x x x x 
+x  x 
+x Xx X 
+X 
+x x x 
+x 
+X XX X X 
+xj3 x x x x xx 
+x : x, x x x x 
+0.002 0.004 0.006 0.008 0.01 0.012 
+actual delta vat 
+x 
+x 
+Figure 2: a) Correlations between expected change in output variance and actual 
+change output variance b) Correlations between actual change in output variance 

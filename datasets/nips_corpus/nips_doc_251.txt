@@ -1,0 +1,162 @@
+194 Huang and Lippmann 
+HMM Speech Recognition 
+with Neural Net Discrimination* 
+William Y. Huang and Richard P. Lippmann 
+Lincoln Laboratory, MIT 
+Room B-349 
+Lexington, MA 02173-9108 
+ABSTRACT 
+Two approaches were explored which integrate neural net classifiers 
+with Hidden Markov Model (HMM) speech recognizers. Both at- 
+tempt to improve speech pattern discrimination while retaining the 
+temporal processing advantages of ltMMs. One approach used neu- 
+ral nets to provide second-stage discrimination following an ItMM 
+recognizer. On a small vocabulary task, Radial Basis Function 
+(RBF) and back-propagation neural nets reduced the error rate 
+substantially (from 7.9% to 4.2% for the RBF classifier). In a larger 
+vocabulary task, neural net classifiers did not reduce the error rate. 
+They, however, outperformed Gaussian, Gaussian mixture, and k- 
+nearest neighbor (KNN) classifiers. In another approach, neural 
+nets functioned as low-level acoustic-phonetic feature extractors. 
+When classifying phonemes based on single 10 msec. frames, dis- 
+criminant RBF neural net classifiers outperformed Gaussian mix- 
+ture classifiers. Performance, however, differed little when classi- 
+fying phones by accumulating scores across all frames in phonetic 
+segments using a single node ItMM recognizer. 
+*This work was sponsored by the Department of the Air Force and the Air Force Office of 
+Scientific Research 
+HMM Speech Recognition with Neural Net Discrimination 195 
+Cepstral Sequence 
+Second Stage 
+Classifier 
+Node Averages 
+Viterbi 
+Segmentation 
+Figure 1: Second stage discrimination system. ItMM recognition is based on the 
+accumulated scores from each node. A second stage classifier can adjust the weights 
+from each node to provide improved discrimination. 
+I Introduction 
+This paper describes some of our current efforts to integrate discriminant neural net 
+classifiers into HMM speech recognizers. The goal of this work is to combine the 
+temporal processing capabilities of the HMM approach with the superior recogni- 
+tion rates provided by discriminant classifiers. Although neural nets are well devel- 
+oped for static pattern classification, neural nets for dynamic pattern recognition 
+require further research. Current conventional HMM recognizers rely on likelihood 
+scores provided by non-discriminant classifiers, such as Gaussian mixture [11] and 
+histogram [5] classifiers. Non-discriminant classifiers are sensitive to assumptions 
+concerning the shape of the probability density function and the robustness of the 
+Maximum Likelihood (ML) estimators. Discriminant classifiers have a number of 
+potential advantages over non-discriminant classifiers on real world problems. They 
+make fewer assumptions concerning underlying class distributions, can be robust to 
+outliers, and can lead to efficient parallel analog VLSI implementation [4, 6, 7, 8]. 
+Recent efforts in applying discriminant training to ItMM recognizers have led to 
+promising techniques, including Maximum Mutual Information (MMI) training [2] 
+and corrective training [5]. These techniques maintain the same structure as in a 
+conventional HMM recognizer but use a different overall error criteria to estimate 
+parameters. We believe that a significant improvement in recognition rate will result 
+if discriminant classifiers are included directly in the HMM structure. 
+This paper examines two integration strategies: second stage classification and 
+discriminant pre-processing. In second stage classification, discussed in Sec. 2, 
+classifiers are used to provide post-processing for an ItMM isolated word recognizer. 
+In discriminant pre-processing, discussed in Sec. 3, discriminant classifiers replace 
+the maximum likelihood classifiers used in conventional HMM recognizers. 
+196 Huang and Lippmann 
+2 Second Stage Classification 
+HMM isolated-word recognition requires one Markov model per word. Recognition 
+involves accumulating scores for an unknown input across the nodes in each word 
+model, and selecting that word model which provides the maximum accumulated 
+score. In the case of discriminating between minimal pairs, such as those in the 
+E-set vocabulary (the letters (BCDEGPTVZ)), it is desired that recognition be 
+focused on the nodes that correspond to the small portion of the utterance that are 
+different between words. In the second stage classification approach, illustrated in 
+Fig. 1, the IMMs at the first layer are the components of a fully-trained isolated- 
+word HMM recognizer. The second stage classifier is provided with matching scores 
+and duration from each IMM node. A simple second stage classifier which sums 
+the matching scores of the nodes for each word would be equivalent to an HMM 
+recognizer. It is hoped that discriminant classifiers can utilize the additional infor- 
+mation provided by the node dependent scores and duration to deliver improved 
+recognition rates. 
+The second stage system of Fig. 1 was evaluated using the 9 letter E-set vocabulary 
+and the (BDG) vocabulary. Words were taken from the TI-46 Word database, 
+which contains 10 training and 16 testing tokens per word per talker and 16 talkers. 
+Evaluation was performed in the speaker dependent mode; thus, there were a total 
+of 30 training and 48 testing tokens per talker for the (BDG)-set task and 90 
+training and 144 testing tokens per talker for the E-set task. Spectral pre-processing 
+consisted of extracting the first 12 reel-scaled cepstral coefficients [10], ignoring the 
+0 th cepstral coefficient (energy), for each 10 ms frame. An HMM isolated word 
+recognizer was first trained using the forward-backward algorithm. Each word was 
+modeled using 8 HMM nodes with 2 additional noise nodes at each end. During 
+classification, each test word was segmented using the Viterbi decoding algorithm 
+on all word models. The average matching score and duration of all non-noise nodes 
+were used as a static pattern for the second stage classifier. 
+2.1 Classifiers 
+Four second stage classifiers were used: (1) Multi-layer perceptron (MLP) classifiers 
+trained with back-propagation, (2) Gaussian mixture classifiers trained with the 
+Expectation Maximization (EM) algorithm [9], (3) RBF classifiers [8] with weights 
+trained using the pseudoinverse method computed via Singular Value Decomposi- 
+tion (SVD), and (4) KNN classifiers. Covariance matrices in the Gaussian mixture 
+classifiers were constrained to be diagonal and tied to be the same between mixture 
+components in all classes. The RBF classifiers were of the form 
+Decide Class i = 
+Argmax wij EXP ' '2' 
+i i= 
+(1) 
+HMM Speech Recognition with Neural Net Discrimination 197 
+where 
+i 
+J 
+, 
+h 
+acoustic vector input, 
+class label, 
+number of centers, 
+weight from jth center to ith class output, 
+jth center and variance, and 
+spread factor. 
+The center locations (fii's) were obtained from either/:-means or Gaussian mixture 
+clustering. The variances (r i 's) were either the variances of the individual k-means 
+clusters or those of the individual Gaussian mixture components, depending on 
+which clustering algorithm was used. Results for k = 1 are reported for the KNN 
+classifier because this provided best performance. 
+The Gaussian mixture classifier was selected as a reference conventional non-discri- 
+minant classifier. A Gaussian mixture classifier can provide good models for multi- 
+modal and non-Gaussian distributions by using many mixture components. It can 
+also generalize to the more common, well-known unimodal Gaussian classifier which 
+provides poor performance when the input distribution is not Gaussian. Very few 
+benchmarking studies have been performed to evaluate the relative performance of 
+Gaussian mixture and neural net classifiers, although mixture models have been 
+used successfully in HMM recognizers [11]. RBF classifiers were used because they 
+train rapidly, and recent benchmarking studies show that they perform as well as 
+MLP classifiers on speech problems [8]. 
+GAUSSIAN RBFJ' RBF:[ 
+Mixtures per Centers per Total Number 
+Class Class of Centers KNN 
+Vocab HMM MLP 1 I 3 1 I 3 30 I 70 (k = 1) 
+{E-Set} 11.3% 13.4% 21.2% 20.6% 15.8% 13.7% 15.8% 12.8% 36.0% 
+t Centers from Gaussian mixture clustering, h--150. 
+ Centers from k-means clustering. h--150. 
+Table 1: Percentage errors from the second stage classifier, averaged over all 16 
+talkers. 
+2.2 Results of Second Stage Classification 
+Table 1 shows the error rates for the second stage system of Fig. 1, averaged 
+over all talkers. The second stage system improved performance over the baseline 
+HMM system when the vocabulary was small (B, D and G). Error rates decreased 
+from 7.9% for the baseline HMM recognizer to 4.2% for the RBF second stage 
+classifier. There was no improvement for the E-set vocabulary task. The best RBF 
+second stage classifier degraded the error rate from 11.3% with the baseline HMM 
+to 12.8%. In the E-set results, MLP and RBF classifiers, with error rates of 13.4% 
+198 Huang and Lippmann 
+and 12.8%, performed considerably better than the Gaussian (21.2%), Gaussian 
+mixture (20.6%) and KNN classifiers (36.0%). 
+The second stage approach is effective for a very small vocabulary but not for a larger 
+vocabulary task. This may be due to a combination of limited training data and the 
+increased complexity of decision regions as vocabulary size and dimensionality gets 
+large. When the vocabulary size increased from 3 to 9, the input dimensionality 
+of the classifiers scaled up by a factor of 3 (from 48 to 144) but the number of 
+training tokens increased only by the same factor (from 30 to 90). It is, in general, 
+possible for the amount of training tokens required for good performance to scale 
+up exponentially with the input dimensionality. MLP and RBF classifiers appear 
+to be affected by this problem but not as strongly as Gaussian, Gaussian mixture, 
+and KNN classifiers. 
+3 Discriminant Pre-Processing 
+Second stage classifiers will not work well if 

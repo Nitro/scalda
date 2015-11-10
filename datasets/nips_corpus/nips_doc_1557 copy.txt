@@ -1,0 +1,129 @@
+Learning Instance-Independent Value Functions 
+to Enhance Local Search 
+Robert Moll Andrew G. Barto Theodore J. Perkins 
+Department of Computer Science 
+University of Massachusetts, Amherst, MA 01003 
+Richard S. Sutton 
+AT&T Shannon Laboratory, 180 Park Avenue, Florham Park, NJ 07932 
+Abstract 
+Reinforcement learning methods can be used to improve the performance 
+of local search algorithms for combinatorial optimization by learning 
+an evaluation function that predicts the outcome of search. The eval- 
+uation function is therefore able to guide search to low-cost solutions 
+better than can the original cost function. We describe a reinforcement 
+learning method for enhancing local search that combines aspects of pre- 
+vious work by Zhang and Dietterich (1995) and Boyan and Moore (1997, 
+Boyan 1998). In an off-line learning phase, a value function is learned 
+that is useful for guiding search for multiple problem sizes and instances. 
+We illustrate our technique by developing several such functions for the 
+Dial-A-Ride Problem. Our learning-enhanced local search algorithm ex- 
+hibits an improvement of more then 30% over a standard local search 
+algorithm. 
+1 INTRODUCTION 
+Combinatorial optimization is of great importance in computer science, engineering, and 
+operations research. We investigated the use of reinforcement learning (RL) to enhance tra- 
+ditional local search optimization (hillclimbing). Since local search is a sequential decision 
+process. RL can be used to improve search performance by learning an evaluation func- 
+tion that predicts the outcome of search and is therefore able to guide search to low-cost 
+solutions better than can the original cost function. 
+Three approaches to using RL to improve combinatorial optimization have been described 
+1018 R. Moll, A. G. Barto, T. ,L. Perkins and R. S. Sutton 
+in the literature. One is to learn a value function over multiple search trajectories of a single 
+problem instance. As the value function improves in its predictive accuracy, its guidance 
+enhances additional search trajectories on the same instance. Boyan and Moore's STAGE 
+algorithm (Boyan and Moore 1997, Boyan 1998) falls into this category, showing excellent 
+performance on a range of optimization problems. Another approach is to learn a value 
+function off-line and then use it over multiple new instances of the same problem. Zhang 
+and Dietterich's (1995) application of RL to a NASA space shuttle mission scheduling 
+problem takes this approach (although it does not strictly involve local search as we define 
+it below). A key issue here is the need to normalize state representations and rewards so 
+that trajectories from instances of different sizes and difficulties yield consistent training 
+data. In each of the above approaches, a state of the RL problem is an entire solution (e.g., 
+a complete tour in a Traveling Salesman Problem (TSP)) and the actions select next solu- 
+tions from the current solutions' neighborhoods. A third approach, described by Bertsekas 
+and Tsitsiklis (1996), uses a learned value function for guiding the direct construction of 
+solutions rather than for moving between them. 
+We focused on combining aspects of first two of these approaches with the goal of carefully 
+examining how well the TD(,) algorithm can learn an instance-independent value function 
+for a given problem to produce an enhanced local search algorithm applicable to all in- 
+stances of that problem. Our approach combines an off-line learning phase with STAGE's 
+alternation between using the learned value function and the original cost function to guide 
+search. We present an extended case study of this algorithm's application to a somewhat 
+complicated variant of TSP known as the Dial-A-Ride Problem, which exhibits some of 
+the non-uniIbrm structure present in real-world transportation and logistics problems. 
+2 ENHANCING LOCAL SEARCH 
+The components of local search for combinatorial optimization are 1) a finite set of feasible 
+solutions, $; 2) an objective, or cost, function, c: $ ---+ 3; and 3) a neighborhood function, 
+A: S -- 79(,_q) (the power set of S). Local search starts with an initial feasible solution, So, 
+of a problem instance and then at each step k: 1,2,..., it selects a solution sk C A(sk_) 
+such that c(su) < c(sk_). This process continues until further local improvement is 
+impossible, and the current local optimum is returned. If the algorithm always moves to the 
+first less expensive neighboring solution encountered in an enumeration of a neighborhood, 
+it is called first improvement local search. 
+Following Zhang and Dietterich (1995) and Boyan and Moore (1997), we note that local 
+search can be viewed as a policy of a Markov decision process (MDP) with state set $ 
+and action sets A(s), s  $, where an action is identified with the neighboring solution 
+selected. Local search selects actions which decrease the value of c, eventually absorbing 
+at a state with a locally minimum cost. But c is not the optimal value function for the 
+local search problem, whose objecti've is to reach the lowest-cost absorbing state (possibly 
+including some tradeoff involving the number of search steps required to do so). RL used 
+with a function approximator can learn an approximate optimal value function, V, thereby 
+producing an enhanced search algorithm that is locally guided by V instead of by c. One 
+way to do this is to give a small penalty, , for each transition and a terminal reward upon 
+absorption that is inversely related to the cost of the terminal state. Maximizing the ex- 
+pected undiscounted return accomplishes the desired tradeoff (determined by the value of 
+) between quality of final solution and search time (cf. Zhang and Dietterich, 1995). 
+Since each instance of an optimization problem corresponds to a different MDP, a value 
+Learning Instance-Independent Value Functions to Enhance Local Search 1019 
+function V learned in this way is instance-specific. Whereas Boyan's STAGE algorithm in 
+effect uses such a V to enhance additional searches that start from different states of the 
+same instance, we are interested in learning a V off-line, and then using it for arbitrary in- 
+stances of the given problem. In this case, the relevant sequential decision problem is more 
+complicated than a single-instance MDP since it is a summary of aspects of all problem 
+instances. It would be extremely difficult to make the structure of this process explicit, but 
+fortunately RL requires only the generation of sample trajectories, which is relatively easy 
+in this case. 
+In addition to their cost, secondary characteristics of feasible solutions can provide valuable 
+information for search algorithms. By adjusting the parameters of a function approximation 
+system whose inputs are feature vectors describing feasible solutions, an RL algorithm can 
+produce a compact representation of V. Our approach operates in two distinct phases. In 
+the learning phase, it learns a value function by applying the TD(A) algorithm to a number 
+of randomly chosen instances of the problem. In the performance phase, it uses the result- 
+ing value function, now held fixed, to guide local search for additional problem instances. 
+This approach is in principle applicable to any combinatorial optimization problem, but we 
+describe its details in the context of the Dial-A-Ride problem. 
+3 THE DIAL-A-RIDE PROBLEM 
+The Dial-a-Ride Problem (DARP) has the following formulation. A van is parked at a 
+terminal. The driver receives calls from N customers who need rides. Each call identifies 
+the location of a customer, as well as that customer's destination. After the calls have been 
+received, the van must be routed so that it starts from the terminal, visits each pick-up 
+and drop-off site in some order, and then returns to the terminal. The tour must pick up 
+a passenger before eventually dropping that passenger off. The tour should be of minimal 
+length. Failing this goal--and DARP is NP-complete, so it is unlikely that optimal DARP 
+tours will be found easily--at least a good quality tour should be constructed. We assume 
+that the van has unlimited capacity and that the distances between pick-up and drop-off 
+locations are represented by a symmetric Euclidean distance matrix. 
+We use the notation 
+0 1 2-1 3-3-2 
+to denote the following tour: start at the terminal (0), then pick up 1, then 2, then drop 
+off 1 (thus: -1), pick up 3, drop off 3, drop off 2 and then return to the terminal (site 0). 
+Given a tour s, the 2-opt neighborhood of s, A2 (s), is the set of legal tours obtainable from 
+s by subsequence reversal. For example, for the tour above, the new tour created by the 
+following subsequence reversal 
+01/2-13/-3-2 > 013-12-3-2 
+is an element of A2 (T). However, this reversal 
+012/-13-3/-2 > 012-33-1 -2 
+leads to an infeasible tour, since it asserts that passenger 3 is dropped off first, then picked 
+up. The neighborhood structure of DARP is highly non-uniform, varying between A2 
+neighborhood sizes of O(N) and O(N2). 
+Let s be a feasible DARP tour. By 2-opt(s) we mean the tour obtained by first-improvement 
+local search using the A2 neighborhood structure (presented in a fixed, standard enumer- 
+ation), with tour length as the cost function. As with TSP, there is a 3-opt algorithm for 
+1020 R. Moll, A. G. Barto, T. ,L. Perkins and R. S. Sutton 
+DARP, where a 3-opt neighborhood A3(s) is defined and searched in a fixed, systematic 
+way, again in first-improvement style. This neighborhood is created by inserting three 
+rather than two breaks in a tour. 3-opt is much slower than 2-opt, more than 100 times 
+as slow for N = 50, but it is much more effective, even when 2-opt is given equal time to 
+generate multiple random starting tours and then complete its improvement scheme. 
+Psaraftis (1983) was the first to study 2-opt and 3-opt algorithms for DARP. He studied 
+tours up to size N = 30, reporting that at t

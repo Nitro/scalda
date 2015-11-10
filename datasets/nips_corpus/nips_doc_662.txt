@@ -1,0 +1,146 @@
+Word Space 
+Hinrich Schiitze 
+Center for the Study of Language and Information 
+Ventura Hall 
+Stanford, CA 94305-4115 
+Abstract 
+Representations for semantic information about words are neces- 
+sary for many applications of neural networks in natural language 
+processing. This paper describes an efficient, corpus-based method 
+for inducing distributed semantic representations for a large num- 
+ber of words (50,000) from lexical coccurrence statistics by means 
+of a large-scale linear regression. The representations are success- 
+fully applied to word sense disambiguation using a nearest neighbor 
+method. 
+1 Introduction 
+Many tasks in natural language processing require access to semantic information 
+about lexical items and text segments. For example, a system processing the sound 
+sequence: /r{kanaisbi:t/needs to know the topic of the discourse in order to decide 
+which of the plausible hypotheses for analysis is the right one: e.g. wreck a nice 
+beach or recognize speech. Similarly, a mail filtering program has to know the 
+topical significance of words to do its job properly. 
+Traditional semantic representations are ill-suited for artificial neural networks since 
+they presume a varying number of elements in representations for different words 
+which is incompatible with a fixed input window. Their localist nature also poses 
+problems because semantic similarity (for example between dog and cat) may be 
+hidden in inheritance hierarchies and complicated feature structures. Neural net- 
+works perform best when similarity of targets corresponds to similarity of inputs; 
+traditional symbolic representations do not have this property. Microfeatures have 
+been widely used to overcome these problems. However, microfeature representa- 
+895 
+896 Schfitze 
+tions have to be encoded by hand and don't scale up to large vocabularies. 
+This paper presents an efficient method for deriving vector representations for words 
+from lexical cooccurrence counts in a large text corpus. Proximity of vectors in the 
+space (measured by the normalized correlation coefficient) corresponds to semantic 
+similarity. Lexical coocurrence can be easily measured. However, for a vocabulary 
+of 50,000 words, there are 2,500,000,000 possible coocurrence counts to keep track 
+of. While many of these are zero, the number of non-zero counts is still huge. On 
+the other hand, in any document collection most of these counts are small and 
+therefore unreliable. Therefore, letter fourgrams are used here to bootstrap the 
+representations. Cooccurrence statistics are collected for 5,000 selected fourgrams. 
+Since each of the 5000 fourgrams is frequent, counts are more reliable than cooc- 
+currence counts for rare words. The 5000-by-5000 matrix used for this purpose is 
+manageable. A vector for a lexical item is computed as the sum of fourgram vectors 
+that occur close to it in the text. This process of confusion yields representations 
+of words that are fine-grained enough to reflect selnantic differences between the 
+various case and infiectional forms a word may have in the corpus. 
+The paper is organized as follows. Section 2 discusses related work. Section 3 
+describes the derivation of the vector representations. Section 4 performs an eval- 
+uation. The final section concludes. 
+2 Related Work 
+Two kinds of semantic representations commonly used in connectionism are micro- 
+features (e.g. Waltz and Pollack 1985, McClelland and Kawamoto 1986) and local- 
+ist schemes in which there is a separate node for each word (e.g. Cottrell 1989). 
+Neither approach scales up well enough in its original form to be applicable to large 
+vocabularies and a wide variety of topics. Gallant (1991), Gallant et al. (1992) 
+present a less labor-intensive method based on microfeatures, but the features for 
+core stems still have to be encoded by hand for each new document collection. The 
+derivation of the Word Space presented here is fully automatic. It also uses fea- 
+ture vectors to represent words, but the features cannot be interpreted on their 
+own. Vector similarity is the only information present in Word Space: semantically 
+related words are close, unrelated words are distant. The emphasis on seman- 
+tic similarity rather than decomposition into interpretable features is similar to 
+Kawamoto (1988). Scholtes (1991) uses a two-dimensional Kohonen map to rep- 
+resent semantic similarity. While a. Kohonen map can deal with non-linearities 
+(in contrast to the singular value decomposition used below), a space of much 
+higher dimensionality is likely to capture more of the complexity of semantic re- 
+latedness present in natural language. Scholtes' idea to use n-grams to reduce 
+the number of initial features for the semantic representations is extended here by 
+looking at n-gram coocurrence statistics rather than occurrence in documents (cf. 
+(Kimbrell 1988) for the use of n-grams in information retrieval). 
+An important goal of many schemes of semantic representation is to find a limited 
+number of semantic classes (e.g. classical thesauri such a.s Roger's, Crouch 1990, 
+Brown et al. 1990). Instead, a nmltidimensional space is constructed here, in which 
+each word has its ovn individual representation. Any clustering into classes intro- 
+duces artificial boundaries that cut off words from part of their semantic neighbor- 
+Word Space 897 
+governor quits knights of 
+GOrE _QUI NIGH 
+VERN QUIT HTS_ 
+ERNO 
+RNOR 
+columbus over bishop's abortion gag rule 
+OLUM SHOP ABOR _RUL 
+LUMB HOP_ BORT RULE 
+ORTI ULE_ 
+RTIO 
+Figure 1: A line from the New York Times with selected fourgrams. 
+hood. In large classes, there will be meinbers from opposite sides of the class that 
+are only distantly related. So any class size is problematic, since words are either 
+separated from close neighbors or lumped together with distant terms. Conversely, 
+a. multidimensional space does not make such an arbitrary classification necessary. 
+3 Derivation of the Vector Representations 
+Fourgram selection. There are about 600,000 possible fourgrams if the empty 
+space, numbers and non-alphanmneric characters are included as special letters. 
+Of these, 95,000 occurred in 5 months of the New York Times. They were reduced 
+to 5000 by first deleting all rare ones (frequency less than 1000) and then redundant 
+and uninformative fourgrams as described below. 
+If there is a group of fourgrams that occurs in only one word, all but one is deleted. 
+For instance, the fourgrams BAGH, AGHD, GHDA, HDAD tend to occur together in 
+Baghdad, so three of them will be deleted. The rationale for this move is that 
+cooccurrence information about one of the fourgrams can be fully derived from 
+each of the others, so that an index in the matrix would be wasted if nore than 
+one of them was included. The relative frequency of one fourgram occurring after 
+another was calculated with fivegrams. For instance, the relative frequency of AGHD 
+following tAGH is the frequency of the fivegram t^GHD divided by the frequency of 
+the fourgram BAGH. 
+Most fourgrams occur predominantly in three or four stems or words. Uninfor- 
+mative fourgrams are sequences such as RETI or TION that are part of so many 
+different words (resigned, residents, retirements, resisted, ...; abortion, despera- 
+tion, construction, detention, ...) that knowledge about coocurrence with them 
+carries ahnost no semantic information. Such fourgrams are therefore useless and 
+are deleted. Again, fivegrains were used to identify fourgrams that occurred fre- 
+quently in many stems. 
+A set of 6290 fourgrams remained after these deletions. To reduce it to the required 
+size of 5000, the most frequent 300 and the least frequent 990 were also deleted. 
+Figure i shows a line from the New York Times and which of the 5000 selected 
+fourgrams occurred in it. 
+Computation of fourgram vectors. The computation of word vectors de- 
+scribed below depends on fourgram vectors that accurately reflect semantic siin- 
+ilarity in the sense of being used to describe the same contents. Consequently, one 
+needs to be able to compare the sets of contexts two fourgrams occur in. For this 
+purpose, a collocation matrix for fourgrams was collected such that the entry ai,j 
+898 Schiitze 
+counts the number of times that fourgram i occurs at most 200 fourgrams to the 
+left of fourgrain j. Two columns in this matrix are similar if the contexts the corre- 
+sponding fourgrams are used in are similar. The counts were determined using five 
+months of the New York Times (June - October 1990). The resulting collocation 
+matrix is dense: only 2% of entries are zeros, because almost any two fourgrams 
+cooccur. Only 10% of entries are smaller than 10, so that culling small counts 
+would not increase the sparseness of the matrix. Consequently, any computation 
+that employs the fourgram vectors directly would be inefficient. For this reason, a 
+singular value decomposition was performed and 97 singular values extracted (cf. 
+Deerwester et al. 1990) using an algorithm from SVDPACK (Berry 1992). Each 
+fourgram can then be represented by a vector of 97 real values. Since the singular 
+value decomposition finds the best least-square approximation of the original space 
+in 97 dimensions, two fourgram vectors will be similar if their original vectors in 
+the collocation matrix are similar. The reduced fourgram vectors can be efficiently 
+used for confusion as described in the following section. 
+Computation of word vectors. We can think offourgrams as highly ambiguous 
+terms. Therefore, they are inadequate if used directly as input to a neural net. We 
+have to get back from fourgrams to words. For the experiment reported here, 
+cooccurrence information was used for a second time to achieve this goal: in this 
+case coocurrence of a target word with any of the 5000 fourgrams. For each of 
+the selected words (see below), a context vector was computed for every position 
+at which it occurred in the text. A

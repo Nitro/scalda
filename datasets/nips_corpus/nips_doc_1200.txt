@@ -1,0 +1,156 @@
+Unsupervised Learning by 
+Convex and Conic Coding 
+D. D. Lee and H. S. Seung 
+Bell Laboratories, Lucent Technologies 
+Murray Hill, NJ 07974 
+(ddlee I seungbell-labs. com 
+Abstract 
+Unsupervised leaxning algorithms based on convex and conic en- 
+coders are proposed. The encoders find the closest convex or conic 
+combination of basis vectors to the input. The learning algorithms 
+produce basis vectors that minimize the reconstruction error of the 
+encoders. The convex algorithm develops locally linear models of 
+the input, while the conic algorithm discovers features. Both al- 
+gorithms are used to model handwritten digits and compared with 
+vector quantization and principal component analysis. The neural 
+network implementations involve feedback connections that project 
+a reconstruction back to the input layer. 
+I Introduction 
+Vector quantization (VQ) and principal component analysis (PCA) are two widely 
+used unsupervised learning algorithms, based on two fundamentally different ways 
+of encoding data. In VQ, the input is encoded as the index of the closest prototype 
+stored in memory. In PCA, the input is encoded as the coefficients of a linear 
+superposition of a set of basis vectors. VQ can capture nonlinear structure in 
+input data, but is weak because of its highly localized or grandmother neuron 
+representation. Many prototypes are typically required to adequately represent the 
+input data when the number of dimensions is large. On the other hand, PCA uses a 
+distributed representation so it needs only a small number of basis vectors to model 
+the input. Unfortunately, it can only model linear structures. 
+Learning algorithms based on convex and conic encoders are introduced here. These 
+encoders are less constrained than VQ but more constrained than PCA. As a result, 
+516 D. D. Lee and H. S. Seung 
+y JOllVeX 
+o 
+Figure 1: The affine, convex, and conic hulls for two basis vectors. 
+they are able to produce sparse distributed representations that are efficient to com- 
+pute. The resulting learning algorithms can be understood as approximate matrix 
+factorizations and can also be implemented as neural networks with feedforward 
+and feedback connections between neurons. 
+2 Arline, convex, conic, and point encoding 
+Given a set of basis vectors {a}, the linear combination = vava is called 
+convex if va _ 0 , -.a v = I , 
+conic va _ 0 . 
+The complete set of affine, convex, and conic combinations are called respectively the 
+affine, convex, and conic hulls of the basis. These hulls are geometrically depicted in 
+Figure 1. The convex hull contains only interpolations of the basis vectors, whereas 
+the affine hull contains not only the convex hull but also linear extrapolations. The 
+conic hull also contains the convex hull but is not constrained to stay within the 
+set a va = 1. It extends to any nonnegative combination of the basis vectors and 
+forms a cone in the vector space. 
+Four encoders are considered in this paper. The convex and conic encoders are 
+novel, and find the nearest point to the input � in the convex and conic hull of the 
+basis vectors. These encoders are compared with the well-known affine and point 
+encoders. The affine encoder finds the nearest point to  in the affine hull and is 
+equivalent to the encoding in PCA, while the point encoder or VQ finds the nearest 
+basis vector to the input. All of these encoders minimize the reconstruction erro. 
+min :- vatY (1) 
+Va 
+a----1 
+The constraints on va for the convex, conic, and affine encoders were described 
+above. Point encoding can be thought of as a heavily constrained optimization of 
+Eq. (1): a single va must equal unity while all the rest vanish. 
+Efficient algorithms exist for computing all of these encodings. The affine and point 
+encoders are the fastest. Affine encoding is simply a linear transformation of the 
+input vector. Point encoding is a nonlinear operation, but is computationally simple 
+Unsupervised Learning by Convex and Conic Coding 517 
+since it involves only a minimum distance computation. The convex and conic 
+encoders require solving a quadratic programming problem. These encodings are 
+more computationally demanding than the affine and point encodings; nevertheless, 
+polynomial time algorithms do exist. The tractability of these problems is related 
+to the fact that the cost function in Eq. (1) has no local minima on the convex 
+domains in question. These encodings should be contrasted with computationally 
+inefficient ones. A natural modification of the point encoder with combinatorial 
+expressiveness can be obtained by allowing  to be any vector of zeros and ones 
+[1, 2]. Unfortunately, with this constraint the optimization of Eq. (1) becomes an 
+integer programming problem and is quite inefficient to solve. 
+The convex and conic encodings of an input generally contain coefficients va that 
+vanish, due to the nonnegativity constraints in the optimization of Eq. (1). This 
+method of obtaining sparse encodings is distinct from the method of simply trun- 
+cating a linear combination by discarding small coefficients [3]. 
+3 Learning 
+There correspond learning algorithms for each of the encoders described above that 
+minimize the average reconstruction error over an ensemble of inputs. If a training 
+set of m examples is arranged as the columns of a N x m matrix X, then the learning 
+and encoding minimization can be expressed as: 
+min IIX - Wgll 2 
+w,v 
+(2) 
+where IIXll 2 is the summed squares of the elements of X. Learning and encoding 
+can thus be described as the approximate factorization of the data matrix X into a 
+N x r matrix W of r basis vectors and a r x m matrix V of m code vectors. 
+Assuming that the input vectors in X have been scaled to the range [0, 1], the 
+constraints on the optimizations in Eq. (2) are given by: 
+Arline: 0 _< Wi, <_ 1, '., V,, -- 1 
+Convex: 0 _< Wi, _< 1, V,, _> O, -., V,, - 1 
+Conic: 0 <_ Wi, _< 1, V,, _> O. 
+The nonnegativity constraints on W and V prevent cancellations from occurring in 
+the linear combinations, and their importance will be seen shortly. The upper bound 
+on W is chosen such that the basis vectors are normalized in the same range as the 
+inputs X. We noted earlier that the computation for encoding is tractable since 
+the cost function Eq. (2) is a quadratic function of V. However, when considered 
+as a function of both W and V, the cost function is quartic and finding its global 
+minimum for learning can be very difficult. The issue of local minima is discussed 
+in the following example. 
+4 Example: modeling handwritten digits 
+We applied Affine, Convex, Conic, and VQ learning to the USPS database [4], 
+which consists of examples of han. dwritten digits segmented from actual zip codes. 
+Each of the 7291 training and 2007 test images were normalized to a 16 x 16 grid 
+518 D. D. Lee and H. S. Seung 
+VQ 
+Affine (PCA) 
+Convex 
+Conic 
+Figure 2: Basis vectors for 2 found by VQ, Arline, Convex, and Conic learning. 
+with pixel intensities in the range [0, 1]. There were noticeable segmentation errors 
+resulting in unrecognizable digits, but these images were left in both the training 
+and test sets. The training examples were segregated by digit class and separate 
+basis vectors were trained for each of the classes using the four encodings. Figure 2 
+shows our results for the digit class 2 with r = 25 basis vectors. 
+The k-means algorithm was used to find the VQ basis vectors shown in Figure 2. 
+Because the encoding is over a discontinuous and highly constrained space, there 
+exist many local minima to Eq. (2). In order to deal with this problem, the algorithm 
+was restarted with various initial conditions and the best solution was chosen. The 
+resulting basis vectors look like 2 templates and are blurry because each basis 
+vector is the mean of a large number of input images. 
+Arline determines the affine space that best models the input data. As can be seen 
+in the figure, the individual basis vectors have no obvious interpretation. Although 
+the space found by Arline is unique, its representation by basis vectors is degener- 
+ate. Any set of r linearly independent vectors drawn from the affine space can be 
+used to represent it. This is due to the fact that the product WV is invariant under 
+the transformation W -+ W$ and V - '-IV.i 
+Convex finds the r basis vectors whose convex hull best fits the input data. The 
+optimization was performed by alternating between projected gradient steps of W 
+and V. The constraint that the column sums of V equal unity was implemented 
+Affine is essentially equivalent to PCA, except that they represent the afiqne space in 
+different ways. Affine represents it with r points chosen from the space. PCA represents 
+the ane space with a single point from the space and r - 1 orthonormal directions. This 
+is still a degenerate representation, but PCA fixes it by taking the point to be the sample 
+mean and the r - I directions to be the eigenvectors of the covariance matrix of X with 
+the largest eigenvalues. 
+Unsupervised Learning by Convex and Conic Coding 
+Input Image 
+519 
+Convex Coding 
+Convex Reconstructions 
+Conic Coding 
+Conic Reconstructions 
+Figure 3: Activities and reconstructions of a 2 using conic and convex coding. 
+by adding a quadratic penalty term. In contrast to Affine, the basis vectors are 
+interpretable as templates and are less blurred than those found by VQ. Many of 
+the elements of W and also of V are zero at the minimum. This eliminates many in- 
+variant transformations $, because they would violate the nonnegativity constraints 
+on W and V. From our simulations, it appears that most of the degeneracy seen in 
+Affine is lifted by the nonnegativity constraints. 
+Conic finds basis vectors whose conic hull best models the input images. The 
+learning algorithm is similar to Convex except there is no penalty term on the sum 
+of the activities. The Conic representation allows combin

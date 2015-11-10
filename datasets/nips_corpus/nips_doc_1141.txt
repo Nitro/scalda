@@ -1,0 +1,127 @@
+Adaptive Access Control Applied to Ethernet Data 
+Timothy X Brown 
+Dept. of Electrical and Computer Engineering 
+University of Colorado, Boulder, CO 80309-0530 
+t imxbcolorado. edu 
+Abstract 
+This paper presents a method that decides which combinations of traffic 
+can be accepted on a packet data link, so that quality of service (QoS) 
+constraints can be met. The method uses samples of QoS results at dif- 
+ferent load conditions to build a neural network decision function. Pre- 
+vious similar approaches to the problem have a significant bias. This 
+bias is likely to occur in any real system and results in accepting loads 
+that miss QoS targets by orders of magnitude. Preprocessing the data to 
+either remove the bias or provide a confidence level, the method was 
+applied to sources based on difficult-to-analyze ethernet data traces. 
+With this data, the method produces an accurate access control function 
+that dramatically outperforms analytic alternatives. Interestingly, the 
+results depend on throwing away more than 99% of the data. 
+1 INTRODUCTION 
+In a communication network in which traffic sources can be dynamically added or 
+removed, an access controller must decide when to accept or reject a new traffic source 
+based on whether, if added, acceptable service would be given to all carried sources. 
+Unlike best-effort services such as the internet, we consider the case where traffic sources 
+are given quality of service (QoS) guarantees such as maximum delay, delay variation, or 
+loss rate. The goal of the controller is to accept the maximal number of users while guar- 
+anteeing QoS. To accommodate diverse sources such as constant bit rate voice, variable- 
+rate video, and bursty computer data, packet-based protocols are used. We consider QOS 
+in terms of lost packets (i.e. packets discarded due to resource overloads). This is broadly 
+applicable (e.g. packets which violate delay guarantees can be considered lost) although 
+some QoS measures can not fit this model. 
+The access control task requires a classification function--analytically or empirically 
+derived--that specifies what conditions will result in QoS not being met. Analytic func- 
+tions have been successful only on simple traffic models [Gue91 ], or they are so conserva- 
+tive that they grossly under utilize the network. This paper describes a neural network 
+method that adapts an access control function based on historical data on what conditions 
+packets have and have not been successfully carried. Neural based solutions have been 
+previously applied to the access control problem [Hir90][Tra92][Est94], but these 
+Adaptive Access Control Applied to Ethernet Data 933 
+approaches have a distinct bias that under real-world conditions leads to accepting combi- 
+nations of calls that miss QoS targets by orders of magnitude. Incorporating preprocessing 
+methods to eliminate this bias is critical and two methods from earlier work will be 
+described. The combined data preprocessing and neural methods are applied to difficult- 
+to-model ethernet traffic. 
+2 THE PROBLEM 
+Since the decision to accept a multilink connection can be decomposed into decisions on 
+the individual links, we consider only a single link. A link can accept loads from different 
+source types. The loads consist of packets modeled as discrete events. Arriving packets are 
+placed in a buffer and serviced in turn. If the buffer is full, excess packets are discarded 
+and treated as lost. The precise event timing is not critical as the concern is with the num- 
+ber of lost packets relative to the total number of packets received in a large sample of 
+events, the so-called loss rate. The goal is to only accept load combinations which have a 
+loss rate below the QoS target denoted by p*. 
+Load combinations are described by a feature vector, , consisting_of load types and possi- 
+bly other information such as time of day. Each feature vector, b, has an associated loss 
+rate, p(), which can not be measured directly. Therefore, the goal is to have a classifier 
+function, C(), such that C() >, <, = 0 if p() <, >, = p*. 
+Since analytic C() are not in general available, we look to statistical classification meth- 
+ods. This requires training samples, a desired output for each sample, and a significance or 
+weight for each sample. Loads can be dynamically added or removed. Training samples 
+are generated at load transitions, with information since the last transition containing the 
+number of packet arrivals, T, the number of lost packets, s, and the feature vector, 
+A sample (i, si, Ti), requires a desired classification, d( i, s i, Ti)  {+1, -1 }, and a weight, 
+w(- i, s i, Ti)  (0, oo). Given a data set {(i, s i, T/)}, a classifier, C, is then chosen that mini- 
+mizes the weighted sum squared error E = i[W(i, $i, Ti)(C(i)-d(i, si, Ti))21. 
+A classifier, with enough degrees of freedom will set C(i) = d( i, s i, Ti) if all the qb- t. are dif- 
+ferent. With multiple samples at the same qb then we see that the error is minimized when 
+C()---({i]t } [w(i'Si' ri)d(i'si' ri)])/(  W(i, Si, ri) ). (1) 
+= {il/= } 
+Thus, the optimal C() is the weighted average of the d()- i, s i, Ti) at . If the classifier has 
+fewer deg_rees of freedom (e.g. a low dimension linear classifier), C(qb) will be the average 
+of the d(q) i, s i, Ti) in the neighborhood of qb, where the neighborhood is, in general, an 
+unspecified function of the classifier. 
+A more direct form of averaging would be to choose a specific neighborhood around qb and 
+average over samples in this neighborhood. This suffers from having to store all the sam- 
+ples in the decision mechanism, and incurs a significant computational burden. More sig- 
+nificant is how to decide the size of the neighborhood. If it is fixed, in sparse regions no 
+samples may be in the neighborhood. In dense regions near decision boundaries, it may 
+average over too wide a range for accurate estimates. Dynamically setting the neighbor- 
+hood so that it always contains the k nearest neighbors solves this problem, but does not 
+account for the size of the samples. We will return to this in Section 4. 
+3 THE SMALL SAMPLE PROBLEM 
+Neural networks have previously been ap_plied to the access control problem [Hir91] 
+[Tra92][Est94]. In [Hir90] and [Tra92], d() i, s i, T/) = +1 when silt i < p*, d() i, s i, Ti) = -1 
+otherwise, and the weighting is a uniform w( i, si, Ti) = 1 for all i. This desired out and 
+934 T. X. Brown 
+uniform weighting we call the normal method. For a given load combination, , assume an 
+idealized system where packets enter and with probability p() independent of earlier or 
+later packets, the packet is labeled as lost. In a sample of T such Bernoulli trials with s the 
+number packets lost, let PB = ?{sit > p* }. Since with the normal method d(O, s, T) = -1 if 
+sit > p*, PB = P{d(O), s, T) =-1 }. From (1), with uniform weighting the decision bound- 
+ary is where PB = 0.5. If the samples are small (i.e. T < (ln 2)/p* < l/p*), d(qb, s, T) = -1 for 
+all s > 0. In this case PB = 1 - (1 _p())r. Solving for p() atP B = 0.5 using ln(1 -x) = -x, 
+the decision boundary is at p(qb) = (ln 2)FF > p*. So, for small sample sizes, the normal 
+method boundary is biased to greater than p* and can be made orders of magnitude larger 
+as T becomes smaller. For larger T, e.g. Tp* > 10, this bias will be seen to be negligible. 
+One obvious solution is to have large samples. This is complicated by three effects. The 
+first is that desired loss rates in data systems are often small; typically in the range 
+10-6-10 -12 . This implies that to be large, samples must be at least 107-1013 packets. For 
+the latter, even at Gbps rates, short packets, and full loading this translates into samples of 
+several hours of traffic. Even for the first at typical rates, this can translate into minutes of 
+traffic. The second, related problem is that in dynamic data networks, while individual 
+connections may last for significant periods, on the aggregate a given combination of loads 
+may not exist for the requisite period. The third more subtle problem is that in any queue- 
+ing system even with uncorrelated arrival traffic the buffering introduces memory in the 
+system. A typical sample with losses may contain 100 losses, but a loss trace would show 
+that all of the losses occurred in a single short overload interval. Thus the number of inde- 
+pendent trials can be several orders of magnitude smaller than indicated by the raw sample 
+size indicating that the loads must be stable for hours, days, or even years to get samples 
+that lead to unbiased classification. 
+An alternative approach used in [Hir95] sets d(, s, T) = sit and models p() directly. The 
+probabilities can vary over orders of magnitude making accurate estimates difficult. Esti- 
+mating the less variable log(p()) with d = log(s/T) is complicated by the logarithm being 
+undefined for small samples where most samples have no losses so that s = 0. 
+4 METHODS FOR TREATING BIAS AND VARIANCE 
+We present without proof two preprocessing methods derived and analyzed in [Bro96]. 
+The first eliminates the sample bias by choosing an appropriate d and w that directly 
+solves (1) s.t. C() >, <, = 0 if and only ifp() <, >, =p* i.e. it is an unbiased estimate as 
+to whether the loss rate is above and below p*. This is the weighting method shown in 
+Table 1. The relative weighting of samples with loss rates above and below the critical loss 
+rate is plotted in Figure 1. For large T, as expected, it reduces to the normal method. 
+The second preprocessing method assigns uniform weighting, but classifies d(qb, s, T) = 1 
+only if a certain confidence level, L, is met that the sample represents a combination where 
+p(qb) < p*. Such a confidence was derived in [Bro96]' 
+Table 1: Summary of Methods. 
+Sample Class Weighting, w(i, si, ri) , when 
+Method 
+d(�i, si, T/) = + 1 if d( i, s i, Ti) = + 1 (i.e. w +) d({ i

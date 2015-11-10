@@ -1,0 +1,138 @@
+Kohonen Networks and Clustering: Comparative 
+Performance in Color Clustering 
+Wesley Snyder 
+Department of Radiology 
+Bowman Gray School of 
+Medicine 
+Wake Forest University 
+Winston-Salem, NC 27103 
+Daniel Nissman, David Van den Bout, 
+and Griff Bilbro 
+Center for Communications and Signal Processing 
+North Carolina State University 
+Raleigh, NC 27695 
+Abstract 
+The problem of color clustering is defined and shown to be a problem of 
+assigning a large number (hundreds of thousands) of 3-vectors to a 
+small number (256) of clusters. Finding those clusters in such a way that 
+they best represent a full color image using only 256 distinct colors is a 
+burdensome computational problem. In this paper, the problem is solved 
+using classical techniques -- k-means clustering, vector quantization 
+(which tums out to be the same thing in this application), competitive 
+learning, and Kohonen self-organizing feature maps. Quality of the 
+result is judged subjectively by how much the pseudo-color result 
+resembles the true color image, by RMS quantization error, and by run 
+time. The Kohonen map provides the best solution. 
+1 INTRODUCTION 
+Clustering, vector quantization, and unsupervised learning are all words which 
+describe the same process: assigning a few exemplars to represent a large set of samples. 
+Performing that process is the subject of a substantial body of literature. In this paper, we 
+are concerned with the comparison of various clustering techniques to a particular, practi- 
+cal application: color clustering. 
+The color clustering problem is as follows: an image is recorded in full color -- that is, 
+three components, RED, GREEN, and BLUE, each of which has been measured to 8 bits 
+of precision. Thus, each pixel is a 24 bit quantity. We must find a representation in which 
+2563 possible colors are represented by only 8 bits per pixel. That is, for a problem with 
+256000 variables (512 x 512) variables, assign each variable to one of only 256 classes. 
+The color clustering problem is currently of major economic interest since millions of dis- 
+play systems are sold each year which can only store 8 bits per pixel, but on which users 
+would like to be able to display true color (or at least as near true color as possible). 
+In this study, we have approached the problem using the standard techniques from the lit- 
+erature (including k-means -- ISODATA clustering[I,3,6], LBG[4]), competitive learning 
+(referred to as CL herein)J2], and Kohonen feature maps[5,7,9]. The Kohonen feature map 
+984 
+Kohonen Networks and Clustering 985 
+(referred to as KFM herein) was found to win hands down, providing both the best quality image 
+(subjectively) and objectively (based on quantization error), as well as the fastest run times. 
+2 BACKGROUND - METHODS TESTED 
+In almost all clustering algorithms, we begin with some (usually ad-hoc) determination of initial 
+cluster centers. The number of such centers generally remains the same, although some algorithms 
+(e.g. ISODATA[10]) allow the number to evolve through the running of the algorithm. In this work, 
+we know that we want to find 256 distinct clusters. The basic idea behind most of these methods is 
+to update the cluster closest to the current data point by moving it some small increment towards 
+that data point. Mter the data has been presented to the algorithm sufficiently often, the clusters 
+should converge to the real cluster means. Typically, one has to cycle through the training set sew 
+eral times (sometimes a large number of times) to get an acceptable solution. Each run though the 
+training set is termed an epoch. 
+2.1 K-MEANS 
+The well-known [6] k-means algorithm for clustering is as follows (see [10] for a tutorial explana- 
+tion). 
+1. gegin with an arbitrary assignment of samples to clusters or begin with an arbitrary set of clus- 
+ter centers and assign samples to nearest centers. 
+2. Compute the sample mean of each cluster. 
+3. Reassign each sample to the cluster with the nearest mean. 
+4. If the classification of all samples has not changed, stop; else go to step 2. 
+2.2 LBG VECTOR QUANTIZATION 
+In this method, 256 colors are picked randomly from the scene. These are referred to as the code- 
+book. Each pixel in the image is then assign .e;d to the nearest entry in the codebook. After 
+assignment of all pixels, the mean of each bin I is calculated. If the difference between the code- 
+book entry and the mean of the corresponding bin is below threshold for all entries, the optimal 
+codebook has been located. In [4], the algorithm is shown to work for a large variety of distance 
+functions; however, for applications (such as this one) where the Euclidean metric is most appropri- 
+ate, the algorithm becomes identical to k-means. In [8], results similar to those we found are 
+reported in the color clustering problem. 
+2.3 KOHONEN MAPS AND COMPETITIVE LEARNING 
+In competitive learning algorithms, data examples are presented sequentially to the system. The 
+cluster center most similar to the data example is determined, and that center is moved slightly 
+toward the example. 
+1 That is, all the pixels assigned to that entry in the codebook. 
+986 Snyder, Nissman, Van den Bout, and Bilbro 
+The update rule for competitive learning can be described as follows: 
+new _ old+ _ old. 
+co i % n (data - 
+= CO i ) 
+(EQ 1) 
+where wi is the weight vector (or mean) corresponding to cluster i and h is the learning parameter 
+(typically on the order of 0.01). 
+In the case of Kohonen maps, however, the algorithm is slightly more complicated. All clusters are 
+connected to each other according to a topological map. When the closest cluster to a data point 
+(the primary cluster) is updated, so are its immediate neighbors (the proximity clusters) in terms of 
+the topological map. In feature space, it is possible, initially, for the neighbors of the primary clus- 
+ter to not be its topological neighbors. By the nature of the update rule, the neighbors of the primary 
+cluster in topological space will become its neighbors in feature space after some period of time. 
+This is very desirable for applications in which a minimum distance between related clusters is 
+desired (the Traveling Salesman Problem, for example). 
+Often, it is the case that a single cluster is chosen much of the time, if not all of the time, because of 
+the order in which data is presented and the manner in which the clusters are initialized. In order to 
+make clustering work in a practical context, one needs to include a term in the distance calculation 
+which reduces the probability of updating an often-used cluster. Such a term is called the con- 
+science[2]. Its effect is to increase the effective distance of a cluster from a data point An altema- 
+live approach to the use of a conscience is to increment a counter for each cluster which has been 
+passed over for updating and then subtract some multiple of this counter from the calculated dis- 
+tance. We call this the loneliness term, and used it because the implementation turned out to be 
+more convenient, and the performance similar to that of conscience. 
+For KFM, the primary cluster is updated as indicated in Eqn. 1. The proximity clusters are updated 
+in a similar fashion 
+oa? w = co td + F ( q, do) (data- co td) 
+(EQ2) 
+where wj is the weight vector corresponding to the proximity cluster j, d o is the topological distance 
+between'clusters i and j, and F (q, do) is some decreasing function of the distance between i andj 
+with a maximum at q. 
+3 Application to Color Clustering 
+Making no assumptions concerning the input image, we chose an appropriate topology for the 
+KFM algorithm which would easily lend itself to describing a uniform distribution of colors in 
+RGB space. Such a distribution is a rectangular solid in the 3-D color space. We chose the dimen- 
+sions of this block to be 6x7x6 -- corresponding to 252 clusters rather than the 256 allowable -- 
+under the assumption that the omission of those four clusters would not make a perceptible differ- 
+ence. The clusters were initialized as a small block positioned at the center of RGB space with the 
+long axis in the green direction. This orientation was chosen because human eyes are most sensitive 
+to green wavelengths and, hence, more resolution may be required along this axis. The exact initial 
+orientation does not matter in the final solution, but was chosen to aid in speed of convergence. 
+Kohonen Networks and Clustering 987 
+In an attempt to significantly speed up training, each data point was assigned to one of the eight 
+subcubes of RGB space, and then only a specified subset of clusters was searched for an appropri- 
+ate candidate for updating. The clusters were subdivided, roughly, into eight subcubes as well. The 
+effect of this is to decrease training time by approximately a factor of eight. Also, in the interest of 
+processing time, only the six most immediate topological neighbors (those with a topological dis- 
+tance of one from the primary cluster) were ulxlated. This same heuristic was applied for both CL 
+and KFM experiments. 
+4 RESULTS 
+We applied all the techniques discussed, in various implementations, to actual color images, includ- 
+ing'in particular, pictures of faces. Although also tested on larger images, all times given in this 
+report are against a baseline case of a 128x128 image: three bands of input (red, green, blue -- 8 bits 
+each), and one band (8 bits) of output, plus a lookup table output indicating what 24 bit color each 
+of the 8 bit pattern represented. Given sufficient training, all the techniques produced pseudo-color 
+images which were extremely lifelike. Comparing the images closely on a CRT, a trained observer 
+will note variations in the color rendering, particularly in sparse colors (e.g. blue eyes in a facial 
+scene), and will also observe color contouring. However, these details are subtle, and are not easily 
+reproducible in a conferen

@@ -1,0 +1,157 @@
+An Oscillatory Correlation Framework for 
+Computational Auditory Scene Analysis 
+Guy J. Brown 
+Department of Computer Science 
+University of Sheffield 
+Regent Court, 211 Portobello Street, 
+Sheffield S 1 4DP, UK 
+Email: g. brown @dcs. shefac. uk 
+DeLiang L. Wang 
+Department of Computer and Information 
+Science and Centre for Cognitive Science 
+The Ohio State University 
+Columbus, OH 43210-1277, USA 
+Email: dwang @ cis. ohio-state. edu 
+Abstract 
+A neural model is described which uses oscillatory correlation to 
+segregate speech from interfering sound sources. The core of the model 
+is a two-layer neural oscillator network. A sound stream is represented 
+by a synchronized population of oscillators, and different streams are 
+represented by desynchronized oscillator populations. The model has 
+been evaluated using a corpus of speech mixed with interfering sounds, 
+and produces an improvement in signal-to-noise ratio for every mixture. 
+1 Introduction 
+Speech is seldom heard in isolation: usually, it is mixed with other environmental sounds. 
+Hence, the auditory system must parse the acoustic mixture reaching the ears in order to 
+retrieve a description of each sound source, a process termed auditory scene analysis 
+(ASA) [2]. Conceptually, ASA may be regarded as a two-stage process. The first stage 
+(which we term 'segmentation') decomposes the acoustic stimulus into a collection of 
+sensory elements. In the second stage ('grouping'), elements that are likely to have arisen 
+from the same environmental event are combined into a perceptual structure called a 
+stream. Streams may be further interpreted by higher-level cognitive processes. 
+Recently, there has been a growing interest in the development of computational systems 
+that mimic ASA [4], [1], [5]. Such computational auditory scene analysis (CASA) 
+systems are inspired by auditory function but do not model it closely; rather, they employ 
+symbolic search or high-level inference engines. Although the performance of these 
+systems is encouraging, they are no match for the abilities of a human listener; also, they 
+tend to be complex and computationally intensive. In short, CASA currently remains an 
+unsolved problem for real-time applications such as automatic speech recognition. 
+Given that human listeners can segregate concurrent sounds with apparent ease, 
+computational systems that are more closely modelled on the neurobiological mechanisms 
+of hearing may offer a performance advantage over existing CASA systems. This 
+observation - together with a desire to understand the neurobiological basis of ASA - has 
+led some investigators to propose neural network models of ASA. Most recently, Brown 
+and Wang [3] have given an account of concurrent vowel separation based on oscillatory 
+correlation. In this framework, oscillators that represent a perceptual stream are 
+synchronized (phase locked with zero phase lag), and are desynchronized from oscillators 
+that represent different streams [8]. Evidence for the oscillatory correlation theory comes 
+from neurobiological studies which report synchronised oscillations in the auditory, visual 
+and olfactory cortices (see [10] for a review). 
+748 G. J. Brown and D. L. Wang 
+In this paper, we propose a neural network model that uses oscillatory correlation as the 
+underlying neural mechanism for ASA; streams are formed by synchronizing oscillators 
+in a two-dimensional time-frequency network. The model is evaluated on a task that 
+involves the separation of two time-varying sounds. It therefore extends our previous 
+study [3], which only considered the segregation of vowel sounds with static spectra. 
+2 Model description 
+The input to the model consists of a mixture of speech and an interfering sound source, 
+sampled at a rate of 16 kHz with 16 bit resolution. This input signal is processed in four 
+stages described below (see [10] for a detailed account). 
+2.1 Peripheral auditory processing 
+Peripheral auditory frequency selectivity is modelled using a bank of 128 gammatone 
+filters with center frequencies equally distributed on the equivalent rectangular bandwidth 
+(ERB) scale between 80 Hz and 5 kHz [1]. Subsequently, the output of each filter is 
+processed by a model of inner hair cell function. The output of the hair cell model is a 
+probabilistic representation of auditory nerve firing activity. 
+2.2 Mid-level auditory representations 
+Mechanisms similar to those underlying pitch perception can contribute to the perceptual 
+separation of sounds that have different fundamental frequencies (F0s) [3]. Accordingly, 
+the second stage of the model extracts periodicity information from the simulated auditory 
+nerve firing patterns. This is achieved by computing a running autocorrelation of the 
+auditory nerve activity in each channel, forming a representation known as a correlogram 
+[1], [5]. At time step j, the autocorrelation A(i},'c) for channel i with time lag 'c is given by: 
+K-I 
+A(i'i') = E r(i'i-k)r(i'j-k-)w(k) (1) 
+k=0 
+Here, r is the output of the hair cell model and w is a rectangular window of width K time 
+steps. We use K = 320, corresponding to a window width of 20 ms. The autocorrelation lag 
+'c is computed in L steps of the sampling period between 0 and L-l; we use L = 201, 
+corresponding to a maximum delay of 12.5 ms. Equation (1) is computed for M time 
+frames, taken at 10 ms intervals (i.e., at intervals of 160 steps of the time index j). 
+For periodic sounds, a characteristic 'spine' appears in the correlogram which is centered 
+on the lag corresponding to the stimulus period (Figure 1A). This pitch-related structure 
+can be emphasized by forming a 'pooled' correlogram s(j,'c), which exhibits a prominent 
+peak at the delay corresponding to perceived pitch: 
+N 
+s(j, x) =  A(i, j, x) (2) 
+i=1 
+It is also possible to extract harmonics and formants from the correlogram, since 
+frequency channels that are excited by the same acoustic component share a similar 
+pattern of periodicity. Bands of coherent periodicity can be identified by cross-correlating 
+adjacent correlogram channels; regions of high correlation indicate a harmonic or formant 
+[1]. The cross-correlation C(i/) between channels i and i+1 at time framej is defined as: 
+L-1 
+1 
+C(i,j) =  E (i,j,x)(i+ l,j,x) (I<i<N-1) (3) 
+Here, (i, j, 'c) is the autocorrelation function of (1) which has been normalized to have 
+zero mean and unity variance. A typical cross-correlation function is shown in Figure 1A. 
+Oscillatory Correlation for CASA 749 
+2.3 Neural oscillator network: overview 
+Segmentation and grouping take place within a two-layer oscillator network (Figure lB). 
+The basic unit of the network is a single oscillator, which is defined as a reciprocally 
+connected excitatory variable x and inhibitory variable y [7]. Since each layer of the 
+network takes the form of a time-frequency grid, we index each oscillator according to its 
+frequency channel (i) and time frame (j): 
+3 
+�ij = 3xij - xij + 2 - Yij + lij + Sij + f) (4a) 
+)ij = �(y(1 + tanh(xij/[))-Yij) (4b) 
+Here, Iij represents external input to the oscillator, Sij denotes the coupling from other 
+oscillators in the network, �, � and  are parameters, and p is the amplitude of a Gaussian 
+noise term. If coupling and noise are ignored and I O. is held constant, (4) defines a 
+relaxation oscillator with two time scales. The x-nullcline, i.e. i: = 0, is a cubic function 
+and the y-nullcline is a sigmoid function. If I O > 0, the two nullclines intersect only at a 
+point along the middle branch of the cubic with  chosen small. In this case, the oscillator 
+exhibits a stable limit cycle for small values of �, and is referred to as enabled. The limit 
+cycle alternates between silent and active phases of near steady-state behaviour. 
+Compared to motion within each phase, the alternation between phases takes place 
+rapidly, and is referred to as jumping. If li_. < 0, the two nullclines intersect at a stable fixed 
+point. In this case, no oscillation occurs. ence, oscillations in (4) are stimulus-dependent. 
+2.4 Neural oscillator network: segment layer 
+In the first layer of the network, segments are formed - blocks of synchronised oscillators 
+that trace the evolution of an acoustic component through time and frequency. The first 
+layer is a two-dimensional time-frequency grid of oscillators with a global inhibitor (see 
+Figure lB). The coupling term Sij in (4a) is defined as 
+Sij = Z Wij,tlS(Xt l - Ox) - WzS(z - Oz) (5) 
+kl � N(i, i) 
+r > wi 
+where H is the Heaviside function (i.e., H(x) = 1 fox _ 0, and zero other se), Wij, icl is the 
+connection weight from an oscillator (id) to an oscillator (k,l) and N(id) is the four nearest 
+neighbors of (id). The threshold 0 x is chosen so that an oscillator has no influence on its 
+5000- 
+2741- 
+1457- 
+729- 
+315- 
+80- 
+110 
+B 
+Grouping 
+Layer 
+Segment 
+Layer 
+2'.5 5'.0 7'.5 1(.0 li.5 Global 
+Autocorrelation Lag (ms) Inhibitor 
+Figure 1: A. Correlogram of a mixture of speech and trill telephone, taken 450 ms after the 
+start of the stimulus. The pooled correlogram is shown in the bottom panel, and the cross- 
+correlation function is shown on the right. B. Structure of the two-layer oscillator network. 
+750 G. J. Brown and D. L. Wang 
+neighbors unless it is in the active phase. The weight of neighboring connections along the 
+time axis is uniformly set to 1. The connection weight between an oscillator (ij) and its 
+vertical neighbor (i+lj) is set to 1 if C(i) exceeds a threshold 0c; otherwise it is set to 0. 
+W z is the weight of inhibition from the global inhibitor z, defined as 
+ = ooo- z (6) 
+where oo = 1 if xij > 0 z for at least one oscillator (id), and oo = 0 otherwise. Hence 0 z is a 
+threshold. If o = 1, z -->1. 
+Small segments may form which do not correspond to perceptually significant acoustic 
+components. In order to remove these noisy fragments, we introduce a lateral potential Pij 
+for oscillator (ij), defined as [11 ]'

@@ -1,0 +1,153 @@
+Bayesian Query Construction for Neural 
+Network Models 
+Gerhard Paass JSrg Kindermann 
+German National Research Center for Computer Science (GMD) 
+D-53757 Sankt Augustin, Germany 
+paass@gmd.de kindermann@gmd.de 
+Abstract 
+If data collection is costly, there is much to be gained by actively se- 
+lecting particularly informative data points in a sequential way. In 
+a Bayesian decision-theoretic framework we develop a query selec- 
+tion criterion which explicitly takes into account the intended use 
+of the model predictions. By Markov Chain Monte Carlo methods 
+the necessary quantities can be approximated to a desired preci- 
+sion. As the number of data points grows, the model complexity 
+is modified by a Bayesian model selection strategy. The proper- 
+ties of two versions of the criterion are demonstrated in numerical 
+experiments. 
+1 INTRODUCTION 
+In this paper we consider the situation where data collection is costly, as when 
+for example, real measurements or technical experiments have to be performed. In 
+this situation the approach of query learning ('active data selection', 'sequential 
+experimental design', etc.) has a potential benefit. Depending on the previously 
+seen examples, a new input value ('query') is selected in a systematic way and 
+the corresponding output is obtained. The motivation for query learning is that 
+random examples often contain redundant information, and the concentration on 
+non-redundant examples must necessarily improve generalization performance. 
+We use a Bayesian decision-theoretic framework to derive a criterion for query con- 
+struction. The criterion reflects the intended use of the predictions by an appropriate 
+444 Gerhard Paass, Jirg Kindermann 
+loss function. We limit our analysis to the selection of the next data point, given a 
+set of data already sampled. The proposed procedure derives the expected loss for 
+candidate inputs and selects a query with minimal expected loss. 
+There are several published surveys of query construction methods [Ford et al. 89, 
+Plutowski White 93, Sollich 94]. Most current approaches, e.g. [Cohn 94], rely 
+on the information matrix of parameters. Then however, all parameters receive 
+equal attention regardless of their influence on the intended use of the model 
+[Pronzato Walter 92]. In addition, the estimates are valid only asymptotically. Baye- 
+sian approaches have been advocated by [Berger 80], and applied to neural networks 
+[MacKay 92]. In [Sollich Saad 95] their relation to maximum information gain is 
+discussed. In this paper we show that by using Markov Chain Monte Carlo me- 
+thods it is possible to determine all quantities necessary for the selection of a query. 
+This approach is valid in small sample situations, and the procedure's precision can 
+be increased with additional computational effort. With the square loss function, 
+the criterion is reduced to a variant of the familiar integrated mean square error 
+[Plutowski White 93]. 
+In the next section we develop the query selection criterion from a decision-theoretic 
+point of view. In the third section we show how the criterion can be calculated using 
+Markov Chain Monte Carlo methods and we discuss a strategy for model selection. 
+In the last section, the results of two experiments with MLPs are described. 
+2 A DECISION-THEORETIC FRAMEWORK 
+Assume we have an input vector z and a scalar output y distributed as y ~ p(y [ z, w) 
+where w is a vector of parameters. The conditional expected value is a deterministic 
+function f(x, w) :- E(y l x , w) where y - f(x, w)+e and e is a zero mean error term. 
+Suppose we have iteratively collected observations D():= ((.1,1), ...,(n,n)). 
+We get the Bayesian posterior p(w I D())- p(D()lw ) p(w)/fp(D()Iw)p(w)dw 
+and the predictive distribution p(y l x, D()) - f p(y l x, w)p(w I D()) dw if p(w) is 
+the prior distribution. 
+We consider the situation where, based on some data x, we have to perform an 
+action a whose result depends on the unknown output y. Some decisions may have 
+more severe effects than others. The loss function L(y,a)  [0, cx) measures the 
+loss if y is the true value and we have taken the action a  4. In this paper we 
+consider real-valued actions, e.g. setting the temperature a in a chemical process. 
+We have to select an a  4 only knowing the input x. According to the Bayes 
+Principle [Berger 80, p.14] we should follow a decision rule d: x - a such that 
+the average risk f R(w, d)p(w ID())dw is minimal, where the risk is defined as 
+R(w,d) := f L(y,d(x))p(y[x, w)p(x)dydx. Here p(x)is the distribution of future 
+inputs, which is assumed to be known. 
+For the square loss function L(y,a) = (y- )9., the conditional expectation 
+d(x) :-- E(ylx , D()) is the optimal decision rule. In a control problem the loss 
+may be larger at specific critical points. This can be addressed with a weigh- 
+led square loss function L(y,a) := h(y)(y- a)2, where h(y) >_ 0 [Berger 80, 
+p.111]. The expected loss for an action is f(y- a)2h(y)p(y I x,D())dy. Re- 
+placing the predictive density p(y Ix, D()) with the weighted predictive density 
+Bayesian Query Construction for Neural Network Models 445 
+(y I x, D()) := h(y) p(y I x, D())/G(x), where G(x) :- f h(y) p(y I x, D()) dy, 
+we get the optimal decision rule d(z) := f YI(Y I x, D(,)) dy and the average loss 
+O(x) f(y - E(ylx, D(,)))2(ylx, D(,))dy for a given input x. With these modi- 
+fications, all later derivations for the square loss function may be applied to the 
+weighted square loss. 
+The aim of query sampling is the selection of a new observation : in such a way 
+that the average risk will be maximally reduced. Together with its still unknown 
+y-value, : defines a new observation (:, )) and new data D(,) U (:, )). To determine 
+this risk for some given : we have to perform the following conceptual steps for a 
+candidate query :: 
+1. Future Data: Construct the possible sets of 'future' observations D() U 
+(, B), where B~ p(yl,D()). 
+2. Future posterior: Determine a 'future' posterior distribution of parameters 
+p(w ID()U (:, )) that depends on  in the same way as though it had 
+actually been observed. 
+3. Future Loss: Assuming d;,(x) is the optimal decision rule for given values 
+of k, j, and x, compute the resulting loss as 
+(1) 
+4. Averaging: Integrate this quantity over the future trial inputs x distributed 
+ } and the different possible future outputs , yielding 
+-*   
+This procedure is repeated until an  with minimal average risk is found. Since local 
+optima are typical, a global optimization method is required. Subsequently we then 
+try to determine whether the current model is still adequate or whether we have to 
+increase its complexity (e.g. by adding more hidden units). 
+3 COMPUTATIONAL PROCEDURE 
+Let us assume that the real data D() was generated according to a regression model 
+y = f(x, w)+e with i.i.d. Gaussian noise e ~ N(O,2(w)). For example f(x, w) may 
+be a multilayer perceptton or a radial basis function network. Since the error terms 
+are independent, the posterior density is p(w I D()) cr p(w) I-lin=l P(i I'i, W) even 
+in the case of query sampling [Ford et al. 89]. 
+As the analytic derivation of the posterior is infeasible except in trivial cases, we 
+have to use approximations. One approach is to employ a normal approximation 
+[MacKay 92], but this is unreliable if the number of observations is small compa- 
+red to the number of parameters. We use Markov Chain Monte Carlo procedures 
+[Paa6 91, Neal 93] to generate a sample W(s) :- {w,...ws} of parameters distri- 
+buted according to p(w ] D(,)). If the number of sampling steps approaches infinity, 
+the distribution of the simulated wb approximates the posterior arbitrarily well. 
+To take into account the range of future -values, we create a set of them by si- 
+mulation. For each wb  W(B) a number of j ~ p(y I :, wb) is generated. Let 
+446 Gerhard Paass, JOrg Kindermann 
+(:,R) :---- {,I,1,'' ', R} be the resulting set. Instead of performing a new Markov 
+Monte Carlo run to generate a new sample according to p(w I D(,) t.J (5:,)), we 
+use the old set W(B) of parameters and feweight them (importance sampling). 
+In this way we may approximate integrals of some function g(w) with respect to 
+p(w [D() t.J (5:, )) [Kalos Whitlock 86, p.92]: 
+f g(w)p(wlD() 
+Eb_-g(wb)P(ls:.wb) (2) 
+B 
+Eb----1 P(B [ 5:, wb) 
+The approximation error approaches zero as the size of W(B) increases. 
+3.1 APPROXIMATION OF FUTURE LOSS 
+Consider the future loss ;,(x) given new observation (5:,) and trial input x,. In 
+the case of the square loss function, (1) can be transformed to 
+= (3) 
++ f p(w I u (5:. 
+where aS(w):- Vax(ylx, w)is independent of x. Assume a set XT -- {z1,...,ZT) 
+is given, which is representative of trial inputs for the distribution p(x). Define 
+B 
+$(5:, ):= =x P(J 1 5:, TM) for j e (,n). Then from equations (2) and (3) we get 
+(ylxt,D()u(,B)) :: 1/S(&,) a 
+E= f(x, w) p( [ , w) and 
+B 
+rg,( ,)  S(,) a(wb)p(O]k,w) (4) 
+b--1 
+B 
+1 [f(xt,w)_t(ylxt,D(,)U(5:,.O))]p(.O]5:,w ) 
+The final value of - is obtained by averaging over the different j  (,a)and 
+different trial inputs xt  XT. To reduce the variance, the trial inputs xt should 
+be selected by importance sampling (2) to concentrate them on regions with high 
+current loss (see (5) below). To facilitate the search for an  with minimal ; we 
+reduce the extent of random fluctuations of the j values. Let (vx,..., vn) be a 
+vector of random numbers v ~ N(0, 1), and let j be randomly selected from 
+{1,..., B}. Then for each k the possible observations   (,n) are defined as 
+j := f(5:, w1)+ va2(wj). In this way the difference between neighboring inputs 
+is not affected by noise, and search procedures can exploit gradients. 
+3.2 CURRENT LOSS 
+As a proxy for the future loss, we may use the current loss at &, 
+rcur(5:) = P(:) / L(y, d* (5:)) p(y l S:, D(,)) dy 

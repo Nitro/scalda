@@ -1,0 +1,130 @@
+EM Algorithms for PCA and SPCA 
+Sam Roweis* 
+Abstract 
+I present an expectation-maximization (EM) algorithm for principal 
+component analysis (?CA). The algorithm allows a few eigenvectors and 
+eigenvalues to be extracted from large collections of high dimensional 
+data. It is computationally very efficient in space and time. It also natu- 
+rally accommodates missing information. I also introduce a new variant 
+of ?CA called sensible principal component analysis (S?CA) which de- 
+fines a proper density model in the data space. Learning for S?CA is also 
+done with an EM algorithm. I report results on synthetic and real data 
+showing that these EM algorithms correctly and efficiently find the lead- 
+ing eigenvectors of the covariance of datasets in a few iterations using up 
+to hundreds of thousands of datapoints in thousands of dimensions. 
+1 Why EM for PCA? 
+Principal component analysis (PCA) is a widely used dimensionality reduction technique in 
+data analysis. Its popularity comes from three important properties. First, it is the optimal 
+(in terms of mean squared error) linear scheme for compressing a set of high dimensional 
+vectors into a set of lower dimensional vectors and then reconstructing. Second, the model 
+parameters can be computed directly from the data - for example by diagonalizing the 
+sample covariance. Third, compression and decompression are easy operations to perform 
+given the model parameters- they require only matrix multiplications. 
+Despite these attractive features however, PCA models have several shortcomings. One is 
+that naive methods for finding the principal component directions have trouble with high 
+dimensional data or large numbers of datapoints. Consider attempting to diagonalize the 
+sample covariance matrix of n vectors in a space ofp dimensions when n and p are several 
+hundred or several thousand. Difficulties can arise both in the form of computational com- 
+plexity and also data scarcity. 1 Even computing the sample covariance itself is very costly, 
+requiring O(np 2) operations. In general it is best to avoid altogether computing the sample 
+* roweJ. s@cns. cal. tech. edu; Computation & Neural Systems, California Institute of Tech. 
+IOn the data scarcity front, we often do not have enough data in high dimensions for the sample 
+covariance to be of full rank and so we must be careful to employ techniques which do not require full 
+rank matrices. On the complexity front, direct diagonalization of a symmetric matrix thousands of 
+rows in size can be extremely costly since this operation is O(p 3) forp xp inputs. Fortunately, several 
+techniques exist for efficient matrix diagonalization when only the first few leading eigenvectors and 
+eigerivalues are required (for example the power method [10] which is only O(p 2)). 
+EM Algorithms for PCA and $PCA 627 
+covariance explicitly. Methods such as the snap-shot algorithm [7] do this by assuming that 
+the eigenvectors being searched for are linear combinations of the datapoints; their com- 
+plexity is O(n3). In this note, I present a version of the expectation-maximization (EM) 
+algorithm [ 1] for learning the principal components of a dataset. The algorithm does not re- 
+quire computing the sample covariance and has a complexity limited by O (knp) operations 
+where k is the number of leading eigenvectors to be learned. 
+Another shortcoming of standard approaches to PCA is that it is not obvious how to deal 
+properly with missing data. Most of the methods discussed above cannot accommodate 
+missing values and so incomplete points must either be discarded or completed using a 
+variety of ad-hoc interpolation methods. On the other hand, the EM algorithm for PCA 
+enjoys all the benefits [4] of other EM algorithms in terms of estimating the maximum 
+likelihood values for missing information directly at each iteration. 
+Finally, the PCA model itself suffers from a critical flaw which is independent of the tech- 
+nique used to compute its parameters: it does not define a proper probability model in the 
+space of inputs. This is because the density is not normalized within the principal subspace. 
+In other words, if we perform PCA on some data and then ask how well new data are fit 
+by the model, the only criterion used is the squared distance of the new data from their 
+projections into the principal subspace. A datapoint far away from the training data but 
+nonetheless near the principal subspace will be assigned a high pseudo-likelihood or low 
+error. Similarly, it is not possible to generate fantasy data from a PCA model. In this note 
+I introduce a new model called sensible principal component analysis (SPCA), an obvious 
+modification of PCA, which does define a proper covariance structure in the data space. Its 
+parameters can also be learned with an EM algorithm> given below. 
+In summary, the methods developed in this paper provide three advantages. They allow 
+simple and efficient computation of a few eigenvectors and eigenvalues when working with 
+many datapoints in high dimensions. They permit this computation even in the presence of 
+missing data. On a real vision problem with missing information, I have computed the 10 
+leading eigenvectors and eigenvalues of 2 x7 points in 2 x2 dimensions in a few hours using 
+MATLAB on a modest workstation. Finally, through a small variation, these methods allow 
+the computation not only of the principal subspace but of a complete Gaussian probabilistic 
+model which allows one to generate data and compute true likelihoods. 
+2 Whence EM for PCA? 
+Principal component analysis can be viewed as a limiting case of a particular class of linear- 
+Gaussian models. The goal of such models is to capture the covariance structure of an ob- 
+served p-dimensional variable y using fewer than the p(p+ 1) /2 free parameters required in 
+a full covariance matrix. Linear-Gaussian models do this by assuming that y was produced 
+as a linear transformation of some k-dimensional latent variable x plus additive Gaussian 
+noise. Denoting the transformation by the p x k matrix 12, and the (p-dimensional) noise 
+by v (with covariance matrix R) the generative model can be written 2 as 
+y=Cx+v x ~ A;(O,I) v ~ 3/(O,R) 
+(la) 
+The latent or cause variables x are assumed to be independent and identically distributed 
+according to a unit variance spherical Gaussian. Since v are also independent and normal 
+distributed (and assumed independent of x), the model reduces to a single Gaussian model 
+2All vectors are column vectors. To denote the transpose of a vector or matrix I use the notation 
+x T. The determinant of a matrix is denoted by IA] and matrix inversion by A -1 . The zero matrix 
+is 0 and the identity matrix is I. The symbol ,-, means distributed according to. A multivariate 
+normal (Gaussian) distribution with mean p and covariance matrix El is written as iV' (p, El). The 
+same Gaussian evaluated at the point x is denoted iV' (p, 
+628 3'. Roweis 
+for y which we can write explicitly: 
+y ~ A/' (0, CC r + R) (lb) 
+In order to save parameters over the direct covariance representation in p-space, it is neces- 
+sary to choose k < p and also to restrict the covariance structure of the Gaussian noise v by 
+constraining the matrix R. 3 For example, if the shape of the noise distribution is restricted 
+to be axis aligned (its covariance matrix is diagonal) the model is known as factor analysis. 
+2.1 Inference and learning 
+There are two central problems of interest when working with the linear-Gaussian models 
+described above. The first problem is that of state inference or compression which asks: 
+given fixed model parameters C and R, what can be said about the unknown hidden states 
+x given some observations y? Since the datapoints are independent, we are interested in 
+the posterior probability P (xly) over a single hidden state given the corresponding single 
+observation. This can be easily computed by linear matrix projection and the resulting 
+density is itself Gaussian: 
+P (xly) = P (ylx) P (x) = A/' (Cx, R)ly A/' (O,I)Ix 
+P (y) A; (0, CO r + R)ly 
+P (xly) = A; (y,I - 3C)Ix, 3 = cr(cc r + R) 
+(2a) 
+(2b) 
+from which we obtain not only the expected value/y of the unknown state but also an 
+estimate of the uncertainty in this value in the form of the covariance I -/C. Computing 
+y from x (reconstruction) is also straightforward: P (ylx) = A/' (Cx, R) ly. Finally, 
+computing the likelihood of any datapoint y is merely an evaluation under (lb). 
+The second problem is that of learning, or parameterfitting which consists of identifying 
+the matrices C and R that make the model assign the highest likelihood to the observed 
+data. There are a family of EM algorithms to do this for the various cases of restrictions to 
+R but all follow a similar structure: they use the inference formula (2b) above in the e-step 
+to estimate the unknown state and then choose C and the restricted R in the m-step so as 
+to maximize the expected joint likelihood of the estimated x and the observed y. 
+2.2 Zero noise limit 
+Principal component analysis is a limiting case of the linear-Gaussian model as the covari- 
+ance of the noise v becomes infinitesimally small and equal in all directions. Mathemati- 
+cally, PCA is obtained by taking the limit R = limo I. This has the effect of making 
+the likelihood of a point y dominated solely by the squared distance between it and its re- 
+construction Cx. The directions of the columns of C which minimize this error are known 
+as the principal components. Inference now reduces to 4 simple least squares projection: 
+P(xly ) = A/'(/y,I-/C) Ix, /= lim CT(CC r +eI) - (3a) 
+e--0 
+P (xly) = A; ((CrC)-CTy, 0)ix =/(x - (CrC)-CTy) (3b) 
+Since the noise has become infinitesimal, the posterior over states collapses to a single 
+point and the covariance becomes zero. 
+3This restriction on R is not merely to save on parameters: the covariance of the observation noise 
+must be restricted in some w

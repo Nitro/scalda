@@ -1,0 +1,138 @@
+Graded grammaticality in Prediction 
+Fractal Machines 
+Shan Parfitt, Peter Tifio and Georg Dorffner 
+Austrian Research Institute for Artificial Intelligence, 
+Schottengasse 3, A-1010 Vienna, Austria. 
+{ shan, petert, georg) @ai. univie. ac. at 
+Abstract 
+We introduce a novel method of constructing language models, 
+which avoids some of the problems associated with recurrent neu- 
+ral networks. The method of creating a Prediction Fractal Machine 
+(PFM) [1] is briefly described and some experiments are presented 
+which demonstrate the suitability of PFMs for language modeling. 
+PFMs distinguish reliably between minimal pairs, and their be- 
+havior is consistent with the hypothesis [4] that wellformedness is 
+'graded' not absolute. A discussion of their potential to offer fresh 
+insights into language acquisition and processing follows. 
+1 Introduction 
+Cognitive linguistics has seen the development in recent years of two important, 
+related trends. Firstly, a widespread renewal of interest in the statistical, 'graded' 
+nature of language (e.g. [2]-[4]) is showing that the traditional all-or-nothing no- 
+tion of well-formedness may not present an accurate picture of how the congruity 
+of utterances is represented internally. Secondly, the analysis of state space tra- 
+jectories in artificial neural networks (ANNs) has provided new insights into the 
+types of processes which may account for the ability of learning devices to acquire 
+and represent language, without appealing to traditional linguistic concepts [5]-[7]. 
+Despite the remarkable advances which have come out of connectionist research 
+(e.g. [8]), and the now common use of recurrent networks, and Simple Recurrent 
+Networks (SRNs) [9] especially, in the study of language (e.g. [10]), recurrent neu- 
+ral networks suffer from particular problems which make them imperfectly suited 
+to language tasks. The vast majority of work in this field employs small networks 
+and datasets (usually artificial), and although many interesting linguistic issues 
+may be thus tackled, real progress in evaluating the potentials of state trajecto- 
+ries and graded 'grammaticality' to uncover the underlying processes responsible 
+for overt linguistic phenomena must inevitably be limited whilst the experimental 
+tasks remain so small. Nevertheless, there are certain obstacles to the scaling-up 
+of networks trained by back-propagation (BP). Such networks tend towards ever 
+Graded GrammaticaliF in Prediction Fractal Machines 53 
+longer training times as the sizes of the input set and of the network increase, and 
+although Real-Time Recurrent Learning (RTRL) and Back-propagation Through 
+Time are potentially better at modeling temporal dependencies, training times are 
+longer still [11]. Scaling-up is also difficult due to the potential for catastrophic 
+interference and lack of adaptivity and stability [12]-[14]. Other problems include 
+the rapid loss of information about past events as the distance from the present in- 
+creases [15] and the dependence of learned state trajectories not only on the training 
+data, but also upon such vagaries as initial weight vectors, making their analysis 
+difficult [16]. Other types of learning device also suffer problems. Standard Markov 
+models require the allocation of memory for every n-gram, such that large values 
+of n are impractical; variable-length Markov models are more memory-efficient, but 
+become unmanageable when trained on large data sets [17]. Two important, related 
+concerns in cognitive linguistics are thus (a) to find a method which allows language 
+models to be scaled up, which is similar in spirit to recurrent neural networks, but 
+which does not encounter the same problems of scale, and (b) to use such a method 
+to evince new insights into graded grammaticality from the state trajectories which 
+arise given genuinely large, naturally-occurring data sets. 
+Accordingly, we present a new method of generating state trajectories which avoids 
+most of these problems. Previously studied in a financial prediction task, the 
+method creates a fractal map of the training data, from which state machines are 
+built. The resulting models are known as Prediction Fractal Machines (PFMs) 
+[18] and have some useful properties. The state trajectories in the fractal repre- 
+sentation are fast and computationally efficient to generate, and are accurate and 
+well-understood; it may be inferred that, even for very large vocabularies and train- 
+ing sets, catastrophic interference and lack of adaptivity and stability will not be a 
+problem, given the way in which representations are built (demonstrating this is a 
+topic for future work); training times are significantly less than for recurrent net- 
+works (in the experiments described below, the smallest models took a few minutes 
+to build, while the largest ones took only around three hours; in comparison, all 
+of the ANNs took longer - up to a day - to train); and there is little or no loss of 
+information over the course of an input sequence (allowing for the finite precision 
+of the computer). The scalability of the PFM was taken advantage of by training 
+on a large corpus of naturally-occurring text. This enabled an assessment of what 
+potential new insights might arise from the use of this method in truly large-scale 
+language tasks. 
+2 Prediction Fractal Machines (PFMs) 
+A brief description of the method of creating a PFM will now be given. Interested 
+readers should consult [1], since space constraints preclude a detailed examination 
+here. The key idea behind our predictive model is a transformation F of symbol 
+sequences from an alphabet (here, tagset) {1, 2, ..., N) into points in a hypercube 
+H = [0, 1] t). The dimensionality D of the hypercube H should be large enough for 
+each symbol 1, 2, ..., N to be identified with a umque vertex of H. The particular 
+assignment of symbols to vertices is arbitrary. The transformation F has the crucial 
+property that symbol sequences sharing the same suffix (context) are mapped close 
+to each other. Specifically,-the longer the common suffix shared by two sequences, 
+the smaller the (Euclidean) distance between their point representations. The trans- 
+formation F used in this study corresponds to an Iterative Function System [19] 
+54 S. Parfitt, P. 7o and G. Dorffner 
+consisting of N affine maps i: H -- H, i - 1, 2, ..., N, 
+1 
+i(x)-(x+ti), tie,O, 1) , ti7 tjfori:j. 
+(1) 
+Given a sequence $182...$L of L symbols from the alphabet 1, 2, ..., N, we construct 
+its point representation as 
+(x*)))...))= (sL o sL_ o ... o s2 o 
+x }z) of the hypercube H. (Note that as is common in the 
+where x* is the center { 
+Iterative Function Systems literature, i refers either to a symbol or to a map, de- 
+pending upon the context.) PFMs are constructed on point representations of sub- 
+sequences appearing in the training sequence. First, we slide the window of length 
+L > i over the training sequence. At each position we transform the sequence 
+of length L appearing in the window into a point. The set of points obtained by 
+sliding through the whole training sequence is then partitioned into several classes 
+by k-means vector quamization (in the Euclidean space), each class represented by 
+a particular codebook vector. The number of codebook vectors required is cho- 
+sen experimentally. Since quantization classes group points lying close together, 
+sequences having point representations in the same class (potentially) share long 
+suffixes. The quantization classes may then be treated as prediction contexts, and 
+the corresponding predictive symbol probabilities computed by sliding the window 
+over the training sequence again and counting, for each quantization class, how of- 
+ten a sequence mapped to that class was followed by a particular symbol. In test 
+mode, upon seeing a new sequence of L symbols, the transformation F is again 
+performed, the closest quantization center found, and the corresponding predictive 
+probabilities used to predict the next symbol. 
+3 
+An experimental comparison of PFMs and recurrent 
+networks 
+The performance of the PFM was compared against that of a RTRL-trained re- 
+current network on a next-tag prediction task. Sixteen grammatical tags and a 
+'sentence start' character were used. The models were trained on a concatenated 
+sequence (22781 tags) of the top three-quarters of each of the 14 sub-corpora of 
+the University of Pennsylvania 'Brown' corpus 1. The remainder was used to create 
+test data, as follows. Because in a large training corpus of naturally-occurring data, 
+contexts in most cases have more than one possible correct continuation, simply 
+counting correctly predicted symbols is insufficient to assess performance, since this 
+fails to count correct responses which are not targets. The extent to which the mod- 
+els distinguished between grammatical axed ungrammatical utterances was therefore 
+additionally measured by generating minimal pairs and comparing their negative log 
+likelihoods (NLLs) per symbol with respect to the model. Likelihood is computed 
+by sliding through the test sequence and for each window position, determining the 
+probability of the symbol that appears immediately beyond it. As processing pro- 
+gresses, these probabilities are multiplied. The negative of the natural logarithm is 
+then taken and divided by the number of symbols. Significant differences in NLLs 
+http://www.ldc.upenn.edu/ 
+Graded Grammaticality in Prediction Fractal Machines 55 
+are much harder to achieve between members of minimal pairs than between gram- 
+matical and random sequences, and are therefore a good measure of model validity. 
+Minimal pairs generated by theoretically-motivated manipulations tend to be no 
+longer ungrammatical given a small tagset, because the removal of grammatical 
+sub-classes necessarily also removes a large amount of information. Manipulations 
+were therefore performed by switching the positions of t

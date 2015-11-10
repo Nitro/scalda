@@ -1,0 +1,150 @@
+A Fast Stochastic Error-Descent 
+Algorithm for Supervised Learning and 
+Optimization 
+Gert Cauwenberghs 
+California Institute of Technology 
+Mail-Code 128-95 
+Pasadena, CA 91125 
+E-maih gertcco. caltech. edu 
+Abstract 
+A parallel stochastic algorithm is investigated for error-descent 
+learning and optimization in deterministic networks of arbitrary 
+topology. No explicit information about internal network struc- 
+ture is needed. The method is based on the model-free distributed 
+learning mechanism of Dembo and Kailath. A modified parameter 
+update rule is proposed by which each individual parameter vector 
+perturbation contributes a decrease in error. A substantially faster 
+learning speed is hence allowed. Furthermore, the modified algo- 
+rithm supports learning time-varying features in dynamical net- 
+works. We analyze the convergence and scaling properties of the 
+algorithm, and present simulation results for dynamic trajectory 
+learning in recurrent networks. 
+I Background and Motivation 
+We address general optimization tasks that require finding a set of constant param- 
+eter values pi that minimize a given error functional �(p). For supervised learning, 
+the error functional consists of some quantitative measure of the deviation between 
+a desired state x T and the actual state of a network x, resulting from an input y 
+and the parameters p. In such context the components of p consist of the con- 
+nection strengths, thresholds and other adjustable parameters in the network. A 
+244 
+A Fast Stochastic Error-Descent Algorithm for Supervised Learning and Optimization 245 
+typical specification for the error in learning a discrete set of pattern associations 
+(y(a), xT(a)) for a steady-state network is the Mean Square Error (MSE) 
+�(P) --  E E -- 
+c k 
+(1) 
+and similarly, for learning a desired response (y(t), x T (t)) in a dynamic network 
+�(P)-  E (z(t)- z(t))dt (2) 
+k 
+For �(p) to be uniquely defined in the latter dynamic case, initial conditions x(/init ) 
+need to be specified. 
+A popular method for minimizing the error functional is steepest 
+(gradient descent) [1]-[6] 
+0� 
+Ap = -/Op 
+error descent 
+(3) 
+Iteration of (3) leads asymptotically to a local minimum of �(p), provided / is 
+strictly positive and small. The computation of the gradient is often cumbersome, 
+especially for time-dependent problems [2]-[5], and is even ill-posed for analog hard- 
+ware learning systems that unavoidably contain unknown process impurities. This 
+calls for error descent methods avoiding calculation of the gradients but rather prob- 
+ing the dependence of the error on the parameters directly. Methods that use some 
+degree of explicit internal information other than the adjustable parameters, such 
+as Madaline III [6] which assumes a specific feedforward multi-perceptron network 
+structure and requires access to internal nodes, are therefore excluded. Two typical 
+methods which satisfy the above condition are illustrated below: 
+Weight Perturbation [7], a simple sequential parameter perturbation tech- 
+nique. The method updates the individual parameters in sequence, by measuring 
+the change in error resulting from a perturbation of a single parameter and adjust- 
+ing that parameter accordingly. This technique effectively measures the compo- 
+nents of the gradient sequentially, which for a complete knowledge of the gradient 
+requires as many computation cycles as there are parameters in the system. 
+Model-Free Distributed Learning [8], which is based on the M.I.T. rule 
+in adaptive control [9]. Inspired by analog hardware, the distributed algorithm 
+makes use of time-varying perturbation signals r,(t) supplied in parallel to the pa- 
+rameters pi, and correlates these ri(t) with the instantaneous network response 
+�(p q- r) to form an incremental update Api. Unfortunately, the distributed 
+model-free algorithm does not support learning of dynamic features (2) in net- 
+works with delays, and the learning speed degrades sensibly with increasing num- 
+ber of parameters [8]. 
+2 Stochastic Error-Descent: Formulation and Properties 
+The algorithm we investigate here combines both above methods, yielding a sig- 
+nificant improvement in performance over both. Effectively, at every epoch the 
+constructed algorithm decreases the error along a single randomly selected direc- 
+tion in the parameter space. Each such decrement is performed using a single 
+246 Cauwenberghs 
+synchronous parallel parameter perturbation per epoch. Let ) = p q- r with par- 
+allel perturbations ri selected from a random distribution. The perturbations ri 
+are assumed reasonably small, but not necessarily mutually orthogonal. For a given 
+single random instance of the perturbation r, we update the parameters with the 
+rule 
+Ap=--ua' , (4) 
+where the scalar 
+(s) 
+is the error contribution due to the perturbation r, and u is a small strictly positive 
+constant. Obviously, for a sequential activation of the ri, the algorithm reduces to 
+the weight perturbation method [7]. On the other hand, by omitting �(p) in (5) 
+the original distributed model-free method [8] is obtained. The subtraction of the 
+unperturbed reference term �(p) in (5) contributes a significant increase in speed 
+over the original method. Intuitively, the incremental error  specified in (5) isolates 
+the specific contribution due to the perturbation, which is obviously more relevant 
+than the total error which includes a bias �(p) unrelated to the perturbation r. 
+This bias necessitates stringent zero-mean and orthogonality conditions on the ri 
+and requires many perturbation cycles in order to effect a consistent decrease in 
+the error [8]. 1 An additional difference concerns the assumption on the dynamics 
+of the perturbations ri. By fixing the perturbation r during every epoch in the 
+present method, the dynamics of the ri no longer interfere with the time delays of 
+the network, and dynamic optimization tasks as (2) come within reach. 
+The rather simple and intuitive structure (4) and (5) of the algorithm is somewhat 
+reminiscent of related models for reinforcement learning, and likely finds parallels 
+in other fields as well. Random direction and line-search error-descent algorithms 
+for trajectory learning have been suggested and analyzed by P. Baldi [12]. As a 
+matter of coincidence, independent derivations of basically the same algorithm but 
+from different approaches are presented in this volume as well [13],[14]. Rather than 
+focussing on issues of originality, we proceed by analyzing the virtues and scaling 
+properties of this method. We directly present the results below, and defer the 
+formal derivations to the appendix. 
+2.1 
+The algorithm performs gradient descent on average, provided that the 
+perturbations ri are mutually uncorrelated with uniform auto-variance, 
+that is E(rir/) = er25ij with er the perturbation strength. The effective 
+gradient descent learning rate corresponding to (3) equals r/eft =/a 2. 
+Hence on average the learning trajectory follows the steepest path of error descent. The 
+stochasticity of the parameter perturbations gives rise to fluctuations around the mean 
+path of descent, injecting diffusion in the learning process. However, the individual fluc- 
+tuations satisfy the following desirable regularity: 
+ An interesting noise-injection variant on the model-free distributed learning paradigm 
+of [8], presented in [10], avoids the bias due to the offset level �(p) as well, by differentiating 
+the perturbation and error signals prior to correlating them to construct the parameter 
+increments. A complete demonstration of an analog VLSI system based on this approach 
+is presented in this volume [11]. As a matter of fact, the modified noise-injection algorithm 
+corresponds to a continuous-time version of the algorithm presented here, for networks and 
+error functionMs free of time-varying features. 
+A Fast Stochastic Error-Descent Algorithm for Supervised Learning and Optimization 247 
+2.2 
+The error �(p) always decreases under an update (4) for any r, provided 
+that [r[ 2 is small, and u is strictly positive and small. 
+Therefore, the algorithm is guaranteed to converge towards local error minima just like 
+gradient descent, as long as the perturbation vector rr statistically explores all directions of 
+the parameter space, provided the perturbation strength and learning rate are sufficiently 
+small. This property holds only for methods which bypass the bias due to the offset error 
+term �(p) for the calculation of the updates, as is performed here by subtraction of the 
+offset ia (5). 
+The guaranteed decrease in error of the update (4) under any small, single instance of 
+the perturbation rr removes the need of averaging multiple trials obtained by different in- 
+stances of rr in order to reduce turbulence in the learning dynamics. We intentionally omit 
+any smoothing operation on the constructed increments (4) prior to effecting the updates 
+Ap,, unlike the estimation of the true gradient in [8],[10],[13] by essentially accumulating 
+and averaging contributions (4) over a large set of random perturbations. Such averaging 
+is unnecessary here (and in [131) since each individual increment (4) contributes a decrease 
+in error, and since the smoothing of the ragged downward trajectory on the error surface 
+is effectively performed by the integration of the incremental updates (4) anyway. Fur- 
+thermore, from a simple analysis it follows that such averaging is actually detrimental to 
+the effective speed of convergence? For a correct measure of the convergence speed of the 
+algorithm relative to that of other methods, we studied the boundaries of learning sta- 
+bility regions specifying maximum learning rates for the different methods. The analysis 
+reveals the following scaling properties with respect to the size of the trained network, 
+characterized by the number of adjustable parameters P: 
+2.3 
+The maximum attainable 

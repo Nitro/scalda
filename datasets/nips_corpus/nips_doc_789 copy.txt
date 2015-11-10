@@ -1,0 +1,149 @@
+Recognition-based Segmentation of 
+On-line Cursive Handwriting 
+Nicholas S. Flann 
+Department of Computer Science 
+Utah State University 
+Logan, UT 84322-4205 
+ilamni�l. as. usu. edu 
+Abstract 
+This paper introduces a new recognition-based segmentation ap- 
+proach to recognizing on-line cursive handwriting from a database 
+of 10,000 English words. The original input stream of a:, y pen coor- 
+dinates is encoded as a sequence of uniform stroke descriptions that 
+are processed by six feed-forward neural-networks, each designed 
+to recognize letters of different sizes. Words are then recognized by 
+performing best-first search over the space of all possible segmen- 
+tations. Results demonstrate that the method is effective at both 
+writer dependent recognition (1.7% to 115.15% error rate) and writer 
+independent recognition (15.2% to 31.1% error rate). 
+I Introduction 
+With the advent of pen-based computers, the problem of automatically recognizing 
+handwriting from the motions of a pen has gained much significance. Progress has 
+been made in reading disjoint block letters [Weissman el. al, 93]. However, cursive 
+writing is much quicker and natural for humans, but poses a significant challenge to 
+pattern recognition systems because of its variability, ambiguity and need to both 
+segment and recognize the individual letters. Recent techniques employing self- 
+organizing networks are described in [Morasso el. al, 93] and [Schomaker, 1993]. 
+This paper presents an alternative approach based on feed-forward networks. 
+On-line handwriting consists of writing with a pen on a touch-terminal or digitizing 
+777 
+778 Flann 
+/ 
+(a) 
+(,) 
+Figure 1: The five principal stages of preprocessing: (a) The original data, z,// 
+values sampled every 10rnS. (b) The slant is normalized through a shear transfor- 
+mation; (c) Stroke boundaries are determined at points where t velocity equals 0 or 
+pen-up or pen-down events occur; (d) Delayed strokes are reordered and associated 
+with corresponding strokes of the same letters; (e) Each stroke is resampled in space 
+to correspond to exactly 8 points. Note pen-down strokes are shown as thick lines, 
+pen-up strokes as thin lines. 
+Recognition-Based Segmentation of On-Line Cursive Handwriting 779 
+tablet. The device produces a regular stream of x, y coordinates, describing the 
+positions of the pen while writing. Hence the problem of recognizing on-line cur- 
+sively written words is one of mapping a variable length sequence of x, y coordinates 
+to a variable length sequence of letters. Developing a system that can accurately 
+perform this mapping faces two principal problems: First, because handwriting is 
+done with little regularity in speed, there is unavoidable variability in input size. 
+Second, because no pen-up events or spatial gaps signal the end of one letter and the 
+beginning of the next, the system must perform both segmentation and recognition. 
+This second problem necessitates the development of a recognition-based segmenta- 
+tion approach. In [Schenkel et al., 93] one such approach is described for connected 
+block letter recognition where the system learns to recognize segmentation points. 
+In this paper an alternative method is presented that first performs exhaustive 
+recognition then searches the space of possible segmentations. The remainder of 
+the paper describes the method in more detail and presents results that demon- 
+strate its effectiveness at recognizing a variety of cursive handwriting styles. 
+2 Methodology 
+The recognition system consists of three subsystems: (a) the preprocessor that maps 
+the initial stream of x, y coordinates to a stream of stroke descriptions; (b) the letter 
+classifier that learns to recognize individual letters of different size; and (c) the word 
+finder that performs recognition-based segmentation over the output of the letter 
+classifier to identify the most likely word written. 
+2.1 Preprocesslng 
+The preprocessing stage follows steps outlined in [Guerfali &; Plamondon, 93] and 
+is illustrated in Figure 1. First the original data is smoothed by passing it through 
+a low-pass filter, then reslanted to make the major stroke directions vertical. This 
+is achieved by computing the mean angle of all the individual lines then applying 
+a shear transformation to remove it. Second, the strokes boundaries are identified 
+as points when 9 = 0 or when the pen is picked up or put down. Zero y velocity 
+was chosen rather than minimum absolute velocity [Morasso et. al, 93] since it was 
+found to be more robust. Third, delayed strokes such as those that dot an i or cross 
+a t are reordered to be associated with their corresponding letter. Here the delayed 
+stroke is placed to immediately follow the closest down stroke and linked into the 
+stroke sequence by straight line pen-up strokes. Fourth, each stroke is resampled in 
+the space domain (using linear interpolation) so as to represent it as exactly eight 
+x, y coordinates. Finally the new stream of x, y coordinates is converted to a stream 
+of 14 feature values. 
+Eight of these features are similar to those used in [Weissman et. al, 93], and repre- 
+sent the angular acceleration (as the sin and cos of the angle), the angular velocity 
+of the line (as the sin and cos of the angle), the x, y coordinates (x has a linear 
+ramp removed), and first differential x, y. One feature denotes whether the pen 
+was down or up when the line was drawn. The remaining features encode more 
+abstract information about the stroke. 
+780 Flann 
+32 
+14 
+32 
+Figure 2: The pyramid-style architecture of the network used to recognize 2 stroke 
+letters. The input size is 32 x 14; 32 is from the 4 input strokes (each represented by 
+8 resampled points), two central strokes from the letter and the 2 context strokes, 
+one each side; 14 is from the number of features employed to represent each point. 
+Not all the receptive fields are shown. The first hidden layer consists of 7 fields, 
+4 over each stroke and 3 more spanning the stroke boundaries. The next hidden 
+layer consists of 5 fields, each spanning 3 x 20 inputs. The output is a 32 bit 
+error-correcting code. 
+Figure 3' Examples of the class other for stroke sizes i though 6. Each letter is 
+a random fragment of a word, such that it is not an alphabetic letter. 
+Recognition-Based Segmentation of On-Line Cursive Handwriting 781 
+2.2 Letter Recognition 
+The letter classifier consists of six separate pyramid-style neural-networks, each 
+with an architecture suitable for recognizing a letter of one through six strokes. 
+A neural network designed to recognize letters of size j strokes encodes a map- 
+ping from a sequence of j + 9. stroke descriptions to a 32 bit error-correcting code 
+[Dietterich & Bakiri, 91]. Experiments have shown this use of a context window 
+improves performance, since the allograph of the current letter is dependent on the 
+allographs of the previous and following letters. The network architecture for stroke 
+size two is illustrated in Figure 2. The architecture is similar to a time-delayed 
+neural-network [Lang & Waibel, 90] in that the hierarchical structure enables dif- 
+ferent levels of abstract features to be learned. However, the individual receptive 
+fields are not shared as in a TDNN, since translational variance is not problem and 
+the sequence of data is important. 
+The networks are trained using 80% of the raw data collected. This set is further 
+divided into a training and a verification set. All training and verification data is 
+preprocessed and hand segmented, via a graphical interface, into letter samples. 
+These are then sorted according to size and assembled into distinct training and 
+verification sets. It is often the case that the same letter will appear in multiple 
+size files due to variability in writing and different contexts (such as when an o is 
+followed by a 9 it is at least a 3 stroke allograph, while an o followed by an l is 
+usually only a two stroke allograph). Included in these letter samples are samples 
+of a new letter class other, illustrated in Figure 3. Experiments demonstrated 
+that use of an other class tightens decision boundaries and thus prevents spurious 
+fragments--of which there are many during performance from being recognized as 
+real letters. Each network is trained using back-propagation until correctness on 
+the verification set is maximized, usually requiring less than 100 epochs. 
+2.3 Word Interpreter 
+To identify the correct word, the word interpreter explores the space of all possible 
+segmentations of the input stroke sequence. First, the input sequence is partitioned 
+into all possible fragments of size one through six, then the appropriately sized 
+network is used to classify each fragment. An example of this process is illustrated 
+as a matrix in Figure 4(a). 
+The word interpreter then performs a search of this matrix to identify candidate 
+words. Figure 4(b) and Figure 4(c) illustrates two sets of candidate words found 
+for the example in Figure 4(a). Candidates in this search process are generated 
+according to the following constraints: 
+A legal segmentation point of the input stream is one where no two adja- 
+cent fragments overlap or leave a gap. To impose this constraint the i'th 
+fragment of size j may be extended by all of the i + j fragments, if they 
+exist. 
+A legal candidate letter sequence must be a subsequence of a word in the 
+provided lexicon of expected English words. 
+782 Flann 
+(a) 
+4CVRE 
+Figure 4: (a) The matrix of fragments and their classifications that is generated by 
+applying the letter recognizers to a sample of the word are. The original handwriting 
+sample, following preprocessing, is given at the top of the matrix. The bottom row 
+of the matrix corresponds to all fragments of size one (with zero overlap), the second 
+row to all fragments of size two (with an overlap of one stroke) etc. The column 
+of letters in each fragment box represents the letter classi

@@ -1,0 +1,150 @@
+Template-Based Algorithms for 
+Connectionist Rule Extraction 
+Jay A. Alexander and Michael C. Mozer 
+Department of Computer Science and 
+Institute for Cognitive Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+Abstract 
+Casting neural network weights in symbolic terms is crucial for 
+interpreting and explaining the behavior of a network. Additionally, in 
+some domains, a symbolic description may lead to more robust 
+generalization. We present a principled approach to symbolic rule 
+extraction based on the notion of weight templates, parameterized 
+regions of weight space corresponding to specific symbolic expressions. 
+With an appropriate choice of representation, we show how template 
+parameters may be efficiently identified and instantiated to yield the 
+optimal match to a unit's actual weights. Depending on the requirements 
+of the application domain, our method can accommodate arbitrary 
+disjunctions and copjunctions with O(k) complexity, simple n-of-m 
+expressions with O(k 2) compl_exity, or a more general class of recursive 
+n-of-m expressions with O(k a) complexity, where k is the number of 
+inputs to a unit. Our method of rule extraction offers several benefits 
+over alternative approaches in the literature, and simulation results on a 
+variety of problems demonstrate its effectiveness. 
+1 INTRODUCTION 
+The problem of understanding why a trained neural network makes a given decision has a 
+long history in the field of connectionist modeling. One promising approach to this prob- 
+lem is to convert each unit's weights and/or activities from continuous numerical quantities 
+into discrete, symbolic descriptions [2, 4, 8]. This type of reformulation, or rule extraction, 
+can both explain network behavior and facilitate transfer of learning. Additionally, in 
+intrinsically symbolic domains, there is evidence that a symbolic description can lead to 
+more robust generalization [4]. 
+610 Jay A. Alexander, Michael C. Mozer 
+We are interested in extracting symbolic rules on a unit-by-unit basis from connectionist 
+nets that employ the conventional inner product activation and sigmoidal output functions. 
+The basic language of description for our rules is that of n-of-m expressions. An n-of-m 
+expression consists of a list of m subexpressions and a value n such that 1 < n < m. The 
+overall expression is true when at least n of the m subexpressions are true. An example of 
+an n-of-m expression stated using logical variables is the majority voter function 
+X = 2 of(A, B, C). N-of-m expressions are interesting because they are able to model 
+behaviors intermediate to standard Boolean OR (n = 1) and AND (n = m) functions. 
+These intermediate behaviors reflect a limited form of two-level Boolean logic. (To see 
+why this is true, note that the expression for X above is equivalent to AB + BC + AC.) In a 
+later section we describe even more general behaviors that can be represented using recur- 
+sive forms of these expressions. N-of-m expressions fit well with the activation behavior 
+of sigmoidal units, and they are quite amenable to human comprehension. 
+To extract an n-of-m rule from a unit's weights, we follow a three-step process. First we 
+generate a minimal set of candidate templates, where each template is parameterized to 
+represent a given n-of-m expression. Next we instantiate each template's parameters with 
+optimal values. Finally we choose the symbolic expression whose instantiated template is 
+nearest to the actual weights. Details on each of these steps are given below. 
+2 TEMPLATE-BASED RULE EXTRACTION 
+2.1 Background 
+Following McMillan [4], we define a weight template as a parameterized region of weight 
+space corresponding to a specific symbolic function. To see how weight templates can be 
+used to represent symbolic functions, consider the weight vector for a sigmoidal unit with 
+four inputs and a bias: 
+W = W 1 W 2 W 3 W 4 b 
+Now consider the following two template vectors: 
+= -p p 0 -p 1.5p 
+t2 = p -p p p --0.5p 
+These templates are parameterized by the variable p. Given a large positive value ofp (say 
+5.0) and an input vector I (whose components are approximately 0 and 1), t 1 describes the 
+symbolic expression l of( 1, 12, 74), while t2 describes the symbolic expression 
+2 of(l 1, 72, I., 14). A general description for n-of-m templates of this form is the following: 
+M of the weight values are set to +p, p > 0; all others are set to 0. 
+(+p is used for normal subexpressions, -p for negated subexpressions) 
+The bias value is set to (0.5 + mneg - n)p, where mneg represents the 
+number of negated subexpressions. 
+When the inputs are Boolean with values -1 and +1, the form of the templates is the same, 
+except the template bias takes the value (1 + m - 2n)p. This seemingly trivial difference 
+tums out to have a significant effect on the efficiency of the extraction process. 
+Template-Based Algorithms for Connectionist Rule Extraction 611 
+2.2 Basic extraction algorithm 
+Generating candidate templates 
+Given a sigmoidal unit with k inputs plus a bias, the total number of n-of-m expressions 
+that unit may compute is an exponential function of k: 
+k rn k 
+ = 2k3 k- 1 
+T - 2rn -- (k-m) ! (m- 1) ! 
+m=ln=l =1 
+For example, Tk=_10 is 393,660, while Tk__2o is over 46 billion. Fortunately we can apply 
+knowledge of the unit's actual weights to explore this search space without generating a 
+template for each possible n-of-m expression. Alexander [1] proves that when the -1/+1 
+input representation is used, we need consider at most one template for each possible 
+choice of n and m. For a given choice of n and m, a template is indicated when 
+sign(1 + m - 2n) = sign(b). A required template is formed by setting the template weights 
+corresponding to the m highest absolute value actual weights to sp, where s represents the 
+sign of the corresponding actual weight. The template bias is set to (1 + m - 2n)p. This 
+reduces the number of templates required to a polynomial function of k: 
+Tn_ of_ m = 
+  1= k2+k+ 
+m=l n=l 
+Values for T_0 and T_20 are now 30 and 110, respectively, making for a very efficient 
+pruning of the search space. When 0/1 inputs are used, this simple procedure does not suf- 
+fice and many more templates must be generated. For this reason, in the remainder of this 
+paper we focus on the -1/+1 case and assume the use of symmetric sigmoid functions. 
+Instantiating template parameters 
+Instantiating a weight template t requires finding a value for p such that the Euclidean 
+distance d = lit- wll  is minimized. Letting u i = 1 if template weight t i is nonzero, u i = 0 
+otherwise, the value ofp that minimizes this distance for any -1/+1 template is given by: 
+k 
+ ]wilui+ <1 +m-2n)b 
+p, =i=l 
+m+ (l+m-2n) 2 
+Finding the nearest template and checking extraction validity 
+Once each template is instantiated with its value of p*, the distance between the template 
+and the actual weight vector is calculated, and the minimal distance template is selected as 
+the basis for rule extraction. Having found the nearest template t*, we can use its values as 
+part of a rudimentary check on extraction validity. For example, we can define the 
+extraction error as 100% x IIt*-wll2xllwll to measure how well the nearest symbolic rule 
+fits the actual weights. We can also examine the value of p* used in t*. Small values of p* 
+translate into activation levels in the linear regime of the sigmoid functions, compromis- 
+ing the assumption of Boolean outputs propagating to subsequent inputs. 
+612 Jay A. Alexander, Michael C. Mozer 
+2.3 Extending expressiveness 
+While the n-of-m expressions treated thus far are fairly powerful, there is an interesting 
+class of symbolic behaviors that cannot be captured by simple n-of-m expressions. The 
+simplest example of this type of behavior may be seen in the single hidden unit version of 
+xor described in [6]. In this 2-1-1 network the hidden unit H learns the expression 
+AND(I, I2), while the output unit (which connects to the two inputs as well as to the hid- 
+den unit) learns the expression AND[OR(I 1, I2),H]. This latter expression may be viewed 
+as a nested or recursive form of n-of-m expression, one where some of the m subexpres- 
+sions may themselves be n-of-m expressions. The following two forms of recursive n-of-m 
+expressions are linearly separable and are thus computable by a single sigmoidal unit: 
+OR [ Cn_of_ m , COR ] 
+AND l Cn-of-m, CAND ] 
+where Cn_of_ m is a nested n-of-m expression ( 1 < n < m) 
+COR is a nested OR expression (n = 1) 
+CAN D is a nested AND expression (n = m) 
+These expressions may be seen to generalize simple n-of-m expressions in the same way 
+that simple n-of-m expressions generalize basic disjunctions and conjunctions. 1 We term 
+the above forms augmented n-of-m expressions because they extend simple n-of-m 
+expressions with additional disjuncts or conjuncts. Templates for these expressions (under 
+the -1/+1 input representation) may be efficiently generated and instantiated using a pro- 
+cedure similar to that described for simple n-of-m expressions. When augmented expres- 
+sions are included in the search, the total number of templates required becomes: 
+5 
+Taugrnented m [k3-k2+k+J 
+This figure is O(k) worse than for simple n-of-m expressions, but it is still polynomial in k 
+and is quite manageable for many problems. (Values for T_lO and Tk=2o are 150 and 1250, 
+respectively.) A more detailed treatment of augmented n-of-m expressions is given in [ 1]. 
+3 RELATED WORK 
+Here we briefly consider two alternative systems for connectionist rule extraction. Many 
+other methods have been developed; a recent summary and categorization appears in [2]. 
+3.1 McMillan 
+McMillan described the projection of actual weights to simple weight templates in [4]. 
+McMillan's parameter selection and instantiation procedures are inefficient compared to 
+those described here, though they yield equivalent results for the classes of templates he 
+us

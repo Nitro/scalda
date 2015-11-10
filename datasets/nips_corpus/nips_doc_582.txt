@@ -1,0 +1,171 @@
+Learning Sequential Tasks by 
+Incrementally Adding Higher Orders 
+Mark Ring 
+Department of Computer Sciences, Taylor 2.124 
+University of Texas at Austin 
+Austin, Texas 78712 
+(ring@cs.utexas.edu) 
+Abstract 
+An incremental, higher-order, non-recurrent network combines two 
+properties found to be useful for learning sequential tasks: higher- 
+order connections and incremental introduction of new units. The 
+network adds higher orders when needed by adding new units that 
+dynamically modify connection weights. Since the new units mod- 
+ify the weights at the next time-step with information from the 
+previous step, temporal tasks can be learned without the use of 
+feedback, thereby greatly simplifying training. Furthermore, a the- 
+oretically unlimited number of units can be added to reach into 
+the arbitrarily distant past. Experiments with the Reber gram- 
+mar have demonstrated speedups of two orders of magnitude over 
+recurrent networks. 
+1 INTRODUCTION 
+Second-order recurrent networks have proven to be very powerful [8], especially 
+when trained using complete back propagation through time [1, 6, 14]. It has also 
+been demonstrated by Fahlman that a recurrent network that incrementally adds 
+nodes during training--his Recurrent Cascade-Correlation algorithm [5]--can be 
+superior to non-incremental, recurrent networks [2, 4, 11, 12, 15]. 
+The incremental, higher-order network presented here combines advantages of both 
+of these approaches in a non-recurrent network. This network (a simplified, con- 
+115 
+116 Ring 
+tinuous version of that introduced in [9]), adds higher orders when they are needed 
+by the system to solve its task. This is done by adding new units that dynamically 
+modify connection weights. The new units modify the weights at the next time-step 
+with information from the last, which allows temporal tasks to be learned without 
+the use of feedback. 
+2 GENERAL FORMULATION 
+Each unit (U) in the network is either an input (I), output (O), or high-level (L) 
+unit. 
+ui(t ) ae__ value of ith unit at time t. 
+ii(t ) ae= ui(t) where i is an input unit. 
+oi(t ) ae__ ui(t) where i is an output unit. 
+Ti(t ) ae Target value for Oi(t) at time t. 
+Liy(t ) ae__ Ui(t ) where i is the higher-order unit that 
+modifies weight Wy at time t. 1 
+The output and high-level units are collectively referred to as non-input (N) units: 
+Ni(t ) a { Oi(t) ifU i  O i. 
+-- Ly(t) ifU i  L i 
+In a given time-step, the output and high-level units receive  summed input from 
+the input units. 
+Ni(t)   IJ(t)g(i,j,t). (1) 
+J 
+g is a gating function representing the weight of a particular connection at a par- 
+ticular time-step. If there is a higher-order unit signed to that connection, then 
+the input value of that unit is added to the connection's weight at that time-step? 
+g(i,j,t) -- (wij(t) -t- L(t - 1) If L exists 
+wij ( t ) Otherwise 
+(2) 
+At each time-step, the values of the output units are calculated from the input units 
+and the weights (possibly modified by the activations of the high-level units from the 
+previous time-step). The values of the high-level units are calculated at the same 
+time in the same way. The output units generate the output of the network. The 
+high-level units simply alter the weights at the next time-step. All unit activations 
+can be computed simultaneously since the activations of the L units are not required 
+A connection may be modified by at most one L unit. Therefore JL i, Lxy, and Ly are 
+identical but used as appropriate for notational convenience. 
+2It can be seen that this is a higher-order connection in the usual sense if one substitutes 
+the right-hand side of equation I for Lj in equation 2 and then replaces g in equation 1 with 
+the result. In fact, as the network increases in height, ever higher orders are introduced, 
+while lower orders are preserved. 
+Learning Sequential Tasks by Incrementally Adding Higher Orders 117 
+until the following time-step. The network is arranged hierarchically in that every 
+higher-order units is always higher in the hierarchy than the units on either side 
+of the weight it affects. Since higher-order units have no outgoing connections, the 
+network is not recurrent. It is therefore impossible for a high-level unit to affect, 
+directly or indirectly, its own input. 
+There are no hidden units in the traditional sense, and all units have a linear activa- 
+tion function. (This does not imply that non-linear functions cannot be represented, 
+since non-linearities do result from the multiplication of higher-level and input units 
+in equations 1 and 2.) 
+Learning is done through gradient descent to reduce the sum-squared error. 
+1 (Ti(t ) _ Oi(t)) 2 
+i 
+Wij(t q- 1) - wij(t) - r]Awij(t) 
+OE(t) 
+= 
+(3) 
+where r/is the learning rate. Since it may take several time-steps for the value of 
+a weight to affect the network's output and therefore the error, equation 3 can be 
+rewritten as: 
+OE(t) (4) 
+= Ow(t- ' 
+where 
+ri { 0 if U i -- 0 i 
+: l+r  ifU i=_Liy 
+The value r i is constant for any given unit i and specifies how high in the hierarchy 
+unit i is. It therefore also specifies how many time-steps it takes for a change in 
+unit i's activation to affect the network's output. 
+Due to space limitations, the derivation of the gradient is not shown, but is given 
+elsewhere [10]. The resulting weight change rule, however, is: 
+Ti(t)-Oi(t) IfU i--O i 
+Awij(t) = I j (t- r i) Away(t) If U i -- Liy (5) 
+The weights are changed after error values for the output units have been collected. 
+Since each high-level unit is higher in the hierarchy than the units on either side 
+of the weight it affects, weight changes are made bottom up, and the Awxy(t) in 
+equation 5 will already have been calculated at the time Awij(t) is computed. 
+The intuition behind the learning rule is that each high-level unit learns to utilize 
+the context from the previous time-step for adjusting the connection it influences 
+at the next time-step so that it can minimize the connection's error in that context. 
+Therefore, if the information necessary to decide the correct value of a connection 
+at one time-step is available at the previous time-step, then that information is used 
+by the higher-order unit assigned to that connection. If the needed information is 
+not available at the previous time-step, then new units may be built to look for 
+the information at still earlier steps. This method concentrating on unexpected 
+events is similar to the hierarchy of decisions of Dawkins [3], and the history 
+compression of Schmidhuber [13]. 
+118 Ring 
+3 WHEN TO ADD NEW UNITS 
+A unit is added whenever a weight is being pulled strongly in opposite directions 
+(i.e. when learning is forcing the weight to increase and to decrease at the same 
+time). The unit is created to determine the contexts in which the weight is pulled 
+in each direction. This is done in the following way: Two tong-term averages are 
+kept for each connection. The first of these records the average change made to the 
+weight, 
+Awij(t) = crAwij(t) q- (1 -- cr)Awij(t -- 1); 0 _( cr (_ 1. 
+The second is the long-term mean absolute deviation, given by: 
+IAwij(t)l - crlAwij(t)[ q- (1 - cr)[Awij(t -- 1)1; 0 _( cr _( 1. 
+The parameter, a, specifies the duration of the long-term average. A lower value 
+of a means that the average is kept for a longer period of time. When Awq(t) is 
+small, but IAwij(t)[ is large, then the weight is being pulled strongly in conflicting 
+directions, and a new unit is built. 
+if IAwij(Z)[ ) � 
+N+i 
+then build unit Lq 
+where e is a small constant that keeps the denominator from being zero, � is 
+threshold value, and N is the number of units in the network. A related method for 
+adding new units in feed-forward networks was introduced by Wynne-Jones [16]. 
+When a new unit is added, its incoming weights are initially zero. It has no output 
+weights but simply learns to anticipate and reduce the error at each time-step of 
+the weight it modifies. In order to keep the number of new units low, whenever a 
+unit, L is created, the statistics for all connections into the destination unit (U i) 
+are reset: [Awij(t)[ - 0.0 and Awij(t) *- 1.0. 
+4 RESULTS 
+The Reber grammar is a small finite-state grammar of the following form: 
+s�x 
+E 
+Transitions from one node to the next are made by way of the labeled arcs. The 
+task of the network is: given as input the label of the arc just traversed, predict 
+Learning Sequential Tasks by Incrementally Adding Higher Orders 119 
+Elman Recurrent Incremental 
+Network RTRL Cascade Higher-Order 
+Correlation Network 
+Sequences Seen: Mean 25,000 206 
+Best 20,000 19,000 176 
+Hidden Units 15 2 2-3 40 
+Table 1: The incremental higher-order network is compared against recurrent net- 
+works on the Reber grammar. The results for the recurrent networks are quoted 
+from other sources [2, 5]. The mean and/or best performance is shown when avail- 
+able. RTRL is the real-time recurrent learning algorithm [15]. 
+the arc that will be traversed next. A training sequence, or string, is generated 
+by starting with a B transition and then randomly choosing an arc leading away 
+from the current state until the final state is reached. Both inputs and outputs are 
+encoded locally, so that there are seven output units (one each for B, T, S, X, V, P, 
+and E) and eight input units (the same seven plus one bias unit). The network is 
+considered correct if its highest activated outputs correspond to the arcs that can be 
+traversed from the current state. Note that the current state cannot be determined 
+from the current input alone. 
+An Elman-type recurrent network was able to learn this task after 20,000 string 
+presentations using 15 hidden units [2]. (The correctness criteria for the Elman 
+net was slightly more stringent than that described in the previous paragraph.) 
+Recurrent Cascade-Correlation (RCC) was able to learn this task using only two or 
+three hidden units in an average of 25

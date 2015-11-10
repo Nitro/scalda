@@ -1,0 +1,151 @@
+Learning Nonlinear Dynamical Systems 
+using an EM Algorithm 
+Zoubin Ghahramani and Sam T. Roweis 
+Gatsby Computational Neuroscience Unit 
+University College London 
+London WCiN 3AR, U.K. 
+http://www. gat sby. ucl. ac. uk/ 
+Abstract 
+The Expectation-Maximization (EM) algorithm is an iterative pro- 
+cedure for maximum likelihood parameter estimation from data 
+sets with missing or hidden variables [2]. It has been applied to 
+system identification in linear stochastic state-space models, where 
+the state variables are hidden from the observer and both the state 
+and the parameters of the model have to be estimated simulta- 
+neously [9]. We present a generalization of the EM algorithm for 
+parameter estimation in nonlinear dynamical systems. The expec- 
+tation step makes use of Extended Kalman Smoothing to estimate 
+the state, while the maximization step re-estimates the parame- 
+ters using these uncertain state estimates. In general, the nonlinear 
+maximization step is dicult because it requires integrating out the 
+uncertainty in the states. However, if Gaussian radial basis func- 
+tion (RBF) approximators are used to model the nonlinearities, 
+the integrals become tractable and the maximization step can be 
+solved via systems of linear equations. 
+1 Stochastic Nonlinear Dynamical Systems 
+We examine inference and learning in discrete-time dynamical systems with hidden 
+state xt, inputs ut, and outputs yt.  The state evolves according to stationary 
+nonlinear dynamics driven by the inputs and by additive noise 
+xt+ = f(xt, ut) + w 
+(1) 
+All lowercase characters (except indices) denote vectors. Matrices are represented by 
+uppercase characters. 
+432 Z Ghahramani and S. T. Rowels 
+where w is zero-mean Gaussian noise with covariance Q. 2 The outputs are non- 
+linearly related to the states and inputs by 
+yt = 9(xt, + v (2) 
+where v is zero-mean Gaussian noise with covariance R. The vector-valued nonlin- 
+earlties f and g are assumed to be differentiable, but otherwise arbitrary. 
+Models of this kind have been examined for decades in various communities. Most 
+notably, nonlinear state-space models form one of the cornerstones of modern sys- 
+tems and control engineering. In this paper, we examine these models within the 
+framework of probabilistic graphical models and derive a novel learning algorithm 
+for them based on EM. With one exception, 3 this is to the best of our knowledge 
+the first paper addressing learning of stochastic nonlinear dynamical systems of the 
+kind we have described within the framework of the EM algorithm. 
+The classical approach to system identification treats the parameters as hidden vari- 
+ables, and applies the Extended Kalman Filtering algorithm (described in section 2) 
+to the nonlinear system with the state vector augmented by the parameters [5]. 4 
+This approach is inherently on-line, which may be important in certain applications. 
+Furthermore, it provides an estimate of the covariance of the parameters at each 
+time step. In contrast, the EM algorithm we present is a batch algorithm and does 
+not attempt to estimate the covariance of the parameters. 
+There are three important advantages the EM algorithm has over the classical ap- 
+proach. First, the EM algorithm provides a straightforward and principled method 
+for handing missing inputs or outputs. Second, EM generalizes readily to more 
+complex models with combinations of discrete and real-valued hidden variables. 
+For example, one can formulate EM for a mixture of nonlinear dynamical systems. 
+Third, whereas it is often very difficult to prove or analyze stability within the 
+classical on-line approach, the EM algorithm is always attempting to maximize the 
+likelihood, which acts as a Lyapunov function for stable learning. 
+In the next sections we will describe the basic components of the learning algorithm. 
+For the expectation step of the algorithm, we infer the conditional distribution of the 
+hidden states using Extended Kalman Smoothing (section 2). For the maximization 
+step we first discuss the general case (section 3) and then describe the particular 
+case where the nonlinearities are represented using Gaussian radial basis function 
+(RBF; [6]) networks (section 4). 
+2 Extended Kalman Smoothing 
+Given a system described by equations (1) and (2), we need to infer the hidden 
+states from a history of observed inputs and outputs. The quantity at the heart 
+of this inference problem is the conditional density P(xt[ul,..., UT, Yi,..., YT), for 
+i _< t _< T, which captures the fact that the system is stochastic and therefore our 
+inferences about x will be uncertain. 
+2The Gaussian noise assumption is less restrictive for nonlinear systems than for linear 
+systems since the nonlinearity can be used to generate non-Gaussian state noise. 
+3The authors have just become aware that Briegel and Tresp (this volume) have applied 
+EM to essentially the same model. Briegel and Tresp's method uses multilayer perceptrons 
+(MLP) to approximate the nonlinearities, and requires sampling from the hidden states to 
+fit the MLP. We use Gaussian radial basis functions (RBFs) to model the nonlinearities, 
+which can be fit analytically without sampling (see section 4). 
+4It is important not to confuse this use of the Extended Kalman algorithm, to simul- 
+taneously estimate parameters and hidden states, with our use of EKS, to estimate just 
+the hidden state as part of the E step of EM. 
+Learning Nonlinear Dynamics Using EM 433 
+For linear dynamical systems with Gaussian state evolution and observation noises, 
+this conditional density is Gaussian and the recursive algorithm for computing its 
+mean and covariance is known as Kalman smoothin 9 [4, 8]. Kalman smoothing is 
+directly analogous to the forward-backward algorithm for computing the conditional 
+hidden state distribution in a hidden Markov model, and is also a special case of 
+the belief propagation algorithm. s 
+For nonlinear systems this conditional density is in general non-Gaussian and can 
+in fact be quite complex. Multiple approaches exist for inferring the hidden state 
+distribution of such nonlinear systems, including sampling methods [7] and varia- 
+tional approximations [3]. We focus instead in this paper on a classic approach from 
+engineering, Extended Kalman Smoothing (EKS). 
+Extended Kalman Smoothing simply applies Kalman smoothing to a local lineariza- 
+tion of the nonlinear system. At every point  in x-space, the derivatives of the 
+vector-valued functions f and 9 define the matrices, A -- - and C -- ag 
+x= x x= ' 
+respectively. The dynamics are linearized about St, the mean of the Kalman filter 
+state estimate at time t: 
+xt+ - f(:t, ut) d- A, (xt - t) d- w. 
+(3) 
+The output equation (2) can be similarly linearized. If the prior distribution of the 
+hidden state at t - 1 was Gaussian, then, in this linearized system, the conditional 
+distribution of the hidden state at any time t given the history of inputs and outputs 
+will also be Gaussian. Thus, Kalman smoothing can be used on the linearized system 
+to infer this conditional distribution (see figure 1, left panel). 
+3 Learning 
+The M step of the EM algorithm re-estimates the parameters given the observed 
+inputs, outputs, and the conditional distributions over the hidden states. For the 
+model we have described, the parameters define the nonlinearities f and 9, and the 
+noise covariances Q and R. 
+Two complications arise in the M step. First, it may not be computationally fea- 
+sible to fully re-estimate f and 9- For example, if they are represented by neural 
+network regressors, a single full M step would be a lengthy training procedure using 
+backpropagation, conjugate gradients, or some other optimization method. Alter- 
+natively, one could use partial M steps, for example, each consisting of one or a few 
+gradient steps. 
+The second complication is that f and 9 have to be trained using the uncertain state 
+estimates output by the EKS algorithm. Consider fitting f, which takes as inputs 
+xt and ut and outputs xt+. For each t, the conditional density estimated by EKS is 
+a full-covariance Gaussian in (xt, xt+)-space. So f has to be fit not to a set of data 
+points but instead to a mixture of full-covariance Gaussians in input-output space 
+(Gaussian clouds of data). Integrating over this type of noise is non-trivial for 
+almost any form of f. One simple but inefficient approach to bypass this problem 
+is to draw a large sample from these Gaussian clouds of uncertain data and then fit 
+f to these samples in the usual way. A similar situation occurs with 9. 
+In the next section we show how, by choosing Gaussian radial basis functions to 
+model f and 9, both of these complications vanish. 
+5The forward part of the Kalman smoother is the Kalman filter. 
+434 Z. Ghahramani and S. T. Roweis 
+4 Fitting Radial Basis Functions to Gaussian Clouds 
+We will present a general formulation of an RBF network from which it should be 
+clear how to fit special forms for f and g. Consider the following nonlinear mapping 
+from input vectors x and u to an output vector z' 
+I 
+z = Zhi pi(x) + Ax + Bu + b + w, (4) 
+i=1 
+where w is a zero-mean Gaussian noise variable with covariance Q. For example, 
+one form of f can be represented using (4) with the substitutions x -- xt, u +- ut, 
+and z -- xt+; another with x +- (Xt,Ut) , U -- , and z +- xt+. The parameters 
+are: the coefficients of the I RBFs, hi; the matrices A and B multiplying inputs 
+x and u, respectively; and an output bias vector b. Each RBF is assumed to be a 
+Gaussian in x-space, with center ci and width given by the covariance matrix Si: 
+1 C.-S_i(x__ci)} ' 
+pi(x) --t27r8i1-1/2 exp -(x - , i 
+(5) 
+The goal is to fit this model to data (u,x, z). The complication is that the data 
+set comes in the form of a mixture of Gaussian distributions. Here we show how to 
+analytically integrate over this mixture distribution to fit the RBF model. 
+Assume the da

@@ -1,0 +1,157 @@
+Supervised Learning with Growing Cell 
+Structures 
+Bernd Fritzke 
+Institut fiir Neuroinformatik 
+Ruhr-Universitit Bochum 
+Germany 
+Abstract 
+We present a new incremental radial basis function network suit- 
+able for classification and regression problems. Center positions 
+are continuously updated through soft competitive learning. The 
+width of the radial basis functions is derived from the distance 
+to topological neighbors. During the training the observed error 
+is accumulated locally and used to determine where to insert the 
+next unit. This leads (in case of classification problems) to the 
+placement of units near class borders rather than near frequency 
+peaks as is done by most existing methods. The resulting networks 
+need few training epochs and seem to generalize very well. This is 
+demonstrated by examples. 
+I INTRODUCTION 
+Feed-forward networks of localized (e.g., Gaussian) units are an interesting alter- 
+native to the more frequently used networks of global (e.g., sigmoidal) units. It 
+has been shown that with localized units one hidden layer suffices in principle to 
+approximate any continuous function, whereas with sigmoidal units two layers are 
+necessary. 
+In the following we are considering radial basis function networks similar to those 
+proposed by Moody & Darken (1989) or roggio & Girosi (1990). Such networks 
+consist of one layer L of Gaussian units. Each unit c G L has an associated vector 
+wc  R n indicating the position of the Gaussian in input vector space and a standard 
+255 
+256 Fritzke 
+deviation rc. For a given input datum   R'* the activation of unit c is described 
+by 
+o' c 
+(1) 
+On top of the layer L of Gaussian units there are m single layer percepttons. 
+Thereby, m is the output dimensionality of the problem which is given by a number 
+of input/output pairs 1 ((,() G (R n x R'). Each of the single layer perceptrons 
+computes a weighted sum of the activations in L: 
+Oi() = y] wiDj() i  {1,..., m} (2) 
+jL 
+With wij we denote the weighted connection from local unit j to output unit i. 
+Training of a single layer perceptron to minimize square error is a very well under- 
+stood problem which can be solved incrementally by the delta rule or directly by 
+linear algebra techniques (Moore-Penrose inverse). Therefore, the only (but severe) 
+difficulty when using radial basis function networks is choosing the number of local 
+units and their respective parameters, namely center position w and width 
+One extreme approach is to use one unit per data points and to position the units 
+directly at the data points. If one chooses the width of the Gaussians sufficiently 
+small it is possible to construct a network which correctly classifies the training 
+data, no matter how complicated the task is (Fritzke, 1994). However, the network 
+size is very large and might even be infinite in the case of a continuous stream of 
+non-repeating stochastic input data. Moreover, such a network can be expected to 
+generalize poorly. 
+Moody & Darken (1989), in contrast, propose to use a fixed number of local units 
+(which is usually considerably smaller than the total number of data points). These 
+units are first distributed by an unsupervised clustering method (e.g., k-means). 
+Thereafter, the weights to the output units are determined by gradient descent. 
+Although good results are reported for this method it is rather easy to come up 
+with examples where it would not perform well: k-means positions the units based 
+on the density of the training data, specifically near density peaks. However, to ap- 
+proximate the optimal Bayesian a posterJori classifier it would be better to position 
+units near class borders. Class borders, however, often lie in regions with a particu- 
+larly low data density. Therefore, all methods based on k-means-like unsupervised 
+placement of the Gaussians are in danger to perform poorly with a fixed number of 
+units or - similarly undesirable - to need a huge number of units to achieve decent 
+performance. 
+From this one can conclude that - in [he case of radial basis function networks 
+- it is essential to use the class labels not only for the training of the connection 
+weights but also for the placement of the local units. Doing this forms the core of 
+the method proposed below. 
+1Throughout this article we assume a classification problem and use the corresponding 
+terminology. However, the described method is suitable for regression problems as well. 
+Supervised Learning with Growing Cell Structures 257 
+2 SUPERVISED GROWING CELL STRUCTURES 
+In the following we present an incremental radial basis function network which 
+is able to simultaneously determine a suitable number of local units, their center 
+positions and widths as well as the connection weights to the output units. The 
+basic idea is a very simple one: 
+0. Start with a very small radial basis function network. 
+1. Train the current network with some I/O-pairs from the training data. 
+2. Use the observed accumulated error to determine where in input vector 
+space to insert new units. 
+3. If network does not perform well enough goto 1. 
+One should note that during the training phase (Step 1.) error is accumulated 
+over several data items and this accumulated error is used to determine where to 
+insert new units (Step 2.). This is different from the approach of Platt (1991) where 
+insertions are based on single poorly mapped patterns. In both cases, however, the 
+goal is to position new units in regions where the current network does not perform 
+well rather than in regions where many data items stem from. 
+In our model the center positions of new units are interpolated from the positions 
+of existing units. Specifically, after some adaptation steps we determine the unit 
+q which has accumulated the maximum error and insert a new unit in between q 
+and one of its neighbors in input vector space. The interpolation procedure makes 
+it necessary to allow the center positions of existing units to change. Otherwise, all 
+new units would be restricted to the convex hull of the centers of the initial network. 
+We do not necessarily insert a new unit in between q and its nearest neighbor. 
+Rather we like to choose one of the units with adjacent Voronoi regions 2. In the 
+two-dimensional case these are the direct neighbors of q in the Delaunay triangu- 
+lation (Delaunay-neighbors) induced by all center positions. In higher-dimensional 
+spaces there exists an equivalent based on hypertetrahedrons which, however, is 
+very hard to compute. For this reason, we arrange our units in a certain topological 
+structure (see below) which has the property that if two units are direct neighbors 
+in that structure they are mostly Delaunay-neighbors. By this we get with very 
+little computational effort an approximate subset of the Delaunay-neighbors which 
+seems to be sufficient for practical purposes. 
+2.1 NETWORK STRUCTURE 
+The structure of our network is very similar to standard radial basis function net- 
+works. The only difference is that we arrange the local units in a k-dimensional 
+topological structure consisting of connected simplices a (lines for k = 1, triangles 
+2The Voronoi region of a unit c denotes the part of the input vector space which consists 
+of points for which c is the nearest unit. 
+3A historical reason for this specific approach is the fact that the model was developed 
+from an unsupervised network (see Fritzke, 1993) where the k-dimensional neighborhood 
+was needed to reduce dimensionality. We currently investigate an alternative (and more 
+258 Ftzke 
+for k = 2, tetrahedrons for k = 3 and hypertetrahedrons for larger k). This ar- 
+rangement is done to facilitate the interpolation and adaptation steps described 
+below. The initial network consists of one k-dimensional simplex (k q- 1 local units 
+fully connected with each other). The neighborhood connections are not weighted 
+and do not directly influence the behavior of the network. They are, however, used 
+to determine the width of the Gaussian functions associated with the units. Let 
+for each Gaussian unit c denote Nc the set of direct topological neighbors in the 
+topological structure. Then the width of c is defined as 
+dENt 
+(3) 
+which is the mean distance to the topological neighbors. If topological neighbors 
+have similar center positions (which will be ensured by the way adaptation and 
+insertion is done) then this leads to a covering of the input vector space with partially 
+overlapping Gaussian functions. 
+2.2 ADAPTATION 
+It was mentioned above that several adaptation steps are done before a new unit is 
+inserted. One single adaptation step is done as follows (see fig. 1)' 
+* Chose an I/O-pair (,(), C R'*,( C R) from the training data. 
+* determine the unit s closest to  (the so-called best-matching unit). 
+e Move the centers of s and its direct topological neighbors towards 
+Aw -- eb( - w), Aw -- e,,( -- w) for allc  N 
+eb and en are small constants with eb >> 
+e Compute for each local unit c 6 L the activation Dc() (see eqn. 1) 
+* Compute for each output unit i the activation Oi (see eqn. 2) 
+ Compute the square error by 
+i--1 
+* Accumulate error at best-matching unit s: 
+Aerr, = SE 
+* Make Delta-rule step for the weights (c denotes the learning rate)' 
+Awij = aDj(i- Oi) i 6 {1,..., m}, j 6 L 
+Since together with the best-matching unit always its direct topological neighbors 
+are adapted, neighboring units tend to have similar center positions. This prop- 
+erty can be used to determine suitable center positions for new units as will be 
+demonstrated in the following. 
+Supervised Learning with Growing Cell Structures 259 
+a) Before... 
+b) during, and ... 
+c) ... after adaptation 
+Figure 1: One adaptation step. The center positions of the current network are 
+shown and the change caused by a single input signal. The observed error SE for 
+this pattern is added to the local error variable of the best-matching unit. 
+a) Befo

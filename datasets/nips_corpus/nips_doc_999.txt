@@ -1,0 +1,170 @@
+Selective Attention for Handwritten 
+Digit Recognition 
+Ethem Alpaydin 
+Department of Computer Engineering 
+Boazii University 
+Istanbul, TR-80815 Turkey 
+Mpaydin@boun.edu.tr 
+Abstract 
+Completely parallel object recognition is NP-complete. Achieving 
+a recognizer with feasible complexity requires a compromise be- 
+tween parallel and sequential processing where a system selectively 
+focuses on parts of a given image, one after another. Successive 
+fixations are generated to sample the image and these samples are 
+processed and abstracted to generate a temporal context in which 
+results are integrated over time. A computational model based on a 
+partially recurrent feedforward network is proposed and made cred- 
+ible by testing on the reM-world problem of recognition of hand- 
+written digits with encouraging results. 
+I INTRODUCTION 
+For all-parallel bottom-up recognition, allocating one separate unit for each possible 
+feature combination, i.e., conjunctive encoding, implies combinatorial explosion. It 
+has been shown that completely parallel, bottom-up visual object recognition is 
+NP-complete (Tsotsos, 1990). By exchanging space with time, systems with much 
+less complexity may be designed. For example, to phone someone at the press of a 
+button, one needs 10 ? buttons on the phone; the sequential alternative is to have 
+10 buttons on the phone and press one at a time, seven times. 
+We propose recognition based on selective attention where we analyze only a small 
+part of the image in detail at each step, combining results in time. Noton and Stark's 
+(1971) scanpath theory advocates that each object is internally represented as a 
+feature-ring which is a temporal sequence of features extracted at each fixation and 
+the positions or the motor commands for the eye movements in between. In this 
+approach, there is an eye that looks at an image but which can really see only a 
+small part of it. This part of the image that is examined in detail is the fovea. The 
+772 E. ALPAYDIN 
+Class Probabilities 
+(10xl) 
+softmax 
+Class Units 
+(10xl) O/ 
+Hidden Units (s x 1) 
+ASSOCIA T1VE 
+LEVEL 
+/ 
+PRE-ATTENTIVE LEVEL ATTENTIVE LEVEL 
+Feature Map   Eye Position Map 
+F (r x 1) X, (p x p) 
+I subsample 
+and blur 
+U 
+Fov 
+(mxm) / I //i/i , 
+J Saliency Map 
+, (n x n) 
+Bitmap Image (n x n) 
+Figure 1' The block diagram of the implemented system. 
+fovea's content is examined by the lore-attentive level where basic feature extraction 
+takes place. The features thus extracted are fed to an associative part together 
+with the current eye position. If the accumulated information is not sufficient for 
+recognition, the eye is moved to another part of the image, making a saccade. To 
+minimize recognition time, the number of saccades should be minimized. This is 
+done through defining a criterion of being interesting or saliency and by fixating 
+only at the most interesting. Thus sucessive fixations are generated to sample the 
+image and these samples are processed and abstracted to generate a temporal con- 
+text in which results are integrated over time. There is a large amount of literature 
+on selective attention in neuroscience and psychology; for reviews see respectively 
+(Posner and Peterson, 1990) and (Treisman, 1988). The point stressed in this paper 
+is that the approach is also useful in engineering. 
+2 AN EXAMPLE SYSTEM FOR OCR 
+The structure of the implemented system for recognition of handwritten digits is 
+given in Fig. 1. 
+Selective Attention for Handwritten Digit Recognition 773 
+We have an n x n binary image in which the fovea is m x m with m < n. To 
+minimize recognition time, the system should only attend to the parts of the image 
+that carry discriminative information. We define a criterion of being interesting 
+or saliency which is applied to all image locations in parallel to generate a sallehey 
+map, S. The saliency measure should be chosen to draw attention to parts that 
+have the highest information content. Here, the saliency criterion is a low-pass filter 
+which roughly counts the number of on pixels in the corresponding m x m region 
+of the input image M. As the strokes in handwritten digits are mostly one or two 
+pixels wide, a count of the on pixels is a good measure of the discontinuity (and 
+thus information). It is also simple to compute: 
+where N'9.(p, E) is the bivariate normal with mean p and the covariance E. Note 
+that we want the convolution kernel to have effect up to trn/2J and also that the 
+normal is zero after pq- 3or. In our simulations where n is 16 and m is 5 (typical for 
+digit recognition), cr  1. The location that is most salient is the position of the next 
+fixation and as such defines the new center of the loves. A location once attended 
+to is no longer interesting; after each fixation, the saliency of all the locations that 
+currently are in the scope of the loves are set to 0 to inhibit another fixation there. 
+The attentive level thus controls the scope of the pre-attentive level. The maximum 
+of the saliency map through a winner-take-all gives the eye position (i*, j*) at 
+fixation t. 
+(i*(t),j*(t)) = argm. a. xSi 
+By thus following the salient regions, we get an input-dependent emergent sequence 
+in time. 
+Eye-Position Map 
+The eye position map, P, stores the position of the eye in the current fixation. It is 
+p x p. p is chosen to be smaller than n for dimensionality reduction for decreasing 
+complexity and introducing an effect of regularization (giving invariance to small 
+translations). When p is a factor of n, computations are also simpler. We also blur 
+the immediate neighbors for a smoother representation: 
+P(t) = blur(subsample(winner-take-all($))) 
+Pre-Attentive Level: Feature Extraction 
+The pre-attentive level extracts detailed features from the fovea to generate a feature 
+map. This information and the current eye position is passed to the associative 
+system for recognition. There is a trade-off between the fovea size and the number 
+of saccades required for recognition: As the operation in the pre-attentive level is 
+carried out in parallel, to minimize complexity the features extracted there should 
+not be many and the fovea should not be large: Fovea is where the expensive 
+computation takes place. On the other hand, the fovea should be large enough to 
+extract discriminative features and thus complete recognition in a small amount of 
+time. The features to be extracted can be learned through an supervised method 
+when feedback is available. 
+774 E. ALPAYDIN 
+The m x m region symmetrically around (i*, j*) is extracted as the fovea I and is 
+fed to the feature extractors. The r features extracted there are passed on to the 
+associative level as the feature map, F. r is typically 4 to 8. Ug denote the weights 
+of feature g and Fg is the value of feature g that is found by convolving the fovea 
+input with the feature weight vector (f(-) is the sigmoid function): 
+= Mi*(t)-[/.]+i,j*(t)-[/.]+j, i,j = 1...m 
+$ 
+Associative Level: Classification 
+At each fixation, the associative level is fed the feature map from the pre-attentive 
+level and the eye position map from the attentive level. As a number of fixations 
+may be necessary to recognize an image, the associative system should have a short- 
+term memory able to accumulate inputs coming through time. Learning similarly 
+should be through time. When used for classification, the class units are organized 
+so as to compete and during recognition the activations of the class units evolve 
+till one class gets suf[iciently active and suppresses the others. When a training 
+set is available, a temporal supervised method can be used to train the associative 
+level. Note that there may be more than one scanpath for each object and learning 
+one sequence for each object fails. We see it is a task of accumulating two types of 
+information through time: the what (features extracted) and the where (eye 
+position). 
+The fovea map, F, and the eye position map, P, are concatenated to make a 
+r -t- p x p dimensional input that is fed to the associative level. Here we use an 
+artificial neural network with one hidden layer of s units. We have experimented 
+with various architectures and noticed that recurrency at the output layer is the 
+best. There are 10 output units. 
+h k 
+exp[O(t)] 
+where P denotes the softmaxed output probabilities (Bridle, 1990) and P(t - 1) 
+are the values in the preceding fixation (initially 0). We use the cross-entropy as 
+the goodness measure: 
+1 
+C : y. - y. D log P(t), t _> 1 
+ c 
+Dc is the required output for class c. Learning is gradient-ascent on this goodness 
+measure. The fraction 1/t is to give more weight to initial fixations than later ones. 
+Connections to the output units are updated as follows (7 is the learning factor): 
+Selective Attention for Handwritten Digit Recognition 775 
+*c(t)- pc- i.c(t) /xx. ch:(t)/h nc ,c(t)i.(t x) 
+?c -- - 
+Note that we assume OP(t- 1)/ORc = 0. For the connections to the hidden units 
+we have: 
+,.(t) = 
+We can back-propagate one step more to train the feature extractors. Thus the 
+update equations for the connections to feature units are: 
+t 
+A series of fixations are made until one of the class units is sufficiently active: 
+3c, Pc >  (typically 0.99), or when the most salient point has a saliency less than a 
+certain threshold (this condition is rarely met after the first few epochs). Then the 
+computed changes are summed up and the updates are made like the exaple below: 
+aTc = arch(t) 
+Backpropagation through time where the recurrent connections are unfolded in time 
+did not work well in this task because as explained before, for the same class, there is 
+more than one scanpath. The above-mentioned approach is like real-time recurrent 
+learning (Williams and Zipser, 1989) where the partial derivatives in the previous 
+time step is 0, thus ignoring this temporal dependence. 
+3 RESULTS AND DISCUSSION 
+We have experimented with 

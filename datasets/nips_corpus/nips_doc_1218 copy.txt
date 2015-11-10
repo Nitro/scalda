@@ -1,0 +1,163 @@
+Monotonicity Hints 
+Joseph Sill 
+Computation and Neural Systems program 
+California Institute of Technology 
+email: joe@cs.caltech.edu 
+Yaser S. Abu-Mostafa 
+EE and CS Deptartments 
+California Institute of Technology 
+email: yaser@cs.caltech.edu 
+Abstract 
+A hint is any piece of side information about the target function to 
+be learned. We consider the monotonicity hint, which states that 
+the function to be learned is monotonic in some or all of the input 
+variables. The application of monotonicity hints is demonstrated 
+on two real-world problems- a credit card application task, and a 
+problem in medical diagnosis. A measure of the monotonicity error 
+of a candidate function is defined and an objective function for the 
+enforcement of monotonicity is derived from Bayesian principles. 
+We report experimental results which show that using monotonicity 
+hints leads to a statistically significant improvement in performance 
+on both problems. 
+1 Introduction 
+Researchers in pattern recognition, statistics, and machine learning often draw 
+a contrast between linear models and nonlinear models such as neural networks. 
+Linear models make very strong assumptions about the function to be modelled, 
+whereas neural networks are said to make no such assumptions and can in principle 
+approximate any smooth function given enough hidden units. Between these two 
+extremes, there exists a frequently neglected middle ground of nonlinear models 
+which incorporate strong prior information and obey powerful constraints. 
+A monotonic model is one example which might occupy this middle area. Monotonic 
+models would be more flexible than linear models but still highly constrained. Many 
+applications arise in which there is good reason to believe the target function is 
+monotonic in some or all input variables. In screening credit card applicants, for 
+instance, one would expect that the probability of default decreases monotonically 
+Monotonicity Hints 635 
+with the applicant's salary. It would be very useful, therefore, to be able to constrain 
+a nonlinear model to obey monotonicity. 
+The general framework for incorporating prior information into learning is well 
+established and is known as learning from hints[l]. A hint is any piece of information 
+about the target function beyond the available input-output examples. Hints can 
+improve the performance of learning models by reducing capacity without sacrificing 
+approximation ability [2]. Invariances in character recognition [3] and symmetries in 
+financial-market forecasting [4] are some of the hints which have proven beneficial in 
+real-world learning applications. This paper describes the first practical applications 
+of monotonicity hints. The method is tested on two noisy real-world problems: a 
+classification task concerned with credit card applications and a regression problem 
+in medical diagnosis. 
+Section II derives, from Bayesian principles, an appropriate objective function for 
+simultaneously enforcing monotonicity and fitting the data. Section III describes 
+the details and results of the experiments. Section IV analyzes the results and 
+discusses possible future work. 
+2 
+Bayesian Interpretation of Objective Function 
+Let x be a vector drawn from the input distribution and x  be such that 
+vj i,x'j = xj (1) 
+The statement that f is monotonically increasing in input variable xi means that 
+for all such x, x' defined as above 
+i(x') i(x) (3) 
+Decreasing monotonicity is defined similarly. 
+We wish to define a single scalar measure of the degree to which a particular can- 
+didate function y obeys monotonicity in a set of input variables. 
+One such natural measure, the one used in the experiments in Section IV, is defined 
+in the following way: Let x be an input vector drawn from the input distribution. 
+Let i be the index of an input variable randomly chosen from a uniform distri- 
+bution over those variables for which monotonicity holds. Define a perturbation 
+distribution, e.g., U[0,1], and draw 5xi from this distribution. Define x ' such that 
+�j  i, x'j = xj (4) 
+! 
+x i -- xi -- sgn(i)Sxi (5) 
+636 J. Sill and Y. S. Abu-Mostafa 
+where sgn(i) = i or -1 depending on whether f is monotonically increasing or 
+decreasing in variable i. We will call Eh the monotonicity error of y on the input 
+pair (x, x'). 
+Eh -- ( 0 y(x') _> y(x) 
+(y(x)- y(x')) 2 y(x') < y(x) 
+(6) 
+Our measure of y's violation of monotonicity is �[Ea], where the expectation is 
+taken with respect to random variables x, i and 5xi. 
+We believe that the best possible approximation to f given the architecture used 
+is probably approximately monotonic. This belief may be quantified in a prior 
+distribution over the candidate functions implementable by the architecture: 
+Pt(y) cre 
+(7) 
+This distribution represents the a priori probability density, or likelihood, assigned 
+to a candidate function with a given level of monotonicity error. The probability 
+that a function is the best possible approximation to f decreases exponentially 
+with the increase in monotonicity error. A is a positive constant which indicates 
+how strong our bias is towards monotonic functions. 
+In addition to obeying prior information, the model should fit the data well. For 
+classification problems, we take the network output y to represent the probability 
+of class c - I conditioned on the observation of the input vector (the two possible 
+classes are denoted by 0 and 1). We wish to pick the most probable model given the 
+data. Equivalently, we may choose to maximize log(P(rnod�l]data)). Using Bayes' 
+Theorem, 
+log(P(modelldata)) or log(P(data[model) + log(P(model)) 
+(8) 
+M 
+-- E c,fiog(y,) + (1 - cm)log(1 - y,) - A�[Eh] 
+rn=l 
+(9) 
+For continuous-output regression problems, we interpret y as the conditional mean 
+of the observed output t given the observation of x. If we assume constant-variance 
+gaussian noise, then by the same reasoning as in the classification case, the objective 
+function to be maximized is � 
+M 
+- E (Ym - t.)  - 
+rn=l 
+(10) 
+The Bayesian prior leads to a familiar form of objective function, with the first 
+term reflecting the desire to fit the data and a second term penalizing deviation 
+from monotonicity. 
+Monotonicity Hints 637 
+3 Experimental Results 
+Both databases were obtained via FTP from the machine learning database 
+repository maintained by UC-Irvine i 
+The credit card task is to predict whether or not an applicant will default. For 
+each of 690 applicant case histories, the database contains 15 features describing 
+the applicant plus the class label indicating whether or not a default ultimately 
+occurred. The meaning of the features is confidential for proprietary reasons. Only 
+the 6 continuous features were used in the experiments reported here. 24 of the case 
+histories had at least one feature missing. These examples were omitted, leaving 
+666 which were used in the experiments. The two classes occur with almost equal 
+frequency; the split is 55%-45%. 
+Intuition suggests that the classification should be monotonic in the features. Al- 
+though the specific meanings of the continuous features are not known, we assume 
+here that they represent various quantities such as salary, assets, debt, number of 
+years at current job, etc. Common sense dictates that the higher the salary or the 
+lower the debt, the less likely a default is, all else being equal. Monotonicity in all 
+features was therefore asserted. 
+The motivation in the medical diagnosis problem is to determine the extent to 
+which various blood tests are sensitive to disorders related to excessive drinking. 
+Specifically, the task is to predict the number of drinks a particular patient consumes 
+per day given the results of 5 blood tests. 345 patient histories were collected, each 
+consisting of the 5 test results and the daily number of drinks. The number of 
+drinks variable was normalized to have variance 1. This normalization makes the 
+results easier to interpret, since a trivial mean-squared-error performance of 1.0 
+may be obtained by simply predicting for mean number of drinks for each patient, 
+irrespective of the blood tests. 
+The justification for monotonicity in this case is based on the idea that an abnormal 
+result for each test is indicative of excessive drinking, where abnormal means either 
+abnormally high or abnormally low. 
+In all experiments, batch-mode backpropagation with a simple adaptive learning 
+rate scheme was used 2 Several methods were tested. The performance of a lin- 
+ear perceptton was observed for benchmark purposes. For the experiments using 
+nonlinear methods, a single hidden layer neural network with 6 hidden units and 
+direct input-output connections was used on the credit data; 3 hidden units and di- 
+rect input-output connections were used for the liver task. The most basic method 
+tested was simply to train the network on all the training data and optimize the 
+objective function as much as possible. Another technique tried was to use a vali- 
+dation set to avoid overfitting. Training for all of the above models was performed 
+by maximizing only the first term in the objective function, i.e., by maximizing the 
+log-likelihood of the data (minimizing training error). Finally, training the networks 
+with the monotonicity constraints was performed, using an approximation to (9) 
+They may be obtained as follows: ftp ics.uci.edu. cd pub/machine-learning-databases. 
+The credit data is in the subdirectory /credit-screening, while the liver data is in the 
+sub directory /liver-disorders. 
+If the previous iteration resulted in a increase in likelihood, the learning rate was 
+increased by 3%. If the likelihood decreased, the learning rate was cut in half 
+638 J. Sill and Y. S. Abu-Mostafa 
+and (10). 
+A leave-k-out procedure was used in order to get statistically significant compar- 
+isons of the difference in performance. For each method, the data was randomly 
+partitioned 200 different ways (The spli

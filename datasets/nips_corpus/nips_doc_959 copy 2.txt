@@ -1,0 +1,172 @@
+Pairwise Neural Network Classifiers with 
+Probabilistic Outputs 
+David Price 
+A2iA and ESPCI 
+3 Rue de l'Arriv6e, BP 59 
+75749 Paris Cedex 15, France 
+a2ia @ dialup. france net. fr 
+Stefan Knerr 
+ESPCI and CNRS (UPR A0005) 
+10, Rue Vauquelin, 75005 Paris, France 
+knerr @ neurones.espci .fr 
+L6on Personnaz, G6rard Dreyfus 
+ESPCI, Laboratoire d'Electronique 
+10, Rue Vauquelin, 75005 Paris, France 
+dreyfus @neurones.espci.fr 
+Abstract 
+Multi-class classification problems can be efficiently solved by 
+partitioning the original problem into sub-problems involving only two 
+classes: for each pair of classes, a (potentially small) neural network is 
+trained using only the data of these two classes. We show how to 
+combine the outputs of the two-class neural networks in order to obtain 
+posterior probabilities for the class decisions. The resulting probabilistic 
+pairwise classifier is part of a handwriting recognition system which is 
+currently applied to check reading. We present results on real world data 
+bases and show that, from a practical point of view, these results compare 
+favorably to other neural network approaches. 
+1 Introduction 
+Generally, a pattern classifier consists of two main parts: a feature extractor and a 
+classification algorithm. Both parts have the same ultimate goal, namely to transform a 
+given input pattern into a representation that is easily interpretable as a class decision. In 
+the case of feedforward neural networks, the interpretation is particularly easy if each class 
+is represented by one output unit. For many pattern recognition problems, it suffices that 
+the classifier compute the class of the input pattern, in which case it is common practice to 
+associate the pattern to the class corresponding to the maximum output of the classifier. 
+Other problems require graded (soft) decisions, such as probabilities, at the output of the 
+1110 David Price, Stefan Knerr, Ldon Personnaz, Gdrard Dreyfus 
+classifier for further use in higher context levels: in speech or character recognition for 
+instance, the probabilistic outputs of the phoneme (character) recognizer are often used by a 
+Hidden-Markov-Model algorithm or by some other dynamic programming algorithm to 
+compute the most probable word hypothesis. 
+In the context of classification, it has been shown that the minimization of the Mean 
+Square Error (MSE) yields estimates of a posteriori class probabilities [Bourlard & 
+Wellekens, 1990; Duda & Hart, 1973]. The minimization can be performed by a 
+feedforward multilayer perceptrons (MLP's) using the backpropagation algorithm, which is 
+one of the reasons why MLP's are widely used for pattern recognition tasks. However, 
+MLPs have well-known limitations when coping with real-world problems, namely long 
+training times and unknown architecture. 
+In the present paper, we show that the estimation of posterior probabilities for a K-class 
+problem can be performed efficiently using estimates of posterior probabilities for K(K- 1)/2 
+two-class sub-problems. Since the number of sub-problems increases as K 2, this procedure 
+was originally intended for applications involving a relatively small number of classes, 
+such as the 10 classes for the recognition of handwritten digits [Knerr et al., 1992]. In this 
+paper we show that this approach is also viable for applications with K >> 10. 
+The probabilistic pairwise classifier presented in this paper is part of a handwriting 
+recognition system, discussed elsewhere [Simon, 1992], which is currently applied to check 
+reading. The purpose of our character recognizer is to classify pre-segmented characters from 
+cursive handwriting. The probabilistic outputs of the recognizer are used to estimate word 
+probabilities. We present results on real world data involving 27 classes, compare these 
+results to other neural network approaches, and show that our probabilistic pairwise 
+classifier is a powerful tool for computing posterior class probabilities in pattern 
+recognition problems. 
+2 Probabilistic Outputs from Two-class Classifiers 
+Multi-class classification problems can be efficiently solved by divide and conquer 
+strategies which partition the original problem into a set of K(K-1)/2 two-class problems. 
+For each pair of classes 0 i and 0j, a (potentially small) neural network with a single 
+output unit is trained on the data of the two classes [Knerr et al., 1990, and references 
+therein]. In this section, we show how to obtain probabilistic outputs from each of the 
+two-class classifiers in the pairwise neural network classifier (Figure 1). 
+O/r02 O)l/r0 3 O)l/r0 4 
+03 tt03 K 00K_J03 K 03K_ i03 K 
+x 1 x 2 x 3 x N +1 
+K(K-1)/2 
+two-class networks 
+inputs 
+Figure 1: Pairwise neural network classifier. 
+Pairwise Neural Network Classifiers with Probabilistic Outputs 1111 
+It has been shown that the minimization of the MSE cost function (or likewise a cost 
+function based on an entropy measure, [Bridle, 1990]) leads to estimates of posterior 
+probabilities. Of course, the quality of the estimates depends on the number and distribution 
+of examples in the training set and on the minimization method used. 
+In the theoretical case of two classes o 1 and to 2, each Gaussian distributed, with means 
+m l and m2, a priori probabilities Prl and Pr 2, and equal covariance matrices E, the 
+posterior probability of class o 1 given the pattern x is: 
+Pr(class=tol IX=x) - 
+1 + P..r2 exp(- 12--(2xTE4(m-m2 ) + mE-m2 - rn TE 'lm 0) 
+Pr 
+(1) 
+Thus a single neuron with a sigmoidal transfer function can compute the posterior 
+probabilities for the two classes. 
+However, in'the case of real world data bases, classes are not necessarily Gaussian 
+distributed, and therefore the transformation of the K(K-1)/2 outputs of our pairwise neural 
+network classifier to posterior probabilities proceeds in two steps. 
+In the first step, a class-conditional probability density estimation is performed on the 
+linear output of each two-class neural network: for both classes toi and toj of a given two- 
+class neural network, we fit the probability density over vii (the weighted sum of the inputs 
+of the output neuron) to a function. We denote by toij the union of classes to i and toj. The 
+resulting class-conditional densities p(vij I toi) and p(vij It o j) can be transformed to 
+probabilities Pr(toi I toij ^ (Vij=vij)) and Pr(toj I toij ^ (Vii=vii)) via the Bayes rule (note 
+that Pr(toij ^ (Vij=vij) / too = Pr((Vij=vij) I toO): 
+Pr(oi I o)ij^(Vij=vij)) = 
+p(vij I(oi) Pr(toi) 
+ p(vijltOk) Pr(tok) 
+k {i,j} 
+(2) 
+It is a central assumption of our approach that the linear classifier output vij is as 
+informative as the input vector x. Hence, we approximate Prij = Pr(toi I toij ^ (X=x)) by 
+Pr(toi I toij ^ (V=vij)). Note that Pji = 1-Pij. 
+In the second step, the probabilities Prij are combined to obtain posterior probabilities 
+Pr(to i I (X=x)) for all classes to i given a pattern x. Thus, the network can be considered as 
+generating an intermediate data representation in the recognition chain, subject to further 
+processing [Denker & LeCun, 1991]. In other words, the neural network becomes part of 
+the preprocessing and contributes to dimensionality reduction. 
+3 Combining the Probabilities Prij of the Two-class Classifiers 
+to a posteriori Probabilities 
+The set of two-class neural network classifiers discussed in the previous section results in 
+probabilities Prij for all pairs (i, j) with i : j. Here, the task is to express the posterior 
+probabilities Pr(toi I (X=x)) as functions of the Prij. 
+1112 David Price, Stefan Knerr, Ldon Personnaz, Gdrard Dreyfus 
+We assume that each pattern belongs to only one class: 
+K 
+Pr(j[.J 1 mj, (X=x))=1 
+From the definition of mij, it follows for any given i: 
+K K 
+,oj I (X=x))= er( [,J mij I (X=x))= 1 
+'= j=l, j;i 
+Using the closed form expression for the probability of the union of N events Ei: 
+N N N 
+Pr(LJ Ei)=  Pr(Ei) +...+ (-1) k-1  
+i=l i=l i<...<ik 
+(3) 
+(4) 
+Pr(Ei^...^Eik) +...+ (- 1)N'Ipr(E 1 ^...hEN) 
+it follows from (4): 
+K 
+Y Pr(mij I (X=x))- (K-2) Pr(mi I (X=x)) = 1 (5) 
+j=l ,j;i 
+With 
+Prij = Pr(mi I mij^(X--x))- 
+Pr(�}i^o)ij^(X=x)) _ 
+Pr(roij^(X=x)) 
+Pr(i I (X=x)) 
+Pr(roij I (X=x)) 
+(6) 
+one obtains the final expression for the K posterior probabilities given the K(K-1)/2 two- 
+class probabilities Prji: 
+Pr(mi I (X=x))= 
+K 
+j=l,j;i Prij 
+--- (K-2) 
+(7) 
+In [Refregier et al., 1991], a method was derived which allows to compute the K posterior 
+probabilities from only (K-1) two-class probabilities using the following relation between 
+posterior probabilities and two-class probabilities: 
+Prij _ Pr(mi I (X=x)) 
+Prji Pr(mj I (X=x)) 
+(8) 
+However, this approach has several practical drawbacks. For instance, in practice, the 
+quality of the estimation of the posterior probabilities depends critically on the choice of 
+the set of (K-l) two-class probabilities, and finding the optimal subset of (K-l) Prij is 
+costly, since it has to be performed for each pattern at recognition time. 
+Pairwise Neural Network Classifiers with Probabilistic Outputs 1113 
+4 Application to Cursive Handwriting Recognition 
+We applied the concepts described in the previous sections to the classification of pre- 
+segmented characters from cursive words originating from real-world French postal checks. 
+For cursive word recognition it is important to obtain probabilities at the output of the 
+character classifier since it is necessary to establish an ordered list of hypotheses along with 
+a confidence value for further processing at the word recognition level: the probabilities can 
+be passed to an Edit Distance algorithm [Wagner et al., 1974] or to a Hidden-Markov-Model 
+algorithm [Kundu et al., 1989] in order to compute recognition scores for words. For the 
+recognition of the amounts on French postal checks we used an Edit Distance algorithm and 
+made extensive use of the fact that we are dealing with a limited vocabulary (28 words). 
+The

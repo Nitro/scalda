@@ -1,0 +1,165 @@
+Repeat Until Bored: A Pattern Selection Strategy 
+Paul W. Munro 
+Department of Information Science 
+University of Pittsburgh 
+Pittsburgh, PA 15260 
+ABSTRACT 
+An alternative to the typical technique of selecting training examples 
+independently from a fixed distribution is formulated and analyzed, in 
+which the current example is presented repeatedly until the error for that 
+item is reduced to some criterion value, [; then, another item is ran- 
+domly selected. The convergence time can be dramatically increased or 
+decreased by this heuristic, depending on the task, and is very sensitive 
+to the value of [. 
+1 INTRODUCTION 
+In order to implement the back propagation learning procedure (Werbos, 1974; Parker, 
+1985; Rumelhart, Hinton and Williams, 1986), several issues must be addressed. In addi- 
+tion to designing an appropriate network architecture and determining appropriate values 
+for the learning parameters, the batch size and a scheme for selecting training examples 
+must be chosen. The batch size is the number of patterns presented for which the corre- 
+sponding weight changes are computed before they are actually implemented; immediate 
+update is equivalent to a batch size of one. The principal pattern selection schemes are 
+independent selections from a stationary distribution (independent identically distributed, 
+or i.i.d.) and epochal, in which the training set is presented cyclically (here, each cycle 
+through the training set is called an epoch). Under i.i.d. pattern selection, the learning 
+performance is sensitive to the sequence of training examples. This observation suggests 
+that there may exist selection strategies that facilitate learning. Several studies have 
+shown the benefit of strategic pattern selection (e.g., Mozer and Bachtach, 1990; Atlas, 
+Cohn, and Ladner, 1990; Baum mad Lang, 1991). 
+1001 
+1002 Munro 
+Typically, online learning is implemented by independent identically distributed pattem se- 
+lection, which cannot (by definition) take advantage of useful sequencing strategy. It 
+seems likely, or certainly plausible, that the success of learning depends to some extent 
+on the order in which stimuli are presented. An extreme, though negative, example 
+would be to restrict learning to a portion of the available training set; i.e. to reduce the ef- 
+fective training set. Let sampling functions that depend on the state of the learner in a 
+constructive way be termed pedagogical. 
+Determination of a particular input may require information exogenous to the learner; that 
+is, just as training algorithms have been classified as supervised and unsupervised, so can 
+pedagogical pattern selection techniques. For example, selection may depend on the net- 
+work's performance relative to a desired schedule. The intent of this study is to explore 
+an unsupervised selection procedure (even though a supervised learning rule, backpropaga- 
+tion, is used). The initial selection heuristic investigated was to evaluate the errors across 
+the entire pattern set for each iteration and to present the pauern with the highest error; of 
+course, this technique has a large computational overhead, but the question was whether it 
+would reduce the number of learning trials. The results were quite to the contrary; pre- 
+liminary trials on small tasks (two and three bit parity), show that this scheme performs 
+very poorly with all patterns maimaining high error. 
+A new unsupervised selection technique is introduced here. The Repeat-Until-Bored 
+heuristic is easily implemented and simply stated: if the current training example gener- 
+ates a high error (i.e. greater than a fixed criterion value), it is repeated; otherwise, another 
+one is randomly selected. This approach was motivated by casual observations of behav- 
+ior in small children; they seem to repeat seemingly arbitrary tasks several times, and 
+then abruptly stop and move to some seemingly arbitrary alternative (Piaget, 1952). For 
+the following discussion, IID and RUB will denote the two selection procedures to be 
+compared. 
+2 METHODOLOGY 
+RUB can be implemented by adding a condition to the IID statement; in C, this is simply 
+old(IID) : patno = random() % numpats; 
+new(RUB): if (paterror<beta) patno = random() % numpats; 
+wherepatno identifies the selected pattem, numpats is the number of pattems in the train- 
+ing set, and paterror is the sum squared error on a particular pattern. Thus, an example is 
+presented and repeated until it has been learned by the network to some criterion level, the 
+squared error summed across the output units is less than a boredom criterion 13; then, 
+another pauem is randomly selected. 
+The action of RUB in weight space is illustrated in Figure 1, for a two dimensional envi- 
+ronment consisting of just two patterns. Corresponding to each pattern, there is an iso- 
+cline (or equilibrium surface), defined by the locus of weight vectors that yield the desired 
+response to that pattern (here, a or b). Since the delta rule drives the weight parallel to 
+the presented pattern, trajectories in weight space are perpendicular to the pattern's iso- 
+cline. Here, RUB is compared with alternate pauern selection. 
+Repeat Until Bored: A Pattern Selection Strategy 1003 
+w,a=A 
+an lid trajectory 
+w,b=B 
+a RUB trajectory 
+Figure 1. Effect of pattern selection on weight state trajectory. A linear unit can be 
+trained to give arbitrary responses (A and B) to given stimuli (a and b). The isoclines 
+{bold lines) are defined to be the set of weights that satisfy each stimulus-response 
+pair. Thus, the intersection is the weight state that satisfies both constraints. The 
+delta rule drives the weights toward the isocline that corresponds to the presented 
+pattern. The RUB procedure repeats a pattern until the state approaches the isocline. 
+The RUB procedure was tested for a broad range of [5 across several tasks. Two perfor- 
+mance measures were used; in both cases, performance was averaged across several (20- 
+100) trials with different initial random weights. For the parity tasks, performance was 
+measured as the fraction of trials for which the squared error summed over the training set 
+reached a sufficiently low value (usually 0.1) within a specified number of training exam- 
+ples. Since the parity task always converged for sufficiently large [, performance was 
+measured as the number of trials that converged within a prespecified number of iterations 
+required to reduce the total squared error summed across the pattern set to a low value 
+(typically, 0.1). Note that each iteration of weight modification during a set of repeated 
+examples was explicitly counted in the performance measure, so the comparison between 
+IID and RUB is fair. Also, for each task, the learning rate and momentum were fixed 
+(ususally 0.1 and 0.9, respectively). 
+Consideration of RUB (see the above C implementation, for example) indicates that, for 
+very small values of [, the �trst example will be repeated indefinitely, and the task can 
+therefore not be learned. At the other extreme, for [ greater than or equal to the maxi- 
+mum possible squared error (2.0, in this case), performance should match IID. 
+1004 Munro 
+3 RESULT S 
+3.1. PARITY 
+While the expected behavior for RUB on the two and three bit parity tasks (Figure 2) is 
+observed for low and high values of [3, there are some surprises in the intermediate range. 
+Rather than proceeding monotonically from zero to its lid value, the performance curve 
+exhibits an up-down-up behavior; it reaches a maximum in the range 0.2< 13<0.25, then 
+plummets to zero at [k=0.25, remains there for an interval, then partially recovers at its 
+final (liD) level. This dead zone phenomenon is not as pronounced when the momen- 
+tum parameter is set to zero (Figure 3). 
+100 100 
+80 80 
+60 60 
+40 40 
+20 20 
+0 0 
+.0001 .001 .01 .1 1 10 .0001 .001 .01 .1 1 10 
+Figure 2. Performance profiles for the parity task. Each point is the average 
+number of successful simulations out of 100 trials. A log scale is used so that 
+the behavior for very low values of the error criterion is evident. Note the 
+critical falloff at 1=0.25 for both the XOR task (left) and three-bit parity (right). 
+6O 
+40 40 
+20 20 
+0 0 
+.0001 .001 .01 .1 1 10 .0001 ,001 .01 .1 1 10 
+Figure 3. Performance profiles with zero momemtum. For these two tasks, 
+the up-down-up phenomenon is still evident, but there is no dead zone. 
+Left: XOR Right: Three bit parity 
+Repeat Until Bored: A Pattern Selection Strategy 1005 
+3.2 ENCODERS 
+The 4-2-4 encoder shows no significant improvement over the IID for any value of RUB. 
+Here, performance was measured both in terms of success rate and average number of iter- 
+ations to success. Even though all simulations converge for [i>.001 (i.e., there is no 
+dead zone), the effect of [ is reflected in another performance measure: average number of 
+iterations to convergence (Figure 4). However, experiments with the 5-2-5 encoder task 
+show an effect. While backprop converges for all values of [ (except very small values), 
+the performance, as measured by number of pattern presentations, does show a pro- 
+nounced decrement. The 8-3-8 encoder shows a significant, but less dramatic, effect. 
+o 
+o 
+o 
+6000 
+4000 
+2000 
+1st data value: 
+8691 .o 
+525 
+4-2-4 
+838 
+A A � AA AAA r J I ' 
+.001 .01 .1 1 
+lO 
+Figure 4. Encoder performance profiles. See text. 
+3.3 THE MESH 
+The mesh (Figure 5, left) is a 2-D classification task that can be solved by a strictly lay- 
+ered net with five hidden units. Like the encoder and unlike parity, IID is found to con- 
+verge on 100% of trials; however, there is a critical value of [ and a well-defined dead 
+zone (Figure 5, right). Note that the curve depicting average number of iterations to con- 
+vergence decreases monotonically, interrupted at the dead zone but continuing its apparent 
+trend for higher values of 
+1006 Munro 
+o o 
+o 
+o � � � 
+o o � 
+Figure $. The mesh task. Left: the task. 

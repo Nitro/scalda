@@ -1,0 +1,155 @@
+An Information-theoretic Learning 
+Algorithm for Neural Network 
+Classification 
+David J. Miller 
+Department of Electrical Engineering 
+The Pennsylvania State University 
+State College, Pa: 16802 
+Ajit Rao, Kenneth Rose, and Allen Gersho 
+Department of Electrical and Computer Engineering 
+University of California 
+Santa Barbara, Ca. 93106 
+Abstract 
+A new learning algorithm is developed for the design of statistical 
+classifiers minimizing the rate of misclassification. The method, 
+which is based on ideas from information theory and analogies to 
+statistical physics, assigns data to classes in probability. The dis- 
+tributions are chosen to minimize the expected classification error 
+while simultaneously enforcing the classifier's structure and a level 
+of randomness measured by Shannon's entropy. Achievement of 
+the classifier structure is quantified by an associated cost. The con- 
+strained optimization problem is equivalent to the minimization of 
+a Helmholtz free energy, and the resulting optimization method 
+is a basic extension of the deterministic annealing algorithm that 
+explicitly enforces structural constraints on assignments while re- 
+ducing the entropy and expected cost with temperature. In the 
+limit of low temperature, the error rate is minimized directly and a 
+hard classifier with the requisite structure is obtained. This learn- 
+ing algorithm can be used to design a variety of classifier structures. 
+The approach is compared with standard methods for radial basis 
+function design and is demonstrated to substantially outperform 
+other design methods on several benchmark examples, while of- 
+ten retaining design complexity comparable to, or only moderately 
+greater than that of strict descent-based methods. 
+592 D. MILLER, A. RAO, K. ROSE, A. GERSHO 
+I Introduction 
+The problem of designing a statistical classifier to minimize the probability of mis- 
+classification or a more general risk measure has been a topic of continuing interest 
+since the 1950s. Recently, with the increase in power of serial and parallel computing 
+resources, a number of complex neural network classifier structures have been pro- 
+posed, along with associated learning algorithms to design them. While these struc- 
+tures offer great potential for classification, this potl ial cannot be fully realized 
+without effective learning procedures well-matched to the minimunn classification- 
+error objective. Methods such as back propagation which approximate class targets 
+in a sql;xred error sense do not directly minimize the probability of error. Rather, 
+it has been shown that these approaches design networks to approximate the class 
+a posteriori probabilities. The probability estimates can then be used to form a de- 
+cision rule. While large networks can in principle accurately approximate the Bayes 
+discriminant, in practice the network size must be constrained to avoid overfitting 
+the (finite) training set. Thus, discriminative learning techniques, e.g. (Juang and 
+Katagiri, 1992), which seek to directly minimize classification error may achieve 
+better results. However, these methods may still be susceptible to finding shallow 
+local minima far from the global minimum. 
+As an alternative to strict descent-based procedures, we propose a new determinis- 
+tic learning algorithm for statistical classifier design with a demonstrated potential 
+for avoiding local optima of the cost. Several deterministic, annealing-based tech- 
+niques have been proposed for avoiding nonglobal optima in computer vision and 
+image processing (Yuille, 1990), (Geiger and Girosi,1991), in combinatorial opti- 
+mization, and elsewhere. Our approach is derived based on ideas from information 
+theory and statistical physics, and builds on the probabilistic framework of the de- 
+terministic annealing (DA) approach to clustering and related problems (Rose et 
+al., 1990,1992,1993). In the DA approach for data clustering, the probability dis- 
+tributions are chosen to minimize the expected clustering cost, given a constraint 
+on the level of randomness, as measured by Shannon's entropy  
+In this work, the DA approach is extended in a novel way, most significantly to 
+incorporate structural constraints on data assignments, but also to minimize the 
+probability of error as the cost. While the general approach we suggest is likely 
+applicable to problems of structured vector quantization and regression as well, we 
+focus on the classification problem here. Most design methods have been developed 
+for specific classifier structures. In this work, we will develop a general approach but 
+only demonstrate results for RBF classifiers. The design of neaxest prototype and 
+MLP classifiers is considered in (Miller et al., 1995a,b). Our method provides sub- 
+stantial performance gains over conventional designs for all of these structures, while 
+retaining design complexity in many cases comparable to the strict descent meth- 
+ods. Our approach often designs small networks to achieve training set performance 
+that can only be obtained by a much larger network designed in a conventional way. 
+The design of smaller networks may translate to superior performance outside the 
+training set. 
+Note that in (Rose et al., 1990,1992,1993), the DA method was formally derived using 
+the mximum entropy principle. Here we emphasize the alternative, but mthemtically 
+equivalent description that the chosen distributions minimize the expected cost given con- 
+strained entropy. This formulation my hve more intuitive ppeal for the optimization 
+problem t hnd. 
+An Information-theoretic Learning Algorithm for Neural Network Classification 593 
+2 Classifier Design Formulation 
+2.1 Problem Statement 
+Let T = {(x, c)) be a training set of N labelled vectors, where x  7g'* is a feature 
+vector and c  2; is its class label from an index set 2;. A classifier is a mapping 
+C: 7g  2;, which assigns a cls label   to each vector in . Typically, the 
+clsifier is represented by a set of model parameters A. The clsifier specifies a 
+partitioning of the feature space into regions Ri  (x  : C(x) = j}, where 
+ Ri   and  Ri  . It also induces a partitioning of the training set into 
+sets  C T, where   ((x,c}: x  Ri,(x,c)  T}. A training pair (x,c)  T 
+is misclassified if C(x)  c. The performance meure of primary interest is the 
+empirical error fraction P of the clsifier, i.e. the fraction of the training set (for 
+generalization purposes, the fraction of the test set) which is misclsified: 
+1 1 
+= (1) 
+where 5(c, j) = 1  c  j and 0 otherwise. In this work, we will sume that the 
+classifier produces an output Fj(x ) sociated with each cls, d uses a winner- 
+takeall clsification rule: 
+{x e n: 5(x) &(x) e z}. 
+This rule is consistent with MLP and RBF-bed clsification. 
+2.2 Randomized Classifier Partition 
+As in the original DA approach for clustering (Rose et al., 1990,1992), we cast 
+the optimization problem in a framework in which data are assigned to classes 
+in probability. Accordingly, we define the probabilities of association between a 
+feature x and the class regions, i.e. {P[x  Rj]}. As our design method, which 
+optimizes over these probabilities, must ultimately form a classifier that makes 
+hard decisions based on a specified network model, the distributions must be 
+chosen to be consistent with the decision rule of the model. In other words, we 
+need to introduce randomness into the classifier's partition. Clearly, there are many 
+ways one could define probability distributions which are consistent with the hard 
+partition at some limit. We use an information-theoretic approach. We measure the 
+randomness or uncertainty by Shannon's entropy, and determine the distribution 
+for a given level of entropy. At the limit of zero entropy we should recover a hard 
+partition. For now, suppose that the values of the model parameters A have been 
+fixed. We can then write an objective function whose maximization determines the 
+hard partition for a given A: 
+1 
+Note specifically that maximizing (3) over all possible partitions captures the deci- 
+sion rule of (2). The probabilistic generalization of (3) is 
+1 
+F= E EP[xRjlFj(x)' (4) 
+(x,c)etr j 
+where the (randomized) partition is now represented by association probabilities, 
+and the corresponding entropy is 
+1 
+v[,, e log V[,, e 
+(x,c)etr j 
+594 D. MILLER, A. RAO, K. ROSE, A. GERSHO 
+We determine the distribution at a given level of randomess as the one which 
+maximizes F while maintaining H at a prescribed level r. 
+max F subject to H =/-/. (6) 
+The result is the best probabilistic partition, in the sense of F, at the specified level 
+of randomness. For/-/= 0 we get back the hard partition maximizing (3). At any 
+/-/, the solution of (6) is the Gibbs distribution 
+?Ix 
+eTFi(x) 
+y e'er'k(x) , 
+(7) 
+where ? is the Lagrange multiplier. For ? - 0, the associations become increas- 
+ingly uniform, while for ? - o, they revert to hard classifications, equivalent to 
+application of the rule in (2). Note that the probabilities depend on A through the 
+network outputs. Here we have emphasized this dependence through our choice of 
+concise notation. 
+2.3 Information-Theoretic Classifier Design 
+Until now we have formulated a controlled way of introducing randomness into 
+the classifier's partition while enforcing its structural constraint. However, the 
+derivation assumed that the model parameters were given, and thus produced only 
+the form of the distribution Pji(A), without actually prescribing how to choose the 
+values of its parameter set. Moreover the derivation did not consider the ultimate 
+goal of minimizing the probability of error. Here we remedy both shortcomings. 
+The method we suggest gradually enforces formation of a hard classifier minimizing 
+the probability of error. We start with a highly random classifier and a high expected 
+misclassification cost. We then gradually redu

@@ -1,0 +1,169 @@
+Neural Network Based Model Predictive 
+Control 
+Stephen Pich 
+Pavilion Technologies 
+Austin, TX 78758 
+spiche$pav. com 
+Jim Keeler 
+Pavilion Technologies 
+Austin, TX 78758 
+jkeeler$pav. com 
+Greg Martin 
+Pavilion Technologies 
+Austin, TX 78758 
+gmartinpav. com 
+Gene Boe 
+Pavilion Technologies 
+Austin, TX 78758 
+gboe$pav.com 
+Doug Johnson 
+Pavilion Technologies 
+Austin, TX 78758 
+djohnson$pav.com 
+Mark Gerules 
+Pavilion Technologies 
+Austin, TX 78758 
+mgerules$pav. com 
+Abstract 
+Model Predictive Control (MPC), a control algorithm which uses 
+an optimizer to solve for the optimal control moves over a future 
+time horizon based upon a model of the process, has become a stan- 
+dard control technique in the process industries over the past two 
+decades. In most industrial applications, a linear dynamic model 
+developed using empirical data is used even though the process it- 
+self is often nonlinear. Linear models have been used because of the 
+difficulty in developing a generic nonlinear model from empirical 
+data and the computational expense often involved in using non- 
+linear models. In this paper, we present a generic neural network 
+based technique for developing nonlinear dynamic models from em- 
+pirical data and show that these models can be efficiently used in 
+a model predictive control framework. This nonlinear MPC based 
+approach has been successfully implemented in a number of indus- 
+trial applications in the refining, petrochemical, paper and food 
+industries. Performance of the controller on a nonlinear industrial 
+process, a polyethylene reactor, is presented. 
+I Introduction 
+Model predictive control has become the standard technique for supervisory control 
+in the process industries with over 2,000 applications in the refining, petrochemicals, 
+chemicals, pulp and paper, and food processing industries [1]. Model Predictive 
+Control was developed in the late 70's and came into wide-spread use, particularly 
+in the refining industry, in the 80's. The economic benefit of this approach to control 
+has been documented [1,2]. 
+1030 S. Pich, J. Keeler, G. Martin, G. Boe, D. Johnson andM. Gentles 
+Several factors have contributed to the wide-spread use of MPC in the process 
+industries: 
+o 
+Multivariate Control: 
+input multiple-output 
+mented using MPC. 
+Industrial processes are typically coupled multiple- 
+(MIMO) systems. MIMO control can be imple- 
+Constraints: Constraints on the inputs and outputs of a process due to 
+safety considerations are common in the process industries. These con- 
+straints can be integrated into the control calculation using MPC. 
+Sampling Period: Unlike systems in other industries such as automotive or 
+aerospace, the open-loop settling times for many processes is on the order 
+of hours rather than milliseconds. This slow settling time translates to 
+sampling periods on the order of minutes. Because the sampling period is 
+sufficiently long, the complex optimization calculations that are required to 
+implement MPC can be solved at each sampling period. 
+Commercial Tools: Commercial tools that facilitate model development and 
+controller implementation have allowed proliferation of MPC in the process 
+industries. 
+Until recently, industrial applications of MPC have relied upon linear dynamic 
+models even though most processes are nonlinear. MPC based upon linear models 
+is acceptable when the process operates at a single setpoint and the primary use of 
+the controller is the rejection of disturbances. However, many chemical processes, 
+including polymer reactors, do not operate at a single setpoint. These processes 
+are often required to operate at different setpoints depending upon the grade of the 
+product that is to be produced. Because these processes operate over the nonlinear 
+range of the system, linear MPC often results in poor performance. To properly 
+control these processes, a nonlinear model is needed in the MPC algorithm. 
+This need for nonlinear models in MPC is well recognized. A number of researchers 
+and commercial companies have developed both simulation and industrial appli- 
+cations using a variety of different technologies including both first principles and 
+empirical approaches such as neural networks [3,4]. Although a variety of different 
+models have been developed, they have not been practical for wide scale industrial 
+application. On one hand, nonlinear models built using first principle techniques 
+are expensive to develop and are specific to a process. Conversely, many empirically 
+based nonlinear models are not appropriate for wide scale use because they require 
+costly plant tests in multiple operating regions or because they are too computa- 
+tionally expensive to use in a real-time environment. 
+This paper presents a nonlinear model that has been developed for wide scale indus- 
+trial use. It is an empirical model based upon a neural network which is developed 
+using plant test data from a single operating region and historical data from all 
+regions. This is in contrast to the usual approach of using plant test data from 
+multiple regions. This model has been used on over 50 industrial applications and 
+was recognized in a recent survey paper on nonlinear MPC as the most widely used 
+nonlinear MPC controller in the process industries[i]. 
+Neural Network Based Model Predictive Control 1031 
+After providing a brief overview of model predictive control in the next section, 
+we present details on the formulation of the nonlinear model. After describing the 
+model, an industrial application is presented that validates the usefulness of the 
+nonlinear model in an MPC algorithm. 
+2 Model Predictive Control 
+Model predictive control is based upon solving an optimization problem for the 
+control actions at each sampling interval. Using MPC, an optimizer computes 
+future control actions that minimize the difference between a model of the process 
+and desired performance over a time horizon (typically the time horizon is greater 
+than the open-loop settling time of the process). For example, given a linear model 
+of process, 
+Yt = -alyt- - a2yt-2 -t- blUt- + b2ut-2 
+(1) 
+where u(t) represents the input to the process, the optimizer may be used to mini- 
+mize an objective function at time t, 
+T 
+j = E((yt.]_ i _ t_]_i)2 _ (-t-]-i - -t-l-i-i) 2) 
+i=l 
+(2) 
+where )t is the desired setpoint for the output and T is the length of the time 
+horizon. In addition to minimizing an objective function, the optimizer is used to 
+observe a set of constraints. For example, it is common to place upper and lower 
+bounds on the inputs as well as bounds on the rate of change of the input, 
+Uupper  ut-]-i  Flower V I < i < T (3) 
+AUupper _ ttt--i - ttt--i-1 _ AUlower � I < i < T (4) 
+where Uupper and Flower are the upper and lower input bounds while AUupper and 
+AUlower are the upper and lower rate of change bounds. After the trajectory of 
+future control actions is computed, only the first value in the trajectory is sent as a 
+setpoint to the actuators. The optimization calculation is re-run at each sampling 
+interval using a model which has been updated using feedback. 
+The form of the model, the objective function, the constraints and the type of 
+optimizer have been active areas of research over the past two decades. A number 
+of excellent survey papers on MPC cover these topics [1,2,4]. As discussed above, 
+we have selected a MIMO nonlinear model which is presented in the next section. 
+Although the objective function given above contains two terms (desired output 
+and input move suppression), the objective function used in our implementation 
+contains thirteen separate terms. (The details of the objective function are beyond 
+the scope of this paper.) Our implementation uses the constraints given above in 
+(3) and (4). Because we use nonlinear models, a nonlinear programming technique 
+must be used to solve the optimization problem. We use LS-GRG which is a reduced 
+gradient solver [5]. 
+1032 S. Pichd, J. Keeler, G. Martin, G. Boe, D. Johnson and M. Gerules 
+3 A Generic and Parsimonious Nonlinear Model 
+For a nonlinear model to achieve wide-spread industrial use, the model must be 
+parsimonious so that it can be efficiently used in an optimization problem. Fur- 
+thermore, it must be developed from limited process data. As discussed below, the 
+nonlinear model we use is composed of a combination of a nonlinear steady state 
+model and a linear dynamic model which can be derived from available data. The 
+method of combining the models results in a parsimonious nonlinear model. 
+3.1 Process data and component models 
+The quantity and quality of available data ultimately determines the structure of 
+an empirical model. In developing our models, the available data dictated the type 
+of model that could be created. In the process industries, two types of data are 
+available: 
+1. Historical data: The values of the inputs and outputs of most processes 
+are saved at regular intervals to a data base. Furthermore, most process- 
+ing companies retain historical data associated with their plant for several 
+years. 
+2. Plant tests: Open-loop testing is a well accepted practice for determining 
+the process dynamics for implementation of MPC. However, open-loop test- 
+ing in multiple operating regions is not well accepted and is impractical in 
+most cases even if it were accepted. 
+Most practitioners of MPC models have used plant test data and ignored historical 
+data. Practitioners have ignored the historical data in the past because it was 
+difficult to extract and preprocess the data, and build models. Historical data 
+was also viewed as not useful because it was collected in closed-loop and therefore 
+process dynamics could not be extracted in many cases. Using only the plant test 
+data, the practitioner is limited to linear dynamic models. 
+We chose to use the historical data because it can be used to create nonlinear 
+steady state models of processes that opera

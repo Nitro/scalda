@@ -1,0 +1,160 @@
+141 
+GEMINI: GRADIENT ESTIMATION 
+THROUGH MATRIX INVERSION 
+AFTER NOISE INJECTION 
+Yann Le Cun  Conrad C. Galland and Geoffrey E. Hinton 
+Department of Computer Science 
+University of Toronto 
+10 King's College Rd 
+Toronto, Ontario M5S 1A4 
+Canada 
+ABSTRACT 
+Learning procedures that measure how random perturbations of unit ac- 
+tivities correlate with changes in reinforcement are inefficient but simple 
+to implement in hardware. Procedures like back-propagation (Rumelhart, 
+Hinton and Williams, 1986) which compute how changes in activities af- 
+fect the output error are much more efficient, but require more complex 
+hardware. GEMINI is a hybrid procedure for multilayer networks, which 
+shares many of the implementation advantages of correlational reinforce- 
+ment procedures but is more efficient. GEMINI injects noise only at the 
+first hidden layer and measures the resultant effect on the output error. 
+A linear network associated with each hidden layer iteratively inverts the 
+matrix which relates the noise to the error change, thereby obtaining 
+the error-derivatives. No back-propagation is involved, thus allowing un- 
+known non-linearities in the system. Two simulations demonstrate the 
+effectiveness of GEMINI. 
+OVERVIEW 
+Reinforcement learning procedures typically measure the effects of changes in lo- 
+cal variables on a global reinforcement signal in order to determine sensible weight 
+changes. This measurement does not require the connections to be used backwards 
+(as in back-propagation), but it is inefficient when more than a few units are in- 
+volved. Either the units must be perturbed one at a time, or, if they are perturbed 
+simultaneously, the noise from all the other units must be averaged away over a 
+large number of samples in order to achieve a reasonable signal to noise ratio. So 
+reinforcement learning is much less efficient than back-propagation (BP) but much 
+easier to implement in hardware. 
+GEMINI is a hybrid procedure which retains many of the implementation advan- 
+tages of reinforcement learning but eliminates some of the inefficiency. GEMINI 
+uses the squared difference between the desired and actual output vectors as a 
+reinforcement signal. It injects random noise at the first hidden layer only, caus- 
+ing correlated noise at later layers. If the noise is sufficiently small, the resultant 
+1First Author's present address: Room 4G-332, AT&T Bell Laboratories, Crawfords Corner 
+Rd, Holmdel, NJ 07733 
+142 Le Cun, Galland and Hinton 
+change in the reinforcement signal is a linear function of the noise vector at any 
+given layer. A matrix inversion procedure implemented separately at each hidden 
+layer then determines how small changes in the activities of units in the layer affect 
+the reinforcement signal This matrix inversion gives a much more accurate esti- 
+mate of the error-derivatives than simply averaging away the effects of noise and, 
+unlike the averaging approach, it can be used when the noise is correlated. 
+The matrix inversion at each layer can be performed iterative]y by a local linear 
+network that learns to predict the change in reinforcement from the noise vector at 
+that layer. For each input vector, one ordinary forward pass is performed, followed 
+by a number of forward passes each with a small amount of noise added to the total 
+inputs of the first hidden layer. After each forward pass, one iteration of an LMS 
+training procedure is run at each hidden layer in order to improve the estimate of 
+the error-derivatives in that layer. The number of iterations required is comparable 
+to the width of the largest hidden layer. In order to avoid singularities in the 
+matrix inversion procedure, it is necessary for each layer to have fewer units than 
+th preceding one. 
+In this hybrid approach, the computations that relate the perturbation vectors 
+to the reinforcement signal are all local to a layer. There is no detailed back- 
+propagation of information, so that GEMINI is more amenable to optical or elec- 
+tronic implementations than BP. The additional time needed to run the gradient- 
+estimating inner loop, may be offset by the fact that only forward propagation is 
+required, so this can be made very efficient (e.g. by using analog or optical hard- 
+ware). 
+TECHNIQUES FOR GRADIENT ESTIMATION 
+The most obvioua way to measure the derivative of the cost function w.r.t the 
+weights is to perturb the weights one at a time, for each input vector, and to 
+measure the effect that each weight perturbation has on the cost function, C. The 
+advantage of this technique is that it makes very few assumptions about the way 
+the network computes its output. 
+It is possible to use far fewer perturbations (Barto and Anandan, 1985) if we are 
+using quasi-linear units in which the output, yl, of unit i is a smooth non-linear 
+function, f, of'its total input, xi, and the total input is a linear function of the 
+incoming weights, wij and the activities, yj, of units in the layer below: 
+= 
+xi -  wijyj 
+Instead of perturbing the weights, we perturb the total input, xi, received by each 
+unit, in order to measure OC/Oxi Once this derivative is known it is easy to 
+derive c9C/Owij for each of the unit's incoming weights by performing a simple local 
+computation: 
+Oc Oc 
+Ow-- = Oxi y 
+If the units are perturbed one at a time, we can approximate OC/Oxi by 
+143 
+C C 
+= + 
+where 5C is the variation of the cost function induced by a perturbation 5a:i of the 
+total input to unit i. This method is more efficient than perturbing the weights 
+directly, but it still requires as many forward passes as there are hidden units. 
+Reducing the number of perturbations required 
+If the network has a layered, feed-forward, architecture the state of any single layer 
+completely deterrjaines the output. This makes it possible to reduce the number of 
+required perturbations and forward passes still further. Perturbing units in the first 
+hidden layer will induce perturbations at the following layers, and we can use these 
+induced perturbations to compute the gradients for these layers. However, since 
+many of the units in a typical hidden layer will be perturbed simultaneously, and 
+since these induced perturbations will generally be correlated, it is necessary to do 
+some local computation within each layer in order to solve the credit assignment 
+problem of deciding how much of the change in the final cost function to attribute 
+to each of the simultaneous perturbations within the layer. This local computation 
+is relatively simple. Let x(k) be the vector of total inputs to units in layer k. Let 
+5x(k) be the perturbation vector of layer k at time t. It does not matter for the 
+following analysis whether the perturbations are directly caused (in the first hidden 
+layer) or are induced. For a given state of the network, we have: 
+OCT 
+6c, = + O(ll6xd)ll 
+To compute the gradient w.r.t. layer k we must solve the following system for g 
+6C, = gTSxt(k) t = 1...P 
+where P is the number of perturbations. Unless P is equal to the number of units 
+in layer k, and the perturbation vectors are linearly independent, this system will 
+be over- or under-determined. In some network architectures it is impossible to 
+induce nl linearly independent perturbation vectors in a hidden layer, l containing 
+nl units. This happens when one of the preceding hidden layers, k, contains fewer 
+units because the perturbation vectors induced by a layer with n units on the 
+following layer generate at most n independent directions. So to avoid having to 
+solve an under-determined system, we require convergent networks in which each 
+hidden layer has no mbre units than the preceding layer. 
+Using a Special Unit to Allocate Credit within a Layer 
+Instead of directly solving for the OC/Oxi within each layer, we can solve the same 
+system iteratively by minimizing: 
+144 Le Curt, Galland and Hinton 
+linear 
+unit 
+linear 
+unit 
+� � 
+input layer 
+Figure 1: A GEMINI network. 
+This can be done by a special unit whose inputs are the perturbations of layer 
+k and whose desired output is the resulting perturbation of the cost function 6C 
+(figure 1). When the LMS algorithm is used, the weight vector g of this special 
+unit converges to the gradient of C with respect to the vector of total inputs x(k). 
+If the components of the perturbation vector are uncorrelated, the convergence will 
+be fast and the number of iterations required should be of the order of the the 
+number of units in the layer. Each time a new input vector is presented to the main 
+network, the inner-loop minimization process that estimates the OC/Oxi must 
+be re-initialized by setting the weights of the special units to zero or by reloading 
+approximately correct weights from a table that associates estimates of the OC/Ox 
+with each input vector. 
+Summary of the Gemini Algorithm 
+1. Present an input pattern and compute the network state by forward propagation. 
+2. Present a desired output and evaluate the cost function. 
+3. Re-initialize the weights of the special units. 
+4. Repeat until convergence: 
+(a) Perturb the first hidden layer and propagate forward. 
+(b) Measure the induced perturbations in other layers and the output cost function. 
+(c) At each layer apply one step of the LMS rule on the special units to minimize 
+the error between the predicted cost variation and the actual variation. 
+5. Use the weights of the special units (the estimates of OC/Oxi ) to compute the 
+weight changes of the main network. 
+6. Update the weights of the main network. 
+145 
+A TEST EXAMPLE: CHARACTER RECOGNITION 
+The GEMINI procedure was tested on a simple classification task using a network 
+with two hidden layers. The input layer represented a 16 by 16 binary image of 
+a handwritten digit. The first hidden layer was an 8 by 8 array of units that 
+were locally connected to the input layer in the following way: Each hidden unit 
+connected to a 3 by 3 receptive field of input uni

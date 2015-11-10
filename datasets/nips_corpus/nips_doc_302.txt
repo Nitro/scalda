@@ -1,0 +1,165 @@
+Simulation of the Neocognitron on a CCD 
+Parallel Processing Architecture 
+Michael L. Chuang and Alice M. Chiang 
+M.I.T Lincoln Laboratory 
+Lexington, MA 02173 
+e-mail: chuang@micro.ll. mil. edu 
+Abstract 
+The neocognitron is a neural network for pattern recognition and feature 
+extraction. An analog CCD parallel processing architecture developed 
+at Lincoln Laboratory is particularly well suited to the computational re- 
+quirements of shared-weight networks such as the neocognitron, and imple- 
+mentation of the neocognitron using the CCD architecture was simulated. 
+A modification to the neocognitron training procedure, which improves 
+network performance under the limited arithmetic precision that would be 
+imposed by the CCD architecture, is presented. 
+1 INTRODUCTION 
+Multilayer neural networks characterized by local interlayer connectivity and groups 
+of nodes that are constrained to have the same weights on their input lines are often 
+refered to as shared-weight networks. A group of nodes with identical weights where 
+each node is connected to a different portion of the layer immediately beneath can 
+be thought of as a collection of spatially replicated receptive fields. Among the 
+desirable attributes of shared-weight networks is the fact that substantially less 
+storage is required for weights than would be required by a more conventional net- 
+work with a comparable number of nodes. Furthermore, reducing the number of 
+free parameters through use of shared weights and local receptive fields, as op- 
+posed to simply reducing the number of hidden nodes, may be an effective way of 
+obtaining good generalization when only a small training set is available (Martin 
+and Pittman, 1989). However, the most immediately obvious attribute of a shared- 
+weight architecture is that the replicated receptive fields allow a learned feature 
+to be detected anywhere within the input. This feature is particularly useful in 
+1039 
+1040 Chuang and Chiang 
+tasks where position invariance is required (Le Cun, 1989). Neural networks using 
+shared weights have been applied successfully to areas ranging from handwritten 
+digit recognition (Le Cun, Boser, et. al., 1989) to phoneme extraction in speech 
+preprocessing (Waibel, et. al., 1989). 
+A CCD architecture that is well suited to implementing shared-weight networks has 
+been developed at Lincoln Laboratory (Chiang and LaFranchise, 1991). This archi- 
+tecture performs high-speed inner product computations and is able to accommo- 
+date the often complicated data access patterns of a shared-weight network without 
+imposing the burden of this complexity on the host computer; input and output 
+to devices built using this architecture are simple. The neocognitron (Fukushima, 
+1988) was selected as a candidate for implementation by the CCD architecture. 
+In particular, we were interested the effect that limited precision arithmetic might 
+have on network performance. 
+2 THE NEOCOGNITRON 
+The neocognitron is a multilayer feed-forward neural network for pattern recog- 
+nition. The nodes or cells in each layer or level of the neocognitron are further 
+subdivided into cell planes, where all the nodes in a given cell plane are feature 
+detectors tuned to the same feature but connected to a different portion of the level 
+immediately beneath (the first level has cell planes connected directly to the input). 
+Each cell plane can be viewed as an array of identical, overlapping receptive fields. 
+Three types of processing elements or nodes are used in the neocognitron. S-cells 
+perform feature extraction, c-cells compensate for local shifts of features, and v-cells 
+are intended to prevent random excitation of s-cells. A given cell plane contains 
+only one type of node. A cell plane containing only s-cells, for example, is thus 
+called an s-plane. Each level of the network contains several s-planes, an identical 
+number of c-planes, and exactly one v-plane. The function of an s-cell is to generate 
+a nonlinear function of the inner product of a stored weight template a),(k, n, i, j) 
+and the contents of its receptive field. (In this notation A denotes the level of 
+the s-plane with which the template is associated, and the k and  indicate the 
+particular s- and c-planes between which the template serves as a connection. The 
+i, j are spatial coordinates within the template.) An s-plane is therefore a feature 
+map of its input. Each c-plane is paired with a single s-plane of the same level. A c- 
+cell has a small receptive field on its correpsonding s-plane and performs a weighted 
+average of the values of the s-cells to which it is connected. This implements a 
+form of local feature-shift invariance, and a c-plane is a feature map of its input 
+which is unchanged by small translations of features in the input. A schematic of a 
+three-level neocognitron is shown in Figure 1. 
+The cell planes in the first level of the network typically correspond to maps of simple 
+features such as oriented line segments. The second level of the neocognitron is given 
+the output of the first-level c-planes as input, and tends to form more complicated 
+features from the first-level cell planes. Successively higher levels correspond to even 
+more complex features; at the top level, each c-cell (of which there is exactly one in 
+each top-level c-plane) corresponds to one input pattern in a trained neocognitron. 
+The basic idea is to break up each input pattern into simple components such as 
+line segments and corners, then to put the pieces back together, allowing a certain 
+Simulation of the Neocognitron on a CCD Parallel Processing Architecture 1041 
+An image feature extractor (IFE) device suitable for performing the inner products 
+required by a neural network with local receptive fields and shared weights has 
+been fabricated (Chiang and LaFranchise, 1991). The IFE consists of a 775-stage 
+CCD tapped delay line for holding and shifting input pixels or node values, 49 
+eight-bit, four-quadrant multiplying digital-to-analog converters (MDACs), and on- 
+chip storage for 980 eight-bit digital weights. Figure 2 is a photomicrograph of 
+the chip, which has an area of 29 mm 2 and performs over one billion arithmetic 
+operations/second when clocked at 10 MHz. The device dissipates less than 1 W. 
+The 49 MDACs of the IFE are arranged in a 7 x 7 array; each MDAC nondestruc- 
+tively senses the value held in an appropriate point along the 775-stage tapped delay 
+line, which holds six 128-pixel lines, plus seven pixels of the following line, of the 
+input image. Image pixels are continuously loaded into the device in row-by-row 
+fashion. Each MDAC has a local memory of twenty eight-bit digital weights for 
+holding inner product kernel or template values. Conceptually, the device scans a 
+7 x 7 window over an input array, shifting one position at each step, and computes 
+the inner product of each of the twenty templates with the portion of the image 
+beneath the window. The multiplications of each inner product are performed in 
+parallel and the partial sums are connected to a common output line, allowing the 
+complete inner product to be computed in one clock. In actuality, the device passes 
+the input image under the 7 x 7 window, performing twenty inner products with 
+each shift of the image. A schematic of data flow through the IFE device is shown 
+in Figure 3. 
+Figure 2: Photomicrograph of the CCD Image Feature Extractor 
+4 A MODIFIED TRAINING ALGORITHM 
+Most computer simulations of the neocognitron have used floating point arithmetic 
+as well as weights which are, for all practical purposes, real numbers. However, 
+a neocognitron implemented using an IFE device would use fairly low precision 
+1042 Chuang and Chiang 
+amount of relative position shift between the pieces at each stage of reassembly. 
+This allows the network to identify deformed or shifted inputs. The extent to which 
+a particular network is able to tolerate deformation of input patterns depends on 
+the amount of overlap between adjacent receptive fields as well as the size and 
+weighting of c-cell receptive fields. 
+The output of an s-cell is given by 
+and c-cells compute 
+0. y�O 
+�(Ltn, s) _Z- y>O 
+[l+y' 
+I 
+y= Y. Y. ddi..,').sd.,,* 
+Figure 1: Schematic of a Three-Level Neocognitron 
+The majority of the computation in the neocognitron consists of the inner products. 
+A good implementation of shared-weight networks such as the neocognitron must be 
+capable of performing high speed inner product computations as well as supporting 
+the data access patterns of the algorithm efficiently. A device which meets both 
+these requirements is described in the following section. 
+3 THE IMAGE FEATURE EXTRACTOR 
+The neocognitron is most easily visualized as a three-dimensional structure built of 
+the s-, c- and v-cells, but the s- and c-planes can be generated by raster scanning 
+weight templates whose values are the aA(k, , i, j) or the dA(i, j), respectively, over 
+the appropriate input. This operation can be performed efficiently by the CCD 
+architecture alluded to in the Introduction. In this architecture, analog node values 
+are represented using charge packets while fully programmable weight values are 
+stored digitally on-chip. The multiplications of the generic weighted sum computa- 
+tion are performed in parallel, with the summation performed in the charge domain, 
+yielding a complete inner product sum on each clock. 
+Simulation of the Neocognitron on a CCD Parallel Processing Architecture 1043 
+II!-!ll]l 
+'lllllll 
+.'1 I'll I I I 
+i411111  I'1 
+Input 
+� ] il]l.I 111 
+I!i111111 
+IIllllJl 
+ill!milli 
+I I ! I_1 I I1 I 
+1 i I I I.i ! I I! 
+� 128 PIXELS 
+� 
+� Input Image 
+� 
+L 
+128 stages 
+4 
+Figure 3: Dataflow in the Image Feature Extractor 
+10o 
+70 � 
+6 
+-o- % cormcdy cl  
+10 11 12 
+floatins 
+precision Coi) point 
+J 
+? 8 O 10 11 
+Figure 4: (a) Effect of Arithmetic Precision on Classification (b) Comparision of 
+Original and Modified Training P

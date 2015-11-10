@@ -1,0 +1,185 @@
+Data Analysis using G/SPLINES 
+David Rogers 
+Research Institute for Advanced Computer Science 
+MS T041-5, NASA/Ames Research Center 
+Moffett Field, CA 94035 
+INTERNET: drogersriacs.edu 
+Abstract 
+G/SPLINES is an algorithm for building functional models of data. It 
+uses genetic search to discover combinations of basis functions which 
+are then used to build a least-squares regression model. Because it 
+produces a population of models which evolve over time rather than a 
+single model, it allows analysis not possible with other regression-based 
+approaches. 
+1 INTRODUCTION 
+G/SPLINES is a hybrid of Friedman's Multivariable Adaptive Regression Splines 
+(MARS) algorithm (Friedman, 1990) with Holland's Genetic Algorithm (Holland, 1975). 
+G/SPLINES has advantages over MARS in that it requires fewer least-squares 
+computations, is easily extendable to non-spline basis functions, may discover models 
+inaccessible to local-variable selection algorithms, and allows significantly larger 
+problems to be considered. These issues are discussed in (Rogers, 1991). 
+This paper begins with a discussion of linear regression models, followed by a description 
+of the G/SPLINES algorithm, and finishes with a series of experiments illustrating its 
+performance, robustness, and analysis capabilities. 
+* Currently at Polygen/Molecular Simulations, Inc., 796 N. Pastoria Ave., Sunnyvale, CA 94086, 
+INTERNET: drogers@msi.com. 
+1088 
+Data Analysis Using G/Splines 1089 
+2 LINEAR MODELS 
+A common assumption used in data modeling is that the data samples are derived from an 
+underlying function: 
+Yi = f (X i) + error 
+ = f(xil, ...,Xin ) + error 
+The goal of analysis is to develop a model F(X) which minimizes the least-squares error: 
+N 
+1 2 
+LSE(F)-   (Yi-F(Xi)) 
+i=1 
+The function F(X) can then be used to estimate the underlying function f at previously- 
+seen data samples (recall) or at new data samples (prediction). Samples used to construct 
+the function F(X) are in the training set; samples used to test prediction are in the test set. 
+In constructing F(X), if we assume the model F can be written as a linear combination of 
+basis function {qh:}: 
+M 
+= a 0 + 
+k=l 
+then standard least-squares regression can find the optimal coefficients {a}. However, 
+selecting an appropriate set of basis functions for high-dimensional models can be 
+difficult. G/SPLINES is a primarily a method for selecting this set. 
+G/SPLINES 
+functions. 
+3 G/SPLINES 
+Many techniques develop a regression model by incremental addition or deletion of basis 
+functions to a single model.The primary idea of G/SPLINES is to keep a collection of 
+models, and use the genetic algorithm to recombine among these models. 
+begins with a collection of models containing randomly-generated basis 
+F2: {bl b2 b3 J4 J5 J6  J8 J9 JlO 11} 
+FK: {{31 {32 {33 {34 {35 {36 {37 {38 {39 {310 {311 {312 } 
+The basis functions are functions which use a small number of the variables in the data set, 
+such as SIN(x 2 - 1) or (x 4 - .4)(x 5 -. 1). The model coefficients {ate} are determined using 
+least-squares regression. 
+Each model is scored using Friedman's lack of fit (LOF) measure, which is a penalized 
+least-squares measure for goodness of fit; this measure takes into account factors such as 
+the number of data samples, the least-squares error, and the number of model parameters. 
+1090 Rogers 
+At this point, we repeatedly perform the genetic crossover operation: 
+� Two good models are probabilistically selected as parents. The likelihood of being 
+chosen is inversely proportional to a model's LOF score. 
+� Each parent is randomly cut into two sections, and a new model is created using a 
+piece from each parent: 
+First parent 
+Second parent 
+New model 
+� Optional mutation operators may alter the newly-created model. 
+� The model with the worst LOF score is replaced by this new model. 
+This process ends when the average fitness of the population stops improving. 
+Some features of the G/SPLINES algorithm are significantly different from MARS: 
+Unlike incremental search, full-sized models are tested at every step. 
+The algorithm automatically determines the proper size for models. 
+Many fewer models are tested than with MARS. 
+A population of models offers information not available from single-model methods. 
+4 MUTATION OPERATORS 
+Additional mutation operators were added to the system to counteract some negative 
+tendencies of a purely crossover-based algorithm. 
+Problem: genetic diversity is reduced as process proceeds (fewer basis functions in 
+population) 
+NEW: creates a new basis function by randomly choosing a basis function type and then 
+randomly filling in the parameters. 
+Problem: need process for constructing useful multidimensional basis functions 
+MERGE: takes a random basis function from each parent, and creates a new basis function 
+by multiplying them together. 
+Problem: models contain hitchhiking basis functions which contribute little 
+DELETION: ranks the basis functions in order of minimum maximum contribution to the 
+approximation. It removes one or more of the least-contributing basis functions. 
+5 EXPERIMENTAL 
+Experiments were conducted on data derived from a function used by Friedman (1988): 
+1 2 
+fix) = SIN(/1;xx2)+20(x3-5) + 10X4+5X 5 
+Data Analysis Using G/Splines 1091 
+Standard experimental conditions are as follows. Experiments used a training set 
+containing 200 samples, and a test set containing 200 samples. Each sample contained 10 
+predictor variables (5 informative, 5 noninformative) and a response. Sample points were 
+randomly selected from within the unit hypercube. The signal/noise ratio was 4.8/1.0 
+The G/SPLINE population consisted of 100 models. Linear truncated-power splines were 
+used as basis functions. After each crossover, a model had a 50% chance of getting a new 
+basis function created by operator NEW or MERGE and the least-contributing 10% of its 
+basis functions deleted using operator DELETE. 
+The standard training phase involved 10,000 crossover operations. After training, the 
+models were tested against a set of 200 previously-unseen test samples. 
+5.1 G/SPLINES VS. MARS 
+O Bst test LS co 
+ 17.5 gl MARS testLS sco 
+ 12. 
+ 7. 
+2. __ _ .......  
+0' 
+ho '2do 'do hdo 'sdo 'do %do '8 
+ LS  � lffi 
+Figure 1. Test least-sques ores versus number of least-sques regressions for 
+GJSPLIS d MS. 
+Question: is G/SPLINE competitive with MARS? 
+27.5 ................ 
+22.5 
+The MARS algorithm was close to convergence after 50,000 least-squares regressions, 
+and showed no further improvement after 80,000. The G/SPLINES algorithm was close to 
+convergence after 4,000 least-squared regressions, and showed no further improvement 
+after 10,000. [Note: the number of least-squares regressions is not a direct measure of the 
+computational efficiency of the algorithms, as MARS uses a technique (applicable only to 
+linear truncated-power splines) to greatly reduce cost of doing least-squares-regression.] 
+To complete the comparison, we need results on the quality of the discovered models: 
+Final average least-squared error of the best 4 G/SPLINES models was: -1.17 
+Final least-squared error of the MARS model was: -1.12 
+The best model has a least-squared error (from the added noise) of: -1.08 
+Using only linear truncated-power splines, G/SPLINES builds models comparable 
+(though slightly inferior) to MARS. However, by using basis functions other than linear 
+truncated power splines, G/SPLINES can build improved models. If we repeat the 
+experiment with additional basis function types of step functions, linear splines, and 
+quadratic splines, we get improved results: 
+With additional basis functions, the final average least-squared error was: -1.095. 
+I suggest that by including basis functions which reflect the underlying structure of f, the 
+quality of the discovered models is improved. 
+1092 Rogers 
+5.2 VARIABLE ELIMINATION 
+Question: does variable usage in the population reflect the underlying function? (Recall 
+that the data samples contained 10 variables; only the first 5 were used to calculate f.) 
+1400 
+;> 1200 �Var[1] use 
+ II Var[2] use 
+ 1000 liVar[3] use 
+  Var[4] use 
+ 800. 
+ :::: Var[5] use 
+O , i: Var[6] use 
+600, 
+' ffi Var[7] use 
+ 400, � VarlS] use 
+ 200', ' Var[9] use 
+t , Var[10] use 
+0 10 20 30 40 50 60 70 80 90 100 
+# Genetic Operations x 100 
+Figure 2. # of basis functions using a variable vs. # of crossover operations. 
+G/SPLINES correctly focuses on basis functions which use the first five variables The 
+relative usage of these five variables reflects the complexity of the relationship between an 
+input variable and the response in a given dimension. 
+Question: is the rate of elimination of variables affected by sample size? 
+100 .  ...... 100 .................. 
+90: .'' '..-t----'  90 
+8o:i I = 80 
+70: ' 70; eVar[6] 
+60: :3 60:  Var[7] 
+50: . 50; :,: '. llVar[8] 
+302  30: :! .':' Var[101 
+20: ...... .'......_ . 20: 
+10: :::ii: ................. ;i:! .... '' ................................ :.:.... .......  10: 
+0 ::1*: 
+0 g 1) 1 2) 2'5 3) 3 4) 4 50 5 10 15 20 25 30 35 40 45 50 
+# Genetic Operations x 100 # Genetic Operations x 100 
+Figure 3. Close-up of Figure 2, showing the five variables not affecting the response. 
+The left graph is the standard experiment; the right from a training with 50 samples. 
+The left graph plots the number of basis functions containing a variable versus the number 
+of genetic operations for the five noninformative variables in the standard experiment. The 
+variables are slowly eliminated from consideration. The right graph plots the same 
+information, using a training set size of 50 samples. The variables are rapidly eliminated. 
+Smaller training sets force the algorithm to work with most predictive variables, causing a 
+faster elimination of less predictive variables. 
+Question: Is variable elimination effective with increased numbers of

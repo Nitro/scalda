@@ -1,0 +1,168 @@
+RecNorm: Simultaneous Normalisation and 
+Classification applied to Speech Recognition 
+John S. Bridle 
+Royal Signals and Radar Est. 
+Great Malvern 
+UK WR14 3PS 
+Abstract 
+Stephen J. Cox 
+British Telecom Research Labs. 
+Ipswich 
+UK IP5 7RE 
+A particular form of neural network is described, which has terminals 
+for acoustic patterns, class labels and speaker parameters. A method of 
+training this network to tune in the speaker parameters to a particular 
+speaker is outlined, based on a trick for converting a supervised network 
+to an unsupervised mode. We describe experiments using this approach 
+in isolated word recognition based on whole-word hidden Markov models. 
+The results indicate an improvement over speaker-independent perfor- 
+mance and, for unlabelled data, a performance close to that achieved on 
+labelled data. 
+1 INTRODUCTION 
+We are concerned to emulate some aspects of perception. In particular, the way that 
+a stimulus which is ambiguous, perhaps because of unknown lighting conditions, can 
+become unambiguous in the context of other such stimuli: the fact that they are 
+subject to the same unknown conditions gives our perceptual apparatus enough 
+constraints to solve the problem. Individual words are often ambiguous even to 
+human listeners. For instance a Cockney might say the word ace to sound the 
+same as a Standard English speaker's ice. Similarly with room and rum, or 
+work and walk in other pairs of British English accents. If we heard one of these 
+ambiguous pronunciations, knowing nothing else about the speaker we could not tell 
+which word had been said. For current automatic speech recognition (ASR) systems 
+such effects are much more frequent, because we do not know how to concentrate 
+on the important aspects of the signal locally, nor how to exploit the fact that some 
+unknown properties apply to whole words, nor how to bring to bear on the task of 
+234 
+RecNorm 235 
+acoustic disambiguation all the information that is normally latent in the context 
+of the utterance. 
+Most attempts to construct ASR systems which can be used by many persons have 
+used so-called speaker-independent models. When decoding a short sequence of 
+words there is no way of imposing our knowledge that all the speech is uttered by 
+one person. 
+To enable adaptation using small amounts of speech from a new speaker we propose 
+to factor the speech knowledge into speaker-independent models, continous speaker- 
+specific parameters and a transformation which modifies the models according to 
+the speaker parameters. (In this paper we shall only use transformations which can 
+just as easily be applied to the input patterns.) We are specially interested in the 
+possibility of estimating such parameters from quite small amounts of unlabelled 
+speech, such as a few short words or one longer word. Although the types of models 
+and transformations we have used are very simple, we hope the general approach 
+will be applicable to quite sophisticated models and transformations which will be 
+necessary for future high-performance speech recognition systems. 
+2 AN ADAPTIVE NETWORK APPROACH 
+2.1 GENERALIDEA 
+Suppose we had a feed-forward network with three (vector-valued) ternfinals, which 
+encapsulates our knowledge of the relationship between acoustic patterns, X, class 
+labels (e.g. word identities) C, and speaker parameters, Q. 
+Training such a network seems difficult, because although we can supply (X,(7) 
+pairs, we do not know the appropriate values of Q. (We only know the names of 
+the speakers, or perhaps some phoneticJan's descriptive labels.) 
+In training the network we start with default values of Q, feed forward from X and 
+Q to (7, back-propagate derivatives to internal parameters of the network (weights, 
+transition probabilities, etc.) and also to the Qs, enforcing the constraint that the 
+Qs for any one speaker stay equal. We can imagine one copy of the network for 
+each utterance, with the Q terminals of networks dealing with the same speaker 
+strapped together. One convenient implementation (for a small number of training 
+speakers) is to adapt one Q vector per speaker in a set of weights from one-from-N 
+coded speaker identity inputs to linear units, as we shall see later. 
+Once the network is trained we have two modes of use. If we have available one 
+or more known utterances by a new speaker, then we can tune-in to the speaker 
+(as during training) except that only the Q inputs are adjusted. The case of most 
+interest in this paper, however, is when we have a few unknown words from an 
+unknown speaker. We set up a Q-strapped set of networks, one for each word, 
+initialise the Q values to their defaults, propagate forwards to produce a set of 
+distributions across word labels, and then we use a technique which tends to sharpen 
+these distributions. In the simplest case, the sharpening process could be a matter 
+of: for each utterance pick the word label with the largest output, and assuming 
+it to be correct back-propagate derivatives to the common Q. In practice, we can 
+use a gentler method in which large outputs get most 'encouragement'. For some 
+236 Bridle and Cox 
+networks it is possible to show that such a phantom target procedure can lead 
+to hillclimbing on the likelihood of the data given an assumption about the form of 
+the generator of the data (see Appendix). 
+2.2 SIMPLE NETWORK ILLUSTRATION 
+We have explored these ideas using a very simple network based on that in figure 
+1. It can be viewed either as a feedforward network with radial (minus Euclidean 
+distance squared) units and a generalised-logistic (Softmax) output non-linearity, 
+or as a Gaussian classifier in which the covariance matrices are unit diagonal (see 
+[Bri90b]). Training is done by gradient-based optimisation, using back-propagation 
+of partial derivatives. During training the criterion is based on relative entropy 
+(likelihood of the targets given the network outputs) [Bri90c]. (Such discriminative 
+training can lead to different results from the usual model-based methods [Bri90b], 
+which in this case would set the reference points at the data means for each class.) 
+This simple classifier network is preceded by a full linear transformation (6 param- 
+eters), so the equivalent model-based classifier has Gaussian distributions with the 
+same arbitrary covariance matrix for each class. We use the biasses of the linear 
+units as speaker parameters, so the weights from speaker identity inputs go straight 
+into the hidden units, 3 as figure 2. 
+During adaptation to a new speaker from unlabelled tokens, the speaker parameters 
+of the transformation are allowed to adapt, but the (phantom) targets are derived 
+from the outputs themselves (the targets are just double the outputs) so that the 
+largest outputs are encouraged. 
+In figure 3 we see the adaptation of the positions of the reference points of the 
+radial units in figure 2 when the input points are essentially the 6 reference points 
+displaced to one side (to represent one example of each word spoken by a new 
+speaker). Adaptation based on tentative classifications pulls the reference points 
+towards a position where the inputs can be given confident, consistent labels. 
+3 SPEECH RECOGNITION EXPERIMENTS 
+We have applied these ideas to the problem of recognising a few short, confusable 
+words from a known set, all spoken by the same unknown speaker. If our method 
+works we should be able to recognise each word better (on average) if we also look 
+at a few other unknown words from the same speaker. 
+The dataset [Sa189], which had been recorded previously for other purposes, com- 
+prised the British English isolated pronounciations of the names of the letters of 
+the alphabet, each spoken 3 times by each speaker. The 104 speakers were divided 
+into two groups of 52 (Train and Test), balanced for age and sex. Initial acoustic 
+analysis produced 28-component spectrum vectors, 100 per second. In place of the 
+2-D input patterns discussed above, each speech pattern was a variable-duration 
+sequence (typically 50) of 28-vectors. 
+In place of each simple Gaussian density class-models we used a set of Gaussian 
+densities and a matrix of probabilities of transitions between them. Each class- 
+model is thus a hidden Markov model (HMM) of a word. We used 26 HMMs, each 
+RecNorm 237 
+T T T T T ! T T T T 
+I SOFTMAX (Normalised Exponential) I sox (Normalised Exponential) 
+Units 
+ \  / / .Linear . 
+ Hdden Umts 
+Inputs 
+Speaker Inputs 
+I.D. 
+Linear 
+Transformation 
+Fig. 1 Feedforward Network 
+Implementing Simple Gaussian 
+Classifier 
+Fig.2 Gaussian classifier network with 
+input transformation and speaker inputs 
+15% _ 
+14% _ 
+13%_ 
+12% _ 
+10% _ 
+)Bias only 
+-'1 ....... t ..... I ..... t-'-:'.'_ :)Fixed Shift 
+I I I I  :) Variable 
+..[ .... ...... I I ..[ [ ....... .. ,Shift 
+N; Ada-t 3 10 20 78 'Cheat 
+P � Words given mode 
+Fig.3 Adaptation to 6 displaced 
+points 
+Fig.4 Average error rates for alphabet 
+word recognition 
+238 Bridle and Cox 
+with 15 states, each with a 3-component Gaussian mixture output distribution. For 
+further details see [CB90]. 
+The equivalent to the evaluation of a Gaussian density in the simple network is 
+the Forward (or Alpha) computation of the likelihood of the data given a (hidden 
+Markov) model. This calculation can be thought of as being performed by a 
+recurrent network of a special form. When we include the Bayes inversion to 
+produce probabilities of the classes (this is a normalisation if we assume equal prior 
+probabilities) we obtain the equivalent of the simple network of figure 1, which we 
+call an Alphanet[Bri90a]. 
+In place of the 2-component linear transformation in figure 2 we use a constrained 
+linear transformation based on [Hun81] yi = airi-1 + biri + ciri+l + di, where 
+� i, i = 1,... 28, is the log spectrum amplitude in frequency channel i. 
+We tried three conditions: 
+� Bias Only: a = 0, b = 1, c = 0 (28 parameters)

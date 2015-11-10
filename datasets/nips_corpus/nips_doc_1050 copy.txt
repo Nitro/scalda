@@ -1,0 +1,153 @@
+Investment Learning 
+with Hierarchical PSOMs 
+JSrg Walter and Helge Ritter 
+Department of Information Science 
+University of Bielefeld, D-33615 Bielefeld, Germany 
+Email: {walter,beige) @techfak.uni-bielefeld.de 
+Abstract 
+We propose a hierarchical scheme for rapid learning of context dependent 
+skills that is based on the recently introduced Parameterized Self- 
+Organizing Map (PSOM). The underlying idea is to first invest some 
+learning effort to specialize the system into a rapid learner for a more 
+restricted range of contexts. 
+The specialization is carried out by a prior investment learning stage, 
+during which the system acquires a set of basis mappings or skills for 
+a set of prototypical contexts. Adaptation of a skill to a new context 
+can then be achieved by interpolating in the space of the basis mappings 
+and thus can be extremely rapid. 
+We demonstrate the potential of this approach for the task of a 3D visuo- 
+motor map for a Puma robot and two cameras. This includes the for- 
+ward and backward robot kinematics in 3D end effector coordinates, the 
+2D+2D retina coordinates and also the 6D joint angles. After the invest- 
+ment phase the transformation can be learned for a new camera set-up 
+with a single observation. 
+1 Introduction 
+Most current applications of neural network learning algorithms suffer from a large number 
+of required training examples. This may not be a problem when data are abundant, but in 
+many application domains, for example in robotics, training examples are costly and the 
+benefits of learning can only be exploited when significant progress can be made within a 
+very small number of learning examples. 
+Investment Learning with Hierarchical PSOMs 571 
+In the present contribution, we propose in section 3 a hierarchically structured learning ap- 
+proach which can be applied to many learning tasks that require system identification from 
+a limited set of observations. The idea builds on the recently introduced Parameterized 
+Self-Organizing Maps (PSOMs), whose strength is learning maps from a very small 
+number of training examples [8, 10, 11]. 
+In [8], the feasibility of the approach was demonstrated in the domain of robotics, among 
+them, the learning of the inverse kinematics transform of a full 6-degree of freedom (DOF) 
+Puma robot. In [10], two improvements were introduced, both achieve a significant in- 
+crease in mapping accuracy and computational efficiency. In the next section, we give a 
+short summary of the PSOM algorithm; it is decribed in more detail in [11] which also 
+presents applications in the domain of visual learning. 
+2 The PSOM Algorithm 
+A Parameterized Self-Organizing Map is a parametrized, m-dimensional hyper-surface 
+M = {w(s) E X C_ lRal s E S c_ IR '} that is embedded in some higher-dimensional 
+vector space X. M is used in a very similar way as the standard discrete self-organizing 
+map: given a distance measure dist(x, x ) and an input vector x, a best-match location 
+s* (x) is determined by minimizing 
+s* := argmin dist(x,w(s)) (1) 
+The associated best-match vector w (s*) provides the best approximation of input x in the 
+manifold M. If we require dist(.) to vary only in a subspace X in of X (i.e., dist(x, x') = 
+dist(Px, Px'), where the diagonal matrix P projects into Xin), s* (x) actually will only 
+depend on Px. The projection (! -P)w(s* (x)) E X �'t ofw(s* (x)) lies in the orthogonal 
+subspace X �ut can be viewed as a (non-linear) associative completion of a fragmentary 
+input x of which only the part Px is reliable. It is this associative mapping that we will 
+exploit in applications of the PSOM. 
+ M - S  
+x, PX 
+� Wa X cl a Ac_S 
+Figure 1: Best-match s* and associative completion w(s* (x)) of 
+input z, ace(Px) given in the input subspace X i'. Here in this 
+simple case, the m -- 1 dimensional manifold M is constructed 
+to pass through four data vectors (square marked). The left side 
+shows the d = 3 dimensional embedding space X = X i' x X �' 
+and the right side depicts the best match parameter s* (x) parameter 
+manifold $ together with the hyper-lattice A of parameter values 
+(indicated by white squares) belonging to the data vectors. 
+in a topology preserving fashion to ensure good interpolation 
+obtained by the following steps. 
+M is constructed 
+as a manifold that passes 
+through a given set D of 
+data examples (Fig. 1 de- 
+picts the situation schemat- 
+ically). To this end, we 
+assign to each data sam- 
+ple a point a  $ and 
+denote the associated data 
+sample by wa. The set A 
+of the assigned parameter 
+values a should provide a 
+good discrete model of 
+the topology of our data set 
+(Fig. 1 right). The assign- 
+ment between data vectors 
+and points a must be made 
+by the manifold M that is 
+5 72 J. WALTER, H. RITTER 
+For each point a E A, we construct a basis function H (., a; A) or simplified  H (., a): 
+S  ]R that obeys (/) H(ai, aj) = 1 for i = j and vanishes at all other points of A i 5 j 
+(orthonormality condition,) and (ii) 5-]aA H(a, s) = ! for Vs (partition of unity condi- 
+tion.) We will mainly be concerned with the case of A being a m-dimensional rectangular 
+hyper-lattice; in this case, the functions H(., a) can be constructed as products of Lagrange 
+interpolation polynomials, see [ 11]. Then, 
+w(s) = (2) 
+aA 
+defines a manifold M that passes through all data examples. Minimizing dist(.) in Eq. 1 
+can be done by some iterative procedure, such as gradient descent or - preferably - the 
+Levenberg-Marquardt algorithm [11]. This makes M into the attractor manifold of a (dis- 
+crete time) dynamical system. Since M contains the data set D, any at least m-dimensional 
+fragment of a data example x = w E D will be attracted to the correct completion w. 
+Inputs x q D will be attracted to some approximating manifold point. 
+This approach is in many ways the continuous analog of the standard discrete self- 
+organizing map. Particularly attractive features are (i) that the construction of the map 
+manifold is direct from a small set of training vectors, without any need for time con- 
+suming adaptation sequences, (ii) the capability of associative completion, which allows 
+to freely redefine variables as inputs or outputs (by changing dist(.) on demand, e.g. one 
+can reverse the mapping direction), and (iii) the possibility of having attractor manifolds 
+instead of just attractor points. 
+3 Hierarchical PSOMs: Structuring Learning 
+Rapid learning requires that the structure of the learner is well matched to his task. How- 
+ever, if one does not want to pre-structure the learner by hand, learning again seems to be 
+the only way to achieve the necessary pre-structuring. This leads to the idea of structuring 
+learning itself and motivates to split learning into two stages: 
+(i) The earlier stage is considered as an investment stage that may be slow and that may 
+require a larger number of examples. It has the task to pre-structure the system in such a 
+way that in the later stage, 
+(ii) the now specialized system can learn fast and with extremely few examples. 
+To be concrete, we consider specialized mappings or skills, which are dependent on 
+the state of the system or system environment. Pre-structuring the system is achieved by 
+learning a set of basis mappings, each in a prototypical system context or environment state 
+(investment phase.) This imposes a strong need for an efficient learning tool - efficient 
+in particular with respect to the number of required training data points. 
+The PSOM networks appears as a very attractive solution: Fig. 2 shows a hierarchical 
+arrangement of two PSOM. The task of mapping from input to output spaces is learned - 
+and performed, by the Transformation-PSOM (T-PSOM). 
+During the first learning stage, the investment learning phase the T-PSOM is used to learn 
+a set of basis mappings Tj � 51 - 2 or context dependent skills is constructed in the 
+T-PSOM, each of which gets encoded as a internal parameter or weight set wj. The 
+ In contrast to kernel methods, the basis functions may depend on the relative position to all other 
+knots. However, we drop in our notation the dependency H(a, s) = H(a, s; A) on the latter. 
+Investment Learning with Hierarchical PSOMs 5 73 
+Context 
+Figure 2: The transforming T-PSOM maps between input and output spaces (changing direction 
+on demand). In a particular environmental context, the correct transformation is learned, and encoded 
+in the internal parameter or weight set w. Together with an characteristic environment observation 
+ffref, the weight set w is employed as a training vector for the second level Meta-PSOM. After 
+learning a structured set of mappings, the Meta-PSOM is able to generalizing the mapping for a new 
+environment. When encountering any change, the environment observation ffref gives input to the 
+Meta-PSOM and determines the new weight set w for the basis T-PSOM. 
+second level PSOM (Meta-PSOM) is responsible for learning the association between 
+the weight sets wj of the first level T-PSOM and their situational contexts. 
+The system context is characterized by a suitable environment observation, denoted ref, 
+see Fig. 2. 
+The context situations are chosen such that the associated basis mappings capture already a 
+significant amount of the underlying model structure, while still being sufficiently general 
+to capture the variations with respect to which system environment identification is desired. 
+For the training of the second level Meta-PSOM each constructed T-PSOM weight set wj 
+serves together with its associated environment observation reLj as a high dimensional 
+training data vector. 
+Rapid learning is the return on invested effort in the longer pre-training phase. As a re- 
+sult, the task of learning the skill associated with an unknown system context now takes 
+the form of an immediate Meta-PSOM  T-PSOM mapping: the Meta-PSOM maps the 
+new system context o

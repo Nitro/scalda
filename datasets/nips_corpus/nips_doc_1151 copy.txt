@@ -1,0 +1,163 @@
+Interpreting images by propagating 
+Bayesian beliefs 
+Yair Weiss 
+Dept. of Brain and Cognitive Sciences 
+Massachusetts Institute of Technology 
+El0-120, Cambridge, MA 02139, USA 
+yweiss( psyche. m it. ed u 
+Abstract 
+A central theme of computational vision research has been the re- 
+alization that reliable estimation of local scene properties requires 
+propagating measurements across the image. Many authors have 
+therefore suggested solving vision problems using architectures of 
+locally connected units updating their activity in parallel. Unfor- 
+tunately, the convergence of traditional relaxation methods on such 
+architectures has proven to be excruciatingly slow and in general 
+they do not guarantee that the stable point will be a global mini- 
+mum. 
+In this paper we show that an architecture in which Bayesian Be- 
+liefs about image properties are propagated between neighboring 
+units yields convergence times which are several orders of magni- 
+tude faster than traditional methods and avoids local minima. In 
+particular our architecture is non-iterative in the sense of Marr [5]: 
+at every time step, the local estimates at a given location are op- 
+timal given the information which has already been propagated to 
+that location. We illustrate the algorithm's performance on real 
+images and compare it to several existing methods. 
+I Theory 
+The essence of our approach is shown in figure 1. Figure la shows the prototypical 
+ill-posed problem: interpolation of a function from sparse data. Figure lb shows a 
+traditional relaxation approach to the problem: a dense array of units represents 
+the value of the interpolated function at discretely sampled points. The activity of a 
+unit is updated based on the local data (in those points where data is available) and 
+the activity of the neighboring points. As discussed below, the local update rule can 
+Interpreting Images by Propagating Bayesian Beliefs 909 
+Figure 1: a. a prototypical ill-posed problem b. Traditional relaxation approach: dense 
+array of units represent the value of the interpolated function. Units update their activity 
+based on local information and the activity of neighboring units. c. The Bayesian Belief 
+Propagation (BBP) approach. Units transmit probabilities and combine them according 
+to probability calculus in two non-interacting streams. 
+be defined such that the network converges to a state in which the activity of each 
+unit corresponds to the value of the globally optimal interpolating function. Figure 
+lc shows the Bayesian Belief Propagation (BBP) approach to the problem. As in 
+the traditional approach the function is represented by the activity of a dense array 
+of units. However the units transmit probabilities rather than single estimates to 
+their neighbors and combine the probabilities according to the probability calculus. 
+To formalize the above discussion, let y represent the activity of a unit at location 
+k, and let y be noisy samples from the true function. A typical interpolation 
+problem would be to minimize: 
+J(Y) =  wk(Yk -- y)2 q-  (Yi -- Yi+i) 2 (1) 
+k i 
+Where we have defined w = 0 for grid points with no data, and w = 1 for points 
+with data. Since J is quadratic, any local update in the direction of the gradient 
+will converge to the optimal estimate. This yields updates of the sort' 
+,- + + - + - (2) 
+W * 
+2 
+Relaxation algorithms differ in their choice of r/: r/ = 1/(A + w) corresponds to 
+Gauss-Seidel relaxation and r/= 1.9/(A + w) corresponds to successive over relax- 
+ation (SOR) which is the method of choice for such problems [10]. 
+To derive a BBP update rule for this problem, note that that minimizing J(Y) 
+is equivalent to maximizing the posterior probability of Y given Y* assuming the 
+following generative model: 
+Yi+l = Yi q- 12 (3) 
+Y = wiYi + rl (4) 
+Where 12 ~ N(0, an), r/~ N(0, az>). The ratio of az> to an plays a role similar to 
+that of A in the original cost functional. 
+The advantage of considering the cost functional as a posterior is that it enables us 
+to use the methods of Hidden Markov Models, Bayesian Belief Nets and Optimal 
+Estimation to derive local update rules (cf. [6, 7, 1]). Denote the posterior by 
+Pi(u) = P(Y/= ulY*), the Markovian property allows us to factor Pi(u) into three 
+terms: one depending on the local data, another depending on data to the left of i 
+and a third depending on data to the right of i. Thus: 
+= (5) 
+where ai(u) = P(Yi = ulYi*,i-1),i(u) -- P(Yi = ulYi4jv),Li(u) = P(Y?IY = u) 
+and c denotes a normalizing constant. Now, denoting the conditional Ci(u, v) = 
+910 Y. Weiss 
+P( = ulY_l = v), ci(u) can be written in terms of ci_l(v): 
+.(u) = c f .i_ l(v)Ci(u, v)Li_l(v) (6) 
+where c denotes another normalizing constant. A symmetric equation can be written 
+for i(u). 
+This suggests a propagation scheme where units represent the probabilities given in 
+the left hand side of equations 5-6 and updates are bed on the right hand side, i.e. 
+on the activities of neighboring units. Specifically, for a Gaussian generating process 
+the probabilities can be represented by their mean and variance. Thus denote 
+Pi  N(i,i), and similarly i  N(,)and   N(, ). Performing the 
+integration in 6 gives a Kalman-Filter like update for the parameters: 
+,,+   
+  () 
+++  
+D i 
+i  wi- , 
+a_xPi-l a i-1 
+g   ,_ (8) 
+I w_x)_x (9) 
+vg  v+(W- + v 
+(he update rules for he parameters of  are analogous) 
+So far we have considered continuous estimation problems bu identical issues arise 
+in labeling problems, where he k is o estimate a label L which can ake on M 
+discrete values. We will denote L(m) = I if he label akes on value m and zero 
+otherwise. Typically one minimizes functionMs of the form: 
+- 
+m k m k 
+adifionM relation labeling algorithms minimize his cost funcfionM wih up- 
+daes of he form: 
+  f(v, _, , +) () 
+Again differen relaion labeling Mgorihms differ in heir choice of f. A linear 
+sum followed by a hreshold gives the discrete Hopfield network updates, a linear 
+sum followed by a sof threshold gives he continuous or mean-field Hop field 
+updates nd yet another form gives the relaxation labeling algorithm of Rosenfeld 
+e M. (see [3] for a review of relaxation labeling methods ). 
+To derive a BBP algorithm for this ce one cn again rewrite   the posterior 
+of a Markov generating process, and cMculae P(L(m) = 1) for this process. 1. 
+This gives he same expressions  in equations 5-6 wih he integral replaced by a 
+linear sum. Since he probabilities here are no Gaussian, he i, i, Pi will no be 
+represented by heir mean nd wriances, but rather by a vector of length M. Thus 
+he update rule for i will be: 
+()   -(t)c,(, )-() () 
+(and similarly for .) 
+Vo  vi , owig v(() = ) i o mi fo ooig 
+sequence of labels that minimizes J. In those ces one should do beef revision rather 
+than propagation [6] 
+Interpreting Images by Propagating Bayesian Beliefs 911 
+Figure 2' a. the first frame of a sequence. The hand is translated to the left. b. contour 
+extracted using standard methods 
+1.1 Convergence 
+Equations 5-6 are mathematical identities. Hence, it is possible to show [6] that 
+after N iterations the activity of units Pi will converge to the correct posteriors, 
+where N is the maximal distance between any two units in the architecture, and an 
+iteration refers to one update of all units. Furthermore, we have been able to show 
+that after n < N iterations, the activity of unit Pi is guaranteed to represent the 
+probability of the hidden state at location i given all data within distance n. 
+This guarantee is significant in the light of a distinction made by Mart (1982) 
+regarding local propagation rules. In a scheme where units only communicate with 
+their neighbors, there is an obvious limit on how fast the information can reach a 
+given unit: i.e. after n iterations the unit can only know about information within 
+distance n. Thus there .is a minimal number of iterations required for all data to 
+reach all units. Mart distinguished between two types of iterations - those that are 
+needed to allow the information to reach the units, versus those that are used to 
+refine an estimate based on information that has already arrived. The significance 
+of the guarantee on Pi is that it shows that BBP only uses the first type of iteration 
+- iterations are used only to allow more information to reach the units. Once the 
+information has arrived, Pi represents the correct posterior given that information 
+and no further iterations are needed to refine the estimate. Moreover, we have been 
+able to show that propagations schemes that do not propagate probabilities (such 
+as those in equations 2) will in general not represent the optimal estimate given 
+information that has already arrived. 
+To summarize, both traditional relaxation updates as in equation 2 and BBP up- 
+dates as in equations 7-9 give simple rules for updating a unit's activity based on 
+local data and activities of neighboring units. However, the fact that BBP updates 
+are based on the probability calculus guarantees that a unit's activity will be optimal 
+given information that has already arrived and gives rise to a qualitative difference 
+between the convergence of these two types of schemes. In the next section, we will 
+demonstrate this difference in image interpretation problems. 
+2 Results 
+Figure 2a shows the first frame of a sequence in which the hand is translated to the 
+left. Figure 2b shows the bounding contour of the hand extracted using standard 
+techniques. 
+2.1 Motion propagation along contours 
+Local measurements along the contour are insufficient to determine the motion. 
+Hildreth [2] suggested to overcome the local ambiguity by minimizing the following 
+912 Y. Weiss 
+Figure 3' a. Local estimate of velocity along the contour. b. Performance of SOR, 
+gradient descent and BBP 

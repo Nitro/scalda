@@ -1,0 +1,165 @@
+Feudal Reinforcement Learning 
+Peter Dayan 
+CNL 
+The Salk Institute 
+PO Box 85800 
+San Diego CA 92186-5800, USA 
+dayanhelmholtz. sdsc. edu 
+Geoffrey E Hinton 
+Department of Computer Science 
+University of Toronto 
+6 Kings College Road, Toronto, 
+Canada M5S 1A4 
+hintonai. toronto. edu 
+Abstract 
+One way to speed up reinforcement learning is to enable learning to 
+happen simultaneously at multiple resolutions in space and time. 
+This paper shows how to create a Q-learning managerial hierarchy 
+in which high level managers learn how to set tasks to their sub- 
+managers who, in turn, learn how to satisfy them. Sub-managers 
+need not initially understand their managers' commands. They 
+simply learn to maximise their reinforcement in the context of the 
+current command. 
+We illustrate the system using a simple maze task.. As the system 
+learns how to get around, satisfying commands at the multiple 
+levels, it explores more efficiently than standard, flat, Q-learning 
+and builds a more comprehensive map. 
+1 INTRODUCTION 
+Straightforward reinforcement learning has been quite successful at some rela- 
+tively complex tasks like playing backgammon (Tesauro, 1992). However, the 
+learning time does not scale well with the number of parameters. For agents solv- 
+ing rewarded Markovian decision tasks by learning dynamic programming value 
+functions, some of the main bottlenecks (Singh, 1992b) are temporal resolution - 
+expanding the unit of learning from the smallest possible step in the task, division- 
+and-conquest - finding smaller subtasks that are easier to solve, exploration, and 
+structural generalisation - generalisation of the value function between different 1o- 
+271 
+272 Dayan and Hinton 
+cations. These are obviously related - for instance, altering the temporal resolution 
+can have a dramatic effect on exploration. 
+Consider a control hierarchy in which managers have sub-managers, who work 
+for them, and super-managers, for whom they work. If the hierarchy is strict 
+in the sense that managers control exactly the sub-managers at the level below 
+them and only the very lowest level managers can actually act in the world, then 
+intermediate level managers have essentially two instruments of control over their 
+sub-managers at any time - they can choose amongst them and they can set them 
+sub-tasks. These sub-tasks can be incorporated into the state of the sub-managers 
+so that they in turn can choose their own sub-sub-tasks and sub-sub-managers to 
+execute them based on the task selection at the higher level. 
+An appropriate hierarchy can address the first three bottlenecks. Higher level 
+managers should sustain a larger grain of temporal resolution, since they leave the 
+sub-sub-managers to do the actual work. Exploration for actions leading to rewards 
+can be more efficient since it can be done non-uniformly - high level managers can 
+decide that reward is best found in some other region of the state space and send 
+the agent there directly, without forcing it to explore in detail on the way. 
+Singh (1992a) has studied the case in which a manager picks one of its sub-managers 
+rather than setting tasks. He used the degree of accuracy of the Q-values of sub- 
+managerial Q-learners (Watkins, 1989) to train a gating system (Jacobs, Jordan, 
+Nowlan & Hinton, 1991) to choose the one that matches best in each state. Here 
+we study the converse case, in which there is only one possible sub-manager active 
+at any level, and so the only choice a manager has is over the tasks it sets. Such 
+systems have been previously considered (Hinton, 1987; Watkins, 1989). 
+The next section considers how such a strict hierarchical scheme can learn to choose 
+appropriate tasks at each level, section 3 describes a maze learning example for 
+which the hierarchy emerges naturally as a multi-grid division of the space in 
+which the agent moves, and section 4 draws some conclusions. 
+2 FEUDAL CONTROL 
+We sought to build a system that mirrored the hierarchical aspects of a feudal 
+fiefdom, since this is one extreme for models of control. Managers are given 
+absolute power over their sub-managers - they can set them tasks and reward 
+and punish them entirely as they see fit. However managers ultimately have to 
+satisfy their own super-managers, or face punishment themselves - and so there is 
+recursive reinforcement and selection until the whole system satisfies the goal of the 
+highest level manager. This can all be made to happen without the sub-managers 
+initially understanding the sub-tasks they are set. Every component just acts to 
+maximise its expected reinforcement, so after learning, the meaning it attaches to a 
+specification of a sub-task consists of the way in which that specification influences 
+its choice of sub-sub-managers and sub-sub-tasks. Two principles are key: 
+Reward Hiding Managers must reward sub-managers for doing their bidding 
+whether or not this satisfies the commands of the super-managers. Sub-managers 
+should just learn to obey their managers and leave it up to them to determine what 
+Feudal Reinforcement Learning 273 
+it is best to do at the next level up. So if a sub-manager fails to achieve the sub-goal 
+set by its manager it is not rewarded, even if its actions result in the satisfaction of 
+of the manager's own goal. Conversely, if a sub-manager achieves the sub-goal it 
+is given it is rewarded, even if this does not lead to satisfaction of the manager's 
+own goal. This allows the sub-manager to learn to achieve sub-goals even when 
+the manager was mistaken in setting these sub-goals. So in the early stages of 
+learning, low-level managers can become quite competent at achieving low-level 
+goals even if the highest level goal has never been satisfied. 
+Information Hiding Managers only need to know the state of the system at the 
+granularity of their own choices of tasks. Indeed, allowing some decision making 
+to take place at a coarser grain is one of the main goals of the hierarchical decom- 
+position. Information is hidden both downwards - sub-managers do not know 
+the task the super-manager has set the manager- and upwards - a super-manager 
+does not know what choices its manager has made to satisfy its command. How- 
+ever managers do need to know the satisfaction conditions for the tasks they set 
+and some measure of the actual cost to the system for achieving them using the 
+sub-managers and tasks it picked on any particular occasion. 
+For the special case to be considered here, in which managers are given no choice 
+of which sub-manager to use in a given state, their choice of a task is very similar 
+to that of an action for a standard Q-learning system. If the task is completed 
+successfully, the cost is determined by the super-manager according to how well (eg 
+how quickly, or indeed whether) the manager satisfied its super-tasks. Depending 
+on how its own task is accomplished, the manager rewards or punishes the sub- 
+manager responsible. When a manager chooses an action, control is passed to the 
+sub-manager and is only returned when the state changes at the managerial level. 
+3 THE MAZE TASK 
+To illustrate this feudal system, consider a standard maze task (Barto, Sutton & 
+Watkins, 1989) in which the agent has to learn to find an initially unknown goal. 
+The grid is split up at successively finer grains (see figure 1) and managers are 
+assigned to separable parts of the maze at each level. So, for instance, the level 1 
+manager of area 1-(1,1) sets the tasks for and reinforcement given to the level 2 
+managers for areas 2-(1,1), 2-(1,2), 2-(2,1) and 2-(2,2). The successive separation 
+into quarters is fairly arbitrary- however if the regions at high levels did not cover 
+contiguous areas at lower levels, then the system would not perform very well. 
+At all times, the agent is effectively performing an action at every level. There are 
+five actions, NSEW and *, available to the managers at all levels other than the first 
+and last. NSEW represent the standard geographical moves and * is a special action 
+that non-hierarchical systems do not require. It specifies that lower level managers 
+should search for the goal within the confines of the current larger state instead of 
+trying to move to another region of the space at the same level. At the top level, 
+the only possible action is *; at the lowest level, only the geographical moves are 
+allowed, since the agent cannot search at a finer granularity than it can move. 
+Each manager maintains Q values (Watkins, 1989; Barto, Bradtke & Singh, 1992) 
+over the actions it instructs its sub-managers to perform, based on the location of 
+274 Dayan and Hinton 
+1-(1,1) 
+1-(2,1) 
+2-(3,1) 
+2-(4,1 
+Figure 1: Figure 1: The Grid Task. This shows how the maze is divided up at 
+different levels in the hierarchy. The 'U' shape is the barrier, and the shaded square 
+is the goal. Each high level state is divided into four low level ones at every step. 
+the agent at the subordinate level of detail and the command it has received from 
+above. So, for instance, if the agent currently occupies 3-(6,6), and the instruction 
+from the level 0 manager is to move South, then the 1-(2,2) manager decides upon 
+an action based on the Q values for NSEW giving the total length of the path to 
+either 2-(3,2) or 2-(4,2). The action the 1-(2,2) manager chooses is communicated 
+one level down the hierarchy and becomes part of the state determining the level 2 
+Q values. 
+When the agent starts, actions at successively lower levels are selected using the 
+standard Q-learning softmax method and the agent moves according to the finest 
+grain action (at level 3 here). The Q values at every level at which this causes 
+Feudal Reinforcement Learning 275 
+Steps to Goal 
+le v04 F-Q Task 1 
+7 F-Q Task 2 
+5 S-Q Task 1 
+3 S-Q Task 2 
+2 
+1.S 
+1 e +03 
+7 
+S 
+3 
+2 
+1.S 
+le+02 
+7 
+5 
+3 
+2 
+1.5 Iterations 
+o.oo oo.oo 200.00 300.00 400.00 5oo.oo 
+Figure 2: Learning Performance. F-Q shows the perform

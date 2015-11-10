@@ -1,0 +1,144 @@
+Text-Based Information Retrieval Using 
+Exponentiated Gradient Descent 
+Ron Papka, James P. Callan, and Andrew G. Barto * 
+Department of Computer Science 
+University of Massachusetts 
+Amherst, MA 01003 
+papka@cs.umass.edu, callan@cs.umass.edu, barto@cs.umass.edu 
+Abstract 
+The following investigates the use of single-neuron learning algo- 
+rithms to improve the performance of text-retrieval systems that 
+accept natural-language queries. A retrieval process is explained 
+that transforms the natural-language query into the query syntax 
+of a real retrieval system: the initial query is expanded using statis- 
+tical and leaxning techniques and is then used for document ranking 
+and binary classification. The results of experiments suggest that 
+Kivinen and Warmuth's Exponentiated Gradient Descent learning 
+algorithm works significantly better than previous approaches. 
+I Introduction 
+The following work explores two leaxning algorithms - Least Mean Squared (LMS) 
+[1] and Exponentiated Gradient Descent (EG) [2] - in the context of text-based 
+Information Retrieval (IR) systems. The experiments presented in [3] use connec- 
+tionist learning models to improve the retrieval of relevant documents from a large 
+collection of text. Here, we present further analysis of those experiments. Previous 
+work in the area employs various techniques for improving retrieval [6, 7, 14]. The 
+experiments presented here show that EG works significantly better than widely 
+used ad hoc methods for finding a good set of query term weights. 
+The retrieval processes being considered operate on a collection of documents, a 
+natural-language query, and a training set of documents judged relevant or non- 
+relevant to the query. The query may be, for example, the information request 
+submitted through a web-seaxch engine, or through the interface of a system with 
+This material is based on work supported by the National Science Foundation, Library 
+of Congress, and Department of Commerce under cooperative agreement number EEC- 
+9209623. Any opinions, findings and conclusions or recommendations expressed in this 
+material are those of the author and do not necessarily reflect those of the sponsor. 
+4 R. Papka, J.P. Callan and A. G. Barto 
+domain-specific information such as legal, governmental, or news data maintained 
+as a collection of text. The query, expressed as complete or incomplete sentences, is 
+modified through a learning process that incorporates the terms in the test collection 
+that are important for improving retrieval performance. The resulting query can 
+then be used against collections similar in domain to the training collection. 
+Natural language query: 
+An insider-trading case. 
+IP system query using default weights: 
+#WSUM( 1.0 An 1.0 insider 1.0 trading 1.0 case ); 
+After stop word and stemming process: 
+#WSUM( 1.0 insid 1.0 trade 1.0 case ); 
+Aer Expansion and learning newweights: 
+#WSUM( 0.181284 insid 0.045721 trade 0.016127 case 0.088143 boesk 
+0.000001 ivan 0.026762 sec 0.052081 guilt 0.074493 drexel 0.000001 plead 
+0.003834 fraud 0.091436 takeov 0.018636 lawyer 0.000000 crimin 0.137799 
+alleg 0.057393 attorney 0.155781 charg 0.024237 scandal 0.000000 burnham 
+0.000000 lambert 0.026270 investig 0.000000 wall 0.000000 firm 0.000000 
+illeg 0.000000 indict 0.000000 prosecutor 0.000000 profit 0.000000 ); 
+Figure 1: Query Transformation Process. 
+The query transformation process is illustrated in Figure 1. First, the natural- 
+language query is transformed into one which can be used by the query-parsing 
+mechanism of the IR system. The weights associated with each term are assigned a 
+default value of 1.0, implying that each term is equally important in discriminating 
+relevant documents. The query then undergoes a stopping and stemming process, 
+by which morphological stemming and the elimination of very common words, called 
+stopwords, increases both the effectiveness and efficiency of a system [9]. The query 
+is subsequently expanded using a statistical term-expansion process producing terms 
+from the training set of documents. Finally, a learning algorithm is invoked to 
+produce new weights for the expanded query. 
+2 Retrieval Process 
+Text-based information retrieval systems allow the user to pose a query to a col- 
+lection or a stream of documents. When a query q is presented to a collection 
+c, each document d  c is examined and assigned a value relative to how well d 
+satisfies the semantics of the request posed by q. For any instance of the triple 
+< q, d,c >, the system determines an evaluation value attributed to d using the 
+function eval(q, d, c). 
+The evaluation function eval(q, d, c) =  q 
+was used for this work, and is based on an implementation of INQUERY [8]. It is 
+assumed that q and d are vectors of real numbers, and that c contains precomputed 
+collection statistics in addition to the current set of documents. Since the collection 
+may change over time, it may be necessary to change the query representation over 
+time; however, in what follows the training collection is assumed to be static, and 
+successful learning implies that the resulting query generalizes to similar collections. 
+An IR system can perform several kinds of retrieval tasks. This work is specif- 
+ically concerned with two retrieval processes: document ranking and document 
+classification. A ranking of documents based on query q is achieved by sorting all 
+documents in a collection by evaluation value. Binary classification is achieved by 
+determining a threshold 0 such that for class R, eval(q, d, c) _ 0 - d  R, and 
+Text-Based Information Retrieval Using Exponentiated Gradient Descent 5 
+eval(q, d, c) < t9 - d  , so that R is the set of documents from the collection that 
+are classified as relevant to the query, and  is the set classified as non-relevant. 
+Central to any IR system is a parsing process used for documents and queries, 
+which produces tokens called terms. The terms derived from a document are used 
+to build an inverted list structure which serves as em index to the collection. 
+The natural-lemguage query is also parsed into a set of terms. Research-based IR 
+systems such as INQUERY, OKAPI [11], and SMART [5], assume that the co- 
+occurrence of a term in a query and a document indicates that the document is 
+relevant to the query to some degree, and that a query with multiple terms requires 
+a mechanism by which to combine the evidence each co-occurrence contributes to 
+the document's degree of relevemce to the query. The document representation for 
+such systems is a vector, each element of which is associated with a unique term in 
+the document. The values in the vector are produced by a term-evaluation function 
+comprised of a term frequency component, t f, and an inverse document frequency 
+component, idf, which are described in [8, 11]. The tf component causes the term- 
+evaluation value to increase as a query-term's occurrence in the document increases, 
+and the idf component causes the term-evaluation value to decrease as the number 
+of documents in the collection in which the term occurs increases. 
+3 Query Expansion 
+Though it is possible to learn weights for terms in the original query, better re- 
+sults are obtained by first expanding the query with additional terms that can 
+contribute to identifying relevemt documents, and then learning the weights for 
+the expemded query. The optimal number of terms by which to expemd a query is 
+domain-dependent, emd query expemsion can be performed using several techniques, 
+including thesaurus expansion and statistical methods [12]. The query expansion 
+process performed in this work is a two-step process: term selection followed by 
+weight assignment. The term selection process ranks all terms found in relevant 
+documents by an information metric described in [8]. The top n terms are used in 
+the expemded query. The experiments in this work used values of 50 emd 1000 for n. 
+The most common technique for weight assignment is derived from a closed-form 
+function originally presented by Rocchio in [6], but our experiments show that a 
+single-neuron learning approach is more effective. 
+3.1 Rocchio Weights 
+We assume that the-erms of the original query are stored in a vector t, and that 
+their associated weights are stored in q. Assuming that the new terms in the 
+expanded query are stored t , the weights for q can be determined using a method 
+originally developed by Rocchio that has been improved upon in [7, 8]. Using the 
+notation presented above, the weight assignment cem be represented in the linear 
+form: q' - . f(t) -t-/3,r(t',Rq,C) -t-/*nr(t',q,C), where f is a function operating 
+on the terms in the original query, r is a function operating on the term statistics 
+available from the training set of relevant documents (/q), emd nr is a function 
+operating on the statistics from the non-relevant documents (q). The values for 
+a,/, and ? have been the focus of many IR experiments, and 1.0, 2.0, and 0.5, have 
+been found to work well with various implementations of the functions f, r, and nr 
+[7]. 
+3.2 LMS and EG 
+In the experiments that follow, LMS and EG were used to learn query term weights. 
+Both algorithms were used in a training process attempting to learn the association 
+between the set of training instances (documents) and their corresponding binary 
+classifications (relevant or non-relevant). A set of weights  is updated given an 
+input instance  and a target binary classification value y. The algorithms learn the 
+association between  and y perfectly if .  - y, otherwise the value (y - -5) is 
+the error or loss incurred. The task of the learning algorithm is to learn the values 
+of  for more than one instance of . 
+-' , 2 -' : 
+The update rule for LMS is wt+ = t + Ft where Ft = - rlt(wt � t - yt) t, where 
+tie-t'i where 
+1 The update rule for EG is tq-l,i -- N 
+the step-size /t - .. -=  .e , 
+6 R. Papka, J.P. C

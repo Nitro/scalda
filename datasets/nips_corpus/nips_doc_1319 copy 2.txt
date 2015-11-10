@@ -1,0 +1,145 @@
+Visual Navigation in a Robot using 
+Zig-Zag Behavior 
+M. Anthony Lewis 
+Beckman Institute 
+405 N. Mathews Avenue 
+University of Illinois 
+Urbana, Illinois 61801 
+Abstract 
+We implement a model of obstacle avoidance in flying insects on a small, 
+monocular robot. The result is a system that is capable of rapid navigation 
+through a dense obstacle field. The key to the system is the use of zigzag 
+behavior to articulate the body during movement. It is shown that this behavior 
+compensates for a parallax blind spot surrounding the focus of expansion nor- 
+mally found in systems without parallax behavior. The system models the coop- 
+eration of several behaviors: halteres-ocular response (similar to VOR), 
+optomotor response, and the parallax field computation and mapping to motor 
+system. The resulting system is neurally plausible, very simple, and should be 
+easily hosted on aVLSI hardware. 
+1 INTRODUCTION 
+Srinivasan and Zhang (1993) describe behavioral evidence for two distinct movement 
+detecting systems in bee: (1) A direction selective pathway with low frequency response 
+characteristics serving the optomotor response and (2) A non-direction selective move- 
+ment system with higher frequency response serving functions of obstacle avoidance and 
+the 'tunnel centering' response where the animal seeks a flight path along the centerline of 
+a narrow corridor. Recently, this parallel movement detector view has received support 
+from anatomical evidence in fly (Douglass and Strausfeld, 1996). We are concerned here 
+with the implications of using non-direction selective movement detectors for tasks such 
+as obstacle avoidance. 
+A reasonable model of a non-direction selective pathway, wou!,d be that this pathway is 
+computing the absolute value of the optic flow, i.e. s = II[c, :glll where c, :9 are the 
+components of the optic flow field on the retina at the point [x, y]. 
+What is the effect of using the absolute value of the flow field and throwing away 
+direction information? In section 2 we analyze the effect of a non-direction selective 
+movement field. We understand from this analysis that rotational information, and the 
+limited dynamic range of real sensors contaminates the non-direction selective field and 
+Visual Navigation in a Robot Using Zig-Zag Behavior 823 
+probably prevents the use of this technique in an area around the direction heading of the 
+observer. 
+One technique to compensate for this 'parallax blind spot' is by periodically changing the 
+direction of the observer. Such periodic movements are seen in insects as well as lower 
+vertebrates and it is suggestive that these movements may compensate for this basic 
+problem. 
+In Section 3, we describe a robotic implementation using a crude non-direction selective 
+movement detector based on a rectified temporal derivative of luminosity. Each 'neuron' 
+in the model retina issues a vote to control the motors of the robot. This system, though 
+seemingly naively simple, compares favorably with other robotic implementations that 
+rely on the optic flow or a function of the optic flow (divergence). These techniques 
+typically require a large degree of spatial temporal averaging and seem computationally 
+complex. In addition, our model agrees better with with the biological evidence. 
+Finally, the technique presented here is amenable to implementation in custom aVLSI or 
+mixed aVLSI/dVLSI chips. Thus it should be possible to build a subminiature visually 
+guided navigation system with several (one?) low-power simple custom chips. 
+2 ANALYSIS OF NON-DIRECTION SELECTIVE MOVEMENT 
+DETECTION SYSTEM 
+Let us assume a perspective projection 
+where x is the focal length of the lens, X, Y, Z is the position of a point in the environ- 
+ment, and x, y is the projection of that point on the retinal plane. The velocity of the image 
+of a moving point in the world can be found by differentiating (1) with respect to time: 
+If we assume that objects in the environment are fixed in relation to one-a,nt-other and that 
+the observer is moving with relative translational velocity Cv = [v v v] and relative 
+� � c  . . e .1 y Zl . . 
+rotational velocity n = [to % toz] to the environment given m frame c, a point m the 
+environment has relative velocity: 
+(3) 
+Now substituting in (2): 
+II 'I-1 0 XlCv +'[ xy -1-X2;lclle 
+= 0 -1 yJ e l+y2 -xy 
+and taking the absolute value of the optic flow: 
+(4) 
+s2= I '2v +x-(xy%+toy(x +l)+ytoz) +-�+y+(-%(y +l)+xytoy+ 
+where we have made the substitution: [// , t - a 0] (that is, the heading direction). 
+/ 
+We can see that the terms involving [% toy t�z] cannot be separated from the x, y terms. If 
+we assume that [% toy toz] = 0 then we car rarrange the equation as: 
+824 M. A. Lewis 
+in the case of Z translation. If [Tz[ = 0 then we have: 
++ 
+(6) 
+(7) 
+this corresponds to the case of pure lateral translations. Locusts (as well as some verte- 
+brates) use peering or side to side movements to gauge distances before jumping. 
+We call the quantity in (6) inverse relative depth. Under the correct circumstances it is 
+equivalent to the reciprocal of time to contact. 
+Equation (6) can be restated as: a-(s) = gis where g is a gain factor that depends on the 
+current direction heading and the position in the retina. This gain factor can be imple- 
+mented neurally as a shunting inhibition, for example. 
+This has the following implications. If the observer is using a non-direction sensitive 
+movement detector then (A) it must rotationally stabilize its eyes (B) it must dynamically 
+alter the gain of this information in a pathway between the retinal input and motor output 
+or it must always have a constant direction heading and use constant gain factors. 
+In real systems there is likely to be imperfection in rotational stabilization of the observer 
+as well as sensors with limited dynamic range. To understand the effect of these, let us 
+assume that there is a base-line noise level 5 and we assume that this defines a minimum 
+threshold substituting s = /5, we can find a level curve for the minimum detectability of 
+an object, i.e.: 
+Thus, for constant depth and for  independent of the spatial position on the retina, the 
+level curve is a circle. The circle increases in radius with increasing distance, and noise, 
+and decreases with increasing speed. The circle is centered around the direction heading. 
+The solution to the problem of a 'parallax blind spot' is to make periodic changes of 
+direction. This can be accomplished in an open loop fashion or, perhaps, in an image 
+driven fashion as suggested by Sobey (1994). 
+3 ROBOT MODEL 
+Figure 1 a is a photograph of the robot model. The robot' s base is a Khepera Robot. The 
+Khepera is a small wheeled robot a little over 2 in diameter and uses differential drive 
+motors. The robot has been fitted with a solid-state gyro attached to its body. This 
+gyroscope senses angular velocities about the body axis and is aligned with the axis of the 
+camera joint. A camera, capable of rotation about an axis perpendicular to the ground 
+plane, is also attached. The camera has a field of view of about 90 � and can swing of 
++90 � . The angle of the head rotation is sensed by a small potentiometer. 
+For convenience, each visual process is implemented on a separate Workstation (SGI 
+Indy) as a heavyweight process. Interprocess communication is via PVM distributed 
+computing library. Using a distributed processing model, behaviors can be dynamically 
+added and deleted facilitating analysis and debugging. 
+3.1 ROBOT CONTROL SYSTEM 
+The control is divided into control modules as illustrated in Fig 2. At the top of the 
+drawing we see a gaze stabilization pathway. This uses a gyro (imitating a halteres organ) 
+for stabilization of rapid head movements. In addition, a visual pathway, using direction 
+selective movement detector (DSMD) maps is used for slower optomotor response. Each 
+of the six maps uses correlation type detectors (Borst and Egelhaaf, 1989). Each map is 
+Visual Navigation in a Robot Using Zig-Zag Behavior 825 
+>era Base[ 
+Figure 1. Physical setup. (A) Modified Khepera Robot with camera and gyro 
+mounted. (B) Typical obstacle field run experiment. 
+tuned to a different horizontal velocity (three for left image translations and three for right 
+image translations). 
+The lower half of the drawing shows the obstacle avoidance pathway. A crude non- 
+direction selective movement detector is created using a simple temporal derivative. The 
+use of this as a movement detector was motivated by the desire to eventually replace the 
+camera front end with a Neuromorphic chip. Temporal derivative chips are readily avail- 
+able (Delbrtick and Mead, 1991). 
+Next we reason that the temporal derivative gives a crude estimate of the obsolute value of 
+the optic flow. For example if we expect only horizontal flows then: E..x = -E. (Horn 
+and Shunck, 1981). Here E t 1S the temporal derivative of the luminosity and E x is the 
+spatial derivative. If we sample over a patch of the image, Ex will take on a range of 
+values. If we take the average rectified temporal derivative over a patch then 
+-- I-Etl/IEI � Thus the average rectified temporal derivative over a patch will give a 
+velociiy pr6poixional the absolute value of the optic flow. 
+In order to make the change to motor commands, we use a voting scheme. Each pixel in 
+the nondirection selective movement detector field (NDSMD) votes on a direction for the 
+robot. The left pixels for a right turn and the right pixels vote for a left turn. The left and 
+right votes are summed. In certain experiments described below the difference of the left 
+and right votes was used to drive the rotation of the robot. In others a symmetry breaking 
+scheme was used. It was observed that with an object dead ahead of the robot, often the 
+left and right activation would have high but nearly equal activation. In the symmetry 
+breaking scheme, the side with the lower activatio

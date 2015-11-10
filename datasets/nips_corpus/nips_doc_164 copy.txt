@@ -1,0 +1,197 @@
+537 
+A MASSIVELY PARALLEL SELF-TUNING 
+CONTEXT-FREE PARSER 
+Eugene Santos Jr. 
+Department of Computer Science 
+Brown University 
+Box 1910, Providence, RI 02912 
+esj@cs.brown. edu 
+ABSTRACT
+The Parsing and Learning System(PALS) is a massively 
+parallel self-tuning context-free parser. It is capable of 
+parsing sentences of unbounded length mainly due to its 
+parse-tree representation scheme. The system is capable 
+of improving its parsing performance through the 
+presentation of training examples. 
+INTRODUCTION 
+Recent PDP research[Rumelhart et al., 1986; Feldman and Ballard, 1982; 
+Lippmann, 1987] involving natural language processing[Fanty, 1988; 
+Selman, 1985; Waltz and Pollack, 1985] have unrealistically restricted 
+sentences to a fixed length. A solution to this problem was presented in 
+the system CONPARSE[Charniak and Santos, 1987]. A parse-tree 
+representation scheme was utilized which allowed for processing 
+sentences of any length. Although successful as a parser, it's achitecture 
+was strictly hand-constructed with no learning of any form. Also, 
+standard learning schemes were not applicable since it differed from all 
+the popular architectures, in particular, connectionist ones. 
+In this paper, we present the Parsing and Learning System(PALS) which 
+attempts to integrate a learning scheme into CONPARSE. It basically 
+allows CONPARSE to modify and improve its parsing capability. 
+1This research was supported in part by the Office of Naval Research under 
+contract N00014-79-C-0592, the National Science Foundation under contracts 
+I8T-8416034 and I8T-8515005, and by the Defense Advanced Research Projects 
+Agency under ARPA Order No. 4786. 
+538 Santos 
+REPRESENTATION OF PARSE TREE 
+A parse-tree is represented by a matrix where the bottom row consists of 
+the leaves of the tree in left-to-right order and the entries in each 
+column above each leaf correspond to the nodes in the path from leaf to 
+root. For example, looking at the simple parse-tree for the sentence 
+noun verb noun, the column entries for verb would be verb, VP, and $. 
+(see Figure 1) (As in previous work, PALS takes part-of-speech as input, 
+not words.) 
+s 
+s rS  vP 
+NP VP NP 
+noun v noun 
+no 
+noun 
+Figure 1. Parse tree as represented by a collection of columns in the 
+matrix. 
+In addition to the columns of nonterminals, we introduce the binder 
+entries as a means of easily determining whether two identical 
+nonterminals in adjacent columns represent the same nonterminal in a 
+parse tree (see Figure 2). 
+s 
+s --s 
+NP VP / NP 
+noun verb noun 
+Figure 2. Parse tree as represented by a collection of columns in the 
+matrix plus binders. 
+To distributively represent the matrix, each entry denotes a collection of 
+labeled computational units. The value of the entry is taken to be the 
+label of the unit with the largest value. 
+A Massively Parallel Self-Tuning Context-Free Parser 539 
+A nonterminal entry has units which are labeled with the nonterminals 
+of a language plus a special label blank. When the blank unit is 
+largest, this indicates that the entry plays no part in representing the 
+current parse tree. 
+A binder entry has units which are labeled from 1 to the number of rows 
+in the matrix. A unit labeled k then denotes the binding of the 
+nonterminal entry on its immediate left to the nonterminal entry in the 
+kth row on its right. To indicate that no binding exists, we use a special 
+unit label e called an edge. 
+In general, it is easiest to view an entry as a vector of real numbers where 
+each vector component denotes some symbol. (For more information see 
+[Charniak and Santos, 1987].) 
+In the current implementation of PALS, entry unit values range from 0 to 
+1. The ideal value for entry units is thus I for the largest entry unit and 0 
+for all rema_tning entry units. We essentially have 1 being yes and 0 
+being no. 
+LANGUAGE RULES 
+In order to determine the values of the computational units mentioned in 
+the previous section, we apply a set of language rules. Each 
+compuatational unit will be determined by some subset of these rules. 
+Each language rule is represented by a single node, called a rule node. A 
+rule node takes its input from several computational units and outputs to 
+a single computational unit. 
+The output of each rule node is also modified by a non-negative value 
+called a rule-weight. This weight represents the applicability of a 
+language rule to the language we are attempting to parse (see PARSING). 
+In the current implementation of PALS, rule-weight values range from 0 
+to I being similar to probabfiities. 
+Basically, a rule node attempts to express some rule of grammar. As with 
+CONPARSE, PALS breaks context-free grammars into several subrules. 
+For example, as part of S --> NP VP, PALS would have a rule stating that 
+an NP entry would like to have an S immediately above it in the same 
+column. Our rule for this grammar rule will then take as input the entry's 
+computational unit labeled NP and output to the unit labeled S in the 
+entry immediately above(see Figure 3). 
+540 San 
+Entry i,j 
+Entry i- 1 ,j 
+Rule-Weight 
+Figure 3. A rule node for $ above NP. 
+Rule-Node 
+As a more complex example, ff an entry is a NP, the NP does not continue 
+right, i.e., has an edge, and above is an S that continues to the right, then 
+below the second S is a VP. 
+In general, to determine a unit's value, we take all the rule nodes and 
+combine their influences. This will be much clearer when we discuss 
+parsing in the next section. 
+PARSING 
+Since we are dealing with a PDP-type architecture, the size of our matrix 
+is fixed ahead of time. However, the way we use the matrix 
+representation scheme allows us to handle sentences of unbounded 
+length as we shall see. 
+The system parses a sentence by taking the first word and placing it in 
+the lower rightmost entry; it then attempts to construct the column 
+above the word by using its rule nodes. After this processing, the system 
+shffis the first word and its column left and inserts the second word. Now 
+both words are processed simultaneously. This shifting and processing 
+continues untfi the last word is shifted through the matrix (see Figure 4). 
+Since sentence lengths may exceed the size of the matrix, we are only 
+processing a portion at a time, creating partial parse-trees. The complete 
+parse-tree is the combination of these partial ones. 
+A Massively Parallel Self-Tuning Context-Free Parser 541 
+noilll 
+NP VP 
+noun verb noun 
+NP 
+noun verb 
+NP VP / NP 
+noun verb noun 
+Figure 4. Parsing of noun verb noun. 
+Basically, the system builds the tree in a bottom-up fashion. However, It 
+can also build left-right, right-left, and top-down since columns may be 
+of differing height. In general, columns on the left in the matrix will be 
+more complete and hence possibly higher than those on the right. 
+LEARNING 
+The goal of PALS is to learn how to parse a given language. Given a 
+system consisting of a matrix with a set of language rules, we learn 
+parsing by determining how to apply each language rule. 
+In general, when a language rule is inconsistent with the language we are 
+learning to parse, its corresponding rule-weight drops to zero, essentially 
+disconnecting the rule. When a language rule is consistent, its rule- 
+weight then approaches one. 
+In PALS, we learn how to parse a sentence by using training examples. 
+The teacher/trainer gives to the system the complete parse tree of the 
+sentence to be learned. 
+Because of the restrictions imposed by our matrix, we may be unable to 
+fully represent the complete parse tree given by the teacher. To learn how 
+to parse the sentence, we can only utfiize a portion of the complete parse 
+tree at any one time. 
+Given a complete parse tree, the system simply breaks it up into 
+manageable chunks we call snapshots. Snapshots are matrices which 
+contain a portion of the complete parse tree. 
+Given this sequence of snapshots, we present them to the system in a 
+fashion similar to parsing. The only difference is that we clamped the 
+542 Santos 
+snapshot to the system matrix while it fires its rule nodes. From this, we 
+can easily determine whether a rule node has incorrectly fired or not by 
+seeing ff it fired consistently with given snapshot. We punish and reward 
+accordingly. 
+As the system is trained more and more, our rule-weights contain more 
+and more information. We would like the rule-weights of those rules used 
+frequently during training to not change as much as those not frequently 
+used. This serves to stabilize our knowledge. R also prevents the system 
+from being totally corrupted when presented with an incorrect training 
+example. 
+As in traditional methods, we find the new rule-weights by minimizing 
+some function which gives us our desired learning. The function which 
+captures this learning method is 
+7--.ij {cij ( xij - Iij ):z + [ ,j Iij + ( ] - j ) ( ] - Iij ) 1 :z rij:z} 
+where t are the unit labels for some matrix entry, j are the language rules 
+associated with units i, ai, j are the old rule-weights, [i,j are the new rule- 
+weights, ci, j is the knowledge preservation coefficient which is a 
+function of the frequency that language rule j for entry unit i has been 
+fired during learning, ri, j is the unmodffied rule output using snapshot as 
+input, and i,j is the measure of the correctness of language rule j for unit 
+i. 
+RESULTS 
+In the current implementation of PALS, we utilize a 7x6 matrix and an 
+average of fifty language rules per entry unit to parse English. 
+Obviously, our set of language rules will determine what we can and 
+cannot learn. Currently, the system is able to learn and parse a modest 
+subset of the English language. It can parse sentences with moderate 
+sentence embedding and phrase attachment from the following 
+grammar: 
+S M --> S per 
+$ --> NP VP 
+N P --> (det) (adj)* noun (PP)* (WHCL) 
+(INFP 1) 
+NP --> INFP2 
+PP --> prep NP 
+WHCL --> that S/NP 
+S/NP --> VP 
+S/NP --> NP VP/NP 

@@ -1,0 +1,165 @@
+Backpropagation without Multiplication 
+Patrice Y. Simard 
+AT&T Bell Laboratories 
+Holmdel, NJ 07733 
+Hans Peter Graf 
+AT&T Bell Laboratories 
+Itohndel, NJ 07733 
+Abstract 
+The back propagation algorithm has been modified to work with- 
+out any multiplications and to tolerate computations with a low 
+resolution, which makes it more attractive for a hardware imple- 
+mentation. Numbers are represented in floating point format with 
+i bit mantissa and 3 bits in the exponent for the states, and i bit 
+mantissa and 5 bit exponent for the gradients, while the xveights are 
+16 bit fixed-point numbers. In this way, all the computations can 
+be executed with shift and add operations. Large netxvorks with 
+over 100,000 weights were trained and demonstrated the same per- 
+formance as networks computed with full precision. An estimate of 
+a circuit implementation shows that a large network can be placed 
+on a single chip, reaching more than 1 billion weight updates per 
+second. A speedup is also obtained on any machine where a mul- 
+tiplication is slower than a shift operation. 
+i INTRODUCTION 
+One of the main problems for implementing tile backpropagation algorithm in hard- 
+ware is the large number of multiplications that have to be executed. Fast multipli- 
+ers for operands with a high resolution require a large area. Hence the multipliers 
+are the elements dominating the area of a circuit.. Many researchers have tried to 
+reduce the size of a circuit bv limiting the resolution of the computation. Typically, 
+this is done by simply reducfng the number of bits utilized for the computation. For 
+a forward pass a reduction to just a few, 4 to 6, bits, often degrades the performance 
+very little, but learning requires considerably more resolution. Requirements rang- 
+ing anywhere fi'om 8 bits to more than 16 bits were reported to be necessary to make 
+learning converge reliably (Sakaue et al., 1993; Asanovic, Morgan and Wawrzynek, 
+1993; Reyneri and Filippi, 1991). But there is no general theory, how much resolu- 
+tion is enough, and it depends oil several factors, such as the size and architecture 
+of the netxvork as well as on the type of problem to be solved. 
+232 
+Backpropagation without Multiplication 233 
+Several researchers have tried t.o train networks where the weights are limited to 
+powers of two (Kwan and Tang, 1993; White and Ehnasry, 1992; Marchesi et. al., 
+1993). In this way all the nmltiplications can be reduced to shift operations, an 
+operation that can be implemented with much less hardware than a multiplication. 
+But restricting the weight values severely impacts the performance of a network, and 
+it is tricky to make the learning procedure converge. In fact, some researchers keep 
+weights with a full resolution off-line aud update these weights in the backward pass, 
+while the weights with reduced resolution are used in the forward pass (Marchesi 
+et al., 1993). Silnilar tricks are usually used when networks implemented in analog 
+hardware are trained. Weights with a high resolution are stored in an external, 
+digital memory while the analog network with its limited resolution is used in the 
+forward pass. If a high resolution copy is not stored, the weight update process 
+needs to be modified. This is t. ypically done by using a stochastic update technique, 
+such as weight dithering (Vincent and Myers, 1992), or weight perturbation (Jabri 
+and Flower, 1992). 
+We present here an algorithm that instead of reducing the resolution of the weights, 
+reduces the resolution of all the other values, namely those of the states, gradients 
+and learning rates, to powers of two. This eliminates multiplications without af- 
+fecting the learning capabilities of the network. Therefore we obtain the benefit of 
+a much compacter circuit without any compromises on the learning performance. 
+Simulations of large networks with over 100,000 weights show that this algorithm 
+perfor. ms as well as standard i)ackpropagation computed with 32 bit floating point 
+precision. 
+2 THE ALGORITHM 
+The forward propagatiou for each unit i, is given by the equation: 
+where f is the unit function, wi is the weight from unit i t.o unit j, and xi is the 
+activation of unit i. The backpropagation algorithm is robust with regard to the 
+unit filnction as long as the function is nonlinear, monotonically increasing, and a 
+derivative exists (the most commonly used fimction is depicted iu Figure 1, left. 
+A saturated ramp function (see Figure 1, middle), for instance, performs as well 
+as the differentiable sigmoid. The binary threshold function, however, is too much 
+of a simplification and results in poor performance. The clioice of our function is 
+dictated by the fact that we would like t.o have only powers of two for the unit values. 
+This function is depicted in Figure 1, right. It giw_s performances comparable to 
+the sigmoid or the saturated ramp. Its values can be represented by a 1 bit mantissa 
+(the sign) with a 2 or 3 bit exponent (uegative powers of two). 
+The derivative of this fimction is a sum of Dirac delta functions, but we take instead 
+the derivative of a piecewise linear ramp function (see Figure 1). One could actually 
+consider this a low pass filtered version of the real derivative. After the gradients 
+of all the units have been cornpuled using the equation, 
+we will discretize the values to be a power of two (with sign). This introduces noise 
+into the gradient and its effect on the learning has to be considered carefully. This 
+234 Simard and Graf 
+Sigmoid 
+Piecewise linear 
+Power of two 
+uncC�on 
+0 
+Fnctlon derivative (approxlmat�on) 
+1.$ 
+Figure 1: Left' sigmoid function xvith its derivative. Middle: piecewise linear 
+function with its derivative. Right: Saturated power of two function with a power 
+of two approximation of its derivative (identical to the piece,vise linear derivative). 
+problem will be discussed in section 4. The backpropagation algorithm can now be 
+implemented with additions (or subtractions) and shifting only. The weight update 
+is given by the equation: 
+A Wj i -- -- ?]gj 32 i (3) 
+Since both gj and xi are powers of two, the veight update also reduces to additions 
+and shifts. 
+3 RESULTS 
+A large structured network with five layers and overall more than 100,000 weights 
+was used to test this algorithm. The application analyzed is recognizing handwritten 
+character images. A database of 800 digits was used for training and 2000 hand- 
+written digits were used for testing. A description of this netxvork can be found in 
+(Le Cun et al., 1990). Figure 2 shows the learning curves on the test set for various 
+unit functions and discretization processes. 
+First, it should be noted that the results given by the sigmoid function and the 
+saturated ramp with full precision on unit values, gradients, and weights are very 
+similar. This is actually a well known behavior. The surprising result comes from 
+the fact that reducing the precision of the unit values and the gradients to a 1 bit 
+mantissa does not reduce the classification accuracy and does not even slow down the 
+learning process. During these tests the learning process was interrupted at various 
+stages to check that both the unit values (including the input layer, but excluding 
+the output layer) and the gradients (all gradients) were restricted to powers of two. 
+It was flirther confirmed that only 2 bits were sufficient for the exponent of the unit 
+Backpropagation without Multiplication 235 
+Training 
+oo. error 
+o � sigmoid 
+o pecewise lin 
+eo ! o powerof2 
+7O 
+60 , 
+10 
+0 2 4 6 8 10 12 14 18 18 20 22 24 
+age (in 1000) 
+Testing 
+,oo I error � sigmoid 
+9o | o pecewise lin 
+7O 
+3O 
+10 
+0 
+0 2 4 6 8 10 12 14 16 16 20 22 24 
+age (in 1000) 
+Figure 2: Training and testing error during learning. The filled squares (resp. 
+empty squared) represent t. he points obtained with the vanilla backpropagation and 
+a sigmoid function (resp. piecewise linear function) used as an activation function. 
+The circles represent the same experiment done wit. h a power of t. wo function used 
+as the activation fimction, and xvit. h all unit. gradient. s discretized to the nearest 
+power of two. 
+values (from 20 t.o 2 -3) and 4 bit.s vere sufficient for the exponent. of the gradients 
+(from 20 to 2-1). 
+To test whether there was any asympt.otic limit on performance, we ran a long 
+term experiment (several days) with our largest network (17,000 h'ee parameters) 
+for handwritten character recognition. The training set (60,000 patterns) was made 
+out 30,000 patterns of tile original NIST t. raining set, (easy) and 30,000 patterns 
+out of the original NIST testing set (hard). Using the most basic backpropagat,ion 
+algorithm (with a guessed constant learning rate) we got the training raw error rate 
+down to under 1% in 20 epochs which is comparable to our standard learning time. 
+Performance on the t,est set was not as good wit,h t,he discrete network (it took twice 
+as long to reach equal performance xvith the discrete network). This was at,tribut,ed 
+to the unnecessary discretization of t,he output unit. s 1 
+These results show that gradients and unit activat.ions can be discretized t.o powers 
+of two with negligible loss in performance and convergence speed! The next section 
+will present, theoretical explanations for why this is at. all possible and why it, is 
+generally the case. 
+Since the output units are not multiplied by anything, there is no need to use a 
+discrete activation function. As a matter of fact the coutinuous sigmoid functiou can be 
+implemented by just changing the target, values (using the inverse sigmoid function) and 
+by using no activation function for the output units. Titis modification was not introduced 
+but we believe it vould improves the performance on the test set, especially when fancy 
+decision rules (with confidence evaluation) are used, since they require high precision on 
+the output units. 
+236 Simard and Graf 
+2000, 
+16

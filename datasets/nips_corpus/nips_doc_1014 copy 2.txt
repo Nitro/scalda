@@ -1,0 +1,149 @@
+Optimal Asset Allocation 
+using 
+Adaptive Dynamic Programming 
+Ralph Neuneier* 
+Siemens AG, Corporate Research and Development 
+Otto-Hahn-Ring 6, D-81730 M/inchen, Germany 
+Abstract 
+In recent years, the interest of investors has shifted to computer- 
+ized asset allocation (portfolio management) to exploit the growing 
+dynamics of the capital markets. In this paper, asset allocation is 
+formalized as a MarkovJan Decision Problem which can be opti- 
+mized by applying dlnamic programming or reinforcement learning 
+based algorithms. Using an artificial exchange rate, the asset allo- 
+cation strategy optimized with reinforcement learning (Q-Learning) 
+is shown to be equivalent to a policy computed by dynamic pro- 
+gramming. The approach is then tested on the task to invest liquid 
+capital in the German stock market. Here, neural networks are 
+used as value function approximators. The resulting asset alloca- 
+tion strategy is superior to a heuristic benchmark policy. This is 
+a further example which demonstrates the applicability of neural 
+network based reinforcement learning to a problem setting with a 
+high dimensional state space. 
+1 Introduction 
+Billions of dollars are daily pushed through the international capital markets while 
+brokers shift their investments to more promising assets. Therefore, there is a great 
+interest in achieving a deeper understanding of the capital markets and in developing 
+efficient tools for exploiting the dynamics of the markets. 
+*Ralph. Neuneier@zfe.siemens.de, http://www.siemens.de/zfe_nn/homepage.html 
+Optimal Asset Allocation Using Adaptive Dynamic Programming 953 
+Asset allocation (portfolio management) is the investment of liquid capital to various 
+trading opportunities like stocks, futures, foreign exchanges and others. A portfolio 
+is constructed with the aim of achieving a maximal expected return for a given 
+risk level and time horizon. To compose an optimal portfolio, the investor has 
+to solve a difficult optimization problem consisting of two phases (Brealy, 1991). 
+First, the expected yields are estimated simultaneously with a certainty measure. 
+Second, based on these estimates, a portfolio is constructed obeying the risk level 
+the investor is willing to accept (mean-variance techniques). The problem is further 
+complicated if transaction costs must be considered and if the investor wants to 
+revise the decision at every time step. In recent years, neural networks (NN) have 
+been successfully used for the first task. Typically, a NN delivers the expected 
+future values of a time series based on data of the past. Furthermore, a confidence 
+measure which expresses the certainty of the prediction is provided. 
+In the following, the modeling phase and the search for an optimal portfolio are 
+combined and embedded in the framework of MarkovJan Decision Problems, MDP. 
+That theory forrealizes control problems within stochastic environments (Bertsekas, 
+1987, Elton, 1971). If the discrete state space is small and if an accurate model of 
+the system is available, MDP can be solved by conventional Dynamic Programming, 
+DP. On the other extreme, reinforcement learning methods, e.g. Q-Learning, QL, 
+can be applied to problems with large state spaces and with no appropriate model 
+available (Singh, 1994). 
+2 Portfolio Management is a Markovian Decision Problem 
+The following simplifications do not restrict the generalization of the proposed meth- 
+ods with respect to real applications but will help to clarify the relationship between 
+MDP and portfolio optimization. 
+� There is only one possible asset for a Deutsch-Mark based investor, say a 
+foreign currency called Dollar, US-$. 
+� The investor is small and does not influence the market by her/his trading. 
+� The investor has no risk aversion and always invests the total amount. 
+� The investor may trade at each time step for an infinite time horizon. 
+MDP provide a model for multi-stage decision making problems in stochastic en- 
+vironments. MDP can be described by a finite state set $ = 1,..., n, a finite set 
+U(i) of admissible control actions for every state i C $, a set of transition prob- 
+abilities pj, which describe the dynamics of the system, and a return function  
+r(i, j, u(i)), with i, j C S, u(i)  U(i). Furthermore, there is a stationary policy 
+re(i), which delivers for every state an admissible action u(i). One can compute the 
+value-function V? of a given state and policy, 
+v 
+t--O 
+In the MDP-literature, the return often depends only on the current state i, but the 
+theory extends to the case of r = r(i,j, u(i)) (see Singh, 1994). 
+954 R. NEUNEIER 
+where E indicates the expected value, 7 is the discount factor with 0 _< 7 < 1, and 
+where R are the expected returns, R = Ej(r(i,j, u(i)). The aim is now to find a 
+policy r* with the optimal value-function V* = max V? for all states. 
+In the context discussed here, a state vector consists of elements which describe the 
+financial time series, and of elements which quantify the current value of the invest- 
+ment. For the simple example above, the state vector is the triple of the exchange 
+rate, xt, the wealth of the portfolio, ct, expressed in the basis currency (here DM), 
+and a binary variable b, representing the fact that currently the investment is in 
+DM or US-$. 
+Note, that out of the variables which form the state vector, the exchange rate is 
+actually independent of the portfolio decisions, but the wealth and the returns are 
+not. Therefore, asset allocation is a control problem and may not be reduced to pure 
+prediction. 2 This problem has the attractive feature that, because the investments 
+do not influence the exchange rate, we do not need to invest real money during the 
+training phase of QL until we are convinced that our strategy works. 
+3 Dynamic Programming: Off-line and Adaptive 
+The optimal value function V* is the unique solution of the well-known Bellman 
+equation (Bertsekas, 1987). According to that equation one has to maximize the 
+expected return for the next step and follow an optimal policy thereafter in order 
+to achieve global optimal behavior (Bertsekas, 1987). An optimal policy can be 
+easily derived from V* by choosing a r(i) which satisfies the Bellman equation. For 
+nonlinear systems and non-quadric cost functions, V* is typically found by using an 
+iterative algorithm, value iteration, which converges asymptotically to V*. Value 
+iteration applies repeatedly the operator T for all states i, 
+T/(V)= max (R(i,u(i))+7EPjk)). (2) 
+,(i)ev(i) ' 
+Value iteration assumes that the expected return function R(i, u(i)) and the tran- 
+sition probabilities pj (i.e. the model) are known. Q-Learning, (QL), is a 
+reiaforcement-learning method that does not require a model of the system but 
+optimizes the policy by sampling state-action pairs and returns while interacting 
+with the system (Barto, 1989). Let's assume that the investor executes action u(i) 
+at state i, and that the system moves to a new state j. Let r(i, j, u(i)) denote the 
+actual return. QL then uses the update equation 
+Q(i,u(i)) 
+Q(k,v) 
+= (1 - rl)Q(i,u(i)) + rl(r(i,j,u(i)) +7maxQ(j,u(j))) 
+u(j) 
+= Q(k,v), for all k y i and v y u(i) 
+(3) 
+where r/ is the learning rate and Q(i,u(i)) are the tabulated Q-values. One can 
+prove, that this relaxation algorithm converges (under some conditions) to the op- 
+timal Q-values (Singh, 1994). 
+2To be more precise, the problem only becomes a multi-stage decision problem if the 
+transaction costs are included in the problem. 
+Optimal Asset Allocation Using Adaptive Dynamic Programming 955 
+The selection of the action u(i) should be guided by the trade-off between explo- 
+ration and exploitation. In the beginning, the actions are typically chosen randomly 
+(exploration) and in the course of training, actions with larger Q-values are cho- 
+sen with increasingly higher probability (exploitation). The implementation in the 
+following experiments is based on the Boltzmann-distribution using the actual Q- 
+values and a slowly decreasing temperature parameter (see Barto, 1989). 
+4 Experiment I: Artificial Exchange Rate 
+In this section we use an exchange-rate model to demonstrate how DP and Q- 
+Learning can be used to optimize asset allocation. 
+The artificial exchange rate xt is in the range between 1 and 2 representing the 
+value of i US-$ in DM. The transition probabilities pij of the exchange rate are 
+chosen to simulate a situation where the xt follows an increasing trend, but with 
+higher values of xt, a drop to very low values becomes more and more probable. 
+A realization of the time series is plotted in the upper part of fig. 2. The random 
+state variable ct depends on the investor's decisions ut, and is further influenced by 
+xt, xt+, and ct-. A complete state vector consists of the current exchange rate xt 
+and the capital ct, which is always calculated in the basis currency (DM). Its sign 
+represents the actual currency, i.e., ct = -1.2 stands for an investment in US-$ 
+worth of 1.2 DM, and ct = 1.2 for a capital of 1.2 DM. ct and xt are discretized in 10 
+bins each. The transaction costs ( - 0.1 q-Ic/100[ are a combination of fixed (0.1) 
+and variable costs ([c/1001). Transactions only apply, if the currency is changed 
+from DM to US-$. The immediate return rt(xt, �t, Xt+l, ut) iS computed as in table 
+1. If the decision has been made to change the portfolio into DM or to keep the 
+actual portfolio in DM, ut = DM, then the return is always zero. If the decision 
+has been made to change the portfolio into US-$ or to keep the actual portfolio in 
+US-S, ut = US-S, then the return is equal to the relative change of the exchange 
+rate weighted with ct. That return is reduced by the transaction costs , if the 
+investor has to change into US-$. 
+Table 1: The immediate return function. 
+II DM I ut = US-$ 
+ct e DM 0 I rt = (xt+i/xt)(ct-)-ct 
+Ct G US-$ 0 rt ---- (Xt+l/Xt - 1)ct 
+The success of the strategies was tested on a r

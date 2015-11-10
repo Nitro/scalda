@@ -1,0 +1,159 @@
+103 
+NEURAL NETWORKS FOR TEMPLATE MATCHING: 
+APPLICATION TO REAL-TIME CLASSIFICATION 
+OF THE ACTION POTENTIALS OF REAL NEURONS 
+Yiu-fai Wong, Jashojiban Banik]. and James M. Bower$ 
+]'Division of Engineering and Applied Science 
+$Division of Biology 
+California Institute of Technology 
+Pasadena, CA 91125 
+ABSTRACT 
+Much experimental study of real neural networks relies on the proper classification of 
+extracellulary sampled neural signals (i.e. action potentials) recorded from the brains of ex- 
+perimental animals. In most neurophysiology laboratories this classification task is simplified 
+by limiting investigations to single, electrically well-isolated neurons recorded one at a time. 
+However, for those interested in sampling the activities of many single neurons simultaneously, 
+waveform classification becomes a serious concern. In this paper we describe and constrast 
+three approaches to this problem each designed not only to recognize isolated neural events, 
+but also to separately classify temporally overlapping events in real time. First we present two 
+formulations of waveform classification using a neural network template matching approach. 
+These two formulations are then compared to a simple template matching implementation. 
+Analysis with real neural signals reveals that simple template matching is a better solution to 
+this problem than either neural network approach. 
+INTRODUCTION 
+For many years, neurobiologists have been studying the nervous system by 
+using single electrodes to serially sample the electrical activity of single neu- 
+rons in the brain. However, as physiologists and theorists have become more 
+aware of the complex, nonlinear dynamics of these networks, it has become 
+apparent that serial sampling strategies may not provide all the information 
+necessary to understand functional organization. In addition, it will likely be 
+necessary to develop new techniques which sample the activities of multiple 
+neurons simultaneously 1. Over the last several years, we have developed two 
+different methods to acquire multineuron data. Our initial design involved 
+the placement of many tiny microelectrodes individually in a tightly packed 
+pseudo-floating configuration within the brain 2. More recently we have been 
+developing a more sophisticated approach which utilizes recent advances in 
+silicon technology to fabricate multi-ported silicon based electrodes (Fig. 1). 
+Using these electrodes we expect to be able to readily record the activity pat- 
+terns of larger number of neurons. 
+As research in multi-single neuron recording techniques continue, it has be- 
+come very clear that whatever technique is used to acquire neural signals from 
+many brain locations, the technical difficulties associated with sampling, data 
+compressing, storing, analyzing and interpreting these signals largely dwarf the 
+development of the sampling device itself. In this report we specifically consider 
+the need to assure that neural action potentials (also known as spikes) on 
+each of many parallel recording channels are correctly classified, which is just 
+one aspect of the problem of post-processing multi-single neuron data. With 
+more traditional single electrode/single neuron recordings, this task usually in- 
+American Institute of Physics 1988 
+104 
+volves passing analog signals through a Schmidt trigger whose output indicates 
+the occurence of an event to a computer, at the same time as it triggers an 
+oscilloscope sweep of the analog data. The experimenter visually monitors the 
+oscilloscope to verify the accuracy of the discrimination as a well-discriminated 
+signal from a single neuron will overlap on successive oscilloscope traces (Fig. 
+lc). Obviously this approach is impractical when large numbers of channels 
+are recorded at the same time. Instead, it is necessary to automate this classifi- 
+cation procedure. In this paper we will describe and contrast three approaches 
+we have developed to do this. 
+layer 
+Traces 
+on lower 
+layer 
+., ,, ; 
+0 1 
+2 3 4 
+me (mc) 
+Receding site b. 
+75 sq 
+Fig. 1. Silicon probe being developed in our lababoratory for multi-single unit recording 
+in cerebellax cortex. a) a complete probe; b) surface view of one recording tip; c) several 
+superhnposed neuronal action potentials recorded from such a silicon electrode in cerebellax 
+cortex. 
+While our principal design objective is the assurance that neural waveforms 
+are adequately discriminated on multiple channels, technically the overall ob- 
+jective of this research project is to sample from as many single neurons as 
+possible. Therefore, it is a natural extention of our effort to develop a neural 
+waveform classification scheme robust enough to allow us to distinguish activi- 
+ties arising from more than one neuron per recording site. To do this, however, 
+we now not only have to determine that a particular signal is neural in origin, 
+but also from which of several possible neurons it arose (see Fig. 2a). While 
+in general signals from different neurons have different waveforms aiding in 
+the classification, neurons recorded on the same channel firing simultaneously 
+or nearly simultaneously will produce novel combination waveforms (Fig. 2b) 
+which also need to be classified. It is this last complication which particularly 
+105 
+bedevils previous efforts to classify neural signals (For review see 5, also see 
+3-4). In summary, then, our objective was to design a circuit that would: 
+1. distinguish different waveforms even though neuronal discharges tend 
+to be quite similar in shape (Fig. 2a); 
+2. recognize the same waveform even though unavoidable movements 
+such as animal respiration often result in periodic changes in the amplitude 
+of a recorded signal by moving the brain relative to the tip of the electrode; 
+3. be considerably robust to recording noise which variably corrupts all 
+neural recordings (Fig. 2); 
+4. resolve overlapping waveforms, which are likely to be particularly in- 
+teresting events from a neurobiological point of view; 
+5. provide real-time performance allowing the experimenter to detect 
+problems with discrimination and monitor the progress of the experiment; 
+6. be implementable in hardware due to the need to classify neural sig- 
+nals on many channels simultaneously. Simply duplicating a software-based 
+algorithm for each channel will not work, but rather, multiple, small, in- 
+dependent, and programmable hardware devices need to be constructed. 
+1 1 
+signal recorded 
+2 2 
+t 5o v 
+electrode 
+a. 
+Fig. 2. a) Schematic diagram of an electrode recording from two neuronal cell bodies b) An 
+actual multi-neuron recording. Note the similarities in the two waveforms and the overlapping 
+event. c) and d) Synthesized data with different noise levels for testing classification algorithms 
+(c: 0.3 NSR; d: 1.1 NSR). 
+106 
+METHODS 
+The problem of detecting and classifying multiple neural signals on sin- 
+gle voltage records involves two steps. First, the waveforms that are present 
+in a particular signal must be identified and the templates be generated; 
+second, these waveforms must be detected and classified in ongoing data 
+records. To accomplish the first step we have modified the principal com- 
+ponent analysis procedure described by Abeles and Goldstein 3 to automat- 
+ically extract templates of the distinct waveforms found in an initial sam- 
+ple of the digitized analog data. This will not be discussed further as it is 
+the means of accomplishing the second step which concerns us here. Specif- 
+ically, in this paper we compare three new approaches to ongoing wave- 
+form classification which deal explicitly with overlapping spikes and vari- 
+ably meet other design criteria outlined above. These approaches consist of 
+a modified template matching scheme, and two applied neural network im- 
+plementations. We will first consider the neural network approaches. On 
+a point of nomenclature, to avoid confusion in what follows, the real neu- 
+rons whose signals we want to classify will be referred to as neurons while 
+computing elements in the applied neural networks will be called Hopons. 
+Neural Network Approach -- Overall, the problem of classifying neural 
+waveforms can best be seen as an optimization problem in the presence of 
+noise. Much recent work on neural-type network algorithms has demonstrated 
+that these networks work quite well on problems of this sort 6-8. In particular, 
+in a recent paper Hopfield and Tank describe an A/D converter network and 
+suggest how to map the problem of template matching into a similar context 8. 
+The energy functional for the network they propose has the form: 
+where T/j = connectivity between Hopon i and Hopon j, V/ = voltage output 
+of Hopon i, Ii = input current to Hopon i and each Hopon has a sigmoid 
+input-output characteristic V -- g(u) = 1/(1 + exp(-au)). 
+If the equation of motion is set to be: 
+dui/dt = -OE/OV =  TsV  + I 
+(la) 
+then we see that dE/dt = -(j TiVj + Ii)dV/dt - -(du/dt)(dV/dt) = 
+-g'(u)(du/dt) 2 50. Hence E will go to to a minimum which, in a network 
+constructed as described below, will correspond to a proposed solution to a 
+particular waveform classification problem. 
+Template Matching using a Hopfield-type Neural Net -- We have 
+taken the following approach to template matching using a neural network. For 
+simplicity, we initially restricted the classification problem to one involving two 
+waveforms and have accordingly constructed a neural network made up of two 
+groups of Hopons, each concerned with discriminating one or the other wave- 
+form. The classification procedure works as follows: first, a Schmidt trigger 
+107 
+is used to detect the presence of a voltage on the signal channel above a set 
+threshold. When this threshold is crossed, implying the presence of a possible 
+neural signal, 2 msecs of data around the crossing are stored in a buffer (40 
+samples at 20 KHz). Note that biophysical limitations assure that a s

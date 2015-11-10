@@ -1,0 +1,160 @@
+Structural and Behavioral Evolution 
+of Recurrent Networks 
+Gregory M. Saunders, Peter J. Angeline, and Jordan B. Pollack 
+Laboratory for Artificial Intelligence Research 
+Department of Computer and Information Science 
+The Ohio State University 
+Columbus, Ohio 43210 
+saunders @cis.ohio-state.edu 
+Abstract 
+This paper introduces GNARL, an evolutionary program which induces 
+recurrent neural networks that are structurally unconstrained. In contrast 
+to constructive and destructive algorithms, GNARL employs a popula- 
+tion of networks and uses a fitness function's unsupervised feedback to 
+guide search through network space. Annealing is used in generating 
+both gaussian weight changes and structural modifications. Applying 
+GNARL to a complex search and collection task demonstrates that the 
+system is capable of inducing networks with complex internal dynamics. 
+1 INTRODUCTION 
+A variety of methods to induce network architecture exist. Some start with a very simple 
+network and incrementally add nodes and links (Hanson 1990; Fahlman & Lebiere, 1990; 
+Fahlman 1991; Chen, et al., 1993); others start with a large network and then prune off 
+superfluous pieces (Mozer & Smolensky, 1989; Cun, Denker, and Solla, 1990; Hassibi & 
+Stork, 1993; Omlin & Giles, 1993). But these constructive and destructive algorithms are 
+monotonic extremes that ignore a more moderate solution: dynamically add or remove 
+pieces of architecture as needed. Moreover, by exclusively exploring either feedforward 
+networks (e.g., Ash, 1989), fully-connected recurrent networks (e.g., Chen, et al. 1993), or 
+some restricted middle ground (e.g., Fahlman,. 1991), these algorithms allow only limited 
+structural change. Finally, constructive and destructive algorithms are supervised methods 
+88 
+Structural and Behavioral Evolution of Recurrent Networks 89 
+num-in input units 
+Random(max-hidden) hidden units 
+Random(max-links) links 
+num-out output units 
+Figure 1: Sample initial network. The number of input nodes and number of output nodes 
+is fixed for the particular task, but the number of hidden units and the connectivity 
+(although bounded), is random. 
+which rely on complex predicates to determine when to add or delete pieces of network 
+architecture (e.g., when rate of improvement falls below threshold). 
+Genetic algorithms (Holland 1975), on the other hand, are unsupervised methods which can 
+induce networks by making stochastic modifications to a population of bitstrings, each of 
+which is interpreted as a network. Most studies, however, still assume a fixed structure for 
+the network (e.g., Belew et al., 1990; Jefferson, et al., 1991; see also Schaffer, et al. 1992), 
+and those that do not allow only limited structural change (e.g., Potter, 1992, and Karu- 
+nanithi et al., 1992). 
+Evolutionary programming (Fogel, 1992) is an alternate optimization technique which, 
+when applied to network induction, obviates the need for a bitstring-to-network mapping 
+by mutating networks directly. Furthermore, because EP does not employ crossover (an 
+operator of questionable efficacy on distributed representations), it is a better candidate for 
+inducing network structures (Angeline, Saunders, and Pollack, 1993; Fogel et al., 1990). 
+2 THE GNARL ALGORITHM 
+GNARL (GeNeralized Acquisition of Recurrent Links) is an evolutionary program that 
+non-monotonically constructs recurrent networks to solve a given task. It begins with an 
+initial population of n random individuals; a sample network N is shown in Figure 1. The 
+number of input nodes (num-in) and number of output nodes (num-out) are fixed for a given 
+task; the number of hidden nodes as well as the connections among them are free to vary. 
+Self-links as well as general loops are allowed. Thus GNARL's search space is N = {N: 
+network N has num-in input nodes and num-out output nodes }. 
+In each epoch of search, the networks are ranked by a user-supplied fitness function f.' N 
+) R, where R represents the reals. Reproduction of the best n/2 individuals entails modi- 
+fying both the weights and structure of each parent network N. First, the temperature T(N) 
+is calculated: 
+f(N) 
+T(N) = 1 (1) 
+fmax 
+where fmax (provided by the user) is the maximum possible fitness for a given task. This 
+90 Saunders, Angeline, and Pollack 
+measure of N's performance is used to anneal the structural and parametric (Barto, 1990) 
+similarity between parent and offspring, so that networks with a high temperature are 
+mutated severely, and those with a low temperature are mutated only slightly. This allows 
+a coarse-grained search initially, and a finer-grained search as a network approaches a solu- 
+tion (cf. Kirkpatrick et al., 1983). 
+More concretely, parametric mutations are accomplished by perturbing each weight with 
+gaussian noise, whose variance is T(N)2: 
+w <-- w +Normal (0;T(N)), Vw N (2) 
+Structural mutations are accomplished by: 
+� adding k 1 hidden nodes with probability Padd-node 
+� deleting k 2 hidden nodes with probability Pdelete-node 
+� adding k s links with probability Padd-link 
+� deleting k 4 links with probability Pdelete-link 
+where each k i is selected uniformly from a user-defined range, again annealed by T(N). 
+When a node is added, it is initialized without connections; when a node is deleted, all its 
+incident links are removed. All new links are initialized to 0. (See also Angeline, Saunders, 
+and Pollack, 1993.) 
+3 RESULTS 
+GNARL was tested on a simple control task - the Tracker task of Jefferson, et al. (1991) 
+and Koza (1992). In this problem, a simulated ant is placed on a two-dimensional toroidal 
+grid and must maximize the number of pieces of food it collects in a given time period (Fig- 
+ure 2a). Each ant is controlled by a network with two input nodes and four output nodes 
+(Figure 2b). At each step, the action whose corresponding output node has maximum acti- 
+vation is performed. Fitness is the number of grid positions cleared within 200 time steps. 
+The experiments used a population of 100 networks. In the first run (2090 generations), 
+GNARL found a network (Figure 3b) that cleared 81 grid positions within the 200 time 
+steps. Figure 4 shows the state of the output units of the network over three different sets 
+of inputs. Each point is a triple of the form (move, right, left). (No-op is not shown because 
+it was never used in the final network.) Figure 4a shows the result of supplying to the net- 
+work 200 food inputs - a fixed point that executes Move. Figure 4b shows the sequence 
+of states reached when 200 no food signals are supplied to the network - a collection of 
+points describing a limit cycle of length 5 that repeatedly executes the sequence Right, 
+Right, Right, Right, Move. These two attractors determine the response of the network to 
+the task (Figure 4c,d); the additional points in Figure 4c are transients encountered as the 
+network alternates between these attractors. 
+However, not all evolved network behaviors are so simple as to approximate an FSA (Pol- 
+lack, 1991). In a second run (1595 generations) GNARL induced a network that cleared 82 
+grid points within the 200 time steps. Figure 5 demonstrates the behavior of this network. 
+Once again, the food attractor, shown in Figure 5a, is a single point in the space that 
+always executes Move. The no food behavior, however, is not an FSA; instead, it is a 
+Structural and Behavioral Evolution of Recurrent Networks 91 
+Move 
+Turn left Turn right 
++1 +1 
+No-op 
+� 
+Food N o food 
+(a) (b) 
+Figure 2: The ant problem. (a) The trail is connected initially, but becomes progressively 
+more difficult to follow. The underlying 2-d grid is toroidal, so that position P is the first 
+break in the trail. The ellipse indicates the 7 pieces of food that the network of the second 
+run failed to reach. (b) The semantics of the I/O units for the ant network. The first input 
+node denotes the presence of food in the square directly in front of the ant; the second 
+denotes the absence of food in this same square. No-op, from Jefferson, allows the 
+network to stay in one position while activation flows through recurrent links. This 
+particular network eats 42 pieces of food before spinning endlessly in place at position 
+P, illustrating a very deep local minimum in the search space. 
+quasiperiodic trajectory of points shaped like a D in output space (Figure 5b). The place- 
+ment of the D is in the Move / Right corner of the space and encodes a complex alter- 
+nation between these two operations (Figure 5d). 
+4 CONCLUSIONS 
+Artificial architectural constraints (such as feedforwardness) close the door on entire 
+classes of behavior; forced liberties (such as assumed full recurrence) may unnecessarily 
+increase structural complexity or learning time. By relying on a simple stochastic process, 
+GNARL strikes a middle ground between these two, allowing the network's complexity 
+and behavior to emerge in response to the demands of the task. 
+Acknowledgments 
+The research reported in this paper has been partially supported by Office of Naval 
+Research grants N00014-93-1-0059 and N00014-92-J-1195. We are indebted to all those 
+who read and reviewed this work, especially John Kolen, Ed Large, and Barbara Becker. 
+92 Saunders, Angeline, and Pollack 
+I 
+. F ullv 
+Fod Noood connecied 
+(a) 
+(c) 
+! 
+t ! 
+t 
+t 
+/ 
+I 
+! 
+(b) 
+Figure 3: The Tracker Task, first run. (a) The best network in the initial population. Nodes 
+0 & 1 are input, nodes 5-8 are output, and nodes 2-4 are hidden nodes. (b) Network 
+induced by GNARL after 2090 generations. Forward links are dashed; bidirectional links 
+& loops are solid. The light gray connection between nodes 8 and 13 is the sole backlink. 
+This network clears the trail in 319 epochs. (c) Jefferson et al.'s fixed network structure for 
+the Tracker task. 
+References 
+Angeline, P., Saunders, G., Pollack, J. (1993). An evolutionary algorithm that constructs 
+recurrent neural networks. LAIR Te

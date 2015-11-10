@@ -1,0 +1,158 @@
+Prediction of Beta Sheets in Proteins 
+Anders Krogh 
+The Sanger Centre 
+Hinxton, Carnbs CB10 1RQ, UK. 
+Email: krogh@sanger. ac.uk 
+Soren Kamaric Riis 
+Electronics Institute, Building 349 
+Technical University of Denmark 
+2800 Lyngby, Denmark 
+Email: riis@ei. diu.dk 
+Abstract 
+Most current methods for prediction of protein secondary structure 
+use a small window of the protein sequence to predict the structure 
+of the central amino acid. We describe a new method for prediction 
+of the non-local structure called/-sheet, which consists of two or 
+more /-strands that are connected by hydrogen bonds. Since /3- 
+strands are often widely separated in the protein chain, a network 
+with two windows is introduced. After training on a set of proteins 
+the network predicts the sheets well, but there are many false pos- 
+itives. By using a global energy function the/-sheet prediction is 
+combined with a local prediction of the three secondary structures 
+c-helix, fi-strand and coil. The energy function is minimized using 
+simulated annealing to give a final prediction. 
+I INTRODUCTION 
+Proteins are long sequences of amino acids. There are 20 different amino acids with 
+varying chemical properties, e.g., some are hydrophobic (dislikes water) and some 
+are hydrophilic [1]. It is convenient to represent each amino acid by a letter and 
+the sequence of amino acids in a protein (the primary structure) can be written as 
+a string with a typical length of 100 to 500 letters. A protein chain folds back on 
+itself, and the resulting 3D structure (the tertiary structure) is highly correlated to 
+the function of the protein. The prediction of the 3D structure from the primary 
+structure is one of the long-standing unsolved problems in molecular biology. As 
+an important step on the way a lot of work has been devoted to predicting the 
+local conformation of the protein chain, which is called the secondary structure. 
+Neural network methods are currently the most successful for predicting secondary 
+structure. The approach was pioneered by Qian and Sejnowski [2] and Bohr et al. 
+[3], but later extended in various ways, see e.g. [4] for an overview. In most of this 
+work, only the two regular secondary structure elements c-helix and/-strand are 
+being distinguished, and everything else is labeled coil. Thus, the methods based 
+918 
+A. KROGH, S. K. RIIS 
+Figure 1: Left: Anti-parMlel/3-sheet. The vertical lines correspond to the backbone 
+of the protein. An amino acid consists of N-C,-C and a side chain on the C, that 
+is not shown (the 20 amino acids are distinguished by different side chains). In the 
+anti-parMlel sheet the directions of the strands alternate, which is here indicated 
+quite explicitly by showing the middle strand up-side down. The H-bonds between 
+the strands are shown by IIIlllll. A sheet has two or more strands, here the anti- 
+parallel sheet is shown with three strands. Right: Parallel/3-sheet consisting of two 
+strands. 
+on a local window of amino acids give a three-state prediction of the secondary 
+structure of the central amino acid in the window. 
+Current predictions of secondary structure based on single sequences as input have 
+accuracies of about 65-66%. It is widely believed that this accuracy is close to 
+the limit of what can be done from a local window (using only single sequences as 
+input) [5], because interactions between amino acids far apart in the protein chain 
+are important to the structure. A good example of such non-local interactions 
+are the /-sheets consisting of two or more/-strands interconnected by H-bonds, 
+see fig. 1. Often the /-strands in a sheet are widely separated in the sequence, 
+implying that only part of the available sequence information about a -sheet can 
+be contained in a window of, say, 13 amino acids. This is one of the reasons why the 
+accuracy of/-strand predictions are generally lower than the accuracy of c-helix 
+predictions. The aim of this work is to improve prediction of secondary structures 
+by combining local predictions of r-helix,/%strand and coil with a non-local method 
+predicting/-sheets. 
+Other work along the same directions include [6] in which/%sheet predictions are 
+done by linear methods and [7] where a so-called density network is applied to the 
+problem. 
+2 A NEURAL NETWORK WITH TWO WINDOWS 
+We aim at capturing correlations in the -sheets by using a neural network with 
+two windows, see fig. 2. While window i is centered around amino acid number i 
+(ai), window 2 slides along the rest of the chain. When the amino acids centered in 
+each of the two windows sit opposite each other in a -sheet the target output is 1, 
+and otherwise 0. After the whole protein has been traversed by window 2, window 1 
+is moved to the next position (i+ 1) and the procedure is repeated. If the protein is 
+L amino acids long this procedure yields an output value for each of the L(L - 1)/2 
+Prediction of Beta Sheets in Proteins 919 
+Figure 2: Neural network for pre- 
+dicting /3-sheets. The network 
+employs weight sharing to im- 
+prove the encoding of the amino 
+acids and to reduce the number 
+of adjustable parameters. 
+//// Hidden layer 
+.... CidWindow 1 
+C2 Window 2 
+pairs of amino acids. We display the output in a L x L gray-scale image as shown in 
+fig. 3. We assume symmetry of sheets, i.e., if the two windows are interchanged, the 
+output does not change. This symmetry is ensured (approximately) during training 
+by presenting all inputs in both directions. 
+Each window of the network sees K amino acids. An amino acid is represented by a 
+vector of 20 binary numbers all being zero, except one, which is 1. That is, the amino 
+acid A is represented by the vector 1, 0, 0,..., 0 and so on. This coding ensures that 
+the input representations are uncorrelated, but it is a very inefficient coding, since 
+20 amino acids could in principle be represented by only 5 bit. Therefore, we use 
+weight sharing [8] to learn a better encoding [4]. The 20 input units corresponding 
+to one window position are fully connected to three hidden units. The 3 x (20 + 1) 
+weights to these units are shared by all window positions, i.e., the activation of the 
+3 hidden units is a new learned encoding of the amino acids, so instead of being 
+represented by 20 binary values they are represented by 3 real values. Of course the 
+number of units for this encoding can be varied, but initial experiments showed that 
+3 was optimal [4]. The two windows of the network are made the same way with 
+the same number of inputs etc.. The first layer of hidden units in the two windows 
+are fully connected to a hidden layer which is fully connected to the output unit, see 
+fig. 2. Furthermore, two structurally identical networks are used: one for parallel 
+and one for anti-parallel/3-sheets. 
+The basis for the training set in this study is the set of 126 non-homologous protein 
+chains used in [9], but chains forming/3-sheets with other chains are excluded. This 
+leaves us with 85 proteins in our data set. For a protein of length L only a very small 
+fraction of the L(L - 1)/2 pairs are positive examples of/-sheet pairs. Therefore 
+it is very important to balance the positive and negative examples to avoid the 
+situation where the network always predicts no /-sheet. Furthermore, there are 
+several types of negative examples with quite different occurrences: 1) two amino 
+acids of which none belong to a/-sheet; 2) one in a/-sheet and one which is not in 
+a/3-sheet; 3) two sitting in/%sheets, but not opposite to each other. The balancing 
+was done in the following way. For each positive example selected at random a 
+negative example from each of the three categories were selected at random. 
+If the network does not have a second layer of hidden units, it turns out that the 
+result is no better than a network with only one input window, i.e., the network 
+cannot capture correlations between the two windows. Initial experiments indicated 
+that about 10 units in the second hidden layer and two identical input windows of 
+size K = 9 gave the best results. In fig. 3(left) the prediction of anti-parallel sheets 
+is shown for the protein identified as lacx in the Brookhaven Protein Data Bank 
+920 A. KROGH, S. K. RIIS 
+,�� t 
+70 
+-- 5c 
+40 
+20 
+0 
+120 
+8(2 
+4C 
+2(; 
+/ 
+':,. .; 
+20 40 60 80 1 O0 120 
+Amino acid # 
+Figure 3: Left: The prediction of anti-parallel/?-sheets in the protein lacx. In the 
+upper triangle the correct structure is shown by a black square for each fi-sheet 
+pair. The lower triangle shows the prediction by the two-window network. For 
+any pair of amino acids the network output is a number between zero (white) and 
+one (black), and it is displayed by a linear gray-scale. The diagonal shows the 
+prediction of a-helices. Right: The same display for parallel fi-sheets in the protein 
+4fxn. Notice that the correct structure are lines parallel to the diagonal, whereas 
+they are perpendicular for anti-parallel sheets. For both cases the network was 
+trained on a training set that did not contain the protein for which the result is 
+shown. 
+[10]. First of all, one notices the checker board structure of the prediction of fi- 
+sheets. This is related to the structure of fi-sheets. Many sheets are hydrophobic 
+on one side and hydrophilic on the other. The side chains of the amino acids in 
+a strand alternates between the two sides of the sheet, and this gives rise to the 
+periodicity responsible for the pattern. 
+Another network was trained on parallel /?-sheets. These are rare compared to 
+the anti-parallel ones, so the amount of training data is limited. In fig. 3(right) 
+the result is shown for protein 4fxn. This prediction seems better than the one 
+obtained for anti-parallel sheets, although false positive predictions still occurs at 
+some positions with strands that do not pair. Strands that bind in parallel fi-sheets 
+are generally more widely separated in the sequence than strands in anti-pa

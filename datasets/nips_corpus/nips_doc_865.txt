@@ -1,0 +1,162 @@
+Transformation Invariant Autoassociation 
+with Application to 
+Handwritten Character Recognition 
+Holger Schwenk 
+Maurice Milgram 
+PARC 
+Universit6 Pierre et Marie Curie 
+tour 66-56, boite 164 
+4, place Jussieu, 75252 Paris cedex 05, France. 
+e-mail: schwenk @robo.j ussieu.fr 
+Abstract 
+When training neural networks by the classical backpropagation algo- 
+rithm the whole problem to learn must be expressed by a set of inputs and 
+desired outputs. However, we often have high-level knowledge about 
+the learning problem. In optical character recognition (OCR), for in- 
+stance, we know that the classification should be invariant under a set of 
+transformations like rotation or translation. We propose a new modular 
+classification system based on several autoassociative multilayer percep- 
+trons which allows the efficient incorporation of such knowledge. Results 
+are reported on the NIST database of upper case handwritten letters and 
+compared to other approaches to the invariance problem. 
+1 INCORPORATION OF EXPLICIT KNOWLEDGE 
+The aim of supervised learning is to learn a mapping between the input and the output 
+space from a set of example pairs (input, desired output). The classical implementation 
+in the domain of neural networks is the backpropagation algorithm. If this learning set is 
+sufficiently representative of the underlying data distributions, one hopes that after learning, 
+the system is able to generalize correctly to other inputs of the same distribution. 
+992 Holger Schwenk, Maurice Milgram 
+It would be better to have more powerful techniques to incorporate knowledge into the 
+learning process than the choice of a set of examples. The use of additional knowledge 
+is often limited to the feature extraction module. Besides simple operations like (size) 
+normalization, we can find more sophisticated approaches like zernike moments in the 
+domain of optical character recognition (OCR). In this paper we will not investigate this 
+possibility, all discussed classifiers work directly on almost non preprocessed data (pixels). 
+In the context of OCR interest focuses on invariance of the classifier under a number of 
+given transformations (translation, rotation,... ) of the data to classify. In general a neural 
+network could extract those properties of a large enough learning set, but it is very hard to 
+learn and will probably take a lot of time. In the last years two main approaches for this 
+invariance problem have been proposed: tangent-prop and tangent-distance. An indirect 
+incorporation can be achieved by boosting (Drucker, Schapire and Simard, 1993). 
+In this paper we briefly discuss these approaches and will present a new classification system 
+which allows the efficient incorporation of transformation invariances. 
+1.1 TANGENT PROPAGATION 
+The principle of tangent-prop is to specify besides desired outputs also desired changes 
+of the output vector when transforming the net input a: by the transformations t, (Simard, 
+Victorri, LeCun and Denker, 1992). 
+For this, let us define a transformation of pattern p as t(p, a): P - P where P is the space 
+of all patterns and a a parameter. Such transformations are in general highly nonlinear 
+operations in the pixel space P and their analytical expressions are seldom known. It is 
+therefore favorable to use a first order approximation: 
+Ot(p, a) ,=0 
+t(p, a)  p + a tp with tp =  (1) 
+tp is called the tangent vector. This definition can be generalized to c transformations: 
+t(p, a)  p + a tp +... + ac tpc = p + Tpa (2) 
+where Tp is a n x c matrix, each column corresponding to a tangent vector. 
+Let us define R (x) the function calculated by the network. The desired behavior of the net 
+outputs can be obtained by adding a regularization term E, to the objective function: 
+Er - - j OR(t(x'G)) I 12  
+_ _ oR(x) (3) 
+t is the tangent vector for transformation t ' of the input vector a: and OR (a:)/0a: is the 
+gradient of the network with respect to the inputs. Transformation invariance of the outputs 
+is obtained by setting f' = 0, so we want that OR (a:)/0a: is orthogonal to t. 
+Tangent-prop improved the learning time and the generalization on small databases, but its 
+applicability to highly constraint networks (many shared weights) trained on large databases 
+remains unknown. 
+1.2 TANGENT DISTANCE 
+Another class of classifiers are memory based learning methods which rely on distance 
+metrics. The incorporation of knowledge in such classifiers can be done by a distance 
+Transformation Invariant Autoassociation 993 
+measure which is (locally) invariant under a set of specified transformations. 
+(Simard, LeCun and Denker, 1993) define tangent distance as the minimal distance between 
+the two hyperplanes spanned up by the tangent vectors T v in point p and Tq in point q: 
+ ,\2 
+Dvq(p , q)= min (p + TvG-q - Tq/) 2 (p + TpG* - q - Tq5 ) (4) 
+The optimality condition is that the partial derivatives c9Dpq/C9t* and c9Dpq/O/* should 
+be zero. The values G* and/* minimizing (4) can be computed by solving these two linear 
+systems numerically. 
+(Simard, LeCun and Denker, 1993) obtained very good results on handwritten digits and 
+letters using tangent distance with a 1-nearest-neighbor classifier (1-nn). A big problem of 
+every nn-classifier, however, is that it uses no compilation of the data and it needs therefore 
+numerous reference vectors resulting in long classification time and high memory usage. 
+Like reported in (Simard, 1994) and (Sperdutti and Stork, 1995) important improvements 
+are possible, but often a trade-off between speed and memory usage must be made. 
+2 ARCHITECTURE OF THE CLASSIFIER 
+The main idea of our approach is to use an autoassociative multilayer perceptron with a 
+low dimensional hidden layer for each class to recognize. These networks, called diabolo 
+network in the following, are trained only with examples of the corresponding class. This 
+can be seen as supervised learning without counter-examples. Each network learns a hidden 
+layer representation which preserves optimally the information of the examples of one class. 
+These learned networks can now be used like discriminant functions: the reconstruction 
+error is in general much lower for examples of the learned class than for the other ones. 
+In order to build a classifier we use a decision module which interprets the distances between 
+the reconstructed output vectors and the presented example. In our studies we have used 
+until now a simple minimum operator which associates the class of the net with the smallest 
+distance (Fig. 1). 
+The figure illustrates also typical classification behavior, here when presenting a D out of 
+the test set. One can see clearly that the distance of the network D is much lower than for 
+the two other ones. The character is therefore correctly classified. It is also interesting to 
+analyze the outputs of the two networks with the next nearest distances: the network O 
+tries to output a more round character and the network B wants to add a horizontal bar in 
+the middle. 
+The basic classification architecture can be adapted in two ways to the problem to be solved. 
+One on hand we can imagine different architectures for each diabolo network, e.g. several 
+encoding/decoding layers which allow nonlinear dimension reduction. It is even possible 
+to use shared weights realizing local feature detectors (see (Schwenk and Milgram, 1994) 
+for more details). 
+One the other hand we can change the underlying distance measure, as long as the derivatives 
+with respect to the weights can be calculated. This offers a powerful and efficient mechanism 
+to introduce explicit knowledge into the learning algorithm of a neural network. In the 
+discussed case, the recognition of characters represented as pixel images, we can use a 
+994 Holger Schwenk, Maurice Milgrarn 
+score B 
+8.07 
+,, 
+score D 
+4.49 
+score O 
+8.54 
+I 
+character input diabolo output distance decision 
+to classify vector networks vectors measures module 
+Figure 1' Basic Architecture of a Diabolo Classifier 
+classe 
+D 
+transformation invariant distance measure between the net output o and the desired output 
+d (that is of course identical with the net input). The networks do not need to learn each 
+example separately any more, but they can use the set of specified transformations in order 
+to find a common non linear model of each class. 
+The advantage of this approach, besides a better expected generalization behavior of course, 
+is a very low additional complexity. In comparison to the original k-nn approach, and 
+supposedly any possible optimization, we need to calculate only one distance measure for 
+each class to recognize, regardless of the number of learning data. 
+We used two different versions of tangent distance with increasing complexity: 
+1. single sided tangent distance: 
+1( 1( 
+Dd(d,o)=mn d+TdG-O = d+TdG*-o (5) 
+This is the minimal distance between the hyperplane spanned up by the tangent 
+vectors Td in input vector d and the untransformed output vector o. 
+2. double sided tangent distance: 
+Ddo(d,o) =min l ( /)2 
+6,5 d+Tda-O*g-To (6) 
+The convolution of the net output with a Gaussian g is necess for the computa- 
+tion of the tangent vectors To (the net input d is convolved during preprocessing). 
+Figure 2 shows a graphical comparison of Euclidean distance with the two tangent distances. 
+Transformation Invariant Autoassociation 995 
+d :D Dd 
+Dd 
+i ..... t o 
+d: desired output 
+td: tangent vector in d 
+o: net output 
+to: tangent vector in o 
+D: Euclidean distance 
+Dd: single sided tangent distance 
+(only d is transformed) 
+Ddo: double sided tangent distance 
+(both points are transformed) 
+: gradient of Dd 
+Figure 2: Comparison of Euclidean Distance with the Different Tangent Distances 
+The major advantage of the single sided version is that we can now calculate easily the 
+optimal multipliers G* and therefore the whole distance (the double sided version demands 
+expe

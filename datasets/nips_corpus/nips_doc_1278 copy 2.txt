@@ -1,0 +1,161 @@
+Improving the Accuracy and Speed of 
+Support Vector Machines 
+Chris J.C. Burges 
+Bell Laboratories 
+Lucent Technologies, Room 3G429 
+101 Crawford's Corner Road 
+Holmdel, NJ 07733-3030 
+burges@bell-labs.com 
+Bernhard Sch51kopf* 
+Max-Planck-Institut fiir 
+biologische Kybernetik, 
+Spemannstr. 38 
+72076 Tiibingen, Germany 
+bs@mpik-tueb.mpg.de 
+Abstract 
+Support Vector Learning Machines (SVM) are finding application 
+in pattern recognition, regression estimation, and operator inver- 
+sion for ill-posed problems. Against this very general backdrop, 
+any methods for improving the generalization performance, or for 
+improving the speed in test phase, of SVMs are of increasing in- 
+terest. In this paper we combine two such techniques on a pattern 
+recognition problem. The method for improving generalization per- 
+formance (the virtual support vector method) does so by incor- 
+porating known invariances of the problem. This method achieves 
+a drop in the error rate on 10,000 NIST test digit images of 1.4% 
+to 1.0%. The method for improving the speed (the reduced set 
+method) does so by approximating the support vector decision sur- 
+face. We apply this method to achieve a factor of fifty speedup in 
+test phase over the virtual support vector machine. The combined 
+approach yields a machine which is both 22 times faster than the 
+original machine, and which has better generalization performance, 
+achieving 1.1% error. The virtual support vector method is appli- 
+cable to any SVM problem with known invariances. The reduced 
+set method is applicable to any support vector machine. 
+I INTRODUCTION 
+Support Vector Machines are known to give good results on pattern recognition 
+problems despite the fact that they do not incorporate problem domain knowledge. 
+*Part of this work was done while B.S. was with AT&T Research, Holmdel, NJ. 
+376 C. J. Burges and B. Sch6lkopf 
+However, they exhibit classification speeds which are substantially slower than those 
+of neural networks (LeCun et al., 1995). 
+The present study is motivated by the above two observations. First, we shall 
+improve accuracy by incorporating knowledge about invariances of the problem at 
+hand. Second, we shall increase classification speed by reducing the complexity of 
+the decision function representation. This paper thus brings together two threads 
+explored by us during the last year (SchSlkopf, Burges & Vapnik, 1996; Burges, 
+1996). 
+The method for incorporating invariances is applicable to any problem for which 
+the data is expected to have known symmetries. The method for improving the 
+speed is applicable to any support vector machine. Thus we expect these methods 
+to be widely applicable to problems beyond pattern recognition (for example, to 
+the regression estimation problem (Vapnik, Golowich & Smola, 1996)). 
+After a brief overview of Support Vector Machines in Section 2, we describe how 
+problem domain knowledge was used to improve generalization performance in Sec- 
+tion 3. Section 4 contains an overview of a general method for improving the 
+classification speed of Support Vector Machines. Results are collected in Section 5. 
+We conclude with a discussion. 
+2 SUPPORT VECTOR LEARNING MACHINES 
+This Section summarizes those properties of Support Vector Machines (SVM) which 
+are relevant to the discussion below. For details on the basic SVM approach, the 
+reader is referred to (Boser, Guyon & Vapnik, 1992; Cortes & Vapnik, 1995; Vapnik, 
+1995). We end by noting a physical analogy. 
+Let the training data be elements Xi  12, 12 -- R d i = 1, �, with corresponding 
+class labels Yi  {q-X}. An SVM performs a mapping  � 12 -- 7-/, x   into a 
+high (possibly infinite) dimensional Hilbert space 7-/. In the following, vectors in 
+7-/will be denoted with a bar. In 7-/, the SVM decision rule is simply? separating 
+hyperplane: the algorithm constructs a decision surface with normal qt  7-/which 
+separates the xi into two classes: 
+t . i + b _> ko -- i , Yi = +1 (1) 
++ b _< = -1 (2) 
+where the �i are positive slack variables, introduced to handle the non-separable 
+case (Cortes & Vapnik, 1995), and where k0 and kx are typically defined to be +1 
+and -1, respectively. � is computed by minimizing the objective function 
+--- + C(E i)P (3) 
+i=1 
+subject to (1), (2), where C is a constant, and we choose p = 2. In the separable case, 
+the SVM algorithm constructs that separating hyperplane for which the margin 
+between the positive and negative examples in 7-/is maximized. A test vector x  12 
+is then assigned a class label {+ 1,-' 1 } depending on whether t. (x)+ b is greater 
+or less than (k0 + kx)/2. Support vectors sj  12 are defined as training samples 
+for which one of Equations (1) or (2) is an equality. (We name the support vectors 
+s to distinguish them from the rest of the training data). The solution � may be 
+expressed 
+Ns 
+j=l 
+(4) 
+Improving the Accuracy and Speed of Support Vector Machines 377 
+where otj __> 0 are the positive weights, determined during training, yj  {+1} the 
+class labels of the sj, and Ns the number of support vectors. Thus in order to 
+classify a test point x one must compute 
+One of the key properties of support vector machines is the use of the kernel K to 
+compute dot products in 7/without having to explicitly c6mpute the mapping . 
+It is interesting to note that the solution has a simple physical interpretation in 
+the high dimensional space 7/. If we assume that each support vector j exerts a 
+perpendicular force of size aj and sign yj on a solid plane sheet lying along the 
+hyperplane ' �  + b = (k0 + kx)/2, then the solution satisfies the requirements of 
+mechanical stability. At the solution, the cj can be shown to satisfy 
+which translates into the forces on the sheet summing to zero; and Equation (4) 
+implies that the torques also sum to zero. 
+3 IMPROVING ACCURACY 
+This section follows the reasoning of (Sch51kopf, Burges, & Vapnik, 1996). Problem 
+domain knowledge can be incorporated in two different ways: the knowledge can 
+be directly built into the algorithm, or it can be used to generate artificial training 
+examples (virtual examples). The latter significantly slows down training times, 
+due to both correlations in the artificial data and to the increased training set size 
+(Simard et al., 1992); however it has the advantage of being readily implemented for 
+any learning machine and for any invariances. For instance, if instead of Lie groups 
+of symmetry transformations one is dealing with discrete symmetries, such as the 
+bilateral symmetries of Vetter, Poggio, & Biilthoff (1994), then derivative-based 
+methods (e.g. Simard et al., 1992) are not applicable. 
+For support vector machines, an intermediate method which combines the advan- 
+tages of both approaches is possible. The support vectors characterize the solution 
+to the problem in the following sense: If all the other training data were removed, 
+and the system retrained, then the solution would be unchanged. Furthermore, 
+those support vectors i which are not errors are close to the decision boundary 
+in 7/, in the sense that they either lie exactly on the margin (i = 0) or close to 
+it (i < 1). Finally, different types of SVM, built using different kernels, tend to 
+produce the same set of support vectors (SchSlkopf, Burges, & Vapnik, 1995). This 
+suggests the following algorithm: first, train an SVM to generate a set of support 
+vectors {sx,... ,SN.}; then, generate the artificial examples (virtual support vec- 
+tors) by applying the desired invariance transformations to {sx,..., SN,}; finally, 
+train another SVM on the new set. To build a ten-class classifier, this procedure is 
+carried out separately for ten binary classifiers. 
+Apart from the increase in overall training time (by a factor of two, in our ex- 
+periments), this technique has the disadvantage that many of the virtual support 
+vectors become support vectors for the second machine, increasing the number of 
+summands in Equation (5) and hence decreasing classification speed. However, the 
+latter problem can be solved with the reduced set method, which we describe next. 
+378 C. J. Burges and B. Sch6lkopf 
+4 IMPROVING CLASSIFICATION SPEED 
+The discussion in this Section follows that of (Burges, 
+vectors zk E E, k: 1,..., Nz and corresponding weights 7k E R for which 
+Nz 
+1996). Consider a set of 
+(6) 
+k-'l 
+minimizes (for fixed Nz) the Euclidean distance to the original solution: 
+p = - '11. (7) 
+Note that p, expressed here in terms of vectors in 7-/, can be expressed entirely 
+in terms of functions (using the kernel K) of vectors in the input space �. The 
+I k - 1,..., Nz} is called the reduced set. To classify a test point x, the 
+expansion in Equation (5) is replaced by the approximation 
+Nz Nz 
+= x). (8) 
+k=l k=l 
+The goal is then to choose the smallest Nz << Ns, and corresponding reduced 
+set, such that any resulting loss in generalization performance remains acceptable. 
+Clearly, by allowing Nz: Ns, p can be made zero. Interestingly, there are non- 
+trivial cases where Nz < Ns and p = 0, in which case the reduced set leads to 
+an increase in classification speed with no loss in generalization performance. Note 
+that reduced set vectors are not support vectors, in that they do not necessarily lie 
+on the separating margin and, unlike support vectors, are not training samples. 
+While the reduced set can be found exactly in some cases, in general an uncon- 
+strained conjugate gradient method is used to find the z (while the corresponding 
+optimal 7 can be found exactly, for all k). The method for finding the reduced set 
+is computationally very expensive (the final phase constitutes a conjugate gradient 
+descent in a space of (d + 1) � Nz variables, which in our case is typically of order 
+50,000). 
+5 EXPERIMENTAL RESULTS 
+In this Section, by accuracy we mean generalization performance, and by speed 
+we mean classification speed. In our experiments, we used th

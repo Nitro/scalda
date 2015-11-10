@@ -1,0 +1,169 @@
+Connected Letter Recognition with a 
+Multi-State Time Delay Neural Network 
+Hermann Hild and Alex Waibel 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213-3891, USA 
+Abstract 
+The Multi-State Time Delay Neural Network (MS-TDNN) inte- 
+grates a nonlinear time alignment procedure (DTW) and the high- 
+accuracy phoneme spotting capabilities of a TDNN into a connec- 
+tionist speech recognition system with word-level classification and 
+error backpropagation. We present an MS-TDNN for recognizing 
+continuously spelled letters, a task characterized by a small but 
+highly confusable vocabulary. Our MS-TDNN achieves 98.5/92.0% 
+word accuracy on speaker dependent/independent tasks, outper- 
+forming previously reported results on the same databases. We pro- 
+pose training techniques aimed at improving sentence level perfor- 
+mance, including free alignment across word boundaries, word du- 
+ration modeling and error backpropagation on the sentence rather 
+than the word level. Architectures integrating submodules special- 
+ized on a subset of speakers achieved further improvements. 
+1 INTRODUCTION 
+The recognition of spelled strings of letters is essential for all applications involving 
+proper names, addresses or other large sets of special words which due to their sheer 
+size can not be in the basic vocabulary of a recognizer. The high confusability of the 
+English letters makes the seemingly easy task a very challenging one, currently only 
+addressed by a few systems, e.g. those of R. Cole et. al. [JFC90, FC90, CFGJ91] 
+for isolated spoken letter recognition. Their connectionist systems first find a broad 
+phonetic segmentation, from which a letter segmentation is derived, which is then 
+712 
+Connected Letter Recognition with a Multi-State Time Delay Neural Network 713 
+unity 
+weights 
+5 time delays 
+3 time delays � ...... 
+Word Layer 
+a 27 word units 
+sit (only 4 shown) 
+DTW Layer 
+27 word templates 
+(only 4 shown) 
+Phoneme Layer 
+59 phoneme units 
+(only 9 shown) 
+Hidden Layer 
+15 hidden units 
+Input Layer 
+16 reelscale FFT co- 
+efficients 
+Figure 1' The MS-TDNN recognizing the excerpted word 'B'. Only the activations 
+for the words '$ZL', 'It', 'B', and 'C' are shown. 
+classified by another network. In this paper, we present the MS-TDNN as a 
+connectionist speech recognition system for connected letter recognition. After de- 
+scribing the baseline architecture, training techniques aimed at improving sentence 
+level performance and architecttares with gender-specific subnets are introduced. 
+Baseline Architecture. Time Delay Neural Networks (TDNNs) can combine the 
+robustness and discriminative power of Neural Nets with a time-shift invariant ar- 
+chitecture to form high accuracy phoneme classifiers [WHH+89]. The Multi-State 
+TDNN (MS-TDNN) [HFW91, Haf92, HW92], an extension of the TDNN, is capable 
+of classifying words (represented as sequences of phonemes) by integrating a nonlin- 
+ear time alignment procedure (DTW) into the TDNN architecture. Figure 1 shows 
+an MS-TDNN in the process of recognizing the excerpted word 'S', represented by 
+16 reelscale FFT coefficients at a 10-msec frame rate. The first three layers consti- 
+tute a standard TDNN, which uses sliding windows with time delayed connections 
+to compute a score for each phoneme (state) for every frame, these are the activa- 
+tions in the Phoneme Layer. In the DTW Layer, each word to be recognized 
+is modeled by a sequence of phoneroes. The corresponding activations are simply 
+714 Hild and Waibel 
+copied from the Phoneme Layer into the word models of the DTW Layer, where an 
+optimal alignment path is found for each word. The activations along these paths 
+are then collected in the word output units. All units in the DTW and Word Layer 
+are linear and have no biases. 15 (25 to 100) hidden units per frame were used 
+for speaker-dependent (-independent) experiments, the entire 26 letter network has 
+approximately 5200 (8600 to 34500) parameters. 
+Training starts with bootstrapping, during which only the front-end TDNN is 
+used with fixed phoneme boundaries as targets. In a second phase, training is per- 
+formed with word level targets. Phoneme boundaries are freely aligned within given 
+word boundaries in the DTW layer. The error derivatives are backpropagated from 
+the word units through the alignment path and the front-end TDNN. 
+The choice of sensible objective functions is of great importance. Let Y - 
+(Yl,...,Yn) the output and T - (tl,...,tn) the target vector. For training on 
+the phoneme level (bootstrapping), there is a target vector T for each frame in 
+time, representing the correct phoneme j in a l-out-of-n coding, i.e. ti -- 5ij. To 
+see why the standard Mean Square Error (MSE -- E--1 (Yi -- l[i) 2) is problematic 
+for l-out-of-n codings for large n (n - 59 in our case), consider for example that 
+for a target (1.0,0.0,..., 0.0) the output vector (0.0,..., 0.0) has only half the error 
+than the more desirable output (1.0,0.2,...,0.2). To avoid this problem, we are 
+using 
+EMcCte,tand(T, Y) = Z log(1 - (Yi - ti) 2) 
+i=1 
+which (like cross entropy) punishes outliers with an error approaching infinity for 
+Iti -Yi[ approaching 1.0. For the word level training, we have achieved best results 
+with an objective function similar to the Classification Figure of Merit (CFM) 
+[HW90], which tries to maximize the distance d = y,- Yhi between the correct score 
+Yc and the highest incorrect score Yhi instead of using absolute target values of 1.0 
+and 0.0 for correct and incorrect word units: 
+ECFM(T,Y) = f(Yc--Yhi) = f(d) - (l-d) 2 
+The philosophy here is not to touch any output unit not directly related to correct 
+classification. We found it even useful to apply error backpropagation only in the 
+case of a wrong or too narrow classification, i.e. if Yc - Yhi < sa.ety_mar�ir. 
+2 IMPROVING CONTINUOUS RECOGNITION 
+2.1 TRAINING ACROSS WORD BOUNDARIES 
+A proper treatment of word I boundaries is especially important for a short word 
+vocabulary, since most phones are at word boundaries. While the phoneme bound- 
+aries within a word are freely aligned by the DTW during word level training, the 
+word boundaries are fixed and might be error prone or suboptimal. By extending 
+the alignment one phoneme to the left (last phoneme of previous word) and the 
+right (first phoneme of next word), the word boundaries can be optimally adjusted 
+lIn our context, a word consists of one spelled letter, and a sentence is a continu- 
+ously spelled string of letters. 
+Connected Letter Recognition with a Multi-State Time Delay Neural Network 715 
+....... !:!:!:!:!:!:!:!:!:!:!:!:!:!:! 
+word boundaries --- 
+word bou..ndary found 
+by free alignment 
+(a) alignment across word boundaries 
+c 
+B 
+A 
+I I I 
+rob (  ) _ 
+d (dural=ion) 
+(b) duration dependent word penalties 
+............................................... 
+============================= 
+word boundaries 
+word bo�.ndary found 
+by free alignment 
+(c) training on the sentence level 
+Figure 2: Various techniques to improve sentence level recognition performance 
+716 Hild and Waibel 
+in the same way as the phoneme boundaries within a word. Figure 2(a) shows an 
+example in which the word to recognize is surrounded by a silence and a 'B', thus 
+the left and right context (for all words to be recognized) is the phoneme 's�l' and 
+'b', respectively. The gray shaded area indicates the extension necessary to the 
+DTW alignment. The diagram shows how a new boundary for the beginning of 
+the word 'A' is found. As indicated in figure 3, this techniques improves continuous 
+recognition significantly, but it doesn't help for excerpted words. 
+2.2 WORD DURATION DEPENDENT PENALIZING OF 
+INSERTION AND DELETION ERRORS 
+In continuous testing mode, instead of looking at word units the well-known One 
+Stage DTW algorithm [Ney84] is used to find an optimal path through an unspec- 
+ified sequence of words. The short and confusable English letters cause many word 
+insertion and deletion errors, such as T E vs. T or 0 vs. 0 0, therefore 
+proper duration modeling is essential. 
+As suggested in [HW92], minimum phoneme duration can be enforced by state 
+duplication. In addition, we are modeling a duration and word dependent penalty 
+Penw(d) = 1og(k + probw(d)), where the pdf prob(d) is approximated from the 
+training data and k is a small constant to avoid zero probabilities. Pen(d) is 
+added to the accumulated score AS of the search path, AS = AS + Aw * Penw (d), 
+whenever it crosses the boundary of a word w in Ney's One Stage DTW algo- 
+rithm, as indicated in figure 2(b). The ratio A, which determines the degree of 
+influence of the duration penalty, is another important degree of freedom. There 
+is no straightforward mathematically exact way to compute the effect of a change 
+of the weight Aw to the insertion and deletion rate. Our approach is a (pseudo) 
+gradient descent, which changes Aw proportional to E(w) = (-insw --delw)/-w, 
+i.e. we are trying to maximize the relative balance of insertion and deletion errors. 
+2.3 ERROR BACKPOPAGATION AT THE SENTENCE LEVEL 
+Usually the MS-TDNN is trained to classify excerpted words, but evaluated on con- 
+tinuously spoken sentences. We propose a simple but effective method to extend 
+training on the sentence level. Figure 2(c) shows the alignment path of the sentence 
+C a B, in which a typical error, the insertion of an 'A', occurred. In a forced 
+alignment mode (i.e. the correct sequence of words is enforced), positive training is 
+applied along the correct path, while the units along the incorrect path receive neg- 
+ative training. Note that the effect of positive and negative training is neutralized if 
+the paths are the same, only differing parts receive non-zero error backpropagation. 
+2.4 LEARNING CURVES 
+Figure 3 demonstrates the effect of the various training phases. The system is 
+bootstrapped (a) during iteration 1 to 130. 

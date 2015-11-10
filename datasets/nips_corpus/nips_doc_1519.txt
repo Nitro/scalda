@@ -1,0 +1,128 @@
+Making Templates Rotationally Invariant: 
+An Application to Rotated Digit Recognition 
+Shumeet Baluja 
+baluja@cs.cmu.edu 
+Justsystem Pittsburgh Research Center & 
+School of Computer Science, Carnegie Mellon University 
+Abstract 
+This paper describes a simple and efficient method to make template-based 
+object classification invariant to in-plane rotations. The task is divided into two 
+parts: orientation discrimination and classification. The key idea is to pertbrm 
+the orientation discrimination before the classification. This can be accom- 
+plished by hypothesizing, in turn, that the input image belongs to each class of 
+interest. The image can then be rotated to maximize its similarity to the train- 
+ing images in each class (these contain the prototype object in an upright orien- 
+tation). This process yields a set of images, at least one of which will have the 
+object in an upright position. The resulting images can then be classified by 
+models which have been trained with only upright examples. This approach 
+has been successfully applied to two real-world vision-based tasks: rotated 
+handwritten digit recognition and rotated face detection in cluttered scenes. 
+1 Introduction 
+Rotated text is commonly used in a variety of situations, ranging from advertisements, 
+logos, official post-office stamps, and headlines in magazines, to name a few. For exam- 
+pies, see Figure 1. We would like to be able to recognize these digits or characters, regard- 
+less of their rotation. 
+Figure 1: Co--on exales of imag which con.in text that is not axis aligned include logos, t-office 
+smm, gazine adlin and coumer adveen. 
+848 S. Baluja 
+The focus of this paper is on the recognition of rotated digits. The simplest method for cre- 
+ating a system which can recognize digits rotated within the image-plane is to employ 
+existing systems which are designed only for upright digit recognition [Le Cun et al., 
+1990][Le Cun et al., 1995a][Le Cun et al., 1995b][Lee, 1991][Guyon et al., 1989]. By 
+repeatedly rotating the input image by small increments and applying the recognition sys- 
+tem at each rotation, the digit will eventually be recognized. As will be discussed in this 
+paper, besides being extremely computationally expensive, this approach is also error- 
+prone. Because the classification of each digit must occur in many orientations, the likeli- 
+hood of an incorrect match is high. 
+The procedure presented in this paper to make templates rotationally invariant is signifi- 
+cantly faster and more accurate than the one described above. Detailed descriptions of the 
+procedure are given in Section 2. Section 3 demonstrates the applicability of this approach 
+to a real-world vision-based task, rotated handwritten digit recognition. Section 4 closes 
+the paper with conclusions and suggestions for future research. It also briefly describes the 
+second application to which this method has been successfully applied, face detection in 
+cluttered scenes. 
+2 Making Templates Rotationally Invariant 
+The process to make templates rotationally invariant is easiest to describe in the context of 
+a binary classification problem; the extension to multiple classes is discussed later in this 
+section. Imagine a simplified version of the digit recognition task: we want a detector for a 
+single digit. Suppose we wish to tell whether the input contains the digit '3' or not. The 
+challenge is that the '3' can be rotated within the image plane by an arbitrary amount. 
+Recognizing rotated objects is a two step process. In the first step, a De-Rotation net- 
+work is applied to the input image. This network analyzes the input before it is given to a 
+Detection network. If the input contains a '3', the De-Rotation network returns the 
+digit's angle of rotation. The window can then be rotated by the negative of that angle to 
+make the '3' upright. Note that the De-Rotation network does not require a '3' as input. If 
+a non-'3' image is encountered, the De-Rotation network will return an unspecified rota- 
+tion. However, a rotation of a non-'3' will yield another (perhaps different) image of a 
+non-'3'. When the resulting image is given to the Detection network it will not detect a 
+'3'. On the other hand, a rotated '3', which may not have been detected by the Detection 
+network alone, will be rotated to an upright position by the De-Rotation network, and will 
+subsequently be detected as a '3' by the Detection network. 
+The Detection network is trained to output a positive value only if the input contains an 
+upright '3', and a negative value otherwise (even if it contains a rotated '3'). It should be 
+noted that the methods described here do not require neural networks. As shown in [Le 
+Cun et aI., 1995a, Le Cun et al., 1995b] a number of other classifiers can be used. 
+The De-Rotation and Detection networks are used sequentially. First, the input image is 
+processed by the De-Rotation network which returns an angle of rotation, assuming the 
+image contains a '3'. A simple geometric transformation of the image is performed to 
+undo this rotation. If the original image contained a '3', it would now be upright. The 
+resulting image is then passed to the Detection network. If the original image contained a 
+'3', it can now be successfully detected. 
+This idea can easily be extended to multiple-class classification problems: a De-Rotation 
+network is trained for each object class to be recognized. For the digit recognition prob- 
+lem, 10 De-Rotation networks are trained, one for each of the digits 0..9. To classify the 
+digits once they are upright, a single classification network is used with 10 outputs 
+(instead of the detection networks trained on individual digits - alternative approaches 
+will be described later in this paper). The classification network is used in the standard 
+manner; the output with the maximum value is taken as the classification. To classify a 
+new image, the following procedure is used: 
+Making Templates Rotationally Invariant 849 
+For each digit D (0 _<D _< 9): 
+1. Pass image through De-Rotation-network-D. This returns the rotation angle. 
+2. Rotate the image by (-1.0 * returned rotation angle). 
+3. Pass the de-rotated image to the classification network. 
+4. If the classification network's maximum output is output D, the activation of 
+output D is recorded. Otherwise digit D is eliminated as a candidate. 
+In most cases, this will eliminate all but one of the candidates. However, in some cases 
+more than one candidate will remain. In these cases, the digit with the maximum recorded 
+activation (from Step 4) is returned. In the unlikely event that no candidates remain, either 
+the system can reject the sample as one it cannot classify, or it can return the maximum 
+value which would have been recorded in Step 4 if none of the examples were rejected. 
+2.1 Network Specifics 
+To train the De-Rotation networks, images of rotated digits were input, with the rotation 
+angle as the target output. Examples of rotated digits are shown in Figure 2. Each image is 
+28x28 pixels. The upright data sets are from the MNIST database [Le Cun et al., 1995a]. 
+Figure 2:8 examples of each of the 10 digits to be recognized. The first example in each group of eight 
+is shown with no rotation; it is as it appears in the MNIST data set. The second through eighth examples 
+show the same digit rotated in-plane by random amounts. 
+In the classification network, each output represents a distinct class; therefore, the stan- 
+dard 1-of-N output representation was used with 10 outputs. To represent a continuous 
+variable (the angle of rotation) in the outputs of the De-Rotation network, we used a Gaus- 
+sian output encoding [Pomerleau, 1992] with 90 output units. With the Gaussian encod- 
+ing, instead of only training the network to activate a single output (as is done in 1-of-N 
+encoding), outputs close to the desired output are also activated in proportion to their dis- 
+tance from the desired output. This representation avoids the imposed discontinuities of 
+the strict 1-of-N encoding for images which are similar, but have only slight differences in 
+rotations. Further, this representation allows finer granularity with the same number of 
+output units than would be possible if a 1-of-N encoding was used [Pomerleau, 1992]. 
+The network architecture for both the classification and the De-Rotation networks consists 
+of a single hidden layer. However, unlike a standard fully-connected network, each hidden 
+unit was only connected to a small patch of the 28x28 input. The De-Rotation networks 
+used groups of hidden units in which each hidden unit was connected to only 2x2, 3x3, 
+4x4 & 5x5 patches of the inputs (in each of these groups, the patches were spaced 2x2 pix- 
+els apart; therefore, the last three groups had overlapping patches). This is similar to the 
+networks used in [Baluja, 1997][Rowley et. al, 1998a, 1998b] for face detection. Unlike 
+the convolution networks used by [Le Cun et al., 1990], the weights into the hidden units 
+were not shared. 1 Note that many different local receptive field configurations were tried; 
+almost all had equivalent performance. 
+850 S. Baluja 
+3 Rotated Handwritten Digit Recognition 
+To create a complete rotationally invariant digit recognition system, the first step is to seg- 
+ment each digit from the background. The second is to recognize the digit which has been 
+segmented. Many systems have been proposed for segmenting written digits from back- 
+ground clutter [Jain & Yu, 1997][Sato et al., 1998][Satoh & Kanade, 1997]. In this paper, 
+we concentrate on the recognition portion of the task. Given a segmented image of a 
+potentially rotated digit, how do we recognize the digit? 
+The first experiment conducted was to establish the base-line performance. We used only 
+the standard, upright training set to train a classification network (this training set consists 
+of 60,000 digits). This network was then 

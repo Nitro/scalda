@@ -1,0 +1,148 @@
+248 Malkoff 
+A Neural Network for Real-Time Signal Processing 
+Donald B. Malkoff 
+General Electric / Advanced Technology Laboratories 
+Moorestown Corporate Center 
+Building 145-2, Route 38 
+Moorestown, NJ 08057 
+ABSTRACT 
+This paper describes a neural network algorithm that (1) performs 
+temporal pattern matching in real-time, (2) is trained on-line, with 
+a single pass, (3) requires only a single template for training of each 
+representative class, (4) is continuously adaptable to changes in 
+background noise, (5) deals with transient signals having low signal- 
+to-noise ratios, (6) works in the presence of non-Gaussian noise, (7) 
+makes use of context dependencies and (8) outputs Bayesian proba- 
+bility estimates. The algorithm has been adapted to the problem of 
+passive sonar signal detection and classification. It runs on a Con- 
+nection Machine and correctly classifies, within 500 ms of onset, 
+signals embedded in noise and subject to considerable uncertainty. 
+I INTRODUCTION 
+This paper describes a neural network algorithm, STOCHASM, that was developed 
+for the purpose of real-time signal detection and classification. Of prime concern 
+was capability for dealing with transient signals having low signal-to-noise ratios 
+(SNR). 
+The algorithm was first developed in 1986 for real-time fault detection and diagnosis 
+of malfunctions in ship gas turbine propulsion systems (Malkoff, 1987). It subse- 
+quently was adapted for passive sonar signal detection and classification. Recently, 
+versions for information fusion and radar classification have been developed. 
+Characteristics of the algorithm that are of particular merit include the following: 
+A Neural Network for Real-Time Signal Processing 249 
+� It performs well in the presence of either Gaussian or non-Gaussian noise, 
+even where the noise characteristics are changing. 
+Improved classifications result from temporal pattern matching in real-time, 
+and by taking advantage of input data context dependencies. 
+The network is trained on-line. Single exposures of target data require one 
+pass through the network. Target templates, once formed, can be updated 
+on-line. 
+� Outputs consist of numerical estimates of closeness for each of the template 
+classes, rather than nearest-neighbor all-or-none conclusions. 
+� The algorithm is implemented in parallel code on a Connection Machine. 
+Simulated signals, embedded in noise and subject to considerable uncertainty, are 
+classified within 500 ms of onset. 
+2 GENERAL OVERVIEW OF THE NETWORK 
+2.1 REPRESENTATION OF THE INPUTS 
+Sonar signals used for training and testing the neural network consist of pairs of 
+simulated chirp signals that are superimposed and bounded by a Gaussian enve- 
+lope. The signals are subject to random fluctuations and embedded in white noise. 
+There is considerable overlapping (similarity) of the signal templates. Real data 
+has recently become available for the radar domain. 
+Once generated, the time series of the sonar signal is subject to special transforma- 
+tions. The outputs of these transformations are the values which are input to the 
+neural network. In addition, several higher-level signal features, for example, zero 
+crossing data, may be simultaneously input to the same network, for purposes of 
+information fusion. The transformations differ from those used in traditional sig- 
+nal processing. They contribute to the real-time performance and temporal pattern 
+matching capabilities of the algorithm by possessing all the following characteristics: 
+Time-Origin Independence: The sonar input signal is transformed so the 
+resulting time-frequency representation is independent of the starting time 
+of the transient with respect to its position within the observation window 
+(Figure 1). Observation window refers to the most recent segment of the 
+sonar time series that is currently under analysis. 
+Translation Independence: The time-frequency representation obtained 
+by transforming the sonar input transient does not shift from one network 
+input node to another as the transient signal moves across most of the obser- 
+vation window (Figure 1). In other words, not only does the representation 
+remain the same while the transient moves, but its position relative to specific 
+network nodes also does not change. Each given node continues to receive its 
+250 Malkoff 
+usual kind of information about the sonar transient, despite the relative posi- 
+tion of the transient in the window. For example, where the transform is an 
+FFT, a specific input layer node will always receive the output of one specific 
+frequency bin, and none other. 
+Where the SNR is high, translation independence could be accomplished by 
+a simple time-transformation of the representation before sending it to the 
+neural network. This is not possible in conditions where the SNR is sufficiently 
+low that segmentation of the transient becomes impossible using traditional 
+methods such as auto-regressive analysis; it cannot be determined at what 
+time the transient signal originated and where it is in the observation window. 
+The representation gains time-origin and translation ,ndependence without 
+sacrificing knowledge about the signal's temporal characteristics or its com- 
+plex infrastructure. This is accomplished by using (1) the absolute value of 
+the Fourier transform (with respect to time) of the spectrogram of the sonar 
+input, or (2) the radar Woodward Ambiguity Function. The derivation and 
+characterization of these methods for representing data is discussed in a sep- 
+arate paper (Malkoff, 1990). 
+Figure 1: Despite passage of the transient, encoded data enters the same net- 
+work input nodes (translation independence) and has the same form and output 
+classification (time-origin independence). 
+A Neural Network for Real-Time Signal Processing 251 
+2.2 THE NETWORK ARCHITECTURE 
+Sonar data, suitably transformed, enters the network input layer. The input layer 
+serves as a noise filter, or discriminator. The network has two additional layers, 
+the hidden and output layers (Figure 2). Learning of target templates, as well as 
+classification of unknown targets, takes place in a single feed-forward pass through 
+these layers. Additional exposures to the same target lead to further enhancement of 
+the template, if training, or refinement of the classification probabilities, if testing. 
+The hidden layer deals only with data that passes through the input filter. This data 
+predominantly represents a target. Some degree of context dependency evaluation 
+of the data is achieved. Hidden layer data and its permutations are distributed 
+and maintained intact, separate, and transparent. Because of this, credit (error) 
+assignment is easily performed. 
+In the output layer, evidence is accumulated, heuristically evaluated, and trans- 
+formed into figures of merit for each possible template class. 
+INPUTS 
+I lln)T LAYBI I 
+Figure.2: STOCHASM network architecture. 
+2.2.1 The Input Layer 
+Each input layer node receives a succession of samples of a unique part of the sonar 
+representation. This series of samples is stored in a first-in, first-out queue. 
+With the arrival of each new input sample, the mean and standard deviation of 
+the values in the queue are recomputed at every node. These statistical parameters 
+252 Malkoff 
+are used to detect and extract a signal from the background noise by computing 
+a threshold for each node. Arriving input values that exceed the threshold are 
+passed to the hidden layer and not entered into the queues. Passed values are 
+expressed in terms of z-values (the number of standard deviations that the input 
+value differs from the mean of the queued values). Hidden layer nodes receive only 
+data exceeding thresholds; they are otherwise inactive. 
+2.2.2 The Hidden Layer 
+There are three basic types of hidden layer nodes: 
+� The first type receive values from only a single input layer node; they reflect 
+absolute changes in an input layer parameter. 
+� The second type receive values from a pair of inputs where each of those values 
+simultaneously deviates from normal in the same direction. 
+� The third type receive values from a pair of inputs where each of those values 
+simultaneously deviates from normal in opposite directions. 
+For N data inputs, there are a total of N 2 hidden layer nodes. 
+Values are passed to the hidden layer only when they exceed the threshold levels 
+determined by the input node queue. The hidden layer values are stored in first- 
+in, first-out queues, like those of the input layer. If the network is in the testing 
+mode, these values represent signals awaiting classification. The mean and standard 
+deviation are computed for each of these queues, and used for subsequent pattern 
+matching. If, instead, the network is in the training mode, the passed values and 
+their statistical descriptors are stored as templates at their corresponding nodes. 
+2.2.3 Pattern Matching Output Layer 
+Pattern matching consists of computing Bayesian likelihoods for the undiagnosed 
+input relative to each template class. The computation assumes a normal distri- 
+bution of the values contained within the queue of each hidden layer node. The 
+statistical parameters of the queue representing undiagnosed inputs are matched 
+with those of each of the templates. For example, the number of standard devia- 
+tions distance between the means of the undiagnosed queue and a template queue 
+may be used to demarcate an area under a normal probability distribution. This 
+area is then used as a weight, or measure, for their closeness of match. Note that 
+this computation has a non-linear, sigmoid-shaped output. 
+The weights for each template are summed across all nodes. Likelihood values 
+are computed for each template. A priori data is used where available, and the 
+results normalized for final outputs. The number of computations is minimal and 
+done in parallel; they scale linearly with the number of templates 

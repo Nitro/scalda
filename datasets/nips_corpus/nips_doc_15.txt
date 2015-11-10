@@ -1,0 +1,145 @@
+127 
+Neural Network Implementation Approaches 
+for the 
+Connection Machine 
+Nathan H. Brown, Jr. 
+MRJ/Perkin Elmer, 10467 White Granite Dr. (Suite 304), Oakton, Va. 22124 
+ABSTRACT 
+The SIMD parallelism of the Connection Machine (CM) allows the construction of 
+neural network simulations by the use of simple data and control structures. Two 
+approaches are described which allow parallel computation of a model's nonlinear 
+functions, parallel modification of a model's weights, and parallel propagation of a 
+model's activation and error. Each approach also allows a model's interconnect 
+structure to be physically dynamic. A Hopfield model is implemented with each 
+approach at six sizes over the same number of CM processors to provide a performance 
+comparison. 
+INTRODUCTION 
+Simulations of neural network models on digital computers perform various 
+computations by applying linear or nonlinear functions, defined in a program, to 
+weighted sums of integer or real numbers retrieved and stored by array reference. The 
+numerical values are model dependent parameters like time averaged spiking frequency 
+(activation), synaptic efficacy (weight), the error in error back propagation models, and 
+computational temperature in thermodynamic models. The interconnect structure of a 
+particular model is implied by indexing relationships between arrays defined in a 
+program. On the Connection Machine (CM), these relationships are expressed in 
+hardware processors interconnected by a 16-dimensional hypercube communication 
+network. Mappings are constructed to define higher dimensional interconnectivity 
+between processors on top of the fundamental geometry of the communication 
+network. Parallel transfers are defined over these mappings. These mappings may be 
+dynamic. CM parallel operations transform array indexing from a temporal succession 
+of references to memory to a single temporal reference to spatially distributed 
+processors. 
+Two alternative approaches to implementing neural network simulations on the CM 
+are described. Both approaches use data parallelism 1 provided by the *Lisp virtual 
+machine. Data and control structures associated with each approach and performance 
+data for a Hopfield model implemented with each approach are presented. 
+DATA STRUCTURES 
+The functional components of a neural network model implemented in *Lisp are 
+stored in a uniform parallel variable (pvar) data structure on the CM. The data structure 
+may be viewed as columns of pvars. Columns are given to all CM virtual processors. 
+Each CM physical processor may support 16 virtual processors. In the first approach 
+described, CM processors are used to represent the edge set of a models graph 
+structure. In the second approach described, each processor can represent a unit, an 
+outgoing link, or an incoming link in a model's structure. Movement of activation (or 
+error) through a model's interconnect structure is simulated by moving numeric values 
+American Institute of Physics 1988 
+128 
+over the CM's hypercube. Many such movements can result from the execution of a 
+single CM macroinstruction. The CM transparently handles message buffering and 
+collision resolution. However, some care is required on the part of the user to insure 
+that message traffic is distributed over enough processors so that messages don't stack 
+up at certain processors, forcing the CM to sequentially handle large numbers of 
+buffered messages. Each approach requires serial transfers of model parameters and 
+states over the communication channel between the host and the CM at certain times in a 
+simulation. 
+The fh'st approach, the edge list approach, distributes the edge list of a network 
+graph to the CM, one edge per CM processor. Interconnect weights for each edge are 
+stored in the memory of the processors. An array on the host machine stores the 
+current activation for all units. This approach may be considered to represent abstract 
+synapses on the CM. The interconnect structure of a model is described by product 
+sets on an ordered pair of identification (id) numbers, rid and sid. The rid is the id of 
+units receiving activation and sid the id of units sending activation. Each id is a unique 
+integer. In a hierarchical network, the ids of input units are never in the set of rids and 
+the ids of output units are never in the set of sids. Various set relations (e.g. inverse, 
+reflexive, symmetric, etc.) defined over id ranges can be used as a high level 
+representation of a network's interconnect structure. These relations can be translated 
+into pvar columns. The limits to the interconnect complexity of a simulated model are 
+the virtual processor memory limits of the CM configuration used and the stack space 
+Rveuired by functions used to compute the weighted sums of activation. Fig. 1 shows a 
+-> R 2 -> R 4 interconnect structure and its edge list representation on the CM. 
+6 7 8 9 
+I 2 3 
+CMPROCESSOR 0 I 2 3 4 5 6 7 8 g 10111213 
+PACT (ai) 4 4 4 5 5 5 6 6 7 7 8 8 9 9 
+SACT (aj) I 2 3 1 2 3 4 5 4 5 4 5 4 5 
+Fig. 1. Edge List Representation of a R3-> R 2 -> R 4 Interconnect Structure 
+This representation can use as few as six pvars for a model with Hebbian 
+adaptation: rid (i), sid (j), interconnect weight (wij), ract (ai) , sact (aj), and learn rate 
+(1). Error back propagation requires the addition of: error (ei), old interconnect 
+weight (wij(t- 1)), and the momentum term (ix). The receiver and sender unit 
+identification pvars are described above. The interconnect weight pvar stores the 
+weight for the interconnect. The activation pvar, sact, stores the current activation, aj, 
+transfered to the unit specified by rid from the unit specified by sid. The activation 
+pvar, ract, stores the current weighted activation ajwij. The error pvar stores the error 
+for the unit specified by the sid. A variety of proclaims (e.g. integer, floating point, 
+boolean, and field) exist in *Lisp to define the type and size of pvars. Proclaims 
+conserve memory and speed up execution. Using a small number of pvars limits the 
+129 
+amount of memory used in each CM processor so that maximum virtualization of the 
+hardware processors can be realized. Any neural model can be specified in this fashion. 
+Sigma-pi models require multiple input activation pvars be specified. Some edges may 
+have a different number of input activation pvars than others. To maintain the uniform 
+data structure of this approach a tag pvar has to be used to determine which input 
+activation pvars are in use on a particular edge. 
+The edge list approach allows the structure of a simulated model to physically 
+change because edges may be added (up to the virtual processor limit), or deleted at any 
+time without affecting the operation of the control structure. Edges may also be placed 
+in any processor because the subselection (on rid or sid) operation performed before a 
+particular update operation insures that all processors (edges) with the desired units are 
+selected for the update. 
+The second simulation approach, the composite approach, uses a more 
+complicated data structure where units, incoming links, and outgoing links are 
+represented. Update routines for this approach use parallel segmented scans to form 
+the weighted sum of input activation. Parallel segmented scans allow a MIMD like 
+computation of the weighted sums for many units at once. Pvar columns have unique 
+values for unit, incoming link, and outgoing link representations. The data structures 
+for input units, hidden units, and output units are composed of sets of the three pvar 
+column types. Fig. 2 shows the representation for the same model as in Fig. 1 
+implemented with the composite approach. 
+1 
+o 1 
+c--. I Cl c-...q 
+I I I 
+' I 
+I II 
+I II 
+2 3 4 5 6 7 8 9 
+2 3 4 5 6 7 8 9 101112 1314151617181920212223242526272829303132333435 
+[o 
+Fig. 2. Composite Representation of a R 3 -> R 2 -> R 4 Interconnect Structure 
+In Fig. 2, CM processors acting as units, outgoing links, and incoming links are 
+represented respectively by circles, triangles, and squares. CM cube address pointers 
+used to direct the parallel transfer of activation are shown by arrows below the 
+structure. These pointers def'me the model interconnect mapping. Multiple sets of 
+these pointers may be stored in seperate pvars. Segmented scans are represented by 
+operation-arrow icons above the structure. A basic composite approach pvar set for a 
+model with Hebbian adaptation is: forward B, forward A, forward transfer address, 
+interconnect weight (wij), act-1 (ai), act-2 (aj), threshold, learn rate (/1), current unit id 
+(i), attached unit id (j), level, and column type. Back progagation of error requires the 
+addition of: backward B, backward A, backward transfer address, error (ei), previous 
+interconnect weight (wij(t-1)), and the momentum term ((x). The forward and 
+backward boolean pvars control the segmented scanning operations over unit 
+constructs. Pvar A of each type controls the plus scanning and pvar B of each type 
+controls the copy scanning. The forward transfer pvar stores cube addresses for 
+130 
+forward (ascending cube address) parallel transfer of activation. The backward transfer 
+pvar stores cube addresses for backward (descending cube address) parallel transfer of 
+error. The interconnect weight, activation, and error pvars have the same functions as 
+in the edge list approach. The current unit id stores the current unit's id number. The 
+attached unit id stores the id number of an attached unit. This is the edge list of the 
+network's graph. The contents of these pvars only have meaning in link pvar columns. 
+The level pvar stores the level of a unit in a hierarchical network. The type pvar stores 
+a unique arbitrary tag for the pvar column type. These last three pvars are used to 
+subselect processor ranges to reduce the number of processors involved in an 
+operation. 
+Again, edges and units can be added or deleted. Processor memories for

@@ -1,0 +1,141 @@
+Learning To Play the Game of Chess 
+Sebastian Thrun 
+University of Bonn 
+Department of Computer Science III 
+R6merstr. 164, D-53117 Bonn, Germany 
+E-mail: thrun @ carbon.informatik.uni-bonn.de 
+Abstract 
+This paper presents NeuroChess, a program which learns to play chess from the final 
+outcome of games. NeuroChess learns chess board evaluation functions, represented 
+by artificial neural networks. It integrates inductive neural network learning, temporal 
+differencing, and a variant of explanation-based learning. Performance results illustrate 
+some of the strengths and weaknesses of this approach. 
+1 Introduction 
+Throughout the last decades, the game of chess has been a major testbed for research on 
+artificial intelligence and computer science. Most of today's chess programs rely on intensive 
+search to generate moves. To evaluate boards, fast evaluation functions are employed which 
+are usually carefully designed by hand, sometimes augmented by automatic parameter tuning 
+methods [1]. Building a chess machine that learns to play solely from the final outcome of 
+games (win/loss/draw) is a challenging open problem in AI. 
+In this paper, we are interested in learning to play chess from the final outcome of games. 
+One of the earliest approaches, which learned solely by playing itself, is Samuel's famous 
+checker player program [10]. His approach employed temporal difference learning (in short: 
+TD) [14], which is a technique for recursively learning an evaluation function. Recently, 
+Tesauro reported the successful application of TD to the game of Backgammon, using 
+artificial neural network representations [ 16]. While his TD-Gammon approach plays grand- 
+master-level backgammon, recent attempts to reproduce these results in the context of Go 
+[12] and chess have been less successful. For example, Schifer [11] reports a system just 
+like Tesauro's TD-Gammon, applied to learning to play certain chess endgames. Gherrity [6] 
+presented a similar system which he applied to entire chess games. Both approaches learn 
+purely inductively from the final outcome of games. Tadepalli [15] applied a lazy version 
+of explanation-based learning [5, 7] to endgames in chess. His approach learns from the 
+final outcome, too, but unlike the inductive neural network approaches listed above it learns 
+analytically, by analyzing and generalizing experiences in terms of chess-specific knowledge. 
+1070 Sebastian Thrun 
+The level of play reported for all these approaches is still below the level of GNU-Chess, a 
+publicly available chess tool which has frequently been used as a benchmark. This illustrates 
+the hardness of the problem of learning to play chess from the final outcome of games. 
+This paper presents NeuroChess, a program that learns to play chess from the final outcome 
+of games. The central learning mechanisms is the explanation-based neural network (EBNN) 
+algorithm [9, 8]. Like Tesauro's TD-Gammon approach, NeuroChess constructs a neural 
+network evaluation function for chess boards using TD. In addition, a neural network version 
+of explanation-based learning is employed, which analyzes games in terms of a previously 
+learned neural network chess model. This paper describes the NeuroChess approach, dis- 
+cusses several training issues in the domain of chess, and presents results which elucidate 
+some of its strengths and weaknesses. 
+2 Temporal Difference Learning in the Domain of Chess 
+Temporal difference learning (TD) [14] comprises a family of approaches to prediction in 
+cases where the event to be predicted may be delayed by an unknown number of time steps. 
+In the context of game playing, TD methods have frequently been applied to learn functions 
+which predict the final outcome of games. Such functions are used as board evaluation 
+functions. 
+The goal of TD(0), a basic variant of TD which is currently employed in the NeuroChess 
+approach, is to find an evaluation function, V, which ranks chess boards according to their 
+goodness: If the board 8 is more likely to be a winning board than the board 8 , then 
+V(8) > V(8). To learn such a function, TD transforms entire chess games, denoted by 
+a sequence of chess boards 80, 81,82,..., 8t,i, into training patterns for V. The TD(0) 
+learning rule works in the following way. Assume without loss of generality we are learning 
+white's evaluation function. Then the target values for the final board is given by 
+vmrget[8 { 1, if S, is a win for white 
+t t,,,) = 0, ifst isadraw (1) 
+-1, if stn is a loss for white 
+and the targets for the intermediate chess boards so, sl, s2,. �., st,,,-2 are given by 
+vtarget(st) -- 7' V(st+2) (2) 
+This update rule constructs V recursively. At the end of the game, V evaluates the final 
+outcome of the game (Eq. (1)). In between, when the assignment of V-values is less obvious, 
+V is trained based on the evaluation two half-moves later (Eq. (2)). The constant 7 (with 
+0 _< 7 _< 1) is a so-called discount factor. It decays V exponentially in time and hence 
+favors early over late success. Notice that in NeuroChess V is represented by an artificial 
+neural network, which is trained to fit the target values V target obtained via Eqs. (1) and (2) 
+(cf. [6, 11, 12, 16]). 
+3 Explanation-Based Neural Network Learning 
+In a domain as complex as chess, pure inductive learning techniques, such as neural net- 
+work Back-Propagation, suffer from enormous training times. To illustrate why, consider 
+the situation of a knight fork, in which the opponent's knight attacks our queen and king 
+simultaneously. Suppose in order to save our king we have to move it, and hence sacrifice 
+our queen. To learn the badness of a knight fork, NeuroChess has to discover that certain 
+board features (like the position of the queen relative to the knight) are important, whereas 
+Learning to Play the Game of Chess 1071 
+$1 $2 '3 '�1 $2 S3 Sl $2 $3 
+Figure 1' Fitting values and slopes in EBNN: Let V be the target function for which three 
+examples (sl, V(sl)), (s2, V(s2)), and (s3, V(s3)) are known. Based on these points the 
+learner might generate the hypothesis W. If the slopes �v(sO ov s)0s2 and 
+o , '( ' os3 are 
+also known, the learner can do much better: V. 
+others (like the number of weak pawns) are not. Purely inductive learning algorithms such 
+as Back-propagation figure out the relevance of individual features by observing statistical 
+correlations in the training data. Hence, quite a few versions of a knight fork have to be 
+experienced in order to generalize accurately. In a domain as complex as chess, such an 
+approach might require unreasonably large amounts of training data. 
+Explanation-based methods (EBL) [5, 7, 15] generalize more accurately from less training 
+data. They rely instead on the availability of domain knowledge, which they use for explaining 
+and generalizing training examples. For example, in the explanation of a knight fork, EBL 
+methods employ knowledge about the game of chess to figure out that the position of the 
+queen is relevant, whereas the number of weak pawns is not. Most current approaches to 
+EBL require that the domain knowledge be represented by a set of symbolic rules. Since 
+NeuroChess relies on neural network representations, it employs a neural network version 
+of EBL, called explanation-based neural network learning (EBNN) [9]. In the context of 
+chess, EBNN works in the following way: The domain-specific knowledge is represented 
+by a separate neural network, called the chess model M. M maps arbitrary chess boards st 
+to the corresponding expected board st+2 two half-moves later. It is trained prior to learning 
+V, using a large database of grand-master chess games. Once trained, M captures important 
+knowledge about temporal dependencies of chess board features in high-quality chess play. 
+EBNN exploits M to bias the board evaluation function V. It does this by extracting slope 
+constraints for the evaluation function V at all non-final boards, i.e., all boards for which V 
+is updated by Eq. (2). Let 
+ovtarget(st) with t G {0, 1,2,... lfinal- 2} (3) 
+0St  
+denote the target slope of V at st, which, because vmrgct(st) is set to 7V(st+2) according 
+Eq. (2), can be rewritten as 
+Ovtarget(st) OV(st+2) Ost+2 
+: 7' (4) 
+Ost Ost+2 Ost 
+using the chain rule of differentiation. The rightmost term in Eq. (4) measures how in- 
+finitesimal small changes of the chess board st influence the chess board st+2. It can be 
+approximated by the chess model M: 
+ovtarget(st) OV(st+2) OM(st) 
+7' (5) 
+The right expression is only an approximation to the left side, because M is a trained neural 
+10 72 Sebastian Thrun 
+.- -% ! 
+board at time t 
+(wbi to move) (black to move) (white to move) 
+.::... .. p � .  . .. 
+redmtve model network M 
+175 feature 
+evaluation network V  evaluation network V 
+V(t+2) 
+Figure 2: Learning an evaluation function in NeuroChess. Boards are mapped into a 
+high-dimensional feature vector, which forms the input for both the evaluation network V 
+and the chess model M. The evaluation network is trained by Back-propagation and the 
+TD(0) procedure. Both networks are employed for analyzing training example in order to 
+derive target slopes for V. 
+network and thus its first derivative might be erroneous. Notice that both expressions on 
+the right hand side of Eq. (5) are derivatives of neural network functions, which are easy to 
+compute since neural networks are differentiable. 
+The result of Eq. (5) is an estimate of the slope of the target function V at st. This slope 
+adds important shape information to the target values constructed via Eq. (2). As depicted in 
+Fig. 1, functions can be fit more accurately if in addition to target values the slopes of these 
+values are known. Hence, instead of just fitting the target values vtarget(st), NeuroChess also 
+fits these target slopes. This is done using the Tangent-Prop algorithm [ 13]. 
+The complete NeuroChess learning architecture is depicted in F

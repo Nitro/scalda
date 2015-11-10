@@ -1,0 +1,148 @@
+Controlling the Complexity of HMM Systems by 
+Regularization 
+Christoph Neukirchen, Gerhard Rigoil 
+Department of Computer Science 
+Gerhard-Mercator-University Duisburg 
+47057 Duisburg, Germany 
+email: { chn,rigoll} fb9-ti.uni-duisburg.de 
+Abstract 
+This paper introduces a method for regularization of HMM systems that 
+avoids parameter overfitting caused by insufficient training data. Regu- 
+larization is done by augmenting the EM training method by a penalty 
+term that favors simple and smooth HMM systems. The penalty term 
+is constructed as a mixture model of negative exponential distributions 
+that is assumed to generate the state dependent emission probabilities of 
+the HMMs. This new method is the successful transfer of a well known 
+regularization approach in neural networks to the HMM domain and can 
+be interpreted as a generalization of traditional state-tying for HMM sys- 
+tems. The effect of regularization is demonstrated for continuous speech 
+recognition tasks by improving overfitted triphone models and by speaker 
+adaptation with limited training data. 
+1 Introduction 
+One general problem when constructing statistical pattern recognition systems is to ensure 
+the capability to generalize well, i.e. the system must be able to classify data that is not 
+contained in the training data set. Hence the classifier should learn the true underlying data 
+distribution instead of overfitting to the few data examples seen during system training. 
+One way to cope with the problem of overfitting is to balance the system's complexity and 
+flexibility against the limited amount of data that is available for training. 
+In the neural network community it is well known that the amount of information used in 
+system training that is required for a good generalization performance should be larger than 
+the number of adjustable weights (Baum, 1989). A common method to train a large size 
+neural network sufficiently well is to reduce the number of adjustable parameters either 
+by removing those weights that seem to be less important (in (le Cun, 1990) the sensitiv- 
+ity of individual network weights is estimated by the second order gradient) or by sharing 
+738 C. Neukirchen and G. Rigoil 
+the weights among many network connections (in (Lang, 1990) the connections that share 
+identical weight values are determined in advance by using prior knowledge about invari- 
+ances in the problem to be solved). A second approach to avoid overfitting in neural net- 
+works is to make use of regularization methods. Reguladzation adds an extra term to the 
+training objective function that penalizes network complexity. The simplest regularization 
+method is weight decay (Plaut, 1986) that assigns high penalties to large weights. A more 
+complex regularization term is used in soft weight-sharing (Nowlan, 1992) by favoring 
+neural network weights that fall into a finite set of small weight-clusters. The traditional 
+neural weight sharing technique can be interpreted as a special case of soft weight-sharing 
+regularization when the cluster variances tend towards zero. 
+In continuous speech recognition the Hidden Markov Model (HMM) method is common. 
+When using detailed context-dependent triphone HMMs, the number of HMM-states and 
+parameters to estimate in the state-dependent probability density functions (pdfs) is in- 
+creasingly large and overfitting becomes a serious problem. The most common approach 
+to balance the complexity of triphone HMM systems against the training data set is to re- 
+duce the number of parameters by tying, i.e. parameter sharing (Young, 1992). A popular 
+sharing method is state-tying with selecting the HMM-states to be tied in advance, either 
+by data-driven state-clustering based on a pdf-dependent distance metric (Young, 1993), 
+or by constructing binary decision trees that incorporate higher phonetic knowledge (Bahl, 
+1991). In these methods, the number of state-clusters and the decision tree sizes, respec- 
+tively, must be chosen adequately to match the training data size. However, a possible 
+drawback of both methods is that two different states may be selected to be tied (and their 
+pdfs are forced to be identical) although there is enough training data to estimate the differ- 
+ent pdfs of both states sufficiently well. In the following, a method to reduce the complexity 
+of general HMM systems based on a regularization term is presented. Due to its close rela- 
+tionship to the soft weight-sharing method for neural networks this novel approach can be 
+interpreted as soft state-tying. 
+2 Maximum likelihood training in HMM systems 
+Traditionally, the method most commonly used to determine the set of adjustable param- 
+eters 13 in a HMM system is maximum likelihood (ML) estimation via the expectation 
+maximization (EM) algorithm. If the training observation vector sequence is denoted as 
+X = (x(1),..., x(T)) and the corresponding HMM is denoted as W the ML estimator is 
+given by: 
+M/ = argm0ax {logpo(XlW)) (1) 
+In the following, the total number of different HMM states is given by K. The emission pdf 
+, of the k-th state is denoted as bk (x); for continuous HMMs bk (x) is a mixture of Gaussian 
+pdfs most commonly; in the case of discrete HMMs the observation vector x is mapped by 
+a vector quantizer (VQ) on the discrete VQ-label (x) and the emission pdfis replaced by 
+the discrete output probability b (). By the forward-backward algorithm the probabilistic 
+state counts 7 (t) can be determined for each training observation and the log-likelihood 
+over the training data can be decomposed into the auxiliary function Q(13) optimized in 
+the EM steps (state transition probabilitieg are neglected here): 
+T K 
+Q(13) =   7(t)' logb(x(t)) 
+t----1 k=l 
+(2) 
+Sometimes, the observation vector x is split up into several independent streams. If the total 
+number of streams is given by Z, the features in the z-th stream comprise the subvector x (z) 
+and in the case of application of a VQ the corresponding VQ label is denoted as (z) (x(Z)). 
+Controlling the Complexity of HMM Systems by Regularization 739 
+The observation subvectors in different streams are assumed to be statistically independent 
+thus the states' pdfs can be written as: 
+z 
+z=l 
+(3) 
+3 A complexity measure for HMM systems 
+When using regularization methods to train the HMM system, the traditional objective 
+training function Q(�) is augmented by a complexity penalization term f/and the new 
+optimization problem becomes: 
+t reg: argmx {Q(�) + ,. ft(�)} (4) 
+Here, the regulizer term f/should be small if the HMM system has high complexity and 
+parameter overfitting becomes a problem; f/should be large if the HMM-states' pdfs are 
+shaped smoothly and system generalization works well. The constant , _> 0 is a control 
+parameter that adjusts the tradeoff between the pure ML solution and the smoothness of 
+penalization. In Eqn. (4) the term Q(�) becomes larger the more data is used for training 
+(which makes the ML estimation become more reliable) and the influence of the term ,- ft 
+gets less important, relatively� 
+The basic idea when constructing an expression for the regulizer ft that favors smooth 
+HMM systems is, that in the case of simple and smooth systems the state-dependent emis- 
+sion pdfs bk (') should fall into several groups of similar pdfs. This is in contrast to the 
+traditional state-tying that forces identical pdfs in each group. In the following, these clus- 
+ters of similar emission pdfs are described by a probabilistic mixture model� Each pdf is 
+assumed to be generated by a mixture of I different mixture components Pi ('). In this case 
+the probability (-density) of generating the emission pdf bk (.) is given by: 
+I 
+p(O(')) - y, c i � pi(O(')) (5) 
+i=1 
+I 
+with the mixture weights ci that are constrained to 0 _< ci _< I and I - Y'-i=i ci. The i-th 
+mixture component Pi (') is used to model the i-th cluster of HMM-emission pdfs. Each 
+cluster is represented by a prototype pdf that is denoted as/i(') for the i-th cluster; the 
+distance (using a suitable metric) between a HMM emission pdfb (-) and the i-th prototype 
+pdf is denoted as Di (b (.)). If these distances are small for all HMM emission probabilities 
+there are several small clusters of emission probabilities and the regulizer term  should be 
+large. Now, it is assumed that the distances follow a negative exponential distribution (with 
+a deviation parameter Ai), yielding an expression for the mixture components: 
+� r). (z) 
+pi(bk(.)) -. Ai,z exp -  Ai,z ',zw (')) (6) 
+z=l z=l 
+In Eqn. (6) the more general case of Z independent streams is given. Hence, the HMM 
+emission pdfs and the cluster prototype pdfs are split up into Z different pdfs b? ) (.) and 
+/z) (.), respectively and the stream dependent distances Di,z and parameters Ai,z are used. 
+Now, for the regulizer term  the log-likelihood of the mixture model in Eqn. (5) over all 
+emission pdfs in the HMM system can be used: 
+K 
+= logp(b(.)) (7) 
+k=l 
+740 C. Neukirchen and G. Rigoll 
+4 Regularization example: discrete HMMs 
+As an example for parameter estimation in the regularization framework, a discrete HMM 
+system with different VQs for each of the Z streams is considered here: Each VQ subdi- 
+vides the feature space into Jz different partitions (i.e. the z-th codebook size is Jz) and 
+the VQ-partition labels are denoted _(z) If the observation subvector x � is in the j-th 
+'111j . 
+VQ-partition the VQ output is Fn � (x�)) = - � 
+llt, j . 
+Since the discrete kind HMM output probabilities b? ) (rh(z)) are used here, the regulizer's 
+prototypes are the discrete probabilities z) (mr)). As a distance metric between the HMM 
+emission probabilities and the prototype probabilities used in Eqn. (6) the asymmetric 
+Kullback-Leibler divergence is applied: 
+(8) 
+4.1 Estimation of HMM parameters using regularization 
+The parameter set O of the HMM system to be estimated mainly consists of the discrete 
+HMM em

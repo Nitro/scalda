@@ -1,0 +1,131 @@
+Genetic Algorithms and Explicit Search Statistics 
+Shumeet Baluja 
+baluja@cs.cmu.edu 
+Justsystem Pittsburgh Research Center & 
+School of Computer Science, Carnegie Mellon University 
+Abstract 
+The genetic algorithm (GA) is a heuristic search procedure based on mechanisms 
+abstracted from population genetics. In a previous paper [Baluja & Caruana, 1995], 
+we showed that much simpler algorithms, such as hillclimbing and Population- 
+Based Incremental Learning (PBIL), perform comparably to GAs on an optimiza- 
+tion problem custom designed to benefit from the GA's operators. This paper 
+extends these results in two directions. First, in a large-scale empirical comparison 
+of problems that have been reported in GA literature, we show that on many prob- 
+lems, simpler algorithms can perform significantly better than GAs. Second, we 
+describe when crossover is useful, and show how it can be incorporated into PBIL. 
+1 IMPLICIT VS. EXPLICIT SEARCH STATISTICS 
+Although there has recently been controversy in the genetic algorithm (GA) community as 
+to whether GAs should be used for static function optimization, a large amount of research 
+has been, and continues to be, conducted in this direction [De Jong, 1992]. Since much of 
+GA research focuses on optimization (most often in static environments), this study exam- 
+ines the performance of GAs in these domains. 
+In the standard GA, candidate solutions are encoded as fixed length binary vectors. The ini- 
+tial group of potential solutions is chosen randomly. At each generation, the fitness of each 
+solution is calculated; this is a measure of how well the solution optimizes the objective 
+function. The subsequent generation is created through a process of selection, recombina- 
+tion, and mutation. Recombination operators merge the information contained within pairs 
+of selected parents by placing random subsets of the information from both parents into 
+their respective positions in a member of the subsequent generation. The fitness propor- 
+tional selection works as selective pressure; higher fitness solution strings have a higher 
+probability of being selected for recombination. Mutations are used to help preserve diver- 
+sity in the population by introducing random changes into the solution strings. The GA uses 
+the population to implicitly maintain statistics about the search space. The selection, cross- 
+over, and mutation operators can be viewed as mechanisms of extracting the implicit statis- 
+tics from the population to choose the next set of points to sample. Details of GAs can be 
+found in [Goldberg, 1989] [Holland, 1975]. 
+Population-based incremental learning (PBIL) is a combination of genetic algorithms and 
+competitive learning [Baluja, 1994]. The PBIL algorithm attempts to explicitly maintain 
+statistics about the search space to decide where to sample next. The object of the algorithm 
+is to create a real valued probability vector which, when sampled, reveals high quality solu- 
+tion vectors with high probability. For example, if a good solution can be encoded as a 
+string of alternating O's and l's, a suitable final probability vector would be 0.01, 0.99, 
+0.01, 0.99, etc. The PBIL algorithm and parameters are shown in Figure 1. 
+Initially, the values of the probability vector are initialized to 0.5. Sampling from this vec- 
+tor yields random solution vectors because the probability of generating a 1 or 0 is equal. 
+As search progresses, the values in the probability vector gradually shift to represent high 
+320 S. Baluja 
+...... Initialize Probability Vector 
+for i :=1 to LENGTH do P[i] = 0.5; 
+while (NOT termination condition) 
+.... Generate Samples .... 
+for i :=1 to SAMPLES do 
+sample_vectors[i] := generate_sample_vector_according_to_probabilities (P); 
+evaluations[i] := evaluate(sample_vectors[i]); 
+best_vector := find_vector_with_besLevaluation (sample_vectors, evaluations); 
+worst_vector := find_vector_with_worsLevaluation (sample_vectors, evaluations); 
+..... Update Probability Vector Towards Best Solution ..... 
+for i :=1 to LENGTH do 
+P[i] := P[i] * (1.0- LR) + besLvector[i] * (LR); 
+PBIL: USER DEFINED CONSTANTS (Values Used in this Study): 
+SAMPLES: the number of vectors generated before update of the probability vector ( 00). 
+LR: the learning rate, how fast to exploit the search performed (0.1). 
+NEGATIVE_LR: negative leaming rate, how much to leam from negative examples (PBILI=0.0, PBIL2= 0.075). 
+LENGTH: the number of bits in a generated vector (problem specific). 
+Figure 1:PBIL1/PBIL2 algorithm for a binary alphabet. PBIL2 includes shaded region. Mutations not shown. 
+evaluation solution vectors through the tollowing process. A number of solution vectors 
+are generated based upon the probabilities specified in the probability vector. The proba- 
+bility vector is pushed towards the generated solution vector with the highest evaluation. 
+After the probability vector is updated, a new set of solution vectors is produced by sam- 
+pling from the updated probability vector, and the cycle is continued. As the search 
+progresses, entries in the probability vector move away from their initial settings of 0.5 
+towards either 0.0 or 1.0. 
+One key feature of the early generations of genetic optimization is the parallelism in the 
+search; many diverse points are represented in the population of points during the early 
+generations. When the population is diverse, crossover can be an effective means of 
+search, since it provides a method to explore novel solutions by combining different mem- 
+bers of the population. Because PBIL uses a single probability vector, it may seem to have 
+less expressive power than a GA using a full population, since a GA can represent a large 
+number of points simultaneously. A traditional single population GA, however, would not 
+be able to maintain a large number of points. Because of sampling errors, the population 
+will converge around a single point. This phenomenon is summarized below: 
+... the theorem [Fundamental Theorem of Genetic Algorithms [Goldberg, 1989]], assumes 
+an infinitely large population size. In a finite size population, even when there is no selective 
+advantage for either of two competing alternatives... the population will converge to one 
+alternative or the other in finite time (De Jong, 1975; [Goldberg & Segrest, 1987]). This 
+problem of finite populations is so important that geneticists have given it a special name, 
+genetic drift. Stochastic errors tend to accumulate, ultimately causing the population to con- 
+verge to one alternative or another [Goldberg & Richardson, 1987]. 
+Diversity in the population is crucial for GAs. By maintaining a population of solutions, 
+the GA is able--in theory at leastto maintain samples in many different regions. Cross- 
+over is used to merge these different solutions. A necessary (although not sufficient) con- 
+dition for crossover to work well is diversity in the population. When diversity is lost, 
+crossover begins to behave like a mutation operator that is sensitive to the convergence of 
+the value of each bit [Eshelman, 1991]. If all individuals in the population converge at 
+Genetic Algorithms and Explicit Search Statistics 321 
+some bit position, crossover leaves those bits unaltered. At bit positions where individuals 
+have not converged, crossover will effectively mutate values in those positions. Therefore, 
+crossover creates new individuals that differ from the individuals it combines only at the 
+bit positions where the mated individuals disagree. This is analogous to PBIL which cre- 
+ates new trials that differ mainly in positions where prior good performers have disagreed. 
+As an example of how the PBIL algorithm works, we can examine the values in the prob- 
+ability vector through multiple generations. Consider the following maximization prob- 
+lem: 1.0/1(366503875925.0 - X)l, 0 _< X < 240. Note that 366503875925 is represented in 
+binary as a string of 20 pairs of alternating '01 '. The evolution of the probability vector is 
+shown in Figure 2. Note that the most significant bits are pinned to either 0 or 1 very 
+quickly, while the least significant bits are pinned last. This is because during the early 
+portions of the search, the most significant bits yield more information about high evalua- 
+tion regions of the search space than the least significant bits. 
+o 
+-Io 
+o 
+30 
+40 
+Generation 
+Figure 2: Evolution of the probability vector over successive generations. White represents a high 
+probability of generating a 1, black represents a high probability of generating a 0. Intermediate grey represent 
+probabilities close to 0.5 - equal chances of generating a 0 or 1. Bit 0 is the most significant, bit 40 the least. 
+2 AN EMPIRICAL COMPARISON 
+This section provides a summary of the results obtained from a large scale empirical com- 
+parison of seven iterative and evolution-based optimization heuristics. Thirty-four static 
+optimization problems, spanning six sets of problem classes which are commonly 
+explored in the genetic algorithm literature, are examined. The search spaces in these 
+problems range from 2128 to 22040 . The results indicate that, on many problems, using 
+standard GAs for optimizing static functions does not yield a benefit, in terms of the final 
+answer obtained, over simple hillclimbing or PBIL. Recently, there have been other stud- 
+ies which have examined the performance of GAs in comparison to hillclimbing on a few 
+problems; they have shown similar results [Davis, 1991 ] [Juels & Wattenberg, 1996]. 
+Three variants of Multiple-Restart Stochastic Hillclimbing (MRSH) are explored in this 
+paper. The first version, MRSH-1, maintains a list of the position of the bit flips which 
+were attempted without improvement. These bit flips are not attempted again until a better 
+solution is found. When a better solution is found, the list is emptied. If the list becomes as 
+large as the solution encoding, MRSH-1 is restarted at

@@ -1,0 +1,150 @@
+Modeling acoustic correlations by 
+factor analysis 
+Lawrence Saul and Mazin Rahim 
+lsaul ,mazin)research. at. com 
+AT&T Labs -- Research 
+180 Park Ave, D-130 
+Florham Park, NJ 07932 
+Abstract 
+Hidden Markov models (HMMs) for automatic speech recognition 
+rely on high dimensional feature vectors to summarize the short- 
+time properties of speech. Correlations between features can arise 
+when the speech signal is non-stationary or corrupted by noise. We 
+investigate how to model these correlations using factor analysis, 
+a statistical method for dimensionality reduction. Factor analysis 
+uses a small number of parameters to model the covariance struc- 
+ture of high dimensional data. These parameters are estimated 
+by an Expectation-Maximization (EM) algorithm that can be em- 
+bedded in the training procedures for HMMs. We evaluate the 
+combined use of mixture densities and factor analysis in HMMs 
+that recognize alphanumeric strings. Holding the total number of 
+parameters fixed, we find that these methods, properly combined, 
+yield better models than either method on its own. 
+I Introduction 
+Hidden Markov models (HMMs) for automatic speech recognition[i] rely on high 
+dimensional feature vectors to summarize the short-time, acoustic properties of 
+speech. Though front-ends vary from recognizer to recognizer, the spectral infor- 
+mation in each frame of speech is typically codified in a feature vector with thirty 
+or more dimensions. In most systems, these vectors are conditionally modeled by 
+mixtures of Gaussian probability density functions (PDFs). In this case, the corre- 
+lations between different features are represented in two ways[2]: implicitly by the 
+use of two or more mixture components, and explicitly by the non-diagonal elements 
+in each covariance matrix. Naturally, these strategies for modeling correlations- 
+implicit versus explicit--involve tradeoffs in accuracy, speed, and memory. This 
+paper examines these tradeoffs using the statistical method of factor analysis. 
+750 L Saul and M. Rahim 
+The present work is motivated by the following observation. Currently, most HMM- 
+based recognizers do not include any explicit modeling of correlations; that is to 
+say--conditioned on the hidden states, acoustic features are modeled by mixtures of 
+Gaussian PDFs with diagonal covariance matrices. The reasons for this practice are 
+well known. The use of full covariance matrices imposes a heavy computational bur- 
+den, making it difficult to achieve real-time rccognition. Moreover, one rarely has 
+enough data to (reliably) estimate full covariance matrices. Some of these disadvan- 
+tages can be overcome by parameter-tying[3]--e.g., sharing the covariance matrices 
+across different states or models. But parameter-tying has its own drawbacks: it 
+considerably complicates the training procedure, and it requires some artistry to 
+know which states should and should not be tied. 
+Unconstrained and diagonal covariance matrices clearly represent two extreme 
+choices for the hidden Markov modeling of speech. The statistical method of factor 
+analysis[4, 5] represents a compromise between these two extremes. The idea behind 
+factor analysis is to map systematic variations of the data into a lower dimensional 
+subspace. This enables one to represent, in a very compact way, the covariance ma- 
+trices for high dimensional data. These matrices are expressed in terms of a small 
+number of parameters that model the most significant correlations without incur- 
+ring much overhead in time or memory. Maximum likelihood estimates of these 
+parameters are obtained by an Expectation-Maximization (EM) algorithm that can 
+be embedded in the training procedures for HMMs. 
+In this paper we investigate the use of factor analysis in continuous density HMMs. 
+Applying factor analysis at the state and mixture component level[6, 7] results in 
+a powerful form of dimensionality reduction, one tailored to the local properties 
+of speech. Briefly, the organization of this paper is as follows. In section 2, we 
+review the method of factor analysis and describe what makes it attractive for large 
+problems in speech recognition. In section 3, we report experiments on the speaker- 
+independent recognition of connected alpha-digits. Finally, in section 4, we present 
+our conclusions as well as ideas for future research. 
+2 Factor analysis 
+Factor analysis is a linear method for dimensionality reduction of Gaussian random 
+variables[4, 5]. Many forms of dimensionality reduction (including those imple- 
+mented as neural networks) can be understood as variants of factor analysis. There 
+are particularly close ties to methods based on principal components analysis (PCA) 
+and the notion of tangent distance[8]. The combined use of mixture densities and 
+factor analysis--resulting in a non-linear form of dimensionality reduction--was 
+first applied by Hinton et al[6] to the modeling of handwritten digits. The EM 
+procedure for mixtures of factor analyzers was subsequently derived by Ghahra- 
+mani et al[7]. Below we describe the method of factor analysis for Gaussian random 
+variables, then show how it can be applied to the hidden Markov modeling of speech. 
+2.1 Gaussian model 
+Let x G 7g r> denote a high dimensional Gaussian random variable. For simplicity, 
+we will assume that x has zero mean. If the number of dimensions, D, is very 
+large, it may be prohibitively expensive to estimate, store, multiply, or invert a full 
+covariance matrix. The idea behind factor analysis is to find a subspace of much 
+lower dimension, f << D, that captures most of the variations in x. To this end, let 
+z G 7gf denote a low dimensional Gaussian random variable with zero mean and 
+Modeling Acoustic Correlations by Factor Analysis 751 
+identity covariance matrix: 
+P(z) - 1 -z 
+(2r)f/2 e (1) 
+We now imagine that the variable x is generated by a random process in which z is a 
+latent (or hidden) variable; the elements of z are known as the factors. Let A denote 
+an arbitrary D x f matrix, and let q denote a diagonal, positive-definite D x D 
+matrix. We imagine that x is generated by sampling z from eq. (1), computing the 
+D-dimensional vector Az, then adding independent Gaussian noise (with variances 
+qltii) to each component of this vector. The matrix A is known as the factor loading 
+matrix. The relation between x and z is captured by the conditional distribution: 
+P(xlz): 
+[[-/2 �(x_^z)r_,(x_^z ) 
+x is found by integrating out the hidden variable z. 
+Here, E[.Ix ] 
+P(zlx, A, q'). 
+E[zlx ] : [Iq- ATqt-lA]-lATqt-lxt, (7) 
+E[zzTlx] -- [I q- AT-IA] -1 q- E[zlxdE[zlxd. (8) 
+denotes an average with respect to the posterior distribution, 
+The M-step of the EM algorithm is to maximize the right hand 
+The marginal distribution for 
+The calculation is straightforward because both P(z) and P(xlz ) are Gaussian: 
+= P(xlz)P(z) (3) 
+1 + AAr[ -1/2 
+e -- XT (1I--AAT)-- 1 x � (4) 
+From eq. (4), we see that x is normally distributed with mean zero and covariance 
+matrix � + AA r. It follows that when the diagonal elements of  are small, most 
+of the variation in x occurs in the subspace spanned by the columns of A. The 
+variances Iltii measure the typical size of componentwise fluctations outside this 
+subspace. 
+Covariance matrices of the form  + AA r have a number of useful properti. Most 
+importantly, they are expressed in terms of a small number of parameters, namely 
+the D(f+l) non-zero elements of A and . Iff << D, then storing A and  requires 
+much less memory than storing a full covariance matrix. Likewise, estimating A and 
+ also requires much less data than estimating a full covariance matrix. Covariance 
+matrices of this form can be efficiently inverted using the matrix inversion lemma[9], 
+( + AAT)-I = -1 __ -A(I + AT-IA)-IAT -1 (5) 
+where I is the f x f identity matrix. This decomposition also allows one to com- 
+pute the probability P(x) with only O(fD) multiplies,  opposed to the O(D 2) 
+multiplies that are normally required when the covariance matrix is non-diagonal. 
+Maximum likelihood estimates of the parameters A and  are obtained by an EM 
+procedure[q]. Let {x} denote a sample of data points (with mean zero). The EM 
+procedure is an iterative procedure for maximizing the log-likelihood, t In P(xt), 
+with P(x) given by eq. (4). The E-step of this procedure is to compute: 
+The right hand side of eq. (6) depends on A and  through the statistics[7]: 
+752 L. Saul and M. Rahim 
+side of eq. (6) with respect to ' and A'. This leads to the iterative updates[7]: 
+' = diag  
+(10) 
+where N is the number of data points, and ' is constrained to be purely diago- 
+nal. These updates are guaranteed to converge monotonically to a (possibly local) 
+maximum of the log-likelihood. 
+2.2 Hidden Markov modeling of speech 
+Consider a continuous density HMM whose feature vectors, conditioned on the 
+hidden states, are modeled by mixtures of Gaussian PDFs. If the dimensionality of 
+the feature space is very large, we can make use of the parameterization in eq. (4). 
+Each mixture component thus obtains its own means, variances, and factor loading 
+matrix. Taken together, these amount to a total of C(f + 2)D parameters per 
+mixture model, where C is the number of mixture components, f the number of 
+factors, and D the dimensionality of the feature space. Note that these models 
+capture feature correlations in two ways: implicitly, by using two or more mixture 
+components, and explicitly, by using one or more factors. Intuitively, one expects 
+the mixture components to model discrete types of variability (e.g., whether the 
+speaker is male or female), and the factors to model continuous types of variability 
+(e.g., due to coarticulation or noise). Both types of variability are important for 
+building accurate models of speech. 
+It is straightforward to integrate the EM algorithm for factor analysis into the 
+training of HMMs. Suppose that $ = {xt} represen

@@ -1,0 +1,145 @@
+Reinforcement Learning for Mixed 
+Open-loop and Closed-loop Control 
+Eric A. Hansen, Andrew G. Barto, and Shlomo Zilbersteln 
+Department of Computer Science 
+University of Massachusetts 
+Amherst, MA 01003 
+hansen ,barto,shlomo)cs.u mass.edu 
+Abstract 
+Closed-loop control relies on sensory feedback that is usually as- 
+sumed to be free. But if sensing incurs a cost, it may be cost- 
+effective to take sequences of actions in open-loop mode. We de- 
+scribe a reinforcement learning algorithm that learns to combine 
+open-loop and closed-loop control when sensing incurs a cost. Al- 
+though we assume reliable sensors, use of open-loop control means 
+that actions must sometimes be taken when the current state of 
+the controlled system is uncertain. This is a special case of the 
+hidden-state problem in reinforcement learning, and to cope, our 
+algorithm relies on short-term memory. The main result of the pa- 
+per is a rule that significantly limits exploration of possible memory 
+states by pruning memory states for which the estimated value of 
+information is greater than its cost. We prove that this rule allows 
+convergence to an optimal policy. 
+I Introduction 
+Reinforcement learning (RL) is widely-used for learning closed-loop control poli- 
+cies. Closed-loop control works well if the sensory feedback on which it relies is 
+accurate, fast, and inexpensive. But this is not always the case. In this paper, we 
+address problems in which sensing incurs a cost, either a direct cost for obtaining 
+and processing sensory data or an indirect opportunity cost for dedicating limited 
+sensors to one control task rather than another. If the cost for sensing is significant, 
+exclusive reliance on closed-loop control may make it impossible to optimize a per- 
+formance measure such as cumulative discounted reward. For such problems, we 
+describe an RL algorithm that learns to combine open-loop and closed-loop control. 
+By learning to take open-loop sequences of actions between sensing, it can optimize 
+a tradeoff'between the cost and value of sensing. 
+Reinforcement Learning for Mixed Open-loop and Closed-loop Control 1027 
+The problem we address is a special case of the problem of hidden state or partial 
+observability in RL (e.g., Whitehead & Lin, 1995; McCaHum, 1995). Although we 
+assume sensing provides perfect information (a significant limiting assumption), use 
+of open-loop control means that actions must sometimes be taken when the current 
+state of the controlled system is uncertain. Previous work on RL for partially 
+observable environments has focused on coping with sensors that provide imperfect 
+or incomplete information, in contrast to deciding whether or when to sense. Tan 
+(1991) addressed the problem of sensing costs by showing how to use RL to learn a 
+cost-effective sensing procedure for state identification, but his work addressed the 
+question of which sensors to use, not when to sense, and so still assumed closed-loop 
+control. 
+In this paper, we formalize the problem of mixed open-loop and closed-loop control 
+as a Markov decision process and use RL in the form of Q-learning to learn an op- 
+timal, state-dependent sensing interval. Because there is a combinatorial explosion 
+of open-loop action sequences, we introduce a simple rule for pruning this large 
+search space. Our most significant result is a proof that Q-learning converges to 
+an optimal policy even when a fraction of the space of possible open-loop action 
+sequences is explored. 
+2 Q-learning with sensing costs 
+Q-learning (Watkins, 1989) is a well-studied RL algorithm for learning to control 
+a discrete-time, finite state and action Markov decision process (MDP). At each 
+time step, a controller observes the current state z, takes an action a, and receives 
+an immediate reward r with expected value r(z,a). With probability p(z, a, y) 
+the process makes a transition to state y, which becomes the current state on the 
+next time step. A controller using Q-learning learns a state-action value function, 
+Q(z,a), that estimates the expected total discounted reward for taking action a 
+in state z and performing optimally thereafter. Each time step, Q is updated for 
+state-action pair (z, a) after receiving reward r and observing resulting state y, as 
+follows: 
+where a  (0, 1] is a learning rate parameter, -y  [0, 1) is a discount factor, and 
+/(y) -- maxQ(y,b). Watkins and Dayan (1992) prove that Q converges to an 
+^ 
+optimal state-action value function Q (and V converges to an optimal state value 
+function V) with probability one if all actions continue to be tried from all states, 
+the state-action value function is represented by a lookup-table, and the learning 
+rate is decreased in an appropriate manner. 
+If there is a cost for sensing, acting optimally may require a mixed strategy of open- 
+loop and closed-loop control that allows a controller to take open-loop sequences 
+of actions between sensing. This possibility can be modeled by an MDP with two 
+kinds of actions: control actions that have an effect on the current state but do not 
+provide information, and a sensing action that reveals the current state but has no 
+other effect. We let o (for observation) denote the sensing action and assume it 
+provides perfect information about the underlying state. Separating control actions 
+and the sensing action gives an agent control over when to receive sensory feedback, 
+and hence, control over sensing costs. 
+When one control action follows another without an intervening sensing action, the 
+second control action is taken without knowing the underlying state. We model 
+this by including memory states in the state set of the MDP. Each memory 
+state represents memoky of the last observed state and the open-loop sequence of 
+control actions taken since; because we assume sensing provides perfect information, 
+1028 E. A. Hansen, A. G. Barto and S. Zilberstein 
+x 
+x.b 
+Xb 
+ xl-b 
+Figure 1' A tree of memory states rooted at observed state x. The set of control 
+actions is {a,b} and the length bound is 2. 
+remembering this much history provides a sufficient statistic for action selection 
+(Monaban, 1982). Possible memory states can be represented using a tree like 
+the one shown in Figure 1, where the root represents the last observed state and 
+the other nodes represent memory states, one for each possible open-loop action 
+sequence. For example, let za denote the memory state that results from taking 
+control action a in state z. Similarly, let zab denote the memory state that results 
+from taking control action b in memory state za. Note that a control action causes 
+a deterministic transition to a subsequent memory state, while a sensing action 
+causes a stochastic transition to an observed state - the root of some tree. There 
+is a tree like the one in figure I for each observable state. 
+This problem is a special case of a partially observable MDP and can be formalized 
+in an analogous way (Monaban, 1982). Given a state-transition and reward model 
+for a core MDP with a state set that consists only of the underlying states of a 
+system (which for this problem we also call observable states), we can define a state- 
+transition and reward model for an MDP that includes memory states in its state 
+set. As a convenient notation, let p(z, a..ak, y) denote the probability that taking 
+an open-loop action sequence ai..ak from state z results in state y, where both z 
+and y are states of the underlying system. These probabilities can be computed 
+recursively from the single-step state-transition probabilities of the core MDP as 
+follows: 
+p(z,a..a,y) = y,p(a,ai..a_,z)p(z,a,y). 
+State-transition probabilities for the sensing action can then be defined as 
+p(lllal..ak, o, y) ---- (, al..ak, y), 
+and a reward function for the generalized MDP can be similarly defined as 
+r(za..ai_x, ak ) - Zp(z, a..ai_, y)r(y, ai ), 
+y 
+where the cost of sensing in state z of the core MDP is r(z, o). 
+If we assume a bound on the number of control actions that can be taken between 
+sensing actions (i.e., a bound on the depth of each tree) and also assume a finite 
+number of underlying states, the number of possible memory states is finite. It 
+follows that the MDP we have constructed is a well-defined finite state and action 
+MDP, and all of the theory developed for Q-learning continues to apply, including 
+its convergence proof. (This is not true of partially observable MDPs in general.) 
+Therefore, Q-learning can in principle find an optimal policy for interleaving control 
+actions and sensing, assuming sensing provides perfect information. 
+3 Limiting Exploration 
+A problem with including memory states in the state set of an MDP is that it 
+increases the size of the state set exponentially. The combinatorial explosion of 
+Reinforcement Learning for Mixed Open-loop and Closed-loop Control 1029 
+state-action values to be learned raises doubt about the computational feasibility of 
+this generalization of RL. We present a solution in the form of a rule for pruning each 
+tree of memory states, thereby limiting the number of memory states that must be 
+explored. We prove that even if some memory states are never explored, Q-learning 
+converges to an optimal state-action value function. Because the state-action value 
+function is left undefined for unexplored memory states, we must carefully define 
+what we mean by an optimal state-action value function. 
+Definition: A state-action value function is optimal if it is sufficient for generat- 
+ing optimal behavior and the values of the state-action pairs visited when behaving 
+optimally are optimal. 
+A state-action value function that is undefined for some states is optimal, by this 
+definition, if a controller that follows it behaves identically to a controller with a 
+complete, optimal state-action value function. This is possible if the states for which 
+the state-action value function is undefined are not e

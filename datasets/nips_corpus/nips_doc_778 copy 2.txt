@@ -1,0 +1,152 @@
+Address Block Location with a Neural Net System 
+Hans Peter Graf 
+AT&T Bell Laboratories 
+Crawfords Comer Road 
+Holmdel, NJ 07733, USA 
+Eric Cosatto 
+Abstract 
+We developed a system for finding address blocks on mail pieces that can 
+process four images per second. Besides locating the address block, our 
+system also determines the writing style, handwritten or machine printed, and 
+moreover, it measures the skew angle of the text lines and cleans noisy 
+images. A layout analysis of all the elements present in the image is 
+performed in order to distinguish drawings and dirt from text and to separate 
+text of advertisement from that of the destination address. 
+A speed of more than four images per second is obtained on a modular 
+hardware platform, containing a board with two of the NET32K neural net 
+chips, a SPARC2 processor board, and a board with 2 digital signal 
+processors. The system has been tested with more than 100,000 images. Its 
+performance depends on the quality of the images, and lies between 85% 
+correct location in vej noisy images to over 98% in cleaner images. 
+1 INTRODUCTION 
+The system described here has been integrated into an address reading machine developed for 
+the 'Remote Computer Reader' project of the United States Postal Service. While the actual 
+reading of the text is done by other modules, this system solves one of the major problems, 
+namely, finding reliably the location of the destination address. There are only a few constraints 
+on how and where an address has to be written, hence they may appear in a wide variety of 
+styles and layouts. Often an envelope contains advertising that includes images as well as text. 
+785 
+786 Graf and Cosatto 
+Sometimes, dirt covers part of the envelope image, including the destination address. Moreover, 
+the image captured by the camera is thresholded and the reader is given a binary image. This 
+binahzation process introduces additional distortions; in particular, often the destination address 
+is surrounded by a heavy texture. The high complexity of the images and their poor quality make 
+it difficult to find the location of the destination address, requiring an analysis of all the elements 
+present in the image. Such an analysis is compute-intensive and in our system it turned out to 
+be the major bottleneck for a fast throughput. In fact, finding the address requires much more 
+computation than reading it. Special-purpose hardware in the form of the NET32K neural net 
+chips (Graf, Henderson, 90) is used to solve the address location problem. 
+Finding address blocks has been the focus of intensive research recently, as several companies 
+are developing address reading machines (United States Postal Service 92). The wide variety 
+of images that have to be handled has led other researchers to apply several different analysis 
+techniques to each image and then t. to combine the results at the end, see e.g. (Palumbo et al. 
+92). In order to achieve the throughput required in an industrial application, special purpose 
+processors for finding connected components and/or for executing Hough transforms have been 
+applied. 
+In our system we use the NET32K processor to extract geometrical features from an image. The 
+high compute power of this chip allows the extraction of a large number of features 
+simultaneously. From this feature representation, an interpretation of the image's content can 
+then be achieved with a standard processor. Compared to an analysis of the original image, the 
+analysis of the feature maps requires several orders of magnitude less computation. Moreover, 
+the feature representation introduces a high level of robustness against noise. This paper gives 
+a brief overview of the hardware platform in section 2 and then describes the algorithms to find 
+the address blocks in section 3. 
+2 THE HARDWARE 
+The NET32K system has been designed to serve as a high-speed image processing platform, 
+where neural nets as well as conventional algorithms can be executed. Three boards form the 
+whole system. Two NET32K neural net chips are integrated with a sequencer and data 
+formatting circuits on one board. The second board contains two digital signal processors 
+(DSPs), together with 6 Mbytes ofmemolj. Control of the whole system is provided by a board 
+containing a SPARC2 processor plus 64 Mbytes of memory. A schematic of this system is 
+shown in Figm'e 1. 
+Image buffering and communication with other modules in the address reader are handled by 
+the board with the SPARC2 processor. When an image is received, it is sent to the DSP board 
+and from there over to the NET32K processor. The feature maps produced by the NET32K 
+processor are stored on the DSP board, while the SPARC2 starts with the analysis of the feature 
+maps. The DSP's main task is formatting of the data, while the NET32K processor extracts all 
+the features. Its speed of computation is more than 100 billion multiply-accumulates per second 
+with operands that have one or two bits of resolution. Images with a size of 512x512 pixels are 
+processed at a rate of more than 10 fi'ames per second, and 64 convolution kernels, each with 
+a size of 16x16 pixels, can be scanned simultaneously over the image. Each such kemel is 
+tuned to detect the presence of a feature, such as a line, an edge or a comer. 
+Address Block Location with a Neural Net System 787 
+NET32K MODULE 
+i NE NET32 
+.................................. ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: ........................... 
+I ..... i' ........ 
+VME BUS 
+Figure 1: Schematic of the xvhole NET32K system. Each of the dashed 
+boxes represents one 6U VME board. The arrows show the 
+communication paths. 
+3. SEQUENCE OF ALGORITHMS 
+The final result of the adch'ess block location system is a box describing a tight bound around 
+the destination address, if the address is machine printed. Of handwritten addresses, only the 
+zip code is read, and hence, one has to find a tight boundary around the zip code. This 
+information is then passed along to reader modules of the address reading machine. There is no 
+a priori knowledge about the writing style. Therefore the system first has to discriminate 
+between handwritten and machine printed text. At the end of the address block location process, 
+additional algorithms are executed to improve the accuracy of the reader. An overview of the 
+sequence of algorithms used to solve these tasks is shown in Figure 2. The whole process is 
+divided into three major steps: Preprocessing, featm'e extraction, and high-level analysis based 
+on the feature information. 
+3.1. Preprocessing 
+To quickly get an idea about the complexity of the image, a coarse evaluation of its layout is 
+done. By sampling the density of the black pixels in various places of the image, one can see 
+already whether the image is clean or noisy and whether the text is lightly printed or is dark. 
+788 Graf and Cosatto 
+The images are divided into four categories, depending on their darkness and the level of noise. 
+This information is used in the subsequent processing to guide the choice of the features. Only 
+about one percent of the pixels are taken into account for this analysis, therefore, it can be 
+executed quickly on the SPARC2 processor. 
+Preprocessing 
+Extract features 
+NET32K 
+clean, light clean, dark noisy, light 
+16 Feature 
+maps 
+MACHINE PRINT 
+Analyse group of lines 
+Determine level of noise 
+Clean with NET32K; 
+Extract text lines 
+Cluster lines into groups 
+( Classifygroups of lines  
+HAND WRI'I-rEN 
+Cluster text segments into lines 
+Analyse group of lines 
+Segment lines to find ZIP 
+Determine slant/skew angle; 
+Figure 2: Schematic of the sequence of algorithms for finding the 
+position of the address blocks. 
+3.2. Feature Extraction 
+After the preprocessing, the image is sent to the NET32K board where simple geometrical 
+features, such as edges, corners and lines are extracted. Up to 16 different feature maps are 
+generated, where a pixel in one of the maps indicates the presence of a feature in this location. 
+Some of these feature maps are used by the host processor, for example, to decide whether text 
+is handwritten or machine printed. Other feature maps are combined and sent once more 
+through the NET32K processor in order to search for combinations of features representing 
+more complex features. Typically, the feature maps are thresholded, so that only one bit per 
+pixel is kept. More resolution of the computation results is available from the neural net chips, 
+but in this way the amount of data that has to be analyzed is minimal, and one bit of resolution 
+turned out to be sufficient. 
+Examples of kernels used for the detection of stxokes and text lines are shown in Figure 3. In 
+the chip, usually four line detectors of increasing height plus eight stroke detectors of different 
+orientations are stored. Other detectors are tuned to edges and su'okes of machine printed text. 
+The line detectors respond to any black line of the proper height. Due to the large width of 16 
+Address Block Location with a Neural Net System 789 
+pixels, a kemel stretches over one or even several characters. Hence a text line gives a response 
+similar to that produced by a continuous black line. When the threshold is set properly, a text 
+line in the original image produces a continuous line in the feature map, even across the gaps 
+between characters and across small empty spaces between words. For an interpretation of a 
+line feature map only the lea and right end points of each connected component are stored. In 
+this way one obtains a compact representation of the lines' positions that are well suited for the 
+high-level analysis of the layout. 
+Kernel: Line detector 
+Image 
+the NET32K syste 
+Feature map 
+Kernel: Stroke detector 
+Image 
+Feature map 
+Figure 3 :Examples of convolution kemels and their results. The kernels' sizes 
+are 16xl 6 pixels, and their pixels' values are +1,0, -

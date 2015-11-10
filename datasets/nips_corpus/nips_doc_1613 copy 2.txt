@@ -1,0 +1,150 @@
+Large Margin DAGs for 
+Multiclass Classification 
+John C. Platt 
+Microsoft Research 
+1 Microsoft Way 
+Redmond, WA 98052 
+jplatt @ microsoft. corn 
+Nello Cristianini 
+Dept. of Engineering Mathematics 
+University of Bristol 
+Bristol, BS8 1TR - UK 
+hello. c ristian in i @ b risto l. ac. uk 
+John Shawe-Taylor 
+Department of Computer Science 
+Royal Holloway College - University of London 
+EGHAM, Surrey, TW20 0EX - UK 
+j. shawe-taylor@dcs. rhbnc. ac. uk 
+Abstract 
+We present a new learning architecture: the Decision Directed Acyclic 
+Graph (DDAG), which is used to combine many two-class classifiers 
+into a multiclass classifier. For an N-class problem, the DDAG con- 
+tains N(N - 1)/2 classifiers, one for each pair of classes. We present a 
+VC analysis of the case when the node classifiers are hyperplanes; the re- 
+sulting bound on the test error depends on N and on the margin achieved 
+at the nodes, but not on the dimension of the space. This motivates an 
+algorithm, DAGSVM, which operates in a kernel-induced feature space 
+and uses two-class maximal margin hyperplanes at each decision-node 
+of the DDAG. The DAGSVM is substantially faster to train and evalu- 
+ate than either the standard algorithm or Max Wins, while maintaining 
+comparable accuracy to both of these algorithms. 
+1 Introduction 
+The problem of multiclass classification, especially for systems like SVMs, doesn't present 
+an easy solution. It is generally simpler to construct classifier theory and algorithms for two 
+mutually-exclusive classes than for N mutually-exclusive classes. We believe constructing 
+N-class SVMs is still an unsolved research pr. oblem. 
+The standard method for N-class SVMs [ 10] is to construct N SVMs. The ith SVM will be 
+trained with all of the examples in the ith class with positive labels, and all other examples 
+with negative labels. We refer to SVMs trained in this way as l ov-r SVMs (short for one- 
+versus-rest). The final output of the N 1-v-r SVMs is the class that corresponds to the SVM 
+with the highest output value. Unfortunately, there is no bound on the generalization error 
+for the 1-v-r SVM, and the training time of the standard method scales linearly with N. 
+Another method for constructing N-class classifiers from SVMs is derived from previous 
+research into combining two-class classifiers. Knerr [5] suggested constructing all possible 
+two-class classifiers from a training set of N classes, each classifier being trained on only 
+548 J. C. Platt, N. Cristianini and J. Shawe-Taylor 
+two out of N classes. There would thus be K = N(N - 1)/2 classifiers. When applied to 
+SVMs, we refer to this as l-v-1 SVMs (short for one-versus-one). 
+Knerr suggested combining these two-class classifiers with an AND gate [5]. Fried- 
+man [4] suggested a Max Wins algorithm: each l-v-1 classifier casts one vote for its pre- 
+ferred class, and the final result is the class with the most votes. Friedman shows cir- 
+cumstances in which this algorithm is Bayes optimal. Krefel [6] applies the Max Wins 
+algorithm to Support Vector Machines with excellent results. 
+A significant disadvantage of the l-v-1 approach, however, is that, unless the individual 
+classifiers are carefully regularized (as in SVMs), the overall N-class classifier system will 
+tend to overfit. The AND combination method and the Max Wins combination method 
+do not have bounds on the generalization error. Finally, the size of the l-v-1 classifier may 
+grow superlinearly with N, and hence, may be slow to evaluate on large problems. 
+In Section 2, we introduce a new multiclass learning architecture, called the Decision Di- 
+rected Acyclic Graph (DDAG). The DDAG contains N(N - 1)/2 nodes, each with an 
+associated l-v-1 classifier. In Section 3, we present a VC analysis of DDAGs whose clas- 
+sifiers are hyperplanes, showing that the margins achieved at the decision nodes and the 
+size of the graph both affect their performance, while the dimensionality of the input space 
+does not. The VC analysis indicates that building large margin DAGs in high-dimensional 
+feature spaces can yield good generalization performance. Using such bound as a guide, 
+in Section 4, we introduce a novel algorithm for multiclass classification based on placing 
+l-v-1 SVMs into nodes of a DDAG. This algorithm, called DAGSVM, is efficient to train 
+and evaluate. Empirical evidence of this efficiency is shown in Section 5. 
+2 Decision DAGs 
+A Directed Acyclic Graph (DAG) is a graph whose edges have an orientation and no cycles. 
+A Rooted DAG has a unique node such that it is the only node which has no arcs pointing 
+into it. A Rooted Binary DAG has nodes which have either 0 or 2 arcs leaving them. 
+We will use Rooted Binary DAGs in order to define a class of functions to be used in 
+classification tasks. The class of functions computed by Rooted Binary DAGs is formally 
+defined as follows. 
+Definition 1 Decision DAGs (DDAGs). Given a space X and a set of boolean functions 
+f. = {f: X --+ {0, 1}}, the class DDAG(f.) of Decision DAGs on N classes over .7' are 
+functions which can be implemented using a rooted binary DAG with N leaves labeled by 
+the classes where each of the K = N(N - 1)/2 internal nodes is labeled with an element 
+off'. The nodes are arranged in a triangle with the single root node at the top, two nodes 
+in the second layer and so on until the final layer of N leaves. The i-th node in layer j < N 
+is connected to the i-th and (i + 1)-st node in the (j + 1)-st layer. 
+To evaluate a particular DDAG G on input a: E X, starting at the root node, the binary 
+function at a node is evaluated. The node is then exited via the left edge, if the binary 
+function is zero; or the right edge, if the binary function is one. The next node's binary 
+function is then evaluated. The value of the decision function D(a:) is the value associated 
+with the final leaf node (see Figure l(a)). The path taken through the DDAG is known 
+as the evaluation path. The input a: reaches a node of the graph, if that node is on the 
+evaluation path for a:. We refer to the decision node distinguishing classes i and j as the 
+/j-node. Assuming that the number of a leaf is'its class, this node is the i-th node in the 
+(N - j + i)-th layer provided i < j. Similarly the j-nodes are those nodes involving class 
+j, that is, the internal nodes on the two diagonals containing the leaf labeled by j. 
+The DDAG is equivalent to operating on a list, where each node eliminates one class from 
+the list. The list is initialized with a list of all classes. A test point is evaluated against the 
+decision node that corresponds to the first and last elements of the list. If the node prefers 
+Large Margin DAGs for Multiclass Classification 549 
+4 3 2 
+2 .4 4 
+.2_ 22 :4'4 test points on this I 
+ _2 side of hyperplane 
+ cannot be in class 1 
+3 
+1 1 vs 4 SVM 
+1 
+1 1 1 
+1 1 1 test points on this 
+side of hyperptane 
+cannot be n class 4 
+(a) (b) 
+Figure 1' (a) The decision DAG for finding the best class out of four classes. The equivalent 
+list state for each node is shown next to that node. (b) A diagram of the input space of a 
+four-class problem. A l-v-1 SVM can only exclude one class from consideration. 
+one of the two classes, the other class is eliminated from the list, and the DDAG proceeds 
+to test the first and last elements of the new list. The DDAG terminates when only one 
+class remains in the list. Thus, for a problem with N classes, N - 1 decision nodes will be 
+evaluated in order to derive an answer. 
+The current state of the list is the total state of the system. Therefore, since a list state 
+is reachable in more than one possible path through the system, the decision graph the 
+algorithm traverses is a DAG, not simply a tree. 
+Decision DAGs naturally generalize the class of Decision Trees, allowing for a more ef- 
+ficient representation of redundancies and repetitions that can occur in different branches 
+of the tree, by allowing the merging of different decision paths. The class of functions 
+implemented is the same as that of Generalized Decision Trees [ 1], but this particular rep- 
+resentation presents both computational and learning-theoretical advantages. 
+3 Analysis of Generalization 
+In this paper we study DDAGs where the node-classifiers are hyperplanes. We define a 
+Perceptron DDAG to be a DDAG with a perceptron at every node. Let w be the (unit) 
+weight vector correctly splitting the i and j classes at the/j-node with threshold 0. We 
+define the margin of the/j-node to be ? = rninc(:)=i,j {[(w, a:} - 01}, where c(a:) is the 
+class associated to training example a:. Note that, in this definition, we only take into 
+account examples with class labels equal to i or j. 
+Theorem 1 Suppose we are able to classify a random ra sample of labeled examples using 
+a Perceptron DDAG on N classes containing K decision nodes with margins ?i at node i, 
+then we can bound the generalization error with probability greater than 1 - 6 to be less 
+than 
+130R2 (D' log(4ern)log(4rn) + log 2(2 )K), 
+m 
+where D/ K 1 
+-- 5-i= , and t is the radius of a ball containing the distribution's support. 
+Proof: see Appendix [] 
+550 J. C. Platt, N. Cristianini and J. Shawe-Taylor 
+Theorem 1 implies that we can control the capacity of DDAGs by enlarging their margin. 
+Note that, in some situations, this bound may be pessimistic: the DDAG partitions the 
+input space into polytopic regions, each of which is mapped to a leaf node and assigned 
+to a specific class. Intuitively, the only margins that should matter are the ones relative to 
+the boundaries of the cell where a given training point is assigned, whereas the bound in 
+Theorem 1 depends on all the margins in the graph. 
+By the above observations, we would expect that a DDAG whose j-node margins are large 
+would be accurate at identifying class j, even when other nodes do not have large margins. 
+Theorem 2 substantiates this by showing that the appropriate bound depends only on the 
+

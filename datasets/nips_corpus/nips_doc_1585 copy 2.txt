@@ -1,0 +1,153 @@
+Reinforcement Learning for Trading 
+John Moody and Matthew Saffell* 
+Oregon Graduate Institute, CSE Dept. 
+P.O. Box 91000, Portland, OR 97291-1000 
+(moody, saffell)@cse.ogi.edu 
+Abstract 
+We propose to train trading systems by optimizing financial objec- 
+tive functions via reinforcement learning. The performance func- 
+tions that we consider are profit or wealth, the Sharpe ratio and 
+our recently proposed differential Sharpe ratio for online learn- 
+ing. In Moody & Wu (1997), we presented empirical results that 
+demonstrate the advantages of reinforcement learning relative to 
+supervised learning. Here we extend our previous work to com- 
+pare Q-Learning to our Recurrent Reinforcement Learning (RRL) 
+algorithm. We provide new simulation results that demonstrate 
+the presence of predictability in the monthly S&P 500 Stock Index 
+for the 25 year period 1970 through 1994, as well as a sensitivity 
+analysis that provides economic insight into the trader's structure. 
+1 Introduction: Reinforcement Learning for Trading 
+The investor's or trader's ultimate goal is to optimize some relevant measure of 
+trading system performance, such as profit, economic utility or risk-adjusted re- 
+turn. In this paper, we propose to use recurrent reinforcement learning to directly 
+optimize such trading system performance functions, and we compare two differ- 
+ent reinforcement learning methods. The first, Recurrent Reinforcement Learning, 
+uses immediate rewards to train the trading systems, while the second (Q-Learning 
+(Watkins 1989)) approximates discounted future rewards. These methodologies can 
+be applied to optimizing systems designed to trade a single security or to trade port- 
+folios. In addition, we propose a novel value function for risk-adjusted return that 
+enables learning to be done online: the differential Sharpe ratio. 
+Trading system profits depend upon sequences of interdependent decisions, and are 
+thus path-dependent. Optimal trading decisions when the effects of transactions 
+costs, market impact and taxes are included require knowledge of the current system 
+state. In Moody, Wu, Liao & Saffell (1998), we demonstrate that reinforcement 
+learning provides a more elegant and effective means for training trading systems 
+when transaction costs are included, than do more standard supervised approaches. 
+* The authors are also with Nonlinear Prediction Systems. 
+918 J.. Moody and M. Surfell 
+Though much theoretical progress has been made in recent years in the area of rein- 
+forcement learning, there have been relatively few successful, practical applications 
+of the techniques. Notable examples include Neuro-gammon (Tesauro 1989), the 
+asset trader of Neuneier (1996), an elevator scheduler (Crites & Burro 1996) and a 
+space-shuttle payload scheduler (Zhang g; Dietterich 1996). 
+In this paper we present results for reinforcement learning trading systems that 
+outperform the S&P 500 Stock Index over a 25-year test period, thus demonstrating 
+the presence of predictable structure in US stock prices. The reinforcement learning 
+algorithms compared here include our new recurrent reinforcement learning (RRL) 
+method (Moody g; Wu 1997, Moody et al. 1998) and Q-Learning (Watkins 1989). 
+2 Trading Systems and Financial Performance Functions 
+2.1 Structure, Profit and Wealth for Trading Systems 
+We consider performance functions for systems that trade a single I security with 
+price series zt. The trader is assumed to take only long, neutral or short positions 
+Ft C {-1, 0, 1} of constant magnitude. The constant magnitude assumption can 
+be easily relaxed to enable better risk control. The position Ft is established or 
+maintained at the end of each time interval t, and is re-assessed at the end of 
+period t + 1. A trade is thus possible at the end of each time period, although 
+nonzero trading costs will discourage excessive trading. A trading system return 
+Rt is realized at the end of the time interval (t- 1, t] and includes the profit or loss 
+resulting from the position Ft-1 held during that interval and any transaction cost 
+incurred at time t due to a difference in the positions Ft-1 and Ft. 
+In order to properly incorporate the effects of transactions costs, market impact and 
+taxes in a trader's decision making, the trader must have internal state information 
+and must therefore be recurrent. An example of a single asset trading system 
+that takes into account transactions costs and market impact has following decision 
+function: Ft = F(Ot;Ft_l,It)with It = {zt,zt-l,zt-2,...;yt,Yt-l,yt-2,...} where 
+Ot denotes the (learned) system parameters at time t and It denotes the information 
+set at time t, which includes present and past values of the price series zt and an 
+arbitrary number of other external variables denoted Yt. 
+Trading systems can be optimized by maximizing performance functions U() such 
+as profit, wealth, utility functions of wealth or performance ratios like the Sharpe 
+ratio. The simplest and most natural performance function for a risk-insensitive 
+trader is profit. The transactions cost rate is denoted 5. 
+Additive profits are appropriate to consider if each trade is for a fixed number 
+of shares or contracts of security zt. This is often the case, for example, when 
+trading small futures accounts or when trading standard USS FX contracts in dollar- 
+denominated foreign currencies. With the definitions rt = zt - zt-1 and r[ = 
+z[ - z[_ 1 for the price returns of a risky sst and a risk-free asset (like T- 
+Bills) respectively, the additive profit accumulated over T time periods with trading 
+position size/ > 0 is then defined as: 
+T T 
+t=l t--1 
+(1) 
+See Moody et al. (1998) for a detailed discussion of multiple asset portfolios. 
+Reinforcement Learning for Trading 919 
+with P0 = 0 and typically FT = F0 = 0. Equation (1) holds for continuous quanti- 
+ties also. The wealth is defined as WT -- W0 + PT. 
+Multiplicative profits are appropriate when a fixed fraction of accumulated 
+wealth v > 0 is invested in each long or short trade. Here, rt = (zt/zt-1 - 1) 
+and rt y: (zt J/ztY_t - 1). If no short sales are allowed and the leverage factor is set 
+fixed at v = 1, the wealth at time T is: 
+T T 
+WT -- Wo H { l q- It } - Wo H { l q- (1- Ft-1) rt J q- Ft - l rt } {1- 51Ft - Ft -11} . 
+t:l t--1 
+(2) 
+2.2 The Differential Sharpe Ratio for On-line Learning 
+Rather than maximizing profits, most modern fund managers attempt to maximize 
+risk-adjusted return as advocated by Modern Portfolio Theory. The Sharpe ratio is 
+the most widely-used measure of risk-adjusted return (Sharpe 1966). Denoting as 
+before the trading system returns for period t (including transactions costs) as Rt, 
+the Sharpe ratio is defined to be 
+Average(tt) (3) 
+Standard Deviation(Rt) 
+where the average and standard deviation are estimated for periods t = {1,..., T}. 
+Proper on-line learning requires that we compute the influence on the Sharpe ratio 
+of the return at time t. To accomplish this, we have derived a new objective func- 
+tion called the differential Sharpe ratio for on-line optimization of trading system 
+performance (Moody et al. 1998). It is obtained by considering exponential moving 
+averages of the returns and standard deviation of returns in (3), and expanding to 
+first order in the decay rate r/: St  St-1 q-  d r/:0 q- O(/] 2) � Noting that only the 
+first order term in this expansion depends upon the return Rt at time t, we define 
+the differential Sharpe ratio as: 
+1 A 
+Dr- dqt - Bt-IAAt- t-lABt 
+-- dr I - (Bt_ - At2_l) 3/2 (4) 
+where the quantities At and Bt are exponential moving estimates of the first and 
+second moments of 
+At -- At-1 q- rlAAt - At-1 q- rl(Irt - At-i) 
+Bt -- Bt-i + rIABt = Bt-l + rl(Rt  - Bt-) 
+(5) 
+Treating At- and Bt-1 as numerical constants, note that r/in the update equations 
+controls the magnitude of the influence of the return Rt on the Sharpe ratio St. 
+Hence, the differential Sharpe ratio represents the influence of the trading return 
+Rt realized at time t on St. 
+3 Reinforcement Learning for Trading Systems 
+The goal in using reinforcement learning to adjust the parameters of a system is 
+to maximize the expected payoff or reward that is generated due to the actions 
+of the system. This is accomplished through trial and error exploration of the 
+environment. The system receives a reinforcement signal from its environment (a 
+920 J.. Moody and M. Saffell 
+reward) that provides information on whether its actions are good or bad. The 
+performance function at time 7'can be expressed as a function of the sequence of 
+trading returns UT -- U(R1, R2,..., RT). 
+Given a trading system model Ft(O), the goal is to adjust the parameters 0 in 
+order to maximize UT. This maximization for a complete sequence of T trades 
+can be done off-line using dynamic programming or batch versions of recurrent 
+reinforcement learning algorithms. Here we do the optimization on-line using a 
+reinforcement learning technique. This reinforcement learning algorithm is based 
+on stochastic gradient ascent. The gradient of UT with respect to the parameters 0 
+of the system after a sequence of T trades is 
+T dUT {dRt -Ft dRt dFt-1} 
+dUT(O)_ E dFlt der dO + der-1 dO (6) 
+clO 
+A simple on-line stochastic optimization can be obtained by considering only the 
+term in (6) that depends on the most recently realized return Rt during a forward 
+pass through the data: 
+dUt(O) dUt { dFlt dFt dFlt dFt-1} 
+d'--- = d R' d Ft d--- + d Ft _'- dO (7) 
+The parameters are then updated on-line using AOt '- pdUt (Ot)/dOt. Because of the 
+recurrent structure of the problem (necessary when transaction costs are included), 
+we use a reinforcement learning algorithm based on real-time recurrent learning 
+(Williams &: Zipser 1989). This approach, which we call recurrent reinforcement 
+learning (RRL), is described in (Moody & Wu 1997, Moody et al. 1998) along with 
+extensive simulation results. 
+4 Empirical Results: S&P 500 / T

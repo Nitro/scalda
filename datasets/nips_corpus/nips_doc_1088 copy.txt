@@ -1,0 +1,149 @@
+Extracting Tree-Structured 
+Representations of Trained Networks 
+Mark W. Craven and Jude W. Shavlik 
+Computer Sciences Department 
+University of Wisconsin-Madison 
+1210 West Dayton St. 
+Madison, WI 53706 
+craven@cs.wisc.edu, shavlik@cs.wisc.edu 
+Abstract 
+A significant limitation of neural networks is that the represen- 
+tations they learn are usually incomprehensible to humans. We 
+present a novel algorithm, TREPAN, for extracting comprehensible, 
+symbolic representations from trained neural networks. Our algo- 
+rithm uses queries to induce a decision tree that approximates the 
+concept represented by a given network. Our experiments demon- 
+strate that TREPAN is able to produce decision trees that maintain 
+a high level of fidelity to their respective networks while being com- 
+prehensible and accurate. Unlike previous work in this area, our 
+algorithm is general in its applicability and scales well to large net- 
+works and problems with high-dimensional input spaces. 
+1 Introduction 
+For many learning tasks, it is important to produce classifiers that are not only 
+highly accurate, but also easily understood by humans. Neural networks are lim- 
+ited in this respect, since they are usually difficult to interpret after training. In 
+contrast to neural networks, the solutions formed by symbolic learning systems 
+(e.g., Quinlan, 1993) are usually much more amenable to human comprehension. 
+We present a novel algorithm, TREPAN, for extracting comprehensible, symbolic 
+representations from trained neural networks. TREPAN queries a given network 
+to induce a decision tree that describes the concept represented by the network. 
+We evaluate our algorithm using several real-world problem domains, and present 
+results that demonstrate that TREPAN is able to produce decision trees that are 
+accurate and comprehensible, and maintain a high level of fidelity to the networks 
+from which they were extracted. Unlike previous work in this area, our algorithm 
+Extracting Tree-structured Representations of Trained Networks 2 5 
+is very general in its applicability, and scales well to large networks and problems 
+with high-dimensional input spaces. 
+The task that we address is defined as follows: given a trained network and the 
+data on which it was trained, produce a concept description that is comprehensible, 
+yet classifies instances in the same way as the network. The concept description 
+produced by our algorithm is a decision tree, like those generated using popular 
+decision-tree induction algorithms (Breiman et al., 1984; Quinlan, 1993). 
+There are several reasons why the comprehensibility of induced concept descriptions 
+is often an important consideration. If the designers and end-users of a learning 
+system are to be confident in the performance of the system, they must understand 
+how it arrives at its decisions. Learning systems may also play an important role 
+in the process of scientific discovery. A system may discover salient features and 
+relationships in the input data whose importance was not previously recognized. If 
+the representations formed by the learner are comprehensible, then these discoveries 
+can be made accessible to human review. However, for many problems in which 
+comprehensibility is important, neural networks provide better generalization than 
+common symbolic learning algorithms. It is in these domains that it is important 
+to be able to extract comprehensible concept descriptions from trained networks. 
+2 Extracting Decision Trees 
+Our approach views the task of extracting a comprehensible concept description 
+from a trained network as an inductive learning problem. In this learning task, 
+the target concept is the function represented by the network, and the concept 
+description produced by our learning algorithm is a decision tree that approximates 
+the network. However, unlike most inductive learning problems, we have available 
+an oracle that is able to answer queries during the learning process. Since the 
+target function is simply the concept represented by the network, the oracle uses the 
+network to answer queries. The advantage of learning with queries, as opposed to 
+ordinary training examples, is that they can be used to garner information precisely 
+where it is needed during the learning process. 
+Our algorithm, as shown in Table 1, is similar to conventional decision-tree algo- 
+rithms, such as CART (Breiman et al., 1984), and C4.5 (Quinlan, 1993), which 
+learn directly from a training set. However, TREPAN is substantially different from 
+these conventional algorithms in number of respects, which we detail below. 
+The Oracle. The role of the oracle is to determine the class (as predicted by 
+the network) of each instance that is presented as a query. Queries to the oracle, 
+however, do not have to be complete instances, but instead can specify constraints 
+on the values that the features can take. In the latter case, the oracle generates 
+a complete instance by randomly selecting values for each feature, while ensuring 
+that the constraints are satisfied. In order to generate these random values, TREPAN 
+uses the training data to model each feature's marginal distribution. TREPAN uses 
+frequency counts to model the distributions of discrete-valued features, and a kernel 
+density estimation method (Silverman, 1986) to model continuous features. As 
+shown in Table l, the oracle is used for three different purposes: (i) to determine 
+the class labels for the network's training examples; (ii) to select splits for each of 
+the tree's internal nodes; (iii) and to determine if a node covers instances of only 
+one class. These aspects of the algorithm are discussed in more detail below. 
+Tree Expansion. Unlike most decision-tree algorithms, which grow trees in a 
+depth-first manner, TREPAN grows trees using a best-first expansion. The notion 
+2 6 M.W. CRAVEN, J. W. SHAVLIK 
+Table 1: The TREPAN algorithm. 
+TREPAN(training_examples, features) 
+Queue := 0 
+for each example E C training_examples 
+class label for E := ORACLE(E) 
+initialize the root of the tree, T, as a leaf node 
+put (T, training_examples, {} ) into Queue 
+while Queue is not empty and size(T)  tree_size_limit 
+remove node N from head of Queue 
+examplesN := example set stored with N 
+constraintsN :-- constraint set stored with N 
+use features to build set of candidate splits 
+/* sorted queue of nodes to expand */ 
+/* use net to label examples */ 
+/* expand a node */ 
+use examplesN and calls to ORACLE(constraintsv) to evaluate splits 
+$ := best binary split 
+search for best rn-of-n split, o c, using S as a seed 
+make N an internal node with split o c 
+for each outcome, s, of o c 
+make C, a new child node of N 
+constraintsc, := constraints U {$ = s} 
+use calls to ORACLr(constraintsc) to determine if C should remain a leaf 
+otherwise 
+examplesc :-- members of examples with outcome s on split $' 
+put (C, examplesc, constraintsc) into Queue 
+return T 
+/* make children nodes */ 
+of the best node, in this case, is the one at which there is the greatest potential 
+to increase the fidelity of the extracted tree to the network. The function used 
+to evaluate node n is f(n): reach(n) x (1 - fidelity(n)), where reach(n) is the 
+estimated fraction of instances that reach n when passed through the tree, and 
+fidelity(n) is the estimated fidelity of the tree to the network for those instances. 
+Split Types. The role of internal nodes in a decision tree is to partition the input 
+space in order to increase the separation of instances of different classes. In C4.5, 
+each of these splits is based on a single feature. Our algorithm, like Murphy and 
+Pazzani's (1991) ID2-of-3 algorithm, forms trees that use m-of-n expressions for 
+its splits. An m-of-n expression is a Boolean expression that is specified by an 
+integer threshold, m, and a set of n Boolean conditions. An m-of-n expression is 
+satisfied when at least m of its n conditions are satisfied. For example, suppose we 
+have three Boolean features, a, b, and c; the m-of-n expression 2-or-{a, b, c} is 
+logically equivalent to (a A -,b) V (a A c) V (-,b A c). 
+Split Selection. Split selection involves deciding how to partition the input space 
+at a given internal node in the tree. A limitation of conventional tree-induction 
+algorithms is that the amount of training data used to select splits decreases with 
+the depth of the tree. Thus splits near the bottom of a tree are often poorly chosen 
+because these decisions are based on few training examples. In contrast, because 
+TREPAN has an oracle available, it is able to use as many instances as desired to 
+select each split. TREPAN chooses a split after considering at least $mi instances, 
+where $,i, is a parameter of the algorithm. 
+When selecting a split at a given node, the oracle is given the list of all of the 
+previously selected splits that lie on the path from the root of the tree to that node. 
+These splits serve as constraints on the feature values that any instance generated 
+by the oracle can take, since any example must satisfy these constraints in order to 
+Extracting Tree-structured Representations of Trained Networks 2 7 
+reach the given node. 
+Like the ID2-of-3 algorithm, TREP^N uses a hill-climbing search process to con- 
+struct its m-of-n splits. The search process begins by first selecting the best binary 
+split at the current node; as in C4.5, TR;P^N uses the gain ratio criterion (Quinlan, 
+1993) to evaluate candidate splits. For two-valued features, a binary split separates 
+examples according to their values for the feature. For discrete features with more 
+than two values, we consider binary splits based on each allowable value of the 
+feature (e.g., color=red?, color=blue?, ...). For continuous features, we consider 
+binary splits on thresholds, in the same manner as C4.5. The selected binary split 
+serves as a seed for the m-of-n search process. This greedy search uses the gain ratio 
+measure as its 

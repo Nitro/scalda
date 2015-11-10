@@ -1,0 +1,157 @@
+Chaitin-Kolmogorov Complexity 
+and Generalization in Neural Networks 
+Barak A. Pearlmutter 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+Ronald Rosenfeld 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+We present a unified framework for a number of different ways of failing 
+to generalize properly. During learning, sources of random information 
+contaminate the network, effectively augmenting the training data with 
+random information. The complexity of the function computed is therefore 
+increased, and generalization is degraded. We analyze replicated networks, 
+in which a number of identical networks are independently trained on the 
+same data and their results averaged. We conclude that replication almost 
+always results in a decrease in the expected complexity of the network, and 
+that replication therefore increases expected generalization. Simulations 
+confirming the effect are also presented. 
+I BROKEN SYMMETRY CONSIDERED HARMFUL 
+Consider a one-unit backpropagation network trained on exclusive or. Without 
+hidden units, the problem is insoluble. One point where learning would stop is 
+ resulting in an mean squared 
+when all weights are zero and the output is always , 
+error of  
+. But this is a saddle point; by placing the discrimination boundary 
+ and one with error 
+properly, one point can be gotten correctly, two with errors of , 
+of 2 
+5, giving an MSE of {, as shown in figure 1. 
+Networks are initialized with small random weights, or noise is injected during train- 
+ing to break symmetries of this sort. But in breaking this symmetry, something has 
+been lost. Consider a kNN classifier, constructed from a kNN program and the 
+training data. Anyone who has a copy of the kNN program can construct an iden- 
+lical classifier if they receive the training data. Thus, considering the classification 
+925 
+926 Pearlmutter and Rosenteld 
+as an abstract entity, we know its complexity cannot exceed that of the training 
+data plus the overhead of the complexity of the program, which is fixed. 
+But this is not necessarily the case for the backpropagation network we saw! Be- 
+cause of the introduction of randomly broken symmetries, the complexity of the 
+classification itself can exceed that of the training data plus the learning procedure. 
+Thus an identical classifier can no longer be constructed just from the program and 
+the training data, because random factors have been introduced. For a striking 
+example, consider presenting a 32 bit parity with 10,000 exceptions stochastic 
+learner with one million exemplars. The complexity of the resulting function will 
+be high, since in order to specify it we must specify not only the regularities of 
+training set, which we just did in a couple words, but also which of the 4 billion 
+possibilities are among the 10,000 exceptions. 
+Applying this idea to undertraining and overtraining, we see that there are two kinds 
+of symmetries that can be broken. First, if not all the exemplars can be loaded, 
+which of the outliers are not loaded can be arbitrary. Second, underconstrained 
+networks that behave the same on the training set may behave differently on other 
+inputs. Both phenomena can be present simultaneously. 
+2 A COMPLEXITY BOUND 
+The expected value of the complexity of the function implemented by a network b 
+trained on data d, where b is a potentially stochastic mapping, satisfies 
+E(C(b(d))) _< C(d) + c(b) + 
+where I(b(d)[d) is the negative of the entropy of the bias distribution of b trained 
+on d, 
+I(b(d)]d) -- -H(b(d)) -- - 1og P(b(d) -- f) 
+! 
+where f ranges over functions that the network could end up performing, with 
+the network regarded as a black box. This in turn is bounded by the information 
+contained in the random internal parameters, or by the entropy of the watershed 
+structure; but these are both potentially unbounded. 
+A number of techniques for improving generalization, when viewed in this light, 
+work because they tighten this bound. 
+Weight decay [2] and the statistical technique of ridge regression impose an 
+extra constraint on the parameters, reducing their freedom to arbitrarily break 
+symmetry when underconstrained. 
+Cross validation attempts to stop training before too many symmetries have 
+been broken. 
+Efforts to find the perfect number of hidden units attempt to minimize the 
+number of symmetries that must be broken. 
+These techniques strike a balance between undertraining and overtraining. Since in 
+any realistic domain both of these effects will be simultaneously present, it would 
+seem advantageous to attack the problem at the root. One approach that has been 
+Chaitin-Kolmogorov Complexity and Generalization in Neural Networks 927 
+Figure 1' The bifurcation of a percep- 
+tron trained on xor. 
+3 
+-3 
+-3 0 3 
+Figure 2: The training set. Crosses 
+are negative examples and diamonds 
+are positive examples. 
+rediscovered a number of times [1, 3], and systematically explored in its pure form 
+by Lincoln and Skrzypek [4], is that of replicated networks. 
+3 REPLICATED NETWORKS 
+One might think that the complexity of the average of a collection of networks would 
+be the sum of the complexities of the components; but this need not be the case. 
+Consider an ensemble network, in which an infinite number of networks are taught 
+the training data simultaneously, each making its random decisions according to 
+whatever distributions the training procedure calls for, and their output averaged. 
+We have seen that the complexity of a single network can exceed that of its training 
+data plus the training program. But this is not the case with ensemble networks, 
+since the ensemble network output can be determined solely from the program and 
+the training data, i.e. C(E(b(d))) _< C(b)+C(d)+C(replicate) where C( replicate ) 
+is the complexity of the instruction to replicate and average (a small constant). 
+A simple way to approximate the ensemble machine is to train a number of networks 
+simultaneously and average the results. As the number of networks is increased, 
+the composite model approaches the ensemble network, which cannot have higher 
+complexity than the training data plus the program plus the instruction to replicate. 
+Note that even if one accidentally stumbles across the perfect architecture and 
+928 Pearlmutter and Rosenfeld 
+training regime, resulting in a net that always learns the training set perfectly but 
+with no leftover capacity, and which generalizes as well as anything could, then 
+making a replicated network can't hurt, since all the component networks would do 
+exactly the same thing anyway. 
+A number of researchers seem to have inadvertently exploited this fact. For instance, 
+Hampshire et al. [1] train a number of networks on a speech task, where the networks 
+differed in choice of objective function. The networks' outputs were averaged to 
+form the answer used in the recognition phase, and the generalization performance 
+of the composite network was significantly higher than that of any of its component 
+networks. Replicated implementations programmed from identical specifications is 
+a common technique in software engineering of highly reliable systems. 
+4 THE ISSUE OF INDUCTIVE BIAS 
+The representational power of an ensemble is greater that that of a single network. 
+By the usual logic, one would expect the ensemble to have worse generalization, 
+since its inductive bias is weaker. Counterintuitively, this is not the case. For 
+instance, the VC dimension of an ensemble of perceptrons is infinite, because it can 
+implement an arbitrary three layer network, using replication to implement weights. 
+This is much greater than the finite VC dimension of a single perceptron within the 
+ensemble, but our analysis predicts better generalization for the ensemble than for 
+a single stochastic perceptron when the bounds are tight, that is, when 
+H(b(d)) _> C(replicate). (1) 
+This leads to the conclusion that just knowing the inductive bias of a learner is 
+not enough information to make strong conclusions about its expected generaliza- 
+tion. Thus, distribution free results based purely on the inductive bias, such as VC 
+dimension based PAC learning theory [5], may sometimes be unduly pessimistic. 
+As to replicated networks, we have seen that they can not help but improve gener- 
+alization when (1) holds. Thus, if one is training the same network over and over, 
+perhaps with slightly different training regimes, and getting worse generalization 
+than was hoped for, but on different cases each time, then one can improve gener- 
+alization in a seemingly principled manner by putting all the trained networks in a 
+box and calling it a finite sample of the ensemble network (and perhaps buying a 
+bigger computer to run it on). 
+5 EMPIRICAL SUPPORT 
+We conducted the following experiment: 17 standard backpropagation networks 
+(Actually 20, but 3 were lost to a disk failure) were trained on a binary classification 
+task. The nets all had identical architectures (2-20-1) but different initial weights, 
+chosen uniformly from the interval [-1, 1]. The same training set was used to train 
+all the networks. The fi:nctions implemented by each of the networks were then 
+calculated in detail, and the performance of individual networks compared to that 
+of their ensemble. 
+The classification task was a stochastic 2D linear discriminator. Each point was 
+obtained from a Gaussian centered at (0.0) with stdev 1. A classification of 1 was 
+Chaitin-Kolmogorov Complexity and Generalization in Neural Networks 929 
+Figure 3: The functions implemented by the 17 trained networks, and by their 
+average (bottom right). Both the x and y axes run from-3 to 3, and grey levels are 
+used to represent intermediate values in the interval [0, 1]. 
+930 Pearlmutter and Rosenfeld 
+Table 1: Mean squared error and number of mislabeled exemplars for each network 
+on the training set of 200. 

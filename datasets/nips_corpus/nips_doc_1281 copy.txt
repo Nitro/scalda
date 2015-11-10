@@ -1,0 +1,148 @@
+A Mixture of Experts Classifier with 
+Learning Based on Both Labelled and 
+Unlabelled Data 
+David J. Miller and Hasan S. Uyar 
+Department of Electrical Engineering 
+The Pennsylvania State University 
+University Park, Pa. 16802 
+miller@perseus.ee.psu.edu 
+Abstract 
+We address statistical classifier design given a mixed training set con- 
+sisting of a small labelled feature set and a (generally larger) set of 
+unlabelledfeatures. This situation arises, e.g., for medical images, where 
+although training features may be plentiful, expensive expertise is re- 
+quired to extract their class labels. We propose a classifier structure 
+and learning algorithm that make effective use of unlabelled data to im- 
+prove performance. The learning is based on maximization of the total 
+data likelihood, i.e. over both the labelled and unlabelled data sub- 
+sets. Two disinc EM learning algorithms are proposed, differing in the 
+EM formalism applied for unlabelled data. The classifier, based on a 
+joint probability model for features and labels, is a mixture of experts 
+structure that is equivalent to the radial basis function (RBF) classifier, 
+but unlike PuBFs, is amenable to likelihood-based training. The scope of 
+application for the new method is greatly extended by the observation 
+that test data, or any new data to classify, is in fact additional, unlabelled 
+daa- thus, a combined learning/classification operation - much akin to 
+what is done in image segmentation - can be invoked whenever there 
+is new data to classify. Experiments with data sets from the UC Irvine 
+database demonstrate that the new learning algorithms and structure 
+achieve substantial performance gains over alternative approaches. 
+I Introduction 
+Statistical classifier design is fundamentally a supervised learning problem, wherein 
+a decision function, mapping an input feature vector to an output class label, is 
+learned based on representative (feature,class label) training pairs. While a variety 
+of classifier structures and associated learning algorithms have been developed, a 
+common element of nearly all approaches is the assumption that class labels are 
+572 D. J. Miller and H. S. Uyar 
+known for each feature vector used for training. This is certainly true of neu- 
+ral networks such as multilayer percepttons and radial basis functions (RBFs), for 
+which classification is usually viewed as function approximation, with the networks 
+trained to minimize the squared distance to target class values. Knowledge of class 
+labels is also required for parametric classifiers such as mixture of Gaussian clas- 
+sifters, for which learning typically involves dividing the training data into subsets 
+by class and then using maximum likelihood estimation (MLE) to separately learn 
+each class density. While labelled training data may be plentiful for some applica- 
+tions, for others, such as remote sensing and medical imaging, the training set is in 
+principle vast but the size of the labelled subset may be inadequate. The difficulty 
+in obtaining class labels may arise due to limited knowledge or limited resources, 
+as expensive expertise is often required to derive class labels for features. In this 
+work, we address classifier design under these conditions, i.e. the training set 2' 
+is assumed to consist of two subsets, 2' = {2'l,2'}, where 2'l -- {(:,c), (2, c2), 
+..., (a:v,, cv,)} is the labelled subset and 2',: {v,+x,..., v} is the unlabelled 
+subset x. Here, a:i G 7  is the feature vector and ci  I is the class label from the 
+label set I = {1,2,..., No}. 
+The practical significance of this mixed training problem was recognized in (Lipp- 
+mann 1989). However, despite this realization, there has been surprisingly little 
+work done on this problem. One likely reason is that it does not appear possi- 
+ble to incorporate unlabelled data directly within conventional supervised learning 
+methods such as back propagation. For these methods, unlabelled features must 
+either be discarded or preprocessed in a suboptimal, heuristic fashion to obtain class 
+label estimates. We also note the existence of work which is less than optimistic 
+concerning the value of unlabelled data for classification (CasteIll and Cover 1994). 
+However, (Shashahani and Landgrebe 1994) found that unlabelled data could be 
+used effectively in label-deficient situations. While we build on their work, as well 
+as on our own previous work (Miller and Uyar 1996), our approach differs from 
+(Shashahani and Landgrebe 1994) in several important respects. First, we suggest 
+a more powerful mixture-based probability model with an associated classifier struc- 
+ture that has been shown to be equivalent to the RBF classifier (Miller 1996). The 
+practical significance of this equivalence is that unlike RBFs, which are trained in 
+a conventional supervised fashion, the RBF-equivalent mixture model is naturally 
+suited for statistical training (MLE). The statistical framework is the key to incor- 
+porating unlabelled data in the learning. A second departure from prior work is 
+the choice of learning criterion. We maximize the joint data likelihood and suggest 
+two distinct EM algorithms for this purpose, whereas the conditional likelihood was 
+considered in (Shashahani and Landgrebe 1994). We have found that our approach 
+achieves superior results. A final novel contribution is a considerable expansion of 
+the range of situations for which the mixed training paradigm can be applied. This 
+is made possible by the realization that test data or new data to classify can also be 
+viewed as an unlabelled set, available for training. This notion will be clarified 
+in the sequel. 
+2 Unlabelled Data and Classification 
+Here we briefly provide some intuitive motivation for the use of unlabelled data. 
+Suppose, not very restrictively, that the data is well-modelled by a mixture density, 
+This problem can be viewed as a type of missing data problem, wherein the missing 
+items are class labels. As such, it is related to, albeit distinct from supervised learning 
+involving missing and/or noisy .feature components, addressed in (Ghahramani and Jordan 
+1995),(Tresp et al. 1995). 
+A Mixture of Experts Classifier for Label-deficientData 573 
+in the following way. The feature vectors are generated according to the density 
+L 
+f(a:/) = y atf(a:/t), where f(a:/t) is one of L component densities, with non- 
+L 
+negative mixing parameters at, such that  at = 1. Here, t is the set of parameters 
+specifying the component density, with  = {t}. The class labels are also viewed 
+as random quantities and are assumed chosen conditioned on the selected mixture 
+component rni E {1, 2,..., L} and possibly on the feature value, i.e. according 
+to the probabilities P[ci/zi, rni] 2. Thus, the data pairs are assumed generated 
+by selecting, in order, the mixture component, the feature value, and the class 
+label, with each selection depending in general on preceding ones. The optimal 
+classification rule for this model is the maximum a posteriori rule: 
+s(=) = arg %ax P[c,= j, = 
+(1) 
+ai'(i/0) and where S(z) is a selector function with 
+where P[mi = j/z,] = . , 
+range in I. Since his rule is bed on the a posgeriori class probabilities, one can 
+argue ha learning should focus solely on estimating these probabilities. However, 
+if he classifier ruly implements (1), hen implicitly i has been assumed ha[ the 
+estimated mixture density accurately models the feature vectors. If this is not rue, 
+hen presumably estimates of he a poseriori probabilities will also be affected. This 
+suggests haC even in tke absence of class labels, the feature vectors can be used go 
+beer learn a posgeriori probabilities via improved estimation of he mixure-bed 
+feature density. X commonly used measure of mixture density accuracy is he data 
+likelihood. 
+3 
+Joint Likelihood Maximization for a Mixtures of Experts 
+Classifier 
+The previous section basically argues for a learning approach that uses labelled data 
+to directly estimate a posterJori probabilities and unlabelled data to estimate the 
+feature density. A criterion which essentially fulfills these objectives is the joint data 
+likelihood, computed over both the labelled and unlabelled data subsets. Given our 
+model, the joint data log-likelihood is written in the form 
+/, /, 
+og;= (2) 
+a:iEX,, /'-1 a:iEX /=1 
+This objective function consists of a supervised term based on 3/t and an unsu- 
+pervised term based on X,. The joint data likelihood was previously considered 
+in a learning context in (Xu e al. 1995). However, there the primary justification 
+was simplification of the learning algorithm in order to allow parameter estimation 
+based on fixed point iterations rather than gradient descent. Here, the joint likeli- 
+hood allows the inclusion of unlabelled samples in the learning. We next consider 
+two special cases of the probability model described until now. 
+2The usual assumpt;ion made ;.s that components are hard-partitioned, in a deter- 
+ministic fashion, to classes. Our random model includes the partitionedone as a special 
+case. We have generally found this model to be more powerful than the partitioned one 
+(Miller Uyar 1996). 
+574 D. J. Miller and H. S. Uyar 
+The partitioned mixture (PM) model: This is the previously mentioned 
+case where mixture components are hard-partitioned to classes (Shashahani and 
+Landgrebe 1994). This is written Mj G C, where Mj denotes mixture component 
+j and C is the subset of components owned by class k. The posterior probabilities 
+have the form 
+L (3) 
+E 
+1=1 
+The generalized mixture (GM) model: The form of the posterior for each 
+mixture component is now P[ci/mi, :i] -- P[ci/mi] -- f/c,/,, i.e., it is independent 
+of the feature value. The overall posterior probability takes the form 
+This model was introduced in (Miller and Uyar 1996) and was shown there to lead 
+to performance improvement ove

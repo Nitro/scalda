@@ -1,0 +1,168 @@
+Balancing between bagging and bumping 
+Tom Heskes 
+RWCP Novel Functions SNN Laboratory,* University of Nijmegen 
+Geert Grooteplein 21, 6525 EZ Nijmegen, The Netherlands 
+tom@mbfys.kun.nl 
+Abstract 
+We compare different methods to combine predictions from neu- 
+ral networks trained on different bootstrap samples of a regression 
+problem. One of these methods, introduced in [6] and which we 
+here call balancing, is based on the analysis of the ensemble gen- 
+eralization error into an ambiguity term and a term incorporating 
+generalization performances of individual networks. We show how 
+to estimate these individual errors from the residuals on valida- 
+tion patterns. Weighting factors for the different networks follow 
+from a quadratic programming problem. On a real-world problem 
+concerning the prediction of sales figures and on the well-known 
+Boston housing data set, balancing clearly outperforms other re- 
+cently proposed alternatives as bagging [1] and bumping [8]. 
+I EARLY STOPPING AND BOOTSTRAPPING 
+Stopped training is a popular strategy to prevent overfitting in neural networks. 
+The complete data set is split up into a training and a validation set. Through 
+learning the weights are adapted in order to minimize the error on the training 
+data. Training is stopped when the error on the validation data starts increasing. 
+The final network depends on the accidental subdivision in training and validation 
+set, and often also on the, usually random, initial weight configuration and chosen 
+minimization procedure. In other words, early stopped neural networks are highly 
+unstable: small changes in the data or different initial conditions can produce large 
+changes in the estimate. As argued in [1, 8], with unstable estimators it is advisable 
+to resample, i.e., to apply the same procedure several times using different sub- 
+divisions in training and validation set and perhaps starting from different initial 
+RWCP: Real World Computing Partnership; SNN: Foundation for Neural Networks. 
+Balancing Between Bagging and Bumping 467 
+configurations. In the neural network literature resampling is often referred to as 
+training ensembles of neural networks [3, 6]. In this paper, we will discuss methods 
+for combining the outputs of networks obtained through such a repetitive procedure. 
+First, however, we have to choose how to generate the subdivisions in training and 
+validation sets. Options are, among others, k-fold cross-validation, subsampling and 
+bootstrapping. In this paper we will consider bootstrapping [2] which is based on 
+the idea that the available data set is nothing but a particular realization of some 
+probability distribution. In principle, one would like to do inference on this true 
+yet unknown probability distribution. A natural thing to do is then to define an em- 
+pirical distribution. With so-called naive bootstrapping the empirical distribution 
+is a sum of delta peaks on the available data points, each with probability content 
+1/Pdata with Pdata the number of patterns. A bootstrap sample is a collection of 
+Pdata patterns drawn with replacement from this empirical probability distribution. 
+Some of the data points will occur once, some twice and some even more than 
+twice in this bootstrap sample. The bootstrap sample is taken to be the training 
+set, all patterns that do not occur in a particular bootstrap sample constitute the 
+validation set. For large Pdata, the probability that a pattern becomes part of the 
+validation set is (1 - 1/Pdata) pdata -, 1/e -. 0.368. An advantage of bootstrapping 
+over other resampling techniques is that most statistical theory on resampling is 
+nowadays based on the bootstrap. 
+Using naive bootstrapping we generate nrun training and validation sets out of our 
+complete data set of Pdata input-output combinations {,t}. In this paper we 
+will restrict ourselves to regression problems with, for notational convenience, just 
+one output variable. We keep track of a matrix with components q indicating 
+whether pattern/t is part of the validation set for run i (q - 1) or of the training 
+set (q = 0). On each subdivision we train and stop a neural network with one 
+layer of nhidden hidden units. The output o of network i with weight vector w(i) 
+on input  reads 
+o = wj(i) tanh W(k+l)nhdden+j(i)irk + wo(i) , 
+j=l I. k=O 
+where we use the definition xg -- 1. The validation error for run i can be written 
+Evalidation(i) ---- - qr, 
+Pi 
+/=1 
+with Pi =-- Y't q  0.368 Pdata, the number of validation patterns in run i, and 
+r -- (o - t)2/2, the error of network i on pattern/. 
+After training we are left with nrun networks, with, in practice, quite different 
+performances on the complete data set. How should we combine all these outputs 
+to get the best possible performance on new data? 
+2 COMBINING ESTIMATORS 
+Several methods have been proposed to combine estimators (see e.g. [5] for a re- 
+view). In this paper we will only consider estimators with the same architecture 
+468 T. Heskes 
+but trained and stopped on different subdivisions of the data in training and val- 
+idation sets. Recently, two such methods have been suggested for bootstrapped 
+estimators: bagging [1], an acronym for bootstrap aggregating, and bumping [8], 
+meaning bootstrap umbrella of model parameters. With bagging, the prediction on 
+a newly arriving input vector is the average over all network predictions. Bagging 
+completely disregards the performance of the individual networks on the data used 
+for training and stopping. Bumping, on the other hand, throws away all networks 
+except the one with the lowest error on the complete data set . In the following 
+we will describe an intermediate form due to [6], which we here call balancing. A 
+theoretical analysis of the implications of this idea can be found in [7]. 
+Suppose that after training we receive a new set of Ptest test patterns for which we 
+do not know the true targets [, but can calculate the network output 5i for each 
+network i. We give each network a weighting factor ci and define the prediction of 
+all networks on pattern y as the weighted average 
+The goal is to find the weighting factors ai, subject to the constraints 
+run 
+and ai _ O Vi , 
+i--1 
+(1) 
+yielding the smallest possible generalization error 
+I Ptest 
+Ptest 
+The problem, of course, is our ignorance about the targets iv. Bagging simply takes 
+ci = 1/nrun for all networks, whereas bumping implies ai = Ji with 
+Pdata 
+ = argmin _1 E (o - t )' 
+i Pdata 
+y=l 
+As in [6, 7] we write the generalization error in the form 
+Etest -- 1 _ 
+- - - 
+ i,j 
+I 
+ i,j 
++ - - (iF - 
+1 5v.). ] 
+(2) 
+The last term depends only on the network outputs and can thus be calculated. 
+This ambiguity term favors networks with conflicting outputs. The first part, 
+1The idea behind bumping is more general and involved than discussed here. The 
+interested reader is referred to [8]. In this paper we will only consider its naive version. 
+Balancing Between Bagging and Bumping 469 
+containing the generalization errors Etest (i) for individual networks, depends on the 
+targets iv and is thus unknown. It favors networks that by themselves already have 
+a low generalization error. In the next section we will find reasonable estimates for 
+these generalization errors based on the network performances on validation data. 
+Once we have obtained these estimates, finding the optimal weighting factors ai 
+under the constraints (1) is a straightforward quadratic programming problem. 
+3 ESTIMATING THE GENERALIZATION ERROR 
+At first sight, a good estimate for the generalization error of network i could be 
+the performance on the validation data not included during training. However, 
+the validation error Evalidation(i) strongly depends on the accidental subdivision in 
+training and validation set. For example, if there are a few outliers which, by pure 
+coincidence, are part of the validation set, the validation error will be relatively 
+large and the training error relatively small. To correct for this bias as a result 
+of the random subdivision, we introduce the expected validation error for run i. 
+First we define n as the number of runs in which pattern/ is part of the validation 
+set and Evalidation as the error averaged over these runs: 
+-- validation -- 2tt ' 
+i=1 i--1 
+The expected validation error then follows from 
+-/validation (i) 
+Pdata 
+Pi qi Evalidation ' 
+The ratio between the observed and the expected validation error indicates whether 
+the validation error for network i is relatively high or low. Our estimate for the 
+generalization error of network i is this ratio multiplied by an overall scaling factor 
+being the estimated average generalization error: 
+Pdata 
+Evalidation (i) 1 E E Brest(i)  /validation(i) Pdat---- validation' 
+/=1 
+Note that we implicitly make the assumption that the bias introduced by stopping 
+at the minimal error on the validation patterns is negligible, i.e., that the validation 
+patterns used for stopping a network can be considered as new to this network as 
+the completely independent test patterns. 
+4 SIMULATIONS 
+We compare the following methods for combining neural network outputs. 
+Individual: the average individual generalization error, i.e., the generalization er- 
+ror we will get on average when we decide to perform only one run. It 
+serves as a reference with which the other methods will be compared. 
+Bumping: the generalization of the network with the lowest error on the data 
+available for training and stopping. 
+470 T. Heskes 
+unfair unfair 
+bumping bagging ambiguity balancing bumping balancing 
+store I 4 % 9 % 10 % 17 % 17 % 24 % 
+store 2 5 % 15 % 22 % 23 % 23 % 34 % 
+store 3 -7 % 11% 18 % 25 % 25 % 36 % 
+store 4 6 % 11% 17 % 26 % 26 % 31% 
+store 5 6 % 10 % 22 % 19 % 22 % 26 % 
+store 6 1% 8 % 14 % 19 % 16 % 26 % 
+mean 3 % 11% 17 % 22 % 22 % 30 % 
+Table 1: Decrease in generalization error relative to the average indivi

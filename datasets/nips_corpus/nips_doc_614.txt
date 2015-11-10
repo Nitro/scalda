@@ -1,0 +1,133 @@
+Learning to See Where and What: 
+Training a Net to Make Saccades and Recognize 
+Handwritten Characters 
+Gale Martin, Mosfeq Rashid, David Chapman, and James Pittman 
+MCC, 3500 Balcones Center Drive, Austin, Texas 78759 
+ABSTRACT 
+This paper describes an approach to integrated segmentation and 
+rof,ognition of hand-printed characters. The approach, called Saccade, 
+integrates ballistic and corrective saccarles (eye movements) with 
+character recognition. A single backpropagation net is trained to make 
+a classification decision on a character centered in its input window, as 
+well as to estimate the distance of the current and next character from the 
+center of the input window. The net learns to accurately estimate these 
+distances regardless of variations in character width, spacing between 
+characters, writing style and other factors. During testing, the system 
+uses the net-extracted classification and distance information, along 
+with a set of jumping rules, to jump from character to character. 
+The ability to read rests on multiple foundation skills. In learning how to read, people learn 
+how to recognize individual characters centered in the visual field. They also learn how 
+to move their eyes along a line of text, sequentially centering the visual field on successive 
+characters. We believe that the key to developing optical character recognition (OCR) sys- 
+tems that can mimic human reading capabilities, is to develop systems that can learn these 
+and other skills in an integrated fashion. In this paper, we demonstrate that a backpropaga- 
+tion net can learn to navigate along a line of handwritten characters, as well as to recognize 
+the characters centered in its visual field. The system, called Saccade, extends the current 
+state of the art in OCR technology by using a single classifier to accurately and efficiently 
+locate and recognize characters, regardless of whether they touch each other or are sepa- 
+rate. The Saccade system was described briefly at the last NIPS conference (Martin & Ra- 
+shid, 1992). In this paper, we describe it more fully and report on results demonstrating 
+its accuracy and efficiency in recognizing handwritten digits. 
+The Saccade system takes a cue from the ballistic and corrective saccades (eye movements) 
+of natural vision systems. Natural saccades make it possible to efficiently move from one 
+informative area to another by jumping. The eye typically initiates a ballistic saccade to 
+441 
+442 Martin, Rashid, Chapman, and Pittman 
+move the center of focus to the general area of interest, followed, if necessary, by one or 
+more corrective saccades for fine-grained position corrections. Recognition processes are 
+applied only at these multiple fixation points. 
+We have copied some of these aspects in the artificial $accade system by training a neural 
+network to know about the locations of characters in its input window, as well as to know 
+about the identity of the character centered in its input window. During run-time, the Sac- 
+cade system accesses this information computed by the net for successive input windows, 
+along with a set of simple jumping rules, to yield an OCR system that jumps from character 
+to character, classifying each character in a sequence. 
+1 TRAINING DETAILS 
+As shown in Figure 1, the Saccade system has a wide input window, large enough to contain 
+No Centered Character 
+Current character I 
+Distance to current character, 
+Distance to next character 
+4Part 
+Output 
+Vector 
+Backprop Net 
+Figure 1. 
+The Saccade system uses an enlarged input window and a 4-part 
+output vector. 
+several characters. Prior to training, each field image of a line of characters is labeled with 
+the horizontal center position of each character in the field, as well as with the category of 
+each character. During training, the input window slides horizontally across a field of char- 
+acters, and at each position, the contents of the input window are paired with a four-part 
+target ctput vector, the values of which are computed from the labeled information. The 
+target values answer the following four questions about the contents of the input window: 
+1. Is a character centered in the input window? 
+2. What character is closest to the center of the window? 
+3. How far off-center (horizontally) is the centermost character? 
+4. How far is the next character to the right from the center of the window? 
+The fh'st node in the output vector represents the no-centered-character state. It's target 
+value is set high (e.g., 1.0) when the center of the input window falls between characters, 
+Training a Net to Make Saccades and Recognize Handwritten Characters 443 
+and set low (e.g., 0.0) when the center of the input window falls on the center of a character. 
+When the net is trained, the value of the no-centered-character node indicates whether the 
+input window is centered over a character, or whether a corrective saccade is needed to bet- 
+ter center the character. 
+The second part of the output vector contains a node for each character category. When 
+the center of the input window falls on a character, the target value for its corresponding 
+node is set high; otherwise it is set low. When the net is trained, the values in these nodes 
+are used to classify the centered character. The target values for both the no-centered- 
+character and the character-category nodes are defined continuously across the horizontal 
+dimension as trapezoidal functions, such that there are plateaus surrounding the off and on 
+positions, with linearly increasing and decreasing values connecting the plateaus. 
+The third and fourth components of the output vector represent distance values, each en- 
+coded in a distributed fashion across multiple nodes, using localized receptive fields 
+(Moody & Darken, 1988). The FL,'St of these two parts represents the distance by which the 
+character closest tothe center of the window is off-center. The target value can be positive, 
+indicating that the center of the window is to the left of the center of character, or it can be 
+negative, indicating that the center of the window has passed over the character, to the right 
+of it's center. When trained, the value of the current-character-distance set of nodes is ac- 
+cessed to determine the magnitude of a corrective saccade, to make a fine-grained position 
+adjustment. 
+The fourth component represents the distance from the center of the window to the center 
+of the next character to the fight. The target value can only be positive. When trained, the 
+value of this set of nodes is accessed to determine the magnitude of a ballistic saccade, to 
+jump to the next character to the fight. 
+It is important to note that for both distance components, the maximum target value can 
+not exceed half the window width. The net is never trained to make a distance judgment 
+that extends beyond its field of view, since it is not given any information about what exists 
+outside of it's input window. For example, when the center of the next character to the right 
+is positioned outside of the current input window, the distance value is set to the maximum 
+value of half the window width. Since the distance values vary with different characters, 
+different writers, and of course, at different positions with respect to a character, the net is 
+forced to learn to use the visual characteristics particular to each window to estimate the 
+distance values. In other words, the net does NOT simply learn average values for each 
+of the two distance metrics. Moreover, as the results will show, the trained net does not 
+seem to use simple density histogram cues to estimate the distance values. It is able to reli- 
+ably estimate the distance values even when characters overlap, and hence would appear 
+as a single clump in a density histogram. 
+2 RUN-TIME SACCADE RULES 
+During run-time, the labeled values are, of course, not available. The system uses the com- 
+puted values in the character classification and distance components of the output vector, 
+and some heuristics, to navigate horizontally along a character field, jumping from one 
+character to the next, and occasionally making a corrective saccade to improve its ability 
+to classify a character. When the net recognizes a character, it executes a ballistic saccade 
+444 Martin, Rashid, Chapman, and Pittman 
+to the next character, obtaining the distance to jump by g the next--character--dis- 
+tance component of the output vector. When this action fails to center a character, as indi- 
+cated by a low value in the no-centered--character output node, the system executes a cor- 
+rective saccade to better center the character. It obtains the distance and direction to jump 
+by reading the current--character-distance component of the output vector. Multiple cor- 
+rective saccades can be executed. 
+3 TESTING ON NIST HANDWRITTEN DIGIT FIELDS 
+We tested the performance of the system on a set of hand-printed digits collected and dis- 
+tributed by the National Institute of Standards and Technology (NIST). This is a database 
+containing 273,000 samples of handwritten numerals. Each of 2100 Census workers filled 
+in a form with 33 fields, 28 fields of which only contain handwritten digits. The scanning 
+resolution of the samples was 300 pixels/inch. The neural net was trained on about 80,000 
+characters from 20,000 fields, written by 800 different individuals. The fields varied in 
+length from 2 characters per field to 6 characters per field. The horizontal positions of each 
+of the characters in these training-data fields were extracted by a person. The test data con- 
+tained about 20,000 digits from 5,000 fields, written by a different group of 200 individuals. 
+The test set was chosen to be this large because use of smaller test sets (e.g., 5,000 digits, 
+1250 fields) yielded significant between-set variations in reported accuracy. Each field 
+image was preprocessed to remove the box mound the field of ch

@@ -1,0 +1,158 @@
+Regularisation in Sequential Learning 
+Algorithms 
+Joo FG de Freitas 
+Cambridge University 
+Engineering Department 
+Cambridge CB2 1PZ England 
+jfgf@eng.cam.ac.uk 
+[Corresponding author] 
+Mahesan Niranjan 
+Cambridge University 
+Engineering Department 
+Cambridge CB2 1PZ England 
+niranj an @ eng. cam. ac. uk 
+Andrew H Gee 
+Cambridge University 
+Engineering Department 
+Cambridge CB2 1PZ England 
+ahg@eng.cam.ac.uk 
+Abstract 
+In this paper, we discuss regularisation in online/sequential learn- 
+ing algorithms. In environments where data arrives sequentially, 
+techniques such as cross-validation to achieve regularisation or 
+model selection are not possible. Further, bootstrapping to de- 
+termine a confidence level is not practical. To surmount these 
+problems, a minimum variance estimation approach that makes use 
+of the extended Kalman algorithm for training multi-layer percep- 
+trons is employed. The novel contribution of this paper is to show 
+the theoretical links between extended Kalman filtering, Sutton's 
+variable learning rate algorithms and Mackay's Bayesian estima- 
+tion framework. In doing so, we propose algorithms to overcome 
+the need for heuristic choices of the initial conditions and noise 
+covariance matrices in the Kalman approach. 
+1 INTRODUCTION 
+Model estimation involves building mathematical representations of physical pro- 
+cesses using measured data. This problem is often referred to as system identifi- 
+cation, time-series modelling or machine learning. In many occasions, the system 
+being modelled varies with time. Under this circumstance, the estimator needs to be 
+Regularisation in Sequential Learning Algorithms 459 
+updated sequentially. Online or sequential learning has many applications in track- 
+ing and surveillance, control systems, fault detection, communications, econometric 
+systems, operations research, navigation and other areas where data sequences are 
+often non-stationary and difficult to obtain before the actual estimation process. 
+To achieve acceptable generalisation, the complexity of the estimator needs to be 
+judiciously controlled. Although there are various reliable schemes for controlling 
+model complexity when training en bloc (batch processing), the same cannot be 
+said about sequential learning. Conventional regularisation techniques cannot be 
+applied simply because there is no data to cross-validate. Consequently, there is 
+ample scope for the design of sequential methods of controlling model complexity. 
+2 NONLINEAR ESTIMATION 
+A dynamical system may be described by the following discrete, stochastic state 
+space representation: 
+wk+ = wk+dk (1) 
+Yk -- g(Wk, tk) q- Vk (2) 
+where it has been assumed that the model parameters (Wk E m) constitute the 
+states of the system, which in our case represent the weights of a multi-layer percep- 
+tron (MLP). g is a nonlinear vector function that may change at each estimation 
+step k, tk denotes the time at the k-th estimation step and dk and v represent 
+zero mean white noise with covariances given by Qk and Rk respectively. The noise 
+terms are often called the process noise (d) and the measurement noise (v). The 
+system measurements are encoded in the output vector y E m. 
+The estimation problem may be reformulated as having to compute an estimate 
+r of the states Wk using the set of measurements Yk -- {y, y:, ..., y}. The 
+estimate r can be used to predict future values of the output y. We want v to be 
+an unbiased, minimum variance and consistent estimate (Gelb 1984). A minimum 
+variance (unbiased) estimate is one that has its variance less than or equal to that of 
+any other unbiased estimator. Since the variance of the output y depends directly 
+on the variance of the parameter estimates (strSm 1970), the minimum variance 
+framework constitutes a regularisation scheme for sequential learning. 
+The conditional probability density function of wk given Y (p(wk IYk)) constitutes 
+the complete solution of the estimation problem (Bar-Shalom and Li 1993, Ho and 
+Lee 1964, Jazwinski 1970). This is simply because P(wklYk) embodies all the statis- 
+tical information about wk given the measurements Y and the initial condition w0. 
+This is essentially the Bayesian approach to estimation, where instead of describing 
+a model by a single set of parameters, it is expressed in terms of the conditional 
+probability P(wklYk) (Jaynes 1986, Jazwinski 1970). The estimate rk can be com- 
+puted from P(wklYk) according to several criteria, namely MAP estimation (peak 
+of the posterior), minimum variance estimation (centroid of the posterior) and min- 
+imax estimation (median of the posterior). 
+The Bayesian solution to the optimal estimation problem is (Ho and Lee 1964): 
+p(Wk+, Yk+l IYk) 
+p(Wk+ IYk+) = 
+P(Y+IY) 
+_ f P(Y+ IY )p(Wk+l iwk)p(wk [Yk)dWk+l dw k 
+, Wk+)p(Wk+ [Wk)p(Wk IYk)dWk (3) 
+- f 
+where the integrals run over the parameter space. This functional integral difference 
+equation governing the evolution of the posterior density function is not suitable 
+460 J. E G. d. Freitas, M. Niranjan and A. H. Gee 
+for practical implementation (Bar-Shalom and Li 1993, Jazwinski 1970). It involves 
+propagating a quantity (the posterior density function) that cannot be described 
+by a finite number of parameters. The situation in the linear case is vastly simpler. 
+There the mean and covariance are sufficient statistics for describing the Gaussian 
+posterior density function. 
+In view of the above statements, it would be desirable to have a framework for non- 
+linear estimation similar to the one for linear-Gaussian estimation. The extended 
+Kalman filter (EKF) constitutes an attempt in this direction (Bar-Shalom and Li 
+1993, Gelb 1984). The EKF is a minimum variance estimator based on a Taylor 
+series expansion of the nonlinear function g(w) around the previous estimate. The 
+EKF equations for a linear expansion are given by: 
+K+x = (P +Q)G+[R +GT+(P +Q)G+] - (4) 
+v+ =  + K+x(y+ -GT+') (5) 
+p+ p + Q T (P + Q) (O) 
+= _ Kk+Gk+  
+where Pk denotes the covariance of the weights. In the general multiple input, 
+multiple output (MIMO) case, g  m is R vector function and G represents the 
+Jacobian of the network outputs with respect to the weights. 
+The EKF provides a minimum variance Gaussian approximation to the posterior 
+probability density function. In many cases, p(w]Y) is a multi-modal (several 
+peaks) function. In this scenario, it is possible to use a committee of Kalm 
+filters, where each individual filter approximates a particular mode, to produce 
+a more accurate approximation (Bar-Shalom and Li 1993, Kadirkamanathan and 
+Kadirmanathan 1995). The parameter covariances of the individual estimators 
+may be used to determine the contribution of each estimator to the committee.  
+addition, the parameter covariances serve the purpose of placing confidence intervals 
+on the output prediction. 
+3 TRAINING MLPs WITH THE EKF 
+One of the earliest implementations of EKF trained MLPs is due to Singhal and 
+Wu (Singhal and Wu 1988). In their method, the network weights are grouped 
+into a single vector w that is updated in accordance with the EKF equations. The 
+entries of the Jacobian matrix are calculated by back-propagating the m output 
+values through the network. 
+The algorithm proposed by Singhal and Wu requires a considerable computational 
+effort. The complexity is of the order raq 2 multiplications per estimation step. Shah, 
+Palmieri and Datum (1992) and Puskorius and Feldkamp (1991) have proposed 
+strategies for decoupling the global EKF estimation algorithm into local EKF esti- 
+mation sub-problems, thereby reducing the computational time. The EKF is an im- 
+provement over conventional MLP estimation techniques, such as back-propagation, 
+in that it makes use of second order statistics (covariances). These statistics are 
+essential for placing error bars on the predictions and for combining separate net- 
+works into committees of networks. Further, it has been proven elsewhere that the 
+back-propagation algorithm is simply a degenerate of the EKF algorithm (Ruck, 
+Rogers, Kabrisky, Maybeck and Oxley 1992). 
+However, the EKF algorithm for training MLPs suffers from serious difficulties, 
+namely choosing the initial conditions (w0, P0) and the noise covariance matrices 
+R and Q. In this work, we propose the use of maximum likelihood techniques, 
+such as back-propagation computed over a small set of initial data, to initialise the 
+Regularisation in Sequential Learning Algorithm's 461 
+EKF-MLP estimator. The following two subsections-describe ways of overcoming 
+the difficulty of choosing R and Q. 
+3.1 
+ELIMINATING Q BY UPDATING P WITH 
+BACK-PROPAGATION 
+To circumvent the problem of choosing the process noise covariance Q, while at the 
+same time increasing computational efficiency, it is possible to extend an algorithm 
+proposed by Sutton (Sutton 1992) to the nonlinear case. In doing so, the weights co- 
+variance is approximated by a diagonal matrix with entries given by pqq -- exp(/q), 
+where/ is updated by error back-propagation (de Freitas, Niranjan and Gee 1997). 
+The Kalman gain Kk and the weights estimate vk are updated using a variation of 
+the Kalman equations, where the Kalman gain and weights update equations are 
+independent of Q (Gelb 1984), while the weights covariance P is updated by back- 
+propagation. This algorithm lessens the burden of choosing the matrix Q by only 
+having to choose the learning rate scalar V. The performance of the EKF algorithm 
+with P updated by back-propagation will be analysed in Section 4. 
+3.2 KALMAN FILTERING AND BAYESIAN TECHNIQUES 
+A further improvement on the EKF algorithm for training MLPs would be to update 
+R and Q automatically each estimation step. This can be done by borrowing some 
+ideas from the Bayesian estimation field. In particular, we shall attempt to link 
+Mackay's work (Mackay 1992, Mackay 1994) on Bayesian es

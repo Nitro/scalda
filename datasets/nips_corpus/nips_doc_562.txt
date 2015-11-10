@@ -1,0 +1,144 @@
+Node Splitting: A Constructive Algorithm for 
+Feed-Forward Neural Networks 
+Mike Wynne-Jones 
+Research Initiative in Pattern Recognition 
+St. Andrews Road, Great Malvern 
+WR14 3PS, UK 
+mikewj@hermes.mod.uk 
+Abstract 
+A constructive algorithm is proposed for feed-forward neural networks, 
+which uses node-splitting in the hidden layers to build large networks from 
+smaller ones. The small network forms an approximate model of a set of 
+training data, and the split creates a larger more powerful network which is 
+initialised with the approximate solution already found. The insufficiency 
+of the smaller network in modelling the system which generated the data 
+leads to oscillation in those hidden nodes whose weight vectors cover re- 
+gions in the input space where more detail is required in the model. These 
+nodes are identified and split in two using principal component analysis, 
+allowing the new nodes to cover the two main modes of each oscillating 
+vector. Nodes are selected for splitting using principal component analysis 
+on the oscillating weight vectors, or by examining the Hessian matrix of 
+second derivatives of the network error with respect to the weights. The 
+second derivative method can also be applied to the input layer, where it 
+provides a useful indication of the relative importances of parameters for 
+the classification task. Node splitting in a standard Multi Layer Percep- 
+tton is equivalent to introducing a hinge in the decision boundary to allow 
+more detail to be learned. Initial results were promising, but further eval- 
+uation indicates that the long range effects of decision boundaries cause 
+the new nodes to slip back to the old node position, and nothing is gained. 
+This problem does not occur in networks of localised receptive fields such 
+as radial basis functions or ganssian mixtures, where the technique appears 
+to work well. 
+1072 
+Node Splitting: A Contructive Algorithm for Feed-Forward Neural Networks 1073 
+1 Introduction 
+To achieve good generalisation in neural networks and other techniques for inferring 
+a model from data, we aim to match the number of degrees of freedom of the model 
+to that of the system generating the data. With too small a model we learn an 
+incomplete solution, while too many free parameters capture individual training 
+samples and noise. 
+Since the optimum size of network is seldom known in advance, there are two alter- 
+native ways of finding it. The constructive algorithm aims to build an approximate 
+model, and then add new nodes to learn more detail, thereby approaching the op- 
+timum network size from below. Pruning algorithms, on the other hand, start with 
+a network which is known to be too big, and then cut Ollt nodes or weights which 
+do not contribute to the model. A review of recent techniques [WJ91a] has led the 
+author to favour the constructive approach, since pruning still requires an estimate 
+of the optimum size, and the initial large networks can take a long time to train. 
+Constructive algorithms offer fast training of the initial small networks, with the 
+network size and training slowness reflecting the amount of information already 
+learned. The best approach of all would be a constructive algorithm which also 
+allowed the pruning of tinnecessary nodes or weights from the network. 
+The constructive algorithm trains a network until no further detail of the training 
+data can be learned, and then adds new nodes to the network. New nodes can be 
+added with random weights, or with pre-determined weights. Random weights are 
+likely to disrupt the approximate solution already found, and are unlikely to be 
+initially placed in parts of the weight space where they can learn something useful, 
+although encouraging results have been reported in this area.[Ash89] This problem 
+is likely to be accentuated in higher dimensional spaces. Alternatively, weights can 
+be pre-determined by measurements on the performance of the seed network, and 
+this is the approach adopted here. One node is turned into two, each with half the 
+output weight. A divergence is introduced in the weights into the nodes which is 
+snfficient for them behave independently in future training without disrupting the 
+approximate solution already found. 
+2 Node-Splitting 
+A network is trained using standard techniques until no further improvement on 
+training set performance is achieved. Since we begin with a small network, we have 
+an approximate model of the data, which captures the dominant properties of the 
+generating system but lacks detail. We now freeze the weights in the network, and 
+calculate the updates which would be made them, using simple gradient descent, 
+by each separate training pattern. Figtire 1 shows the frozen vector of weights into 
+a single hidden node, and the scatter of proposed updates aronnd the equilibrium 
+position. 
+The picture shows the case of a hidden node where there is one clear direction 
+of oscillation. This might be caused by two clusters of data within a class, each 
+trying to use the node in its own area of the input space, or by a decision boundary 
+pulled clockwise by some patterns and anticlockwise by others. If the oscillation 
+is strong, either in its exhibition of a clear direction or in comparison with other 
+1074 Wynne-Jones 
+New #5ode. \ Weight Update 
+' .ctors 
+Weight Vector of ! ,x 
+ Nest�de 
+Figure 1: A hidden node weight vector and tipdates proposed by individual training 
+patterns 
+nodes in the same layer, then the node is split in two. The new nodes are placed 
+one standard deviation either side of the old position. While this divergence gives 
+the nodes a push in the right direction, allowing them to continue to diverge in later 
+training, the overall effect on the network is small. In most cases there is very little 
+degradation in performance as a result of the split. 
+The direction and size of oscillation are calculated by principal component anal- 
+ysis of the weight updates. By a traditional method, we are reqnired to make a 
+covariance matrix of the weight, updates for the weight vector into each node: 
+C = E 5wSwT (1) 
+p 
+where p is the number of patterns. The matrix is then decomposed to a set of eigen- 
+values and eigenvectors; the largest eigenvalue is the variance of oscillation and the 
+corresponding eigenvector is its direction. Suitable techniques for performing this 
+decomposition include Singular Value Decomposition and tlouseholder Reduction. 
+[Vet86] A much more suitable way of calculating the principal components of a 
+stream of continuous measurements such as weight updates is iterative estimation. 
+An estimate is stored for each required principal component vector, and the esti- 
+mates are updated using each sample. [Oja83, San89] By Oja's method, the scalar 
+product of the current sample vector with each current estimate of the eigenvectors 
+is used as a matching coefficient., M. The matching coefficient is used to re-estimate 
+the eigenvalues and eigenvectors, in conjunction with a gain term A which decays 
+as the number of patterns seen increases. The eigenvcctors are updated by a pro- 
+portion AM of the current sample, and the eigcnvalues by A'I 2. The trace (sum of 
+eigenvalues) can also be estimated simply as the mean of the traces (sum of diagonal 
+elements) of the individual sample covariance matrices. The principal component 
+vectors are renormalised and orthogonalised after every few updates. This algorithm 
+is of order n, the number of eigcnvalues required, for the re-estimation, and O(n 2) 
+for the orthogonalisation; the matrix decomposition method can take exponential 
+Node Splitting: A Contructive Algorithm for Feed-Forward Neural Networks 1075 
+time, and is always much slower in practice. 
+In a recent paper on Meiosis Networks, Hanson introduced stochastic weights in the 
+multi layer perceptron, with the aim of avoiding local minima in training.[Han90] 
+A sample was taken from a gaussian distribution each time a weight was used; 
+the mean was updated by gradient descent, and the variance reflected the network 
+convergence. The variance was allowed to decay with time, so that the network 
+would approach a deterministic state, but was increased in proportion to the updates 
+made to the mean. While the network was far from convergence these updates were 
+large, and the variance remained large. Node splitting was implemented in this 
+system, in nodes where the variances on the weights were large compared with the 
+means. In such cases, two new nodes were created with the weights one standard 
+deviation either side of the old mean: one SD is added to all weights to one node, 
+and subtracted for all weights to the other. Preliminary results were promising, but 
+there appear to be two problems with this approach for node-splitting. First, the 
+splitting criterion is not good: a useless node with all weights close to zero could 
+have comparatively large variances on the weights owing to noise. This node would 
+be split indefinitely. Secondly and more interestingly, the split is made without 
+regard to the correlations in sign between the weight updates, shown as dots in the 
+scatter plots of figure 2. In figure 2a, Meiosis would correctly place new nodes in the 
+positions marked with crosses, while in figure 2b, the new nodes would be placed 
+in completely the wrong places. This problem does not occur in the node splitting 
+scheme based on principal component analysis. 
+(a) (b) 
+Figure 2: Meiosis networks split correctly if the weight updates are correlated in 
+sign (a), but, fail when they are not. (b). 
+3 Selecting nodes for splitting 
+Node splitting is carried out in the direction of maximum variance of the scatter plot 
+of weight updates proposed by individual training samples. The hidden layer nodes 
+most likely to benefit from splitting are those for which the non-spherical nature 
+1076 Wynnedones 
+of the scatter plot is most pronounced. In later implementations this criter

@@ -1,0 +1,143 @@
+One-unit Learning Rules for 
+Independent Component Analysis 
+Aapo Hyv'rinen and Erkki Oja 
+Helsinki University of Technology 
+Laboratory of Computer and Information Science 
+Rakentajanaukio 2 C, FIN-02150 Espoo, Finland 
+email: {Aapo. Hyvarinen, Erkki. Oj a}hut. f i 
+Abstract 
+Neural one-unit learning rules for the problem of Independent Com- 
+ponent Analysis (ICA) and blind source separation are introduced. 
+In these new algorithms, every ICA neuron develops into a sepa- 
+rator that finds one of the independent components. The learning 
+rules use very simple constrained Hebbian/anti-Hebbian learning 
+in which decorrelating feedback may be added. To speed up the 
+convergence of these stochastic gradient descent rules, a novel com- 
+putationally efficient fixed-point algorithm is introduced. 
+1 Introduction 
+Independent Component Analysis (ICA) (Comon, 1994; Jutten and Herault, 1991) 
+is a signal processing technique whose goal is to express a set of random vari- 
+ables as linear combinations of statistically independent component variables. The 
+main applications of ICA are in blind source separation, feature extraction, and 
+blind deconvolution. In the simplest form of ICA (Comon, 1994), we observe rn 
+scalar random variables x, ..., Xm which are assumed to be linear combinations of 
+n unknown components s, ...Sn that are zero-mean and mutually statistically inde- 
+pendent. In addition, we must assume n _ m. If we arrange the observed variables 
+xi into a vector x -- (x, x2, ..., Xm) T and the component variables sj into a vector 
+s, the linear relationship can be expressed as 
+x---- As (1) 
+Here, A is an unknown rn x n matrix of full rank, called the mixing matrix. Noise 
+may also be added to the model, but it is omitted here for simplicity. The basic 
+One-unit Learning Rules for Independent Component Analysis 481 
+problem of ICA is then to estimate (separate) the realizations of the original inde- 
+pendent components sj, or a subset of them, using only the mixtures xi. This is 
+roughly equivalent to estimating the rows, or a subset of the rows, of the pseudoin- 
+verse of the mixing matrix A. The fundamental restriction of the model is that 
+we can only estimate non-Gaussian independent components, or ICs (except if just 
+one of the ICs is Gaussian). Moreover, the ICs and the columns of A can only be 
+estimated up to a multiplicative constant, because any constant multiplying an IC 
+in eq. (1) could be cancelled by dividing the corresponding column of the mixing 
+matrix A by the same constant. For mathematical convenience, we define here that 
+the ICs sj have unit variance. This makes the (non-Gaussian) ICs unique, up to 
+their signs. Note the assumption of zero mean of the ICs is in fact no restriction, as 
+this can always be accomplished by subtracting the mean from the random vector 
+x. Note also that no order is defined between the ICs. 
+In blind source separation (Jutten and Herault, 1991), the observed values of x 
+correspond to a realization of an m-dimensional discrete-time signal x(t), t - 1, 2, .... 
+Then the components sj (t) are called source signals. The source signals are usually 
+original, uncorrupted signals or noise sources. Another application of ICA is feature 
+extraction (Bell and Sejnowski, 1996; Hurri et al., 1996), where the columns of the 
+mixing matrix A define features, and the sj signal the presence and the amplitude 
+of a feature. A closely related problem is blind deconvolution, in which a convolved 
+version x(t) of a scalar i.i.d. signal s(t) is observed. The goal is then to recover the 
+original signal s(t) without knowing the convolution kernel (Donoho, 1981). This 
+problem can be represented in a way similar to eq. (1), replacing the matrix A by 
+a filter. 
+The current neural algorithms for Independent Component Analysis, e.g. (Bell and 
+Sejnowski, 1995; Cardoso and Laheld, 1996; Jutten and Herault, 1991; Karhunen 
+et al., 1997; Oja, 1995) try to estimate simultaneously all the components. This is 
+often not necessary, nor feasible, and it is often desired to estimate only a subset of 
+the ICs. This is the starting point of our paper. We introduce learning rules for a 
+single neuron, by which the neuron learns to estimate one of the ICs. A network of 
+several such neurons can then estimate several (1 to n) ICs. Both learning rules for 
+the 'raw' data (Section 3) and for whitened data (Section 4) are introduced. If the 
+data is whitened, the convergence is speeded up, and some interesting simplifications 
+and approximations are made possible. Feedback mechanisms (Section 5) are also 
+mentioned. Finally, we introduce a novel approach for performing the computations 
+needed in the ICA learning rules, which uses a very simple, yet highly efficient, fixed- 
+point iteration scheme (Section 6). An important generalization of our learning rules 
+is discussed in Section 7, and an illustrative experiment is shown in Section 8. 
+2 Using Kurtosis for ICA Estimation 
+We begin by introducing the basic mathematical framework of ICA. Most sug- 
+gested solutions for ICA use the fourth-order cumulant or kurtosis of the signals, 
+defined for a zero-mean random variable v as kurt(v) - E{v 4} - 3(E{v2}) 2. For a 
+Gaussian random variable, kurtosis is zero. Therefore, random variables of positive 
+kurtosis are sometimes called super-Gaussian, and variables of negative kurtosis 
+sub-Gaussian. Note that for two independent random variables v and v2 and for a 
+scalar c, it holds kurt(v +v2) = kurt(v) + kurt(v2) and kurt(cv) = c 4 kurt(v). 
+482 A. Hyviirinen and E. Oja 
+Let us search for a linear combination of the observations xi, say, wTx, such that 
+it has maximal or minimal kurtosis. Obviously, this is meaningful only if w is 
+somehow bounded; let us assume that the variance of the linear combination is 
+constant: E{(wTx) 2} -- 1. Using the mixing matrix A in eq. (1), let us define 
+,, = ATv. Then also I1-,112 = vTA ATv = vTE(xxT}v = E((vTx) = 
+Using eq. (1) and the properties of the kurtosis, we have 
+kurt(wTx) = kurt(wTAs): kurt(zTs)= 
+Ezkurt(sj) (2) 
+Under the constraint E{(wTx) a} = llzll 2: 1, the function in (2) has a number of 
+local minima and maxima. To make the argument clearer, let us assume for the 
+moment that the mixture contains at least one IC whose kurtosis is negative, and 
+at least one whose kurtosis is positive. Then, as may be obvious, and was rigorously 
+proven by Delfosse and Loubaton (1995), the extremal points of (2) are obtained 
+when all the components zj' of z are zero except one component which equals +1. 
+In particular, the function in (2) is maximized (resp. minimized) exactly when the 
+linear combination wTx = zTs equals, up to the sign, one of the ICs sj of positive 
+(resp. negative) kurtosis. Thus, finding the extrema of kurtosis of wTx enables 
+estimation of the independent components. Equation (2) also shows that Gaussian 
+components, or other components whose kurtosis is zero, cannot be estimated by 
+this method. 
+To actually minimize or maximize kurt(wTx), a neural algorithm based on gradient 
+descent or ascent can be used. Then w is interpreted as the weight vector of a neuron 
+with input vector x and linear output wTx. The objective function can be simplified 
+because of the constraint E{(wTx) a} = 1: it holds kurt(wTx) = E{(wTx) 4} - 3. 
+The constraint E{(wTx) 2} = 1 itself can be taken into account by a penalty term. 
+The final objective function is then of the form 
+J(w) = E{(wTx) + OF(E{(wTx)a}) 
+(3) 
+where a,/ > 0 are arbitrary scaling constants, and F is a suitable penalty function. 
+Our basic ICA learning rules are stochastic gradient descents or ascents for an 
+objective function of this form. In the next two sections, we present learning rules 
+resulting from adequate choices of the penalty function F. Preprocessing of the 
+data (whitening) is also used to simplify J in Section 4. An alternative method for 
+finding the extrema of kurtosis is the fixed-point algorithm; see Section 6. 
+3 Basic One-Unit ICA Learning Rules 
+In this section, we introduce learning rules for a single neural unit. These basic 
+learning rules require no preprocessing of the data, except that the data must be 
+made zero-mean. Our learning rules are divided into two categories. As explained in 
+Section 2, the learning rules either minimize the kurtosis of the output to separate 
+ICs of negative kurtosis, or maximize it for components of positive kurtosis. 
+Let us assume that we observe a sample sequence x(t) of a vector x that is a 
+linear combination of independent components s,..., s according to eq. (1). For 
+separating one of the ICs of negative kurtosis, we use the following learning rule for 
+One-unit Learning Rules for Independent Component Analysis 483 
+the weight vector w of a neuron: 
+Aw(t) o(x(t)g-(w(t)Tx(t)) 
+(4) 
+Here, the non-linear learning function g- is a simple polynomial: g-(u) = au - bu a 
+with arbitrary scaling constants a, b > 0. This learning rule is clearly a stochastic 
+gradient descent for a function of the form (3), with F(u) = -u. To separate an IC 
+of positive kurtosis, we use the following learning rule: 
+5w(t) o< x(t)gw+c)(w(t)Tx(t)) 
+(5) 
+where the learning function + is defined as follows: gw+(U) - 
+gw(t) -- 
+--au(w(t)TCw(t)) 2 + bu 3 where C is the covariance matrix of x(t), i.e. C -- 
+E{x(t)x(t)T}, and a, b > 0 are arbitrary constants. This learning rule is a stochas- 
+tic gradient ascent for a function of the form (3), with F(u) = -u 2. Note that 
+w(t)TCw(t) in g+ might also be replaced by (E{(w(t)Tx(t))2}) 2 or by IIw(t)ll 4 to 
+enable a simpler implementation. 
+It can be proven (Hyvlirinen and Oja, 1996b) that using the learning rules (4) and 
+(5), the linear output converges to csj(t) where sj(t) is one of the ICs, and c is a 
+scalar constant. This multiplication of the source signal by the constant c is in fact 
+not a restriction, as the variance and the sign of the sources cannot be estimated. 
+The only condition for 

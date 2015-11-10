@@ -1,0 +1,186 @@
+The Computation of Stereo Disparity for 
+Transparent and for Opaque Surfaces 
+Suthep Madarasmi 
+Computer Science Department 
+University of Minnesota 
+Minneapolis, MI 55455 
+Daniel Kersten 
+Department of Psychology 
+University of Minnesota 
+Ting-Chuen Pong 
+Computer Science Department 
+University of Minnesota 
+Abstract 
+The classical computational model for stereo vision incorporates 
+a uniqueness inhibition constraint to enforce a one-to-one feature 
+match, thereby sacrificing the ability to handle transparency. Crit- 
+ics of the model disregard the uniqueness constraint and argue 
+that the smoothness constraint can provide the excitation support 
+required for transparency computation. However, this modifica- 
+tion fails in neighborhoods with sparse features. We propose a 
+Bayesian approach to stereo vision with priors favoring cohesive 
+over transparent surfaces. The disparity and its segmentation into a 
+multi-layer depth planes representation are simultaneously com- 
+puted. The smoothness constraint propagates support within each 
+layer, providing mutual excitation for non-neighboring transparent 
+or partially occluded regions. Test results for various random-dot 
+and other stereograms are presented. 
+1 INTRODUCTION 
+The horizontal disparity in the projection of a 3-D point in a parallel stereo imag- 
+ing system can be used to compute depth through triangulation. As the number of 
+385 
+386 Madarasmi, Kersten, and Pong 
+points in the scene increases, the correspondence problem increases in complexity 
+due to the matching ambiguity. Prior constraints on surfaces are needed to arrive 
+at a correct solution. Mart and Poggio [1976] use the smoothness constraint to re- 
+solve matching ambiguity and the uniqueness constraint to enforce a 1-to-1 match. 
+Their smoothness constraint tends to oversmooth at occluding boundaries and their 
+uniqueness assumption discourages the computation of stereo transparency for two 
+overlaid surfaces. Prazdny [1985] disregards the uniqueness inhibition term to en- 
+able transparency perception. However, their smoothness constraint is locally en- 
+forced and fails at providing excitation for spatially disjoint regions and for sparse 
+transparency. 
+More recently, Bayesian approaches have been used to incorporate prior constraints 
+(see [Clark and Yuille, 1990] for a review) for stereopsis while overcoming the prob- 
+lem of oversmoothing. Line processes are activated for disparity discontinuities to 
+mark the smoothness boundaries while the disparity is simultaneously computed. 
+A drawback of such methods is the lack of an explicit grouping of image sites 
+into piece-wise smooth regions. In addition, when presented with a stereogram of 
+overlaid (transparent) surfaces such as in the random-dot stereogram in figure 5, 
+multiple edges in the image are obtained while we clearly perceive two distinct, 
+overlaid surfaces. With edges as output, further grouping of overlapping surfaces 
+is impossible using the edges as boundaries. This suggests that surface grouping 
+should be performed simultaneously with disparity computation. 
+2 THE MULTI-LAYER REPRESENTATION 
+We propose a Bayesian approach to computing disparity and its segmentation that 
+uses a different output representation from the previous, edge-based methods. Our 
+representation was inspired by the observations of Nakayama el al. [1989] that mid- 
+level processing such as the grouping of objects behind occluders is performed for 
+objects within the same depth plane. 
+As an example consider the stereogram of a floating square shown in figure la. The 
+edge-based segmentation method computes the disparity and marks the disparity 
+edges as shown in figure lb. Our approach produces two types of output at each 
+pixel: a layer (depth plane) number and a disparity value for that layer. The goal 
+of the system is to place points that could have arisen from a single smooth surface 
+in the scene into one distinct layer. The output for our multi-surface representation 
+is shown in figure lc. Note that the floating square has a unique layer label, namely 
+layer 4, and the background has another label of 2. Layers 1 and 3 have no data 
+support and are, therefore, inactive. 
+The rest of the pixels in each layer that have no data support obtain values by a 
+membrane fitting process using the computed disparity as anchors. The occluded 
+parts of surfaces are, thus, represented in each layer. In addition, disjoint regions of a 
+single surface due to occlusion are represented in a single layer. This representation 
+of occluded parts is an important difference between our representation and a similar 
+representation for segmentation by Darrell and Pentland [1991]. 
+The Computation of Stereo Disparity for Transparent and for Opaque Surfaces 387 
+3 
+(a) 
+(b) 
+Layer 
+Lanai-' 3 
+(C) Layer Labels 
+I - Layer 4 disp. = 4 
+ - Layer 2 Layer 4 
+Figure l: a) A gray scale 
+display of a noisy stereo- 
+gram depicting a floating 
+square. b. Edge based 
+method: disparity com- 
+puted and disparity discon- 
+tinuity computed. c. Multi- 
+Surface method: disparity 
+computed, surface grouping 
+performed by layer assign- 
+ment, and disparity for each 
+layer filled in. 
+ALGORITHM AND SIMULATION METHOD 
+We use Bayes' [1783] rule to compute the scene attribute, namely disparity u and 
+its layer assignment l for each layer: 
+p(u,l[d L d n): P(dL,dn[u,l)P(u, l) 
+' p(di;,d n) 
+where d z; and d n are the left and right intensity image data. Each constraint is ex- 
+ressed as a local cost function using the Markov Random Field (MRF) assumption 
+eman and Geman, 1984], that pixels values are conditional only on their nearest 
+neighbors. Using the Gibbs-MRF equivalence, the energy function can be written 
+as a probability function: 
+where Z is the normalizing constant, T is the temperature, E is the energy cost 
+function, and x is a random variable 
+Our energy constraints can be expressed as 
+E = ,O VD + ,sVs + ,a Va + ,z Vz + An Vn 
+where the A's are the weighting factors and the VD,Vs, Va, Vr, Va functions are 
+the data matching cost, the smoothness term, the gap term, the edge shape term, 
+and the disparity versus intensity edge coupling term, respectively. 
+The data matching constraint prefers matches with similar intensity and contrast: 
+lap- 
+41 + r I(a? - - (a& - 4)1] 
+j6Ni 
+with the image indices k and m given by the ordered pairs k = (row(i), col(i)+uc,i), 
+rn = (row(j),col(j) + uca), M is the number of pixels in the image, Ci is the layer 
+classification for site i, and uu is the disparity at layer l. The 7 weighs absolute 
+intensity versus contrast matching. 
+The Ao is higher for points that belong to unambiguous features such as straight 
+vertical contours, so that ambiguous pixels rely more on their prior constraints. 
+388 Madarasmi, Kersten, and Pong 
+depth difference 
+(b) 
+cost 
+depth difference 
+Figure 2: Cost function V s. a) The smoothness cost is quadratic until the disparity differ- 
+ence is high and an edge process is activated. b) In our simulations we use a threshold 
+below which the smoothness cost is scaled down and above which a different layer 
+assignment is accepted at a constant high cost. 
+Also, if neighboring pixels have a higher disparity than the current pixel and are in 
+a different layer, its AD is lowered since its corresponding point in the left image is 
+likely to be occluded. 
+The equation for the smoothness term is given by: 
+M L 
+V$ = E E E Vs(u,i,ulj)a, 
+i ! jNi 
+where, Ni are the neighbors of i, � is the local smoothness potential, at is the 
+activity level for layer l defined by the percent of pixels belonging to layer l, and L 
+is the number layers in the system. The local smoothness potential is given by: 
+= 
+if (a- b) : < Tn 
+otherwise 
+where/z is the weighting term between depth smoothness and directional derivative 
+smoothness. The Ak is the difference operation in various directions k, and T 
+is the threshold. Instead of the commonly used quadratic smoothness function 
+graphed in figure 2a, we use the tr function graphed in figure 2b which resembles 
+the Ising potential. This allows for some flexibility since As is set rather high in 
+our simulations. 
+The Vo term ensures a gap in the values of corresponding pixels between layers: 
+M L 
+V: E E E V(u�,i,utj)ala�,' V(u�,i utj): { 0 
+i l#Ci jNi 
+if [uc,i - utjl _> T 
+otherwise 
+This ensures that if a site i belongs to layer Ci, then all points j neighboring i for 
+each layer I must have different disparity values utj than ucii. 
+The edge or boundary shape constraint Vz incorporates two types of constraints: 
+a cohesive measure and a saliency measure. The costs for various neighborhood 
+configurations are given in figure 3. 
+The constraint Va ensures that if there is no edge in intensity then there should be 
+no edge in the disparity. This is particularly important to avoid local minima for 
+gray scale images since there is so much ambiguity in the matching. 
+The Computation of Stereo Disparity for Transparent and for Opaque Surfaces 389 
+cost = 0 cost = 0.2 
+cost = 0.25 cost = 0.5 cost = 0.7 
+i I - same layer label 
+[ - different layer label 
+COSt = 1 
+Figure 3: Cost function V E. The costs associated nearest neighborhood layer label con- 
+figurations. a) Fully cohesive region (lowest cost) b) Two opaque regions with straight 
+line boundary. c) Two opaque regions with diagonal line boundary. d) Opaque regions 
+with no figural continuity. e) Transparent region with dense samplings. f) Transparent 
+region with no other neighbors (highest cost). 
+Input:crossec cro 
+Layer 3 
+Wire-fr te plot of Layer 3 
+Figure 4: Stereogram of floating cyl- 
+inder shown in crossed and uncrossed 
+disparity. Only disparity values in the 
+layer labels Layer 5 active layers are shown. A wire- 
+frame rendering for layer 3 which 
+captures the cylinder is shown. 
+The Gibbs Sampler [Geman and Geman, 1984] with simulated annealing is used 
+to compute the disparity and layer assignments. After each it

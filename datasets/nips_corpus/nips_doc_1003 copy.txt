@@ -1,0 +1,146 @@
+A Practical Monte Carlo Implementation 
+of Bayesian Learning 
+Carl Edward Rasmussen 
+Department of Computer Science 
+University of Toronto 
+Toronto, Ontario, M5S 1A4, Canada 
+carl@cs.toronto.edu 
+Abstract 
+A practical method for Bayesian training of feed-forward neural 
+networks using sophisticated Monte Carlo methods is presented 
+and evaluated. In reasonably small amounts of computer time this 
+approach outperforms other state-of-the-art methods on 5 data- 
+limited tasks from real world domains. 
+I INTRODUCTION 
+Bayesian learning uses a prior on model parameters, combines this with information 
+from a training set, and then integrates over the resulting posterior to make pre- 
+dictions. With this approach, we can use large networks without fear of overfitting, 
+allowing us to capture more structure in the data, thus improving prediction accu- 
+racy and eliminating the tedious search (often performed using cross validation) for 
+the model complexity that optimises the bias/variance tradeoff. In this approach 
+the size of the model is limited only by computational considerations. 
+The application of Bayesian learning to neural networks has been pioneered by 
+MacKay (1992), who uses a Gaussian approximation to the posterior weight distri- 
+bution. However, the Gaussian approximation is poor because of multiple modes in 
+the posterior. Even locally around a mode the accuracy of the Gaussian approxi- 
+mation is questionable, especially when the model is large compared to the amount 
+of training data. 
+Here I present and test a Monte Carlo method (Neal, 1995) which avoids the 
+Gaussian approximation. The implementation is complicated, but the user is not re- 
+quired to have extensive knowledge about the algorithm. Thus, the implementation 
+represents a practical tool for learning in neural nets. 
+A Practical Monte Carlo Implementation of Bayesian Learning 599 
+1.1 THE PREDICTION TASK 
+The training data consists of n examples in the form of inputs x = {x �} and 
+corresponding outputs y - {y(i)} where i - 1...n. For simplicity we consider 
+only real-valued scalar outputs. The network is parametrised by weights w, and 
+hyperparameters h that control the distributions for weights, playing a role similar 
+to that of conventional weight decay. Weights and hyperparameters are collectively 
+termed 0, and the network function is written as Fe (x), although the function value 
+is only indirectly dependent on the hyperparameters (through the weights). 
+Bayes' rule gives the posterior distribution for the parameters in terms of the like- 
+lihood, p(yl x, 0), and prior, p(0): 
+p(O)p(y]x,O) 
+P(01x' Y) - p(y]x) 
+To minimize the expected squared error on an unseen test case with input x(+x), 
+we use the mean prediction 
+(.+) _ / Fe(x(+X))P( OIx,y)dkO' 
+(1) 
+2 MONTE CARLO SAMPLING 
+The following implementation is due to Neal (1995). The network weights are 
+updated using the hybrid Monte Carlo method (Duane et al. 1987). This method 
+combines the Metropolis algorithm with dynamical simulation. This helps to avoid 
+the random walk' behavior of simple forms of Metropolis, which is essential if we 
+wish to explore weight space efficiently. The hyperparameters are updated using 
+Gibbs sampling. 
+2.1 NETWORK SPECIFICATION 
+The networks used here are always of the same form: a single linear output unit, a 
+single hidden layer of tanh units and a task dependent number of input units. All 
+layers are fully connected in a feed forward manner (including direct connections 
+from input to output). The output and hidden units have biases. 
+The network priors are specified in a hierarchical manner in terms of hyperparam- 
+eters; weights of different kinds are divided into groups, each group having it's own 
+prior. The output-bias is given a zero-mean Gaussian prior with a std. der. of 
+a - 1000, so it is effectively unconstrained. 
+The hidden-biases are given a two layer prior: the bias b is given a zero-mean 
+Gaussian prior b - Af(0, a2); the value of a is specified in terms of precision r - a -, 
+which is given a Gamma prior with mean p - 400 (corresponding to a - 0.05) and 
+shape parameter c -- 0.5; the Gamma density is given by p(r) - Gamma(p, c) (x 
+ra/- x exp(-rc/2). Note that this type of prior introduces a dependency between 
+the biases for different hidden units through the common r. The prior for the 
+hidden-to-output weights is identical to the prior for the hidden-biases, except that 
+the variance of these weights under the prior is scaled down by the square root 
+of the number of hidden units, such that the network output magnitude becomes 
+independent of the number of hidden units. The noise variance is also given a 
+Gamma prior with these parameters. 
+600 C.E. RASMUSSEN 
+The input-to-hidden weights are given a three layer prior: again each weight is 
+given a zero-mean Gaussian prior w - A/'(0, a2); the corresponding precision for 
+the weights out of input unit i is given a Gamma prior with a mean  and a shape 
+parameter cl - 0.5: -i  Gamma(/, cl). The mean/ is determined on the top 
+level by a Gamma distribution with mean and shape parameter c0 - I: i  
+Gamma(400, c0). The direct input-to-output connections are also given this prior. 
+The above-mentioned 3 layer prior incorporates the idea of Automatic Relevance 
+Determination (ARD), due to MacKay and Neal, and discussed in Neal (1995). The 
+hyperparameters, -i, associated with individual inputs can adapt according to the 
+relevance of the input; for an unimportant input, -i can grow very large (governed 
+by the top level prior), thus forcing ai and the associated weights to vanish. 
+2.2 MONTE CARLO SPECIFICATION 
+Sampling from the posterior weight distribution is performed by iteratively updating 
+the values of the network weights and hyperparameters. Each iteration involves two 
+components: weight updates and hyperparameter updates. A cursory description 
+of these steps follows. 
+2.2.1 Weight Updates 
+Weight updates are done using the hybrid Monte Carlo method. A fictitious dy- 
+namical system is generated by interpreting weights as positions, and augmenting 
+the weights w with momentum variables p. The purpose of the dynamical system 
+is to give the weights inertia so that slow random walk behaviour can be avoided 
+during exploration of weight space. The total energy, H, of the system is the sum 
+of the kinetic energy, K, (a function of the momenta) and the potential energy, E. 
+The potential energy is defined such that p(w) (x exp(-E). We sample from the 
+joint distribution for w and p given by p(w, p) c( exp(-E - K), under which the 
+marginal distribution for w is given by the posterior. A sample of weights from the 
+posterior can therefore be obtained by simply ignoring the momenta. 
+Sampling from the joint distribution is achieved by two steps: 1) finding new points 
+in phase space with near-identical energies H by simulating the dynamical system 
+using a discretised approximation to Hamiltonian dynamics, and 2) changing the 
+energy H by doing Gibbs sampling for the momentum variables. 
+Hamiltonian Dynamics. Hamilton's first order differential equations for H are 
+approximated by a series of discrete first order steps (specifically by the leapfrog 
+method). The first derivatives of the network error function enter through the 
+derivative of the potential energy, and are computed using backpropagation. In 
+the original version of the hybrid Monte Carlo method the final position is then 
+accepted or rejected depending on the final energy H* (which is not necessarily 
+equal to the initial energy H because of the discretisation). Here we use a modified 
+version that uses an average over a window of states instead. The step size of the 
+discrete dynamics should be as large as possible while keeping the rejection rate 
+low. The step sizes are set individually using several heuristic approximations, and 
+scaled by an overall parameter e. We use L - 200 iterations, a window size of 20 
+and a step size of e = 0.2 for all simulations. 
+Gibbs Sampling for Momentum Variables. The momentum variables are 
+updated using a modified version of Gibbs sampling, allowing the energy H to 
+change. A persistence of 0.95 is used; the new value of the momentum is a 
+weighted sum of the previous value (weight 0.95) and the value obtained by Gibbs 
+sampling (weight (1 - 0.952)/2). With this form of persistence, the momenta 
+A Practical Monte Carlo Implementation of Bayesian Learning 601 
+changes approx. 20 times more slowly, thus increasing the inertia of the weights, 
+so as to further help in avoiding random walks. Larger values of the persistence will 
+further increase the weight inertia, but reduce the rate of exploration of H. The 
+advantage of increasing the weight inertia in this way rather than by increasing L is 
+that the hyperparameters are updated at shorter intervals, allowing them to adapt 
+to the rapidly changing weights. 
+2.2.2 Hyperparameter Updates 
+The hyperparameters are updated using Gibbs sampling. The conditional distribu- 
+tions for the hyperparameters given the weights are of the Gamma form, for which 
+efficient generators exist, except for the top-level hyperparameter in the case of the 
+3 layer priors used for the weights from the inputs; in this case the conditional 
+distribution is more complicated and a form of rejection sampling is employed. 
+2.3 NETWORK TRAINING AND PREDICTION 
+The network training consists of two levels of initialisation before sampling for 
+networks used for prediction. At the first level of initialisation the hyperparameters 
+(variance of the Gaussians) are kept constant at 1, allowing the weights to grow 
+during 1000 leapfrog iterations. Neglecting this phase can cause the network to get 
+caught for a long time in a state where weights and hyperparameters are both very 
+small. 
+The scheme described above is then invoked and run for as long as desired, even- 
+tually producing networks from the posterior distributio

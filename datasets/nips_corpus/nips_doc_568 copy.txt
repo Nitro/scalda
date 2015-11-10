@@ -1,0 +1,175 @@
+Information Measure Based Skeletonisation 
+Sowmya Ramachandran 
+Department of Computer Science 
+University of Texas at Austin 
+Austin, TX 78712-1188 
+Lorien Y. Pratt * 
+Department of Computer Science 
+Rutgers University 
+New Brunswick, NJ 08903 
+Abstract 
+Automatic determination of proper neural network topology by trimming 
+over-sized networks is an important area of study, which has previously 
+been addressed using a variety of techniques. In this paper, we present 
+Information Measure Based Skeletonisation (IMBS), a new approach to 
+this problem where superfluous hidden units are removed based on their 
+information measure (IM). This measure, borrowed from decision tree in- 
+duction techniques, reflects the degree to which the hyperplane formed 
+by a hidden unit discriminates between training data classes. We show 
+the results of applying IMBS to three classification tasks and demonstrate 
+that it removes a substantial number of hidden units without significantly 
+affecting network performance. 
+1 INTRODUCTION 
+Neural networks can be evaluated based on their learning speed, the space and time 
+complexity of the learned network, and generalisation performance. Pruning over- 
+sized networks (skeletonisation) has the potential to improve networks along these 
+dimensions as follows: 
+Learning Speed: Empirical observation indicates that networks which have 
+been constrained to have fewer parameters lack flexibility during search, and 
+so tend to learn slower. Training a network that is larger than necessary and 
+*This work was partially supported by DOE #DE-FG02-91ER61129, through subcon- 
+tract #097P753 from the University of Wisconsin. 
+1080 
+Information Measure Based Skeletonisation 1081 
+trimming it back to a reduced architecture could lead to improved learning 
+speed. 
+Network Complexity: Skeletonisation improves both space and time complexity 
+by reducing the number of weights and hidden units. 
+Generalisation: Skeletonisation could constrain networks to generalise better 
+by reducing the number of parameters used to fit the data. 
+Various techniques have been proposed for skeletonisation. One approach [Hanson 
+and Pratt, 1989, Chauvin, 1989, Weigend et al., 1991] is to add a cost term or 
+bias to the objective function. This causes weights to decay to zero unless they 
+are reinforced. Another technique is to measure the increase in error caused by 
+removing a parameter or a unit, as in [Mozer and Smolensky, 1989, Le Cun et al., 
+1990]. Parameters that have the least effect on the error may be pruned from the 
+network. 
+In this paper, we present Information Measure Based Skeletonisation (IMBS), an 
+alternate approach to this problem, in which superfluous hidden units in a single 
+hidden-layer network are removed based on their information measure (IM). This 
+idea is somewhat related to that presented in [Siestma and Dow, 1991], though we 
+use a different algorithm for detecting superfluous hidden units. 
+We also demonstrate that when IMBS is applied to a vowel recognition task, to 
+a subset of the Peterson-Barney 10-vowel classification problem, and to a heart 
+disease diagnosis problem, it removes a substantial number of hidden units without 
+significantly affecting network performance. 
+2 IM AND THE HIDDEN LAYER 
+Several decision tree induction schemes use a particular information-theoretic mea- 
+sure, called IM, of the degree to which an attribute separates (discriminates between 
+the classes of) a given set of training data [Quinlan, 1986]. IM is a measure of the 
+information gained by knowing the value of an attribute for the purpose of classifi- 
+cation. The higher the IM of an attribute, the greater the uniformity of class data 
+in the subsets of feature space it creates. 
+A useful simplification of the sigmoidal activation function used in back-propagation 
+networks [Rumelhart et aI., 1986] is to reduce this function to a threshold by map- 
+ping activations greater than 0.5 to 1 and less than 0.5 to 0. In this simplified 
+model, the hidden units form hyperplanes in the feature space which separate data. 
+Thus, they can be considered analogous to binary-valued attributes, and the IM of 
+each hidden unit can be calculated as in decision tree induction [Quinlan, 1986]. 
+Figure 1 shows the training data for a fabricated two-feature, two-class problem and 
+a possible configuration of the hyperplanes formed by each hidden unit at the end 
+of training. Hyperplane hl's higher IM corresponds to the fact that it separates the 
+two classes better than h2. 
+1082 Ramachandran and Pratt 
+Oo;OIIM = .9887 
+0/ 1 1 1 
+Figure 1: Hyperplanes and their IM. Arrows indicate regions where hidden units have 
+activations > 0.5. 
+3 IM TO DETECT SUPERFLUOUS HIDDEN UNITS 
+One of the important goals of training is to adjust the set of hyperplanes formed 
+by the hidden layer so that they separate the training data. ! We define superfluous 
+units as those whose corresponding hyperplanes are not necessary for the proper 
+separation of training data. For example, in Figure 1, hyperplane h2 is superfluous 
+because: 
+1. hl separates the data better than h2 and 
+2. h2 does not separate the data in either of the two regions created by hl. 
+The IMBS algorithm to identify superfluous hidden units, shown in Figure 2, re- 
+cursively finds hidden units that are necessary to separate the data and classifies 
+the rest as superfluous. It is similar to the decision tree induction algorithm in 
+[Quinlan, 1986]. 
+The hidden layer is skeletonised by removing the superfluous hidden units. Since 
+the removal of these units perturbs the inputs to the output layer, the network will 
+have to be trained further after skeletonisation to recover lost performance. 
+4 RESULTS 
+We have tested IMBS on three classification problems, as follows: 
+1. Train a network to an acceptable level of performance. 
+2. Identify and remove superfluous hidden units. 
+3. Train the skeletonised network further to an acceptable level of performance. 
+We will refer to the stopping point of training at step 1 as the skeletonisation point 
+(SP); further training will be referred to in terms of SP + number of training epochs. 
+This again is not strictly true for hidden units with sigmoidal activation, but holds for 
+the approximate model. 
+Information Measure Based Skeletonisation 1083 
+Input: 
+Training data 
+Hidden unit activations [or each training data pattern. 
+Output: 
+List of superfluous hidden units. 
+Method: 
+main ident-superttuous-hu 
+begin 
+data-set-- training data 
+useful-hu-llst nil 
+pick- best-hu (data-set, useful-hu-list) 
+output hidden units that are not in useful-hu-list 
+end 
+procedure pick-best-hu(data-set, useful-hu-list) 
+begin 
+if all the data in data-set belong to the same class then return 
+Ga/culate IM of each hidden unit. 
+h14-- hidden unit with best IM. 
+add hl to the useful-hu list 
+dsl-- all the data in data-set for which hl has an activation of > .5 
+ds2-- all the data in data-set for which hl has an activation of <-- .$ 
+pick- best-hu (ds1, useful-hu-list) 
+pick- best-hu (ds2, useful-hu-list) 
+end 
+Figure 2: IMBS: An Algorithm for Identifying Superfluous Hidden Units 
+For each problem, data was divided into a training set and a test set. Several 
+networks were run for a few epochs with different back-propagation parameters V 
+(learning rate) and a (momentum) to determine their locally optimal values. 
+For each problem, we chose an initial architecture and trained 10 networks with dif- 
+ferent random initial weights for the same number of epochs. The performances of 
+the original (i.e. the network before skeletonisation) and the skeletonised networks, 
+measured as number of correct classifications of the training and test sets, was mea- 
+sured both at SP and after further training. The refrained skeletonised network was 
+compared with the original network at SP as well as the original network that had 
+been trained further for the same number of weight updates? All training was via 
+the standard back-propagation algorithm with a sigmoidal activation function and 
+updates after every pattern presentation [Rumelhart et aI., 1986]. A paired T-test 
+[Siegel, 1988] was used to measure the significance of the difference in performance 
+between the skeletonised and original networks. Our experimental results are sum- 
+marised in Figure 3, and Tables 1 and 2; detailed experimental conditions are given 
+below. 
+2This was ensured by adjusting the number of epochs a network was trained after 
+skeletonisation according to the number of hidden units in the network. Thus, a network 
+with 10 hidden units was trained on twice as many epochs as one with 20 hidden units. 
+1084 Ramachandran and Pratt 
+PB Vowel 
+240000 300000 
+Robinson vowel 
+9.0 1.1 1.3 1.5 
+240000 32000 
+9.0 1.1 1.3 1.5 
+e5 e6 e6 e6 
+Heart disease 
+166000 172000 17800( 
+/\ 
+166000 174000 
+Weight Updates Weight Updates Weht Updates 
+Figure 3: Summary of experimental results� Circles represent skeletonised networks; 
+triangles represent unskeletonised networks for comparison. Note that when performance 
+drops upon skeletonisation, the original performance level is recovered within a few weight 
+updates. In all cases, hidden unit count is reduced. 
+4.1 PETERSON-BARNEY DATA 
+IMBS was first evaluated on a 3-class subset of the Peterson-Barney 10-vowel classi- 
+fication data set, originally described in [Peterson and Barney, 1952], and recreated 
+by [Watrous, 1991]. This data consists of the formant values F1 and F2 for each of 
+two repetitions of each of ten vowels by 76 speaker (1520 utterances). The vowels 
+were pronounced in isolated words consisting of the consonant h, followed by a 
+� z training/test 
+vowel, followed by d This set was randomly divided into a a 2-, X 
+split, with 298 and 150 patterns, respectively. 
+Our initial architecture was a fully connected network with 2 input units, one hidden 
+layer with 20 units, and 3 output units. We trained the networks with r/= 1.0 and 
+( = 0

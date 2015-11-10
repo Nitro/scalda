@@ -1,0 +1,155 @@
+Robust Reinforcement Learning in 
+Motion Planning 
+Satinder P. Singh* 
+Department of Brain and Cognitive Sciences 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+singh@psyche.mit.edu 
+Andrew G. Barto, Roderic Grupen, and Christopher Connolly 
+Department of Computer Science 
+University of Massachusetts 
+Amherst, MA 01003 
+Abstract 
+While exploring to find better solutions, an agent performing on- 
+line reinforcement learning (RL) can perform worse than is accept- 
+able. In some cases, exploration might have unsafe, or even catas- 
+trophic, results, often modeled in terms of reaching 'failure' states 
+of the agent's environment. This paper presents a method that uses 
+domain knowledge to reduce the number of failures during explo- 
+ration. This method formulates the set of actions from which the 
+RL agent composes a control policy to ensure that exploration is 
+conducted in a policy space that excludes most of the unacceptable 
+policies. The resulting action set has a more abstract relationship 
+to the task being solved than is common in many applications of 
+RL. Although the cost of this added safety is that learning may 
+result in a suboptimal solution, we argue that this is an appropri- 
+ate tradeoff in many problems. We illustrate this method in the 
+domain of motion planning. 
+*This work was done while the first author was finishing his Ph.D in computer science 
+at the University of Massachusetts, Amherst. 
+655 
+656 Singh, Barto, Grupen, and Connolly 
+An agent using reinforcement learning (Sutton et al., 1991; Barto et al., to appear) 
+(RL) to approximate solutions to optimal control problems has to search, or explore, 
+to improve its policy for selecting actions. Although exploration does not directly 
+affect performance (Moore & Atkeson, 1993) in off-line learning with a model of 
+the environment, exploration in on-line learning can lead the agent to perform 
+worse than is acceptable. In some cases, exploration might have unsafe, or even 
+catastrophic, results, often modeled in terms of reaching 'failure' states of the agent's 
+environment. To make on-line RL more practical, especially if it involves expensive 
+hardware, task-specific minimal levels of performance should be ensured during 
+learning, a topic not addressed by prior RL research. 
+Although the need for exploration cannot be entirely removed, domain knowledge 
+can sometimes be used to define the set of actions from which the RL agent composes 
+a control policy so that exploration is conducted in a space that excludes most of 
+the unacceptable policies. We illustrate this approach using a simulated dynamic 
+mobile robot in two different environments. 
+I Closed-loop policies as actions 
+RL agents search for optimal policies in a solution space determined in part by 
+the set of actions available to the agent. With a few exceptions (e.g., Mahadevan 
+& Connell, 1990; Singh, 1992), researchers have formulated RL tasks with actions 
+that are primitive in the sense that they are low-level, are available in very state, 
+are executed open-loop, and last a single time-step. We propose that this is an 
+arbitrary, and self-imposed, restriction, and that in general the set of actions can 
+have a much more abstract relationship to the problem being solved. Specifically, 
+what are considered 'actions' by the RL algorithm can themselves be closed-loop 
+control policies that meet important subgoals of the task being solved. 
+In this paper, the following general advantages afforded by using closed-loop policies 
+as actions are demonstrated in the domain of motion planning: 
+1. It is possible to design actions to meet certain hard constraints so that RL 
+maintains acceptable performance while simultaneously improving perfor- 
+mance over time. 
+2. It is possible to design actions so that the action space for the learning 
+problem has fewer dimensions than the actual dimension of the physical 
+action space. 
+The robustness and greatly accelerated learning resulting from the above factors 
+can more than offset the cost of designing the actions. However, care has to be 
+taken in defining the action space to ensure that the resulting policy space contains 
+at least one policy that is close to optimal. 
+2 RL with Dirichlet and Neumann control policies 
+The motion planning problem arises from the need to give an autonomous robot 
+the ability to plan its own motion, i.e., to decide what actions to execute in order 
+to achieve a task specified by initial and desired spatial arrangements of objects. 
+Robust Reinforcement Learning in Motion Planning 657 
+First consider geometric path planning, i.e., the problem of finding safe paths for a 
+robot with no dynamical constraints in an environment with stationary obstacles. 
+A safe path in our context is one that avoids all obstacles and terminates in a 
+desired configuration. Connolly (1992) has developed a method that generates safe 
+paths by solving Laplace's equation in configuration space with boundary conditions 
+determined by obstacle and goal configurations (also see, Connolly & Grupen, 1993). 
+Laplace's equation is the partial differential equation 
+i= Oxi - O, (1) 
+whose solution is a harmonic function, b, with no interior local minima. In practice, 
+a finite difference approximation to Equation I is solved numerically via Gauss Sidel 
+relation on a mesh over configuration space. Safe paths are generated by gradient 
+descent on the resulting approximate harmonic function. In the general motion 
+planning problem, we are interested in finding control policies that not only keep 
+the robot safe but also extremize some performance criterion, e.g., minimum time, 
+minimum jerk, etc. 
+Two types of boundary conditions, called Dirichlet and Neumann boundary condi- 
+tions, give rise to two different harmonic functions, D and N, that generate dif- 
+ferent types of safe paths. Robots following paths generated from D tend to be re- 
+pelled perpendicularly from obstacles. In controt, robots following paths generated 
+from N tend to skirt obstacles by moving parallel to their boundaries. Although 
+the state space in the motion planning problem for a dynamic robot in a planar 
+environment is {x, k, y, fi), harmonic functions are derived in two-dimensional posi- 
+tion space. These functions are inexpensive to compute (relative to the expense of 
+solving the optimal control problem) because they are independent of the robot dy- 
+namics and criterion of optimal control. The closed-loop control policies that follow 
+the gradient of the Dirichlet or Neumann solutions, respectively denoted D and 
+N, are defined approximately as follows: D(S) = VD(g), and N(S) = 
+where g is the projection of the state s onto position space.  
+Instead of formulating the motion planning problem  a RL task in which a control 
+policy maps states into primitive control actions, consider the formulation in which 
+a policy maps each state s to a mixing parameter k(s) so that the actual action is 
+� [1 - k(s)]D(S) + [k(s)](s), where 0  k(s)  1. Figure lB shows the structure 
+of this kind of policy. In Appendix B, we present conditions guaranteeing that for 
+a robot with no dynamical constraints, this policy space contains only acceptable 
+policies, i.e., policies that cause the robot to reach the goal configuration without 
+contacting an obstacle. Although this guarantee does not strictly hold when the 
+robot h dynamical constraints, e.g., when there are bounds on acceleration, this 
+formulation still reduces the risk of unacceptable behavior. 
+3 Simulation Results 
+In this paper we present a brief summary of simulation results for the two envi- 
+ronments shown in Figures 2A and 3A. See Singh (1993) for details. The first 
+In practice, the gradients of the harmonic functions act as reference signMs to a PD- 
+controller. 
+658 Singh, Barto, Grupen, and Connolly 
+environment consists of two rooms connected by a corridor. The second environ- 
+ment is a horseshoe-shaped corridor. The mobile robot is simulated as a unit-mass 
+that can accelerate in any direction. The only dynamical constraint is a bound on 
+the maximum acceleration. 
+Q(stato, action) 
+A B (s) 
+k(s) :Low-Level Action 
+State Policy 
+ (s) T ,ction 
+1 - k(s)-Low. Level Action 
+� . I Policy2 
+X X Y Y k Neumann 
+state 
+(s) (s) 
+mixing 
+coefficient 
+Figure 1' Q-learning Network and Policy Structure. Panel A: 2-layer Connectionist 
+Network Used to Store Q-values. Network inversion was used to find the maximum 
+Q-value (Equation 2) at any state and the associated greedy action. The hidden 
+layer consists of radial-basis units. Panel B: Policy Structure. The agent has to learn 
+a mapping from state s to a mixing coefficient 0 _< k(s) _ I that determines the 
+proportion in which to mix the actions specifies by the pure Dirichlet and Neumann 
+policies. 
+The learning task is to approximate minimum time paths from every point inside 
+the environment to the goal region without contacting the boundary wall. A rein- 
+forcement learning algorithm called Q-learning (Watkins, 1989) (see Appendix A) 
+was used to learn the mixing function, k. Figure 1A shows the 2-layer neural net- 
+work architecture used to store the Q-values. The robot was trained in a series 
+of trials, each trial starting with the robot placed at a randomly chosen state and 
+ending when the robot enters the goal region. The points marked by stars in Fig- 
+ures 2A and 3A were the starting locations for which statistics were collected to 
+produce learning curves. 
+Figures 2B, 2C, 3A and 3B show three robot trajectories from two randomly chosen 
+start states; the black-filled circles mark the Dirichlet trajectory (labeled D), the 
+white-filled circles mark the Neumann trajectory (labeled N), and the grey-filled 
+circles mark the trajectory after learning (labeled Q). Trajectories are shown by 
+taking snapshots of the robot at every time step; the velocity of the robot can 
+be judged by the spacing between successive cir

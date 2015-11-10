@@ -1,0 +1,159 @@
+Hybrid NN/HMM-Based Speech Recognition 
+with a Discriminant Neural Feature Extraction 
+Daniel Wi!lett, Gerhard Rigoil 
+Department of Computer Science 
+Faculty of Electrical Engineering 
+Gerhard-Mercator-University Duisburg, Germany 
+{willett,rigoll} @fb9-ti.uni-duisburg.de 
+Abstract 
+In this paper, we present a novel hybrid architecture for continuous speech 
+recognition systems. It consists of a continuous HMM system extended 
+by an arbitrary neural network that is used as a preprocessor that takes 
+several frames of the feature vector as input to produce more discrimin- 
+ative feature vectors with respect to the underlying HMM system. This 
+hybrid system is an extension of a state-of-the-art continuous HMM sys- 
+tem, andin fact, it is the first hybrid system that really is capable ofoutper- 
+forming these standard systems with respect to the recognition accuracy. 
+o 
+Experimental results show an relative error reduction of about 10 Yo that 
+we achieved on a remarkably good recognition system based on continu- 
+ous HMMs for the Resource Management 1000-word continuous speech 
+recognition task. 
+1 INTRODUCTION 
+Standard state-of-the-art speech recognition systems utilize Hidden Markov Models 
+(HMMs) to model the acoustic behavior of basic speech units like phones or words. Most 
+commonly the probabilistic distribution functions are modeled as mixtures of Gaussian dis- 
+tributions. These mixture distributions can be regarded as output nodes of a Radial-Basis- 
+Function (RBF) network that is embedded in the HMM system [ 1 ]. Contrary to neural train- 
+ing procedures the parameters of the HMM system, including the RBF network, are usu- 
+ally estimated to maximize the training observations' likelihood. In order to combine the 
+time-warping abilities of HMMs and the more discriminative power of neural networks, 
+several hybrid approaches arose during the past five years, that combine HMM systems and 
+neural networks. The best known approach is the one proposed by Bourlard [2]. It replaces 
+the HMMs' RBF-net with a Multi-Layer-Perceptron (MLP) which is trained to output each 
+HMM state's posterior probability. At last year's NIPS our group presented a novel hybrid 
+speech recognition approach that combines a discrete HMM speech recognition system and 
+a neural quantizer [3]. By maximizing the mutual information between the VQ-labels and 
+the assigned phoneme-classes, this approach outperforms standard discrete recognition sys- 
+tems. We showed that this approach is capable of building up very accurate systems with 
+an extremely fast likelihood computation, that only consists of a quantization and a table 
+lookup. This resulted in a hybrid system with recognition performance equivalent to the best 
+764 D. Willett and G. Rigoll 
+feature 
+x(t-P) ... x(t) ... 
+Neural Network 
+x(t+F) 
+(linear transformation, 
+MLP or recurrent MLP) 
+extraction 
+x'(t) 
+p(x(t)lvq) 
+HMM-System 
+(RBF-network) 
+p(x(t)lw 2) ..... 
+Figure 1: Architecture of the hybrid NN/HMM system 
+continuous systems, but with a much faster decoding. Nevertheless, it has turned out that 
+this hybrid approach is not really capable of substantially outperforming very good continu- 
+ous systems with respect to the recognition accuracy. This observation is similar to experi- 
+ences with Bourlard's MLP approach. For the decoding procedure, this architecture offers 
+a very efficient pruning technique (phone reactivation pruning [4]) that is much more effi- 
+cient than pruning on likelihoods, but until today this approach did not outperform standard 
+continuous HMM systems in recognition performance. 
+2 HYBRID CONTINUOUS HMM/MLP APPROACH 
+Therefore, we followed a different approach, namely the extension of a state-of-the-art con- 
+tinuous system that achieves extremely good recognition rates with a neural net that is 
+trained with MMI-methods related to those in [5]. The major difference in this approach 
+is the fact that the acoustic processor is not replaced by a neural network, but that the Gaus- 
+sian probability density component is retained and combined with a neural component in an 
+appropriate manner. A similar approach was presented in [6] to improve a speech recogni- 
+tion system for the TIMIT database. We propose to regard the additional neural component 
+as being part of the feature extraction, and to reuse it in recognition systems of higher com- 
+plexity where discriminative training is extremely expensive. 
+2.1 ARCHITECTURE 
+The basic architecture of this hybrid system is illustrated in Figure 1. The neural net func- 
+tions as a feature transformation that takes several additional past and future feature vec- 
+tors into account to produce an improved more discriminant feature vector that is fed into 
+the HMM system. This architecture allows (at least) three ways of interpretation; 1. as a 
+hybrid system that combines neural nets and continuous HMMs, 2. as an LDA-like trans- 
+formation that incorporates the HMM parameters into the calculation of the transformation 
+matrix and 3. as feature extraction method, that allows the extraction of features according 
+to the underlying HMM system. The considered types of neural networks are linear trans- 
+fo. rmations, MLPs and recurrent MLPs. A detailed description of the possible topologies is 
+given in Section 3. 
+With this architecture, additional past and future feature vectors can be taken into account 
+in the probability estimation process without increasing the dimensionality of the Gaussian 
+mixture components. Instead of increasing the HMM system's number of parameters the 
+neural net is trained to produce more discriminant feature vectors with respect to the trained 
+HMM system. Of course, adding some kind of neural net increases the number of para- 
+meters too, but the increase is much more moderate than it would be when increasing each 
+Gaussian's dimensionality. 
+Speech Recognition with a Discriminant Neural Feature Extraction 765 
+2.2 TRAINING OBJECTIVE 
+The original purpose of this approach was the intention to transfer the hybrid approach 
+presented in [3], based on MMI neural network, to (semi-) continuous systems. This way, 
+we hoped to be able to achieve the same remarkable improvements that we obtained on 
+discrete systems now on continuous systems, which are the much better and more flexible 
+baseline systems. The most natural way to do this would be the re-estimation of the code- 
+book of Gaussian mean vectors of a semi-continuous system using the neural MMI training 
+algorithm presented in [3]. Unfortunately though, this won't work, as this codebook of a 
+semi-continuous system does not determine a separation of the feature space, but is used as 
+means of Gaussian densities. The MMI-principle can be retained, however, by leaving the 
+original HMM system unmodified and instead extendingit with a neural component, trained 
+according to a frame-based MMI approach, related to the one in [3]. The MMI criterion is 
+usually formulated in the following way: 
+;,,, = ag[nax(X, W) = agx(/(X) - H(XlW)) = g[nx w(xlw) 
+vx(x) 
+(1) 
+This means that following the MMI criterion the system's free parameters ,k have to be es- 
+timated to maximize the quotient of the observation's likelihood px (X[W) for the known 
+transcription W and its overall likelihood px (X). With X = (z(1), z(2), ...z(T))denot- 
+ing the training observations and W: (w(1), w(2), ...w(T)) denoting the HMM states - 
+assigned to the observation vectors in a Viterbi-alignment - the frame-based MMI criterion 
+becomes 
+T 
+MMI ' argcax E Ix(z(i), w(i)) 
+i=1 
+r  Px(z(i)lw(i)) (2) 
+= I w(x(i)lw(i)) g�xII s 
+i--1 p)(2(i))  i--1  px(w(i) lwk)p(wk) 
+k'-i 
+where S is the total,number of HMM states, (wl,...ws) denotes the HMMsmtes and p(w,) 
+denotes each states prior-probability that is estimated on the alignment otthe training data 
+or by an analysis of the language model. 
+Eq. 2 can be used to re-estimate the Gaussians of a continuous HMM system directly. In 
+[7] we reported the slight improvements in recognition accuracy that we achieved with this 
+parameter estimation. However, it turned out, that only the incorporation of additional fea- 
+tures in theprobability calculation pipeline can provide more discriminative emission prob- 
+abilities anda major advance in recognition accuracy. Thus, we experienced it to be more 
+convenient to train an additional neural net in order to maximize Eq. 2. Besides, this ap- 
+proach offers the possibility of improving a recognition system by applying a trained feature 
+extraction network taken from a different system. Section 5 will report our positive exper- 
+iences with this procedure. 
+At first, for matter of simplicity, we will consider a linear network that takes P past fea- 
+ture vectors and F future feature vectors as additional input. With the linear net denoted as 
+a (P + F + 1) x N matrix NET, each component x(t)[c] of the network output x(t) 
+computes to 
+P+F N 
+x(t)[c] = E E x(t - P + i)[j]. NET[i, iV + j][c] �c 6 {1...N} (3) 
+i=0 
+so that the derivative with respect to a component of NET easily computes to 
+0x'(t)[] = a,,(t -  + i)[1 (4) 
+ONET[i , N + j][] 
+In a continuous HMM system with diagonal covariance matrices the pdf of each HMM state 
+w is modeled by a mixture of Gaussian components like 
+j--1 
+766 D. Willett and G. Rigoll 
+A pdf's derivative with respect to a component z'[c] of the net's output becomes 
+With z(t) in Eq. 2 now replaced by the net output z'(t) the partial derivative ofEq. 2 with 
+respect to a probabilistic distribution function p(z'(i) lwk) computes to 
+OIx(x'(i), w(i)) 5,(i),, k p(wk) 
+-- -- (7) 
+s 
+Opx(x'(i)]w) px(x(i)lwk) E px(x(i)]wt)p(wt) 
+/--1 
+Thus, using the chain rule the derivative of the net's parameters with respect to the frame- 
+based MMI criterion can be computed as displayed in Eq. 8 
+OIx(z(i)lw(i)) ) Opx(zt(i)lw) Oz'(i)[c] 
+ONET[I][c] = ' Opx(z'(i)lw) Oz'(i)[c] ONETIll[c] (8) 
+i=1 - 
+and a gradient descent procedure can be u

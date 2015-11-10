@@ -1,0 +1,144 @@
+The Neurothermostat: 
+Predictive Optimal Control of 
+Residential Heating Systems 
+Michael C. Mozer t, Lucky Vidmar t, Robert H. Dodier * 
+tDepartment of Computer Science 
+Department of Civil, Environmental, and Architectural Engineering 
+University of Colorado, Boulder, CO 80309-0430 
+Abstract 
+The Neurothermostat is an adaptive controller that regulates in- 
+door air temperature in a residence by switching a furnace on or 
+off. The task is framed as an optimal control problem in which 
+both comfort and energy costs are considered as part of the con- 
+trol objective. Because the consequences of control decisions are 
+delayed in time, the Neurothermostat must anticipate heating de- 
+mands with predictive models of occupancy patterns and the ther- 
+mal response of the house and furnace. Occupancy pattern predic- 
+tion is achieved by a hybrid neural net / look-up table. The Neu- 
+rothermostat searches, at each discrete time step, for a decision 
+sequence that minimizes the expected cost over a fixed planning 
+horizon. The first decision in this sequence is taken, and this pro- 
+cess repeats. Simulations of the Neurothermostat were conducted 
+using artificial occupancy data in which regularity was systemat- 
+ically varied, as well as occupancy data from an actual residence. 
+The Neurothermostat is compared against three conventional poli- 
+cies, and achieves reliably lower costs. This result is robust to the 
+relative weighting of comfort and energy costs and the degree of 
+variability in the occupancy patterns. 
+For over a quarter century, the home automation industry has promised to revolu- 
+tionize our lifestyle with the so-called Smart House � in which appliances, lighting, 
+stereo, video, and security systems are integrated under computer control. How- 
+ever, home automation has yet to make significant inroads, at least in part because 
+software must be tailored to the home occupants. 
+Instead of expecting the occupants to program their homes or to hire someone to 
+do so, one would ideally like the home to essentially program itself by observing 
+the lifestyle of the occupants. This is the goal of the Neural Network House (Mozer 
+et al., 1995), an actual residence that has been outfitted with over 75 sensors- 
+including temperature, light, sound, motion--and actuators to control air heating, 
+water heating, lighting, and ventilation. In this paper, we describe one research 
+954 M. C. Mozer, L. 7dmar and R. H. Dodier 
+project within the house, the Neurothermostat, that learns to regulate the indoor 
+air temperature automatically by observing and detecting patterns in the occupants' 
+schedules and comfort preferences. We focus on the problem of air heating with 
+a whole-house furnace, but the same approach can be taken with alternative or 
+multiple heating devices, and to the problems of cooling and ventilation. 
+1 
+TEMPERATURE REGULATION AS AN OPTIMAL 
+CONTROL PROBLEM 
+Traditionally, the control objective of air temperature regulation has been to mini- 
+mize energy consumption while maintaining temperature within an acceptable com- 
+fort margin during certain times of the day and days of the week. This is sensible 
+in commercial settings, where occupancy patterns follow simple rules and where 
+energy considerations dominate individual preferences. In a residence, however, the 
+desires and schedules of occupants need to be weighted equally with energy con- 
+siderations. Consequently, we frame the task of air temperature regulation as a 
+problem of maximizing occupant comfort and minimizing energy costs. 
+These two objectives clearly conflict, but they can be integrated into a unified 
+framework via an optimal control aproach in which the goal is to heat the house 
+according to a policy that minimizes the cost 
+i -to4-  
+J = lim  z-,=to+ [e(ut) + m(x)], 
+where time, t, is quantized into nonoverlapping intervals during which we assume 
+all environmental variables remain constant, to is the interval ending at the current 
+time, ut is the control decision for interval t (e.g., turn the furnace on), e(u) is the 
+energy cost associated with decision u, xt is the environmental state during interval 
+t, which includes the indoor temperature and the occupancy status of the home, 
+and re(x) is the misery of the occupant given state x. To add misery and energy 
+costs, a common currency is required. Energy costs are readily expressed in dollars. 
+We also determine misery in dollars, as we describe later. 
+While we have been unable to locate any earlier work that combined energy and 
+comfort costs in an optimal control framework, optimal control has been used in a 
+variety of building energy system control applications (e.g., Henze & Dodier, 1996; 
+Khalid & Omatu, 1995). 
+2 THE NEUROTHERMOSTAT 
+Figure i shows the system architecture of the Neurothermostat and its interaction 
+with the environment. The heart of the Neurothermostat is a controller that, at 
+time intervals of 6 minutes, can switch the house furnace on or off. Because the con- 
+sequences of control decisions are delayed in time, the controller must be predictive 
+to anticipate heating demands. The three boxes in the Figure depict components 
+that predict or model various aspects of the environment. We explain their purpose 
+via a formal description of the controller operation. 
+The controller considers sequences of  decisions, _denoted u, and searches for the 
+sequence that minimizes the expected total cost, Ju, over the planning horizon of 
+6 minutes: 
+where the expectation is computed over future states of the environment conditional 
+on the decision sequence u. The energy cost in an interval depends only on the 
+control decision during that interval. The misery cost depends on two components 
+The Neurothermostat 955 
+EnvlFonment 
+Figure 1: The Neurothermostat and its interaction with the environment 
+of the state--the house occupancy status, o(t) (0 for empty, i for occupied), and 
+the indoor air temperature, hu(t): 
+rhu(o(t),hu(t)) = p[o(t) = 1] rn(1, hu(t)) + p[o(t) = O] rn(O, hu(t)) 
+Because the true quantities e, hu, rn, and p are unknown, they must be estimated. 
+The house thermal model of Figure i provides  and hu, the occupant comfort cost 
+model provides rh, and the home occupancy predictor provides/5. 
+We follow a tradition of using neural networks for prediction in the context of build- 
+ing energy system control (e.g., Curtiss, Kreider, & Brandemuehl, 1993; Ferrano & 
+Wong, 1990; Miller & Seem, 1991), although in our initial experiments we require 
+a network only for the occupancy prediction. 
+2.1 PREDICTIVE OPTIMAL CONTROLLER 
+We propose a closed-loop controller that combines prediction with fixed-horizon 
+planning, of the sort proposed by Clarke, Mohtadi, and Tuffs (1987). At each 
+time step, the controller considers all possible decision sequences over the planning 
+horizon and selects the sequence that minimizes the expected total cost, J. The 
+first decision in this sequence is then performed. After 5 minutes, the planning and 
+execution process is repeated. This approach assumes that beyond the planning 
+horizon, all costs are independent of the first decision in the sequence. 
+While dynamic programming is an efficient search algorithm, it requires a discrete 
+state space. Wishing to avoid quantizing the continuous variable of indoor temper- 
+ature, and the errors that might be introduced, we performed performed exhaustive 
+search through the possible decision sequences, which was tractable due to rela- 
+tively short horizons and two additional domain constraints. First, because the 
+house occupancy status can reasonably be assumed to be independent of the in- 
+toor temperature,/5 need not be recalculated for every possible decision sequence. 
+Second, the current occupancy status depends on the recent occupancy history. 
+Consequently, one needs to predict occupancy patterns over the planning horizon, 
+o 6 {0, 1}  to compute/5. However, because most occupancy sequences are highly 
+improbable, we find that considering only the most likely sequences--those contain- 
+ing at most two occupancy state transitions--produces the same decisions as doing 
+the search over the entire distribution, reducing the cost from O(2 ) to O(n2). 
+2.2 OCCUPANCY PREDICTOR 
+The basic task of the occupancy predictor is to estimate the probability that the 
+occupant will be home 5 minutes in the future. The occupancy predictor can be 
+run iteratively to estimate the probability of an occupancy pattern. 
+If occupants follow a deterministic daily schedule, a look up table indexed by time 
+of day and current occupancy state should capture occupancy patterns. We thus 
+use a look up table to encode whatever structure possible, and a neural network 
+956 M. C. Mozer, L. Iqdmar and R. H. Dodier 
+to encode residual structure. The look up table divides time into fixed 5 minute 
+bins. The neural network consisted of the following inputs: current time of day; day 
+of the week; average proportion of time home was occupied in the 10, 20, and 30 
+minutes from the present time of day on the previous three days and on the same 
+day of the week during the past four weeks; and the proportion of time the home 
+was occupied during the past 60, 180, and 360 minutes. The network, a standard 
+three-layer architecture, was trained by back propagation. The number of hidden 
+units was chosen by cross validation. 
+2.3 THERMAL MODEL OF HOUSE AND FURNACE 
+A thermal model of the house and furnace predicts future indoor temperature(s) 
+as a function of the outdoor temperature and the furnace operation. While one 
+could perform system identification using neural networks, a simple parameterized 
+resistance-capacitance (RC) model provides a reasonable first-order approximation. 
+The RC model assumes that: the inside of the house is at a uniform temperature, 
+and likewise the outside; a homogeneous fiat wall separates the inside and outside, 
+and this wall has a thermal resistance R and 

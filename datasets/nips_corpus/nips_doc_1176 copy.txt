@@ -1,0 +1,144 @@
+On-line Policy Improvement using 
+Monte-Carlo Search 
+Gerald Tesauro 
+IBM T. J. Watson Research Center 
+P. O. Box 704 
+Yorktown Heights, NY 10598 
+Gregory R. Galperin 
+MIT AI Lab 
+545 Technology Square 
+Cambridge, MA 02139 
+Abstract 
+We present a Monte-Carlo simulation algorithm for real-time policy 
+improvement of an adaptive controller. In the Monte-Carlo sim- 
+ulation, the long-term expected reward of each possible action is 
+statistically measured, using the initial policy to make decisions in 
+each step of the simulation. The action maximizing the measured 
+expected reward is then taken, resulting in an improved policy. Our 
+algorithm is easily parallelizable and has been implemented on the 
+IBM SP1 and SP2 parallel-RISC supercomputers. 
+We have obtained promising initial results in applying this algo- 
+rithm to the domain of backgammon. Results are reported for a 
+wide variety of initial policies, ranging from a random policy to 
+TD-Gammon, an extremely strong multi-layer neural network. In 
+each case, the Monte-Carlo algorithm gives a substantial reduction, 
+by as much as a factor of 5 or more, in the error rate of the base 
+players. The algorithm is also potentially useful in many other 
+adaptive control applications in which it is possible to simulate the 
+environment. 
+I INTRODUCTION 
+Policy iteration, a widely used algorithm for solving problems in adaptive con- 
+trol, consists of repeatedly iterating the following policy improvement computation 
+(Bertsekas, 1995): (1) First, a value function is computed that represents the long- 
+term expected reward that would be obtained by following an initial policy. (This 
+may be done in several ways, such as with the standard dynamic programming al- 
+gorithm.) (2) An improved policy is then defined which is greedy with respect to 
+that value function. Policy iteration is known to have rapid and robust convergence 
+properties, and for Markov tasks with lookup-table state-space representations, it 
+is guaranteed to convergence to the optimal policy. 
+On-line Policy Improvement using Monte-Carlo Search 1069 
+In typical uses of policy iteration, the policy improvement step is an extensive 
+off-line procedure. Por example, in dynamic programming, one performs a sweep 
+through all states in the state space. Reinforcement learning provides another ap- 
+proach to policy improvement; recently, several authors have investigated using RL 
+in conjunction with nonlinear function approximators to represent the value func- 
+tions and/or policies (Tesauro, 1992; Crites and Barto, 1996; ghang and Dietterich, 
+1996). These studies are based on following actual state-space trajectories rather 
+than sweeps through the full state space, but are still too slow to compute improved 
+policies in real time. Such function approximators typically need extensive off-line 
+training on many trajectories before they achieve acceptable performance levels. 
+In contrast, we propose an on-line algorithm for computing an improved policy in 
+real time. We use Monte-Carlo search to estimate Vp(a:, a), the expected value of 
+performing action a in state a: and subsequently executing policy P in all successor 
+states. Here, P is some given arbitrary policy, as defined by a base controller 
+(we do not care how P is defined or was derived; we only need access to its policy 
+decisions). In the Monte-Carlo search, many simulated trajectories starting from 
+(a:, a) are generated following P, and the expected long-term reward is estimated 
+by averaging the results from each of the trajectories. (Note that Monte-Carlo 
+sampling is needed only for non-deterministic tasks, because in a deterministic 
+task, only one trajectory starting from (a:,a) would need to be examined.) Hav- 
+ing estimated Vp(a:, a), the improved policy P' at state a: is defined to be the 
+action which produced the best estimated value in the Monte-Carlo simulation, i.e., 
+P'(a:) = argmax V(z,a). 
+1.1 EFFICIENT IMPLEMENTATION 
+The proposed Monte-Carlo algorithm could be very CPU-intensive, depending on 
+the number of initial actions that need to be simulated, the number of time steps 
+per trial needed to obtain a meaningful long-term reward, the amount of CPU per 
+time step needed to make a decision with the base controller, and the total number 
+of trials needed to make a Monte-Carlo decision. The last factor depends on both 
+the variance in expected reward per trial, and on how close the values of competing 
+candidate actions are. 
+We propose two methods to address the potentially large CPU requirements of this 
+approach. First, the power of parallelism can be exploited very effectively. The 
+algorithm is easily parallelized with high efficiency: the individual Monte-Carlo 
+trials can be performed independently, and the combining of results from different 
+trials is a simple averaging operation. Hence there is relatively little communication 
+between processors required in a parallel implementation. 
+The second technique is to continually monitor the accumulated Monte-Carlo sta- 
+tistics during the simulation, and to prune away both candidate actions that are 
+sufficiently unlikely (outside some user-specified confidence bound) to be selected 
+as the best action, as well as candidates whose values are sufficiently close to the 
+value of the current best estimate that they are considered equivalent (i.e., choos- 
+ing either would not make a significant difference). This technique requires more 
+communication in a parallel implementation, but offers potentially large savings in 
+the number of trials needed to make a decision. 
+2 APPLICATION TO BACKGAMMON 
+We have initially applied the Monte-Carlo algorithm to making move decisions in 
+the game of backgammon. This is an absorbing Markov process with perfect state- 
+1070 G. Tesauro and G. R. Galperin 
+space information, and one has a perfect model of the nondeterminism in the system, 
+as well as the mapping from actions to resulting states. 
+In backgammon parlance, the expected value of a position is known as the equity 
+of the position, and estimating the equity by Monte-Carlo sampling is known as 
+performing a rollout. This involves playing the position out to completion many 
+times with different random dice sequences, using a fixed policy P to make move 
+decisions for both sides. The sequences are terminated at the end of the game (when 
+one side has borne off all 15 checkers), and at that time a signed outcome value 
+(called points) is recorded. The outcome value is positive if one side wins and 
+negative if the other side wins, and the magnitude of the value can be either 1, 2, or 
+3, depending on whether the win was normal, a gammon, or a backgammon. With 
+normal human play, games typically last on the order of 50-60 time steps. Hence 
+if one is using the Monte-Carlo player to play out actual games, the Monte-Carlo 
+trials will on average start out somewhere in the middle of a game, and take about 
+25-30 time steps to reach completion. 
+In backgammon there are on average about 20 legal moves to consider in a typical 
+decision. The candidate plays frequently differ in expected value by on the order of 
+.01. Thus in order to resolve the best play by Monte-Carlo sampling, one would need 
+on the order of 10K or more trials per candidate, or a total of hundreds of thousands 
+of Monte-Carlo trials to make one move decision. With extensive statistical pruning 
+as discussed previously, this can be reduced to several tens of thousands of trials. 
+Multiplying this by 25-30 decisions per trial with the base player, we find that 
+about a million base-player decisions have to be made in order to make one Monte- 
+Carlo decision. With typical human tournament players taking about 10 seconds 
+per move, we need to parallelir. e to the point that we can achieve at least 100K 
+base-player decisions per second. 
+Our Monte-Carlo simulations were performed on the IBM SP1 and SP2 parallel- 
+RISC supercomputers at IBM Watson and at Argonne National Laboratories. Each 
+SP node is equivalent to a fast RS/6000, with floating-point capability on the order 
+of 100 Mflops. Typical runs were on configurations of 16-32 SP nodes, with parallel 
+speedup efficiencies on the order of 90%. 
+We have used a variety of base players in our Monte-Carlo simulations, with widely 
+varying playing abilities and CPU requirements. The weakest (and fastest) of these 
+is a purely random player. We have also used a few single-layer networks (i.e., no 
+hidden units) with simple encodings of the board state, that were trained by back- 
+propagation on an expert data set (Tesauro, 1989). These simple networks also make 
+fast move decisions, and are much stronger than a random player, but in human 
+terms are only at a beginner-to-intermediate level. Finally, we used some multi-layer 
+nets with a rich input representation, encoding both the raw board state and many 
+hand-crafted features, trained on self-play using the TD(;) algorithm (Sutton, 1988; 
+Tesauro, 1992). Such networks play at an advanced level, but are too slow to make 
+Monte-Carlo decisions in real time based on full rollouts to completion. Results for 
+all these players are presented in the following two sections. 
+2.1 RESULTS FOR SINGLE-LAYER NETWORKS 
+We measured the game-playing strength of three single-layer base players, and of 
+the corresponding Monte-Carlo players, by playing several thousand games against 
+a common benchmark opponent. The benchmark opponent was TD-Gammon 2.1 
+(Tesauro, 1995), playing on its most basic playing level (1-ply search, i.e., no looka- 
+head). Table i shows the results. Lin-1 is a single-layer neural net with only the 
+raw board description (number of White and Black checkers at each location) as 
+On-line Policy Improvement using Monte-Carlo Search 1071 
+Network Base player Monte-Carlo player Monte-Carlo CPU 
+Lin-1 -0.52 ppg -0.01 ppg 5 sec/move 
+Lin-2 -0.65 ppg -0.02 ppg 5 sec/move 
+Lin-3 -0.32 ppg +0.04 ppg 10 sec/move 
+Table 

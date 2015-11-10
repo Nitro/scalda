@@ -1,0 +1,140 @@
+Learning to estimate scenes from images 
+William T. Freeman and Egon C. Pasztor 
+MERL, Mitsubishi Electric Research Laboratory 
+201 Broadway; Cambridge, MA 02139 
+freemanmerl. cam, pasztarmerl. cam 
+Abstract 
+We seek the scene interpretation that best explains image data. 
+For example, we may want to infer the projected velocities (scene) 
+which best explain two consecutive image frames (image). From 
+synthetic data, we model the relationship between image and scene 
+patches, and between a scene patch and neighboring scene patches. 
+Given' a new image, we propagate likelihoods in a Markov network 
+(ignoring the effect of loops) to infer the underlying scene. This 
+yields an efficient method to form low-level scene interpretations. 
+We demonstrate the technique for motion analysis and estimating 
+high resolution images from low-resolution ones. 
+I Introduction 
+There has been recent interest in studying the statistical properties of the visual 
+world. Olshausen and Field [23] and Bell and Sejnowski [2] have derived V 1-like 
+receptive fields from ensembles of images; Simoncelli and Schwartz [30] account for 
+contrast normalization effects by redundancy reduction. Li and Atick [1] explain 
+retinal color coding by information processing arguments. Various research groups 
+have developed realistic texture synthesis methods by studying the response statis- 
+tics of Vl-like multi-scale, oriented receptive fields [12, 7, 33, 29]. These methods 
+help us understand the early stages of image representation and processing in the 
+brain. 
+Unfortunately, they don't address how a visual system might interpret images, i.e., 
+estimate the underlying scene. In this work, we study the statistical properties of 
+a labelled visual world, images together with scenes, in order to infer scenes from 
+images. The image data might be single or multiple frames; the scene quantities 
+776 W. T. Freeman and E. C. Pasztor 
+to be estimated could be projected object velocities, surface shapes, reflectance 
+patterns, or colors. 
+We ask: can a visual system correctly interpret a visual scene if it models (1) 
+the probability that any local scene patch generated the local image, and (2) the 
+probability that any local scene is the neighbor to any other? The first probabilities 
+allow making scene estimates from local image data, and the second allow these 
+local estimates to propagate. This leads to a Bayesian method for low level vision 
+problems, constrained by Markov assumptions. We describe this method, and show 
+it working for two low-level vision problems. 
+2 Markov networks for scene estimation 
+First, we synthetically generate images and their underlying scene representations, 
+using computer graphics. The synthetic world should typify the visual world in 
+which the algorithm will operate. 
+For example, for the motion estimation problem of Sect. 3, our training images were 
+irregularly shaped blobs, which could occlude each other, moving in randomized 
+directions at speeds up to 2 pixels per frame. The contrast values of the blobs and 
+the background were randomized. The image data were the concatenated image 
+intensities from two successive flames of an image sequence. The scene data were 
+the velocities of the visible objects at each pixel in the two flames. 
+Second, we place the image and scene data in a Markov network [24]. We break 
+the images and scenes into localized patches where image patches connect with un- 
+derlying scene patches; scene patches also connect with neighboring scene patches. 
+The neighbor relationship can be with regard to position, scale, orientation, etc. 
+For the motion problem, we represented both the images and the velocities in 4- 
+level Gaussian pyramids [6], to efficiently communicate across space. Each scene 
+patch then additionally connects with the patches at neighboring resolution levels. 
+Figure 2 shows the multiresolution representation (at one time frame) for images 
+and scenes.  
+Third, we propagate probabilities. Weiss showed the advantage of belief propagation 
+over regularization methods for several 1-d problems [31]; we apply related methods 
+to our 2-d problems. Let the ith and jth image and scene patches be yi and 
+x j, respectively. For the MAP estimate [3] of the scene data, 2 we want to find 
+argmaXxl,x2,...,xvP(xl, x2,..., xvlYl, Y2,.-,, YM), where N and M are the r/umber 
+of scene and image patches. Because the joint probability is simpler to compute, 
+we find, equivalently, argmaXxl,x2,...,xN P(xl, x2,..., XN, Yl, 742,- � -, YM), 
+The conditional independence assumptions of :he Markov network let us factorize 
+the desired joint probability into quantities involving only local measurements and 
+calculations [24, 32]. Consider the two-patch system of Fig. 1. We can factorize 
+P(Xl,X2,Yl,Y2) in three steps: (1) P(Xl,X2,Yl,Y2) -' P(x2,Yl,Y2[xl)P(xl) (by el- 
+ementary probability); (2) P(x2,Yl,Y2[X) = P(yllXl)P(x2,Y2lXl) (by conditional 
+1To maintain the desired conditional independence relationships, we appended the im- 
+age data to the scenes. This provided the scene elements with image contrast information, 
+which they would otherwise lack. 
+2Related arguments follow for the MMSE or other estimators. 
+Learning to Estimate Scenes from Images 777 
+independence); (3) P(x2,Y2lXl) = P(x21xl)P(wlx2) (by elementary probability 
+and the Markov assumption). To estimate just Xl at node 1, the argmaxx2 becomes 
+maxx2, and then slides over constants, giving terms involving only local computa- 
+tions at each node: 
+argmaxcmaxx2P(Xl, x2, Yl, Y2) -'- argmaxx  [P(xl )P(Yl Ix1 )maxx2 [P(x2lx )P(Y21X2)]]. 
+This factorization generalizes to any network structure without loops. We use a 
+different factorization at each scene node: we turn the initial joint probability into 
+a conditional by factoring out that node's prior, P(xj), then proceeding analogously 
+to the example above. The resulting factorized computations give local propagation 
+rules, similar to those of [24, 32]: Each node, j, receives a message from each 
+neighbor, k, which is an accumulated likelihood function, Lkj = P(yk...yz]xj), 
+where y... y are all image nodes that lie at or beyond scene node k, relative to 
+scene node j. At each iteration, more image nodes y enter that likelihood function. 
+After each iteration, the MAP estimate at node j is argmaxxjP(xj)P(yjlxj) 1-I Lj, 
+where k runs over all scene node neighbors of node j. We calculate Lj from: 
+Lkj = maxP(xlxj)P(yIx ) H/t' (2) 
+where Ltk is Lt from the previous iteration. The initial Lt's are 1. Using the 
+Figure 1: Markov network nodes used in example. 
+factorization rules described above, one can verify that the local computations will 
+compute argmax,2,...,NP(Xl , x2,..., XNlYl, Y2,..., YM), as desired. To learn the 
+network parameters, we measure P(xj), P(yjlxj), and P(xlxj), directly from the 
+synthetic training data. 
+If the network contains loops, the above factorization does not hold. Both learning 
+and inference then require more computationally intensive methods [15]. Alterna- 
+tively, one can use multi-resolution quad-tree networks [20], for which the factor- 
+ization rules apply, to propagate information spatially. However, this gives results 
+with artifacts along quad-tree boundaries, statistical boundaries in the model not 
+present in the real problem. We found good results by including the loop-causing 
+connections between adjacent nodes at the same tree level but applying the factor- 
+ized propagation rules, anyway. Others have obtained good results using the same 
+approach for inference [8, 21, 32]; Weiss provides theoretical arguments why this 
+works for certain cases [32]. 
+3 Discrete Probability Representation (motion example) 
+We applied the training method and propagation rules to motion estimation, using 
+a vector code representation [11] for both images and scenes. We wrote a tree- 
+structured vector quantizer, to code 4 by 4 pixel by 2 frame blocks of image data 
+778 I44. T. Freeman and E. C. Pasztor 
+for each pyramid level into one of 300 codes for each level. We also coded scene 
+patches into one of 300 codes. 
+During training, we presented approximately 200,000 examples of irregularly shaped 
+moving blobs, some overlapping, of a contrast with the background randomized 
+to one of 4 values. Using co-occurance histograms, we measured the statistical 
+relationships that embody our algorithm: P(x), P(y[x), and P(x,lx), for scene 
+neighboring scene x. 
+Figure 2 shows an input test image, (a) before and (b) after vector quantization. The 
+true underlying scene, the desired output, is shown (c) before and (d) after vector 
+quantization. Figure 3 shows six iterations of the algorithm (Eq. 2) as it converges 
+to a good estimate for the underlying scene velocities. The local probabilities we 
+learned (P(x), P(y[x), and P(x[x)) lead to figure/ground segmentation, aperture 
+problem constraint propagation, and filling-in (see caption). 
+Figure 2: (a) First of two frames of image data (in gaussian pyramid), and (b) 
+vector quantized. (c) The optical flow scene information, and (d) vector quantized. 
+Large arrow added to show small vectors' orientation. 
+4 Density Representation (super-resolution example) 
+For super-resolution, the input image is the high-frequency components (sharpest 
+details) of a sub-sampled image. The scene to be estimated is the high-frequency 
+components of the full-resolution image, Fig. 4. 
+We improved our method for this second problem. A faithful image representation 
+requires so many vector codes that it becomes infeasible to measure the prior and 
+co-occurance statistics (note unfaithful fit of Fig. 2). On the other hand, a discrete 
+representation allows fast propagation. We developed a hybrid method that allows 
+both good fitting and fast propagation. 
+We describe the image and scene patches as vectors in a continuous space, and 
+first modelled the probability densities, P(x), P(y,x), and P(x,,x), as gau

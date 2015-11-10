@@ -1,0 +1,149 @@
+Practical confidence and prediction 
+intervals 
+Tom Heskes 
+RWCP Novel Functions SNN Laboratory,* University of Nijmegen 
+Geert Grooteplein 21, 6525 EZ Nijmegen, The Netherlands 
+tom@mbfys.kun.nl 
+Abstract 
+We propose a new method to compute prediction intervals. Espe- 
+cially for small data sets the width of a prediction interval does not 
+only depend on the variance of the target distribution, but also on 
+the accuracy of our estimator of the mean of the target, i.e., on the 
+width of the confidence interval. The confidence interval follows 
+from the variation in an ensemble of neural networks, each of them 
+trained and stopped on bootstrap replicates of the original data set. 
+A second improvement is the use of the residuals on validation pat- 
+terns instead of on training patterns for estimation of the variance 
+of the target distribution. As illustrated on a synthetic example, 
+our method is better than existing methods with regard to extrap- 
+olation and interpolation in data regimes with a limited amount of 
+data, and yields prediction intervals which actual confidence levels 
+are closer to the desired confidence levels. 
+1 STATISTICAL INTERVALS 
+In this paper we will consider feedforward neural networks for regression tasks: 
+estimating an underlying mathematical function between input and output variables 
+based on a finite number of data points possibly corrupted by noise. We are given 
+a set of Plata pairs {, t  } which are assumed to be generated according to 
+t() -- f(') + ('), (1) 
+where () denotes noise with zero mean. Straightforwardly trained on such a 
+regression task, the output of a network o(g') given a new input vector  can be 
+RWCP: Real World Computing Partnership; SNN: Foundation for Neural Networks. 
+Practical Confidence and Prediction Intervals 177 
+interpreted as an estimate of the regression f(-), i.e., of the mean of the target 
+distribution given input '. Sometimes this is all we are interested in: a reliable 
+estimate of the regression f('). In many applications, however, it is important to 
+quantify the accuracy of our statements. For regression problems we can distinguish 
+two different aspects: the accuracy of our estimate of the true regression and the 
+accuracy of our estimate with respect to the observed output. Confidence intervals 
+deal with the first aspect, i.e., consider the distribution of the quantity f(') - o(), 
+prediction intervals with the latter, i.e., treat the quantity t(-) - o('). We see from 
+t() - o() -- [f() - o()] -I- ((), 
+that a prediction interval necessarily encloses the corresponding confidence interval. 
+In [7] a method somewhat similar to ours is introduced to estimate both the mean 
+and the variance of the target probability distribution. It is based on the assumption 
+that there is a sufficiently large data set, i.e., that their is no risk of overfitting and 
+that the neural network finds the correct regression. In practical applications with 
+limited data sets such assumptions are too strict. In this paper we will propose 
+a new method which estimates the inaccuracy of the estimator through bootstrap 
+resampling and corrects for the tendency to overfit by considering the residuals on 
+validation patterns rather than those on training patterns. 
+2 BOOTSTRAPPING AND EARLY STOPPING 
+Bootstrapping [3] is based on the idea that the available data set is nothing but 
+a particular realization of some unknown probability distribution. Instead of sam- 
+pling over the true probability distribution, which is obviously impossible, one 
+defines an empirical distribution. With so-called naive bootstrapping the empirical 
+distribution is a sum of delta peaks on the available data points, each with probabil- 
+ity content 1/Pdat a. A bootstrap sample is a collection of Pdata patterns drawn with 
+replacement from this empirical probability distribution. This bootstrap sample is 
+nothing but our training set and all patterns that do not occur in the training set 
+are by definition part of the validation set. For large Paata, the probability that a 
+pattern becomes part of the validation set is (1 - 1/paata) pa't'  1/e  0.37. 
+When training a neural network on a particular bootstrap sample, the weights are 
+adjusted in order to minimize the error on the training data. Training is stopped 
+when the error on the validation data starts to increase. This so-called early stop- 
+ping procedure is a popular strategy to prevent overfitting in neural networks and 
+can be viewed as an alternative to regularization techniques such as weight decay. 
+In this context bootstrapping is just a procedure to generate subdivisions in training 
+and validation set similar to k-fold cross-validation or subsampling. 
+On each of the rtrun bootstrap replicates we train and stop a single neural network. 
+The output of network i on input vector a? is written oi( ') = o. As the 
+estimate of our ensemble of networks for the regression f() we take the average 
+output x 
+i rln 
+-- o, 
+run i:l 
+This is a so-called bagged estimator [2]. In [5] it is shown that a proper balancing 
+of the network outputs can yield even better results. 
+178 Heskes 
+3 CONFIDENCE INTERVALS 
+Confidence intervals provide a way to quantify our confidence in the estimate 
+m(g') of the regression f(g'), i.e., we have to consider the probability distribution 
+P(f(')[m(�)) that the true regression is f() given our estimate m(�). Our line of 
+reasoning goes as follows (see also [8]). 
+We assume that our ensemble of neural networks yields a more or less unbiased 
+estimate for f(g'), i.e., the distribution P(f(')[m(�)) is centered around m(g'). The 
+truth is that neural networks are biased estimators. For example, neural networks 
+trained on a finite number of examples will always have a tendency (as almost 
+any other model) to oversmooth a sharp peak in the data. This introduces a bias, 
+which, to arrive at asymptotically correct confidence intervals, should be taken 
+into account. However, if it would be possible to compute such a bias correction, 
+one should do it in the first place to arrive at a better estimator. Our working 
+hypothesis here is that the bias component of the confidence intervals is negligible 
+in comparison with the variance component. 
+There do exist methods that claim to give confidence intervals that are second- 
+4, 3/ (see e.g. the discussion 
+order correct, i.e., up to and including terms of order l/Pdata 
+after [3]). Since we do not know how to handle the bias component anyways, 
+such precise confidence intervals, which require a tremendous amount of bootstrap 
+samples, are too ambitious for our purposes. First-order correct intervals up to 
+and including terms of order 1/pclata are always symmetric and can be derived by 
+assuming a Gaussian distribution P(f(g')]m()). 
+The variance of this distribution can be estimated from the variance in the outputs 
+rtln 
+1 
+-- (3) 
+tru n -- i 
+i=1 
+of the rtrun networks: 
+This is the crux of the bootstrap method (see e.g. [3]). Since the distribution of 
+P(f()[m(')) is a Gaussian, so is the inverse distribution P(m(')lf(')) to find 
+the regression m(-) by randomly drawing data sets consisting of Pdata data points 
+according to the prescription (1). Not knowing the true distribution of inputs and 
+corresponding targets , the best we can do is to define the empirical distribution as 
+explained before and estimate P(m()[f(�)) from the distribution P(o(g')lm()). 
+This then yields the estimate (3). 
+So, following this bootstrap procedure we arrive at the confidence intervals 
+m(') --Cconfidence0'(' ) _ f() _< re(M) + Cconfidence0'(') , 
+where Cconfidenc e depends on the desired confidence level 1- c. The factors Cconfidenc e 
+can be taken from a table with the percentage points of the Student's t-distribution 
+with number of degrees of freedom equal to the number of bootstrap runs nrun. A 
+more direct alternative is to choose Cconfiaence such that for no more than 100a% of 
+all nrun X Pclata network predictions [of - m  ] _ Cconfidence 0'tt- 
+2In this paper we assume that both the inputs and the outputs are stochastic. For the 
+case of deterministic input variables other bootstrapping techniques (see e.g. [4]) are more 
+appropriate, since the statistical intervals resulting from naive bootstrapping may be too 
+conservative. 
+Practical Confidence and Prediction Intervals 179 
+4 PREDICTION INTERVALS 
+Confidence intervals deal with the accuracy of our prediction of the regression, i.e., 
+of the mean of the target probability distribution. Prediction intervals consider the 
+accuracy with which we can predict the targets themselves, i.e., they are based on 
+estimates of the distribution P(t(z7)lm()). We propose the following method. 
+The two noise components f(-) - rn() and (') in (2) are independent. The 
+variance of the first component has been estimated in our bootstrap procedure to 
+arrive at confidence intervals. The remaining task is to estimate the noise inherent 
+to the regression problem. We assume that this noise is more or less Gaussian such 
+that it again suffices to compute its variance which may however depend on the 
+input '. In mathematical symbols, 
+__ = + = + 
+Of course, we are interested in prediction intervals for new points  for which we 
+do not know the targets t. Suppose that we had left aside a set of test patterns 
+{, t } that we had never used for training nor for validating our neural networks. 
+Then we could try and estimate a model X  () to fit the remaining residuals 
+r2( ) -- max([t-m()]2-a2(), 0), (4) 
+using minus the loglikelihood as the error measure: 
+L =- Elog V/2rX( ) exp 2X(.) (5) 
+Of course, leaving out these test patterns is a waste of data and luckily our bootstrap 
+procedure offers an alternative. Each pattern is in about 37% of all bootstrap runs 
+not part of the training set. Let us write q - 1 if pattern/ is in the validation set 
+of run

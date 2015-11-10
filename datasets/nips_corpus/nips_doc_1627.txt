@@ -1,0 +1,156 @@
+Topographic Transformation as a 
+Discrete Latent Variable 
+Nebojsa Jojic 
+Beckman Institute 
+University of Illinois at Urbana 
+www.ifp.uiuc.edu/~jojic 
+Brendan J. Frey 
+Computer Science 
+University of Waterloo 
+www.cs.uwaterloo.ca/~frey 
+Abstract 
+Invariance to topographic transformations such as translation and 
+shearing in an image has been successfully incorporated into feed- 
+forward mechanisms, e.g., convolutional neural networks, tan- 
+gent propagation. We describe a way to add transformation invari- 
+ance to a generafive density model by approximating the nonlinear 
+transformation manifold by a discrete set of transformations. An 
+EM algorithm for the original model can be extended to the new 
+model by computing expectations over the set of transformations. 
+We show how to add a discrete transformation variable to Gaussian 
+mixture modeling, factor analysis and mixtures of factor analysis. 
+We give results on filtering microscopy images, face and facial pose 
+clustering, and handwritten digit modeling and recognition. 
+I Introduction 
+Imagine what happens to the point in the N-dimensional space corresponding to an 
+N-pixel image of an object, while the object is deformed by shearing. A very small 
+amount of shearing will move the point only slightly, so deforming the object by 
+shearing will trace a continuous curve in the space of pixel intensities. As illustrated 
+in Fig. la, extensive levels of shearing will produce a highly nonlinear curve (consider 
+shearing a thin vertical line), although the curve can be approximated by a straight 
+line locally. 
+Linear approximations of the transformation manifold have been used to signif- 
+icantly improve the performance of feedforward discriminative classifiers such as 
+nearest neighbors (Simard et at., 1993) and multilayer perceptrons (Simard et at., 
+1992). Linear generarive models (factor analysis, mixtures of factor analysis) have 
+also been modified using linear approximations of the transformation manifold to 
+build in some degree of transformation invariance (Hinton et al., 1997). 
+In general, the linear approximation is accurate for transformations that couple 
+neighboring pixels, but is inaccurate for transformations that couple nonneighboring 
+pixels. In some applications (e.g., handwritten digit recognition), the input can be 
+blurred so that the linear approximation becomes more robust. 
+For significant levels of transformation, the nonlinear manifold can be better mod- 
+eled using a discrete approximation. For example, the curve in Fig. la can be 
+4 78 N. Jojic and B. J. Fret 
+(b) 
+(c) 
+p(z) 
+(d) 
+Y 
+(e) 
+Figure 1: (a) An N-pixel greyscale image is represented by a point (untilled disc) in an N- 
+dimensional space. When the object being imaged is deformed by shearing, the point moves 
+along a continuous curve. Locally, the curve is linear, but high levels of shearing produce a 
+highly nonlinear curve, which we approximate by discrete points (filled discs) indexed by �. (b) 
+A graphical model showing how a discrete transformation variable � can be added to a density 
+model p(z) for a latent image z to model the observed image x. The Gaussian pdf p(x{�, z) 
+captures the �th transformation plus a small amount of pixel noise. (We use a box to represent 
+variables that have Gaussian conditional pdfs.) We have explored (c) transformed mixtures 
+of Gaussians, where c is a discrete cluster index; (d) transformed component analysis (TCA), 
+where y is a vector of Gaussian factors, some of which may model locally linear transformation 
+perturbations; and (e) mixtures of transformed component analyzers, or transformed mixtures 
+of factor analyzers. 
+represented by a set of points (filled discs). In this approach, a discrete set of possi- 
+ble transformations is specified beforehand and parameters are learned so that the 
+model is invariant to the set of transformations. This approach has been used to 
+design convolutional neural networks that are invariant to translation (Le Cun 
+et al., 1998) and to develop a general purpose learning algorithm for generarive 
+topographic maps (Bishop et al., 1998). 
+We describe how invariance to a discrete set of known transformations (like transla- 
+tion) can be built into a generafive density model and we show how an EM algorithm 
+for the original density model can be extended to the new model by computing ex- 
+pectations over the set of transformations. We give results for 5 different types of 
+experiment involving translation and shearing. 
+2 Transformation as a Discrete Latent Variable 
+We represent transformation � by a sparse transformation generating matrix Gt that 
+operates on a vector of pixel intensities. For example, integer-pixel translations of 
+an image can be represented by permutation matrices. Although other types of 
+transformation matrix may not be accurately represented by permutation matrices, 
+many useful types of transformation can be represented by sparse transformation 
+matrices. For example, rotation and blurring can be represented by matrices that 
+have a small number of nonzero elements per row (e.g., at most 6 for rotations). 
+The observed image x is linked to the nontransformed latent image z and the 
+transformation index �  {1,... , L} as follows: 
+p(xlt, z) - Af(x; Gez, (1) 
+where � is a diagonal matrix of pixel noise variances. Since the probability of 
+a transformation may depend on the latent image, the joint distribution over the 
+latent image z, the transformation index  and the observed image x is 
+p(x, �, z) = Af(x; Gez, 'I)P(�lz)p(z). (2) 
+The corresponding graphical model is shown in Fig. lb. For example, to model noisy 
+transformed images of just one shape, we choose p(z) to be a Gaussian distribution. 
+Topographic Transformation as a Discrete Latent Variable 479 
+2.1 Transformed mixtures of Gaussians (TMG). Fig. lc shows the graph- 
+ical model for a TMG, where different clusters may have different transformation 
+probabilities. Cluster c has mixing proportion 7re, mean/c and diagonal covariance 
+matrix I'c. The joint distribution is 
+p(x, �, z, c) = A/'(x; Gtz, )A/'(z; Ic, c)Ptc7rc, 
+(3) 
+where the probability of transformation t for cluster c is Ptc. Marginalizing over 
+the latent image gives the cluster/transformation conditional likelihood, 
+p(xl�, c) - JV'(x; Gt/,c, GtcGt T + 9), 
+(4) 
+which can be used to compute p(x) and the cluster/transformation responsibility 
+P(�, clx ). This likelihood looks like the likelihood for a mixture of factor analyzers 
+(Ghahramani and Hinton, 1997). However, whereas the likelihood computation for 
+N latent pixels takes order N 3 time in a mixture of factor analyzers, it takes linear 
+time, order N, in a TMG, because Gtc(]/T + � is sparse. 
+2.2 Transformed component analysis (TCA). Fig. ld shows the graphical 
+model for TCA (or transformed factor analysis). The latent image is modeled 
+using linearly combined Gaussian factors, y. The joint distribution is 
+p(x, t, z, y) = At(x; Gtz, )Ar(z;/ + Ay, )Ar(y; 0, I)pt, 
+(5) 
+where/ is the mean of the latent image, A is a matrix of latent image components 
+(the factor loading matrix) and � is a diagonal noise covariance matrix for the latent 
+image. Marginalizing over the factors and the latent image gives the transformation 
+conditional likelihood, 
+p(xl� ) - Af(x; Ge/, Ge(AA T + I,)G T + 9), 
+(6) 
+which can be used to compute p(x) and the transformation responsibility p(�lx). 
+G/(AA T + I,)(]/T is not sparse, so computing this likelihood exactly takes N 3 
+time. However, the likelihood can be computed in linear time if we assume 
+IGi(AA T + I')G + 91 m IGt( AAT + I')GTI, which corresponds to assuming 
+that the observed noise is smaller than the variation due to the latent image, or 
+that the observed noise is accounted for by the latent noise model, I,. In our ex- 
+periments, this approximation did not lead to degenerate behavior and produced 
+useful models. 
+By setting columns of A equal to the derivatives of/ with respect to continuous 
+transformation parameters, a TCA can accommodate both a local linear approxi- 
+mation and a discrete approximation to the transformation manifold. 
+2.3 Mixtures of transformed component analyzers (MTCA). A combi- 
+nation of a TMG and a TCA can be used to jointly model clusters, linear compo- 
+nents and transformations. Alternatively, a mixture of Ganssians that is invariant 
+to a discrete set of transformations and locally linear transformations can be ob- 
+tained by combining a TMG with a TCA whose components are all set equal to 
+transformation derivatives. 
+The joint distribution for the combined model in Fig. le is 
+p(x,�, z, c,y) - A/'(x; Gtz, 9)A/'(z;/ c + Acy,c).N'(y;O,I)ptc7rc. (7) 
+The cluster/transformation likelihood is p(x[�, c) = A/'(x; Gi/ c, Gi(AcA + 
+I,c)G/T + ), which can be approximated in linear time as for TCA. 
+480 N. Jojic and B. J. Frey 
+3 Mixed Transformed Component Analysis (MTCA) 
+We present an EM algorithm for MTCA; EM algorithms for TMG or TCA emerge 
+by setting the number of factors to 0 or setting the number of clusters to 1. 
+Let 0 represent a parameter in the generarive model. For i.i.d. data, the derivative 
+of the log-likelihood of a training set Xl,... , XT with respect to 0 can be written 
+T 
+Ologp(xl,...,XT) -.E[ologp(xt,c,t,z,Y)lxt ] (8) 
+..--_ 
+O0 ' 
+where the expectation is taken over p(c, �, z, ylxt). The EM algorithm iteratively 
+solves for a new set of parameters using the old parameters to compute the expec- 
+tations. This procedure consistently increases the likelihood of the training data. 
+By setting (8) to 0 and solving for the new parameter values, we obtain update equa- 
+tions based on the expectations given in the Appendix. Notation: ] = 7 Y-t= [') 
+is a sufficient statistic computed by averaging over the training set; aiag(A) gives a 
+vector containing the diagonal elements of matrix A; diag(a) gives a diagonal matrix 
+whose diagonal contains the elements of vector a; a

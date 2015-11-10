@@ -1,0 +1,170 @@
+Learning with Preknowledge: 
+Clustering with Point and Graph 
+Matching Distance Measures 
+Steven Cold 1, Artand Rangarajan I and Eric Mjolsness 2 
+Department of Computer Science 
+Yale University 
+New Haven, CT 06520-8285 
+Abstract 
+Prior constraints are imposed upon a learning problem in the form 
+of distance measures. Prototypical 2-D point sets and graphs are 
+learned by clustering with point matching and graph matching dis- 
+tance measures. The point matching distance measure is approx. 
+invariant under affine transformations- translation, rotation, scale 
+and shear - and permutations. It operates between noisy images 
+with missing and spurious points. The graph matching distance 
+measure operates on weighted graphs and is invariant under per- 
+mutations. Learning is formulated as an optimization problem. 
+Large objectives so formulated (-- million variables) are efficiently 
+minimized using a combination of optimization techniques - alge- 
+braic transformations, iterative projective scaling, clocked objec- 
+tives, and deterministic annealing. 
+I Introduction 
+While few biologists today would subscribe to Locke's description of the nascent 
+mind as a tabula rasa, the nature of the inherent constraints - Kant's preknowl- 
+E-mail address of authors: lastname-firstname@cs.yale.edu 
+2Department of Computer Science and Engineering, University of California at San 
+Diego (UCSD), La Jolla, CA 92093-0114. E-mail: emj@cs.ucsd.edu 
+714 Steven Gold, Anand Rangarajan, Eric Mjolsness 
+edge - that helps organize our perceptions remains much in doubt. Recently, the 
+importance of such preknowledge for learning has been convincingly argued from 
+a statistical framework [Geman et al., 1992]. Researchers have proposed that our 
+brains may incorporate preknowledge in the form of distance measures [Shepard, 
+1989]. The neural network community has begun to explore this idea via tangent 
+distance [Simard et al., 1993], model learning [Williams et al., 1993] and point 
+matching distances [Gold et al., 1994]. However, only the point matching distances 
+have been invariant under permutations. Here we extend that work by enhancing 
+both the scope and function of those distance measures, significantly expanding the 
+problem domains where learning may take place. 
+We learn objects consisting of noisy 2-D point-sets or noisy weighted graphs by 
+clustering with point matching and graph matching distance measures. The point 
+matching measure is approx. invariant under permutations and affine transforma- 
+tions (separately decomposed into translation, rotation, scale and shear) and oper- 
+ates on point-sets with missing or spurious points. The graph matching measure is 
+invariant under permutations. These distance measures and others like them may be 
+constructed using Bayesian inference on a probabilistic model of the visual domain. 
+Such models introduce a carefully designed bias into our learning, which reduces its 
+generality outside the problem domain but increases its ability to generalize within 
+the problem domain. (From a statistical viewpoint, outside the problem domain it 
+increases bias while within the problem domain it decreases variance). The resulting 
+distance measures are similar to some of those hypothesized for cognition. 
+The distance measures and learning problem (clustering) are formulated as objec- 
+tive functions. Fast minimization of these objectives is achieved by a combination 
+of optimization techniques - algebraic transformations, iterative projective scaling, 
+clocked objectives, and deterministic annealing. Combining these techniques signif- 
+icantly increases the size of problems which may be solved with recurrent network 
+architectures [Rangarajan et al., 1994]. Even on single-cpu workstations non-linear 
+objectives with a million variables can routinely be minimized. With these meth- 
+ods we learn prototypical examples of 2-D points set and graphs from randomly 
+generated experimental data. 
+2 Distance Measures in Unsupervised Learning 
+2.1 An Affine Invariant Point Matching Distance Measure 
+The first distance measure quantifies the degree of dissimilarity between two unla- 
+beled 2-D point images, irrespective of bounded affine transformations, i.e. differ- 
+ences in position, orientation, scale and shear. The two images may have different 
+numbers of points. The measure is calculated with an objective that can be used to 
+find correspondence and pose for unlabeled feature matching in vision. Given two 
+sets of points {Xj } and {Yk }, one can minimize the following objective to find the 
+affine transformation and permutation which best maps Y onto X: 
+J K J K 
+Ep,n(rn, t,A) - E E rnjkllXi - t - A . Y}]] ' -I- g(A) - a E E rni 
+j=l k=l j=l k--1 
+with constraints: �j r 
+= rnj _< 1 , �k '.= rnik _< 1 , �jk rni _ O. 
+Learning with Preknowledge 715 
+A is decomposed into scale, rotation, vertical shear and oblique shear components. 
+#(A) regularizes our affine transformation - bounding the scale and shear compo- 
+nents. m is a fuzzy correspondence matrix which matches points in one image with 
+corresponding points in the other image. The inequality constraint on m allows for 
+null matches - that is a given point in one image may match to no corresponding 
+point in the other image. The a term biases the objective towards matches. 
+Then given two sets of points {Xj } and {Yk } the distance between them is defined 
+D({Xj}, {Yk}) = min(Epm(m,t,A) l constraints on m) 
+This measure is an example of a more general image distance measure derived in 
+[Mjolsness, 1992]: 
+d(z y)= mind(z,T(y))  
+' T 
+where T is a set of transformation parameters introduced by a visual grammar. 
+Using slack variables, and following the treatment in [Peterson and SSderberg, 1989; 
+Yuille and Kosowsky, 1994] we employ Lagrange multipliers and an x log x barrier 
+function to enforce the constraints with the following objective: 
+J K J K 
+Epm(m,t,A) = E  rn1}llX1 - t - A. Y}ll ' + g(A) - a  E rn1} 
+j=lk=l j=lk=l 
+i J+l K+I J K+I K J+l 
++7 1)+ 1)+ 1) (1) 
+j=l k=l j=l k=l k=l j=l 
+In this objective we are looking for a saddle point. (1) is minimized with respect to 
+m, t, and A which are the correspondence matrix, translation, and affine transform, 
+and is maximized with respect to/ and u, the Lagrange multipliers that enforce 
+the row and column constraints for m. 
+The above can be used to define many different distance measures, since given 
+the decomposition of A it is trivial to construct measures which are invariant only 
+under some subset of the transformations (such as rotation and translation). The 
+regularization and a terms may also be individually adjusted in an appropriate 
+fashion for a specific problem domain. 
+2.2 Weighted Graph Matching Distance Measures 
+The following distance measure quantifies the degree of dissimilarity between two 
+unlabeled weighted graphs. Given two graphs, represented by adjacency matrices 
+G,b and gij, one can minimize the objective below to find the permutation which 
+best maps G onto g:' 
+A I B J 
+a=1i=l b=l j=l 
+716 Steven Gold, Anand Rangarajan, Eric Mjolsness 
+I A 
+with constraints: Va Ei--1 mai -- 1 , �i Ea=l rnai = 1 , �ai rnai _> O. These 
+constraints are enforced in the same fashion as in (1). An algebraic fixed-point 
+transformation and self-amplification term further transform the objective to: 
+A I B J 
+1. 
+(m)= Z Z(,',,,(Z ..,,,,-,,,r,-,,,, + 
+a=l i=1 b=l j=l 
+1 A  A   A 
++   m.i(log m.i- 1)+  (Z m.i- 1)+ Z Ai(Z m.i- 1) 
+a=l i=1 a--1 i=1 i=1 a=l 
+In this objective we are also looking for a saddle point. 
+A second, functionally equivalent, graph matching objective is also used in the 
+clustering problem: 
+A B I J 
+Eg m'(m) =  Z Y Z maim�y( Ga� - gJ i)2 
+a--1 b--1 i--1 j--1 
+I A 
+with constraints: Va Ei=i mai '- 1 , �i Ea=l mai = 1 , �ai mai _> O. 
+2.3 The Clustering Objective 
+The learning problem is formulated as follows: Given a set of I objects, {Xi} find 
+a set of A cluster centers {Ya } and match variables {Mia } defined as 
+1 if Xi is in Y,'s cluster 
+Mi, = 0 otherwise, 
+such that each object is in only one cluster, and the total distance of all the objects 
+from their respective cluster centers is minimized. To find {Y. } and {Mi. } minimize 
+the cost function, 
+I A 
+i=1 a=l 
+with the constraint that Vi -].aMi. = i , Vai Mai _ O. D(Xi,Ya), the distance 
+function, is a measure of dissimilarity between two objects. 
+The constraints on M are enforced in a manner similar to that described for the 
+distance measure, except that now only the rows of the matrix M need to add to 
+one, instead of both the rows and the columns. 
+Z Z Mi. D(Xi, Y.) +  Z Z Mia(log Mi. -1) 
+i--1 a--1 i--1 a--1 
+I A 
+i=1 a=l 
+(4) 
+Learning with Preknowledge 717 
+Here, the objects are point-sets or weighted graphs. If point-sets the distance mea- 
+sure D(Xi,Y,) is replaced by (1), if graphs it is replaced by (2) or (3). 
+Therefore, given a set of objects, X, we construct Ecluste,- and upon finding the 
+appropriate saddle point of that objective, we will have Y, their cluster centers, 
+and M, their cluster memberships. 
+3 The Algorithm 
+The algorithm to minimize the clustering objectives consists of two loops - an inner 
+loop to minimize the distance measure objective [either (1) or (2)] and an outer 
+loop to minimize the clustering objective (4). Using coordinate descent in the 
+outer loop results in dynamics similar to the EM algorithm [Jordan and Jacobs, 
+1994] for clustering. All variables occurring in the distance measure objective are 
+held fixed during this phase. The inner loop uses coordinate ascent/descent which 
+results in repeated row and column projections for m. The minimization of m, 
+and the distance measure variables [either t, A of (1) or p, a of (2)], occurs in an 
+incremental fashion, that is their values are saved after each inner loop call from 
+within the outer loop and are then used as initial values for the next call to the 
+inner loop. This tracking of th

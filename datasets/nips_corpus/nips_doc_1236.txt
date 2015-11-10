@@ -1,0 +1,146 @@
+Selective Integration: A Model for 
+Disparity Estimation 
+Michael S. Gray, Alexandre Pouget, Richard S. Zemel, 
+Steven J. Nowlan, Terrence J. Sejnowski 
+Departments of Biology nd Cognitive Science 
+University of California, Sn Diego 
+La Jolla, CA 92093 
+nd 
+Howard Hughes Medical Institute 
+Computational Neurobiology Lab 
+The Salk Institute, P. O. Box 85800 
+San Diego, CA 92186-5800 
+Email: michael, alex, zemel, nowlan, terry@salk.edu 
+Abstract 
+Local disparity information is often sparse and noisy, which creates 
+two conflicting demands when estimating disparity in an image re- 
+gion: the need to spatially average to get an accurate estimate, and 
+the problem of not averaging over discontinuities. We have devel- 
+oped a network model of disparity estimation based on disparity- 
+selective neurons, such as those found in the early stages of process- 
+ing in visual cortex. The model can accurately estimate multiple 
+disparities in a region, which may be caused by transparency or oc- 
+clusion, in real images and random-dot stereograms. The use of a 
+selection mechanism to selectively integrate reliable local disparity 
+estimates results in superior performance compared to standard 
+back-propagation and cross-correlation approaches. In addition, 
+the representations learned with this selection mechanism are con- 
+sistent with recent neurophysiological results of von der Heydt, 
+Zhou, Friedman, and Poggio [8] for cells in cortical visual area V2. 
+Combining multi-scale biologically-plausible image processing with 
+the power of the mixture-of-experts learning algorithm represents 
+a promising approach that yields both high performance and new 
+insights into visual system function. 
+Selective Integration: A Model for Disparity Estimation 867 
+I INTRODUCTION 
+In many stereo algorithms, the local correlation between images from the two eyes 
+is used to estimate relative depth (Jain, Kasturi, & Schunk [5]). Local correlation 
+measures, however, convey no information about the reliability of a particular dis- 
+parity measurement. In the model presented here, we introduce a separate selection 
+mechanism to determine which locations of the visual input have consistent dispar- 
+ity information. The focus was on several challenging viewing situations in which 
+disparity estimation is not straightforward. For example, can the model estimate 
+the disparity of more than one object in a scene? Does occlusion lead to poorer 
+disparity estimation? Can the model determine the disparities of two transparent 
+surfaces? Does the model estimate accurately the disparities present in real world 
+images? Datasets corresponding to these different conditions were generated and 
+used to test the model. 
+Our goal is to develop a neurobiologically plausible model of stereopsis that ac- 
+curately estimates disparity. Compared to traditional cross-correlation approaches 
+that try to compute a depth map for all locations in space, the mixture-of-experts 
+model used here searches for sparse, reliable patterns or configurations of disparity 
+stimuli that provide evidence for objects at different depths. This allows partial 
+segmentation of the image to obtain a more compact representation of disparities. 
+Local disparity estimates are sufficient in this case, as long as we selectively segment 
+those regions of the image with reliable disparity information. 
+The rest of the paper is organized as follows. First, we describe the architecture of 
+the mixture-of-experts model. Second, we provide a brief qualitative description of 
+the model's performance followed by quantitative results on a variety of datasets. 
+In the third section, we compare the activity of units in the model to recent neuro- 
+physiological data. Finally, we discuss these findings, and consider remaining open 
+questions. 
+2 MIXTURE-OF-EXPERTS MODEL 
+The model of stereopsis that we have explored is based on the filter model for motion 
+detection devised by Nowlan and Sejnowski [6]. The motion problem was readily 
+adapted to stereopsis by changing the time domain of motion to the left/right 
+image domain for stereopsis. Our model (Figure 1) consisted of several stages 
+and computed its output using only feed-forward processing, as described below 
+(see also Gray, Pouget, Zemel, Nowlan, and Sejnowski [2] for more detail). The 
+output of the first stage (disparity energy filters) became the input to two different 
+primary pathways: (1) the local disparity networks, and (2) the selection networks. 
+The activation of each of the four disparity-tuned output units in the model was 
+the product of the outputs of the two primary pathways (summed across space). 
+An objective function based on the mixture-of-experts framework (Jacobs, Jordan, 
+Nowlan, & Hinton [4]) was used to optimize the weights from the disparity energy 
+units to the local disparity networks and to the selection networks. The weights to 
+the output units from the local disparity and selection pathways were fixed at 1.0. 
+Once the model was trained, we obtained a scalar disparity estimate from the model 
+by computing a nonlinear least squares Gaussian fit to the four output values. The 
+mean of the Gaussian was our disparity estimate. When two objects were present 
+868 M. S. Gray, A. Pouget, R. S. Zemel, S. J. Nowlan and T. J. Sejnowski 
+Desired Output Space Output Actual Output 
+Competition 
+Disparity 
+Energy Filters I ] ] I Medium sr 
+Left Eye Retina Right Eye Retina 
+Figure 1: The mixture-of-experts architecture. 
+in the input, we fit the sum of two Gaussians to the four output values. 
+2.1 DISPARITY ENERGY FILTERS 
+The retinal layer in the model consisted of one-dimensional right eye and left eye 
+images, each 82 pixels in length. These images were the input to disparity energy 
+filters, as developed by Ohzawa, DeAngelis, and Freeman [7]. At the energy filter 
+layer, there were 51 receptive field (RF) locations which received input from partially 
+overlapping regions of the retinae. At each of these RF locations, there were 30 
+energy units corresponding to 10 phase differences at 3 spatial frequencies. These 
+phase differences were proportional to disparity. An energy unit consisted of 4 
+energy filter pairs, each of which was a Gabor filter. The outputs of the disparity 
+energy units were normalized at each RF location and within each spatial frequency 
+using a soft-max nonlinearity. 
+2.2 LOCAL DISPARITY NETWORKS 
+In the local disparity pathway, there were 8 RF locations, and each received a 
+weighted input from 9 disparity energy locations. Each RF location corresponded 
+to a local disparity network and contained a pool of 4 disparity-tuned units. Neigh- 
+boring locations received input from overlapping sets of disparity energy units. 
+Weights were shared across all RF locations for each disparity. Soft-max compe- 
+tition occurred within each local disparity network (across disparity), and insured 
+that only one disparity was strongly activated at each RF location. 
+2.3 SELECTION NETWORKS 
+Like the local disparity networks, the selection networks were organized into a grid 
+of 8 RF locations with a pool of 4 disparity-tuned units at each location. These 4 
+units represented the local support for each of the different disparity hypotheses. It 
+is more useful to think of the selection networks, however, as 4 separate layers each 
+Selective Integration: A Model for Disparity Estimation 869 
+of which responded to a specific disparity across all regions of the image. Like the 
+local disparity pathway, neighboring RF locations received input from overlapping 
+disparity energy units, and weights were shared across space for each disparity. 
+In addition, the outputs of the selection network were normalized with the soft- 
+max operation. This competition, however, occurred separately for each of the 4 
+disparities in a global fashion across space. 
+3 RESULTS 
+Figure 2 shows the pattern of activations in the model when presented with a single 
+object at a disparity of 2.1 pixels. The visual layout of the model in this figure 
+is identical to the layout in Figure 1. The stimulus appears at bottom, with the 
+3 disparity energy filter banks directly above it. On the left above the disparity 
+energy filters are the local disparity networks. The selection networks are on the 
+right. The summed output (across space) appears in the upper right corner of the 
+figure. Note that the selection network for a 2 pixel disparity (2nd row from the 
+bottom in the selection pathway) is active for the spatial location at far left. The 
+corresponding location is also highly active in the local disparity pathway, and this 
+combination leads to strong activation for a 2 pixel disparity in the output of the 
+model. 
+The mixture-of-experts model was optimized individually on a variety of different 
+datasets and then tested on novel stimuli from the same datasets. The model's 
+ability to discriminate among different disparities was quantified as the disparity 
+threshold -- the disparity difference at which one can correctly see a difference in 
+depth 75% of the time. Disparity thresholds for the test stimuli were computed us- 
+ing signal-detection theory (Green & Swets [3]). Sample stimuli and their disparity 
+thresholds are shown in Table 1. The model performed best on single object stimuli 
+(top row). This disparity threshold (0.23 pixels) was substantially less than the 
+input resolution of the model (1 pixel) and was thus exhibiting stereo hyperacuity. 
+The model also performed well when there were multiple, occluding objects (2nd 
+row). When both the stimulus and the background were generated from a uni- 
+form random distribution, the disparity threshold rose to 0.55 pixels. The model 
+estimated disparity accurately in random-dot stereograms and real world images. 
+Binary stereograms containing two transparent surfaces, however, were a challeng- 
+ing stimulus, and the threshold rose to 0.83 pixels. Part of the difficulty with this 
+stimulus (con

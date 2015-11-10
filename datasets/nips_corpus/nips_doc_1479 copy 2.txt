@@ -1,0 +1,153 @@
+Optimizing Correlation Algorithms for 
+Hardware-based Transient Classification 
+R. Timothy Edwards , Gert Cauwenberghs , and Fernando J. Pineda 2 
+Electrical and Computer Engineering, Johns Hopkins University, Baltimore, MD 21218 
+2Applied Physics Laboratory, Johns Hopkins University, Laurel, MD 20723 
+e-mail: {tim, gert, fernando}Obach. ece. jhu. edu 
+Abstract 
+The performance of dedicated VLSI neural processing hardware depends 
+critically on the design of the implemented algorithms. We have pre- 
+viously proposed an algorithm for acoustic transient classification [1]. 
+Having implemented and demonstrated this algorithm in a mixed-mode 
+architecture, we now investigate variants on the algorithm, using time 
+and frequency channel differencing, input and output normalization, and 
+schemes to binarize and train the template values, with the goal of achiev- 
+ing optimal classification performance for the chosen hardware. 
+1 Introduction 
+At the NIPS conference in 1996 [ 1], we introduced an algorithm for classifying acoustic 
+transient signals using template correlation. While many pattern classification systems use 
+template correlation [2], our system differs in directly addressing the issue of efficient im- 
+plementation in analog hardware, to overcome the area and power consumption drawbacks 
+of equivalent digital systems. In the intervening two years, we have developed analog cir- 
+cuits and built VLSI hardware implementing both the template correlation and the frontend 
+acoustic processing necessary to map the transient signal into a time-frequency representa- 
+tion corresponding to the template [3, 4]. In the course of hardware development, we have 
+been led to reevaluate the algorithm in the light of the possibilities and the limitations of 
+the chosen hardware. 
+The general architecture is depicted in Figure 1 (a), and excellent agreement between simu- 
+lations and experimental output from a prototype is illustrated in Figure 1 (b). Issues of im- 
+plementation efficiency and circuit technology aside, the this paper specifically addresses 
+further improvements in classification performance achievable by algorithmic modifica- 
+tions, tailored to the constraints and strengths of the implementation medium. 
+Optimizing Correlation Algorithms for Transient Classification 679 
+y[t,m] x[t,m] 
+M Template 
+Correlator Nx M 
+pt[n, m] 
+1 
+I Shift and Accumulate 
+7O 
+6O 
+50! 
+40 
+30 
+20 
+10 
+O' 
+-10 
+-20 
+Simulated 
+Measured 
+x .x x  
+x 
+40 60 80 1 O0 120 140 
+cz[t] Time 
+(a) (b) 
+Figure 1: (a) System architecture of the acoustic transient classifier (b) Demonstration of 
+accurate computation in the analog correlator on a transient classification task. 
+2 The transient classification algorithm 
+The core of our architecture performs the running correlation between an acoustic input 
+and a set of templates for distiguishing between Z distinct classes. A simple template 
+correlation equation for the acoustic transient classification can be written: 
+M N 
+= 
+m=l n=l 
+where M is the number of frequency channels of the input, N is the maximum number of 
+time bins in the window, and x is the array of input signals representing the energy content 
+in each of the M bandpass frequency channels. The inputs x are normalized across chan- 
+nels using an L-1 normalization so that the correlation is less affected by volume changes 
+in the input. The matrix Pz contains the template pattern values for pattern z out of a total 
+of Z classes; Kz is a constant gain coefficient for class z, and t is the current time. This 
+formula produces a running correlation cz [t] of the input array with the template for class 
+z. A signal is classified as belonging to class z when the output cz exceeds the output for 
+all other classes at a point in time t determined by simple segmentation of the input. 
+To train and evaluate the system, we used a database of 22 recorded samples of 10 different 
+classes of everyday transients such as the sounds made by aluminum cans, plastic tubs, 
+handclaps, and the like. 
+Each example transient recording was processed through a thirty-two channel constant-Q 
+analog cochlear filter with output taps spaced on a logarithmic frequency scale [6]. For 
+the simulations, the frontend system outputs were sampled and saved to disk, then digitally 
+rectified and smoothed with a lowpass filter function with a 2 ms time constant. These 
+thirty-two channel outputs representing short-term average energy in each frequency band 
+were decimated to 500 Hz and normalized with the function 
+M+I 
+x[t,m] = y[t,m]/ Z y[t,k], (2) 
+k----1 
+where y[t, M + 1] is a constant-valued input added to the system in order to supress noise 
+in the normalized outputs during periods of silence. The additional output x[t, M + 1] 
+680 R. T. Edwards, G. Cauwenberghs and F. J. Pineda 
+becomes maximum during the periods of silence and minimum during presentation of a 
+transient event. This extra output can be used to detect onsets of transients, but is not used 
+in the correlation computation of equation (1). 
+Template values pz are learned by automatically aligning all examples of the same class in 
+the training set using a threshold on the normalization output a:[t, M + 1], and averaging 
+the values together over N samples, starting a few samples before the point of alignment. 
+Class outputs are normalized relative to one another by multiplying each output by a gain 
+factor Kz, computed from the template values using the L-2 norm function 
+Kz= EEpz[n,m]2. (3) 
+m=l n=l 
+We evaluated the accuracy of the system with a cross-validation loop in which we train the 
+system on all of the database except one example of one class, then test on that remaining 
+example, repeating the test for each of the 220 examples in the database. The baseline 
+algorithm gives a classification accuracy of 96.4%. 
+3 Single-bit template values 
+A major consideration for hardware implementations (both digital and analog) is the mem- 
+ory storage required by the templates, one of which is required for each class. Minimal 
+storage space in terms of bits per template is practical only if the algorithm can be proved 
+to perform acceptably well under decreased levels of quantization of the template values. 
+At one bit per template location (i.e., M x N bits per template), the complexity of the hard- 
+ware is greatly simplified, but it is no longer obvious what method is best to use for learn- 
+ing the template values, or for calculating the per-class gains. The choice of the method is 
+guided by knowledge about the acoustic transients themselves, and simulation to evaluate 
+its effect on the accuracy of a typical classification task. 
+4 Simulations of different zero-mean representations 
+One bit per template value is a desirable goal, but realizing this goal requires reevaluating 
+the original correlation equation. The input values to be correlated represent band-limited 
+energy spectra, and range from zero to some maximum determined by the L-1 normaliza- 
+tion. To determine the value of a template bit, the averaged value over all examples of the 
+class in the training set must be compared to a threshold (which itself must be determined), 
+or else the input itself must be transformed into a form with zero average mean value. In 
+the latter method, the template value is determined by the sign of the transformed input, 
+averaged over all examples of the class in the training set. 
+The obvious transformations of the input which provide a vector of zero-mean signals to the 
+correlator are the time derivative of each input channel, and the difference between neigh- 
+boring channels. Certain variations of these are possible, such as a center-surround compu- 
+tation of channel differences, and zero-mean combinations of time and channel differences. 
+While there is evidence that center-surround mechanisms are common to neurobiological 
+signal processing of various sensory modalities in the brain, including processing in the 
+mammalian auditory cortex [5], time derivatives of the input are also plausible in light of 
+the short time base of acoustic transient events. Indeed, there is no reason to assume a 
+priori that channel differences are even meaningful on the time scale of transients. 
+Table 1 shows simulation results, where classification accuracy on the cross-validation test 
+is given for different combinations of continuous-valued and binary inputs and templates, 
+Optimizing Correlation Algorithms for Transient Classification 681 
+Table 1: Simulation results with different architectures. 
+Method Both Binary Both Binary (1,-1) Binary (1,0) 
+Cont. Input Binary Template Template 
+One-to-One 96.40% -- -- -- 
+Time Difference 85.59% 65.32% 59.46% 82.43% 81.98% 
+Channel Difference 90.54% 53.60% 95.05% 94.59% 94.14% 
+Center-Surround 92.79% 53.60% 95.05% 92.34% 92.34% 
+and different zero-mean transformations of the input. There are several significant points 
+to the results of these classification tasks. The first is to note that in spite of the fact that 
+acoustic transient events are short-term and the time steps between the bins in the template 
+as low as 2 ms, using time differences between samples does not yield reliable classification 
+when either the input or the template or both is reduced to binary form. However, reliability 
+remains high when the correlation is performed using channel differences. The implication 
+is that even the shortest transient events have stable and reliable structure in the frequency 
+domain, a somewhat surprising conclusion given the impulsive nature of most transients. 
+Another interesting point is that we observe no significant difference between the use of 
+pairwise channel differences and the more complicated center-surround mechanism (twice 
+the channel value minus the value of the two neighboring channels). The slight decrease in 
+accuracy for the center-surround in some instances is most likely due only to the fact that 
+one less channel contributes i

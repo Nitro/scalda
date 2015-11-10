@@ -1,0 +1,151 @@
+223 
+'Ensemble' Boltzmann Units 
+have Collective Computational Properties 
+like those of Hopfield and Tank Neurons 
+Mark Derthick and Joe Tebelskis 
+Department of Computer Science 
+Carnegie-Mellon University 
+ABSTRACT
+1 Introduction 
+There are three existing connection:,t models in which network states are assigned 
+a computational energy. These models Hopfield nets, Hopfield and Tank nets, and 
+Boltzmann Machines--search for states with minimal energy. Every link in the net- 
+work can be thought of as imposing a constraint on acceptable states, and each vio- 
+lation adds to the total energy. This is convenient for the designer because constraint 
+satisfaction problems can be mapped easily onto a network. Multiple constraints can 
+be superposed, and those states satisfying the most constraints will have the lowest 
+energy. 
+Of course there is no free lunch. Constraint satisfaction problems are generally 
+combinatorial and remain so even with a parallel implementation. Indeed, Merrick 
+Furst (personal communication) has shown that an NP-complete problem, graph col- 
+oring, can be reduced to deciding whether a connectionist network has a state with 
+an energy of zero (or below). Therefore designing a practical network for solving a 
+problem requires more than simply putting the energy minima in the right places. The 
+topography of the energy space affects the ease with which a network can find good 
+solutions. If the problem has highly interacting constraints, there will be many local 
+minima separated by energy barriers. There are two principal approaches to search- 
+ing these spaces: monotonic gradient descent, introduced by Hopfield [1] and refined 
+by Hopfield and Tank [2]; and stochastic gradient descent, used by the Boltzmann 
+Machine [3]. While the monotonic methods are not guaranteed to find the optimal 
+solution, they generally find good solutions much faster than the Boltzmann Machine. 
+This paper adds a refinement to the Boltzmann Machine search algorithm analogous 
+to the Hopfield and Tank technique, allowing the user to trade off the speed of search 
+for the quality of the solution. 
+American Institute of Physics 1988 
+224 
+2 Hopfield nets 
+A Hopfield net [1] consists of binary-valued units connected by symmetric weighted 
+links. The global energy of the network is defined to be 
+1 
+E = -   Wij$i$ j -- E IiSi 
+i piti i 
+where si is the state of unit i, and wij is the weight on the link between units i and j. 
+The search algorithm is: randomly select a unit and probe it until quiescence. 
+During a probe, a unit decides whether to be on or off, determined by the states of 
+its neighbors. When a unit is probed, there are two possible resulting global states. 
+The difference in energy between these states is called the unit's energy gap: 
+Ak  gsk=O -- gsk =1 '- E WikSi q' Ik 
+The decision rule is 
+{ 0ifAi< 0 
+si = 1 otherwise 
+This rule chooses the state with lower energy. With time, the global energy of the 
+network monotonically decreases. Since there are only a finite number of states, the 
+network must eventually reach quiescence. 
+3 Boltzmann Machines 
+A Boltzmann Machine [3] also has binary units and weighted links, and the same 
+energy function is used. Boltzmann Machines also have a learning rule for updating 
+weights, but it is not used in this paper. Here the important difference is in the 
+decision rule, which is stochastic. As in probing a Hopfield unit, the energy gap is 
+determined. It is used to determine a probability of adopting the on state: 
+1 
+P(si = 1)= 
+1 + e-ai/r 
+where T is the computational temperature. With this rule, energy does not decrease 
+monotonically. The network is more likely to adopt low energy states, but it some- 
+times goes uphill. The idea is that it can search a number of minima, but spends 
+more time in deeper ones. At low temperatures, the ratio of time spent in the deepest 
+minima is so large that the chances of not being in the global minimum are negligible. 
+It has been proven [4] that after searching long enough, the probabilities of the states 
+are given by the Boltzmann distribution, which is strictly a function of energy and 
+temperature, and is independent of topography: 
+P = e -(�-)/r (1) 
+P 
+225 
+The approach to equilibrium, where equation 1 holds, is speeded by initially 
+searching at a high temperature and gradually decreasing it. Unfortunately, reaching 
+equilibrium stills takes exponential time. While the Hopfield net settles quickly and 
+is not guaranteed to find the best solution, a Boltzmann Machine can theoretically be 
+run long enough to guarantee that the global optimum is found. Most of the time the 
+uphill moves which allow the network to escape local minima are a waste of time, 
+however. It is a direct consequence of the guaranteed ability to find the best solution 
+that makes finding even approximate solutions slow. 
+4 Hopfield and Tank networks 
+In Hop field and Tank nets [2], the units take on continuous values between zero and 
+one, so the search takes place in the interior of a hypercube rather than only on its 
+vertices. The search algorithm is deterministic gradient descent. By beginning near 
+the center of the space and searching in the direction of steepest descent, it seems 
+likely that the deepest minimum will be found. There is still no guarantee, but good 
+results have been reported for many problems. 
+The modified energy equation is 
+g -- - y  wij$isj q- i 1($)d$ - y Ii$i 
+i � i 
+(2) 
+Ri is'the input resistance to unit i, and g(u) is the sigrnoidal unit transfer function 
+1 1 
++--7r;,. The second term is zero for extreme values of $i, and is minimized at si = 3' 
+The Hop field and Tank model is continuous in time as well as value. Instead of 
+proceeding by discrete probes, the system is described by simultaneous differential 
+equations, one for each unit. Hopfield and Tank show that the following equation of 
+motion results in a monotonic decrease in the value of the energy function: 
+= -ul/r + wijsj + 
+where r = RC, C is a constant determining the speed of convergence, u = g-(si), 
+and the gain, A, is analgous to (the inverse of) temperature in a Boltzmann Machine. 
+A determines how important it is to satisfy the constraints imposed by the links to 
+other units. When A is low, these consuaints are largely ignored and the second term 
+dominates, tending to keep the system near the center of the search space, where 
+there is a single global minimum. At high gains, the minima lie at the comers of 
+the search space, in the same locations as for the Hopfield model and the Boltzmann 
+model. If the system is run at high gain, but the initial state is near the center of the 
+space, the search gradually moves out towards the comers, on the way encountering 
+continental divides between watersheds leading to all the various local minima. The 
+initial steepness of the watersheds serves as a heuristic for choosing which minima is 
+226 
+likely to be lower. This search heuristic emerges automatically from the architecture, 
+making network design simple. For many problems this single automatic heuristic 
+results in a system comparable to the best knowledge intensive algorithms in which 
+many domain specific heuristics are laboriously hand programmed. 
+For many problems, Hop field and Tank nets seem quite sufficient [5, 6]. However 
+for one network we have been using [7] the Hopfield and Tank model invariably settles 
+into poor local minima. The solution has been to use a new model combining the 
+advantages of Boltzmann Machines and Hop field and Tank networks. 
+5 'Ensemble' Boltzmann Machines 
+It seems the Hop field and Tank model gets its advantage by measuring the actual 
+gradient, giving the steepest direction to move. This is much more informative than 
+picking a random direction and deciding which of the two corners of the space to try, 
+as models using binary units must do. Peter Brown (personal communication) has 
+investigated continuous Bokzmann Machines, in which units stochastically adopt a 
+state between zero and one. The scheme presented here has a similar effect, but the 
+units actually take on discrete states between zero and one. Each ensemble unit can 
+be thought of as an ensemble of identically connected conventional Boltzmann units. 
+To probe the ensemble unit, each of its constituents is probed, and the state of the 
+ensemble unit is the average of its constituents' states. Because this average is over 
+a number of identical independent binary random variables, the ensemble unit's state 
+is binomially distributed. 
+Figure 1 shows an ensemble unit with three constituents. At infinite temperature, 
+all unit states tend toward .�, and at zero temperature the states go to zero or one 
+unless the energy gap is exactly zero. This is similar to the behavior of a Hop field and 
+Tank network at low and high gain, respectively. In Ensemble Boltzmann Machines 
+(EBMs) the tendency towards � in the absence of constraints from other units results 
+from the shape of the binomial distribution. In contrast, the second term in the energy 
+equation is responsible for this effect in the Hopfield and Tank model. 
+Although an EBM proceeds in discrete time using probes, over a large number of 
+probes the search tends to proceed in the direction of the gradient. Every time a unit 
+is probed, a move is made along one axis whose length depends on the magnitude of 
+the gradient in that direction. Because probing still contains a degree of stochasticity, 
+EBMs can escape from local minima, and if run long enough are guaranteed to find 
+the global minimum. By varying n, the number of components of each ensemble 
+unit, the system can exhibit any intermediate behavior in the tradeoff between the 
+speed of convergence of Hopfield and Tank networks, and the ability to escape local 
+minima of Boltzmann Machines. 
+Clearly when n = 1 the performance is identical to a conventional Boltzmann 
+Machine, because each unit consists of a sing

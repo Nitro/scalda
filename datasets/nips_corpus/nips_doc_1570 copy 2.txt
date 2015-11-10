@@ -1,0 +1,154 @@
+Efficient Bayesian Parameter Estimation in Large 
+Discrete Domains 
+Nir Friedman 
+Hebrew University 
+nirOcs. huj i. ac. il 
+Yoram Singer 
+AT&T Labs 
+sinerOresearch. art. com 
+Abstract 
+We examine the problem of estimating the parameters of a multinomial 
+distribution over a large number of discrete outcomes, most of which 
+do not appear in the training data. We analyze this problem from a 
+Bayesian perspective and develop a hierarchical prior that incorporates 
+the assumption that the observed outcomes constitute only a small subset 
+of the possible outcomes. We show how to efficiently perform exact 
+inference with this form of hierarchical prior and compare it to standard 
+approaches. 
+1 Introduction 
+One of the most important problems in statistical inference is multinomialestimation: Given 
+a past history of observations independent trials with a discrete set of outcomes, predict 
+the probability of the next trial. Such estimators are the basic building blocks in more 
+complex statistical models, such as prediction trees [ 1, 12, 11], hidden Markov models [9] 
+and Bayesian networks [3, 6]. The roots of multinomial estimation go back to Laplace's 
+work in the 18th century [7]. 
+In Bayesian theory, the classic approach to multinomial estimation is via the use of the 
+Dirichlet distribution (see for instance [4]). Laplace's law of succession and other 
+common methods can be derived using Bayesian inference with the Dirichlet distribution 
+as a prior distribution. The Dirichlet distribution has several properties that are useful 
+in statistical inference. In particular, estimates with Dirichlet priors are consistent (the 
+estimate converges with probability one to the true distribution), conjugate (the posterior 
+distribution is also a Dirichlet distribution), and can be computed efficiently (queries of 
+interest have a closed-form solution). Furthermore, theoretical studies of online prediction 
+of individual sequences show that prediction using Dirichlet priors is competitive with any 
+other prior distribution (see for instance [2] and the references therein). 
+Unfortunately, in some key applications, Dirichlet priors are unwieldy. These applications 
+are characterized by several features: ( a ) The set of possible outcomes is extremely large, 
+and often not known in advance. (b) The number of training examples is small compared 
+418 N. Friedman and Y. Singer 
+to the number of possible outcomes. (c) The outcomes that have positive probability 
+constitute a relatively small subset of the possible outcomes; this subset, however, is not 
+known in advance. In these situations, predictions based on a Dirichlet priors tend to assign 
+most of the probability mass to outcomes that were not seen in the training set. 
+For example, consider a natural language application, where outcomes are words drawn 
+from an English dictionary, and the problem is predicting the probability of words that follow 
+a particular word, say Bosnia. If we do not have any prior knowledge, we can consider 
+any word in the dictionary as a possible candidate. Yet, our knowledge of language would 
+lead us to believe that in fact, only few words, such as Herzegovina, should naturally 
+follow the word Bosnia. Furthermore, even in a large corpus, we do not expect to see 
+many training examples that involve this phrase. As another example consider the problem 
+of estimating the parameters of a discrete dynamical system. Here the task is to find a 
+distribution over the states that can be reached from a particular state s (possibly after the 
+system receives an external control signal). Again, in many domains it is natural to assume 
+that the system is sparse: only a small subset of states is reachable from any state. 
+In this paper, we present a Bayesian treatment of this problem using an hierarchical prior 
+that averages over an exponential number of hypotheses each of which represents a subset 
+of the feasible outcomes. Such a prior was previously used in a specific context of online 
+prediction using suffix tree transducers [11]. As we show, although this prior involves 
+exponentially many hypotheses, we can efficiently perform predictions. Moreover, our 
+approach allows us to deal with countably infinite number of outcomes. 
+2 Dirichlet priors 
+Let X be a random variable that can take L possible values from a set E. Without loss of 
+generality, let E - { 1,... L}. We are given a training set D that contains the outcomes 
+of N independent draws ate,..., atv of X from an unknown multinomial distribution ?*. 
+We denote by Ni be the number of occurrences of the Symbol i in the training data. The 
+multinomial estimation problem is to find a good approximation for ?*. 
+This problem can be stated as the problem of predicting the outcome atv+  given at ,..., atN. 
+Given a prior distribution over the possible multinomial distributions, the Bayesian estimate 
+is: 
+P(x I = f P( xN+ 
+where 0 -- (01,..., 0z,) is a vector that describes possible values of the (unknown) proba- 
+bilities P* ( 1),..., P* (L), and  is the context variable that denotes all other assumptions 
+about the domain. (We consider particular contexts in the next section.) 
+The posterior probability of 0 can rewritten using Bayes law as: 
+P(O I P(xl,...,x N I - P(O If) II 
+i 
+The family of Dirichlet distributions is conjugate to the multinomial distribution. That is, 
+if the prior distribution is from this family, so is the posterior. A Dirichlet prior for X is 
+specified by hyperparameters a,..., az,, and has the form: 
+P(01)-- I(-]4�q)'HO'-I (Oi-- 1 andOi _> Oforalli) 
+YIi l(oq) i i 
+where F(x) = fo  t:-le-tdt is the gamma function. Given a Dirichlet prior, the initial 
+prediction for each value of X is P(X 1 = i] - foiP(Ol)dO- It is 
+Efficient Bayesian Parameter Estimation in Large Discrete Domains 419 
+easy to see that, if the prior is a Dirichlet prior with hyperparameters ct,..., aL, then the 
+posterior is a Dirichlet with hyperparameters ct + N,..., a� + N�. Thus, we get that 
+the prediction for X N+ is P(X N+ -- i [ z,...,zN,) -- (ai +,Ni)/5-j(aj q- Nj). 
+We can think of the hyperparameters oi as the number of imaginary' examples in which 
+we saw outcome i. Thus, the ratio between hyperparameters corresponds to our initial 
+assessment of the relative probability of the corresponding outcomes. The total weight of 
+the hyperparameters represent our confidence (or entrenchment) in the prior knowledge. 
+As we can see, if this weight is large, our estimates for the parameters tend to be further off 
+from the empirical frequencies observed in the training data. 
+3 Hierarchical priors 
+We now describe structured priors that capture our uncertainty about the set of feasible 
+values of X. We define a random variable V that takes values from the set 2 z of possible 
+subsets of Z. The intended semantics for this variable is that Oi > 0 iff i 6 V. 
+Clearly, the hypothesis V = Z  (for Z  C_ Z) is consistent with training data only if Z  
+contains all the indices i for which Ni > 0. We denote by Z � the set of observed symbols. 
+That is, Z � = {i � Ni > 0}, and we let k � = IZ�I- 
+Suppose we know the value of V. Given this assumption, we can define a Dirichlet prior 
+over possible multinomial distributions 0 if we use the same hyper-parameter ct for each 
+symbol in V. Formally, we define the prior: 
+P(OIV) = 
+Using Eq. (2), 
+r(Ivl-) 07-' 
+iv 
+we have that: 
+(E Oi -- 1, Vi, Oi >_ O, and Oi -- 0 for all i  V) 
+i 
+,.. IVla+N 
+P(X - i lz V) = 0 
+(3) 
+ifi6 V 
+(4) 
+otherwise 
+Now consider the case where we are uncertain about the actual set of feasible outcomes. 
+We construct a two tiered prior over the values of V. We start with a prior over the size 
+of V, and then assume that all sets of the same cardinality have the same prior probability. 
+We let the random variable $ denote the cardinality of V. We assume that we are given a 
+distribution P(S = k) for k -- 1,..., L. We define the prior over sets to be: 
+P(V[$: k)= (5) 
+We now examine how to compute the posterior predictions given this hierarchical prior. Let 
+D denote the training data a:  ,..., z N. Then it is easy to verify that 
+P(X N+ =il D) 
+_ y a+ Ni )' P(V[D) (6) 
+ka+ N  
+k v, lvl=k,iv 
+Let us now examine which sets V actually contribute to this sum. 
+First, we note that sets that do not contain 5; � have zero posterior probability, since they 
+are inconsistent with the observed data. Thus, we can examine only sets V that contain Z �. 
+Second, as we noted above, P(D I V) is the same for all sets of cardinality k that contain 
+Z �. Moreover, by definition the prior for all these sets is the same. Using Bayes rule, we 
+conclude that P(V I D) is the same for all sets of size k that contain Z �. Thus, we can 
+420 N. Friedman and Y. Singer 
+simplify the inner summation in Eq. (6), by multiplying the number of sets in the score of 
+the summation by the posterior probability of such sets. 
+There are two cases. If i 6 Y?, then any set V that has non-zero posterior probability for i 
+appears in the sum. Thus, in this case we can write: 
+P(X N+I = i ] D) =   + Ni P(S = kid ) if/6 Z � 
+ka+N 
+If i  Z �, then we need to estimate the fraction of subsets of V with non-zero posterior that 
+contain i. This leads to an equation similar to the one above, but with a correction for this 
+fraction. By symmetry all unobserved outcomes have the same posterior probability. Thus, 
+we can simply divide the mass that was not assigned to the observed outcomes among the 
+unseen symbols. 
+Notice that the single term in Eq. (3) that depends on Ni can be moved outside 
+the summation. Thus, to make predictions, we only need to estimate the quantity: 
+C(O, L) L o+Ne(k i O) 
+- Ek=k � ka+N 
+and then 
+P(X v+' = i l D)= { �+JvC(D'L) if/6 Z � 
+_A-(1-C(D,L)) ifiCZ � 
+We can therefore think of C(D, L) as scaling factor that we apply to the Dirichlet prediction 
+that assumes that we have seen all of the feasible symbols. Th

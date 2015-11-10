@@ -1,0 +1,176 @@
+356 
+USING BACKPROPAGATION 
+WITH TEMPORAL WINDOWS 
+TO LEARN THE DYNAMICS 
+OF THE CMU DIRECT-DRIVE ARM II 
+K. Y. Goldberg and B. A. Pearlmutter 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+ABSTRACT 
+Computing the inverse dynamics of a robot arm is an active area of research 
+in the control literature. We hope to learn the inverse dynamics by training 
+a neural network on the measured response of a physical ann. The input to 
+the network is a temporal window of measured positions; output is a vector 
+of torques. We train the network on data measured from the first two joints 
+of the CMU Direct-Drive Arm II as it moves through a randomly-generated 
+sample of pick-and-place trajectories. We then test generalization with 
+a new trajectory and compare its output with the torque measured at the 
+physical arm. The network is shown to generalize with a root mean square 
+error/standard deviation (RMSS) of 0.10. We interpreted the weights of the 
+network in terms of the velocity and acceleration filters used in conventional 
+control theory. 
+INTRODUCTION 
+Dynamics is the study of forces. The dynamic response of a robot arm relates joint 
+torques to the position, velocity, and acceleration of its links. In order to control an ann 
+at high speed, it is important to model this interaction. In practice however, the dynamic 
+response is extremely difficult to predict. 
+A dynamic controller for a robot ann is shown in Figure 1. Feedforward torques for a 
+desired trajectory are computed off-line using a model of ann dynamics and applied to 
+the joints at every cycle in an effort to linearize the resulting system. An independent 
+feedback loop at each joint is used to correct remaining errors and compensate for external 
+disturbances. See ([3]) for an introduction to dynamic control of robot arms. 
+Conventional control theory has difficulty addressing physical effects such as friction 
+[1], backlash [2], torque non-linearity (especially dead zone and saturation) [2], high- 
+frequency dynamics [2], sampling effects [7], and sensor noise [7]. 
+We propose to use a three-layer backpropagation network [4] with sigmoid thresholds 
+to fill the box marked inverse arm in Figure 1. We will treat the arm as an unknown 
+non-linear transfer function to be represented by weights of the network. 
+Using Backpropagation with Temporal Windows 357 
+VELOiITY 
+Figure 1: Block diagram of a feedforward torque controller, after [7]. 
+Kawato, et. al. applied a neural network to learning the dynamics of a physical robot 
+arm [6]. After training on a single trajectory, they claimed their network could generalize 
+to a faster and quite different trajectory, although details were omitted. In this paper 
+we measure the ability of a neural network to generalize within a specific family of 
+trajectories on a physical arm. 
+THE CMU DD ARM H 
+We used the CMU Direct-Drive Arm II (see Figure 2) to test this approach. Direct- 
+drive arms have the capacity to be driven much faster than geared arms, bat their ability 
+to be backdriven exacerbates dynamic effects. DD arms are thus a popular target for 
+dynamics-based control. 
+Figure 2: A photograph of the CMU DD Arm II (taken from [7] with permission of the 
+author). 
+TEMPORAL WINDOWS 
+Rather than feeding the network position, velocity and acceleration data from a single 
+point in time, we give the network a window of positions. We chose this approach 
+358 Goldberg and Pearlmutter 
+because of the conceptual simplicity of using only one type of state information; velocity 
+and acceleration can be determined by filtering the window of position values. The time 
+delay introduced by such filtering in real time is avoided because desired trajectories are 
+generated off-line. 
+NETWORK ARCHITECTURE 
+The network architecture used in this study is shown in Figure 3. The input to the network 
+is the temporal window of desired position values x(t-nat),..., x(t),..., x(t+mA t) scaled 
+from 0.0 to 1.0. The output is r( O, the torque vector applied at time t. The input units 
+are connected to a set of ten hidden units which are in rum connected to a pair of output 
+units. In addition, there are direct connections from the input units to the output units. 
+torque app 
+torque 
+1 
+desired output 
+output units 
+hidden units 
+input units 
+position of 3olnt 
+poser on of 
+Figure 3: The network architecture. 
+Using Backpropagation with Temporal Windows 359 
+TRAJECTORIES 
+We sample a subset of the state-space traversed by a family of 'ick-and-place trajecto- 
+ries parameterized by two values, 0 _< 01, 02  '/4, which specify the maximum extent 
+of the shoulder (joint 1) and elbow (joint 2). Joints three through six remain locked. 
+The trajectories are generated using the parametric equation i -Oi sin 
+= T where t is 
+the time in seconds. We draw random samples from this family by generating pairs of 
+random numbers. 
+A proportional controller is used to drive the first 2 links of the DD arm along 6 random 
+trajectories from this family. Five trajectories comprise the training set while the sixth is 
+reserved for testing. Joint torque and position are measured at the amuator at 10 msec 
+intervals resulting in 300 time samples per trajectory. Thus the training corpus consists 
+of 1500 examples. For our largest network, this translates to over 700,000 floating point 
+multiplications per epoch. Training required over 20,000 epochs. 
+RESULTS 
+Table 1 shows the performance of networks with window sizes of 11, 21, and 41. As in 
+[8], we use root mean square error divided by the dat_aset's standard deviation (RMSS) 
+as an error measure. This cancels out the effects of the translation and scaling needed to 
+fit desired output data within the range of backpropagation units. A window of size 11 
+refers to a window centered at time t that includes 5 time steps before and 5 time steps 
+after t, yielding a total of eleven samples. As expected, the network performs better on 
+the training set than on th new trajectories. 
+Window Size RMSS on Training Data RMSS on Trajectory 6 
+11 0.078 0.22 
+21 0.027 0.10 
+41 0.024 0.13 
+Table 1: RMSS errors of networks with different window sizes on training and test data. 
+The lowest error rate was achieved with a window size of 21. We conjecture that the 
+improved generalization between a window of size 11 and a window of size 21 is caused 
+by the fact that a window of size 11 does not see enough data to make sufficiently 
+accurate estimates of the acceleration. In contrast, the network with a window of size 41 
+seems to have used a portion of its extra capacity to memorize some of the training set, 
+thus improving performance on the training set in a way that impairs generalization. 
+360 Goldberg and Pearlmutter 
+Figures 4, 5, and 6, show measured vs. predicted torque for joint 1 (the shoulder) over 
+the course of the test trajectory. Measured torque (common to all three figures) is drawn 
+with a fine line. 
+Figure 4: Torque vs. time. Predicted torque (bold fine) for network with window size 
+11. RMSS error over the entire trajectory is 0.22. 
+Figure 5: Torque vs. time. Predicted torque (bold line) for network with window size 
+21. RMSS error over the entire trajectory is 0.10. 
+Figure 6: Torque vs. time. Predicted torque (bold line) for network with window size 
+41. RMSS error over the entire trajectory is 0.13. 
+Using Backpropagation with TemporE Windows 361 
+ANALYSIS 
+WEIGHT DISPLAYS 
+Figure 7 shows the weights developed by the networks after training. This Hinton 
+diagram shows the weights in a somewhat recursive fashion. Each of the submarine 
+shapes represents a neuron. The top two are the output units, with the shoulder torque 
+on the left and the elbow torque on the right. The rest are hidden units. 
+The blobs within each unit correspond to its local weights; the larger the blob, the larger 
+the weight. White blobs are positive and black ones are negative. The two bottom rows 
+of blobs in each unit correspond to the weights of the connections from the temporal 
+window. 
+The top two blobs correspond to the weights of its outgoing connections. The remaining 
+blob on the upper left is each unit's bias, the strength of a connection from a unit which 
+is always on, which is equivalent to the negative of the threshold. 
+Figure 7: Hinton diagram for a network with window size 21. The largest weight has a 
+magnitude of 11.7. 
+Horizontal position in the temporal window corresponds to time. Thus for any unit we 
+can plot its incoming weights as a function of position (time): f(x),-w _< x _< w. 
+Interpolating to a continuous function, we can decompose this function into its constant, 
+even, and odd parts. 
+const 
+= I f(x)dx 
+2w w 
+362 Goldberg and Pearlmutter 
+f (x) + f (- x) 
+even(x) = 
+2 
+f(x) -f(-x) 
+odd(x) = 
+2 
+- const. 
+Figure 8 shows the weight function for an output unit. We can interpret the weight 
+function shown in Fig. 8 as the superposition of temporally smooth filters shaped to detect 
+a combination of velocity (the odd componen0 and acceleration (the even component). 
+2 
+1 
+0 
+-1 
+-3 
+-10 
+-8 -6 -4 -2 0 2 4 6 8 10 
+timo 
+Figure 8: A weight function (bold line) decomposed into constant, even, and odd com- 
+ponents (fine lines). 
+CONCLUSION 
+We have shown that a three-layer backpropagation network is capable of generating 
+accurate feedforward torques for a limited family of pick-and-place trajectories on a 
+physical robot arm. By using a temporal window of position values as input, the resulting 
+weights can be interpreted as the velocity and acceleration filters used in conventional 
+control theory. 
+The primary argument in favor of the conventional Newton-Euler formulation is that by 
+reasoning from first principles it models the dynamics of an ideal arm at every point in 
+state space. The neural network described in this paper models the physical arm within 
+a subset of state space. Because the neural model is derived from empirical dam, it can 
+be se

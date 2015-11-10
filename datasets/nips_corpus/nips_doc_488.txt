@@ -1,0 +1,173 @@
+A Weighted Probabilistic Neural Network 
+David Montana 
+Bolt Beranek and Newman Inc. 
+10 Moulton Street 
+Cambridge, MA 02138 
+Abstract 
+The Probabilistic Neural Network (PNN) algorithm represents the likeli- 
+hood function of a given class as the sum of identical, isotropic Gaussians. 
+In practice, PNN is often an excellent pattern classifier, outperforming 
+other classifiers including backpropagation. However, it is not robust with 
+respect to affine transformations of feature space, and this can lead to 
+poor performance on certain data. We have derived an extension of PNN 
+called Weighted PNN (WPNN) which compensates for this flaw by allow- 
+ing anisotropic Gaussians, i.e. Gaussians whose covariance is not a mul- 
+tiple of the identity matrix. The covariance is optimized using a genetic 
+algorithm, some interesting features of which are its redundant, logarith- 
+mic encoding and large population size. Experimental results validate our 
+claims. 
+I INTRODUCTION 
+1.1 PROBABILISTIC NEURAL NETWORKS (PNN) 
+of its natural mapping onto a two-layer feedforward network. 
+Let the exemplars from class i be the k-vectors  for j = 
+likelihood function for class i is 
+PNN (Specht 1990) is a pattern classification algorithm which falls into the broad 
+class of nearest-neighbor-like algorithms. It is called a neural network because 
+It works as follows. 
+1,...,Ni. Then, the 
+I N, 
+= 
+(1) 
+111o 
+A Weighted Probabilistic Neural Network 1111 
+class A class B 
+(a) 
+A 2 
+class A 
+A 1 
+(b) 
+B 1 
+class B 
+Figure 1: PNN is not robust with respect to affine transformations of feature space. 
+Originally (a), A2 is closer to its classmate A1 than to B1; however, after a simple 
+arline transformation (b), A2 is closer to 
+and the conditional probability for class i is 
+M 
+= (2) 
+j=l 
+Note that the class likelihood functions are sums of identical isotropic Gaussians 
+centered at the exemplars. 
+The single free parameter of this algorithm is a, the variance of the Gaussians (the 
+rest of the terms in the likelihood functions are determined directly from the training 
+data). Hence, training a PNN consists of optimizing a relative to some evaluation 
+criterion, typically the number of classification errors during cross-validation (see 
+Sections 2.1 and 3). Since the search space is one-dimensional, the search procedure 
+is trivial and is often performed by hand. 
+1.2 THE PROBLEM WITH PNN 
+The main drawback of PNN and other nearest-neighbor-like algorithms is that 
+they are not robust with respect to affine transformations (i.e., transformations of 
+the form Z  AZ + ) of feature space. (Note that in theory affine transformations 
+should not affect the performance of backpropagation, but the results of Section 3 
+show that this is not true in practice.) Figures I and 2 depict examples of how 
+arline transformations of feature space affect classification performance. In Figures 
+la and 2a, the point A2 is closer (using Euclidean distance) to point A1, which is 
+also from class A, than to point B1, which is from class B. Hence, with a training set 
+consisting of the exemplars A1 and B1, PNN would classify A2 correctly. Figures 
+lb and 2b depict the feature space after affine transformations. In both cases, A2 is 
+closer to B1 than to A1 and would hence be classified incorrectly. For the example 
+of Figure 2, the transformation matrix A is not diagonal (i.e., the principle axes 
+of the transformation are not the coordinate axes), and the adverse effects of this 
+transformation cannot be undone by any affine transformation with diagonal A. 
+This problem has motivated us to generalize the PNN algorithm in such a way that 
+it is robust with respect to affine transformations of the feature space. 
+1 1 12 Montana 
+AAclass A 
+class B 1 
+(a) 
+1 
+class A 
+1 
+/class B 
+(b) 
+Figure 2: The principle axes of the affine transformation do not necessarily corre- 
+spond with the coordinate axes. 
+1.3 A SOLUTION: WEIGHTED PNN (WPNN) 
+This flaw of nearest-neighbor-like algorithms has been recognized before, and there 
+have been a few proposed solutions. They all use what Dasarathy (1991) calls 
+modified metrics, which are non-Euclidean distance measures in feature space. 
+All the approaches to modified metrics define criteria which the chosen metric 
+should optimize. Some criteria allow explicit derivation of the new metrics (Short 
+and Fukunuga 1981; Fukunuga and Flick 1984). However, the validity of these 
+derivations relies on there being a very large number of exemplars in the training 
+set. A more recent set of approaches (Atkeson 1991; Kelly and Davis 1991) (i) 
+use criteria which measure the performance on the training set using leaving-one- 
+out cross-validation (see (Stone 1974) and Section 2.1), (ii) restrict the number of 
+parameters of the metric to increase statistical significance, and (iii) optimize the 
+parameters of the metric using non-linear search techniques. For his technique of 
+locally weighted regression, Atkeson (1991) uses an evaluation criterion which is 
+the sum of the squares of the error using leaving-one-out. His metric has the form 
+d 2 = wl(xl _yl)2+ ...+wk(x _yk)2, and hence has k free parameters wl, ..., w. He 
+uses Levenberg-Marquardt to optimize these parameters with respect to the evalu- 
+ation criterion. For their Weighted K-Nearest Neighbors (WKNN) algorithm, Kelly 
+and Davis (1991) use an evaluation criterion which is the total number of incorrect 
+classifications under leaving-one-out. Their metric is the same as Atkeson's, and 
+their optmization is done with a genetic algorithm. 
+We use an approach similar to that of Atkeson (1991) and Kelly and Davis (1991) 
+to make PNN more robust with respect to affine transformations. Our approach, 
+called Weighted PNN (WPNN), works by using anisotropic Gaussians rather than 
+the isotropic Gaussians used by PNN. An anisotropic Gaussian has the form 
+1 e -(-�)rr'-(-�) The covariance E is a nonnegative-definite kxk 
+(2r)k/2(det p,) /2 � 
+symmetric matrix. Note that E enters into the exponent of the Gaussian so as to 
+define a new distance metric, and hence the use of anisotropic Gaussians to extend 
+PNN is analogous to the use of modified metrics to extend other nearest-neighbor- 
+like algorithms. 
+The likelihood function for class i is 
+1 N, 
+Li() Ni(27r)/2(det y])l/2 j:l 
+e-(-%) r (-s) 
+(3) 
+A Weighted Probabilistic Neural Network 1 113 
+and the conditional probability is still as given in Equation 2. Note that when Z is 
+a multiple of the identity, i.e. E -- trI, Equation 3 reduces to Equation 1. Section 2 
+describes how we select the value of Z. 
+To ensure good generalization, we have so far restricted ourselves to diagonal co- 
+variances (and thus metrics of the form used by Atkeson (1991) and Kelly and 
+Davis (1991). This reduces the number of degrees of freedom of the covariance from 
+k(k + 1)/2 to k. However, this restricted set of covariances is not sufficiently general 
+to solve all the problems of PNN (as demonstrated in Section 3), and we therefore 
+in Section 2 hint at some modifications which would allow us to use arbitrary co- 
+variances. 
+2 OPTIMIZING THE COVARIANCE 
+We have used a genetic algorithm (Goldberg 1988) to optimize the covariance of the 
+Gaussians. The code we used was a non-object-oriented C translation of the OOGA 
+(Object-Oriented Genetic Algorithm) code (Davis 1991). This code preserves the 
+features of OOGA including arbitrary encodings, exponential fitness, steady-state 
+replacement, and adaptive operator probabilities. We now describe the distinguish- 
+ing features of our genetic algorithm: (1) the evaluation function (Section 2.1), (2) 
+the genetic encoding (Section 2.2), and (3) the population size (Section 2.3). 
+2.1 THE EVALUATION FUNCTION 
+To evaluate the performance of a particular covariance matrix on the training set, we 
+use a technique called leaving-one-out, which is a special form of cross-validation 
+(Stone 1974). One exemplar at a time is withheld from the training set, and we 
+then determine how well WPNN with that covariance matrix classifies the with- 
+held exemplar. The full evaluation is the sum of the evaluations on the individual 
+exemplars. 
+For the exemplar , let Lq() for q = 1, ..., M denote the class likelihoods obtained 
+upon withholding this exemplar and applying Equation 3, and let /Sq() be the 
+probabilities obtained from these likelihoods via Equation 2. Then, we efine the 
+performance as 
+M N, 
+E = E E( (1 -/5i() )2 + E(/q ())2) (4) 
+i=1 j=l qi 
+We have incorporated two heuristics to quickly identify covariances which are clearly 
+bad and give them a value of c, the worst possible score. This greatly speeds up the 
+optimization process because many of the generated covariances can be eliminated 
+this way (see Section 2.3). The first heuristic identifies covariances which are too 
+small based on the condition that, for some exemplar  and all q = 1,...M, 
+Lq() = 0 to within the precision of IEEE double-precision floating-point format. 
+In this case, the probabilities 15q(X) are not well-defined. (When E is this small, 
+WPNN is approximately equivalent to WKNN with k - 1, and if such a small E is 
+indeed required, then the WKNN algorithm should be used instead.) 
+1 114 Montana 
+The second heuristic identifies covariances which are too big in the sense that 
+too many exemplars contribute significantly to the likelihood functions. Empirical 
+observations and theoretical arguments show that PNN (and WPNN) work best 
+when only a small fraction of the exemplars contribute significantly. Hence, we 
+reject a particular E if, for any exemplar j, 
+M 
+2 e--('--J)T--l(l--J) > (2 Zi)/P (5) 
+Here, P is a parameter which we chose for our experiments to equal four. 
+Note: If we wish to improve the generalization by discarding some of the degrees 
+of freedom of the covariance (which we will need to do when we allow non-diagonal 
+covariances), we should modify the evaluation functio

@@ -1,0 +1,186 @@
+Dual Estimation and the Unscented 
+Transformation 
+Eric A. Wan 
+ericwan @ ece. ogi. edu 
+Rudolph van der Merwe 
+rudmerwe @ ece. ogi. edu 
+Alex T. Nelson 
+atnelson @ ece. ogi. edu 
+Oregon Graduate Institute of Science & Technology 
+Department of Electrical and Computer Engineering 
+20000 N.W. Walker Rd., Beaverton, Oregon 97006 
+Abstract 
+Dual estimation refers to the problem of simultaneously estimating the 
+state of a dynamic system and the model which gives rise to the dynam- 
+ics. Algorithms include expectation-maximization (EM), dual Kalman 
+filtering, and joint Kalman methods. These methods have recently been 
+explored in the context of nonlinear modeling, where a neural network 
+is used as the functional form of the unknown model. Typically, an ex- 
+tended Kalman filter (EKF) or smoother is used for the part of the al- 
+gorithm that estimates the clean state given the current estimated model. 
+An EKF may also be used to estimate the weights of the network. This 
+paper points out the flaws in using the EKF, and proposes an improve- 
+ment based on a new approach called the unscented transformation (UT) 
+[3]. A substantial performance gain is achieved with the same order of 
+computational complexity as that of the standard EKF. The approach is 
+illustrated on several dual estimation methods. 
+1 Introduction 
+We consider the problem of learning both the hidden states x and parameters w of a 
+discrete-time nonlinear dynamic system, 
+Xkq- 1 --- F(xk,vk,w) (1) 
+= (2) 
+where y is the only observed signal. The process noise v drives the dynamic system, and 
+the observation noise is given by n. Note that we are not assuming additivity of the noise 
+sources. 
+A number of approaches have been proposed for this problem. The dual EKF algorithm 
+uses two separate EKFs: one for signal estimation, and one for model estimation. The states 
+are estimated given the current weights and the weights are estimated given the current 
+states. In the joint EKF, the state and model parameters are concatenated within a combined 
+state vector, and a single EKF is used to estimate both quantities simultaneously. The 
+EM algorithm uses an extended Kalman smoother for the E-step, in which forward and 
+Dual Estimation and the Unscented Transformaa'on 667 
+backward passes are made through the data to estimate the signal. The model is updated 
+during a separate M-step. 
+For a more thorough treatment and a theoretical basis on how these algorithms relate, see 
+Nelson [6]. Rather than provide a comprehensive comparison between the different algo- 
+rithms, the goal of this paper is to point out the assumptions and flaws in the EKF (Sec- 
+tion 2), and offer a improvement based on the unscented transformation/filter (Section 3). 
+The unscented filter has recently been proposed as a substitute for the EKF in nonlinear 
+control problems (known dynamic model) [3]. This paper presents new research on the use 
+of the UF within the dual estimation framework for both state and weight estimation. In 
+the case of weight estimation, the UF represents a new efficient second-order method for 
+training neural networks in general. 
+2 Flaws in the EKF 
+Assume for now that we know the model (weight parameters) for the dynamic system in 
+Equations 1 and 2. Given the noisy observation y, a recursive estimation for  can be 
+expressed in the form, 
+(optimal prediction of x) + G x [yk - (optimal prediction of y)] (3) 
+This recursion provides the optimal MMSE estimate for x assuming the prior estimate 
+and current observation y are Gaussian. We need not assume linearity of the model. The 
+optimal terms in this recursion are given by 
+= 
+G: PxyP;Js,  
+.; = E[H(c,n)], (4) 
+where the optimal prediction : is the expectation of a nonlinear function of the random 
+variables c_ and v_ (similar interpretation for the optimal prediction of y). The 
+optimal gain term is expressed as a function of posterior covariance matrices (with 2� - 
+y - .). Note these terms also require taking expectations of a nonlinear function of the 
+prior state estimates. 
+The Kalman filter calculates these quantities exactly in the linear case. For nonlinear mod- 
+els, however, the extended KF approximates these as: 
+  F(/c_,9) G m PxyP:J- r- = H( fi), (5) 
+y y  
+where predictions are approximated as simply the function of the prior mean value for es- 
+timates (no expectation taken). The covariance are determined by linearizing the dynamic 
+equations (x+ m Axk + Bye, y  CXk + Dn), and then determining the posterior 
+covariance matrices analytically for the linear system. As such, the EKF can be viewed 
+as providing first-order approximations to the optimal terms (in the sense that expres- 
+sions are approximated using a first-order Taylor series expansion of the nonlinear terms 
+around the mean values). While second-order versions of the EKF exist, their increased 
+implementation and computational complexity tend to prohibit their use. 
+3 The Unscented Transformation/Filter 
+The unscented transformation (UT) is a method for calculating the statistics of a random 
+variable which undergoes a nonlinear transformation [3]. Consider propagating a random 
+variable c (dimension L) through a nonlinear function,  = g(c). Assume c has mean & 
+and covariance P,. To calculate the statistics of , we form a matrix X of 2L + 1 sigma 
+vectors A'i, where the first vector (A'o) corresponds to &, and the rest are computed from 
+the mean (+)plus and (-)minus each column of the matrix square-root of P,. These sigma 
+668 E. A. Wan, R. v. d. Merwe and A. T. Nelson 
+vectors are propagated through the nonlinear function, and the mean and covariance for 1 
+are approximated using a weighted sample mean and covariance, 
+1 tg('o) + g(rt'i) , (6) 
+t, 
+1 n[g(&) - 3][g(&) - 3] T +  [g(Xi) - 3][g(Xi) - B] T (7) 
+PZ m L + i= 
+where n is a scaling hcton Note that this method differs substantially from general sta- 
+pling methods (e.g., Monte-C1o methods and pticle filters [1]) which requffe orders 
+of magnitude more staple poin in an attempt to propagate an accurate (possibly non- 
+Gaussian) distribution of the state. The UT approximations e accuram to the third order 
+for Gaussian inputs for all nonlineities. For non-Gaussian inputs, approximations e 
+accurate to at least the second-order, with the accuracy detemined by the choice of n [3]. 
+A simple exmple is shown in Figure 1 for a 2-dimensional system: the left plots shows 
+e e mean and coviance propagation using Monte-C1o stapling; the center plots 
+show e performce of the  (note only 5 sigma points e requffed); the right plo 
+show e resulB using a lineization approach as would be done in e E. e superior 
+performance of the UT is clear. 
+Actual l[sampling) 
+true mean 
+UT Linearized (EKF) 
+sigma points 
+y = g(xd 
+1 
+UT 
+tme covariance / me?. UT coiariance 
+transformed sigma points 
+P = ArPA 
+I 
+ATPaA 
+Figure 1: Example of the UT for mean and covariance propagation. 
+UT, c) first-order linear (EKF). 
+a) actual, b) 
+The unscented filter (UF) [3] is a straightforward extension of the UT to the recursive 
+estimation in Equation 3, where we set c - , and denote the corresponding sigma matrix 
+as X(k[k). The UF equations are given on the next page. It is interesting to note that no 
+explicit calculation of Jacobians or Hessians are necessary to implement this algorithm. 
+The total number of computations is only order L 2 as compared to L  for the EKF.  
+4 Application to Dual Estimation 
+This section shows the use of the UF within several dual estimation approaches. As an ap- 
+plication domain for comparison, we consider modeling a noisy time-series as a nonlinear 
+Note that a matrix square-root using the Cholesky factorization is of order La/. However, the 
+covariance matrices are expressed recursively, and thus the square-root can be computed in only order 
+L 2 by performing a recursive update to the Cholesky factorization. 
+Dual Estimation and the Unscented Transformation 669 
+UF Equations 
+Wo = ,q(� + ,) , w... w2L = 1/2(� + ) 
+x(l 1) r[x( 11 1) / 
+--  -- -- vv j 
+i:o WZ(klk - 1) 
+-- x k ] 
+E=o m[&(l - 1) - r][(l 1) - - r 
+p = 2 
+y(l 1) [(1 1) / 
+-- 2L 
+y = =o wY(I- 1) 
+2L 
+_ -- y ] 
+P - E=o w[Y(l- 1) ;][Y(I- 1)- - r 
+2L 
+= Yk ] 
+P E=o w[(l - 1) - ][y(l - 1) - - r 
+k = x + Pxy Pg (Y - ) 
+P P Pxy -1 ]rpT 
+= - (Py y 
+autoregression: 
+x =  (x_, ...x_, w) +  
+y = x + n, Vk  {1...N} 
+(8) 
+The underlying clean signal xk is a nonlinear function of its past M values, driven by 
+2 The observed data point yk includes the 
+white Gaussian process noise v with variance a v. 
+2 The corresponding 
+additive noise n, which is assumed to be Gaussian with variance a s. 
+state-space representation for the signal z is given by: 
+Xk 
+Xk--1 
+Xk--M+i.] 
+= + (9) 
+/(xk_,w) 
+o o I 
+q- 
+B � Uk-- 1 
+y=[1 0 -.- 0].x+n (10) 
+In this context, the dual estimation problem consists of simultaneously estimating the clean 
+signal xk and the model parameters w from the noisy data y. 
+4.1 Dual EKF / Dual UF 
+One dual estimation approach is the dual extended Kalman filter developed in [8, 6]. The 
+dual EKF requires separate state-space representation for the signal and the weights. A 
+state-space representation for the weights is generated by considering them to be a station- 
+ary process with an identity state transition matrix, driven by process noise u: 
+w = w_ +uk (11) 
+y = f(x_, w) + v + nk. (12) 
+The noisy measurement y has been rewritten as an observation on w. This allows the use 
+of an EKF for weight estimation (representing a second-order optimization procedure) 
+[7]. Two EKFs can now be run simultaneously for signal and weight estimation. At every 
+time-step, the current estimate of the weights is used in the signal-filter, and the current 
+estimate of the signal-state is used in the weight-filter. 
+670 E

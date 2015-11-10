@@ -1,0 +1,146 @@
+Memory-based Stochastic Optimization 
+Andrew W. Moore and Jeff Schneider 
+School of Computer Science 
+Carnegie-Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+In this paper we introduce new algorithms for optimizing noisy 
+plants in which each experiment is very expensive. The algorithms 
+build a global non-linear model of the expected output at the same 
+time as using Bayesian linear regression analysis of locally weighted 
+polynomial models. The local model answers queries about confi- 
+dence, noise, gradient and Hessians, and use them to make auto- 
+mated decisions similar to those made by a practitioner of Response 
+Surface Methodology. The global and local models are combined 
+naturally as a locally weighted regression. We examine the ques- 
+tion of whether the global model can really help optimization, and 
+we extend it to the case of time-varying functions. We compare 
+the new algorithms with a highly tuned higher-order stochastic op- 
+timization algorithm on randomly-generated functions and a sim- 
+ulated manufacturing task. We note significant improvements in 
+total regret, time to converge, and final solution quality. 
+I INTRODUCTION 
+In a stochastic optimization problem, noisy samples are taken from a plant. A 
+sample consists of a chosen control u (a vector of real numbers) and a noisy observed 
+response y. y is drawn from a distribution with mean and variance that depend on 
+u. y is assumed to be independent of previous experiments. Informally the goal is 
+to quickly find control u to maximize the expected output Ely I u]. This is different 
+from conventional numerical optimization because the samples can be very noisy, 
+there is no gradient information, and we usually wish to avoid ever performing badly 
+(relative to our start state) even during optimization. Finally and importantly: 
+each experiment is very expensive and there is ample computational time 
+(often many minutes) for deciding on the next experiment. The following questions 
+are both interesting and important: how should this computational time best be 
+used, and how can the data best be used? 
+Stochastic optimization is of real industrial importance, and indeed one of our 
+reasons for investigating it is an association with a U.S. manufacturing company 
+Memory-based Stochastic Optimization 1067 
+that has many new examples of stochastic optimization problems every year. 
+The discrete version of this problem, in which u is chosen from a discrete set, 
+is the well known k-armed bandit problem. Reinforcement learning researchers 
+have recently applied bandit-like algorithms to efficiently optimize several dis- 
+crete problems [Kaelbling, 1990, Greiner and Jurisica, 1992, Gratch et al., 1993, 
+Maron and Moore, 1993]. This paper considers extensions to the continuous case 
+in which u is a vector of reals. We anticipate useful applications here too. Conti- 
+nuity implies a formidable number of arms (uncountably infinite) but permits us to 
+assume smoothness of Ely I u] as a function of u. 
+The most popular current techniques are: 
+� Response Surface Methods (RSM). Current RSM practice is described in 
+the classic reference [Box and Draper, 1987]. Optimization proceeds by cautious 
+steepest ascent hill-climbing. A region of interest (ROI) is established at a start- 
+ing point and experiments are made at positions within the region that can best 
+be used to identify the function properties with low-order polynomial regression. 
+A large portion of the RSM literature concerns experimental design--the decision 
+of where to take data points in order to acquire the lowest variance estimate of 
+the local polynomial coefficients in a fixed number of experiments. When the 
+gradient is estimated with sufficient confidence, the ROI is moved accordingly. 
+Regression of a quadratic locates optima within the ROI and also diagnoses ridge 
+systems and saddle points. 
+The strength of RSM is that it is careful not to change operating conditions based 
+on inadequate evidence, but moves onde the data justifies. A weakness of RSM 
+is that human judgment is needed: it is not an algorithm, but a manufacturing 
+methodology. 
+� Stochastic Approximation methods. The algorithm of [Robbins and Monro, 
+1951] does root finding without the use of derivative estimates. Through the use of 
+successively smaller steps convergence is proven under broad assumptions about 
+noise. Keifer-Wolfowitz (KW) [Kushner and Clark, 1978] is a related algorithm 
+for optimization problems. From an initial point it estimates the gradient by 
+performing an experiment in each direction along each dimension of the input 
+space. Based on the estimate, it moves its experiment center and repeats. Again, 
+use of decreasing step sizes leads to a proof of convergence to a local optimum. 
+The strength of KW is its aggressive exploration, its simplicity, and that it comes 
+with convergence guarantees. However, it has more of a danger of attempting 
+wild experiments in the presence of noise, and effectively discards the data it 
+collects after each gradient estimate is made. In practice, higher order versions 
+of KW are available in which convergence is accelerated by replacing the fixed 
+step size schedule with an adaptive one [Kushner and Clark, 1978]. Later we 
+compare the performance of our algorithms to such a higher-order KW. 
+2 MEMORY-BASED OPTIMIZATION 
+Neither KW nor RSM uses old data. After a gradient has been identified the control 
+u is moved up the gradient and the data that produced the gradient estimate is 
+discarded. Does this lead to inefficiencies in operation? This paper investigates one 
+way of using old data: build a global non-linear plant model with it. 
+We use locally weighted regression to model the system [Cleveland and Delvin, 1988, 
+Atkeson, 1989, Moore, 1992]. We have adapted the methods to return posterior 
+distributions for their coefficients and noise (and thus, indirectly, their predictions) 
+1068 A.W. MOORE, J. SCHNEIDER 
+based on very broad priors, following the Bayesian methods for global linear regres- 
+sion described in [DeGroot, 1970]. 
+We estimate the coefficients/ = {/l .../m } of a local polynomial model in which 
+the data was generated by the polynomial and corrupted with gaussian noise of 
+variance ae, which we also estimate. Our prior assumption will be that / is dis- 
+tributed according to a multivariate gaussian of mean 0 and covariance matrix ,. 
+Our prior on a is that 1/a e has a gamma distribution with parameters c and/. 
+Assume we have observed n pieces of data. The jth polynomial term for the ith 
+data point is Xij and the output response of the ith data point is Y/. Assume 
+further that we wish to estimate the model local to the query point Xq, in which a 
+data point at distance di from the the query point has weight wi = exp(-di/K). 
+K, the kernel width is a fixed parameter that determines the degree of localness in 
+the local regression. Let W = Diag(w, we... w). 
+The marginal posterior distribution of/ is'a t distribution with mean/ = (,- + 
+X T WX)-  (X T WeY) covariance 
+(2/3+(YT--iTxT)weyT)(,.I - + xTwx)-i / (2c+ -i__wi ) (1) 
+and c + --i= w degrees of freedom. 
+We assume a wide, weak, prior  = Diag(20e,20e,...20),c = 0.8,/3 = 0.001, 
+meaning the prior assumes each regression coefficient independently lies with high 
+probability in the range -20 to 20, and the noise lies in the range 0.01 to 0.5. 
+Briefly, we note the following reasons that Bayesian locally weighted polynomial 
+regression is particularly suited to this application: 
+� We can directly obtain meaningful confidence estimates of the joint pdf of the 
+regressed coefficients and predictions. Indirectly, we can compute the probability 
+distribution of the steepest gradient, the location of local optima and the principal 
+components of the local Hessian. 
+� The Bayesian approach allows meaningful regressions even with fewer data points 
+than regression coefficients--the posterior distribution reveals enormous lack of 
+confidence in some aspects of such a model but other useful aspects can still be 
+predicted with confidence. This is crucial in high dimensions, where it may be 
+more effective to head in a known positive gradient without waiting for all the 
+experiments that would be needed for a precise estimate of steepest gradient. 
+� Other pros and cons of locally weighted regression in the context of control can 
+be found in [Moore et al., 1995]. 
+Given the ability to derive a plant model from data, how should it best be used? 
+The true optimal answer, which requires solving an infinite-dimensional Markov 
+decision process, is intractable. We have developed four approximate algorithms 
+that use the learned model, described briefly below. 
+� AutoRSM. Fully automates the (normally manual) RSM procedure and incor- 
+porates weighted data from the model; not only from the current design. It uses 
+online experimental design to pick ROI design points to maximize information 
+about local gradients and optima. Space does not permit description of the linear 
+algebraic formulations of these questions. 
+� PMAX. This is a greedy, simpler approach that uses the global non-linear model 
+from the data to jump immediately to the model optimum. This is similar to the 
+technique described in [Botros, 1994], with two extensions. First, the Bayesian 
+Memory-based Stochastic Optimization 1069 
+Figure 1: Three examples 
+of 2-d functions used in op- 
+timization experiments 
+priors enable useful decisions before the regression becomes full-rank. Second, 
+local quadratic models permit second-order convergence near an optimum. 
+� IEMAX. Applies Kaelbling's IE algorithm [Kaelbling, 1990] in the continuous 
+case using Bayesian confidence intervals. 
+argmax 
+Uchosen -- Apt(U) (2) 
+u 
+where fopt (u) is the top of the 95th %-ile confidence interval. The intuition here 
+is that we are encouraged to explore more aggressively than PMAX, but will not 
+explore areas that are confi

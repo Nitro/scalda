@@ -1,0 +1,150 @@
+A Framework for Non-rigid Matching 
+and Correspondence 
+Suguna Pappu, Steven Gold, and Anand Rangarajan 1 
+Departments of Diagnostic Radiology and Computer Science 
+and the Yale Neuroengineering and Neuroscience Center 
+Yale University New Haven, CT 06520-8285 
+Abstract 
+Matching feature point sets lies at the core of many approaches to 
+object recognition. We present a framework for non-rigid match- 
+ing that begins with a skeleton module, affine point matching, 
+and then integrates multiple features to improve correspondence 
+and develops an object representation based on spatial regions to 
+model local transformations. The algorithm for feature matching 
+iteratively updates the transformation parameters and the corre- 
+spondence solution, each in turn. The aftme mapping is solved in 
+closed form, 'which permits its use for data of any dimension. The 
+correspondence is set via a method for two-way constraint satisfac- 
+tion, called softassign, which has recently emerged from the neural 
+network/statistical physics realm. The complexity of the non-rigid 
+matching algorithm with multiple features is the same as that of 
+the affine point matching algorithm. Results for synthetic and real 
+world data are provided for point sets in 2D and 3D, and for 2D 
+data with multiple types of features and parts. 
+I Introduction 
+A basic problem of object recognition is that of matching- how to associate sensory 
+data with the representation of a known object. This entails finding a transforma- 
+tion that maps the features of the object model onto the image, while establishing a 
+correspondence between the spatial features. However, a tractable class of transfor- 
+mation, e.g., affine, may not be sufficient if the object is non-rigid or has relatively 
+independent parts. If there is noise or occlusion, spatial information alone may 
+not be adequate to determine the correct correspondence. In our previous work in 
+spatial point matching [1], the 2D arline transformation was decomposed into its 
+e-mail address of authors: lastname-firstname@cs.yMe.edu 
+796 S. PAPPU, S. GOLD, A. RANGARAJAN 
+physical component elements, which does not generalize easily to 3D, and so, only 
+a rigid 3D transformation was considered. 
+We present a framework for non-rigid matching that begins with solving the basic 
+affine point matching problem. The algorithm iteratively updates the affine pa- 
+rameters and correspondence in turn, each as a function of the other. The affine 
+transformation is solved in closed form, which lends tremendous flexibility- the 
+formulation can be used in 2D or 3D. The correspondence is solved by using a 
+softassign [1] procedure, in which the two-way assignment constraints are solved 
+without penalty functions. The accuracy of the correspondence is improved by the 
+integration of multiple features. A method for non-rigid parameter estimation is 
+developed, based on the assumption of a well-articulated model with distinct re- 
+gions, each of which may move in an affine fashion, or can be approximated as 
+such. Umeyama [3] has done work on parameterized parts using an exponential 
+time tree search technique, and Wakahara [4] on local affine transforms, but neither 
+integrates multiple features nor explicitly considers the non-rigid matching case, 
+while expressing a one-to-one correspondence between points. 
+2 Aftinc Point Matching 
+The affine point matching problem is formulated as an optimization problem for 
+determining the correspondence and affine transformation between feature points. 
+Given two sets of data points )j G R -1, n = 3, 4..., j = 1,..., J, the image, 
+and I) G R -, n - 3, 4,..., k = 1,..., K, the model, find the correspondence and 
+associated arline transformation that best maps a subset of the image points onto a 
+subset of the model point set. These point sets are expressed in homogeneous coor- 
+dinates, Xj = (1,)j), Y -- (1, I7). { aij } -- A G R  x is the affine transformation 
+matrix. Note that{aj - 0 Vj} because of the homogeneous coordinates. Define the 
+match variable Mj where Mj  [0, 1]. For a given match matrix {Mj}, transfor- 
+mation A and I, an identity matrix of dimension n, j, Mj[IX j - (A + I)Y[I 2 
+expresses the similarity between the point sets. The term -a j, Mj, with pa- 
+rameter a > 0 is appended to this to encourage matches (else Mj = 0 V j, k 
+minimizes the function). To limit the range of transformations, the terms of the 
+affine matrix are regularized via a term )dr(ATA) in the objective function, with 
+parameter A, where tr(.) denotes the trace of the matrix. Physically, Xj may fully 
+match to one Y, partially match to several, or may not match to any point. A sim- 
+ilar constraint holds for Y. These are expressed as the constraints in the following 
+optimization problem: 
+(1) 
+To begin, slack variables Mj,K+ and Ms+, are introduced so that the in- 
+-,J+l Mj k 
+equality constraints can be transformed into equality constraints: z_j-1 -- 
+, v'K+ Mj -- 1, Vj. Mj,K+ -- i indicates that Xj does not match to 
+1 Vk and z_,=l 
+any point in Y. An equivalent unconstrained optimization problem to (2) is de- 
+rived by relaxing the constraints via Lagrange parameters/j, v, and introducing 
+an x log x barrier function, indexed by a parameter fl. A similar technique was used 
+A Framework for Nonrigid Matching and Correspondence 797 
+[2] to solve the assignment problem. The energy function used is: 
+J K+I 
+min ,,v EMjIIXj -(A + I)YII2 + Atr(ATA)-aE Mj + EPJ(E Mj 1) 
+A,M 
+j, j, J =. 
+K J+l i J+l K+I 
+k j--1 j--1 k--1 
+This is to be minimized with respect to the match variables and affine parameters 
+while satisfying the constraints via Lagrange parameters. Using the recently devel- 
+oped softassign technique, we satisfy the constraints explicitly. When A is fixed, 
+we have an assignment problem. Following the development in [1], the assignment 
+constraints are satisfied using softassign, a technique for satisfying two-way (as- 
+signment) constraints without a penalty term that is analogous to softmax which 
+enforces a one-way constraint. First, the match variables are initialized: 
+= exp(-/311Xj - + ,4)Y11 - -) (2) 
+This is followed by repeated row-column normalization of the match variables until 
+a stopping criterion is reached: 
+then 
+When the correspondence between the two point sets is fixed, A can be solved in 
+closed form, by holding M fixed in the objective function, and differentiating and 
+solving for A: 
+The algorithm is summarized as: 
+(4) 
+1. INITIALIZE: Variables: A = 0, M = 0 
+Parameters: /3initial,/3update,/3final T- Inner loop iterations, A 
+2. ITERATE: Do T times for a fixed value of/3 
+Softassign: Re-initialize M*(A) and then (Eq. 2) until AM small 
+A*(M) updated (Eq. 4) 
+3. UPDATE: While/3 </3nal,/3 '-/3 */3update, Return to 2. 
+The complexity of the algorithm is O(JK). Starting with small/3initial permits 
+many partial correspondences in the initial solution for M. As /3 increases the 
+correspondence becomes more refined. For large/3final, M approaches a permutation 
+matrix (adjusting appropriately for the slack variables). 
+3 Nonrigid Feature Matching: Affine Quilts 
+Recognition of an object requires many different types of information working in 
+concert. Spatial information alone may not be sufficient for representation, espe- 
+cially in the presence of noise. Additionally the affine transformation is limited in 
+its inability to handle local variation in an object, due to the object's non-rigidity 
+or to the relatively independent movement of its parts, e.g., in human movement. 
+The optimization problem (2) easily generalizes to integrate multiple invariant fea- 
+tures. A representation with multiple features has a spatial component indicating 
+798 S. PAPPU, S. GOLD, A. RANGARAJAN 
+the location of a feature element. At that location, there may be invariant geomet- 
+ric characteristics, e.g., this point belongs on a curve, or non-geometric invariant 
+features such as color, and texture. Let Xjr be the value of feature r associated 
+with point Xj. The location of point Xj is the null feature. There are R features 
+associated with each point Xj and Y. Note that the match variable remains the 
+same. The new objective function is identical to the original objective function, 
+(2), appended by the term y'j,k,rMjkwr(Xjr -- Ykr) 2. The (Xjr - Ykr) 2 quan- 
+tity captures the similarity between invariant types of features, with wr a weight- 
+ing factor for feature r. Non-invariant features are not considered. In this way, 
+the point matching algorithm is modified only in the re-initialization of M(A): 
+Mj = exp(-fi(llX y - (I q- A)Yll 2 q- Er wr(X - y)2 _ )) The rest of the 
+algorithm remains unchanged. 
+Decomposition of spatial transformations motivates classification of the B individual 
+regions of an object and use of a quilt of local aftinc transformations. In the 
+multiple aftinc scenario, membership to a region is known on the well-articulated 
+model, but not on the image set. It is assumed that all points that are members 
+of one region undergo the same aftinc transformation. The model changes by the 
+addition of one subscript to the affine matrix, Ab() where b(k) is an operator that 
+indicates which transformation operates on point k. In the algorithm, during the 
+A(M) update, instead of a single update, B updates are done. Denote K(b) - 
+{klb(k ) = b}, i.e., all the points that are within region b. Then in the affine update, 
+Ab = A;(M) = (y'5, eK(b) Mi(XsY T - YYT))(Zj, eK(,) MjYY T + A,I) - 
+However, the theoretical complexity does not change, since the B updates still only 
+require summing over the points. 
+4 Experimental Results: Hand Drawn and Synthetic 
+The speed for matching point sets of 50 points each is around 20 seconds on an SGI 
+workstation with a R4400 processor. This is true for points in 2D, 3D and with 
+extra features. This can be improved with a tradeoff in accuracy by adopting a 
+looser

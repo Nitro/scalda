@@ -1,0 +1,150 @@
+Learning Informative Statistics: A 
+Nonparametric Approach 
+John W. Fisher III, Alexander T. Ihler, and Paul A. Viola 
+Massachusetts Institute of Technology 
+77 Massachusetts Ave., 35-421 
+Cambridge, MA 02139 
+{fisher,ihler, viola  @ ai. rnit. edu 
+Abstract 
+We discuss an information theoretic approach for categorizing and mod- 
+eling dynamic processes. The approach can learn a compact and informa- 
+tive statistic which summarizes past states to predict future observations. 
+Furthermore, the uncertainty of the prediction is characterized nonpara- 
+metrically by a joint density over the learned statistic and present obser- 
+vation. We discuss the application of the technique to both noise driven 
+dynamical systems and random processes sampled from a density which 
+is conditioned on the past. In the first case we show results in which both 
+the dynamics of random walk and the statistics of the driving noise are 
+captured. In the second case we present results in which a summarizing 
+statistic is learned on noisy random telegraph waves with differing de- 
+pendencies on past states. In both cases the algorithm yields a principled 
+approach for discriminating processes with differing dynamics and/or de- 
+pendencies. The method is grounded in ideas from information theory 
+and nonparametric statistics. 
+1 Introduction 
+Noisy dynamical processes abound in the world - human speech, the frequency of sun 
+spots, and the stock market are common examples. These processes can be difficult to 
+model and categorize because current observations are dependent on the past in complex 
+ways. Classical models come in two sorts: those that assume that the dynamics are linear 
+and the noise is Gaussian (e.g. Weiner etc.); and those that assume that the dynamics are 
+discrete (e.g. HMM's). These approach are wildly popular because they are tractable and 
+well understood. Unfortunately there are many processes where the underlying theoretical 
+assumptions of these models are false. For example we may wish to analyze a system 
+with linear dynamics and non-Gaussian noise or we may wish to model a system with an 
+unknown number of discrete states. 
+We present an information-theoretic approach for analyzing stochastic dynamic processes 
+which can model simple processes like those mentioned above, while retaining the flexi- 
+bility to model a wider range of more complex processes. The key insight is that we can 
+often learn a simplifying informative statistic of the past from samples using nonparametric 
+estimates of both entropy and mutual information. Within this tYamework we can predict 
+future states and, of equal importance, characterize the uncertainty accompanying those 
+Learning Informative Statistics: A Nonparametric Approach 901 
+predictions. This non-parametric model is flexible enough to describe uncertainty which 
+is more complex than second-order statistics. In contrast techniques which use squared 
+prediction error to drive learning are focused on the mode of the distribution. 
+Taking an example from financial forecasting, while the most likely sequence of pricing 
+events is of interest, one would also like to know the accompanying distribution of price 
+values (i.e. even if the most likely outcome is appreciation in the price of an asset, knowl- 
+edge of lower, but not insignificant, probability of depreciation is also valuable). Towards 
+that end we describe an approach that allows us to simultaneously learn the dependencies 
+of the process on the past as well as the uncertainty of future states. Our approach is novel 
+in that we fold in concepts from information theory, nonparametric statistics, and learning. 
+In the two types of stochastic processes we will consider, the challenge is to summarize the 
+past in an efficient way. In the absence of a known dynamical or probabilistic model, can 
+we learn an informative statistic (ideally a sufficient statistic) of the past which minimizes 
+our uncertainty about future states? In the classical linear state-space approach, uncertainty 
+is characterized by mean squared error (MSE) which implicitly assume Gaussian statistics. 
+There are, however, linear systems with interesting behavior due to non-Gaussian statistics 
+which violate the assumption underlying MSE. There are also nonlinear systems and purely 
+probabilistic processes which exhibit complex behavior and are poorly characterized by 
+mean square error and/or the assumption of Gaussian noise. 
+Our approach is applicable to both types of processes. Because it is based on non- 
+parametric statistics we characterize the uncertainty of predictions in a very general way: 
+by a density of possible future states. Consequently the resulting system captures both the 
+dynamics of the systems (through a parameterization) and the statistics of driving noise 
+(through a nonparametric modeling). The model can then be used to classify new signals 
+and make predictions about the future. 
+2 Learning from Stationary Processes 
+In this paper we will consider two related types of stochastic processes, depicted in figure 1. 
+These processes differ in how current observations are related to the past. The first type of 
+process, described by the following set of equations, is a discrete time dynamical (possibly 
+nonlinear) system: 
+Xk=G({Xk--1}N;Wg) q-T]k ; {Xk}N '= {Xk,..-,X/c-(N-i)} (1) 
+where, .zk, the state of the process at time k, is a function of the N previous states and 
+the present value of r/. In general the sequence {xk} is not stationary (in the strict sense); 
+however, under fairly mild conditions on {r/k}, namely that {r/k} is a sequence of i.i.d. 
+random variables (which we will always assume to be true), the sequence: 
+ek = xk - G( {xk_ } %) (2) 
+is stationary. Often termed an innovation sequence, for our purpose the stationarity of 2 will 
+suffice. This leads to a prediction framework for estimating the dynamical parameters, w a, 
+of the system and to which we will adjoin a nonparametric characterization of uncertainty. 
+The second type of process we consider is described by a conditional probability density: 
+xk  P(xkll{xk-x }N) (3) 
+In this case it is only the conditional statistics of {xk } that we are concerned with and they 
+are, by definition, constant. 
+3 Learning Informative Statistics with Nonparametric Estimators 
+We propose to determine the system parameters by minimizing the entropy of the error 
+residuals for systems of type (a). Parametric entropy optimization approaches have been 
+902 J. W. Fisher III, .4. T. Ihler and P. A. ola 
+Xk--1 
+(a) (b) 
+I qp(xJ{xA,- }N)' 
+I 1 
+'4 
+[ Z-I,''' ,Z --N 
+i k' 
+I 
+I 
+I 
+I 
+Xk--1 
+F({k_i}N) 
+- I (x,F({-l}N))max 
+Figure 1: Two related systems: (a) dynamical system driven by stationary noise and (b) 
+probabilistic system dependent on the finite past. Dotted box indicates source of stochastic 
+process, while solid box indicates learning algorithm 
+proposed (e.g. [4]), the novelty of our approach; however, is that we estimate entropy 
+nonparametrically. That is, 
+bg = argmin [/(e) [/(e)  fp(e)logp(e)de t3(e): --- 
+JJ9 
+1 Al- 1 
+X!k=O n(ek--e) , (4) 
+where the differential entropy integral is approximated using a function of the Parzen kernel 
+density estimator [5] (in all experiments we use the Gaussian kernel). It can be shown that 
+minimizing the entropy of the error residuals is equivalent to maximizing their likelihood 
+[ l ]. In this light, the proposed criterion is seeking the maximum likelihood estimate of the 
+system parameters using a nonparametric description of the noise density. Consequently, 
+we solve for the system parameters and the noise density jointly. 
+While there is no explicit dynamical system in the second system type we do assume that 
+the conditional statistics of the observed sequence are constant (or at worst slowly changing 
+for an on-line learning algorithm). In this case we desire to minimize the uncertainty of 
+predictions from future samples by summarizing information from the past. The challenge 
+is to do so efficiently via a function of recent samples. Ideally we would like to find a 
+sufficient statistic of the past; however, without an explicit description of the density we 
+opt instead for an informative statistic. By informative statistic we simply mean one which 
+reduces the conditional entropy of future samples. If the statistic were sufficient then the 
+mutual information has reached a maximum [1]. As in the previous case, we propose to 
+find such a statistic by maximizing the nonparametric mutual information as defined by 
+wf 
+wf 
+= argmin /(xk) +//(F({ };wf)) - /(xk,F({ 
+= argmin /(xk) - /(xklF({ };to/))) 
+(5) 
+(6) 
+(7) 
+By equation 6 this is equivalent to optimizing the joint and marginal entropies (which we 
+do in practice) or, by equation 7, minimizing the conditional entropy. 
+We have previously presented two related methods for incorporating kernel based density 
+estimators into an information theoretic learning framework [2, 3]. We chose the method of 
+[3] because it provides an exact gradient of an approximation to entropy, but more impor- 
+tantly can be converted into an implicit error function thereby reducing computation cost. 
+Learning Informative Statistics.' A Nonparametric Approach 903 
+4 Distinguishing Random Walks: An Example 
+In random walk the feedback function G({xk_  }  ) = xk_ 1. The noise is assumed to be in- 
+dependent and identically distributed (i.i.d.). Although the sequence,xk, is non-stationary 
+the increments (xk-xk_x) are stationary. In this context, estimating the statistics of the 
+residuals allows for discrimination between two random walk process with differing noise 
+densities. Furthermore, as we will demonstrate empirically, even when one of the pro- 
+cesses is driven by Gaussian noise (an implicit assumption of the MMSE criterion), such 
+knowledge may not be sufficient to distinguish one process from another. 
+Figure 2 shows two random walk realizations and their associate noise den

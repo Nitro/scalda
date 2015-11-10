@@ -1,0 +1,177 @@
+Softassign versus Softmax: Benchmarks 
+in Combinatorial Optimization 
+Steven Gold 
+Department of Computer Science 
+Yale University 
+New Haven, CT 06520-8285 
+Anand Rangarajan 
+Dept. of Diagnostic Radiology 
+Yale University 
+New Haven, CT 06520-8042 
+Abstract 
+A new technique, termed softassign, is applied for the first time 
+to two classic combinatorial optimization problems, the travel- 
+ing salesman problem and graph partitioning. Softassign, which 
+has emerged from the recurrent neural network/statistical physics 
+framework, enforces two-way (assignment) constraints without the 
+use of penalty terms in the energy functions. The softassign can 
+also be generalized from two-way winner-take-all constraints to 
+multiple membership constraints which are required for graph par- 
+titioning. The softassign technique is compared to the softmax 
+(Potts glass). Within the statistical physics framework, softmax 
+and a penalty term has been a widely used method for enforcing the 
+two-way constraints common within many combinatorial optimiza- 
+tion problems. The benchmarks present evidence that softassign 
+has clear advantages in accuracy, speed, parallelizability and algo- 
+rithmic simplicity over softmax and a penalty term in optimization 
+problems with two-way constraints. 
+I Introduction 
+In a series of papers in the early to mid 1980's, Hopfield and Tank introduced 
+techniques which allowed one to solve combinatorial optimization problems with 
+recurrent neural networks [Hopfield and Tank, 1985]. As researchers attempted 
+to reproduce the original traveling salesman problem results of Hopfield and 
+Tank, problems emerged, especially in terms of the quality of the solutions ob- 
+tained. More recently however, a number of techniques from statistical physics 
+have been adopted to mitigate these problems. These include deterministic an- 
+nealing which convexities the energy function in order help avoid some local min- 
+ima and the Potts glass approximation which results in a hard enforcement of 
+a one-way (one set of) winner-take-all (WTA) constraint via the softmax. In 
+Softassign versus Softmax: Benchmarks in Combinatorial Optimization 627 
+the late 80's, armed with these techniques optimization problems like the trav- 
+eling salesman problem (TSP) [Peterson and Soderberg, 1989] and graph partition- 
+ing [Peterson and Soderberg, 1989, Van den Bout and Miller III, 1990] were reex- 
+amined and much better results compared to the original Hopfield-Tank dynamics 
+were obtained. 
+However, when the problem calls for two-way interlocking WTA constraints, as 
+do TSP and graph partitioning, the resulting energy function must still include 
+a penalty term when the softmax is employed in order to enforce the second set 
+of WTA constraints. Such penalty terms may introduce spurious local minima 
+in the energy function and involve free parameters which are hard to set. A 
+new technique, termed softassign, eliminates the need for all such penalty terms. 
+The first use of the softassign was in an algorithm for the assignment problem 
+[Kosowsky and Yuille, 1994]. It has since been applied to much more difficult 
+optimization problems, including parametric assignment problems--point match- 
+ing [Gold et al., 1994, Gold et al., 1995, Gold et al., 1996] and quadratic assign- 
+ment problems--graph matching [Gold et al., 1996, Gold and Rangarajan, 1996, 
+Gold, 1995]. 
+Here, we for the first time apply the softassign to two classic combinatorial op- 
+timization problems, TSP and graph partitioning. Moreover, we show that the 
+softassign can be generalized from two-way winner-take-all constraints to multiple 
+membership constraints, which are required for graph partitioning (as described be- 
+low). We then run benchmarks against the older softmax (Potts glass) methods and 
+demonstrate advantages in terms of accuracy, speed, parallelizability, and simplicity 
+of implementation. 
+It must be emphasized there are other conventional techniques, for solving 
+some combinatorial optimization problems such as TSP, which remain supe- 
+rior to this method in certain ways [Lawler et al., 1985]. (We think for some 
+problems--specifically the type of pattern matching problems essential for cogni- 
+tion [Gold, 1995]--this technique is superior to conventional methods.) Even within 
+neural networks, elastic net methods may still be better in certain cases. However, 
+the elastic net uses only a one-way constraint in TSP. The main goal of this paper 
+is to provide evidence, that when minimizing energy functions within the neural 
+network framework, which have two-way constraints, the softassign should be the 
+technique of choice. We therefore compare it to the current dominant technique, 
+softmax with a penalty term. 
+2 Optimizing With Softassign 
+2.1 The Traveling Salesman Problem 
+The traveling salesman problem may be defined in the following way. Given a set of 
+intercity distances {6ab} which may take values in R +, find the permutation matrix 
+M such that the following objective function is minimized. 
+1 N N N 
+E(M) =  EEE 
+a=l b=l i----1 
+(1) 
+N 
+subject to �a -./N=Mi_i , �i '.= Mi = l , �ai Mai E {O, 1). 
+In the above objective 6, represents the distance between cities a and b. M is a 
+permutation matrix whose rows represent cities, and whose columns represent the 
+day (or order) the city was visited and N is the number of cities. (The notation i 1 
+62 8 S. GOLD, A. RANGARAJAN 
+is used to indicate that subscripts are defined modulo N, i.e. Ma(N+I) - Mal.) So 
+if Mai -- 1 it indicates that city a was visited on day i. 
+Then, following [Peterson and Soderberg, 1989, Yuille and Kosowsky, 1994] we em- 
+ploy Lagrange multipliers and an x log x barrier function to enforce the constraints, 
+as well as a 7 term for stability, resulting in the following objective: 
+(2) 
+In the above we are looking for a saddle point by minimizing with respect to M 
+and maximizing with respect to p and y, the Lagrange multipliers. 
+2.2 The Softassign 
+In the above formulation of TSP we have two-way interlocking WTA constraints. 
+{M,i} must be a permutation matrix to ensure that a valid tour--one in which 
+each city is visited once and only once---is described. A permutation matrix means 
+all the rows and columns must add to one (and the elements must be zero or one) 
+and therefore requires two-way WTA constraints--a set of WTA constraints on the 
+rows and a set of WTA constraints on the columns. This set of two-way constraints 
+may also be considered assignment constraints, since each city must be assigned to 
+one and only one day (the row constraint) and each day must be assigned to one 
+and only one city (the column constraint). 
+These assignment constraints can be satisfied using a result from [Sinkhorn, 1964]. 
+In [Sinkhorn, 1964] it is proven that any square matrix whose elements are all 
+positive will converge to a doubly stochastic matrix just by the iterative process 
+of alternatively normalizing the rows and columns. (A doubly stochastic matrix is 
+a matrix whose elements are all positive and whose rows and columns all add up 
+to one--it may roughly be thought of as the continuous analog of a permutation 
+matrix). 
+The softassign simply employs Sinkhorn's technique within a deterministic anneal- 
+ing context. Figure i depicts the contrast between the softassign and the softmax. 
+In the softmax, a one-way WTA constraint is strictly enforced by normalizing over 
+a vector. 
+[Kosowsky and Yuille, 1994] used the softassign to solve the assignment problem, 
+A I 
+i.e. minimize: '].,= M. iQ.i. the special of the quadratic assign- 
+- --i= For case 
+_0 and using the values of 
+ment problem, being solved here, by setting Q,i = OM., 
+M from the previous iteration, we can at each iteration produce a new assignment 
+problem for which the softassign then returns a doubly stochastic matrix. As the 
+temperature is lowered a series of assignment problems are generated, along with 
+the corresponding doubly stochastic matrices returned by each softassign, until a 
+permutation matrix is reached. 
+The update with the partial derivative in the preceding may be derived using a 
+Taylor series expansion. See [Gold and Rangarajan, 1996, Gold, 1995] for details. 
+The algorithm dynamics then become: 
+Softassign versus Softmax: Benchmarks in Combinatorial Optimization 629 
+Softassign 
+Softmax 
+I Positivity 
+lVIi = extKlO 1 
+Two-way constraints 
+ now Normalization ') 
+/{ 'Mr . � llai .Ix 
+\( 
+I/ 
+IM P�sitivity 1 
+i ---- exp([Qi)J 
+One-way 
+constraint 
+Mi 
+Mi' EM i 
+1 
+Figure 1' Softassign and softmax. This paper compares these two techniques. 
+0�2 
+Qai - (3) 
+M.i '-- Softassign.i(Q) 
+(4) 
+/2 is E2 without the/, p or v terms of (2), therefore no penalty terms are now in- 
+cluded. The above dynamics are iterated as/, the inverse temperature, is gradually 
+increased. 
+These dynamics may be obtained by evaluating the saddle points of the objective 
+in (2). Sinkhorn's method finds the saddle points for the Lagrange parameters. 
+2.3 Graph Partitioning 
+The graph partitioning problem maybe defined in the following way. Given an un- 
+weighted graph G, find the membership matrix M such that the following objective 
+function is minimized. 
+A I I 
+a=l i=1 j=l 
+(5) 
+I A 
+subject to �a i= M,i = I/A , �i ]],= M,i = 1, �ai M,i  {0,1} where graph 
+G has I nodes which should be equally partitioned into A bins. 
+{Gij} is the adjacency matrix of the graph, whose elements must be 0 or 1. M 
+is a membership matrix such that Mai - 1 indicates that node i is in bin a. The 
+permutation matrix constraint present in TSP is modified to the membership con- 
+straint. Node i is a member of only bin a and the number of members in each bin 
+is fixed at I/A. When the above objective is at a minimum, then graph G will be 
+partitioned into A equal sized bins, such that the cutsize is minimum for all possible 
+partitionings of G into A equal sized bins. We assume I/A is an integer. 
+Then following t

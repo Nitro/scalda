@@ -1,0 +1,160 @@
+Digital Boltzmann VLSI for 
+constraint satisfaction and learning 
+Michael Murrayt 
+Ming-Tak Leungt 
+Kan Boonyanit 
+Kong Kritayakiranai 
+James B. Burr* 
+Gregory J. Wolff: 
+Takahiro Watanabe$ Edward Schwartz$ 
+David G. Stork; 
+Allen M. Petersont 
+Department of Electrical Engineering 
+Stanford University 
+Stanford, CA 94305-4055 
+Ricoh California Research Center 
+2882 Sand Hill Road Suite 115 
+Menlo Park, CA 94025-7022 
+and 
+* Sun Microsystems 
+2550 Garcia Ave., MTV-29, room 203 
+Mountain View, CA 94043 
+Abstract 
+We built a high-speed, digital mean-field Boltzmann chip and SBus 
+board for general problems in constraint satisfaction and learning. 
+Each chip has 32 neural processors and 4 weight update processors, 
+supporting an arbitrary topology of up to 160 functional neurons. 
+On-chip learning is at a theoretical maximum rate of 3.5 x 10 s con- 
+nection updates/sec; recall is 12000 patterns/sec for typical condi- 
+tions. The chip's high speed is due to parallel computation of inner 
+products, limited (but adequate) precision for weights and activa- 
+tions (5 bits), fast clock (125 MHz), and several design insights. 
+896 
+Digital Boltzmann VLSI for Constraint Satisfaction and Learning 897 
+i INTRODUCTION 
+A vast number of important problems can be cast into a form of constraint satisfac- 
+tion. A crucial difficulty when solving such problems is the fact that there are local 
+minima in the solution space, and hence simple gradient descent methods rarely suf- 
+fice. Simulated annealing via the Boltzmann algorithm (/].4) is attractive because it 
+can avoid local minima better than many other methods (Aarts and Korst, 1989). 
+It is well known that the problem of learning also generally has local minima in 
+weight (parameter) space; a Boltzmann algorithm has been developed for learning 
+which is effective at avoiding local minima (Ackley and Hinton, 1985). The B.4 
+has not received extensive attention, however, in part because of its slow operation 
+which is due to the annealing stages in which the network is allowed to slowly relax 
+into a state of low error. Consequently there is a great need for fast and efficient 
+special purpose VLSI hardware for implementing the algorithm. Analog Boltzmann 
+chips have been described by Alspector, Jayakumar and Luna (1992) and by Arima 
+et al. (1990); both implement stochastic BA. Our digital chip is the first to imple- 
+ment the deterministic mean field B.4 algorithm (Hinton, 1989), and although its 
+raw throughput is somewhat lower than the analog chips just mentioned, ours has 
+unique benefits in capacity, ease of interfacing and scalability (Burr, 1991, 1992). 
+2 BOLTZMANN THEORY 
+The problems of constraint satisfaction and of learning are unified through the 
+Boltzmann learning algorithm. Given a partial pattern and a set of constraints, 
+the /].4 completes the pattern by means of annealing (gradually lowering a com- 
+putational temperature until the lowest energy state is found) an example 
+of constraint satisfaction. Over a set of training patterns, the learning algorithm 
+modifies the constraints to model the relationships in the data. 
+2.1 CONSTRAINT SATISFACTION 
+A general constraint satisfaction problem over variables xi (e.g., neural activations) 
+_ _1 -ij WijXiXj, 
+is to find the set xi that minimize a global energy function E -- 2 
+where wij are the (symmetric) connection weights between neurons i and j and 
+represent the problem constraints. 
+There are two versions of the BA approach to minimizing E. In one version -- the 
+stochastic BA -- each binary neuron xi E {-1, 1} is polled randomly, independently 
+and repeatedly, and its state is given a candidate perturbation. The probability of 
+acceptance of this perturbation depends upon the amount of the energy change 
+and the temperature. Early in the annealing schedule (i.e., at high temperature) 
+the probability of acceptance is nearly independent of the change in energy; late in 
+annealing (i.e., at low temperature), candidate changes that lead to lower energy 
+are accepted with higher probability. 
+In the deterministic mean field BA, each continuous valued neuron (-1 _< X i __ 
+1) is updated simultaneously and in parallel, its new activation is set to xi = 
+f('.j wijxj), where f(.) is a monotonic non-linearity, typically a sigmoid which 
+corresponds to a stochastic unit at a given temperature (assuming independent 
+898 Murray, Leung, Boonyanit, Kritayakirana, Burr, Wolff, Watanabe, Schwartz, Stork, and Peterson 
+inputs). The inverse slope of the non-linearity is proportional to the temperature; at 
+the end of the anneal the slope is very high and f(-) is effectively a step function. It 
+has been shown that if certain non-restrictive assumtJtions hold, and if the annealing 
+schedule is sufficiently slow, then the final binary states (at 0 temperature) will be 
+those of minimum E (Hinton, 1989, Peterson and Hartman, 1989). 
+2.2 LEARNING 
+The problem of Boltzmann learning is the following: given a network topology 
+of input and output neurons, interconnected by hidden neurons, and given a set of 
+training patterns (input and desired output), find a set of weights that leads to high 
+probability of a desired output activations for the corresponding input activations. 
+In the Boltzmann algorithm such learning is achieved using two main phases -- 
+the Teacher phase and the Student phase -- followed by the actual Weight update. 
+During the Teacher phase the network is annealed with the inputs and outputs 
+clamped (held at the values provided by the omniscient teacher). During the anneal 
+of the Student phase, only the inputs are clamped -- the outputs are allowed to 
+vary. The weights are updated according to: 
+Awij t t s s 
+= e(<xixj> - <xixj>) (1) 
+where e is a learning rate and t t 
+(xixj) the coactivations of neurons i and j at the end 
+of the Teacher phase and (xxj) in at the end of the Student phase (Ackley and 
+Hinton, 1985). Hinton (1989) has shown that Eq. 1 effectively performs gradient 
+descent on the cross-entropy distance between the probability of a state in the 
+Teacher (clamped) and the Student (free-running) phases. 
+Recent simulations by Galland (1993) have shown limitations of the deterministic 
+BA for learning in networks having hidden units directly connected to other hidden 
+units. While his results do not cast doubt on the deterministic BA for constraint 
+satisfaction, they do imply that the deterministic BA for learning is most successful 
+in networks of a single hidden layer. Fortunately, with enough hidden units this 
+topology has the expressive power to represent all but the most pathological input- 
+output mappings. 
+3 FUNCTIONAL DESIGN AND CHIP OPERATION 
+Figure 1 shows the functional block diagram of our chip. The most important units 
+are the Weight memory, Neural processors, Weight update processors, Sigmoid and 
+Rotating Activation Storage (RAS), and their operation are best explained in terms 
+of constraint satisfaction and learning. 
+3.1 CONSTRAINT SATISFACTION 
+For constraint satisfaction, the weights (constraints) are loaded into the Weight 
+memory, the form of the transfer function is loaded into the Sigmoid Unit, and 
+the values and duration of the annealing temperatures (the annealing schedule) are 
+loaded into the Temperature Unit. Then an input pattern is loaded into a bank 
+of the RAS to be annealed. Such an anneal occurs as follows: At an initial high 
+Digital Boltzmann VLSI for Constraint Satisfaction and Learning 899 
+temperature, the 32 Neural processors compute xi = 5-'j wijxj in parallel for the 
+hidden units. A 4 x multiplexing here permits networks of up to 128 neurons to 
+be annealed, with the remaining 32 neurons used as (non-annealed) inputs. Thus 
+our chip supports networks of up to 160 neurons total. These activations are then 
+stored in the Neural Processor Latch and then passed sequentially to the Sigmoid 
+unit, where they are multiplied by the reciprocal of the instantaneous temperature. 
+This Sigmoid unit employs a lookup table to convert the inputs to neural outputs 
+by means of non-linearity f(.). These outputs are sequentially loaded back into the 
+activation store. The temperature is lowered (according to the annealing sched- 
+ule), and the new activations are calculated as before, and so on. The final set of 
+activations xi (i.e., at the lowest temperature) represent the solution. 
+Rotating 
+Activation 
+Storage 
+4 weight update processors 
+weight update cache 
+Weight 
+memory 
+NP cache 
+Sigmoid 
+I Temperature unit I 
+Figure 1: Boltzmann VLSI block diagram. The rotating activation storage (black) 
+consists of three banks, which for learning problems contain the last pattern (al- 
+ready annealed), the current pattern (being annealed) and the next pattern (to be 
+annealed) read onto the chip through the external interface. 
+3.2 LEARNING 
+When the chip is used for learning, the weight memory is initialized with random 
+weights and the first, second and third training patterns are loaded into the RAS. 
+The three-bank RAS is crucial for our chip's speed because it allows a three-fold 
+900 Murray, Leung, Boonyanit, Kritayakirana, Burr, Wolff, Watanabe, Schwartz, Stork, and Peterson 
+concurrency: 1) a current pattern of activations is annealed, while 2) the annealed 
+last pattern is used to update the weights, while 3) the next pattern is being loaded 
+from off-chip. The three banks form a circular buffer, each with a Student and a 
+Teacher activation store. 
+During the Teacher anneal phase (for the current pattern), activations of the input 
+and output neurons are held at the values given by the teacher, and the values of 
+the hidden units found by annealing (as described in the previous subsection). After 
+the last such annealling step (i.e., at the lowest temperature), the final activations 
+are left in the Teacher activation store -- the Teacher phase is then complete. The 
+annealing schedule is then reset to its initial temperature, and the ab

@@ -1,0 +1,145 @@
+Improving Policies without Measuring 
+Merits 
+Peter Dayan  
+CBCL 
+E25-201, MIT 
+Cambridge, MA 02139 
+dayan�ai. mir. edu 
+Satinder P Singh 
+Harlequin, Inc 
+1 Cambridge Center 
+Cambridge, MA 02142 
+s ingh�harlequin. com 
+Abstract 
+Performing policy iteration in dynamic programming should only 
+require knowledge of relative rather than absolute measures of the 
+utility of actions (Werbos, 1991) - what Baird (1993) calls the ad- 
+vantages of actions at states. Nevertheless, most existing methods 
+in dynamic programming (including Baird's) compute some form of 
+absolute utility function. For smooth problems, advantages satisfy 
+two differential consistency conditions (including the requirement 
+that they be free of curl), and we show that enforcing these can lead 
+to appropriate policy improvement solely in terms of advantages. 
+1 Introduction 
+In deciding how to change a policy at a state, an agent only needs to know the 
+differences (called advantages) between the total return based on taking each action 
+a for one step and then following the policy forever after, and the total return 
+based on always following the policy (the conventional value of the state under the 
+policy). The advantages are like differentials - they do not depend on the local levels 
+of the total return. Indeed, Werbos (1991) defined Dual Heuristic Programming 
+(DHP), using these facts, learning the derivatives of these total returns with respect 
+to the state. For instance, in a conventional undiscounted maze problem with a 
+We are grateful to Larry Saul, Tommi Jaakkola and Mike Jordan for comments, and 
+Andy Barto for pointing out the connection to Werbos' DHP. This work was supported by 
+NSERC, MIT, and grants to Professor Michael I Jordan from ATR Human Information 
+Processing Research and Siemens Corporation. 
+1060 P. DAYAN, S. P. SINGH 
+penalty for each move, the advantages for the actions might typically be -1,0 
+or 1, whereas the values vary between 0 and the maximum distance to the goal. 
+Advantages should therefore be easier to represent than absolute value functions in a 
+generalising system such as a neural network and, possibly, easier to learn. Although 
+the advantages are differential, existing methods for learning them, notably Baird 
+(1993), require the agent simultaneously to learn the total return from each state. 
+The underlying trouble is that advantages do not appear to satisfy any form of a 
+Bellman equation. Whereas it is clear that the value of a state should be closely 
+related to the value of its neighbours, it is not obvious that the advantage of action 
+a at a state should be equally closely related to its advantages nearby. 
+In this paper, we show that under some circumstances it is possible to use a solely 
+advantage-based scheme for policy iteration using the spatial derivatives of the 
+value function rather than the value function itself. Advantages satisfy a particular 
+consistency condition, and, given a model of the dynamics and reward structure 
+of the environment, an agent can use this condition to directly acquire the spatial 
+derivatives of the value function. It turns out that the condition alone may not 
+impose enough constraints to specify these derivatives (this is a consequence of the 
+problem described above) - however the value function is like a potential function 
+for these derivatives, and this allows extra constraints to be imposed. 
+2 Continuous DP, Advantages and Curl 
+Consider the problem of controlling a deterministic system to minimise V*(x0) - 
+min,(t) f r(y(t), u(t))dt, where y(t) e ' is the state at time t, u(t) e m is 
+the control, y(0) -- x0, and i(t) - f((y(t),u(t)). This is a simplified form of a 
+classic variational problem since r and f do not depend on time t explicitly, but 
+only through y(t) and there are no stopping time or terminal conditions on y(t) 
+(see Peterson, 1993; Atkeson, 1994, for recent methods for solving such problems). 
+This means that the optimal u(t) can be written as a function of y(t) and that 
+V(x0) is a function of x0 and not t. We do not treat the cases in which the infinite 
+integrals do not converge comfortably and we will also assume adequate continuity 
+and differentiability. 
+The solution by advantages: This problem can be solved by writing down the 
+Hamilton-Jacobi-Bellman (HJB) equation (see Dreyfus, 1965) which V* (x) satisfies: 
+0- min [r(x, u) 4- f(x, u). 7xV*(x)] (1) 
+u 
+This is the continuous space/time analogue of the conventional Bellman 
+equation (Bellman, 1957) for discrete, non-discounted, deterministic deci- 
+sion problems, which says that for the optimal value function V*, 0 - 
+mina [r(x,a) 4- V*(f(x,a)) - V*(x)], where starting the process at state x and us- 
+ing action a incurs a cost r(x, a) and leaves the process in state f(x, a). This, and 
+its obvious stochastic extension to Markov decision processes, lie at the heart of 
+temporal difference methods for reinforcement learning (Sutton, 1988; Barto, Sut- 
+ton & Watkins, 1989; Watkins, 1989). Equation 1 describes what the optimal value 
+function must satisfy. Discrete dynamic programming also comes with a method 
+called value iteration which starts with any function V0 (x), improves it sequentially, 
+and converges to the optimum. 
+The alternative method, policy iteration (Howard, 1960), operates in the space of 
+Improving Policies without Measuring Merits 1061 
+policies, ie functions w(x). Starting with w(x), the method requires evaluating 
+everywhere the value function VW(x) -- f r(y(t),w(y(t))dt, where y(0) -- 
+x, and (t) - f(y(t),w(y(t)). It turns out that V w satisfies a close relative of 
+equation 1: 
+0 - r(x, w(x)) + f(x,w(x)). vxv(x) (2) 
+In policy iteration, w(x) is improved, by choosing the maximising action: 
+__ w X 
+w'(x) argmaxu[r(x,u ) + f(x,u). VxV ( )] (3) 
+as the new action. For discrete Markov decision problems, the equivalent of this 
+process of policy improvement is guaranteed to improve upon w. 
+In the discrete case and for an analogue of value iteration, Baird (1993) defined the 
+optimal advantage function A*(x,a) = [Q*(x,a)- maxb Q*(x,b)] /St, where 5t is 
+effectively a characteristic time for the process which was taken to be i above, and 
+the optimal Q function (Watkins, 1989) is Q*(x,a) - r(x,a) + V*(f(x,a)), where 
+V*(y) = maxb Q*(y, b). It turns out (Baird, 1993) that in the discrete case, one can 
+cast the whole of policy iteration in terms of advantages. In the continuous case, 
+we define advantages directly as 
+A ' (x, u) = r(x, u) + f(x, u)- V V ' (x) (4) 
+This equation indicates how the spatial derivatives of V  determine the advantages. 
+Note that the consistency condition in equation 2 can be written as A(x, w(x)) = 
+0. Policy iteration can proceed using 
+w' (x) = argmaxu A (x, u). (5) 
+Doing without V': We can now state more precisely the intent of this paper: a) 
+the consistency condition in equation 2 provides constraints on the spatial deriva- 
+tives V V  (x), at least given a model of r and f; b) equation 4 indicates how these 
+spatial derivatives can be used to determine the advantages, again using a model; 
+and c) equation 5 shows that the advantages tout court can be used to improve the 
+policy. Therefore, one apparently should have no need to know V w (x) but just its 
+spatial derivatives in order to do policy iteration. 
+Didactic Example LQR: To make the discussion more concrete, consider 
+the case of a one-dimensional linear quadratic regulator (LQR). The task is to 
+minimise V*(xo) = fo cx(t) 2 + fiu(t)2dt by choosing u(t), where c,fi > 0, k(t) -- 
+-[ax(t) + u(t)] and x(0) = x0. It is well known (eg Athans &: Falb, 1966) that 
+the solution to this problem is that V*(x) = k'x2/2 where k* - (c + fi(u*)2)/(a + 
+u*) and u(t) -- (-a + via 2 + c/fi)x(t). Knowing the form of the problem, we 
+consider policies w that make u(t) = wx(t) and require h(x, k) -- V VW(x) = kx, 
+where the correct value of k = (a + fiw2)/(a + w). The consistency condition 
+in equation 2 evaluated at state x implies that 0 - (a + fiw2)x 2 -h(x,k)(a + 
+w)x. Doing online gradient descent in the square inconsistency at samples Xn gives 
+k,,+ = k,,-eO [(c + fiw2)x2 - k,x,(a + w)x,]  /Ok,,, which will reduce the square 
+inconsistency for small enough e unless x = 0. As required, the square inconsistency 
+can only be zero for all values of x if k = (c + fiw2)/((a + w)). The advantage of 
+performing action v (note this is not vx) at state x is, from equation 4, AW(x, v) = 
+cx  + fiv  - (ax + v)(c + fiw2)x/(a + w), which, minimising over v (equation 5) 
+gives u(x) = wx where w  -- (c + fiw )/(2fi(a + w)), which is the Newton-Raphson 
+iteration to solve the quadratic equation that determines the optimal policy. In this 
+case, without ever explicitly forming VW(x), we have been able to learn an optimal 
+1062 P. DAYAN, S. P. SINGH 
+policy. This was based, at least conceptually, on samples Xn from the interaction 
+of the agent with the world. 
+The curl condition: The astute reader will have noticed a problem. The consis- 
+tency condition in equation 2 constrains the spatial derivatives V x V w in only one 
+direction at every point - along the route f(x, w(x)) taken according to the policy 
+there. However, in evaluating actions by evaluating their advantages, we need to 
+know Vx V w in all the directions accessible through f(x, u) at state x. The quadratic 
+regulation task was only solved because we employed a function approximator (which 
+was linear in this case h(x, k) - kx). For the case of LQR, the restriction that h be 
+linear allowed information about f(x', w(x')). 7, VW(x ') at distant states x' and 
+for the policy actions w(x') there to determine f(x, u) � 7VW(x) at state x but 
+for non-policy actions u. If we had tried to represent h(x, k) using a more flexible 
+approximator such as radial basis functions, it might not have worked. In general, if 
+we didn't know the form of V x V w (x), we cannot rely on the function approxima

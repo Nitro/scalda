@@ -1,0 +1,217 @@
+Blind separation of delayed and convolved 
+sources, 
+Te-Won Lee 
+Max-Planck-Society, GERMANY, 
+AND Interactive Systems Group 
+Carnegie Mellon University 
+Pittsburgh, PA 15213, USA 
+teoncs. cmu. edu 
+Anthony J. Bell 
+Computational Neurobiology, 
+The Salk Institute 
+10010 N. Torrey Pines Road 
+La Jolla, California 92037, USA 
+tonysalk. edu 
+Russell H. Lambert 
+Dept of Electrical Engineering 
+University of South California, USA 
+rlambertsipi. usc. edu 
+Abstract 
+We address the difficult problem of separating multiple speakers 
+with multiple microphones in a real room. We combine the work 
+of Torkkola and Amari, Cichocki and Yang, to give Natural Gra- 
+dient information maximisation rules for recurrent (IIR) networks, 
+blindly adjusting delays, separating and deconvolving mixed sig- 
+nals. While they work well on simulated data, these rules fail 
+in real rooms which usually involve non-minimum phase transfer 
+functions, not-invertible using stable IIR filters. An approach that 
+sidesteps this problem is to perform infomax on a feedforward archi- 
+tecture in the frequency domain (Lambert 1996). We demonstrate 
+real-room separation of two natural signals using this approach. 
+i The problem. 
+In the linear blind signal processing problem ([3, 2] and references therein), N 
+signals, s(t) = [Sl(/)... SN(t)] T, are transmitted through a medium so that an 
+array of N sensors picks up a set of signals x(t) = [x (t)... xN(t)] T, each of which 
+Blind Separation of Delayed and Convolved Sources 759 
+has been mixed, delayed and filtered as follows: 
+N M-1 
+= - 
+j=l k=0 
+(1) 
+(Here Dij are entries in a matrix of delays and there is an M-point filter, aij , 
+between the the jth source and the ith sensor.) The problem is to invert this 
+mixing without knowledge of it, thus recovering the original signals, s(t). 
+2 Architectures. 
+The obvious architecture for inverting eq.1 is the feedforward one: 
+N M-1 
+= 
+j=l k=O 
+(2) 
+which has filters, wij, and delays, dij, which supposedly reproduce, at the ui, the 
+original uncorrupted source signals, si. This was the architecture implicitly assumed 
+in [2]. However, it cannot solve the delay-compensation problem, since in eq.1 each 
+delay, Dij, delays a single source, while in eq.2 each delay, dij is associated with a 
+mixture, xj. 
+Torkkola [8], has addressed the problem of solving the delay-compensation prob- 
+lem with a feedback architecture. Such an architecture can, in principle, solve this 
+problem, as shown earlier by Platt & Faggin [7]. Torkkola [9] also generalised the 
+feedback architecture to remove dependencies across time, to achieve the deconvo- 
+lution of mixtures which have been filtered, as in eq.1. 
+Here we propose a slightly different architecture than Torkkola's ([9], eq.15). His 
+architecture could fail since it is missing feedback cross-weights for t -- 0, ie: Wij 0 . 
+A full feedback system looks like: 
+N M-1 
+j=l k=0 
+and is illustrated in Fig.1. Because terms in ui(t) appear on both sides, we rewrite 
+this in vector terms: u(t) = x(t) - W0u(t) - EkM= 1WkU(t- k), in order to solve 
+it as follows: 
+M-1 
+u(t) -- (I + W0)--i(x(t) --  WkU(t- k)) (4) 
+k=l 
+In these equations, there is a feedback unmixing matrix, W, for each time point 
+of the filter, but the 'leading matrix', Wo h a special status in solving for u(t). 
+The delay terms e useful since one metre of distance in air at an 8kHz sampling 
+rate, corresponds to a whole 25 zerotaps of a filter. Reintroducing them gives us: 
+u(t) -- (I q- W0) --1 (x(t) -- net(t)), 
+N M-1 
+neti(t) = y y w,ku(t - di - k)) (5) 
+j=l k=l 
+760 T. Lee, A. J. Bell and R. H. Lambert 
+Maximize Joint Entropy 
+H(Y) 
+/ 
+S1 I t = X1 
+S2 =X2 
+A(z) 
+lyl I y2 
+W(z) 
+Figure 1: The feedback neural architecture of eq.9, which is used to separate and 
+deconvolve signals. Each box represents a causal filter and each circle denotes a 
+time delay. 
+3 Algorithms. 
+Learning in this architecture is performed by maximising the joint entropy, H(y (t)), 
+of the random vector y(t) - g(u(t)), where g is a bounded monotonic nonlinear 
+function (a sigmoid function). The success of this for separating sources depends 
+on four assumptions: (1) that the sources are statistically independent, (2) that 
+each source is white, ie: there are no dependencies between time points, (3) that 
+the non-linearity, g, has a derivative which has higher kurtosis than the probability 
+density functions (pdf's) of the sources, and (4) that a stable IIR (feedback) inverse 
+of the mixing exists; ie: that a is minimum phase (see section 5). 
+Assumption (1) is reasonable and Assumption (3) allows some tailoring of our algo- 
+rithm to fit data of different types. Assumption (2), on the other hand, is not true 
+for natural signals. Our algorithm will whiten: it will remove dependencies across 
+time which already existed in the original source signals, si. However, it is possible 
+to restore the characteristic autocorrelations (amplitude spectra) of the sources by 
+post-processing. For the reasoning behind Assumption (3) see [2]. We will discuss 
+Assumption 4 in section 5. 
+In the static feedback case of eq.5, when M = 1, the learning rule for the feedback 
+weights W0 is just a co-ordinate transform of the rule for feedforward weights, r0, 
+in the equivalent architecture of u(t) = V0x(t). Since V0 -= (I + W0) -1, we 
+have W0 = V 1 - I, which, due to the quotient rule for matrix differentiation, 
+differentiates as: 
+AW0  --(/r-1)Ar( r-l) (6) 
+The best way to maximise entropy in the feedforward system is not to follow the 
+entropy gradient, as in [2], but to follow its 'natural' gradient, as reported by Amari 
+et al [1]' 
+OH (Y) VrT  (Z) 
+This is an optimal rescaling of the entropy gradient [1, 3]. It simplifies the learning 
+Blind Separation of Delayed and Convolved Sources 761 
+rule and speeds convergence considerably. Evaluated, it gives [2]: 
+/XWo (I + ur)Wo, 
+00yi 
+i = Oyi 
+(s) 
+Substituting into eq.7 gives the natural gradient rule for static feedback weights: 
+AWo cr -(I + Wo)(I + :uT), 
+(9) 
+This reasoning may be extended to networks involving filters. For the feedforward 
+filter architecture u(t) - y.M__ Vkx(t -- k), we derive a natural gradient rule (for 
+k > 0) of: 
+AVk oc :utT_nVn (10) 
+where, for convenience, time has become subscripted. Performing the same coordi- 
+nate transforms as for W0 above, gives the rule: 
+-(I + W)utr_k 
+(11) 
+(We note that learning rules similar to these have been independently derived by 
+Cichocki et al [4]). Finally, for the delays in eq.5, we derive [2, 8]: 
+M-1 C9 
+OH(y) _ -Oi Z Wijku(t -- dij - k) (12) 
+Adij or Odij - k--1 
+This rule is different from that in [8] because it uses the collected temporal gradient 
+information from all the taps. The algorithms of eq.9, eq.11 and eq.12 are the ones 
+we use in our experiments on the architecture of eq.5. 
+4 Simulation results for the feedback architecture 
+To test the learning rules in eq.9, eq.11 and eq.12 we used an IIR filter system to 
+recover two sources which had been mixed and delayed as follows (in Z-transform 
+notation): 
+AI (z) - 0.9 + 0.5Z --1 q- 0.3z -2 
+A21 (Z) -- --0.7Z -5 -- 0.3z -6 - 0.2z -7 (13) 
+A2 (z) = 0.5z -5 + 0.3z -6 + 0.2z -7 
+A:(z) = 0.8 - 0.1z - 
+The mixing system, A(z), is a minimum-phase system with all its zeros inside the 
+unit circle. Hence, A(z) can be inverted using a stable causal IIR system since all 
+poles of the inverting systems are also inside the unit circle. For this experiment, we 
+chose an artificially-generated source: a white process with a Laplacian distribution 
+[f(x) = exp(-lxD]. In the frequency domain the deconvolving system looks as 
+follows: 
+[ UI(Z) ] 1 [ W11(z) W21(z)][ XI(Z) ] (14) 
+U2(Z) ---- D(Z) W12(g) W22(Z) X2(Z) 
+where D(z) = W (z)W22(z)- Wi2(z)W2i (z)). This leads to the following solution 
+for the weight filters: 
+W11 (2:) -- A22(z) W22(z) = Ai (z) 
+W21 (z)  -A21(z) W12(z ) -- -A12(z) (15) 
+762 T. Lee, A. J. Bell and R. H. Lambert 
+The learning rule we used was that of eq.9 and eq. ll with the logistic non-linearity, 
+Yi -- 1/exp(--ui). Fig.2A shows the four filters learnt by our IIR algorithm. The 
+bottom row shows the inverting system convolved with the mixing system, proving 
+that W * A is approximately the identity mapping. Delay learning is not demon- 
+strated here, though for periodic signals like speech we observed that it is subject 
+to local minima problems [8, 9]. 
+(A) Feedback (11R) learning 
+(B) Feedforward (FIR)learning 
+1 
+Wl 1 
+F] - L. 
+0.5 
+20 0 
+W12 -Lf-'-- 
+20 0 
+(w'a) 1 
+- 
+�0. 
+20 
+20 
+40 0 40 
+1 1 
+0 .... n n _ 0 
+W12 
+*-- n n[In. n n.-un U - 
+.... uUUU 
+0 40 0 40 
+i 
+0 ---..nuunwu[j-' W22 
+W21 oi-- 
+o 
+2 
+(w'a) 1 
+40 0 40 
+1:!_ w'a) 
+100 0 100 
+Figure 2: Top two rows: learned unmixing filters for (A) IIR learning on minimum- 
+phase mixing, and (B) FIR freq.-domain learning on non-minimum phase mixing. 
+Bottom row: the convolved mixing and unmixing systems. The delta-like response 
+indicates successful blind unmixing. In (B) this occurs acausally with a time-shift. 
+5 Back to the feedforward architecture. 
+The feedback architecture is elegant but limited. It can only invert minimum- 
+phase mixing (all zeros are inside the unit circle meaning that all poles of the 
+inverting system are as well). Unfortunately, real room acoustics usually involves 
+non-minimum phase mixing. 
+There does exist, however, a stable non-causal feedforward (FIR) inverse for non- 
+minimum phase mixing systems. The learning rules for such a system can be formu- 
+lated using the FIR polynomial matrix algebra as described by Lambert [5]. This 
+may be performed in the time or frequency domain, the only requirements being 
+that the inverting filters are long enough and their main energy occurs more-or- 
+less in their centre. This allows for the non-causal expansion of the non-minimum 
+phase roots, causing the roughly symmetrical fianged appearance of the filters in 
+Fig:2B. 
+For convenience, w

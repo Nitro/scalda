@@ -1,0 +1,171 @@
+Learning From Demonstration 
+Stefan Schaal 
+sschaal @cc.gatech.edu; http://www.cc.gatech.edu/fac/Stefan.Schaal 
+College of Computing, Georgia Tech, 801 Atlantic Drive, Atlanta, GA 30332-0280 
+ATR Human Information Processing, 2-2 Hikaridai, Seiko-cho, Soraku-gun, 619-02 Kyoto 
+Abstract 
+By now it is widely accepted that learning a task from scratch, i.e., without 
+any prior knowledge, is a daunting undertaking. Humans, however, rarely at- 
+tempt to learn from scratch. They extract initial biases as well as strategies 
+how to approach a learning problem from instructions and/or demonstrations 
+of other humans. For learning control, this paper investigates how learning 
+from demonstration can be applied in the context of reinforcement learning. 
+We consider priming the Q-function, the value function, the policy, and the 
+model of the task dynamics as possible areas where demonstrations can speed 
+up learning. In general nonlinear learning problems, only model-based rein- 
+forcement learning shows significant speed-up after a demonstration, while in 
+the special case of linear quadratic regulator (LQR) problems, all methods 
+profit from the demonstration. In an implementation of pole balancing on a 
+complex anthropomorphic robot arm, we demonstrate that, when facing the 
+complexities of real signal processing, model-based reinforcement learning 
+offers the most robustness for LQR problems. Using the suggested methods, 
+the robot learns pole balancing in just a single trial after a 30 second long 
+demonstration of the human instructor. 
+1. INTRODUCTION 
+Inductive supervised learning methods have reached a high level of sophistication. Given 
+a data set and some prior information about its nature, a host of algorithms exist that can 
+extract structure from this data by minimizing an error criterion. In learning control, how- 
+ever, the learning task is often less well defined. Here, the goal is to learn a policy, i.e., the 
+appropriate actions in response to a perceived state, in order to steer a dynamical system to 
+accomplish a task. As the task is usually described in terms of optimizing an arbitrary per- 
+formance index, no direct training data exist which could be used to learn a controller in a 
+supervised way. Even worse, the performance index may be defined over the long term 
+behavior of the task, and a problem of temporal credit assignment arises in how to credit 
+or blame actions in the past for the current performance. In such a setting, typical for rein- 
+forcement learning, learning a task from scratch can require a prohibitively time- 
+consuming amount of exploration of the state-action space in order to find a good policy. 
+On the other hand, learning without prior knowledge seems to be an approach that is rarely 
+taken in human and animal learning. Knowledge how to approach a new task can be trans- 
+ferred from previously learned tasks, and/or it can be extracted from the performance of a 
+teacher. This opens the questions of how learning control can profit from these kinds of in- 
+formation in order to accomplish a new task more quickly. In this paper we will focus on 
+learning from demonstration. 
+Learning from demonstration, also known as programming by demonstration, imitation 
+learning, and teaching by showing received significant attention in automatic robot as- 
+sembly over the last 20 years. The goal was to replace the time-consuming manual pro- 
+Learning from Demonstration 1041 
+o,6 
+(a) rng 
+m12 = -lit}+ mglsinO+ ', 0[-,] 
+r(0,) = (3 2 -c() 2 log cos() 
+m = l = 1, g = 9.81,  = 0.05, *m = 5Nm 
+0) 
+F 
+(b) 
+mcosO + ml2 - mglsinO = 0 
+(m + m )2 + mlOcosO - mlO  sin0 = F 
+x: u: 
+4x,u)= xQx+ uau 
+l = 0.75m, m = 0.15kg, m = 1.Okg 
+Q = diag(1.25, 1, 12, 0.25), R = 0.01 
+Figure 1: a) pendulum swing up, 
+b) c pole balancing 
+gramming of a robot by an automatic programming proc- 
+ess, solely driven by showing the robot the assembly task 
+by an expert. In concert with the main stream of Artificial 
+Intelligence at the time, research was driven by symbolic 
+approaches: the expert's demonstration was segmented 
+into primitive assembly actions and spatial relationships 
+between manipulator and environment, and subsequently 
+submitted to symbolic reasoning processes (e.g., Lozano- 
+Perez, 1982; Dufay & Latombe, 1983; Segre & DeJong, 
+1985). More recent approaches to programming by dem- 
+onstration started to include more inductive learning 
+components (e.g., Ikeuchi, 1993; Dillmann, Kaiser, & 
+Ude, 1995). In the context of human skill learning, 
+teaching by showing was investigated by Kawato, Gan- 
+dolfo, Gomi, & Wada (1994) and Miyamoto et al. (1996) 
+for a complex manipulation task to be learned by an an- 
+thropomorphic robot arm. An overview of several other 
+projects can be found in Bakker & Kuniyoshi (1996). 
+In this paper, the focus lies on reinforcement learning and 
+how learning from demonstration can be beneficial in this 
+context. We divide reinforcement learning into two cate- 
+gories: reinforcement learning for nonlinear tasks 
+(Section 2) and for (approximately) linear tasks (Section 
+3), and investigate how methods like Q-learning, value- 
+function learning, and model-based reinforcement learn- 
+ing can profit from data from a demonstration. In Section 
+2.3, one example task, pole balancing, is placed in the 
+context of using an actual, anthropomorphic robot to learn 
+it, and we reconsider the applicability of learning from 
+demonstration in this more complex situation. 
+2. REINFORCEMENT LEARNING FROM DEMONSTRATION 
+Two example tasks will be the basis of our investigation of learning from demonstration. 
+The nonlinear task is the pendulum swing-up with limited torque (Atkeson, 1994; Doya, 
+1996), as shown in Figure la. The goal is to balance the pendulum in an upright position 
+starting from hanging downward. As the maximal torque available is restricted such that 
+the pendulum cannot be supported against gravity in all states, a pumping trajectory is 
+necessary, similar as in the mountain car example of Moore (1991), but more delicately in 
+its timing since building up too much momentum during pumping will overshoot the up- 
+right position. The (approximately) linear example, Figure lb, is the well-known cart-pole 
+balancing problem (Widrow & Smith, 1964; Barto, Sutton, & Anderson, 1983). For both 
+tasks, the learner is given information about the one-step reward r (Figure 1 ), and both 
+tasks are formulated as continuous state and continuous action problems. The goal of each 
+task is to find a policy which minimizes the infinite horizon discounted reward: 
+i ('-') - (1) 
+V(x(t))= e r r(x(s),u(s))ds or V(x(t))= 7'-'r(x(i),u(i)) 
+t i=t 
+where the left hand equation is the continuous time formulation, while the right hand 
+equation is the corresponding discrete time version, and where x and u denote a n- 
+dimensional state vector and a m-dimensional command vector, respectively. For the 
+Swing-Up, we assume that a teacher provided us with 5 successful trials starting from dif- 
+1042 S. Schaal 
+ferent initial conditions. Each trial consists of a time series of data vectors (0,/, ) sam- 
+pled at 60Hz. For the Cart-Pole, we have a 30 seco.nd demonstration of successful balanc- 
+ing, represented as a 60Hz time series of data vectors (x, �, 0, , F). How can these demon- 
+strations be used to speed up reinforcement learning? 
+2.1 THE NONLINEAR TASK: SWING-UP 
+We applied reinforcement learning based on learning a value function (V-function) (Dyer 
+& McReynolds, 1970) for the Swing-Up task, as the alternative method, Q-learning 
+(Watkins, 1989), has yet received very limited research for continuous state-action spaces. 
+The V-function assigns a scalar reward value V(x (t)) to each state x such that the entire V- 
+function fulfills the consistency equation: 
+V(x(t)) = argmin(r(x(t),u(t)) + 7 V(x(t + 1))) (2) 
+u(t) 
+For clarity, this equation is given for a discrete state-action system; the continuous formu- 
+lation can be found, e.g., in Doya (1996). The optimal policy, u =(x), chooses the action 
+u in state x such that (2) is fulfilled. Note that this computation involves an optimization 
+step that includes knowledge of the subsequent state x(t+l). Hence, it requires a model of 
+the dynamics of the controlled system, x(t+ 1)=f(x (t),u(t)). From the viewpoint of learning 
+from demonstration, V-function learning offers three candidates which can be primed from 
+a demonstration: the value function V(x), the policy z[(x), and the model f(x,u). 
+6O 
+'  a) scratch ,- c) primed model 
+- - b) primed actor -- d) primed actor&model 
+50 
+40 
+3o 
+2O 
+10 
+0 
+10 100 
+Trial 
+Figure 2: Smoothed learning curves of the average 
+of 10 learning trials for the learning conditions a) 
+to d) (see text). Good performance is characterized 
+by Tup >45s; below this value the system is usu- 
+ally able to swing up properly but it does not know 
+how to stop in the upright position. 
+2.1.1 V-Learning 
+In order to assess the benefits of a demon- 
+stration for the Swing-Up, we imple- 
+mented V-learning as suggested in Doya's 
+(1996) continuous TD (CTD) learning al- 
+gorithm. The V-function and the dynam- 
+ics model were incrementally learned by a 
+nonlinear function approximator, Recep- 
+tive Field Weighted Regression (RFWR) 
+(Schaal & Atkeson (1996)). Differing 
+from Doya's (1996) implementation, we 
+used the optimal action suggested by CTD 
+to learn a model of the policy z[ (an 
+actor as in Barto et al. (1983)), again re- 
+presented by RFWR. The following learn- 
+ing conditions were tested empirically: 
+a) Scratch: Trial by trial learning of 
+value function V, model f, and actor J from scratch. 
+b) Primed Actor: Initial training of J from the demonstration, then trial by trial learning. 
+c) Primed Model: Initial training off from the demonstration, then trial by trial learning. 
+d) Primed Actor&Model: Priming of J and f as in b) and c), then trial by trial learning. 
+Figure 2 sh

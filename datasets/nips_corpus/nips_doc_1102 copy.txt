@@ -1,0 +1,146 @@
+From Isolation to Cooperation: 
+An Alternative View of a System of Experts 
+Stefan Schaa!* 
+sschaal @ cc.gatech. edu 
+http://www.cc.gatech.edu/fac/Stefan. Schaal 
+Christopher C. Atkeson 
+cga@cc.gatech.edu 
+http://www.cc.gatech.edu/fac/Chris.Atkeson 
+College of Computing, Georgia Tech, 801 Atlantic Drive, Atlanta, GA 30332-0280 
+*ATR Human Information Processing, 2-2 Hikaridai, Seiko-cho, Soraku-gun, 619-02 Kyoto 
+Abstract 
+We introduce a constructive, incremental learning system for regression 
+problems that models data by means of locally linear experts. In contrast 
+to other approaches, the experts are trained independently and do not 
+compete for data during learning. Only when a prediction for a query is 
+required do the experts cooperate by blending their individual predic- 
+tions. Each expert is trained by minimizing a penalized local cross vali- 
+dation error using second order methods. In this way, an expert is able to 
+find a local distance metric by adjusting the size and shape of the recep- 
+tive field in which its predictions are valid, and also to detect relevant in- 
+put features by adjusting its bias on the importance of individual input 
+dimensions. We derive asymptotic results for our method. In a variety of 
+simulations the properties of the algorithm are demonstrated with respect 
+to interference, learning speed, prediction accuracy, feature detection, 
+and task oriented incremental learning. 
+1. INTRODUCTION 
+Distributing a learning task among a set of experts has become a popular method in compu- 
+tational learning. One approach is to employ several experts, each with a global domain of 
+expertise (e.g., Wolpert, 1990). When an output for a given input is to be predicted, every 
+expert gives a prediction together with a confidence measure. The individual predictions 
+are combined into a single result, for instance, based on a confidence weighted average. 
+Another approach the approach pursued in this paper--of employing experts is to create 
+experts with local domains of expertise. In contrast to the global experts, the local experts 
+have little overlap or no overlap at all. To assign a local domain of expertise to each expert, 
+it is necessary to learn an expert selection system in addition to the experts themselves. 
+This classifier determines which expert models are used in which part of the input space. 
+For incremental learning, competitive learning methods are usually applied. Here the ex- 
+perts compete for data such that they change their domains of expertise until a stable con- 
+figuration is achieved (e.g., Jacobs, Jordan, Nowlan, & Hinton, 1991). The advantage of 
+local experts is that they can have simple parameterizations, such as locally constant or lo- 
+cally linear models. This offers benefits in terms of analyzability, learning speed, and ro- 
+bustness (e.g., Jordan & Jacobs, 1994). For simple experts, however, a large number of ex- 
+perts is necessary to model a function. As a result, the expert selection system has to be 
+more complicated and, thus, has a higher risk of getting stuck in local minima and/or of 
+learning rather slowly. In incremental learning, another potential danger arises when the 
+input distribution of the data changes. The expert selection system usually makes either 
+implicit or explicit prior assumptions about the input data distribution. For example, in the 
+classical mixture model (McLachlan & Basford, 1988) which was employed in several lo- 
+cal expert approaches, the prior probabilities of each mixture model can be interpreted as 
+606 S. SCHAAL, C. C. ATKESON 
+the fraction of data points each expert expects to experience. Therefore, a change in input 
+distribution will cause all experts to change their domains of expertise in order to fulfill 
+these prior assumptions. This can lead to catastrophic interference. 
+In order to avoid these problems and to cope with the interference problems during incre- 
+mental learning due to changes in input distribution, we suggest eliminating the competi- 
+tion among experts and instead isolating them during learning. Whenever some new data is 
+experienced which is not accounted for by one of the current experts, a new expert is cre- 
+ated. Since the experts do not compete for data with their peers, there is no reason for them 
+to change the location of their domains of expertise. However, when it comes to making a 
+prediction at a query point, all the experts cooperate by giving a prediction of the output 
+together with a confidence measure. A blending of all the predictions of all experts results 
+in the final prediction. It should be noted that these local experts combine properties of 
+both the global and local experts mentioned previously. They act like global experts by 
+learning independently of each other and by blending their predictions, but they act like lo- 
+cal experts by confining themselves to a local domain of expertise, i.e., their confidence 
+measures are large only in a local region. 
+The topic of data fitting with structurally simple local models (or experts) has received a 
+great deal of attention in nonparametric statistics (e.g., Nadaraya, 1964; Cleveland, 1979; 
+Scott, 1992, Hastie & Tibshirani, 1990). In this paper, we will demonstrate how a non- 
+parametric approach can be applied to obtain the isolated expert network (Section 2.1), 
+how its asymptotic properties can be analyzed (Section 2.2), and what characteristics such 
+a learning system possesses in terms of the avoidance of interference, feature detection, 
+dimensionality reduction, and incremental learning of motor control tasks (Section 3). 
+2. RECEPTIVE FIELD WEIGHTED REGRESSION 
+This paper focuses on regression problems, i.e., the learning of a map from [n .. [m. 
+Each expert in our learning method, Receptive Field Weighted Regression (RFWR), con- 
+sists of two elements, a locally linear model to represent the local functional relationship, 
+and a receptive field which determines the region in input space in which the expert's 
+knowledge is valid. As a result, a given data set will be modeled by piecewise linear ele- 
+ments, blended together. For 1000 noisy data points drawn from the unit interval of the 
+function z = max[exp(-10x 2), exp(-50y 2), 1.25 exp(-5(x 2 + y2)], Figure 1 illustrates an 
+example of function fitting with RFWR. This function consists of a narrow and a wide 
+ridge which are perpendicular to each other, and a Gaussian bump at the origin. Figure 1 b 
+shows the receptive fields which the system created during the learning process. Each ex- 
+perts' location is at the center of its receptive field, marked by a � in Figure 1 b. The recep- 
+o 
+-0.5 
+1.5 
+.5 
+0.5 
+o -0.5 
+-1.5 
+o 
+-0.5 -1.5 -1 -0.5 0 0.5 1 1.5 
+_'3. x 
+(a) (b) x 
+Figure 1: (a) result of function approximation with RFWR, (b) contour lines of 0.1 iso-activation of 
+each expert in input space (the experts' centers are marked by small circles). 
+From Isolation to Cooperation: An Alternative View of a System of Experts 607 
+tive fields are modeled by Gaussian functions, and their 0.1 iso-activation lines are shown 
+in Figure 1 b as well. As can be seen, each expert focuses on a certain region of the input 
+space, and the shape and orientation of this region reflects the function's complexity, or 
+more precisely, the function's curvature, in this region. It should be noticed that there is a 
+certain amount of overlap among the experts, and that the placement of experts occurred on 
+a greedy basis during learning and is not globally optimal. The approximation result 
+(Figure 1 a) is a faithful reconstruction of the real function (MSE = 0.0025 on a test set, 30 
+epochs training, about 1 minute of computation on a SPARC10). As a baseline comparison, 
+a similar result with a sigmoidal 3-layer neural network required about 100 hidden units 
+and 10000 epochs of annealed standard backpropagation (about 4 hours on a SPARC10). 
+ ' , , . x_L >'. 
+,...,. ,ff' .' ReceplJve Connn 
+Weighed  /  FeM Un 
+Average  cenr ate  Inputs 
+Output  
+Figure 2: The RFWR network 
+2.1 THE ALGORITHM 
+RFWR can be sketched in network form as 
+shown in Figure 2. All inputs connect to all ex- 
+pert networks, and new experts can be added as 
+needed. Each expert is an independent entity. It 
+consists of a two layer linear subnet and a recep- 
+tive field subnet. The receptive field subnet has a 
+single unit with a bell-shaped activation profile, 
+centered at the fixed location c in input space. 
+The maximal output of this unit is 1 at the cen- 
+ter, and it decays to zero as a function of the dis- 
+tance from the center. For analytical convenience, 
+we choose this unit to be Gaussian: 
+x is the input vector, and D the distance metric, a positive definite matrix that is generated 
+from the upper triangular matrix M. The output of the linear subnet is: 
+= xrb+b0 =r/5 (2) 
+The connection strengths b of the linear subnet and its bias b 0 will be denoted by the d-di- 
+mensional vector/5 from now on, and the tilde sign will indicate that a vector has been 
+augmented by a constant 1, e.g., ' = (x r, Dr. In generating the total output, the receptive 
+field units act as a gating component on the output, such that the total prediction is: 
+The parameters/5 and M are the primary quantities which have to be adjusted in the learn- 
+ing process:/5 forms the locally linear model, while M determines the shape and orienta- 
+tion of the receptive fields. Learning is achieved by incrementally minimizing the cost 
+function: 
+J = w, Yi - Yi.-i wi + Y 
+tt,m 
+The first term of this function is the weighted mean squared cross validation error over all 
+experienced data points, a local cross validation measure (Schaal & Atkeson, 1994). The 
+second term is a regulafization or penalty term. Local cross validation by itself is consis- 
+tent, i.e., with an increasing amount of data, the size of the receptive field of an expert 
+would shrink to zero. This would require the creation of a

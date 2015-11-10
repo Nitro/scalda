@@ -1,0 +1,159 @@
+Using Unlabeled Data for Supervised 
+Learning 
+Geoffrey Towell 
+Siemens Corporate Research 
+755 College Road East 
+Princeton, NJ 08540 
+Abstract 
+Many classification problems have the property that the only costly 
+part of obtaining examples is the class label. This paper suggests 
+a simple method for using distribution information contained in 
+unlabeled examples to augment labeled examples in a supervised 
+training framework. Empirical tests show that the technique de- 
+scribed in this paper can significantly improve the accuracy of a 
+supervised learner when the learner is well below its asymptotic 
+accuracy level. 
+1 INTRODUCTION 
+Supervised learning problems often have the following property: unlabeled examples 
+have little or no cost while class labels have a high cost. For example, it is trivial to 
+record hours of heartbeats from hundreds of patients. However, it is expensive to 
+hire cardiologists to label each of the recorded beats. One response to the expense of 
+class labels is to squeeze the most information possible out of each labeled example. 
+Regularization and cross-validation both have this goal. A second response is to 
+start with a small set of labeled examples and request labels of only those currently 
+unlabeled examples that are expected to provide a significant improvement in the 
+behavior of the classifier (Lewis & Catlett, 1994; Freund et al., 1993). 
+A third response is to tap into a largely ignored potential source of information; 
+namely, unlabeled examples. This response is supported by the theoretical work 
+of Castelli and Cover (1995) which suggests that unlabeled examples have value in 
+learning classification problems. The algorithm described in this paper, referred to 
+as SULU (Supervised learning Using Labeled and Unlabeled examples), takes this third 
+648 G. TOWELL 
+path by using distribution information from unlabeled examples during supervised 
+learning. Roughly, SULU uses the centroid of labeled and unlabeled examples in the 
+neighborhood of a labeled example as a new training example. In this way, SULU 
+extracts information about the local variability of the input from unlabeled data. 
+SULU is described in Section 2. 
+In its use of unlabeled examples to alter labeled examples, SULU is reminiscent of 
+techniques for adding noise to networks during training (Hanson, 1990; Matsuoka, 
+1992). SULU is also reminiscent of instantiations of the EM algorithm that attempt 
+to fill in missing parts of examples (Ghahramani & Jordan, 1994). The similarity 
+of SULU to these, and other, works is explored in Section 3. 
+SULU is intended to work on classification problems for which there is insufiqcient la- 
+beled training data to allow a learner to approach its asymptotic accuracy level. To 
+explore this problem, the experiments described in Section 4 focus on the early parts 
+of the learning curves of six datasets (described in Section 4.1). The results show 
+that SULU consistently, and statistically significantly, improves classification accu- 
+racy over systems trained with only the labeled data. Moreover, SULU is consistently 
+more accurate than an implementation of the EM-algorithm that was specialized 
+for the task of filling in missing class labels. From these results, it is reasonable to 
+conclude that SULU is able to use the distribution information in unlabeled examples 
+to improve classification accuracy. 
+2 THE ALGORITHM 
+SULU uses standard neural-network supervised training techniques except that it 
+occasionally replaces a labeled example with a synthetic example. in addition, the 
+criterion to stop training is slightly modified to require that the network correctly 
+classify almost every labeled example and a majority of the synthetic examples. For 
+instance, the experiments reported in Section 4 generate synthetic examples 50% of 
+the time; the stopping criterion requires that 80% of the examples seen in a single 
+epoch are classified correctly. The main function in Table I provides psuedocode 
+for this process. 
+The synthesize function in Table I describes the process through which an example is 
+synthesized. Given a labeled example to use as a seed, synthesize collects neighboring 
+examples and returns an example that is the centroid of the collected examples 
+with the label of the starting point. synthesize collects neighboring examples until 
+reaching one of the following three stopping points. First, the maximum number of 
+points is reached; the goal of SULU is to get information about the local variance 
+around known points, this criterion guarantees locality. Second, the next closest 
+example to the seed is a labeled example with a different label; this criterion prevents 
+the inclusion of obviously incorrect information in synthetic examples. Third, the 
+next closest example to the seed is an unlabeled example and the closest labeled 
+example to that unlabeled example has a different label from the seed; this criterion 
+is intended to detect borders between classification areas in example space. 
+The call to synthesize from main effectively samples with replacement from a space 
+defined by a labeled example and its neighbors. As such, there are many ways in 
+which main and synthesize could be written. The principle consideration in this 
+implementation is memory; the space around the labeled examples can be huge. 
+Using Unlabeled Data for Supervised Learning 649 
+Table 1: Pseudocode for SULU 
+RANDOM(min,max): 
+return a uniformly distributed random integer between min and max, 
+inclusive 
+MAIN(B,M): 
+/* B - in [0..100], controls the rate of example synthesis 
+/* M - controls neighborhood size during synthesis 
+Let: E / a set of labeled examples / 
+U /* a set of unlabeled examples */ 
+N /* an appropriate neural network */ 
+Repeat 
+Permute E 
+Foreach e in E 
+if random(O,100) > B then 
+e <- SYNTHESIZE(e,E,U,random(2,M)) 
+TRAIN N using e 
+Until a stopping criterion is reached 
+,I 
+,I 
+SYNTHESIZE(e,E,U,m): 
+Let: C / will hold a collection of examples / 
+For i from I to m 
+c <- ith nearest neighbor of e in E union U 
+if ((c is labeled) and (label of c not equal to label of e)) 
+if c is not labeled 
+cc <- nearest neighbor of c in E 
+if label of cc not equal to label of e then STOP 
+add c to C 
+return an example whose input is the centtold of the 
+inputs of the examples in C and has the class label of e. 
+then STOP 
+3 RELATED WORK 
+SULU is similar to two methods of exploring the input space beyond the boundaries of 
+the labeled examples; example generation and noise addition. Example generation 
+commonly uses a model of how a space deforms and an example of the space to 
+generate new examples. For instance, in training a vehicle to turn, Pomerleau 
+(1993) used information about how the scene shifts when a car is turned to generate 
+examples of turns. The major problem with example generation is that deformation 
+models are uncommon. 
+By contrast to example generation, noise addition is a model-free procedure. In 
+general, the idea is to add a small amount of noise to either inputs (Matsuoka, 
+1992), link weights (Hanson, 1990), or hidden units (Judd & Munro, 1993). For 
+example, Hanson (1990) replaces link weights with a Gaussian. During a forward 
+pass, the Gaussian is sampled to determine the link weight. Training affects both 
+the mean and the variance of the Gaussian. In so doing, Hanson's method uses 
+distribution information in the labeled examples to estimate the global variance of 
+each input dimension. By contrast, SULU uses both labeled and unlabeled examples 
+to make local variance estimates. (Experiments, results not shown, with Hanson's 
+method indicate that it cannot improve classification results as much as SULU.) 
+Finally, there has been some other work on using unclassified examples during 
+training. de Sa (1994) uses the co-occurrence of inputs in multiple sensor modali- 
+650 G. TOWELL 
+ties to substitute for missing class information. However, sensor data from multiple 
+modalities is often not available. Another approach is to use the EM algorithm 
+(Ghahramani & Jordan, 1994) which iteratively guesses the value of missing in- 
+formation (both input and output) and builds structures to predict the missing 
+information. Unlike SULU, EM uses global information in this process so it may 
+not perform well on highly disjunctive problems. Also SULU may have an advantage 
+over EM in domains in which only the class label is missing as that is SULU's specific 
+focus. 
+4 EXPERIMENTS 
+The experiments reported in this section explore the behavior of SULU on six 
+datasets. Each of the datasets has been used previously so they are only briefly 
+described in the first subsection. The results of the experiments reported in the 
+last part of this section show that SULU significantly and consistently improves 
+classification results. 
+4.1 DATASETS 
+The first two datasets are from molecular biology. Each take a DNA sequence and 
+encode it using four bits per nucleotide. The first problem, promoter recognition 
+(Opitz & Shavlik, 1994), is: given a sequence of 57 DNA nucleotides, determine if 
+a promoter begins at a particular position in the sequence. Following Opitz and 
+Shavlik, the experiments in this paper use 234 promoters and 702 nonpromoters. 
+The second molecular biology problem, splice-junction determination (Towell & 
+Shavlik, 1994), is: given a sequence of 60 DNA nucleotides, determine if there is a 
+splice-junction (and the type of the junction) at the middle of the sequence. The 
+data consist of 243 examples of one junction type (acceptors), 228 examples of the 
+other junction type (donors) and 536 examples of non-junctions. For both of these 
+problems, the best randomly initialized neural networks have a small number of 
+hidden units in a single layer (Towell & Shavlik, 1994). 
+The remaining four datasets are word sense disambiguation problems (i.e. deter- 
+mine the intended meaning of the word pen in the sentence the box is in the 
+pen). The proble

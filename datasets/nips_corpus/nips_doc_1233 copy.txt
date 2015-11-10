@@ -1,0 +1,168 @@
+Adaptively Growing Hierarchical 
+Mixtures of Experts 
+Jiirgen Fritsch, Michael Finke, Alex Waibel 
+{fritsch+,finkem,waibel} @cs.cmu.edu 
+Interactive Systems Laboratories 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+We propose a novel approach to automatically growing and pruning 
+Hierarchical Mixtures of Experts. The constructive algorithm pro- 
+posed here enables large hierarchies consisting of several hundred 
+experts to be trained effectively. We show that HME's trained by 
+our automatic growing procedure yield better generalization per- 
+formance than traditional static and balanced hierarchies. Eval- 
+uation of the algorithm is performed (1) on vowel classification 
+and (2) within a hybrid version of the JANUS [9] speech recog- 
+nition system using a subset of the Switchboard large-vocabulary 
+speaker-independent continuous speech recognition database. 
+INTRODUCTION 
+The Hierarchical Mixtures of Experts (HME) architecture [2,3,4] has proven use- 
+ful for classification and regression tasks in small to medium sized applications 
+with convergence times several orders of magnitude lower than comparable neu- 
+ral networks such as the multi-layer perceptron. The HME is best understood as a 
+probabilistic decision tree, making use of soft splits of the input feature space at the 
+internal nodes, to divide a given task into smaller, overlapping tasks that are solved 
+by expert networks at the terminals of the tree. Training of the hierarchy is based 
+on a generative model using the Expectation Maximisation (EM) [1,3] algorithm as 
+a powerful and efficient tool for estimating the network parameters. 
+In [3], the architecture of the HME is considered pre-determined and remains fixed 
+during training. This requires choice of structural parameters such as tree depth 
+and branching factor in advance. As with other classification and regression tech- 
+niques, it may be advantageous to have some sort of data-driven model-selection 
+mechanism to (1) overcome false initialisations (2) speed-up training time and (3) 
+adapt model size to task complexity for optimal generalization performance. In 
+[11], a constructive algorithm for the HME is presented and evaluated on two small 
+classification tasks: the two spirals and the 8-bit parity problems. However, this 
+460 J. Fritsch, M. Finke and A. Waibel 
+algorithm requires the evaluation of the increase in the overall log-likelihood for all 
+potential splits (all terminal nodes) in an existing tree for each generation. This 
+method is computationally too expensive when applied to the large HME's neces- 
+sary in tasks with several million training vectors, as in speech recognition, where 
+we can not afford to train all potential splits to eventually determine the single best 
+split and discard all others. We have developed an alternative approach to growing 
+HME trees which allows the fast training of even large HME's, when combined with 
+a path pruning technique. Our algorithm monitors the performance of the hierar- 
+chy in terms of scaled log-likelihoods, assigning penalties to the expert networks, 
+to determine the expert that performs worst in its local partition. This expert will 
+then be expanded into a new subtree consisting of a new gating network and several 
+new expert networks. 
+HIERARCHICAL MIXTURES OF EXPERTS 
+We restrict the presentation of the HME to the case of classification, although it was 
+originally introduced in the context of regression. The architecture is a tree with 
+gating networks at the non-terminal nodes and expert networks at the leaves. The 
+gating networks receive the input vectors and divide the input space into a nested 
+set of regions, that correspond to the leaves of the tree. The expert networks also 
+receive the input vectors and produce estimates of the a-posteriori class probabilities 
+which are then blended by the gating network outputs. All networks in the tree 
+are linear, with a softmax non-linearity as their activation function. Such networks 
+are known in statistics as multinomial logit models, a special case of Generalized 
+Linear Models (GLIM) [5] in which the probabilistic component is the multinomial 
+density. This allows for a probabilistic interpretation of the hierarchy in terms of 
+a generarive likelihood-based model. For each input vector x, the outputs of the 
+gating networks are interpreted as the input-dependent multinomial probabilities 
+for the decisions about which child nodes are responsible for the generation of the 
+actual target vector y. After a sequence of these decisions, a particular expert 
+network is chosen as the current classifier and computes multinomial probabilities 
+for the output classes. The overall output of the hierarchy is 
+N N 
+P(ylx, O) = y.gi(x, vi) Y.gjli(x, vij)P(ylx, Oij) 
+i=1 j=l 
+where the gi and gj]i are the outputs of the gating networks. 
+The HME is trained using the EM algorithm [1] (see [3] for the application of EM 
+to the HME architecture). The E-step requires the computation of posterior node 
+probabilities as expected values for the unknown decision indicators: 
+gi -']j gjliPij(Y) gjliPij(Y) 
+hi -- -]i gi -]j gjliPij(Y) hJli - -]j gjliPij(Y) 
+The M-step then leads to the following independent maximum-likelihood equations 
+Oij = arg maxN h ) log Pij(y (t)) 
+t 
+vi = argmaxN  h?logg? ) 
+V,  
+t k 
+vij = arg max   h?y]. h () log ,t) 
+t k I 
+Adaptively Growing Hierarchical Mtures of Experts 461 
+where the Oij are the parameters of the expert networks and the vi and vii are 
+the parameters of the gating networks. In the case of a multinomial logit model, 
+Pij (y) - yc, where yc is the output of the node associated with the correct class. The 
+above maximum likelihood equations might be solved by gradient ascent, weighted 
+least squares or Newton methods. In our implementation, we use a variant of Jordan 
+& Jacobs' [3] least squares approach. 
+GROWING MIXTURES 
+In order to grow an HME, we have to define an evaluation criterion to score the 
+experts performance on the training data. This in turn will allow us to select 
+and split the worst expert into a new subtree, providing additional parameters 
+which can help to overcome the errors made by this expert. Viewing the HME 
+as a probabilistic model of the observed data, we partition the input delendent 
+likelihood using expert selection probabilities provided by the gating networks 
+-1ogP(y(t)lx �, {9) =  Ygn logP(y(t)l x(t), {9) 
+t t k 
+y. y.log[P(y(t)lx(t) , 0)1 g = y. l(O; X) 
+k t k 
+where the gk are the products of the gating probabilities along the path from the 
+root node to the k-th expert. gk is the probability that expert k is responsible 
+for generating the observed data (note, that the g sum up to one). The expert- 
+dependent scaled likelihoods l (O; A') can be used as a measure for the performance 
+of an expert within its region of responsibility. We use this measure as the basis of 
+our tree growing algorithm: 
+1. Initialize and train a simple HME consisting of only one gate and several experts. 
+2. Compute the expert-dependent scaled likelihoods/k(O; ,Y) for each expert in one 
+additional pass through the training data. 
+3. Find the expert k with minimum lk and expand the tree, replacing the expert by 
+a new gate with random weights and new experts that copy the weights from the 
+old expert with additional small random perturbations. 
+4. Train the architecture to a local minimum of the classification error using a cross- 
+validation set. 
+5. Continue with step (2) until desired tree size is reached. 
+The number of tree growing phases may either be pre-determined, or based on 
+difference in the likelihoods before and after splitting a node. In contrast to the 
+growing algorithm in [11], our algorithm does not hypothesize all possible node 
+splits, but determines the expansion node(s) directly, which is much faster, espe- 
+cially when dealing with large hierarchies. Furthermore, we implemented a path 
+pruning technique similar to the one proposed in [11], which speeds up training 
+and testing times significantly. During the recursive depth-first traversal of the tree 
+(needed for forward evaluation, posterior probability computation and accumula- 
+tion of node statistics) a path is pruned temporarily if the current node's probability 
+of activation falls below a certain threshold. Additionally, we also prune subtrees 
+permanently, if the sum of a node's activation probabilities over the whole training 
+set falls below a certain threshold. This technique is consistent with the growing 
+algorithm and also helps preventing instabilities and singularities in the parameter 
+updates, since nodes that accumulate too little training information will not be 
+considered for a parameter update because such nodes are automatically pruned by 
+the algorithm. 
+462 J. Fritsch, M. Finke and A. Waibel 
+Figure 1' Histogram trees for a standard and a grown HME 
+VOWEL CLASSIFICATION 
+In initial experiments, we investigated the usefulness of the proposed tree growing 
+algorithm on Peterson and Barney's [6] vowel classification data that uses formant 
+frequencies as features. We chose this data set since it is small, non-artificial and 
+low-dimensional, which allows for visualization and understanding of the way the 
+growing HME tree performs classification tasks. 
+1.0 
+0.. 
+0.- 
+0.71 
+0.0- 
+0.8- 
+0.4- 
+0.2 
+0.1 
+The vowel data set contains 
+1520 samples consisting of the 
+formants F0, F1, F2 and F3 
+and a class label, indicating 
+one of 10 different vowels. 
+Experiments were carried out 
+on the 4-dimensional feature 
+space, however, in this paper 
+graphical representations are 
+restricted to the F1-F2 plane. 
+The figure to the left shows 
+the data set represented in 
+this plane (The formant fre- 
+quencms are normalized to 
+the range [0,1]). 
+In the following experiments, we use binary branching HME's exclusively, but in 
+general the growing algorithm poses no restrictions on the tree branching factor. 
+W

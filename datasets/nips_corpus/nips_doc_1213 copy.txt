@@ -1,0 +1,180 @@
+Efficient Nonlinear Control with 
+Actor-Tutor Architecture 
+Kenji Doya* 
+ATR Human Information Processing Research Laboratories 
+2-2 Hikaridai, Seika-cho, Soraku-gun, Kyoto 619-02, Japan. 
+Abstract 
+A new reinforcement learning architecture for nonlinear control is 
+proposed. A direct feedback controller, or the actor, is trained by 
+a value-gradient based controller, or the tutor. This architecture 
+enables both efficient use of the value function and simple computa- 
+tion for real-time implementation. Good performance was verified 
+in multi-dimensional nonlinear control tasks using Gaussian soft- 
+max networks. 
+I INTRODUCTION 
+In the study of temporal difference (TD) learning in continuous time and space 
+(Doya, 1996b), an optimal nonlinear feedback control law was derived using the 
+gradient of the value function and the local linear model of the system dynam- 
+ics. It was demonstrated in the simulation of a pendulum swing-up task that the 
+value-gradient based control scheme requires much less learning trials than the con- 
+ventional actor-critic control scheme (Barto et al., 1983). 
+In the actor-critic scheme, the actor, a direct feedback controller, improves its con- 
+trol policy stochastically using the TD error as the effective reinforcement (Fig- 
+ure la). Despite its relatively slow learning, the actor-critic architecture has the 
+virtue of simple computation in generating control command. In order to train a 
+direct controller while making efficient use of the value function, we propose a new 
+reinforcement learning scheme which we call the actor-tutor architecture (Fig- 
+ure lb). 
+*Current address: Kawato Dynamic Brain Project, JSTC. 2-2 Hikaridai, Seika-cho, 
+Soraku-gun, Kyoto 619-02, Japan. E-mail: doyaerato.atr.co.jp 
+Ejicient Nonlinear Control with Actor-Tutor Architecture 1013 
+In the actor-tutor scheme, the optimal control command based on the current esti- 
+mate of the value function is used as the target output of the actor. With the use of 
+supervised learning algorithms (e.g., LMSE), learning of the actor is expected to be 
+faster than in the actor-critic scheme, which uses stochastic search algorithms (e.g., 
+ARt ). The simulation result below confirms this prediction. This hybrid control 
+architecture provides a model of functional integration of motor-related brain areas, 
+especially the basal ganglia and the cerebellum (Doya, 1996a). 
+2 CONTINUOUS TD LEARNING 
+First, we summarize the theory of TD learning in continuous time and space (Doya, 
+1996b), which is basic to the derivation of the proposed control scheme. 
+2.1 CONTINUOUS TD ERROR 
+Let us consider a continuous-time, continuous-state dynamical system 
+dt = f(x(t),u(t)) (1) 
+where x  X C R n is the state and u  U C R m is the control input (or the 
+action). The reinforcement is given as the function of the state and the control 
+r(t) = r(x(t), 
+For a given control law (or a policy) 
+(2) 
+we define the value function of the state x(t) as 
+(4) 
+where x(s) and u(s) (t _< s < oo) follow the system dynamics (1) and the control 
+law (3). Our goal is to find an optimal control law p* that maximizes V(x) for 
+any state x  X. Note that v is the time constant of imminence-weighting, which 
+is related to the discount factor 7 of the discrete-time TD as 7 = i at 
+By differentiating (4) by t, we have a local consistency condition for the value 
+function 
+a V , V(x(t)) (). 
+ (()) = - (5) 
+Let P(x(t)) be the prediction of the value function V(x(t)) from x(t) by a neural 
+network, or some function appromator that h enough capability of generaliza- 
+tion. The prediction should be adjusted to nize the inconsistency 
+= p(x(t)) + at ' (6) 
+which is a continuous version of the TD error. Because the boundary condition 
+for the value function is given on the attractor set of the state space, correc- 
+tion of P(x(t))should be made backward into time. The correspondence between 
+continuous-time TD algorithms and discrete-time TD(A) algorithms (Sutton, 1988) 
+is shown in (Doya, 1996b). 
+u(t) = p(x(t)), (3) 
+1014 K. Doya 
+-- Critic 
+Actor 
+{ I -I/( = f(x,u) 
+P(x)/3x 
+-- Critic I [(x,u)/(u  
+-- Ac, o; ,,u T + q/<= f(x,u) -] 
+Figure 1: 
+(a) Actor-critic 
+(b) Actor-tutor 
+2.2 OPTIMAL CONTROL BY VALUE GRADIENT 
+According to the principle of dynamic programming (Bryson and Ho, 1975), the 
+local constraint for the value function V* for the optimal control law p* is given by 
+the Hamilton-Jacobi-Bellman equation 
+V*(t) = max r(x(t) u(t)) + r f(x(t),u(t)) . (7) 
+-()Ev ' 0x 
+The optimal control p* is given by solving the maximization problem in the HJB 
+equation, i.e., 
+o,.(x,.) ov*(x) o.f(x,.) 
+- =o. (8) 
+0u 0x 0u 
+When the cost for each control variable is given by a convex potential function G i 0 
+r(x,.) = R(x) -  c(.), (9) 
+equation (8) can be solved using a monotonic function g1(x) = (G})-l(x) as 
+/0u*() 0(,.)) (0) 
+u1 = g1 1 k Ox Ou s ' 
+If the system is linear with respect to the input, which is the case with many 
+mechanical systems, Of(x, u)/Ou1 is independent of u and the above equation gives 
+a closed-form optimal feedback control law u = p*(x). 
+In practice, the optimal value function is unknown and we replace V* (x) with the 
+current estimate of the value function P(x) 
+(0P(x) 0f(x,u)) (11) 
+u=g r 0x 0u ' 
+While the system evolves with the above control law, the value function P(x) is 
+updated to minimize the TD error (6). In (11), the vector OP(x)/Ox represents the 
+desired motion direction in the state space and the matrix Of(x, u)/0u transforms 
+it into the action space. The function g, which is specified by the control cost, 
+determines the amplitude of control output. For example, if the control cost G is 
+quadratic, then (11) reduces to a linear feedback control. A practically important 
+case is when g is a sigmoid, because this gives a feedback control law for a system 
+with limited control amplitude, as in the examples below. 
+Ejicient Nonlinear Control with Actor-Tutor Architecture 
+3 ACTOR-TUTOR ARCHITECTURE 
+1015 
+It was shown in a task of a pendulum swing-up with limited torque (Doya, 1996b) 
+that the above value-gradient based control scheme (11 can learn the task in much 
+less trials than the actor-critic scheme. However, computation of the feedback 
+command by (11) requires an on-line calculation of the gradient of the value function 
+OP(x)/Ox and its multiplication with the local linear model of the system dynamics 
+Of(x, u)/0u, which can be too demanding for real-time implementation. 
+One solution to this problem is to use a simple direct controller network, as in the 
+case of the actor-critic architecture. The training of the direct controller, or the 
+actor, can be performed by supervised learning instead of trial-and-error learning 
+because the target output of the controller is explicitly given by (11). Although 
+computation of the target output may involve a processing time that is not accept- 
+able for immediate feedback control, it is still possible to use its output for training 
+the direct controller provided that there is some mechanism of short-term memory 
+(e.g., eligibility trace in the connection weights). 
+Figure l(b) is a schematic diagram of this actor-tutor architecture. The critic 
+monitors the performance of the actor and estimates the value function. The tutor 
+is a cascade of the critic, its gradient estimator, the local linear model of the system, 
+and the differential model of control cost. The actor is trained to minimize the 
+difference between its output and the tutor's output. 
+4 SIMULATION 
+We tested the performance of the actor-tutor architecture in two nonlinear control 
+tasks; a pendulum swing-up task (Doya, 1996b) and the global version of a cart-pole 
+balancing task (Barto et al., 1983). 
+The network architecture we used for both the actor and the critic was a Gaussian 
+soft-max network. The output of the network is given by 
+K 
+Y -- E Wkbk(X), 
+k--1 
+exp[-- Eil ( xi-chi )2] 
+bk(x) -- E/K__lexp[-Ei_lx st, 
+where (Cl, ..., cn) and (Sl, ..., sn) are the center and the size of the k-th basis 
+function. It is in general possible to adjust the centers and sizes of the basis function, 
+but in order to assure predictable transient behaviors, we fixed them in a grid. In 
+this case, computation can be drastically reduced by factorizing the activation of 
+basis functions in each input dimension. 
+4.1 PENDULUM SWING-UP TASK 
+The first task was to swing up a pendulum with a limited torque ITI <_ T max, which 
+was about one fifth of the torque that was required to statically bring the pendulum 
+up (Figure 2 (a)). This is a nonlinear control task in which the controller has to 
+swing the pendulum several times at the bottom to build up enough momentum. 
+1016 K. Doya 
+(a) Pendulum 
+2.5 * 
+C 
+0 50 100 150 
+Crl&ls 
+(b) Value gradient 
+50 100 150 200 50 100 150 
+crl&ls Crl&ls 
+(c) Actor-Critic 
+200 
+200 
+(d) Actor-Tutor 
+Figure 2: Pendulum swing-up task. The dynamics of the pendulum (a) is given by 
+ml = -I + mglsinO + T. The parameters were m = l = 1, g = 9.8, / = 0.01, 
+and T max -- 2.0. The learning curves for value-gradient based optimal control (b), 
+actor-critic (c), and actor-tutor (d); t_up is time during which [01 < 450. 
+The state space for the pendulum x = (O,w) was 2D and we used 12 x 12 basis 
+functions to cover the range 10[ _< 1800 and Iwl _< 180O/s. The reinforcement for the 
+state was given by the height of the tip of the pendulum, i.e., R(x) = cos 0 and the 
+cost for control G and the corresponding output sigmoid function g were selected 
+to match the maximal output torque T TM. 
+Figures 2 (b), (c), and (d) show the learning curves for the value-gradient based 
+control (11), actor critic, and actor-tutor control schemes, respectively. As we 
+expected, the learning of the actor-tutor was much faster than that of the actor- 
+critic and was comparable to the value-gradient based optimal control schemes. 
+4.2 CART-POLE SWING-UP TASK 
+Next we teste

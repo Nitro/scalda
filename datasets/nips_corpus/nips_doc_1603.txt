@@ -1,0 +1,153 @@
+Better Generative Models for Sequential 
+Data Problems: Bidirectional Recurrent 
+Mixture Density Networks 
+Mike Schuster 
+ATR Interpreting Telecommunications Research Laboratories 
+2-2 Hikaridai, Seika-cho, Soraku-gun, Kyoto 619-02, JAPAN 
+gustl@itl. atr. co.jp 
+Abstract 
+This paper describes bidirectional recurrent mixture density net- 
+works, which can model multi-modal distributions of the type 
+P(xtly T) and P(xtlxl,x2,...,xt_,y T) without any explicit as- 
+sumptions about the use of context. These expressions occur fre- 
+quently in pattern recognition problems with sequential data, for 
+example in speech recognition. Experiments show that the pro- 
+posed generative models give a higher likelihood on test data com- 
+pared to a traditional modeling approach, indicating that they can 
+summarize the statistical properties of the data better. 
+I Introduction 
+Many problems of engineering interest can be formulated as sequential data prob- 
+lems in an abstract sense as supervised learning from sequential data, where an 
+input vector (dimensionality D) sequence X = x T = {Xl,X2,...,XT_i,XT} liv- 
+ing in space A' has to be mapped to an output vector (dimensionality K) target 
+sequence T = t T = {tl,t2,...,tT-,tT} in space  y, that often embodies cor- 
+relations between neighboring vectors xt,xt+l and tt,tt+l. In general there are 
+a number of training data sequence pairs (input and target), which are used to 
+estimate the parameters of a given model structure, whose performance can then 
+be evaluated on another set of test data pairs. For many applications the problem 
+becomes to predict the best sequence Y given an arbitrary input sequence X, with 
+'best' meaning the sequence that minimizes an error using a suitable metric that is 
+yet to be defined. Making use of the theory of pattern recognition [2] this problem 
+is often simplified by treating any sequence as one pattern. This makes it possi- 
+ble to express the objective of sequence prediction with the well known expression 
+Y = arg maxy P(YIX), with X being the input sequence, Y being any valid out- 
+put sequence and Y being the predicted sequence with the highest probability 2 
+I 
+a sample sequence of the training target data is denoted as T, while an output sequence 
+in general is denoted as Y, both live in the output space y 
+2to simplify notation, random variables and their values, are not denoted as different 
+symbols. This means, P(x)- P(X- x). 
+590 M. Schuster 
+among all possible sequences. 
+Training of a sequence prediction system corresponds to estimating the distribution 
+3 p(yix) from a number of samples which includes (a) defining an appropriate 
+model representing this distribution and (b) estimating its pa.rameters such that 
+P(Y]X) for the training data is maximized. In practice the model consists of 
+several modules with each of them being responsible for a different part of P(YIX). 
+Testing (usage) of the trained system or recognition for a given input sequence 
+X corresponds principally to the evaluation of P(Y[X) for all possible output se- 
+quences to find the best one Y*. This procedure is called the search and its efficient 
+implementation is important for many applications. 
+In order to build a model to predict sequences it is necessary to decompose the 
+sequences such that modules responsible for smaller parts can be build. An often 
+used approach is the decomposition into a generative and prior model part, using 
+P(BIA) = P(AIB)P(B)/P(A ) and P(A,B)= P(A)P(BIA), as: 
+Y* = arg maxP(Y[X)= arg maxP(XIY)P(Y) 
+y y 
+-- argnax [HP(xlx'x'xt-'Yr)] 
+t=l t=l 
+generative part prior part 
+For many applications (1) is approximated by simpler expressions, for example as 
+a first order Markov Model 
+T T 
+Y*  argnax [H P(xtlYt)] [H P(YtlYt-1)] 
+t--1 t=l 
+making some simplifying approximations. These are for this example: 
+(2) 
+� Every output Yt depends only on the previous output yt_ and not on all 
+previous outputs: 
+P(YtlYl,Y,..-,Yt-1)  P(YtlYt-1) (3) 
+� The inputs are assumed to be statistically independent in time: 
+P(xtlx,x,...,xt-,y T) :: P(xtly) (4) 
+� The likelihood of an input vector xt given the complete output sequence y 
+is assumed to depend only on the output found at t and not on any other 
+ones: 
+P(xt[y) :: P(xt[yt) (5) 
+Assuming that the output sequences are categorical sequences (consisting of sym- 
+bols), approximation (2) and derived expressions are the basis for many applications. 
+For example, using Gaussian mixture distributions to model P(xt[yt) -- P(x) V K 
+occuring symbols, approach (2) is used in a more sophisticated form in most state- 
+of-the-art speech recognition systems. 
+Focus of this paper is to present some models for the generative part of (1) which 
+need less assumptions. Ideally this means to be able to model directly expressions 
+of the form P(xtlx , x,..., xt_, yT), the possibly (multi-modal) distribution of a 
+vector conditioned on previous x vectors xt, xt_ ,..., Xl and a complete sequence 
+yT, as shown in the next section. 
+athere is no distinction made between probability mass and density, usually denoted 
+as P and p, respectively. If the quantity to model is categorical, a probability mass is 
+assumed, if it is continuous, a probability density is assumed. 
+Bidireca'onal Recurrent Mixture Density Networks 591 
+2 Mixture density recurrent neural networks 
+Assume we want to model a continuous vector sequence, conditioned on a sequence 
+of categorical variables as shown in Figure 1. One approach is to assume that 
+the vector sequence can be modeled by a uni-modal Gaussian distribution with 
+a constant variance, making it a uni-modal regression problem. There are many 
+practical examples where this assumption doesn't hold, requiring a more complex 
+output distribution to model multi-modal data. One example is the attempt to 
+model the sounds of phoneroes based on data from multiple speakers. A certain 
+phoneme will sound completely different depending on its phonetic environment or 
+on the speaker, and using a single Gaussian with a constant variance would lead to 
+a crude averaging of all examples. 
+The traditional approach is to build generative models for each symbol separately, as 
+suggested by (2). If conventional Gaussian mixtures are used to model the observed 
+input vectors, then the parameters of the distribution (means, covariances, mixture 
+weights) in general do not change with the temporal position of the vector to model 
+within a given state segment of that symbol. This can be a bad representation 
+for the data in some areas (shown are here the means of a very bi-modal looking 
+distribution), as indicated by the two shown variances for the state 'E'. When used 
+to model speech, a procedure often used to cope with this problem is to increase 
+the number of symbols by grouping often appearing symbol sub-strings into a new 
+symbol and by subdividing each original symbol into a number of states. 
+KKKEEEEEEEEEEIIIIIIIIIIIKKKOOOOOOOOO O 
+KKKEEEEEEEEEEIIIIIIIIIIIKKKOOOOOOOOOO 
+Figure 1: Conventional Gaussian mixtures (left) and mixture density BRNNs (right) 
+for multi-modal regression 
+Another alternative is explored here, where all parameters of a Gaussian mixture dis- 
+tribution modeling the continuous targets are predicted by one bidirectional recur- 
+rent neural network, extended to model mixture densities conditioned on a complete 
+vector sequence, as shown on the right side of Figure 1. Another extension (sec- 
+tion 2.1) to the architecture allows the estimation of time varying mixture densities 
+conditioned on a hypothesized output sequence and a continuous vector sequence 
+to model exactly the generative term in (1) without any explicit approximations 
+about the use of context. 
+Basics of non-recurrent mixture density networks (MLP type) can be found in [1112 ]. 
+The extension from uni-modal to multi-modal regression is somewhat involved but 
+straightforward for the two interesting cases of having a radial covariance matrix or a 
+diagonal covariance matrix per mixture component. They are trained with gradient- 
+descent procedures as regular uni-modal regression NNs. Suitable equations to 
+calculate the error that is back-propagated can be found in [6] for the two cases 
+mentioned, a derivation for the simple case in [1][2]. 
+Conventional recurrent neural networks (RNNs) can model expressions of the form 
+P(xtlyl, Y2,... ,Yt), the distribution of a vector given an input vector plus its past 
+input vectors. Bidirectional recurrent neural networks (BRNNs) [5][6] are a simple 
+592 M. Schuster 
+extension of conventional RNNs. The extension allows one to model expressions of 
+the form P(xtly) , the distribution of a vector given an input vector plus its past 
+and following input vectors. 
+2.1 Mixture density extension for BRNNs 
+liere two types of extensions of BRNNs to mixture density networks are considered: 
+I) An extension to model expressions of the type P(xtly), a multi-modal 
+distribution of a continuous vector conditioned on a vector sequence yT, 
+here labeled as mixture density BRNN of Type I. 
+II) An extension to model expressions of the type P(xtlx,x2,... ,xt_,y), 
+a probability distribution of a continuous vector conditioned on a vector 
+sequence y and on its previous context in time Xl,Xe,...,xt-. This 
+architecture is labeled as mixture density BRNN of Type II. 
+The first extension of conventional uni-modal regression BRNNs to mixture density 
+networks is not particularly difficult compared to the non-recurrent implementation, 
+because the changes to model multi-modal distributions are completely independent 
+of the structural changes that have to be made to form a BRNN. 
+The second extension involves a structural change to the basic BRNN structure 
+to incorporate the x,x2,... ,x-I as additional inputs, as shown in Figure 2. For 
+any t the neighboring xt-, xt-2,... are incorporated by adding an additional set 
+of weights to feed the hidden

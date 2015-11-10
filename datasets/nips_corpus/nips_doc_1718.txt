@@ -1,0 +1,170 @@
+Audio-Vision: 
+Using Audio-Visual Synchrony to Locate 
+Sounds 
+John Hershey * 
+j hershey�cogsci. ucsd. edu 
+Department of Cognitive Science 
+University of California, San Diego 
+La Jolla, CA 92093-0515 
+Javier Movellan 
+movellan�cogsci. ucsd. edu 
+Department of Cognitive Science 
+University of California, San Diego 
+La Jolla, CA 92093-0515 
+Abstract 
+Psychophysical and physiological evidence shows that sound local- 
+ization of acoustic signals is strongly influenced by their synchrony 
+with visual signals. This effect, known as ventriloquism, is at work 
+when sound coming from the side of a TV set feels as if it were 
+coming from the mouth of the actors. The ventriloquism effect 
+suggests that there is important information about sound location 
+encoded in the synchrony between the audio and video signals. In 
+spite of this evidence, audiovisual synchrony is rarely used as a 
+source of information in computer vision tasks. In this paper we 
+explore the use of audio visual synchrony to locate sound sources. 
+We developed a system that searches for regions of the visual land- 
+scape that correlate highly with the acoustic signals and tags them 
+as likely to contain an acoustic source. We discuss our experience 
+implementing the system, present results on a speaker localization 
+task and discuss potential applications of the approach. 
+Introduction 
+We present a method for locating sound sources by sampling regions of an im- 
+age that correlate in time with the auditory signal. Our approach is inspired by 
+psychophysical and physiological evidence suggesting that audio-visual contingen- 
+cies play an important role in the localization of sound sources: sounds seem to 
+emanate from visual stimuli that are synchronized with the sound. This effect be- 
+comes particularly noticeable when the perceived source of the sound is known to 
+be false, as in the case of a ventriloquist's dummy, or a television screen. This 
+phenomenon is known in the psychophysical community as the ventriloquism effect, 
+defined as a mislocation of sounds toward their apparent visual source. The effect is 
+robust in a wide variety of conditions, and has been found to be strongly dependent 
+on the degree of synchrony between the auditory and visual signals (Driver, 1996; 
+Bertelson, Vroomen, Wiegeraad & de Gelder, 1994). 
+To whom correspondence should be addressed. 
+814 J. Hershey and J. R. Movellan 
+The ventriloquism effect is in fact less speech-specific than first thought. For exam- 
+ple the effect is not disrupted by an upside-down lip signal (Bertelson, Vroomen, 
+Wiegeraad & de Gelder, 1994) and is just as strong when the lip signals are re- 
+placed by light flashes that are synchronized with amplitude peaks in the audio 
+signal (Radeau & Bertelson, 1977). The crucial aspect here is correlation between 
+visual and auditory intensity over time. When the light flashes are not synchronized 
+the effect disappears. 
+The ventriloquism effect is strong enough to produce an enduring localization bias, 
+known as the ventriloquism aftereffect. Over time, experience with spatially offset 
+auditory-visual stimuli causes a persistent shift in subsequent auditory localization. 
+Exposure to audio-visual stimuli offset from each other by only 8 degrees of azimuth 
+for 20-30 minutes is sufficient to shift auditory localization by the same amount. A 
+corresponding shift in neural processing has been detected in macaque monkeys as 
+early as primary auditory cortex(Recanzone, 1998). In barn owls a misalignment 
+of visual and auditory stimuli during development causes the realignment of the 
+auditory and visual maps in the optic tectum(Zheng & Knudsen, 1999; Stryker, 
+1999; Feldman & Knudsen, 1997). 
+The strength of the psychophysical and physiological evidence suggests that audio- 
+visual contingency may be used as an important source of information that is cur- 
+rently underutilized in computer vision tasks. Visual and auditory sensor systems 
+carry information about the same events in the world, and this information must 
+be combined correctly in order for a useful interaction of the two modalities. Au- 
+diovisual contingency can be exploited to help determine which signals in different 
+modalities share a common origin. The benefits are two-fold: the two signals can 
+help localize each other, and once paired can help interpret each other. To this 
+effect we developed a system to localize speakers using input from a camera and 
+a single microphone. The approach is based on searching for regions of the image 
+which are synchronized with the acoustic signal. 
+Measuring Synchrony 
+The concept of audio-visual synchrony is not well formalized in the psychophysical 
+literature, so for a working definition we interpret synchrony as the degree of mutual 
+information between audio and spatially localized video signals. Ultimately it is a 
+causal relationship that we are often interested in, but causes 'can only be inferred 
+from effects such as synchrony. Let a(t)  11 ' be a vector describing the acoustic 
+signal at time t. The components of a(t) could be cepstral coefficients, pitch mea- 
+surements, or the outputs of a filter bank. Let v(x, y, t)  ]m be a vector describing 
+the visual signal at time t, pixel (x, y). The components of v(x, y, t) could represent 
+Gabor energy coefficients, RGB color values, etc. 
+Consider now a set of s audio and visual vectors $ = (a(tt), v(x, y, tt))t=k-s-1,... ,k 
+sampled at times tk-s-1,' ,tk and at spatial coordinates (x,y). Given this set 
+of vectors our goal is to provide a number that describes the temporal contingency 
+between audio and video at time t. The approach we take is to consider each 
+vector in $ as an independent sample from a joint multivariate Gaussian process 
+(A(t), V(x, y, t)) and define audio-visual synchrony at time t as the estimate of 
+the mutual information between the audio and visual components of the process. 
+Let A(tk) .. A/'n(laA(t),EA(t)), and V(x,y,t) .. A/'m(lav(x,y,t),Ev(x,y,t)), 
+where/ represents means and E covariance matrices. Let A(tk) and V(x,y,t) 
+be jointly Gaussian, i.e., (A(t), V(x,y,t)) .. Af,+m(!A,V(X,y,t),EA,v(X,y, tk) ). 
+Audio 14sion: Using Audio-14sual Synchrony to Locate Sounds 815 
+The mutual information between A(x, y, tk) and V(tk) can be shown to be as follows 
+I(A(t); V(x,y,t)) 
++ - V(x, y, 
+1 
+1 log(2re)lEA(t) ] +  log(2rre)mlEv(x,y,t) I 
+__1 log(2re)+mlEA,v(x, y, t ) ] 
+2 
+1 ]EA(tk)llEv(x,y,t)[ 
+1og 
+(1) 
+(2) 
+In the special case that n - m - 1, then 
+1 log(1 - p2(x,y, tk)), 
+I(A(t); V(x,y, tk)) = - 
+(4) 
+where p(x, y, t) is the Pearson correlation coefficient between A(t) and V(x, y, t). 
+For each triple (x,y, t) we estimate the mutual information between A(tk) and 
+V(x,y,t) by considering each element of $ as an independent sample from the 
+random vector (A(t),V(x,y,t)). This amounts to computing estimates of the 
+joint covariance matrix EA,v(X, y, t). For example the estimate of the covariance 
+between the i th audio component and the jth video component would be as follows 
+SA,,vj(x,y, tk) = -- 
+s--1 
+s--1 
+y(ai(tk-l) -- i(tk))(Vj(X,y, tk--l) -- Oj(x,y,t)), 
+/=0 
+(5) 
+where 
+s--1 
+I  ai(tk_l) ' 
+/----0 
+s--1 
+I  vj(x,y,t_,). 
+= 
+/=0 
+(6) 
+(7) 
+(8) 
+These simple covariance estimates can be computed recursively in constant time 
+with respect to the number of timepoints. The independent treatment of pixels 
+would lend well to a parallel implementation. 
+To measure performance, a secondary system produces a single estimate of the 
+auditory location, for use with a database of labeled solitary audiovisual sources. 
+Unfortunately there are many ways of producing such estimates so it becomes dif- 
+ficult to separate performance of the measure from the underlying system. The 
+model used here is a centroid computation on the mutual information estimates, 
+with some enhancements to aid tracking and reduce background noise. 
+Implementation Issues 
+A real time system was prototyped using a QuickCam on the Linux operating 
+system and then ported to NT as a DirectShow filter. This platform provides input 
+from real-time audio and video capture hardware as well as from static movie files. 
+The video output could also be rendered live or compressed and saved in a movie 
+file. The implementation was challenging in that it turns out to be rather difficult 
+816 J. Hershey andJ. R. Movellan 
+(a) M is talking. 
+(b) J is talking. 
+Figure 1: Normalized audio and visual intensity across sequences of frames in which 
+a sequence of four numbers is spoken. The top trace is the contour of the acoustic 
+energy from one of two speakers, M or J, and the bottom trace is the contour of 
+intensity values for a single pixel, (147,100), near the mouth of J. 
+to process precisely time-synchronized audio and video on a serial machine in real 
+time. Multiple threads are required to read from the peripheral audio and visual 
+devices. By the time the audio and visual streams reach the AV filter module, they 
+are quite separate and asynchronous. The separately threaded auditory and visual 
+packet streams must be synchronized, buffered, and finally matched and aligned by 
+time-stamps before they can finally be processed. It is interesting that successful 
+biologial audiovisual systems employ a parallel architecture and thus avoid this 
+problem. 
+Results 
+To obtain a performance baseline we first tried the simplest possible approach: 
+A single audio and visual feature per location: n - ra = 1, v(x, y, t)  ]R is the 
+intensity of pixel (x, y) at time t, and a(t)  ]R is the average acoustic energy over the 
+interval [t- At, t], where At = 1/30 msec, the sampling period for the NTSC video 
+signal. Figure I illustrates the time course of these signals for a non-synchronous 
+and a synchronous pair of acoustic energy and pixel intensity. Notice in particular 
+that in the synchonous pair, l(b), where the sound and pixel values come from the 
+same speaker, the

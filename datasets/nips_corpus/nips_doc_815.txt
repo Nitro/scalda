@@ -1,0 +1,166 @@
+Fast Non-Linear Dimension Reduction 
+Nanda Kambhatla and Todd K. Leen 
+Department of Computer Science and Engineering 
+Oregon Graduate Institute of Science & Technology 
+P.O. Box 91000 Portland, OR 97291-1000 
+Abstract 
+We present a fast algorithm for non-linear dimension reduction. 
+The algorithm builds a local linear model of the data by merging 
+PCA with clustering based on a new distortion measure. Exper- 
+iments with speech and image data indicate that the local linear 
+algorithm produces encodings with lower distortion than those built 
+by five layer auto-associative networks. The local linear algorithm 
+is also more than an order of magnitude faster to train. 
+I Introduction 
+Feature sets can be more compact than the data they represent. Dimension reduc- 
+tion provides compact representations for storage, transmission, and classification. 
+Dimension reduction algorithms operate by identifying and eliminating statistical 
+redundancies in the data. 
+The optimal linear technique for dimension reduction is principal component anal- 
+ysis (PCA). PCA performs dimension reduction by projecting the original n- 
+dimensional data onto the m < n dimensional linear subspace spanned by the 
+leading eigenvectors of the data's covariance matrix. Thus PCA builds a global 
+linear model of the data (an m dimensional hyperplane). Since PCA is sensitive 
+only to correlations, it fails to detect higher-order statistical redundancies. One 
+expects non-linear techniques to provide better performance; i.e. more compact 
+representations with lower distortion. 
+This paper introduces a local linear technique for non-linear dimension reduction. 
+We demonstrate its superiority to a recently proposed global non-linear technique, 
+152 
+Fast Non-Linear Dimension Reduction 153 
+and show that both non-linear algorithms provide better performance than PCA 
+for speech and image data. 
+2 Global Non-Linear Dimension Reduction 
+Several researchers (e.g. Cottrell and Metcalfe 1991) have used layered feedforward 
+auto-associative networks with a bottle-neck middle layer to perform dimension 
+reduction. It is well known that auto-associative nets with a single hidden layer 
+cannot provide lower distortion than PCA (Bourlard and Kamp, 1988). Recent 
+work (e.g. Oja 1991) shows that five layer auto-associative networks can improve 
+on PCA. These networks have three hidden layers (see Figure l(a)). The first and 
+third hidden layers have non-linear response, and are referred to as the mapping 
+layers. The rn < n nodes of the middle or representation layer provide the encoded 
+signal. 
+The first two layers of weights produce a projection from 7 n to 7 m. The last two 
+layers of weights produce an immersion from 7 ' into 7 n. If these two maps are 
+well chosen, then the complete mapping from input to output will approximate the 
+identity for the training data. If the data requires the projection and immersion 
+to be non-linear to achieve a good fit, then the network can in principal find such 
+functions. 
+rn =___> Low Dimensional 
+Encoding 
+Original High 
+Dimensional 
+Representation 
+X 
+1 
+-1 0 
+-1 
+(b) 
+Figure 1: (a) A five layer feedforward auto-associative network. This network can 
+perform a non-linear dimension reduction from n to rn dimensions. (b) Global 
+curvilinear coordinates built by a five layer network for data distributed on the 
+surface of a hemisphere. When the activations of the representation layer are swept, 
+the outputs trace out the curvilinear coordinates shown by the solid lines. 
+The activities of the nodes in the representation layer form global curvilinear co- 
+ordinates on a submanifold of the input space (see Figure l(b)). We thus refer 
+to five layer auto-associative networks as a global, nonlinear dimension reduction 
+technique. 
+154 Kambhatla and Leen 
+3 Locally Linear Dimension Reduction 
+Five layer networks have drawbacks; they can be very slow to train and they are 
+prone to becoming trapped in poor local optima. Furthermore, it may not be 
+possible to accurately fit global, low dimensional, curvilinear coordinates to the 
+data. We propose an alternative that does not suffer from these problems. 
+Our algorithm pieces together local linear coordinate patches. The local regions are 
+defined by the partition of the input space induced by a vector quantizer (VQ). The 
+orientation of the local coordinates is determined by PCA (see Figure 2). In this 
+section, we present two ways to obtain the partition. First we describe an approach 
+that uses Euclidean distance, then we describe a new distortion measure which is 
+optimal for our task (local PCA). 
+Figure 2: Local coordinates built by our algorithm (dubbed VQPCA) for data dis- 
+tributed on the surface of a hemisphere. The solid lines represent the two principal 
+eigen-directions in each Voronoi cell. The region covered by one Voronoi cell is 
+shown shaded. 
+3.1 Euclidean partitioning 
+Here, we do a clustering (with Euclidean distance) followed by PCA in each of the 
+local regions. The hybrid algorithm, dubbed VQPCA, proceeds in three steps: 
+1. Using competitive learning, train a VQ (with Euclidean distance) with Q 
+reference vectors (weights) (r, r2,..., rQ). 
+2. Perform a local PCA within each Voronoi cell of the VQ. For each cell, 
+compute the local covariance matrix for the data with respect to the cor- 
+responding reference vector (centroid) re. Next compute the eigenvectors 
+(e,..., e) of each covariance matrix. 
+3. Choose a target dimension m and project each data vector x onto 
+the leading m eigenvectors to obtain the local linear coordinates 
+z = (x - (x - ). 
+Fast Non-Linear Dimension Reduction 155 
+The encoding of x consists of the index c of the reference cell closest (Euclidean 
+distance) to x, together with the m < n component vector z. The decoding is given 
+by 
+m 
+= rc + , 
+i=1 
+where rc is the reference vector (centroid) for the cell c, and e? are the leading 
+eigenvectors of the covariance matrix of the cell c. The mean squared reconstruction 
+error incurred by VQPCA is 
+�,co, = E[ Ilx - kll 2 ] = E[ [Ix - rc - E ziel[2] (2) 
+i:1 
+where El.] denotes an expectation with respect to x, and i is defined in (1). 
+Training the VQ and performing the local PCA are very fast relative to training a 
+five layer network. The training time is dominated by the distance computations 
+for the competitive learning. This computation can be speeded up significantly by 
+using a multi-stage architecture for the VQ (Gray 1984). 
+3.2 Projection partitioning 
+The VQPCA algorithm as described above is not optimal because the clustering is 
+done independently of the PCA projection. The goal is to minimize the expected 
+error in reconstruction (2). We can realize this by using the expected reconstruction 
+error as the distortion measure for the design of the VQ. 
+The reconstruction error for VQPCA (�econ defined in (2)) can be written in matrix 
+form as 
+��co = E[ (x - rc)T Pc Pc(x - rc)], (3) 
+where P is an rax n matrix whose rows are the orthonormal trailing eigenvectors 
+of the covariance matrix for the cell c. This is the mean squared Euclidean distance 
+between the data and the local hyperplane. 
+The expression for the VQPCA error in (2) suggests the distortion measure 
+d(x, rc) = (x- rc)TPcPc(x-rc) . (4) 
+We call this the reconstruction distance. The reconstruction distance is the error 
+incurred in approximating x using only ra local PCA coefficients. It is the squared 
+projection of the difference vector X-rc on the trailing eigenvectors of the covariance 
+matrix for the cell c. Clustering with respect to the reconstruction distance directly 
+minimizes the expected reconstruction error ��co. 
+The modified VQPCA algorithm is: 
+1. Partition the input space using a VQ with the reconstruction distance mea- 
+sure  in (4). 
+2. Perform a local PCA (same as in steps 2 and 3 of the algorithm as described 
+in section 3.1). 
+1The VQ is trained using the (batch mode) generalized Lloyd's algorithm (Gersho and 
+Gray, 1992) rather than an on-line competitive learning. This avoids recomputing the 
+matrix Pc (which depends on re) for each input vector. 
+156 Kambhatla and Leen 
+4 Experimental Results 
+We apply PCA, five layer networks (SLNs), and VQPCA to dimension reduction 
+of speech and images. We compare the algorithms using two performance criteria: 
+training time and the distortion in the reconstructed signal. The distortion measure 
+is the normalized reconstruction error: 
+4.1 Model Construction 
+The 5LNs were trained using three optimization techniques: conjugate gradient 
+descent (CGD), the BFGS algorithm (a quasi-Newton method (Press et al 1987)), 
+and stochastic gradient descent (SGD). In order to limit the space of architectures, 
+the 5LNs have the same number of nodes in both of the mapping (second and 
+fourth) layers. 
+For the VQPCA with Euclidean distance, clustering was implemented using stan- 
+dard VQ (VQPCA-Eucl) and multistage quantization (VQPCA-MS-E). The multi- 
+stage architecture reduces the number of distance calculations and hence the train- 
+ing time for VQPCA (Gray 1984). 
+4.2 Dimension Reduction of Speech 
+We used examples of the twelve monothongal vowels extracted from continuous 
+speech drawn from the TIMIT database (Fisher and Doddington 1986). Each input 
+vector consists of 32 DFT coefficients (spanning the frequency range 0-4kHz), time- 
+averaged over the central third of the utterance. We divided the data set into a 
+training set containing 1200 vectors, a validation set containing 408 vectors and 
+a test set containing 408 vectors. The validation set was used for architecture 
+selection (e.g the number of nodes in the mapping layers for the five layer nets). 
+The test set utterances are from speakers not represented in the training set or the 
+validation set. Motivated by the desire to capture formant structure in the vowel 
+encodings, we reduced the data from 32 to 2 dimensions. (Experiments on reduction 
+to 3 dimensions gave similar 

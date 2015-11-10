@@ -1,0 +1,179 @@
+Learning nonlinear overcomplete 
+representations for efficient coding 
+Michael S. Lewicki 
+lewicki�salk. edu 
+Terrence J. Sejnowski 
+terry�salk. edu 
+Howard Hughes Medical Institute 
+Computational Neurobiology Lab 
+The Salk Institute 
+10010 N. Torrey Pines Rd. 
+La Jolla, CA 92037 
+Abstract 
+We derive a learning algorithm for inferring an overcomplete basis 
+by viewing it as probabilistic model of the observed data. Over- 
+complete bases allow for better approximation of the underlying 
+statistical density. Using a Laplacian prior on the basis coefficients 
+removes redundancy and leads to representations that are sparse 
+and are a nonlinear function of the data. This can be viewed as 
+a generalization of the technique of independent component anal- 
+ysis and provides a method for blind source separation of fewer 
+mixtures than sources. We demonstrate the utility of overcom- 
+plete representations on natural speech and show that compared 
+to the traditional Fourier basis the inferred representations poten- 
+tially have much greater coding efficiency. 
+A traditional way to represent real-values signals is with Fourier or wavelet bases. 
+A disadvantage of these bases, however, is that they are not specialized for any 
+particular dataset. Principal component analysis (PCA) provides one means for 
+finding an basis that is adapted for a dataset, but the basis vectors are restricted 
+to be orthogonal. An extension of PCA called independent component analysis 
+(Jutten and Herault, 1991; Comon et al., 1991; Bell and Sejnowski, 1995) allows 
+the learning of non-orthogonal bases. All of these bases are complete in the sense 
+that they span the input space, but they are limited in terms of how well they can 
+approximate the dataset's statistical density. 
+Representations that are overcomplete, i.e. more basis vectors than input variables, 
+can provide a better representation, because the basis vectors can be specialized for 
+Learning Nonlinear Overcomplete Representations for Efficient Coding 557 
+a larger variety of features present in the entire ensemble of data. A criticism of 
+overcomplete representations is that they are redundant, i.e. a given data point may 
+have many possible representations, but this redundancy is removed by the prior 
+probability of the basis coeffcients which specifies the probability of the alternative 
+representations. 
+Most of the overcomplete bases used in the literature are fixed in the sense that 
+they are not adapted to the structure in the data. Recently Olshausen and Field 
+(1996) presented an algorithm that allows an overcomplete basis to be learned. This 
+algorithm relied on an approximation to the desired probabilistic objective that had 
+several drawbacks, including tendency to breakdown in the case of low noise levels 
+and when learning bases with higher degrees of overcompleteness. In this paper, we 
+present an improved approximation to the desired probabilistic objective and show 
+that this leads to a simple and robust algorithm for learning optimal overcomplete 
+bases. 
+I Inferring the representation 
+The data, x:L, are modeled with an overcomplete linear basis plus additive noise: 
+x = As + c (1) 
+where A is an L x M matrix, whose columns are the basis vectors, where M >_ L. 
+We assume Gaussian additive noise so that log P(xlA , s) oc -)(x - As)2/2, where 
+), = 1/a 2 defines the precision of the noise. 
+The redundancy in the overcomplete representation is removed by defining a density 
+for the basis coefficients, P(s), which specifies the probability of the alternative 
+representations. The most probable representation, , is found by maximizing the 
+posterior distribution 
+= maxP(slA, x ) = maxP(s)P(xlA, s) 
+P(s) influences how the data are fit in the presence of noise and determines the 
+uniqueness of the representation. In this model, the data is a linear function of 
+s, but s is not, in general, a linear function of the data. If the basis function is 
+complete (A is invertible) then, assuming broad priors and low noise, the most 
+probable internal state can be computed simply by inverting A. In the case of an 
+overcomplete basis, however, A can not be inverted. Figure I shows how different 
+priors induce different representations. 
+Unlike the Gaussian prior, the optimal representation under the Laplacian prior 
+cannot be obtained by a simple linear operation. One approach for optimizing s is 
+to use the gradient of the log posterior in an optimization algorithm. An alternative 
+method for finding the most probable internal state is to view the problem as the 
+linear program: min 1Ts such that As -- x. This can be generalized to handle both 
+positive and negative s and solved effciently and exactly with interior point linear 
+programming methods (Chen et al., 1996). 
+558 M. S. Lewicki and T. J. Sejnowski 
+20 40 60 80 1 O0 120 
+Figure 1: Different priors induce different representations. (a) The 2D data distribution 
+has three main axes which form an overcomplete representation. The graphs marked L2 
+and LI show the optimal scaled basis vectors for the data point x under the Gaussian 
+and Laplacian prior, respectively. Assuming zero noise, a Gaussian for P(s) is equivalent 
+to finding the exact fitting s with minimum L norm, which is given by the pseudoinverse 
+s = A+x. A Laplacian prior (P(s,) oc exp[-t91s, I]) yields the exact fit with minimum Lz 
+norm, which is a nonlinear operation which essentially selects a subset of the basis vectors 
+to represent the data (Chen et al., 1996). The resulting representation is sparse. (b) A 
+64-sample segment of speech was fit to a 2>< overcomplete Fourier representation (128 basis 
+vectors). The plot shows rank order distribution of the coefficients of s under a Gaussian 
+prior (dashed); and a Laplacian prior (solid). Far more significantly positive coefficients 
+are required under the Gaussian prior than under the Laplacian prior. 
+2 Learning 
+The learning objective is to adapt A to maximize the probability of the data which 
+is computed by marginalizing over the internal states 
+P(xIA) = fds P(s)P(xlA, s) 
+(3) 
+general, this integral cannot be evaluated analytically but can be approximated 
+with a Gaussian integral around fi, yielding 
+ Aft)2 1 
+logP(xlA )  const. + logP(fi) - (x- -  logdetH 
+(4) 
+where H is the Hessian of the log posterior at , given by ),ATA - VV log P(). 
+To avoid a singularity under the Laplacian prior, we use the approximation 
+(log P(sm))'  -ttanh(/sm) which gives the Hessian full rank and positive de- 
+terminant. For large fi this approximates the true Laplacian prior. A learning rule 
+can be obtained by differentiating log P(x[A) with respect to A. 
+In the following discussion, we will present the derivations of the three terms in (4) 
+and simplifying assumptions that lead to the following simple form of the learning 
+rule 
+AA = AATVlogP(xIA)  -A(z{ T + I) 
+(5) 
+where zk = OlogP(sk)/Os. 
+Learning Nonlinear Overcomplete Representations for Efficient Coding 559 
+2.1 Deriving V log P(fi) 
+This term specifies how to change A so as to make the probability of the represen- 
+tation  more probable. If we assume a Laplacian prior, this component changes A 
+to make the representation more sparse. 
+We assume P() -- lira P(ra). In order to obtain O�ra/Oaij, we need to describe 
+ as a function of A. If the basis is complete (and we assume low noise), then we 
+may simply invert A to obtain  - A-ix. When A is overcomplete, however, there 
+is no simple expression, but we may still make an approximation. 
+Under priors, the most probable solution, , will yield at most L non-zero elements. 
+In effect, this selects a complete basis from A. Let  represent this reduced basis 
+under . We then have  - ..- 1 (x - e) where  is equal to  with M - L zero-valued 
+elements removed...-1 obtained by removing the columns of A corresponding to 
+the M - L zero-valued elements of . This allows us to use results obtained for the 
+case when A is invertible. Following MacKay (1996) we obtain 
+0a u = - z ki j (x - ) = (6) 
+l 
+Rewriting in matrix notation we have 
+0 log P() = _.-TT (7) 
+0A 
+We can use this to obtain an expression in terms of the original variables. We 
+simply invert the mapping fi -  to obtain z -  and W T - .-T (row-wise) with 
+zra = 0 and row m of W w -- 0 if ra = 0. We then have 
+01ogP(s) 
+0A = --WWzs w (8) 
+2.2 Deriving V(x- A) 2 
+The second term specifies how to change A so as to minimize the data misfit. 
+Letting ek = Ix - Asia and using the results and notation from above we have: 
+0 
+Oa u   e = es + 
+k k 1 
+= + ek 
+k I 
+-- )eisj -- )eisj ---- 0 
+(9) 
+(10) 
+(11) 
+Thus no gradient component arises from the error term. 
+2.3 Deriving 7 log det H 
+The third term in the learning rule specifies how to change the weights so as to 
+minimize the width of the posterior distribution P(x[A) and thus increase the 
+overall probability of the data. An element of H is defined by Hran - cron  bran 
+560 M. S. Lewicki and T. J. Sejnowski 
+where Cm. = k Aakman and bra. = [-VV log P(fi)]m.. This gives 
+0 log det H 
+Oaij 
+ran 
+'Ocra, Obm, ] 
++ 
+First considering Ocm,/Oaii, we can obtain 
+E --1 OCran --1 -- 
+0.,--7 = + + 
+ran ra  j ra : j 
+Using the fact that HnXj = Hj due to the symmetry of the Hessian, we have 
+E --1 OCran 
+Hran 0A - 2AAH- (14) 
+ran 
+Next we derive Obran/Oaij. We have that VVlogP() is diagonal, because we 
+assume P() -- 1-ira P(ra). Letting 2yra - I-I--nmObrara/Ora and using the result 
+under the reduced representation (6) we can obtain 
+E _ Obrara 
+I-Irara0A ------2WTyT (15) 
+ram 
+2.4 Stabilizing and simplifying the learning rule 
+Putting the terms together yields a problematic expression due to the matrix in- 
+verses. This can be alleviated by multiplying the gradient by an appropriate positive 
+definite matrix, which rescales the gradient components but preserves a direction 
+valid for optimization. Noting that ATw T -- I we have 
+.AAT7 log P(x[A) = -Az

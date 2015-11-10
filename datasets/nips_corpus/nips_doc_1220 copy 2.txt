@@ -1,0 +1,144 @@
+Exploiting Model Uncertainty Estimates 
+for Safe Dynamic Control Learning 
+Jeff G. Schneider 
+The Robotics Institute 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+schneide@cs.cmu.edu 
+Abstract 
+Model learning combined with dynamic programming has been shown to 
+be effective for learning control of continuous state dynamic systems. The 
+simplest method assumes the learned model is correct and applies dynamic 
+programming to it, but many approximators provide uncertainty estimates 
+on the fit. How can they be exploited? This paper addresses the case 
+where the system must be prevented from having catastrophic failures dur- 
+ing learning. We propose a new algorithm adapted from the dual control 
+literature and use Bayesian locally weighted regression models with dy- 
+namic programming. A common reinforcement learning assumption is that 
+aggressive exploration should be encouraged. This paper addresses the con- 
+verse case in which the system has to reign in exploration. The algorithm 
+is illustrated on a 4 dimensional simulated control problem. 
+I Introduction 
+Reinforcement learning and related grid-based dynamic programming techniques are 
+increasingly being applied to dynamic systems with continuous valued state spaces. 
+Recent results on the convergence of dynamic programming methods when using 
+various interpolation methods to represent the value (or cost-to-go) function have 
+given a sound theoretical basis for applying reinforcement learning to continuous 
+valued state spaces [Gordon, 1995]. These are important steps toward the eventual 
+application of these methods to industrial learning and control problems. 
+It has also been reported recently that there are significant benefits in data and 
+computational efficiency when data from running a system is used to build a model, 
+rather than using it once for single value function updates (as Q-learning would 
+do) and discarding it [Sutton, 1990, Moore and Atkeson, 1993, Schaal and Atkeson, 
+1993, Davies, 1996]. Dynamic programming sweeps can then be done on the learned 
+model either off-line or on-line. In its vanilla form, this method assumes the model 
+is correct and does deterministic dynamic programming using the model. This 
+assumption is often not correct, especially in the early stages of learning. When 
+learning simulated or software systems, there may be no harm in the fact that this 
+1048 J. G. Schneider 
+assumption does not hold. However, in real, physical systems there are often states 
+that really are catastrophic and must be avoided even during learning. Worse yet, 
+learning may have to occur during normal operation of the system in which case its 
+performance during learning must not be significantly degraded. 
+The literature on adaptive and optimal linear control theory has explored this prob- 
+lem considerably under the names stochastic control and dual control. Overviews 
+can be found in [Kendrick, 1981, Bar-Shalom and Tse, 1976]. The control decision 
+is based on three components call the deterministic, cautionary, and probing terms. 
+The deterministic term assumes the model is perfect and attempts to control for 
+the best performance. Clearly, this may lead to disaster if the model is inaccurate. 
+Adding a cautionary term yields a controller that considers the uncertainty in the 
+model and chooses a control for the best expected performance. Finally, if the sys- 
+tem learns while it is operating, there may be some benefit to choosing controls 
+that are suboptimal and/or risky in order to obtain better data for the model and 
+ultimately achieve better long-term performance. The addition of the probing term 
+does this and gives a controller that yields the best long-term performance. 
+The advantage of dual control is that its strong mathematical foundation can pro- 
+vide the optimal learning controller under some assumptions about the system, 
+the model, noise, and the performance criterion. Dynamic programming methods 
+such as reinforcement learning have the advantage that they do not make strong 
+assumptions about the system, or the form of the performance measure. It has 
+been suggested [Atkeson, 1995, Atkeson, 1993] that techniques used in global linear 
+control, including caution and probing, may also be applicable in the local case. In 
+this paper we propose an algorithm that combines grid based dynamic program- 
+ming with the cautionary concept from dual control via the use of a Bayesian locally 
+weighted regression model. 
+Our algorithm is designed with industrial control applications in mind. A typical 
+scenario is that a production line is being operated conservatively. There is data 
+available from its operation, but it only covers a small region of the state space and 
+thus can not be used to produce an accurate model over the whole potential range 
+of operation. Management is interested in improving the line's response to changes 
+in setpoints or disturbances, but can not risk much loss of production during the 
+learning process. The goal of our algorithm is to collect new data and optimize the 
+process while explicitly minimizing the risk. 
+2 The Algorithm 
+Consider a system whose dynamics are given by x k+l -- f(x , u). The state, x, 
+and control,u, are real valued vectors and k represents discrete time increments. 
+A model of f is denoted as ]. The task is to minimize a cost functional of the 
+N , 
+form J -- Y-=0 L( x, u k) subject to the system dynamics. N may or may not 
+be fixed depending on the problem. L is given, but f must be learned. The goal is 
+to acquire data to learn f in order to minimize J without incurring huge penalties 
+in J during learning. There is an implicit assumption that the cost function defines 
+catastrophic states. If it were known that there were no disasters to avoid, then 
+simpler, more aggressive algorithms would likely outperform the one presented here. 
+The top level algorithm is as follows: 
+1. Acquire some data while operating the system from an existing controller. 
+2. Construct a model from the data using Bayesian locally weighted regression. 
+3. Perform DP with the model to compute a value function and a policy. 
+4. Operate the system using the new policy and record additional data. 
+Exploiting Model Uncertainty Estimates for Safe Dynamic Control Learning 1049 
+5. Repeat to step 2 while there is still some improvement in performance. 
+In the rest of this section we describe steps 2 and 3. 
+2.1 Bayesian locally weighted regression 
+We use a form of locally weighted regression [Cleveland and Delvin, 1988, 
+Atkeson, 1989, Moore, 1992] called Bayesian locally weighted regression [Moore 
+and Schneider, 1995] to build a model from data. When a query, Xq, is made, each 
+of the stored data points receives a weight wi = exp(-IIxi- xqll2/K). K is the 
+kernel width which controls the amount of localness in the regression. For Bayesian 
+LWR we assume a wide, weak normal-gamma prior on the coefficients of the regres- 
+sion model and the inverse of the noise covariance. The result of a prediction is a 
+t distribution on the output that remains well defined even in the absence of data 
+(see [Moore and Schneider, 1995] and [DeGroot, 1970] for details). 
+The distribution of the prediction in regions where there is little data is crucial to 
+the performance of the DP algorithm. As is often the case with learning through 
+search and experimentation, it is at least as important that a function approximator 
+predicts its own ignorance in regions of no data as it is how well it interpolates in 
+data rich regions. 
+2.2 Grid based dynamic programming 
+In dynamic programming, the optimal value function, V, represents the cost-to-go 
+from each state to the end of the task assuming that the optimal policy is followed 
+from that point on. The value function can be computed iteratively by identifying 
+the best action from each state and updating it according to the expected results 
+of the action as given by a model of the system. The update equation is: 
+Vk+(x) -- inL(x, u) + Vk(f(x, u)) (1) 
+In our algorithm, updates to the r/ue function are computed while considering 
+the probability distribution on the results of each action. If we assume that the 
+output of the real system at each time step is an independent random variable 
+whose probability density function is given by the uncertainty from the model, the 
+update equation is as follows: 
+V+(x) = mi_n_L(x, u) -I- E[V(f(x, u))lf] (2) 
+Note that the independence astption does not hold when reasonably smooth 
+system dynamics are modeled by a smooth function approximator. The model 
+error at one time step along a trajectory is highly correlated with the model error 
+at the following step assuming a small distance traveled during the time step. 
+Our algorithm for DP with model uncertainty on a grid is as follows: 
+Discretize the state space, X, and the control space, U. 
+For each state and each control cache the cost of taking this action from 
+this state. Also compute the probability density function on the next state 
+from the model and cache the information. There are two cases which are 
+shown graphically in fig. 1: 
+� If the distribution is much narrower than the grid spacing, then the 
+model is confident and a deterministic update will be done according to 
+eq. 1. Multilinear interpolation is used to compute the value function 
+at the mean of the predicted next state [Davies, 1996]. 
+� Otherwise, a stochastic update will be done according to eq. 2. The pdf 
+of each of the state variables is stored, discretized at the same intervals 
+as the grid representing the value function. Output independence is 
+1050 J. G. Schneider 
+High Confidence Next State 
+Low Confidence Next State 
+v7 v8 
+Figure 1: Illustration of the two kinds of cached updates. In the high confidence sce- 
+nario the transition is treated as deterministic and the value function is computed 
+with multilinear interpolation: Vo + - L(x, u) + 0.4V7  + 0.3Vs  + 0.2V + 0.1V.. 
+In

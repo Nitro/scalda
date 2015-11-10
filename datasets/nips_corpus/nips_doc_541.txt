@@ -1,0 +1,161 @@
+Dynamically-Adaptive Winner-Take-All Networks 
+Tret E. Lange 
+Computer Scienos Department 
+University of California, Los Angeles, CA 90024 
+Abstract 
+Winner-Take-All (WTA) networks, in which inhibitory interconnec- 
+tions are used to determine the most highly-activated of a pool of units, 
+are an important part of many neural network models. Unfortunately, 
+convergence of normal WTA networks is extremely sensitive to the 
+magnitudes of their weights, which must be hand-tuned and which gen- 
+erally only provide the right amount of inhibition across a relatively 
+small range of initial conditions. This paper presents Dynamically- 
+Adaptive Winner-Take-All (DAWTA) networks, which use a regulatory 
+unit to provide the competitive inhibition to the units in the network. 
+The DAWTA regulatory unit dynamically adjusts its level of activation 
+during competition to provide the right amount of inhibition to differ- 
+entiate between competitors and drive a single winner. This dynamic 
+adaptation allows DAWTA networks to perform the winner-take-all 
+function for nearly any network size or initial condition, using O(N) 
+connections. In addition, the DAWTA regulatory unit can be biased to 
+find the level of inhibition necessary to settle upon the K most highly- 
+activated units, and therefore serve as a K-Winners-Take-All network. 
+1. INTRODUCTION 
+Winner-Take-All networks are fixed group of units which compete by mutual inhibition 
+until the unit with the highest initial activation or input level suppresses the activation of 
+all the others. Winner-take-all selection of the most highly-activated unit is an impoant 
+part of many neural network models (e.g. McCleiland and Rumelhan, 1981; Feidman and 
+Ballard, 1982; Kohonen, 1984; Touretzky, 1989; Lange and Dyer, 1989a,b). 
+Unfortunately, successful convergence in winner-take-all networks is extremely sensitive 
+to the magnitudes of the inhibitory weights between units and other network parameters. 
+For example, a weight value for the mutually-inhibitory connections allowing the most 
+highly-activated unit to suppress the other units in one initial condition (e.g. Figure la) 
+may not provide enough inhibition to select a single winner if the initial input activation 
+levels are closer together and/or higher (e.g. Figure lb). On the other hand, if the compe- 
+341 
+342 
+Lange 
+1.0 ' 
+0.8' 
+0.7, 
+0.8. 
+0.5. 
+0.4 
+0.3 
+0.2 
+0.1 
+0.0 
+0 
+1o0- 
+0.8; 
+o. 
+0.8; 
+0.5-' 
+0.4-' 
+0.3 -' 
+0.2-' 
+0.1  
+10 20 30 40 50 60 70 80 gO 100 
+0 10 20 30 40 50 {) 70 ) gO 100 
+1.0 ,, 
+-1.0 
+-3.0 
+-5.0 
+-7.0 
+2 3 4 5 6 7 8 9 10 
+Figure 1. Several plots of activation venus time for different initial condi- 
+tions in a winner-take-all network in which there is a bidirectional inhibitory 
+connection of weight 4).2 between every pair of units. Unit activation function 
+is that from the interactive activation model of McClelland and Rumelhart 
+(1981). (a) Network in which five units are given an input self bias ranging 
+from 0.10 to 0.14. (b) Network in which five units are given an input self bias 
+ranging from 0.50 to 0.54. Note that the network ended up with three winners 
+because the inhibitory connections of weight 4).2 did not provide enough inhibi- 
+tion to suppress the second and third most-active nodes. (c) Network in which 
+100 units are given an input self bias ranging from 0.01 to 0.14. 'Flax combined 
+activation of all 100 nodes through the inhibitory weight of -0.2 provides far too 
+much inhibition, causing the network to overreact and oscillate wildly 
+tiffon involves a larger number of active units, then the same inhibitory weights may 
+provide too much inhibition and either suppress the activations of all units or lead to 
+oscillations (e.g. Figure lc). 
+Dynamically-Adaptive Winner-Take-All Networks 343 
+Because of these problems, it is genea'ally necessary to hand-tune nelw panm to 
+allow for successful winner-take-all perf in a given neural network 'chiecture 
+having certain expected levels of incoming activations. For complex networks, hin can 
+require a detailed mathematical analysis of the model (cf. Toumuky & Hinton, 1988) ot a 
+heuristic, computer-assisted trial-and-error search process (cf. Reggia, 1989) to find the 
+values of inhibitory weights, tinit thresholds, and other network pammete necessary for 
+clear-cut winner-take-all performance in a given model's input space. In some cases, 
+however, no set of network constant network parmneters can be found to handle the range 
+of possible initial conditions a model may be faced with (Barnden, Kankanahalli, and 
+Dharmavarat 1990), such as when the numbers of units actually comg in a given 
+network may be two at one time and thousands at another (e.g. Barnden, 1990;, Lange, in 
+press). 
+This paper presents a new variant of winner-lake-all netw the Dally-Adaptive 
+Winner-Take-All (DAWTA) network. DAWTA network,n, using O(N) connections, are 
+able to robustly act as winner-take-all networks for nearly any network initial condition 
+without any hand-tuning of network parameters. In , the DAWTA network dy- 
+namically tunes itself by adjusting the level of inhibition sent to each unit in the net- 
+work depending upon feedback from the current conditions of the competition. In addi- 
+tion, a biasing activation can be added to the network to allow it to act as a K-Winners- 
+Take-All network (cf. Majani, Erlanson, and Abu-Mostafa, 1989), in which the K most 
+highly-activated units end up active. 
+2. DYNAMICALLY-ADAPTIVE WTA NETWORKS 
+The basic idea behind the Dynamically-Adaptive Winner-Take-All mechanism can be de- 
+scribed by looking at a version of a winner-take-all network that is functionally equivalent 
+to a normal winner-take-all network but which uses only O(N) connections. Several re- 
+searchers have pointed out that the (N2-N)]2 bidirectional inhibitory connections (each of 
+weight -w 1) normally needed in a winner-take-all network can be replaced by an excitatory 
+serf-connection of weight w I for each unit and a single regulatr-y unit that sums up the 
+activations of all N units and inhibits them each by that -w I times that amount 
+(Touretzky & Hinton, 1988; Majani et al., 1989) (see Figure 2). 
+When viewed in this fashion, the mutually inhibitory connections of winner-take-all net- 
+works can be seen as a regulator (i.e. the regulatory unit) that is attempting to provide the 
+right amount of inhibition to the network to allow the winner-to-be unit's activation to 
+grow while suppressing the activations of all others. This is exactly what happens when 
+Wl has been chosen correctly for the activations of the network (as in Figure la). 
+However, because the amount of this regulatory inhibition is fixed precisely by that in- 
+hibitory weight (i.e. always equal to that weight times the sum of the network activa- 
+tions), there is no way for it to increase when it is not enough (as in Figure lb) or de- 
+crease when it is too much (as in Figure lc). 
+2.1. THE DAWTA REGULATORY UNIT 
+From the point of view of the competing units' inputs, the Dynamically-Adaptive 
+Winner-Take-All network is equivalent to the regulatory-unit simplification of a normal 
+winner-take-all network. Each unit has an excitatory connection to itself and an in- 
+hibitory connection from a regulatory unit whose function is to suppress the activations 
+344 Lange 
+Figure 2. Simplification of a standard W'rA network using O(n) connecfiom 
+by inlxoduction of a regulatory unit (top node) that sums up the afivafions of all 
+network units. Each unit has an excitatory connection to itself and an inlu'bitm3t 
+connection of weight -wt from the regulatory unit. Shading of units (darker = 
+higher) represents their levels of activation at a hypothetical time in the middle 
+of network cycling. 
+of all but the winning unit 1. However, the regulatory unit itself, and how it calculates 
+the inhibition it provides to the network, is different. 
+Whereas the connections to the regulatory unit in a normal winner-take-all network cause 
+it to produce an inhibitory activation (i.e. the sum of the units' activations) that happens 
+to work if its inhibitory weights were set correctly, the sU'ucture of connections to the 
+regulatory unit in a dynamically-adaptive winner-take-all network cause it to continually 
+adjust its level of activation until the right amount of inhibition is found, regardless of 
+the network's initial conditions. As the network cycles and the winner-take-all is being 
+performed, the DAWTA regulatory unit's activation inhibits the networks' units, which 
+results in feedback to the regulatory unit that causes it to increase its activation if more 
+inhibition is required to induce a single winner, or decrease its activation if less is re- 
+quire& Accordingly, the DAWTA regulatory unit's activation (aR(t)) now includes its 
+previous activation, and is the following: 
+I -} netR(t+l) -<-} 
+aR(t+l) = aR(t) +  netR(t+l) -} < netR(t+l) < } 
+} net R ( t + l ) _> } 
+where netR ( t+l ) is the total net input to the regulator at time t+l, and O is a small 
+constant (typically 0.05) whose purpose is to stop the regulatory unit's activation from 
+rising or failing too rapidly on any given cycle. Figure 3 shows the actual Dynamically- 
+Adaptive Winner-Take-All network. As in Figure 2, the regulatory unit is the unit at the 
+top and the competing units are the the circular units at the bottom that are inhibited by it 
+and which have connections (of weight Ws) to themselves. However, there are now two 
+1As in all winner-take-all networks, the competing units may also have inputs from 
+outside the network that provide the initial activations driving the competition. 
+Dynamically-Adaptive Winner-Take-All Networks 345 
+Figure 3. Dynamically-Adaptive Winner-Take-All Netwatk at a hypothelical 
+time in the middle of network cycling. Th topmost unit is the DAW'FA 
+regulatory unit, whose outgoing coanections to all of the competing units at the 
+bottom all have

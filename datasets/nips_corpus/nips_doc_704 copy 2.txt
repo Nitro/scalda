@@ -1,0 +1,193 @@
+High Performance Neural Net Simulation 
+on a Multiprocessor System with 
+Intelligent Communication 
+Urs A. Miiller, Michael Kocheisen, and Anton Gunzinger 
+Electronics Laboratory, Swiss Federal Institute of Technology 
+CH-8092 Zurich, Switzerland 
+Abstract 
+The performance requirements in experimental research on arti- 
+ficial neural nets often exceed the capability of workstations and 
+PCs by a great amount. But speed is not the only requirement. 
+Flexibility and implementation time for new algorithms are usually 
+of equal importance. This paper describes the simulation of neural 
+nets on the MUSIC parallel supercomputer, a system that shows a 
+good balance between the three issues and therefore made many 
+research projects possible that were unthinkable before. (MUSIC 
+stands for Multiprocessor _ystem with Intelligent Communication) 
+I Overview of the MUSIC System 
+The goal of the MUSIC project was to build a fast parallel system and to use it in 
+real-world applications like neural net simulations, image processing or simulations 
+in chemistry and physics [1, 2]. The system should be flexible, simple to program 
+and the realization time should be short enough to not have an obsolete system by 
+the time it is finished. Therefore, the fastest available standard components were 
+used. The key idea of the architecture is to support the collection and redistribution 
+of complete data blocks by a simple, efficient and autonomously working commu- 
+nication network realized in hardware. Instead of considering where to send data 
+and where from to receive data, each processing element determines which part of 
+a (virtual) data block it has produced and which other part of the same data block 
+it wants to receive for the continuation of the algorithm. 
+888 
+Parallel Neural Net Simulation 889 
+MUSIC board 
+Board 
+manager 
+PE PE 
+Host computer 
+(Sun, PC, Macintosh) 
+- user terminal 
+- mass storage 
+I 
+I SCSI 
+............................ 
+Board ?   
+manager i l 
+! 
+! 
+Transpoter links 
+,, 
+! 
+., 
+PE 
+[ I 
+PE PE I/0 
+Comm. Comm. Comm. 
+into'face interface i rite rface 
+Comm. Comm. Comm. Comm. 
+interface interface interface interface 
+32+8 bit, 5 MHz 
+Outside world 
+Figure 1: Overview of the MUSIC hardware 
+Figure 1 shows an overview of the MUSIC architecture. For the realization of the 
+communication paradigm a ring architecture has been chosen. Each processing 
+element has a communication interface realized with a XILINX 3090 programmable 
+gate array. During communication the data is shifted through a 40-bit wide bus (32 
+bit data and 8 bit token) operated at a 5-MHz clock rate. On each clock cycle, the 
+processing elements shift a data value to their right neighbors and receive a new 
+value from their left neighbors. By counting the clock cycles each communication 
+interface knows when to copy data from the stream passing by into the local memory 
+of its processing element and, likewise, when to insert data from the local memory 
+into the ring. The tokens are used to label invalid data and to determine when a 
+data value has circulated through the complete ring. 
+Three processing elements are placed on a 9 x 8.5-inch board, each of them consist- 
+ing of a Motorola 96002 floating-point processor, 2 Mbyte video (dynamic) RAM, 
+I Mbyte static RAM and the above mentioned communication controller. The 
+video RAM has a parallel port which is connected to the processor and a serial port 
+which is connected to the communication interface. Therefore, data processing is 
+almost not affected by the communication network's activity and communication 
+and processing can overlap in time. This allows to use the available communication 
+bandwidth more efficiently. The processors run at 40 MHz with a peak performance 
+of 60 MFlops. Each board further contains an Inmos T425 transputer as a board 
+890 Mfiller, Kocheisen, and Gunzinger 
+Number of processing elments: 
+Peak performance: 
+Floating-point format: 
+Memory: 
+Programming language: 
+Cabinet: 
+Cooling: 
+Total power consumption: 
+Host computer: 
+6O 
+3.6 Gflops 
+44 bit IEEE single extended precision 
+180 Mbyte 
+C, Assembler 
+19-inch rack 
+forced ir cooling 
+less than 800 Watt 
+Sun workstation, PC or Macintosh 
+Table 1: MUSIC system technical data 
+manager, responsible for performance measurements and data communication with 
+the host (a Sun workstation, PC or Macintosh). 
+In order to provide the fast data throughput required by many applications, special 
+I/O modules (for instance for real-time video processing applications) can be added 
+which have direct access to the fast ring bus. An SCSI interface module for four 
+parallel SCSI-2 disks, which is currently being developed, will allow the storage 
+of huge amount of training data for neural nets. Up to 20 boards (60 processing 
+elements) fit into a standard 19-inch rack resulting in a 3.6-Gfiops system. MUSIC's 
+technical data is summarized in Table 1. 
+For programming the communication network just three library functions are nec- 
+essary: In�:_corm() to specify the data block dimensions and data partitioning, 
+Da:a_ready() to label a certain amount of data as ready for communication and 
+Wa�:_da:a() to wait for the arrival of the expected data (synchronization). Other 
+functions allow the exchange and automatic distribution of data blocks between the 
+host computer and MUSIC and the calling of individual user functions. The activity 
+of the transputers is embedded in these functions and remains invisible for the user. 
+Each processing element has its own local program memory which makes MUSIC 
+a MIMD machine (multiple instructions multiple data). However, there is usually 
+only one program running on all processing elements (SPMD = single program mul- 
+tiple data) which makes programming as simple or even simpler as programming a 
+SIMD computer (single instruction multiple data). The difference to SIMD machines 
+is that each processor can take different program pathes on conditional branches 
+without the performance degradation that occurs on SIMD computers in such a 
+case. This is especially important for the simulation of neural nets with nonregular 
+local structures. 
+2 Parallelization of Neural Net Algorithms 
+The first implemented learning algorithm on MUSIC was the well-known back- 
+propagation applied to fully connected multilayer perceptrons [3]. The motivation 
+was to gain experience in programming the system and to demonstrate its perfor- 
+mance on a real-world application. All processing elements work on the same layer 
+a time, each of them producing an individual part of the output vector (or error 
+vector in the backward path) [1]. The weights are distributed to the processing 
+elements accordingly. Since a processing element needs different weight subsets in 
+Parallel Neural Net Simulation 891 
+20O 
+150 
+100 
+Linear spe 
+/ 9oo-6oo 
+-* 300-200-10 
+10 20 30 40 50 60 
+Number of processing elements 
+Figure 2: Estimated (lines) and measured (points) back-propagation performance 
+for different neural net sizes. 
+the forward and in the backward path, two subsets are stored and updated on each 
+processing element. Each weight is therefore stored and updated twice on different 
+locations on the MUSIC system [1]. This is done to avoid the communication of 
+the weights during learning what would cause a saturation of the communication 
+network. The estimated and experimentally measured speedup for different sizes of 
+neural nets is illustrated in Figure 2. 
+Another frequently reported parallelization scheme is to replicate the complete net- 
+work on all processing elments and to let each of them work on an individual subset 
+of the training patterns [4, 5, 6]. The implementation is simpler and the commu- 
+nication is reduced. However, it does not allow continuous weight update, which is 
+known to converge significantly faster than batch learning in many cases. A com- 
+parison of MUSIC with other back-propagation implementations reported in the 
+literature is shown in Table 2. 
+Another category of neural nets that have been implemented on MUSIC are cellular 
+neural nets (CNNs) [10]. A CNN is a two-dimensional array of nonlinear dynamic 
+cells, where each cell is only connected to a local neighborhood [11, 12]. In the 
+MUSIC implementation every processing elment computes a different part of the 
+array. Between iteration steps only the overlapping parts of the neighborhoods 
+need to be communicated. Thus, the computation to communication ratio is very 
+high resulting in an almost linear speedup up to the maximum system size. CNNs 
+are used in image processing and for the modeling of biological structures. 
+3 A Neural Net Simulation Environment 
+After programming all necessary functions for a certain algorithm (e.g. forward 
+propagate, backward propagate, weight update, etc.) they need to be combined 
+892 Mailer, Kocheisen, and Gunzinger 
+Performance Cont. 
+System No. of Forward Learning Peak weight 
+PEs [MCPS] [MCUPS] (%) update 
+PC (80486, 50 MHz)* 1 1.1 0.47 38.0 Yes 
+Sun (Sparcstation 10)* 1 3.0 1.1 43.0 Yes 
+Alpha Station (150 MHz)* 1 8.3 3.2 8.6 Yes 
+Hypercluster [7] 64 27.0 9.9 -- -- 
+Warp [4] 10 -- 17.0 -- No 
+CM-2** [6] 64K 180.0 40.0 -- No 
+Cray Y-MP C90'** 1 220.3 65.6 -- Yes 
+RAP [8] 40 574.0 106.0 50.0 Yes 
+NEC SX-3*** 1 -- 130.0 9.6 Yes 
+MUSIC* 60 504.0 247.0 28.0 Yes 
+Sandy/8** [9] 256 -- 583.0 31.0 Yes 
+GFll [5] 356 -- 901.0 54.0 No 
+*Own measurements 
+**Estimated numbers 
+***No published reference available. 
+Table 2: Comparison of floating-point back-propagation implementations. PEs 
+means processing elements, MCPS stands for millions of connections per second 
+in the forward path and MCUPS is the number of connection updates per second 
+in the learning mode, including both forward and backward path. Note that not all 
+implementations allow continuous weight update. 
+in order to construct and train a specific neural net or to carry out a series of 
+experiments. This can be done using the same

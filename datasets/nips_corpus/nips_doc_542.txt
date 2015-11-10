@@ -1,0 +1,145 @@
+Competitive Anti-Hebbian Learning of Invariants 
+Nicoi N. Schraudoiph 
+Computer Science & Engr. Dept. 
+University of California, San Diego 
+La Jolla, CA 92093-0114 
+nici @cs. ucsd. edu 
+Terrence J. Sejnowski 
+Computational Neurobiology Laboratory 
+The Salk Institute for Biological Studies 
+La Jolla, CA 92186-5800 
+t sej now ski @ uc sd. edu 
+Abstract 
+Although the detection of invariant structure in a given set of input patterns is 
+vital to many recognition tasks, connectionist learning rules tend to focus on 
+directions of high variance (principal components). The prediction paradigm is 
+often used to reconcile this dichotomy; here we suggest a more direct approach 
+to invariant learning based on an anti-Hebbian learning rule. An unsupervised 
+two-layer network implementing this method in a competitive setting learns to 
+extract coherent depth information from random-dot stereograms. 
+1 INTRODUCTION: LEARNING INVARIANT STRUCTURE 
+Many connectionist learning algorithms share with principal component analysis (Jolliffe, 
+1986) the strategy of extracting the directions of highest variance from the input. A single 
+Hebbian neuron, for instance, will come to encode the input's first principal component 
+(Oja and Karhunen, 1985); various forms of lateral interaction can be used to force a layer 
+of such nodes to differentiate and span the principal component subspace -- cf. (Sanger, 
+1989; Kung, 1990; Leen, 1991), and others. The same type of representation also develops 
+in the hidden layer of backpropagation autoassociator networks (Baldi and Hornik, 1989). 
+However, the directions of highest variance need not always be those that yield the most 
+information, or -- as the case may be -- the information we are interested in (Intrator, 
+1991). In fact, it is sometimes desirable to extract the invariant structure of a stimulus 
+instead, learning to encode those aspects that vary the least. The problem, then, is how to 
+achieve this within a connectionist framework that is so closely tied to the maximization of 
+variance. 
+1017 
+1018 Schraudolph and Sejnowski 
+In (F01di, 1991), spatial invariance is turned into a temporal feature by presenting transfor- 
+mation sequences within invariance classes as a stimulus. A built-in temporal smoothness 
+constraint enables Hebbian neurons to learn these transformations, and hence the invariance 
+classes. Although this is an efficient and neurobiologically attractive strategy it is limited 
+by its strong assumptions about the nature of the stimulus. 
+A more general approach is to make information about invariant structure available in the 
+error signal of a supervised network. The most popular way of doing this is to require the 
+network to predict the next patch of some structured input from the preceding context, as in 
+(Elman, 1990); the same prediction technique can be used across space as well as time. It is 
+also possible to explicitly derive an error signal from the mutual information between two 
+patches of structured input (Becker and Hinton, 1992), a technique which has been applied 
+to viewpoint-invariant object recognition (Zemel and Hinton, 1991). 
+2 METHODS 
+2.1 ANTI-HEBBIAN FEEDFORWARD LEARNING 
+In most formulations of the covariance learning rule it is quietly assumed that the learning 
+rate be positive. By reversing the sign of this constant in a recurrent autoassociator, Kohonen 
+constructed a novelty filter that learned to be insensitive to familiar features in its input 
+(Kohonen, 1989). More recently, such anti-Hebbian synapses have been used for lateral 
+decorrelation of feature detectors (Barlow and FOldiik, 1989; Leen, 1991) as well as -- in 
+differential form -- removal of temporal variations from the input (Mitchison, 1991). 
+We suggest that in certain cases the use of anti-Hebbian feedforward connections to learn 
+invariant structure may eliminate the need to bring in the heavy machinery of supervised 
+learning algorithms required by the prediction paradigm, with its associated lack of neu- 
+robiological plausibility. Specifically, this holds for linear problems, where the stimuli lie 
+near a hyperplane in the input space: the weight vector of an anti-Hebbian neuron will 
+move into a direction normal to that hyperplane, thus characterizing the invariant structure. 
+Of course a set of Hebbian feature detectors whose weight vectors span the hyperplane 
+would characterize the associated class of stimuli just as well. The anti-Hebbian learning 
+algorithm, however, provides a more efficient representation when the dimensionality of 
+the hyperplane is more than half that of the input space, since less normal vectors than 
+spanning vectors are required for unique characterization in this case. Since they remove 
+rather than extract the variance within a stimulus class, anti-Hebbian neurons also present 
+a very different output representation to subsequent layers. 
+Unfortunately it is not sufficient to simply negate the learning rate of a layer of Hebbian 
+feature detectors in order to turn them into working anti-Hebbian invariance detectors: 
+although such a change of sign does superficially achieve the intended effect, many of the 
+subtleties that make Hebb's rule work in practice do not survive the transformation. In what 
+follows we address some of the problems thus introduced. 
+Like the Hebb rule, anti-Hebbian learning requires weight normalization, in this case to 
+prevent weight vectors from collapsing to zero. Oja's active decay rule (Oja, 1982) is a 
+popular local approximation to explicit weight normalization: 
+A -- rl(y - y2 ), where y =  T a7 ( 1 ) 
+Competitive Anti-Hebbian Learning of Invariants 1019 
+Here the first term in parentheses represents the standard Hebb rule, while the second is the 
+active decay. Unfortunately, Oja's rule can not be used for weight growth in anti-Hebbian 
+neurons since it is unstable for negative learning rates (r/ < 0), as is evident from the 
+observation that the growth/decay term is proportional to t. In our experiments, explicit 
+L2-normalization of weight vectors was therefore used instead. 
+Hebbian feature detectors attain maximal activation for the class of stimuli they represent. 
+Since the weight vectors of anti-Hebbian invariance detectors are normal to the invariance 
+class they represent, membership in that class is signalled by a zero activation. In other 
+words, linear anti-Hebbian nodes signal violations of the constraints they encode rather 
+than compliance. While such an output representation can be highly desirable for some 
+applications , it is unsuitable for others, such as the classification of mixtures of invariants 
+described below. 
+We therefore use a symmetric activation function that responds maximally for a zero net 
+input, and decays towards zero for large net inputs. More specifically, we use Gaussian 
+activation functions, since these allow us to interpret the nodes' outputs as class membership 
+probabilities. Soft competition between nodes in a layer can then be implemented simply 
+by normalizing these probabilities (i.e. dividing each output by the sum of outputs in a 
+layer), then using them to scale weight changes (Nowlan, 1990). 
+2.2 AN ANTI-HEBBIAN OBJECTIVE FUNCTION 
+The magnitude of weight change in a Hebbian neuron is proportional to the cosine of 
+the angle between input and weight vectors. This means that nodes that best represent the 
+current input learn faster than those which are further away, thus encouraging differentiation 
+among weight vectors. Since anti-Hebbian weight vectors are normal to the hyperplanes 
+they represent, those that best encode a given stimulus will experience the least change in 
+weights. As a result, weight vectors will tend to clump together unless weight changes 
+are rescaled to counteract this deficiency. In our experiments, this is done by the soft 
+competition mechanism; here we present a more general framework towards this end. 
+A simple Hebbian neuron maximizes the variance of its output y through stochastic ap- 
+proximation by performing gradient ascent in _}y2 (Oja and Karhunen, 1985): 
+0 ly 2 0 
+Awi oc Ow-'  = y--wi y = xiy 
+(2) 
+As seen above, it is not sufficient for an anti-Hebbian neuron to simply perform gradient 
+descent in the same function. Instead, an objective function whose derivative has inverse 
+magnitude to the above at every point is needed, as given by 
+0 l log(y2) = 1 0 x_/ (3) 
+AWl (X OW----7'  y OWi y -- y 
+1Consider the subsumption architecture of a hierarchical network in which higher layers only 
+receive information that is not accounted for by earlier layers. 
+1020 Schraudolph and Sejnowski 
+3.00 
+2.00 
+1.00 
+0.00 
+-1.00 
+-2.00 
+-3.00 
+-4.00 -2.00 0.00 2.00 4.00 
+Figure 1' Possible objective functions for anti-Hebbian learning (see text). 
+Unfortunately, the pole at y = 0 presents a severe problem for simple gradient descent 
+methods: the near-infinite derivatives in its vicinity lead to catastrophically large step sizes. 
+More sophisticated optimization methods deal with this problem by explicitly controlling 
+the step size; for plain gradient descent we suggest reshaping the objective function at the 
+pole such that its partials never exceed the input in magnitude: 
+0 2sxiy 
+Awi o< e log(y 2 + e2): 
+OWl y2 + 
+(4) 
+where e > 0 is a free parameter determining at which point the logarithmic slope is 
+abandoned in favor of a quadratic function which forms an optimal trapping region for 
+simple gradient descent (Figure 1). 
+3 RESULTS ON RANDOM-DOT STEREOGRAMS 
+In random-dot stereograms, stimuli of a given stereo disparity lie on a hyperplane whose 
+dimensionality is half that of the input space plus the disparity in pixels. This is easily 
+appreciated by considering that given, say, the left half-image and the disparity, one can 
+predict the right half-image except for the pixels shifted in at the edge. Thus stereo 
+disparities that are small compared to the receptive field width can be learned equally w

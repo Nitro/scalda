@@ -1,0 +1,176 @@
+Online Independent Component Analysis 
+With Local Learning Rate Adaptation 
+Nicol N. Schraudolph 
+nicidsia. ch 
+Xavier Giannakopoulos 
+xavieridsia. ch 
+IDSIA, Corso Elvezia 36 
+6900 Lugano, Switzerland 
+http://ww. idsia. ch/ 
+Abstract 
+Stochastic meta-descent (SMD) is a new technique for online adap- 
+tation of local learning rates in arbitrary twice-differentiable sys- 
+tems. Like matrix momentum it uses full second-order information 
+while retaining O(n) computational complexity by exploiting the 
+efficient computation of Hessian-vector products. Here we apply 
+SMD to independent component analysis, and employ the result- 
+ing algorithm for the blind separation of time-varying mixtures. 
+By matching individual learning rates to the rate of change in each 
+source signal's mixture coefficients, our technique is capable of si- 
+multaneously tracking sources that move at very different, a priori 
+unknown speeds. 
+1 Introduction 
+Independent component analysis (ICA) methods are typically run in batch mode in 
+order to keep the stochasticity of the empirical gradient low. Often this is combined 
+with a global learning rate annealing scheme that negotiates the tradeoff between 
+fast convergence and good asymptotic performance. For time-varying mixtures, 
+this must be replaced by a learning rate adaptation scheme. Adaptation of a single, 
+global learning rate, however, facilitates the tracking only of sources whose mixing 
+coefficients change at comparable rates [1], resp. switch all at the same time [2]. 
+In cases where some sources move much faster than others, or switch at different 
+times, individual weights in the unmixing matrix must adapt at different rates in 
+order to achieve good performance. 
+We apply stochastic meta-descent (SMD), a new online adaptation method for local 
+learning rates [3, 4], to an extended Bell-Sejnowski ICA algorithm [5] with natural 
+gradient [6] and kurtosis estimation [7] modifications. The resulting algorithm is 
+capable of separating and tracking a time-varying mixture of 10 sources whose 
+unknown mixing coefficients change at different rates. 
+790 N. N. Schraudolph and X. Giannakopoulos 
+2 The SMD Algorithm 
+Given a sequence 0, ,... of data points, we minimize the expected value of a 
+twice-differentiable loss function f() with respect to its parameters  by stochas- 
+tic gradient descent: 
+_ (1) 
+where _ Off 
+and � denotes component-wise multiplication. The local learning rates fi are best 
+adapted by exponentiated gradient descent [8, 9], so that they can cover a wide 
+dynamic range while staying strictly positive: 
+Of(gt) 
+lntYt = ln/-i- /a OlntY 
+tYt = fft_l . exp(lt . t) , 
+where Yt -- 01nil (2) 
+and p is a global meta-learning rate. This approach rests on the assumption that 
+each element of fi affects f() only through the corresponding element of . With 
+considerable variation, (2) forms the basis of most local rate adaptation methods 
+found in the literature. 
+In order to avoid an expensive exponentiation [10] for each weight update, we typ- 
+ically use the linearization e u  1 + u, valid for small lu], giving 
+/: -- fft_l-max(o, i + It'Yt), (3) 
+where we constrain the multiplier to be at least (typically)  = 0.1 as a safeguard 
+against unreasonably small -- or negative -- values. For the meta-level gradient 
+descent to be stable,/a must in any case be chosen such that the multiplier for fidoes 
+not stray far from unity; under these conditions we find the linear approximation 
+(3) quite sufficient. 
+Definition of 7. The gradient trace 7 should accurately measure the effect that 
+a change in local learning rate has on the corresponding weight. It is tempting to 
+consider only the immediate effect of a change in fit on tt+' declaring tt and (t 
+in (1) to be independent of fit, one then quickly arrives at 
+_ 
+t4-1 -- O]nYt -- Yt'fft (4) 
+However, this common approach [11, 12, 13, 14, 15] fails to take into account the 
+incremental nature of gradient descent: a change in fi affects not only the current 
+update of , but also future ones. Some authors account for this by setting  to 
+an exponential average of past gradients [2, 11, 16]; we found empirically that the 
+method of Alineida et al. [15] can indeed be improved by this approach [3]. While 
+such averaging serves to reduce the stochasticity of the product t ' t- implied by 
+(3) and (4), the average remains one of immediate, single-step effects. 
+By contrast, Sutton [17, 18] models the long-term effect of fi on future weight 
+updates in a linear system by carrying the relevant partials forward through time, 
+as is done in real-time recurrent learning [19]. This results in an iterative update 
+rule for , which we have extended to nonlinear systems [3, 4]. We define  as an 
+Online ICA with Local Rate Adaptation 791 
+exponential average of the effect of all past changes in ff on the current weights: 
+ = (1-A)Ai 
+i=o Olnp-_i (5) 
+The forgetting factor 0 _ A _ 1 is a free parameter of the algorithm. Inserting (1) 
+=  OlnIt-i 
+i=0 
+,xt + Yt-gt 
+= (6) 
+into (5) gives 
+where Ht denotes the instantaneous Hessian of f, () at time t. The approximation 
+in (6) assumes that (Vi > 0)Ofit/Ofit-i - 0; this signifies a certain dependence on 
+an appropriate choice of meta-learning rate p. Note that there is an efficient O (n) 
+algorithm to calculate HtYt without ever having to compute or store the matrix 
+Ht itself [20]; we shall elaborate on this technique for the case of independent 
+component analysis below. 
+Meta-level conditioning. The gradient descent in ff at the meta-level (2) may 
+of course suffer from ill-conditioning just like the descent in t at the main level 
+(1); the meta-descent in fact squares the condition number when  is defined as the 
+previous gradient, or an exponential average of past gradients. Special measures to 
+improve conditioning are thus required to make meta-descent work in non-trivial 
+systems. 
+Many researchers [11, 12, 13, 14] use the sign function to radically normalize the 
+if-update. Unfortunately such a nonlinearity does not preserve the zero-mean prop- 
+erty that characterizes stochastic gradients in equilibrium -- in particular, it will 
+translate any skew in the equilibrium distribution into a non-zero mean change in 
+if. This causes convergence to non-optimal step sizes, and renders such methods un- 
+suitable for online learning. Notably, Almeida et al. [15] avoid this pitfall by using 
+a running estimate of the gradient's stochastic variance as their meta-normalizer. 
+In addition to modeling the long-term effect of a change in local learning rate, our 
+iterative gradient trace serves as a highly effective conditioner for the meta-descent: 
+the fixpoint of (6) is given by 
+7 = [ AHt + (1-,)diag(1/ff)]-l (7) 
+-- a modified Newton step, which for typical values of A (i.e., close to 1) scales with 
+the inverse of the gradient. Consequently, we can expect the product t - Yt in (2) 
+to be a very well-conditioned quantity. Experiments with feedforward multi-layer 
+perceptrons [3, 4] have confirmed that SMD does not require explicit meta-level 
+normalization, and converges faster than alternative methods. 
+3 Application to ICA 
+We now apply the SMD technique to independent component analysis, using the 
+Bell-Sejnowski algorithm [5] as our base method. The goal is to find an unmixing 
+792 N. N. Schraudolph and X. Giannakopoulos 
+matrix Wt which -- up to scaling and permutation -- provides a good linear esti- 
+mate t -= Wt�t of the independent sources gt present in a given mixture signal t- 
+The mixture is generated linearly according to t - At gt, where At is an unknown 
+(and unobservable) full rank matrix. 
+We include the well-known natural gradient [6] and kurtosis estimation [7] modifi- 
+cations to the basic algorithm, as well as a matrix Pt of local learning rates. The 
+resulting online update for the weight matrix Wt is 
+Wt+l  Wt - Pt' Dr, (8) 
+where the gradient Dt is given by 
+0fw(t) 
+Ot -= OWt 
+-- ([fit q- tanh(7t)] 7t T- I) Wt , 
+(9) 
+with the sign for each component of the tanh(t) term depending on its current 
+kurtosis estimate. 
+Following Pearlmutter [20], we now define the differentiation operator 
+?Z�(g(Wt)) = Og(Wt +rVt)[ (10) 
+01' r=O 
+which describes the effect on g of a perturbation of the weights in the direction of 
+Vt. We can use T� to efficiently calculate the Hessian-vector product 
+Ht*Vt  vec-[Ht vec(Vt)] - ?Z�(Dt) (11) 
+where vec is the operator that concatenates all Columns of a matrix into a single 
+column vector. Since T� is a linear operator, we have 
+?Z�(Wt) = Vt, (12) 
+?Zvt(t) = ?Zvt(Wtt)= Vtt, (13) 
+Tg� (tanh(fft)) = diag(tanh'(7t)) Vt:t, (14) 
+and so forth (cf. [20]). Starting from (9), we apply the T� operator to obtain 
+Ht.Vt 
+(15) 
+In conjunction with the matrix versions of our learning rate update (3) 
+Pt = Pt- max(ao, 1 - /Dt. Vt ) 
+(16) 
+and gradient trace (6) 
+Vt+l = Vt 
+-- Pt ' (Dt + /kHt*Vt) 
+(17) 
+this constitutes our SMD-ICA algorithm. 
+Online IC.4 qth Local Rate Adaptation 793 
+4 Experiment 
+The algorithm was tested on an artificial problem where 10 sources follow elliptic 
+trajectories according to 
+' = (Abase + A1 sin(t) + A2 cos(t))g 
+(18) 
+where Abase is a normally distributed mixing matrix, as well as A and A2, whose 
+columns represent the axes of the ellipses on which the sources travel. The velocities 
+ are normally distributed around a mean of one revolution for every 6 000 data 
+samples. All sources are supergaussian. 
+The ICA-SMD algorithm was implemented with only online access to the data, 
+including on-line whitening [21]. Whenever the condition number of the estimated 
+whitening matrix exceeded a large threshold (set to 350 here), updates (16) and (17) 
+were disabled to prevent the algorithm from diverging. Other parameters settings 
+were/a -- 0.1, A = 0.999, and p - 0.2. 
+Results that were not separating the 10 sources without ambiguity were discarded. 
+Figure I s

@@ -1,0 +1,167 @@
+810 Nfifiez and Fortes 
+Performance of Connectionist Learning Algorithms 
+on 2-D SIMD Processor Arrays 
+Fernando J. Nfifiez* and Jose A.B. Fortes 
+School of Electrical Engineering 
+Purdue University 
+West Lafayette, IN 47907 
+ABSTRACT 
+The mapping of the back-propagation and mean field theory 
+learning algorithms onto a generic 2-D SIMD computer is 
+described. This architecture proves to be very adequate for these 
+applications since efficiencies close to the optimum can be 
+attained. Expressions to find the learning rates are given and 
+then particularized to the DAP array procesor. 
+I INTRODUCTION 
+The digital simulation of connectionist learning algorithms is flexible and 
+accurate. However, with the exception of very small networks, conventional 
+computer architectures spend a lot of time in the execution of simulation 
+software. Parallel computers can be used to reduce the execution time. �ector- 
+pipelined, multiprocessors, and array processors are some of the most important 
+classes of parallel computers 3. Connectionist or neural net (NN) learning 
+algorithms have been mapped onto all of them. 
+The focus of this contribution is on the mapping of the back-propagation (BP) 
+and mean field theory (MFT) learning algorithms onto the subclass of SINif) 
+computers with the processors arranged in a square two-dimensional mesh and 
+interconnected by nearest-neighbor links. 
+The material is organized as follows. In section 2, the execution cost of BP and 
+MFT on sequential computers is found. Two-dimensional SIMD processor arrays 
+are described in section 3, and the costs of the two dominanting operations in the 
+simulations are derived. In section 4 the mapping of BP and MFT is commented 
+* Current address: Motorola Inc., 1301 E Algonquin Rd., Schaumburg, IL 60196 
+Performance of Connectionist Learning Algorithms 811 
+and expressions for the learning rates are obtained. These expressions are 
+particularized to the DAP computer in section 5. Section 6 concludes this work. 
+2 BACK-PROPAGATION AND MEAN FIELD THEORY 
+In this paper, two learning algorithms: BP 7 and MFT4; and 3-layer nets are 
+considered. The number of neurons in the input, hidden, and output layer is I, H, 
+and O respectively. BP has been used in many applications. Probably, NETtalk s 
+is the best known. MFT can also be used to learn arbitrary mappings between 
+two sets, and remarkably, to find approximate solutions to hard optimization 
+problems much more efficiently than a Boltzmann Machine does 4'$. 
+The output of a neuron i will be denoted as vl and called value: 
+vl = f( -].aijvj - O ). The summation represents the net input received and will 
+be called activation. The neuron thresold is 01. A sigmoid-like function f is 
+applied to find the value. The weight of the link from neuron j to neuron i is 
+Since input patterns are the values of the I layer, only neuron values and 
+activations of the H and O layers must be computed. In BP, the activation error 
+and the value error of the H and O layers are calculated and used to change the 
+weights. 
+In a conventional computer, the execution time of BP is approximately the time 
+spent in finding the activations, back-propagating the activation error of the O 
+layer, and modifying the I-H and H-O weights. The result is: (2I+ 30)Ht,,,, 
+where t,, is the time required to perform a multiply/accumulate operation. Since 
+the net has (I q- O)H connections, the learning rate in connections per second is: 
+I+O 
+� = + 
+CPS 
+In the MFT algorithm, only from the neuron values in equilibrium at the end of 
+the clamped and free annealing phases we can compute the weight increments. It 
+is assumed that in both phases there are A annealing temperature nd that E 
+iterations are enough to reach equilibrium at each temperature 4'$. With these 
+changes, MFT is now a deterministic algorithm where the annealing phases are 
+composed of AE sweeps. The MFT execution time can be appr,..imated by the 
+time spent in computing activations in the annealing loops. T ting into account 
+that in. the clamped phase only the H layer is updated, and tha; in the free phase 
+both, the H and O layers change their values, the MFT learring performance is 
+found to be: 
+t BP 
+ rf = -- CPS 
+AE 
+MFT is AE times more expensive than BP. However, the learning qualities of 
+both algorithms are different and such a direct cor-parison is simplistic. 
+812 Nfifiez and Fortes 
+3 2-D SIMD PROCESSOR ARRAYS 
+Two-dimensional single instruction multiple data stream (2-D SEVID) computers 
+are very efficient in the simulation of NN learning algorithms. They can provide 
+massive parallelism at low cost. An SEVID computer is an array of processing 
+elements (PEs) that execute the same instruction in each cycle. There is a single 
+control unit that broadcasts instructions to all the PEs. SIMD architectures 
+operate in a synchronous, lock-step fashion s. They are also called array procesors 
+because their raison dtre is to operate on vectors and matrices. 
+Example SIMD computers are the Illinc-IV, the Massively Parallel Processor 
+(MPP), the Connection Machine (CM), and the Distributed Array Processor 
+(DAP). With the exception of the CM, whose PE interconnection topology is a 
+hypercube, the other three machines are 2-D SIMD arrays because their PEs are 
+interconnected by a 2-D mesh with wrap-around links (figure 1). 
+MORYJ ... 
+Figure 1: A 2-D SIMD Processor Array 
+Each PE has its own local memory. The instruction has an address field to access 
+it. The array memory space can be seen as a 3-D volume. This volume is 
+generated by the PE plane, and the depth is the number of memory words that 
+each PE can address. When the control unit issues an address, a plane of the 
+memory volume is being referenced. Then, square blocks of PxP elements are the 
+natural addressing unit of 2-D SIMD processor arrays. There is an activity bit 
+register in each PE to disable the execution of instructions. This is useful to 
+perform operations with a subset of the PEs. It is assumed that there is no 
+Performance of Connectionist Learning Algorithms 813 
+overlapping between data processing an data moving operations. In other words, 
+PEs can be either performing some operation on data (this includes accessing the 
+local memory) or exchanging data with other processors. 
+8.1 MAPPING THE TWO BASIC OPERATIONS 
+It is characteristic of array processors that the way data is allocated into the PEs 
+memories has a very important effect on performance. For our purposes, two 
+data structures must be considered: vectors and matrices. The storage of vectors 
+is illustrated in figure 2-a. There are two modes: row and column. A vector is 
+split into P-element subvectors stored in the same memory plane. Very large 
+vectors will require two or more planes. The storage of matrices is also very 
+simple. They must be divided into square PxP blocks (figure 2-b). The shading 
+in figure 2 indicates that, in general, the sizes of vectors and matrices do not fit 
+the array dimensions perfectly. 
+P 
+(a) Co)  
+P 
+row 
+column 
+///. ,'/// ///.  
+Figure 2: (a) Vector and Co) Matrix Storage 
+The execution time of BP and MFT in a 2-D SIMD computer is spent, almost 
+completely, in matrix-vector multiply (MVM) and vector outer 
+multiply/accumulate (VOM) operations. They can be decomposed in the 
+following' simpler operations involving PxP blocks. 
+a) Addition (+): C = A + B such that ci = ai + bi. 
+b) Point multiply/accumulate ('): 6' = C + A'B such that �i = eli + aibii. 
+c) Unit rotation: The result block has the same elements than the original, but 
+rotated one place in one of the four possible directions (N, E, W, and S). 
+d) Row (column) broadcast: The result of the row (column) broadcast of a vector 
+z stored in row (column) mode is a block X such that = zj ( = z,). 
+The time required to execute a, b, c, and d will be denoted as t., t,, tr, and tb 
+respectively. Next, let us see how the operation y = Az (MVM) is decomposed in 
+simpler steps using the operations above. Assume that z and y are P-element 
+vectors, and A is a PxP block. 
+814 Nfifiez and Fortes 
+1) Row-broadcast vector z. 
+2) Point multiply Y = A'X. 
+3) Row addition of block Y, y; =  Y;i =  aiizi � This requires log2 steps. In 
+i----1 ./=1 
+each step multiple rotations and one addition are performed. Figure 3 shows how 
+eight values in the same row are added using the recursire doubling technique. 
+Note that the number of rotations doubles in each step. The cost is: 
+Pt, + log2Pt o. Row addition is an inefficient operation because of the large cost 
+due to communication. Fortunately, for larger data its importance can be 
+diminished by using the scheduling described nextly. 
+OOODDO 
+DE) 
+Figure 3: Recursive Doubling 
+Suppose that z, y, and A have dimensions m = MP, n = NP, and 
+respectively. Then, y = Az must be partitioned into a sequence of 
+partitioned block operations as the one explained above. We can write: 
+non- 
+M M M 
+y'= EA'd= 
+In this expression, yi and z i represent the /-th and j-th P-element subvector of y. 
+and z respectively, and Aii is the PxP block of A with indices i and j. Block X  
+is the result of row-broadcasting x $ (z is stored in row mode.) Finally, u is a 
+vector with all its P-elements equal to 1. Note that in the second term M column 
+additions are implicit, while only one is required in the third term because blocks 
+instead of vectors are accumulated. Since y has N subvectors, and the M 
+subvectors of z are broadcast only once, the total cost of the MVM operation is: 
+NMt. + N(Pt, + log2Pto) + Mt 
+After a similar development, the cost of the VOM ( A  = A + yx ' ) operation is: 
+NMt + (N + M)t 
+Performance of Connectionist Learning Algorithms 815 
+If the number of neurons in each layer is not an integer multiple of P, the storage 
+and execution efficiencies decrease. This effect is less important in large networks. 
+4 LEARNING RATES ON 2-D SIMD COMPUTERS 
+4.1 BACK-PROPAGATION 
+The neuron val.ues,

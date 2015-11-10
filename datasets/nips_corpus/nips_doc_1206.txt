@@ -1,0 +1,164 @@
+Clustering via Concave Minimization 
+P.S. Bradley and O. L. Mangasarian 
+Computer Sciences Department 
+University of Wisconsin 
+1210 West Dayton Street 
+Madison, WI 53706 
+email: paulb cs. wisc. edu, olvics. wisc. edu 
+W. N. Street 
+Computer Science Department 
+Oklahoma State University 
+205 Mathematical Sciences 
+Stillwater, OK 74078 
+email: nstreet cs. okstate. edu 
+Abstract 
+The problem of assigning m points in the n-dimensional real space 
+R n to k clusters is formulated as that of determining k centers in 
+R n such that the sum of distances of each point to the nearest 
+center is minimized. If a polyhedral distance is used, the problem 
+can be formulated as that of minimizing a piecewise-linear concave 
+function on a polyhedral set which is shown to be equivalent to 
+a bilinear program: minimizing a bilinear function on a polyhe- 
+dral set. A fast finite k-Median Algorithm consisting of solving 
+few linear programs in closed form leads to a stationary point of 
+the bilinear program. Computational testing on a number of real- 
+world databases was carried out. On the Wisconsin Diagnostic 
+Breast Cancer (WDBC) database, k-Median training set correct- 
+ness was comparable to that of the k-Mean Algorithm, however its 
+testing set correctness was better. Additionally, on the Wisconsin 
+Prognostic Breast Cancer (WPBC) database, distinct and clini- 
+cally important survival curves were extracted by the k-Median 
+Algorithm, whereas the k-Mean Algorithm failed to obtain such 
+distinct survival curves for the same database. 
+I Introduction 
+The unsupervised assignment of elements of a given set to groups or clusters of 
+like points, is the objective of cluster analysis. There are many approaches to this 
+problem, including statistical [9], machine learning [7], integer and mathematical 
+programming [18, 1]. In this paper we concentrate on a simple concave minimization 
+formulation of the problem that leads to a finite and fast algorithm. Our point of 
+Clustering via Concave Minimization 369 
+departure is the following explicit description of the problem: given m points in the 
+n-dimensional real space R n, and a fixed number k of clusters, determine k centers in 
+R n such that the sum of distances of each point to the nearest center is minimized. 
+If the 1-norm is used, the problem can be formulated as the minimization of a 
+piecewise-linear concave function on a polyhedral set. This is a hard problem to 
+solve because a local minimum is not necessarily a global minimum. However, by 
+converting this problem to a bilinear program, a fast successive-linearization k- 
+Median Algorithm terminates after a few linear programs (each explicitly solvable 
+in closed form) at a point satisfying the minimum principle necessary optimality 
+condition for the problem. Although there is no guarantee that such a point is a 
+global solution to our original problem, numerical tests on five real-world databases 
+indicate that the k-Median Algorithm is comparable to or better than the k-Mean 
+Algorithm [18, 9, 8]. This may be due to the fact that outliers have less influence 
+on the k-Median Algorithm which utilizes the 1-norm distance. In contrast the k- 
+Mean Algorithm uses squares of 2-norm distances to generate cluster centers which 
+may be inaccurate if outliers are present. We also note that clustering algorithms 
+based on statistical assumptions that minimize some function of scatter matrices 
+do not appear to have convergence proofs [8, pp. 508-515], however convergence to 
+a partial optimal solution is given in [18] for k-Mean type algorithms. 
+We outline now the contents of the paper. In Section 2, we formulate the clustering 
+problem for a fixed number of clusters, as that of minimizing the sum of the 1-norm 
+distances of each point to the nearest cluster center. This piecewise-linear concave 
+function minimization on a polyhedral set turns out to be equivalent to a bilinear 
+program [3]. We use an effective linearization of the bilinear program proposed in 
+[3, Algorithm 2.1] to solve our problem by solving a few linear programs. Because 
+of the simple structure, these linear programs can be explicitly solved in closed 
+form, thus leading to the finite k-Median Algorithm 2.3 below. In Section 3 we give 
+computational results on five real-world databases. Section 4 concludes the paper. 
+A word about our notation now. All vectors are column vectors unless otherwise 
+specified. For a vector x & R , xi, i = 1,... ,n, will denote its components. The 
+norm II � lip will denote the p norm, 1 _< p <_ oo, while A & R mx will signify a real 
+m x n matrix. For such a matrix, A T will denote the transpose, and Ai will denote 
+row i. A vector of ones in a real space of arbitrary dimension will be denoted by e. 
+2 Clustering as Bilinear Programming 
+Given a set ,4 ofm points in R  represented by the matrix A  R mXn and a number 
+k of desired clusters, we formulate the clustering problem as follows. Find cluster 
+centers Cs, � = 1,..., k, in R  such that the sum of the minima over � � {1,..., k} 
+of the 1-norm distance between each point Ai, i = 1,..., m, and the cluster centers 
+Cs, � = 1,..., k, is minimized. More specifically we need to solve the following 
+mathematical program: 
+m 
+minimize E min {e :Dis} 
+c,D i:l s:l,...,k (1) 
+subject to -Dis < A-Cs < Dis, i = l,...,m, � = l,...k 
+Here Dis  R, is a dummy variable that bounds the components of the difference 
+370 P S. Bradley, O. L. Mangasarian and W. N. Street 
+A/ - Ct between point A/ and center Ct, and e is a vector of ones in R n. Hence 
+eTDit bounds the 1-norm distance between Ai and Ct. We note immediately that 
+since the objective function of (1) is the sum of minima of k linear (and hence 
+concave) functions, it is a piecewise-linear concave function [13, Corollary 4.1.14]. 
+If the 2-norm or p-norm, p  1, c, is used, the objective function will be neither 
+concave nor convex. Nevertheless, minimizing a piecewise-linear concave function 
+on a polyhedral set is NP-hard, because the general linear complementarity prob- 
+lem, which is NP-complete [4], can be reduced to such a problem [11, Lemma 1]. 
+Given this fact we try to look for effective methods for processing this problem. We 
+propose reformulation of problem (1) as a bilinear program. Such reformulations 
+have been very effective in computationally solving NP-complete linear complemen- 
+tarity problems [14] as well as other difficult machine learning [12] and optimization 
+problems with equilibrium constraints [12]. In order to carry out this reformulation 
+we need the following simple lemma. 
+Lemma 2.1 Let a  R k. Then 
+min {at} -- min { 
+l<t<k tR  
+�=1 
+attt tt = 1, tt _> 0, � = 1,...,k (2) 
+t=l 
+Proof This essentially obvious result follows immediately upon writing the dual of 
+the linear program appearing on the right-hand side of (2) which is 
+max {nln < at, � = 1,...k) (3) 
+hER -- 
+Obviously, the maximum of this dual problem is h = min<t<k {at}. By linear 
+programming duality theory, this maximum equals the minimum of the primal 
+linear program in the right hand side of (2). This establishes the equality of (2). [J 
+By defining a = eTDit, i = 1,...,m, � = 1,...,k, Lemma 2.1 can be used to 
+reformulate the clustering problem (1) as a bilinear program as follows. 
+Proposition 2.2 Clustering as a Bilinear Program The 
+(1) is equivalent to the following bilinear program: 
+minimize 
+Ct R ' ,Dit R  ,Ti R 
+subject to 
+clustering problem 
+Ei=I k 
+m Et=l eTDitTit 
+-Die _ Ai  -Ct _ Dit,i = 1...,m, � = 1,...,k 
+k 
+-]t= Tie = 1 Tie >_ 0, i = 1,..., m, � = 1,..., k 
+(4) 
+Note that the constraints of (4) are uncoupled in the variables (C, D) and the vari- 
+able T. Hence the Uncoupled Bilinear Program Algorithm UBPA [3, Algorithm 
+2.1] is applicable. Simply stated, this algorithm alternates between solving a linear 
+program in the variable T and a linear program in the variables (C, D). The al- 
+gorithm terminates in a finite number of iterations at a stationary point satisfying 
+the minimum principle necessary optimality condition for problem (4) [3, Theorem 
+2.1]. We note however, because of the simple structure the bilinear program (4), 
+the two linear programs can be solved explicitly in closed form. This leads to the 
+following algorithmic implementation. 
+Algorithm 2.3 k-Median Algorithm Given C,..., C at iteration j, compute 
+C+I,..., C +1 by the following two steps: 
+Clustering via Concave Minimization 371 
+(a) Cluster Assignment: For each Ai T, i = 1,... m, determine �(i) such that 
+C(i) is closest to Ai T in the 1-norm. 
+(b) Cluster Center Update: For � = 1,...,k choose C +1 a8 a median of 
+all Ai T assigned to C. 
+Stop when C + -- C, � = 1,..., k. 
+Although the k-Median Algorithm is similar to the k-Mean Algorithm wherein the 
+2-norm distance is used [18, 8, 9], it differs from it computationally, and theoreti- 
+cally. In fact, the underlying problem (1) of the k-Median Algorithm is a concave 
+minimization on a polyhedral set while the corresponding problem for the p-norm, 
+p  1, is: 
+m 
+minimize ,i..n.,ullD,llp (5) 
+C,D i=1 
+Ct_< Dit,i= l...,m, �=1,...,k. 
+subject to 
+-Dil < Ai  - 
+This is not a concave minimization on a polyhedral set, because the minimum of 
+a set of convex functions is not in general concave. The concave minimization 
+problem of [18] is not in the original space of the problem variables, that is, the 
+cluster center variables, (C, D), but merely in the space of variables T that assign 
+points to clusters. We also note that the k-Mean Algorithm finds a stationary point 
+not of problem (5) with p -- 2, but of the same problem except that liD/ills is 
+replaced by ]lDii[I . Without this squared distance term, the subproblem of the 
+k-Mean Algorithm becomes the considerably harder Weber problem [17, 5] which 
+locates a center in R n closest in sum of Euclidean distances (not their squares!) to a 
+finite set of given points. The Weber problem has no closed f

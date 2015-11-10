@@ -1,0 +1,177 @@
+Adaptive Elastic Input Field for 
+Recognition Improvement 
+Minoru Asogawa 
+C&C Research Laboratories, 51EC 
+Miyamae, Miyazaki, Kawasaki Kanagawa 213 Japan 
+asogaacs. c .nec. co. jp 
+Abstract 
+For machines to perform classification tasks, such as speech and 
+character recognition, appropriately handling deformed patterns 
+is a key to achieving high performance. The authors presents a 
+new type of classification system, an Adaptive Input Field Neu- 
+ral Network (AIFNN), which includes a simple pre-trained neural 
+network and an elastic input field attached to an input layer. By 
+using an iterative method, AIFNN can determine an optimal afIine 
+translation for an elastic input field to compensate for the original 
+deformations. The convergence of the AIFNN algorithm is shown. 
+AIFNN is applied for handwritten numerals recognition. Conse- 
+quently, 10.83% of originally misclassified patterns are correctly 
+categorized and total performance is improved, without modifying 
+the neural network. 
+I Introduction 
+For machines to accomplish classification tasks, such as speech and character recog- 
+nition, appropriately handling deformed patterns is a key to achieving high perfor- 
+mance [Simard 92] [Simard 93] [Hinton 92] [Barnard 91]. The number of reasonable 
+deformations of patterns is enormous, since they can be either linear translations 
+(an afIine translation or a time shifting) or non-linear deformations (a set of com- 
+binations of partial translations), or both. 
+Although a simple neural network (e.g. a 3-1ayered neural network) is able to adapt 
+1102 Minoru Asogawa 
+Bottom.up 
+Process 
+Elastic 
+ConsWaint 
+Figure 1: AIFNN 
+Jut Field 
+Image 
+Pre-trained 
+Neural Netwjk  
+netj 
+j-th Input Cell 
+�.,..:.::.:.: i' '.:::i:i:i.:.:::;::: 
+� :: 155i:iii:'.:ii!iii:i:..:.-'.:iiiF 
+I 
+I ,, 
+$j 
+Position 
+Figure 2: Delta Force 
+non-linear deformations and to discriminate noises, it is still necessary to have 
+additional methods or data to appropriately process deformations. 
+This paper presents a new type of classification system, an Adaptive Input Field 
+Neural Network (AIFNN), which includes a simple pre-trained neural network and 
+an elastic input field attached to an input layer. The neural network is applied to 
+non-linear deformation compensations and the elastic input field to linear deforma- 
+tions. 
+The AIFNN algorithm can determine an optimal affine translation for compensating 
+for the original patterns' deformations, which are misclassified by the pre-trained 
+neural network. As the result, those misclassified patterns are correctly classified 
+and the final classification performance is improved, compared to that for the orig- 
+inal neural network, without modifying the neural network. 
+2 Adaptive Input Field Neural Network (AIFNN) 
+AIFNN includes a pre-trained neural network and an elastic input field attached to 
+an input layer (Fig. 1). The elastic input field contains receptors sampling input 
+patterns at each location. Each receptor connects to a cell in the input layer. Each 
+receptor links to its adjacent receptors with an elastic constraint and can move over 
+Adaptive Elastic Input Field for Recognition Improvement 1103 
+the input pattern independently, as long as its relative elastic constraint is satisfied. 
+The affine translation of the whole receptor (e.g. a shift, rotation, scale and slant 
+translation) satisfies an elastic constraint, since a constraint violation is induced by 
+the receptors' relative locations. 1 Partial deformations are also allowed with a 
+little constraint violation. 
+This feature of the elastic constraint is similar to that of the Elastic Net method 
+[Durbin 87], which can solve NP-hard problems. Although this elastic net method 
+is directly applicable to the template matching method, the performance is highly 
+dependent on the template selection. Therefore, an elaborated feature space for 
+non-linear deformations is mandatory [Hinton 92]. AIFNN utilizes something like 
+an elastic net constraint, but does not require any prominent templates. 
+The AIFNN algorithm is a repeated sequence of a bottom-up process (calculating 
+a guess and comparing with the presumption) and a top-down process (modifying 
+receptor's location to decrease the error and to satisfy the input field constraints). 
+For applying AIFNN as a classifier, a parallel search is performed; all categories 
+are chosen as presumption categories and the AIFNN algorithm is executed. After 
+hundreds of repetitions, an L score is calculated, which is the sum of the error and 
+the constraint violation in the elastic input field. A category which produces the 
+lowest L score is chosen as a plausible category. In Section 3, it is proved that all 
+receptors will settle to an equilibrium state. In the following sections, details about 
+the bottom-up and top-down processes are described. 
+Bottom-Up Process: 
+When a novel pattern is presented, each receptor samples activation corresponding 
+to a pattern intensity at each location. Each receptor activation is directly transmit- 
+ted to a corresponding neural network input cell. Those input values are forwarded 
+through a pre-trained neural network and an output guess is obtained. 
+This guess is compared to the presumption category, and the negative of this error 
+is defined as the presumption certainty. 2 For example, using the mean squared 
+error criterion, the error E D is defined as follows; 
+= - 2 
+2 ' 
+k 
+where oh is the output value, and d is the desired value determined by the pre- 
+sumption category. The presumption certainty is defined as -E D . 
+Top-Down Process: 
+To minimize the error and to maximize the presumption certainty, each receptor 
+modifies the activation by moving its location over the input pattern. The new 
+location for each receptor is determined by two elements; a direction which yields 
+less error and a direction which satisfies the input field elastic constraint. The 
+former element is called a Delta Force, since it relates to a delta value of an input 
+layer cell. The latter element is named an Address Force. Each receptor moves to 
+aln previous papers, [Asogawa 90] and [Asogawa 91], a shift and rotation translation 
+was taken into account. In those models, a scale and slant translation violated the elastic 
+constraint. 
+2Although another category coding schema is also possible, for simplicity, it is presumed 
+that each output cell corresponds to one certain category. 
+1104 Minoru Asogawa 
+a new location, which is determined by a sum of those two forces. The sum force is 
+called the Combined Force. In the next two sections, details about these forces are 
+described. 
+Delta Force: The Delta Force, which reduces E D by altering receptors' locations, 
+is determined by two elements: a partial derivative for the input value to the error, 
+and a local pattern gradient at each receptor location (Fig. 1). 
+To decrease the error E D, the value divergence for the j-th cell is computed as, 
+Anetj  --or D OED 
+Onetj (2) 
+where a D is small positive number and 5 i is a delta value for the j-th input cell 
+and computed by the back-propagation [Yamada 91]. Anetj and a local pattern 
+gradient V4j are utilized to calculate a Delta Force sff; a scalar value of sff is 
+given as, 
+netj 
+The direction of the Delta Force As is chosen  being parallel 
+Consequenfiy, As is given as, 
+s = netj V4j aD 
+= (4) 
+To avoid Asff becoming infinity, when is almost equal to 0, a small constant 
+c(= ) is added to the denonator; therefore, Asff is defined , 
+IV4 I+ c 
+Address Force: If each receptor is moved iteratively following only the Delta Force, 
+the error becomes its minimum. However, receptors may not satisfy the input field 
+constraint and induce a large constraint violation E a. Here, E a is defined by a 
+distance between a receptor's lattice S and a lattice which is derived by an affine 
+translation from the original lattice. Therefore, E a is defined as follows; 
+1 
+E A ---- 21-d(S N, S) =  E IIs - s, II 2 
+i 
+= t), s), (6) 
+where d(.,.) is a distance measure for two receptor's lattices. S is a current re- 
+ceptor lattice. S N is the receptor lattice given by the affine translation T(.) with 
+parameters t and S O. S � is the original receptor lattice. 
+Therefore, as long as the receptor's lattice can be driven by some affine translation, 
+there is no constraint violation. 
+The affine parameters t are estimated so as to minimize EA; 
+OE A 
+-0 for i = 1,...,6. 
+Oti 
+(7) 
+Adaptive Elastic Input Field for Recognition Improvement 1105 
+Since E A is quadratic with respect to ti, computing ti is moderate. The Address 
+Force for the j-th receptor As.  is defined as the partial derivative to E A with 
+� $ 
+respect to the receptor's location sj; 
+A$ - O A O EA 
+- 0sj ' (s) 
+where a n is a small positive constant. 
+Combined Force: Here, all receptors are moved by a Combined Force As, which is 
+a sum of the Delta Force As D and the Address Force As n. 
+After one hundred iterations, all receptors are moved to the location which produces 
+the minimum output error and the minimum constraint violation. Final states are 
+evaluated with a new measurement L score, which is the sum of the error E D and 
+the constraint violation EA; i.e. L - E D q- E A. 
+This L score is utilized to choose the correct category in a parallel search. In a par- 
+allel search, each category is temporarily chosen as a presumption and converged 
+L scores are calculated. Those scores are compared and the category yielding the 
+smallest L score is chosen as the correct category. This method fully exploits the 
+features of AIFNN, but it requires a large amount of computation, which can fortu- 
+nately be processed totally in parallel. In the following section, convergence of the 
+AIFNN is shown. 
+3 Convergence 
+Convergence is shown by proving that the L is a Lyapunov function. When the L is 
+a Lyapunov function, all receptors converge to some locations after iterations. The 
+necessary and 

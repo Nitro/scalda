@@ -1,0 +1,174 @@
+Constructive Algorithms for Hierarchical 
+Mixtures of Experts 
+S.R.Waterhouse A.J.Robinson 
+Cambridge University Engineering Department, 
+Trumpington St., Cambridge, CB2 1PZ, England. 
+Tel: [+44] 1223 332754, Fax: [+44] 1223 332662, 
+Email: srw1001, air @eng.cam.ac.uk 
+Abstract 
+We present two additions to the hierarchical mixture of experts 
+(HME) architecture. By applying a likelihood splitting criteria to 
+each expert in the HME we grow the tree adaptively during train- 
+ing. Secondly, by considering only the most probable path through 
+the tree we may prune branches away, either temporarily, or per- 
+manently if they become redundant. We demonstrate results for 
+the growing and path pruning algorithms which show significant 
+speed ups and more efficient use of parameters over the standard 
+fixed structure in discriminating between two interlocking spirals 
+and classifying 8-bit parity patterns. 
+INTRODUCTION 
+The HME (Jordan & Jacobs 1994) is a tree structured network whose terminal 
+nodes are simple function approximators in the case of regression or classifiers in the 
+case of classification. The outputs of the terminal nodes or experts are recursively 
+combined upwards towards the root node, to form the overall output of the network, 
+by gates which are situated at the non-terminal nodes. 
+The HME has clear similarities with tree based statistical methods such as Classi- 
+fication and Regression Trees (CART) (Breiman, Friedman, Olshen & Stone 1984). 
+We may consider the gate as replacing the set of questions which are asked at 
+each branch of CART. From this analogy, we may consider the application of the 
+splitting rules used to build CART. We start with a simple tree consisting of two 
+experts and one gate. After partially training this simple tree we apply the split- 
+ting criterion to each terminal node. This evaluates the log-likelihood increase by 
+splitting each expert into two experts and a gate. The split which yields the best 
+increase in log-likelihood is then added permanently to the tree. This process of 
+training followed by growing continues until the desired modelling power is reached. 
+Constructive Algorithms for Hierarchical Mixtures of Experts 585 
+x Yl 2 
+IExpert l I IExpert 21 
+Figure 1: A simple mixture of experts. 
+This approach is reminiscent of Cascade Correlation (Fahlman & Lebiere 1990) in 
+which new hidden nodes are added to a multi-layer perceptton and trained while 
+the rest of the network is kept fixed. 
+The HME also has similarities with model merging techniques such as stacked re- 
+gression (Wolpert 1993), in which explicit partitions of the training set are com- 
+bined. However the HME differs from model merging in that each expert considers 
+the whole input space in forming its output. Whilst this allows the network more 
+flexibility since each gate may implicitly partition the whole input space in a soft 
+manner, it leads to unnecessarily long computation in the case of near optimally 
+trained models. At any one time only a few paths through a large network may 
+have high probability. In order to overcome this drawback, we introduce the idea 
+of path pruning which considers only those paths from the root node which have 
+probability greater than a certain threshold. 
+CLASSIFICATION USING HIERARCHICAL MIXTURES OF EXPERTS 
+The mixture of experts, shown in Figure 1, consists of a set of experts which 
+perform local function approximation. The expert outputs are combined by a gate 
+to form the overall output. In the hierarchical case, the experts are themselves 
+mixtures of further experts, thus extending the architecture in a tree structured 
+fashion. Each terminal node or expert may take on a variety of forms, depending 
+on the application. In the case of multi-way classification, each expert outputs a 
+vector :9j in which element m is the conditional probability of class m (m = 1 ... M) 
+which is computed using the softmax function: 
+P(cmla:(n), wj) = exp(wTmda:(n)) /k exp(wTm,k:r(n) ) 
+k=l 
+where wj = [Wld w2d ... w4] is the parameter matrix for expert j and ci denotes 
+class i. 
+The outputs of the experts are combined using a gate which sits at the non- 
+terminal nodes. The gate outputs are estimates of the conditional probability of 
+selecting the daughters of the non-terminal node given the input and the path taken 
+to that node from the root node. This is once again computed using the softmax 
+function: 
+where 
+j. 
+P(zjla:(n), ) = exp(f a:(n)) / -exp(ir a: �) 
+i=1 
+... j] is the parameter matrix for the gate, and zj denotes expert 
+586 S.R. WATERHOUSE, A. J. ROBINSON 
+The overall output is given by a probabilistic mixture in which the gate outputs 
+are the mixture weights and the expert outputs are the mixture components. The 
+probability of class m is then given by: 
+P(Cml(n),o) 
+J 
+ P(zil (n), )P(cml (n), wi). 
+i=1 
+A straightforward extension of this model also gives us the conditional probability 
+hJn) of selecting expert j given input (n) and correct class ck, 
+h) n) = P(zlo,, (n), Wj) = P(zjI �, )P(ck] (n), wj) 
+/ i-- P(zilm(n)' 
+)P(c&l(n),wi) 
+In order to train the HME to perform classification we maximise the log likelihood 
+L -]nN__l M t ) P(�mle(n), O), where the variable t ) is one if m is the correct 
+-- Em=l log 
+class at exemplar (n) and zero otherwise. This is done via the expectation maximi- 
+sation (EM) algorithm of Dempster, Laird & Rubin (1977), as described by Jordan 
+& Jacobs (1994). 
+TREE GROWING 
+The standard HME differs from most tree 
+based statistical models in that its architecture 
+is fixed. By relaxing this constraint and allow- 
+ing the tree to grow, we achieve a greater de- 
+gree of flexibility in the network. Following the 
+work on CART we start with a simple tree, for 
+instance with two experts and one gate which 
+we train for a small number of cycles. Given 
+this semi-trained network, we then make a set 
+of candidate splits {5} of terminal nodes 
+Each split involves replacin$ an expert zi with 
+a pair of new experts {ziy}]=l and a gate, as 
+shown in Figure 2. 
+We wish to select eventually only the best 
+split  out of these candidate splits. Let us 
+define the best split as being that which max- 
+imises the increase in overall log-likelihood due 
+to the split, AL = L (p+I) - L (p) where L (p) is the 
+likelihood at the ptn generation of the tree. If 
+we make the constraint that all the parameters 
+of the tree remain fixed apart from the param- 
+L(V) 
+i 
+p+l) 
+ L(-I) 
+Figure 2: Making a can- 
+didate split of a terminal 
+node. 
+eters of the new split whenever a candidate split is made, then the maximisation 
+is simplified into a dependency on the increases in the local likelihoods (Li) of the 
+nodes {zi). We thus constrain the tree growing process to be localised such that we 
+find the node which gains the most by being split. 
+max AL(SD = max ALl = m.ax(L? +l) - L? )) 
+Constructive Algorithms for Hierarchical Mixtures of Experts 587 
+Figure 3: Growing the HME. This figure shows the addition of a pair of experts to 
+the partially grown tree. 
+where 
+L? ) 
+L +) 
+=  t?logP(cmlze(n),zi, wi) 
+/ m 
+= Z E t(mn)l�gE P(zijlre(n)'i'zi)P(cmlre(n)'zii' w/j) 
+n m j 
+This splitting rule is similar in form to the CART splitting criterion which uses 
+maximisation of the entropy of the node split, equivalent to our local increase in 
+log-likelihood. 
+Tle final growing algorithm starts with a tree of generation p and firstly fixes the 
+parameters of all non-terminM nodes. All terminal nodes are then split into two 
+experts and a gate. A split is only made if the sum of posterior probabilities '-n h n), 
+as described (1), at the node is greater than a small threshold. This prevents splits 
+being made on nodes which have very little data assigned to them. In order to break 
+symmetry, the new experts of a split are initialised by adding small random noise 
+to the original expert parameters. The gate parameters are set to small random 
+weights. For each node i, we then evaluate ALl by training the tree using the 
+standard EM method. Since all non-terminal node parameters are fixed the only 
+changes to the log-likelihood are due the new splits. Since the parameters of each 
+split are thus independent of one another, all splits can be trained at once, removing 
+the need to train multiple trees separately. 
+After each split has been evaluated, the best split is chosen. This split is kept and 
+all other splits are discarded. The original tree structure is then recovered except 
+for the additional winning split, as shown in Figure 3. The new tree, of generation 
+p + I is then trained as usual using EM. At present the decision on when to add 
+a new split to the tree is fairly straightforward: a candidate split is made after 
+training the fixed tree for a set number of iterations. An alternative scheme we 
+have investigated is to make a split when the overall log-likelihood of the fixed tree 
+has not increased for a set number of cycles. In addition, splits are rejected if they 
+add too little to the local log-likelihood. 
+Although we have not discussed the issue of over-fitting in this paper, a number 
+of techniques to prevent over-fitting can be used in the HME. The most simple 
+technique, akin to those used in CART, involves growing a large tree and successively 
+removing nodes from the tree until the performance on a cross validation set reaches 
+an optimum. Alternatively the Bayesian techniques of Waterhouse, MacKay & 
+Robinson (1995) could be applied. 
+588 S.R. WATERHOUSE, A. J. ROBINSON 
+Tree growing simulations 
+This algorithm was used to solve the 8-bit parity classification task. We compared 
+the growing algorithm to a fixed HME with depth of 4 and binary branches. As can 
+be seen in Figures 4(a) and (b), the factorisation enabled by the growing algorithm 
+significantly speeds up computation over the standard fixed structure. The final tree 
+shape obtained is shown in Figure 4(c). We showed i

@@ -1,0 +1,151 @@
+Information, prediction, and query by 
+committee 
+Yoav Freund 
+Computer and Information Sciences 
+University of California, Santa Cruz 
+yoavcs e. ucs c. edu 
+H. Sebastian Seung 
+AT&T Bell Laboratories 
+Murray Hill, New Jersey 
+seungphysics. art. com 
+Eli Shamir 
+Institute of Computer Science 
+Hebrew University, Jerusalem 
+shamircs. huj i. ac. il 
+Naftali Tishby 
+Institute of Computer Science and 
+Center for Neural Computation 
+Hebrew University, Jerusalem 
+tishbycs. huj i. ac. il 
+Abstract 
+We analyze the query by committee algorithm, a method for fil- 
+tering informative queries from a random stream of inputs. We 
+show that if the two-member committee algorithm achieves infor- 
+mation gain with positive lower bound, then the prediction error 
+decreases exponentially with the number of queries. We show that, 
+in particular, this exponential decrease holds for query learning of 
+thresholded smooth functions. 
+I Introduction 
+For the most part, research on supervised learning has utilized a random input 
+paradigm, in which the learner is both trained and tested on examples drawn at 
+random from the same distribution. In contrast, in the query paradigm, the learner 
+is given the power to ask questions, rather than just passively accept examples. 
+What does the learner gain from this additional power? Can it attain the same 
+prediction performance with fewer examples? 
+Most work on query learning has been in the constructive paradigm, in which the 
+483 
+484 Freund, Seung, Shamir, and Tishby 
+learner constructs inputs on which to query the teacher. For some classes of boolean 
+functions and finite automata that are not PAC learnable from random inputs, there 
+are algorithms that can successfully PAC learn using membership queries[Va184, 
+Ang88]. Query algorithms are also known for neural network learning[Bau91]. The 
+general relevance of these positive results is unclear, since each is specific to the 
+learning of a particular concept class. Moreover, as shown by Eisenberg and Rivest 
+in [ER90], constructed membership queries cannot be used to reduce the number of 
+examples required for PAC learning. That is because random examples provide the 
+learner with information not only about the correct mapping, but also about the 
+distribution of future test inputs. This information is lacking if the learner must 
+construct inputs. 
+In the statistical literature, some attempt has been made towards a more fun- 
+damental understanding of query learning, there called sequential design of 
+experiments. 1. It has been suggested that the optimal experiment (query) is the 
+one with maximal Shannon information[Lin56, Fed72, Mac92]. Similar suggestions 
+have been made in the perceptton learning literature[KR90]. Although the use of an 
+entropic measure seems sensible, its relationship with prediction error has remained 
+unclear. 
+Understanding this relationship is a main goal of the present work, and enables us 
+to prove a positive result about the power of queries. Our work is derived within the 
+query filtering paradigm, rather than the constructive paradigm. In this paradigm, 
+proposed by [CAL90], the learner is given access to a stream of inputs drawn at 
+random from a distribution. The learner sees every input, but chooses whether or 
+not to query the teacher for the label. This paradigm is realistic in contexts where 
+it is cheap to get unlabeled examples, but expensive to label them. It avoids the 
+problems with the constructive paradigm described in [ER90] because it gives the 
+learner free access to the input distribution. 
+In [CAL90] there are several suggestions for query filters together with some em- 
+pirical tests of their performance on simple problems. Seung et al.[SOS92] have 
+suggested a filter called query by committee, and analytically calculated its per- 
+formance for some perceptton-type learning problems. For these problems, they 
+found that the prediction error decreases exponentially fast in the number of queries. 
+In this work we present a more complete and general analysis of query by commit- 
+tee, and show that such an exponential decrease is guaranteed for a general class of 
+learning problems. 
+We work in a Bayesian model of concept learning[HKS91] in which the target con- 
+cept f is chosen from a concept class C according to some prior distribution T'. 
+The concept class consists of boolean-valued functions defined on some input space 
+X. An example is an input x C X along with its label l = f(x). For any set of 
+examples, we define the version space to be the set of all hypotheses in C that are 
+consistent with the examples. As each example arrives, it eliminates inconsistent 
+hypotheses, and the probability of the version space (with respect to T') is reduced. 
+The instantaneous information gain (i.i.g.) is defined as the logarithm of the ratio 
+1The paradigm of (non-sequential) experimental design is analogous to what might be 
+called batch query learning, in which all of the inputs are chosen by the learner before 
+a single label is received from the teacher 
+Information, prediction, and query by committee 485 
+of version space probabilities before and after receiving the example. In this work, 
+we study a particular kind of learner, the Gibbs learner, which chooses a hypothesis 
+at random from the version space. In Bayesian terms, it chooses from the posterior 
+distribution on the concept class, which is the restriction of the prior distribution 
+to the version space. 
+If an unlabeled input x is provided, the expected i.i.g. of its label can be defined by 
+taking the expectation with respect to the probabilities of the unknown label. The 
+input x divides the version space into two parts, those hypotheses that label it as 
+a positive example, and those that lvbel it negative. Let the probability ratios of 
+these two parts to the whole be X an(' 1 - 5. Then the expected i.i.g. is 
+7-/(X) -- -X logx - (1 - X)log(1 - X) � (1) 
+The goal of the learner is to minimize its prediction error, its probability of error 
+on an input drawn from the input distribution 19. In the case of random input 
+learning, every input x is drawn independently from 19. Since the expected i.i.g. 
+tends to zero (see [HKS91]), it seems that random input learning is inefficient. We 
+will analyze query construction and filtering algorithms that are designed to achieve 
+high information gain. 
+The rest of the paper is organized as follows. In section 2 we exhibit query con- 
+struction algorithms for the high-low game. The bisection algorithm for high-low 
+illustrates that constructing queries with high information gain can improve pre- 
+diction performance. But the failure of bisection for multi-dimensional high-low 
+exposes a deficiency of the query construction paradigm. In section 3 we define 
+the query filtering paradigm, and discuss the relation between information gain and 
+prediction error for queries filtered by a committee of Gibbs learners. In section 
+4 lower bounds for information gain are proved for the learning of some nontrivial 
+concept classes. Section 5 is a summary and discussion of open problems. 
+2 Query construction and the high-low game 
+In this section, we give examples of query construction algorithms for the high-low 
+game and its generalizations. In the high-low game, the concept class C' consists of 
+functions of the form 
+1, w<x 
+f(x) = 0, w > x , (2) 
+where 0 _< w, x _< 1. Thus both X and C are naturally mapped to the interval [0, 1]. 
+Both T', the prior distribution for the parameter w, and 19, the input distribution for 
+x, are assumed to be uniform on [0, 1]. Given any sequence of examples, the version 
+space is [xL, xt] where xL is the largest negative example and xt is the smallest 
+positive example. The posterior distribution is uniform in the interval [x�, xt] and 
+vanishes outside. 
+The prediction error of a Gibbs learner is Pr(fv(x) f(x)) where x is chosen 
+from 19, and v and w from the posterior distribution. It is easy to show that 
+Pr(fv(x)  f(x)): (xt- xz,)/3. Since the prediction error is proportional to the 
+version space volume, always querying on the midpoint (xt + x�)/2 causes the 
+prediction error after m queries to decrease like 2 -. This is in contrast to the case 
+of random input learning, for which the prediction error decreases like 1/m. 
+486 Freund, Seung, Shamir, and Tishby 
+The strategy of bisection is clearly maximally informative, since it achieves 
+7/(1/2) -- 1 bit per query, and can be applied to the learning of any concept class. 
+Naive intuition suggests that it should lead to rapidly decreasing prediction error, 
+but this is not necessarily so. Generalizing the high-low game to d dimensions 
+provides a simple counterexample. The target concepts are functions of the form 
+1, wi<x (3) 
+f(i,x)- O, wi > x 
+The prior distribution of  is uniform on the concept class C - [0, 1] d. The inputs 
+are pairs (i, x), where i takes on the values 1,..., d with equal probability, and x is 
+uniformly distributed on [0, 1]. Since this is basically d concurrent high-low games 
+(one for each component of ), the version space is a product of subintervals of 
+[0, 1]. For d - 2, the concept class is the unit square, and the version space is a 
+rectangle. The prediction error is proportional to the perimeter of the rectangle. A 
+sequence of queries with i -- 1 can bisect the rectangle along one dimension, yielding 
+1 bit per query, while the perimeter tends to a finite constant. Hence the prediction 
+error tends to a finite constant, in spite of the maximal information gain. 
+3 The committee filter: information and prediction 
+The dilemma of the previous section was that constructing queries with high infor- 
+mation gain does not necessarily lead to rapidly decreasing prediction error. This is 
+because the constructed query distribution may have nothing to do with the input 
+distribution 7). This deficiency can be avoided in a different paradigm in which 
+the 

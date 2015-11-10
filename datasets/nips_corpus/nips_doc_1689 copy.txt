@@ -1,0 +1,173 @@
+Efficient Approaches to Gaussian Process 
+Classification 
+Lehel Csat6, Ernest Fokou, Manfred Opper, Bernhard Schottky 
+Neural Computing Research Group 
+School of Engineering and Applied Sciences 
+Aston University Birmingham B4 7ET, UK. 
+{opperm, csat ol}aston. ac. uk 
+Ole Winther 
+Theoretical Physics II, Lund University, S51vegatan 14 A, 
+S-223 62 Lund, Sweden 
+wintherthep. lu. se 
+Abstract 
+We present three simple approximations for the calculation of 
+the posterior mean in Gaussian Process classification. The first 
+two methods are related to mean field ideas known in Statistical 
+Physics. The third approach is based on Bayesian online approach 
+which was motivated by recent results in the Statistical Mechanics 
+of Neural Networks. We present simulation results showing: 1. that 
+the mean field Bayesian evidence may be used for hyperparameter 
+tuning and 2. that the online approach may achieve a low training 
+error fast. 
+I Introduction 
+Gaussian processes provide promising non-parametric Bayesian approaches to re- 
+gression and classification [2, 1]. In these statistical models, it is assumed that the 
+likelihood of an output or target variable y for a given input x  R N can be written 
+as P(yla(x)) where a: R S -- R are functions which have a Gaussian prior distri- 
+bution, i.e. a is (a priori) assumed to be a Gaussian random field. This means that 
+any finite set of field variables a(xi), i - 1,...,l are jointly Gaussian distributed 
+with a given covariance E[a(xi)a(xj)] - K(xi,xj) (we will also assume a zero mean 
+throughout the paper). 
+Predictions on a(x) for novel inputs x, when a set D of m training examples (xi, yi) 
+i - 1,..., m, is given, can be computed from the posterior distribution of the m + 1 
+variables a(x) and a(xl),...,a(x,). A major technical problem of the Gaussian 
+process models is the difficulty of computing posterior averages as high dimensional 
+integrals, when the likelihood is not Gaussian. This happens for example in classifi- 
+cation problems. So far, a variety of approximation techniques have been discussed: 
+Monte Carlo sampling [2], the MAP approach [4], bounds on the likelihood [3] and 
+a TAP mean field approach [5]. In this paper, we will introduce three different novel 
+methods for approximating the posterior mean of the random field a(x), which we 
+think are simple enough to be used in practical applications. Two of the techniques 
+252 L. Csat6, E. Fokoud, M. Opper, B. Schottky and O. lt4nther 
+are based on mean field ideas from Statistical Mechanics, which in contrast to the 
+previously developed TAP approach are easier to implement. They also yield simple 
+approximations to the total likelihood of the data (the evidence) which can be used 
+to tune the hyperparameters in the covariance kernel K (The Bayesian evidence (or 
+MLII) framework aims at maximizing the likelihood of the data). 
+We specialize to the case of a binary classification problem, where for simplicity, 
+the class label y - -+-1 is assumed to be noise free and the likelihood is chosen as 
+P(y[a) = O(ya) , (1) 
+where �(x) is the unit step function, which equals 1 for x > 0 and zero else. We 
+are interested in computing efficient approximations to the posterior mean (a(x)), 
+which we will use for a prediction of the labels via y = sign(a(x)), where (...) 
+denotes the posterior expectation. If the posterior distribution of a(x) is symmetric 
+around its mean, this will give the Bayes optimal prediction. 
+Before starting, let us add two comments on the likelihood (1). First, the MAP 
+approach (i.e. predicting with the fields a that maximize the posterior) would not 
+be applicable, because it gives the trivial result a(x) = 0. Second, noise can be 
+easily introduced within a probit model [2], all subsequent calculations will only be 
+slightly altered. Moreover, the Gaussian average involved in the definition of the 
+probit likelihood can always be shifted from the likelihood into the Gaussian process 
+prior, by a redefinition of the fields a (which does not change the prediction), leaving 
+us with the simple likelihood (1) and a modified process covariance [5]. 
+2 Exact Results 
+At first glance, it may seem that in order to calculate (a(x)/ we have to deal with 
+the joint posterior of the fields ai = a(xi), i - 1,..., m together with the field at 
+the test point a(x). This would imply that for any test point, a different new m + 1 
+dimensional average has to be performed. Actually, we will show that this is not the 
+case. As above let E denote the expectation over the Gaussian prior. The posterior 
+expectation at any point, say x 
+E [a(x)1-Ij P(yjlay)] 
+�(x)) = (2) 
+can by integration by parts-for any likelihood-be written as 
+( 01nP(Yjlaj) I (3) 
+(a(x)) = y. K(x, xj)ojyj and oj '- yj Oaj 
+showing that cj is not dependent on the test point x. It is therefore not necessary 
+to compute a m + 1 dimensional average for every prediction. 
+We have chosen the specific definition (3) in order to stress the similarity to pre- 
+dictions with Support Vector Machines (for the likelihood (1), the aj will come 
+out nonnegative). In the next sections we will develop three approaches for an 
+approximate computation of the aj. 
+3 Mean Field Method I: Ensemble Learning 
+Our first goal is to approximate the true posterior distribution 
+m 
+P(alD) = Z V/(2vr)- detK e 
+(4) 
+Efficient Approaches to Gaussian Process Classification 253 
+of a =' (a,. .. ,am) by a simpler, tractable distribution q. Here, K denotes the 
+covariance matrix with elements Kij '- K(xi, xj). In the variational mean field 
+approach-known as ensemble learning in the Neural Computation Community,- 
+the relative entropy distance KL(q,p) = f da q(a)In - is minimized in the family 
+m 
+of product distributions q(a) = Hj=x qj(aj). This is in contrast to [3], where a 
+variational bound on the likelihood is computed. We get 
+KL(q,p) = E / daiqi(ai)ln qi(ai) + 
+� P(yilai) 
+$ 
+1 1 (ai)o 
++ 
+i,j,ij i 
+where (...)0 denotes expectation w.r.t. q. By setting the functional derivative 
+of KL(q,p) with respect to qi(a) equal to zero, we find that the best product 
+distribution is a Gaussian prior times the original Likelihood: 
+1 (-i) 2 
+qi(a) cr P(yila) e  , (5) 
+where rni = -Ai j,jvi(K-x)ij(aj)o and Ai = [K-x]/. Using this specific form 
+for the approximated posterior q(a), replacing the average over the true posterior in 
+(3) by the approximation (5), we get (using the likelihood (1)) a set of rn nonlinear 
+equations in the unknowns cj: 
+(01nP(yjlaj)) 1 D() 
+o- 
+and rnj - E KjiYi�ti - jyjotj , 
+i 
+(6) 
+where D(z) - e-Z2/2/x/- and (z) = f_Zoodt D(t). As a useful byproduct of 
+the variational approximation, an upper bound on the Bayesian evidence P(D) = 
+f da ,r(a)P(Dla ) can be derived. (,r denotes the Gaussian process prior and 
+m 
+P(Dla) = 1-Ij= P(Yjlaj)) � The bound can be written in terms of the mean field 
+'free energy' as 
+-lnP(D) <_ Sqlnq(a) - Eqln[vr(a)P(Dla)] 
+_Eln  [ rnj \ 1 
++ 2. (7) 
+i 1 
++  In der K -  E In hi 
+i 
+which can be used as a yardstick for selecting appropriate hyperparameters in the 
+covariance kernel. 
+The ensemble learning approach has the little drawback, that it requires inversion 
+of the covariance matrix K and, for the free energy (7) one must compute a deter- 
+minant. A second, simpler approximation avoids these computations. 
+4 Mean Field Theory II: A 'Naive' Approach 
+The second mean field theory aims at working directly with the variables otj. As a 
+starting point, we consider the partition function (evidence), 
+m 
+Z = P(D) = / dze -�T< H P(yjlzj), (8) 
+j=l 
+254 L. Csat6, E. Fokoud, 3/1. Opper, B. Schottky and O. Winther 
+which follows from (4) by a standard Gaussian integration, introducing the Fourier 
+eaeiazP(y a) with i being the imaginary 
+transform of the Likelihood 15(ylz) - f  
+unit. It is tempting to view (8) as a normalizing partition function for a Gaussian 
+process zi having covariance matrix K -x and likelihood/5. Unfortunately, /5 is 
+not a real number and precludes a proper probabilistic interpretation. Neverthe- 
+less, dealing formally with the complex measure defined by (8), integration by parts 
+shows that one has yjaj = -i<zj>,, where the brackets (...), denote a average over 
+the complex measure. This suggests a simple approximation for calculating the 
+aj. One may think of trying a saddle-point (or steepest descent) approximation 
+to (8) and replace <zj), by the value of zj (in the complex z plane) which makes 
+the integrand stationary thereby neglecting the fluctuations of the zj. Hence, this 
+approximation would treat expectations of products as (zizj), as (zi), Zj),, which 
+may be reasonable for i  j, but definitely not for the self-correlation i - j. Ac- 
+cording to the general formalism of mean field theories (outlined e.g. in [6]), one 
+2 separately. This can 
+can improve on that idea, by treating the 'self-interactions' z i 
+be done by replacing all zi (except in the form z) by a new variable/i by inserting 
+a Dirac 5 function representation 5(z -/) - f into (8) and integrate 
+over the z and a variables exactly (the integral factorizes), and finally perform a 
+saddle-point integration over the m and/ variables. The details of this calculation 
+will be given elsewhere. Within the saddle-point approximation, we get the system 
+of nonlinear equations 
+I  and mj--  Kji(-ii)-  KjiYiOq (9) 
+cj -- -iyj/j --  (yj m  
+V/- ! i,ij i,ij 
+which is of the same form as (6) with Aj replaced by the simpler Kjj. These 
+equations have also been derived by us in [5] using a Callen identity, but our present 
+derivation allows also for an approximation to the evidence. By plugging the saddle- 
+point values back into the partition function, we get 
+-lnP(D)  - ln Yi +  y.yici(Ki -SijKii)yjcj 
+ j 
+which is also simpler to compute than (7) but does not give a bound on the true 
+evidence. 
+5 A sequential Approach 
+Both previous algorithms do not give an explicit expression 

@@ -1,0 +1,161 @@
+Improving Convergence in Hierarchical 
+Matching Networks for Object 
+Recognition 
+Joachim Utans* Gene Gindi t 
+Department of Electrical Engineering 
+Yale University 
+P.O. Box 2157 Yale Station 
+New Haven, CT 06520 
+Abstract 
+We are interested in the use of analog neural networks for recog- 
+nizing visual objects. Objects are described by the set of parts 
+they are composed of and their structural relationship. Struc- 
+tural models are stored in a database and the recognition prob- 
+lem reduces to matching data to models in a structurally consis- 
+tent way. The object recognition problem is in general very diffi- 
+cult in that it involves coupled problems of grouping, segmentation 
+and matching. We limit the problem here to the simultaneous la- 
+belling of the parts of a single object and the determination of 
+analog parameters. This coupled problem reduces to a weighted 
+match problem in which an optimizing neural network must min- 
+imize E(M,p) = Y'ai M, iW, i(p), where the {M,i} are binary 
+match variables for data parts i to model parts c and {W,i(p)} 
+are weights dependent on parameters p. In this work we show that 
+by first solving for estimates  without solving for Mi, we may 
+obtain good initial parameter estimates that yield better solutions 
+for M and p. 
+*Current address: International Computer Science Institute, 1947 Center Street, 
+Suite 600, Berkeley, CA 94704, utans@icsi.berkeley.edu 
+t Current address: SUNY Stony Brook, Department of Electrical Engineering, Stony 
+Brook, NY 11784 
+401 
+402 Utans and Gindi 
+Figure 1: Stored Model for a 3-Level Compositional Hierarchy (compare Figure 3). 
+I Recognition via Stochastic Forward Models 
+The Frameville object recognition system introduced by Mjolsness et al [5, 6, 1] 
+makes use of a compositional hierarchy to represent stored models. The recognition 
+problem is formulated as the minimization of an objective function. Mjolsness [3, 4] 
+has proposed to derive the objective function describing the recognition problem 
+in a principled way from a stochastic model that describes the objects the system 
+is designed to recognize (stochastic visual grammar). The description mirrors the 
+data representation as a compositional hierarchy, at each stage the description of 
+the object becomes more detailed as parts are added. 
+The stochastic model assigns a probability distribution at each stage of that process. 
+Thus at each level of the hierarchy a more detailed description of parts in terms of 
+their subparts is given by specifying a probability distribution for the coordinates of 
+the subparts. Explicitly specifying these distributions allows for finer control over 
+individual part descriptions than the rather general parameter error terms used 
+before [1, 8]. The goal is to derive a joint probability distribution for an instance 
+of an object and its parts as it appears in the scene. This gives the probability of 
+observing such an object prior to the arrival of the data. Given an observed image, 
+the recognition problem can be stated as a Bayesian inference problem that the 
+neural network solves. 
+1.! 3-Level Stochastic Model 
+For example, consider the model shown in Figure 1 and 3. The object and its parts 
+are represented as line segments (sticks), the parameters were p = (x, y, 1, O) T with 
+x, y denoting position, l the length of a stick and 0 its orientation. The model 
+considers only a rigid translation of an object in the image. 
+Only one model is stored. From a central position p = (x, y, 1, 0), itself chosen 
+from a uniform density, the Nfi parts at the first level are placed. Their structural 
+relationships is stored as coordinates ufi in an object-centered coordinate frame, 
+i.e. relative to p. While placing the parts, Gaussian distributed noise with mean 0 
+and is added to the position coordinates to capture the notion of natural variation 
+of the object's shape. The variance is coordinate specific, but we assume the same 
+distribution for the x and y coordinates, (r; (r is the variance for the length 
+Improving Convergence in Hierarchical Matching Networks for Object Recognition 403 
+component and o'o for the relative angle. In addition, here we assume for simplicity 
+that all parts are independently distributed. Each of the parts/3 is composed of sub- 
+parts. For simplicity of notation, we assume that each part/3 is composed from the 
+same number of subparts N, (note that the index 7 in Figure 2 here corresponds 
+to the double index/3rn to keep track of which part/3 subpart/3m belongs to on the 
+model side, i.e. the index/3m denotes the mth sub-part of part/3). The next step 
+models the unordering of parts in the image via a permutation matrix M, chosen 
+with probability P(M), by which their identity is lost. If this step were omitted, 
+the recognition problem would reduce to the problem of estimating part parameters 
+because the parts would already be labeled. 
+From the grammar we compute the final joint probability distribution (all constant 
+terms are collected in a constant C): 
+P(M,{pam},{p},p)= 
+1 
+Cexp ( ( 2er(x-(x+u))2 
+1 
+1 (l B _ (l + ui)) 2 2er � 
+2i 
+exp 
+1 
+--(Y-(Y+Uy)) 2 
+2o' 
+--(Yc - (Y + Umy))  
+(1) 
+1.2 Frameville Architecture for Part Labelling within a single Object 
+The stochastic forward model for the part labelling problem with only a single object 
+present in the scene translates into a reduced Frameville architecture as depicted in 
+Figure 2. The compositional hierarchy parallels the steps in the stochastic model 
+as parts are added at each level. Match variables appear only at the lowest level, 
+corresponding to the permutation step of the grammar. Parts in the image must 
+be matched to model parts and parts found to belong to the stored object must be 
+grouped together. 
+The single match neuron Moji at the highest level can be set to unity since we assume 
+we know the object's identity and only a single object is present. Similarly, all terms 
+inaij from the first to the second level can be set to unity for the correct grouping 
+since the grouping is known at this point from the forward model description. In 
+addition, at the intermediate (second) level, we may set all Maj = 1 for /3 = j 
+and Mj = 0 otherwise with no loss of generality. These mid-level frames may 
+be matched ahead of time, but their parameters must be computed from data. 
+Introducing a part permutation at the intermediate levels thus is redundant. Given 
+this, an additional simplification ina grouping variables at the lowest (third) level 
+is possible. Since parts are pre-matched at all but the lowest level, inajk can be 
+expressed in terms of the part match M,k as inaji = M. yilNA.yMj and explicitly 
+representing inaji as variables is not necessary. 
+The input to the system are the {pt}, recognition involves finding the parameters 
+404 Utans and Gindi 
+Myk 
+Model Data 
+Fram x 
+I 
+Figure 2: Frameville Architecture for the Stochastic Model. The 3-level grammar leads to a reduced 
+Frameville style network architecture: a single model is stored on the model side and only one instance 
+of the model is present in the input data. The ovals on the model side represent the object, its parts 
+and subparts (compare Figure 1); the arcs INA represent their structural relationship. On the data side, 
+the triangles represent parameter vectors (or frames) describing an instance of the object in the scene. 
+At the lowest level the Pk represent the input data, parameters at higher levels in the hierarchy must be 
+computed by the network (represented as bold triangles). ina represents the grouping of parts on the 
+data side (see text). The horizontal lines represent assignments from frames on the data side to nodes 
+on the model side. At the intermediate level, frames are prematched to the corresponding parts on the 
+model side; match variables are necessary only at the lowest level (represented as bold lines with circles). 
+p and {pj) as well as the labelling of parts M. Thus, from Bayes Theorem 
+P({pk)lM, p, {pj))P(M, p, {pj)) 
+P(M,p, {pj)l{p/)) = 
+P((Pk)) 
+c P(M,p, {pj), {Pk)) (2) 
+and recognition reduces to finding the most probable values for p, {pj) and M 
+given the data: 
+arg max P(M,p, {pj), {p)) (3) 
+M,p,(p) 
+Solving the inference problem involves finding the MAP estimate and is is equivalent 
+to minimizing the exponent in equation (1) with respect to M, p and {pj). 
+2 Bootstrap: Coarse Scale Hints to Initialize the Network 
+2.1 Compositional Hierarchy and Scale Space 
+In some labelling approaches found in the vision literature, an object is first labelled 
+at the coarse, low resolution, level and approximate parameters are found. In this 
+top-down approach the information at the higher, more abstract, levels is used 
+Improving Convergence in Hierarchical Matching Networks for Object Recognition 405 
+Arm 
+spatial 
+scale 
+III 
+Lower Arm 
+abstraction 
+Figure 3: Compositional Hierarchy vs. Scale Space Hierarchy. A compositional hierarchy can represent a 
+scale space hierarchy. At successive levels in the hierarchy, more and more detail is added to the object. 
+to select initial values for the parts at the next lower level of abstraction. The 
+segmentation and labelling at this next lowest level is thus not done blindly; rather 
+it is strongly influenced contextually by the results at the level above. 
+In fact, in very general terms such a scheme was described by Marr and Nishihara [2]. 
+They advocate in essence a hierarchical model base in which a shape is first matched 
+to the highest levels, and defaults in terms of relative object-based parameters of 
+parts at the next level are recalled from memory. These defaults then serve as initial 
+values in an unspecified segmentation algorithm that derives part parameters; this 
+step is repeated recursively until the lowest level is reached. 
+Note that the highest level of abstractions correspond to the coarsest levels of spatial 
+scale. There is nothing in the design of the model base 

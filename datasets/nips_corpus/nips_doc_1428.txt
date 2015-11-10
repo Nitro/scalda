@@ -1,0 +1,139 @@
+A Solution for Missing Data in Recurrent Neural 
+Networks With an Application to Blood Glucose 
+Prediction 
+Volker Tresp and Thomas Briegel 
+Siemens AG 
+Corporate Technology 
+Otto-Hahn-Ring 6 
+81730 Miinchen, Germany 
+Abstract 
+We consider neural network models for stochastic nonlinear dynamical 
+systems where measurements of the variable of interest are only avail- 
+able at irregular intervals i.e. most realizations are missing. Difficulties 
+arise since the solutions for prediction and maximum likelihood learn- 
+ing with missing data lead to complex integrals, which even for simple 
+cases cannot be solved analytically. In this paper we propose a spe- 
+cific combination of a nonlinear recurrent neural predictive model and 
+a linear error model which leads to tractable prediction and maximum 
+likelihood adaptation rules. In particular, the recurrent neural network 
+can be trained using the real-time recurrent learning rule and the linear 
+error model can be trained by an EM adaptation rule, implemented us- 
+ing forward-backward Kalman filter equations. The model is applied to 
+predict the glucose/insulin metabolism of a diabetic patient where blood 
+glucose measurements are only available a few times a day at irregular 
+intervals. The new model shows considerable improvement with respect 
+to both recurrent neural networks trained with teacher forcing or in a free 
+running mode and various linear models. 
+1 TRODUCTION 
+In many physiological dynamical systems measurements are acquired at irregular intervals. 
+Consider the case of blood glucose measurements of a diabetic who only measures blood 
+glucose levels a few times a day. At the same time physiological systems are typically 
+highly nonlinear and stochastic such that recurrent neural networks are suitable models. 
+Typically, such networks are either used purely free running in which the networks predic- 
+tions are iterated, or in a teacher forcing mode in which actual measurements are substituted 
+* {volker. tresp, thomas.briegel}@mchp.siemens,de 
+972 V. Tresp and T. Briegel 
+if available. In Section 2 we show that both approaches are problematic for highly stochas- 
+tic systems and if many realizations of the variable of interest are unknown. The traditional 
+solution is to use a stochastic model such as a nonlinear state space model. The problem 
+here is that prediction and training missing data lead to integrals which are usually con- 
+sidered intractable (Lewis, 1986). Alternatively, state dependent linearizations are used for 
+prediction and training, the most popular example being the extended Kalman filter. In this 
+paper we introduce a combination of a nonlinear recurrent neural predictive model and a 
+linear error model which leads to tractable prediction and maximum likelihood adaptation 
+rules. The recurrent neural network can be used in all generality to model the nonlinear 
+dynamics of the system. The only limitation is that the error model is linear which is not 
+a major constraint in many applications. The first advantage of the proposed model is that 
+for single or multiple step prediction we obtain simple iteration rules which are a combi- 
+nation of the output of the iterated neural network and a linear Kalman filter which is used 
+for updating the linear error model. The second advantage is that for maximum likelihood 
+learning the recurrent neural network can be trained using the real-time recurrent learning 
+rule RTRL and the linear error model can be trained by an EM adaptation rule, imple- 
+mented using forward-backward Kalman filter equations. We apply our model to develop a 
+model of the glucose/insulin metabolism of a diabetic patient in which blood glucose mea- 
+surements are only available a few times a day at irregular intervals and compare results 
+from our proposed model to recurrent neural networks trained and used in the free running 
+mode or in the teacher forcing mode as well as to various linear models. 
+2 RECURRENT SYSTEMS WITH MISSING DATA 
+reasonable estimate for t = 6 
+:. 2, t O desirable response : 
+' O teacher forcing 
+Figure 1: A neural network predicts the next value of a time-series based on the latest two 
+previous measurements (left). As long as no measurements are available (! = 1 to ! = 6), 
+the neural network is iterated (untilled circles). In a free-running mode, the neural network 
+would ignore the measurement at time ! - 7 to predict the time-series at time ! = 8. In a 
+teacher forcing mode, it would substitute the measured value for one of the inputs and use 
+the iterated value for the other (unknown) input. This appears to be suboptimal since our 
+knowledge about the time-series at time t = 7 also provides us with information about the 
+time-series at time ! = 6. For example the dotted circle might be a reasonable estimate. By 
+using the iterated value for the unknown input, the prediction of the teacher forced system 
+is not well defined and will in general lead to unsatisfactory results. A sensible response 
+is shown on the right where the first few predictions after the measurement are close to the 
+measurement. This can be achieved by including a proper error model (see text). 
+Consider a deterministic nonlinear dynamical model of the form 
+Yt : fw(Yt-1,..., Yt-N, Ut) 
+of order N, with input ut and where fw (.) is a neural network model with parameter- 
+vector w. Such a recurrent model is either used in a free running mode in which network 
+predictions are used in the input of the neural network or in a teacher forcing mode where 
+measurements are substituted in the input of the neural network whenever these are avail- 
+able. 
+Missing Data in RNNs with an Application to Blood Glucose Prediction 973 
+Figure 2: Left: The proposed architecture. Right: Linear impulse response. 
+Both can lead to undesirable results when many realizations are missing and when the sys- 
+tem is highly stochastic. Figure 1 (left) shows that a free running model basically ignores 
+the measurement for prediction and that the teacher forced model substitutes the measured 
+value but leaves the unknown states at their predicted values which also might lead to un- 
+desirable responses. The traditional solution is to include a model of the error which leads 
+to nonlinear stochastical models, the simplest being 
+Yt -- fw(Yt-1, .... Yt-N ttt) q- et 
+where et is assumed to be additive uncorrelated zero-mean noise with probability den- 
+sity Pt(e) and represents unmodeled system dynamics. For prediction and learning with 
+missing values we have to integrate over the unknowns which leads to complex integrals 
+which, for nonlinear models, have to be approximated, for example, using Monte Carlo 
+integration.  In general, those integrals are computationally too expensive to solve and, in 
+practice, one relies on locally linearized approximations of the nonlinearities typically in 
+form of the extended Kalman filter. The extended Kalman filter is suboptimal and summa- 
+rizes past data by an estimate of the means and the covariances of the variables involved 
+(Lewis, 1986). 
+In this paper we pursue an alternative approach. Consider the model with state updates 
+Yt '- fw(Y;-,',Yt-v, ut) (1) 
+K 
+3 t --  Oi3t_ i q- 5 t (2) 
+i=1 
+K 
+Yt = Yt q- xt -- fw(yt_,...,yt_N, ut) q- Oixt-i +et (3) 
+i:1 
+and with measurement equation 
+zt = yt + St. (4) 
+where et and (t denote additive noise. The variable of interest yt is now the sum of the 
+deterministic response of the recurrent neural network y and a linear system error model 
+xt (Figure 2). zt is a noisy measurement of yt. In particular we are interested in the special 
+cases that yt can be measured with certainty (variance of 5t is zero) or that a measurement 
+is missing (variance of 5t is infinity). The nice feature is now that y can be considered 
+a deterministic input to the state space model consisting of the equations (2)- (3). This 
+means that for optimal one-step or multiple-step prediction, we can use the linear Kalman 
+filter for equations (2)- (3) and measurement equation (4) by treating y' as deterministic 
+input. Similarly, to train the parameters in the linear part of the system (i.e. {Oi }=1) we can 
+use an EM adaptation rule, implemented using forward-backward Kalman filter equations 
+(see the Appendix). The deterministic recurrent neural network is adapted with the residual 
+error which cannot be explained by the linear model, i.e. target[  : yp - inear 
+ For maximum likelihood learning of linear models we obtain EM equations which can be solved 
+using forward-backward Kalman equations (see Appendix). 
+974 V. Tresp and T. Briegel 
+where y is a measurement of yt at time ! and where t inear is the estimate of the linear 
+model. After the recurrent neural network is adapted the linear model can be retrained 
+using the residual error which cannot be explained by the neural network, then again the 
+neural network is retrained and so on until no further improvement can be achieved. 
+The advantage of this approach is that all of the nonlinear interactions are modeled by 
+a recurrent neural network which can be trained deterministically. The linear model is 
+responsible for the noise model which can be trained using powerful learning algorithms 
+for linear systems. The constraint is that the error model cannot be nonlinear which often 
+might not be a major limitation. 
+3 BLOOD GLUCOSE PREDICTION OF A DIABETIC 
+The goal of this work is to develop a predictive model of the blood glucose of a person with 
+type 1 Diabetes mellitus. Such a model can have several useful applications in therapy: 
+it can be used to warn a person of dangerous metabolic states, it can be used to make 
+recommendations to optimize the person's therapy and, finally, it can be used in the design 
+of a stabilizing control system for blood glucose regulation, a so-called artificial beta cell 
+(Tresp, Moody and Delong, 1994). We want the model to be able to adapt using patient data 
+collected under norm

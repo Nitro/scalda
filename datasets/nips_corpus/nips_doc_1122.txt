@@ -1,0 +1,182 @@
+Tempering Backpropagation Networks: 
+Not All Weights are Created Equal 
+Nicol N. Schraudolph 
+EVOTEC BioSystems GmbH 
+Grandweg 64 
+22529 Hamburg, Germany 
+nici @ evotec. de 
+Terrence J. Sejnowski 
+Computational Neurobiology Lab 
+The Salk Institute for Biol. Studies 
+San Diego, CA 92186-5800, USA 
+terry@salk. edu 
+Abstract 
+Backpropagation learning algorithms typically collapse the network's 
+structure into a single vector of weight parameters to be optimized. We 
+suggest that their performance may be improved by utilizing the struc- 
+tural information instead of discarding it, and introduce a framework for 
+tempering each weight accordingly. 
+In the tempering model, activation and error signals are treated as approx- 
+imately independent random variables. The characteristic scale of weight 
+changes is then matched to that of the residuals, allowing structural prop- 
+erties such as a node's fan-in and fan-out to affect the local learning rate 
+and backpropagated error. The model also permits calculation of an upper 
+bound on the global learning rate for batch updates, which in turn leads 
+to different update rules for bias rs. non-bias weights. 
+This approach yields hitherto unparalleled performance on the family re- 
+lations benchmark, a deep multi-layer network: for both batch learning 
+with momentum and the delta-bar-delta algorithm, convergence at the 
+optimal learning rate is sped up by more than an order of magnitude. 
+1 Introduction 
+Although neural networks are structured graphs, learning algorithms typically view them 
+as a single vector of parameters to be optimized. All information about a network's archi- 
+tecture is thus discarded in favor of the presumption of an isotropic weight space -- the 
+notion that a priori all weights in the network are created equal. This serves to decouple 
+the learning process from network design and makes a large body of function optimization 
+techniques directly applicable to backpropagation learning. 
+But what if the discarded structural information holds valuable clues for efficient weight 
+optimization? Adaptive step size and second-order gradient techniques (Battiti, 1992) may 
+564 N.N. SCHRAUDOLPH, T. J. SEJNOWSKI 
+recover some of it, at considerable computational expense. Ad hoc attempts to incorporate 
+structural information such as the fan-in (Plaut et al., 1986) into local learning rates have be- 
+come a familiar part of backpropagation lore; here we derive a more comprehensive frame- 
+work -- which we call tempering -- and demonstrate its effectiveness. 
+Tempering is based on modeling the activities and error signals in a backpropagation net- 
+work as independent random variables. This allows us to calculate activity- and weight- 
+invariant upper bounds on the effect of synchronous weight updates on a node's activity. 
+We then derive appropriate local step size parameters by relating this maximal change in a 
+node's activity to the characteristic scale of its residual through a global learning rate. 
+Our subsequent derivation of an upper bound on the global learning rate for batch learning 
+suggests that the d.c. component of the error signal be given special treatment. Our exper- 
+iments show that the resulting method of error shunting allows the global learning rate to 
+approach its predicted maximum, for highly efficient learning performance. 
+2 Local Learning Rates 
+Consider a neural network with feedforward activation given by 
+xj - fj(yj), yj -- E xiwij, (1) 
+iEAj 
+where Aj denotes the set ofanteriornodes feeding directly into node j, and fj is a nonlinear 
+(typically sigmoid) activation function. We imply that nodes are activated in the appropriate 
+sequence, and that some have their values clamped so as to represent external inputs. 
+With a local learning rate of r/j for node j, gradient descent in an objective function E pro- 
+duces the weight update 
+OE 
+Awij -- lj 5j xi , where 5j - Oyj (2) 
+Linearizing fj around yj approximates the resultant change in activation xj as 
+x, Sw, = x?. (3) 
+iEAj iAj 
+Our goal is to put the scale of Axj in relation to that of the error signal $j. Specifically, when 
+averaged over many training samples, we want the change in output activity of each node 
+in response to each pattern limited to a certain proportion  given by the global learning 
+rate r/ of its residual. We achieve this by relating the variation of Axj over the training 
+set to that of the error signal: 
+(�j) (Ax?) _4 r/e (dr), (4) 
+where (.) denotes averaging over training samples. Formally, this approach may be inter- 
+preted as a diagonal approximation of the inverse Fischer information matrix (Amari, 1995). 
+We implement (4) by deriving an upper bound for the left-hand side which is then equated 
+with the right-hand side. Replacing the activity-dependent slope of fj by its maximum value 
+s(fj) _= maxlfj(u)l (5) 
+and assuming that there are no correlations I between inputs zi and error 5j, we obtain 
+1Note that such correlations are minimized by the local weight update. 
+Tempering Backpropagation Networks: Not All Weights Are Created Equal 565 
+from (3), provided that 
+itAj 
+We can now satisfy (4) by setting the local learning rate to 
+vj = 
+(7) 
+(8) 
+There are several approaches to computing an upper bound j on the total squared input 
+power . One option would be to calculate the latter empirically during training, though 
+this raises sampling and stability issues. For external inputs we may precompute  or derive 
+an upper bound based on prior knowledge of the training data. For inputs from oher nodes 
+in the network we assume independence and derive j from the range of their activation 
+functions: 
+J = E P(fi)2 ' where P(fi) = muax fi(u)2 . (9) 
+i6A 5 
+Note that when all nodes use the same activation function f, we obtain the well-known 
+x/fan-in heuristic (Plaut et al., 1986) as a special case of (8). 
+3 Error Backpropagation 
+In deriving local learning rates above we have tacitly used the error signal as a stand-in for 
+the residual proper, i.e. the distance to the target. For output nodes we can scale the error to 
+never exceed the residual: 
+10E I �El (10) 
+6j =  - , where (b5 _= max ]j (yj) Ofj (yj)2 
+YJ 
+Note that for the conventional quadratic error this simplifies to 4j = s(fj). What about 
+the remainder of the network? Unlike (Krogh et al., 1990), we do not wish to prescribe 
+definite targets (and hence residuals) for hidden nodes. Instead we shall use our bounds 
+and independence arguments to scale backpropagated error signals to roughly appropriate 
+magnitude. For this purpose we introduce an attenuation coefficient ai into the error back- 
+propagation equation: 
+6i -- aif;(yi) E wij6j, (ll) 
+jP, 
+where Pi denotes the set of posterior nodes fed directly from node i. We posit that the ap- 
+propriate variation for 6i be no more than the weighted average of the variation of back- 
+propagated errors: 
+whereas, assuming independence between the 6 5 and replacing the slope of fi by its max- 
+imum value, (11) gives us 
+jEP, 
+Again we equate the right-hand sides of both inequalities to satisfy (12), yielding 
+1 
+(A)x/Ihl. 
+(14) 
+566 N.N. SCHRAUDOLPH, T. J. SEJNOWSKI 
+Note that the incorporation of the weights into (12) is ad hoc, as we have no a priori reason 
+to scale a node's step size in proportion to the size of its vector of outgoing weights. We 
+have chosen (12) simply because it produces a weight-invariant value for the attenuation 
+coefficient. The scale of the backpropagated error could be controlled more rigorously, at 
+the expense of having to recalculate ai after each weight update. 
+4 Global Learning Rate 
+We now derive the appropriate global learning rate for the batch weight update 
+wij ------ rlj E (Sj(t) xi(t) (15) 
+tET 
+over a non-redundant training sample T. Assuming independent and zero-mean residuals, 
+we then have 
+x? = ITI (ax?) _< ITI . (5?) (16) 
+by virtue of (4). Under these conditions we can ensure 
+x? _< (f), (17) 
+i.e. that the variation of the batch weight update does not exceed that of the residual, by 
+using a global learning rate of 
+ _< ,f -- X/v/ITI . (18) 
+Even when redundancy in the training set forces us to use a lower rate, knowing the upper 
+bound r/* effectively allows an educated guess at r/, saving considerable time in practice. 
+5 Error Shunting 
+It remains to deal with the assumption made above that the residuals be zero-mean, i.e. that 
+(6j) = 0. Any d.c. component in the error requires a learning rate inversely proportional to 
+the batch size -- far below r/*, the rate permissible for zero-mean residuals. This suggests 
+handling the d.c. component of error signals separately. This is the proper job of the bias 
+weight, so we update it accordingly: 
+Awoj = (5j) / s(fj) . (19) 
+In order to allow learning at rates close to r/* for all other weights, their error signals are 
+then centered by subtracting the mean: 
+(vi 0) w,j = - x,(t) (20) 
+tT tT 
+Note that both sums in (21) must be collected in batch implementations of backpropagation 
+anyway -- the only additional statistic required is the average input activity (zi). Indeed 
+for batch update centering errors is equivalent to centering inputs, which is known to assist 
+learning by removing a large eigenvalue of the Hessian (LeCun et al., 1991). We expect 
+online implementations to perform best when both input and error signals are centered so 
+as to improve the stochastic approximation. 
+Tempering Backpropagation Networks: Not All Weights Are Created Equal 567 
+person 1 
+person 2 
+OOOOOOOOOO 
+OOOOOOOOOOOO 
+! 
+000000 
+! 
+000000000000 
+OOOOOOOOOOO 
+OOOOOOOOOOOO 
+000000 
+OOOOOOOOO0�O 
+relationship 
+r/eft -' 
+1.5r/ 
+.25r/ 
+.lOr/ 
+.05r/ 
+Figure 1' Backpropagation network for learning family relations (Hinton, 1986). 
+6 Experimental Setup 
+We tested these ideas on the family relations task (Hinton, 1986): a backpropagation net- 
+work is given examples of a family member and relationship as input, and must indicate 
+on its output

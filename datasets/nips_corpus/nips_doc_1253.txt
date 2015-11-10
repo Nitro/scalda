@@ -1,0 +1,175 @@
+An Analog Implementation of the 
+Constant Statistics Constraint 
+For Sensor Calibration 
+John G. Harris and Yu-Ming Chiang 
+Computational Neuro-Engineering Laboratory 
+Department of Computer and Electrical Engineering 
+University of Florida 
+Gainesville, FL 32611 
+Abstract 
+We use the constant statistics constraint to calibrate an array of 
+sensors that contains gain and offset variations. This algorithm has 
+been mapped to analog hardware and designed and fabricated with 
+a 2um CMOS technology. Measured results from the chip show that 
+the system achieves invariance to gain and offset variations of the 
+input signal. 
+I Introduction 
+Transistor mismatches and parameter variations cause unavoidable nonuniformities 
+from sensor to sensor. A one-time calibration procedure is normally used to coun- 
+teract the effect of these fixed variations between components. Unfortunately, many 
+of these variations fluctuate with time-either with operating point (such as data- 
+dependent variations) or with external conditions (such as temperature). Calibrat- 
+ing these sensors one-time only at the factory is not suitable-much more frequent 
+calibration is required. The sensor calibration problem becomes more challenging as 
+an increasing number of different types of sensors are integrated onto VLSI chips at 
+higher and higher integration densities. Ullman and Schechtman studied a simple 
+gain adjustment algorithm but their method provides no mechanism for canceling 
+additive offsets [10]. Scribner has addressed this nonuniformity correction problem 
+in software using a neural network technique but it will be difficult to integrate this 
+complex solution into analog hardware [9]. A number of researchers have studied 
+sensors that output the time-derivative of the signal[9][4]. A simple time derivative 
+700 J. G. Harris and Y. Chiang 
+cancels any additive offset in the signal but also loses all of the DC and most of 
+the low frequency temporal information present. The offset-correction method pro- 
+posed by this paper, in effect, uses a time-derivative with an extremely long time 
+constant thereby preserving much of the low-frequency information present in the 
+signal. However, even if an ideal time-derivative approximation is used to cancel 
+out additive offsets, the standard deviation process described in this paper can be 
+used to factor out gain variations. 
+We hope to obtain some clues for sensory adaptation from neurobiological systems 
+which possess a tremendous ability to adapt to the surrounding environment at 
+multiple time-scales and at multiple stages of processing. Consider the following 
+experiments: 
+After staring at a single curved line ten minutes, human subjects report 
+that the amount of curvature perceived appears to decrease. Immediately 
+after training, the subjects then were shown a straight line and perceived 
+it as slightly curved in the opposite direction[5]. 
+After staring long enough at an object in continuous motion, the motion 
+seems to decrease with time. Immediately after adaptation, subjects per- 
+ceive motion in the opposite direction when looking at stationary objects. 
+This experiment is called the waterfall effect[2]. 
+Colors tend to look less saturated over time. Color after-images are per- 
+ceived containing exactly the opponent colors of the original scene[1]. 
+Though the purpose of these biological adaptation mechanisms is not clear, some 
+theories suggest that these methods allow for fine-tuning the visual system through 
+long-term averaging of measured visual parameters[10]. We will apply such 
+continuous-calibration procedures to VLSI sensor calibration. 
+The real-world variable x(t) is transduced by a nonlinear response curve into a 
+measured variable y(t). For a single operating point, the linear approximation can 
+be written as: 
+y(t) -- ax(t) q- b (1) 
+with a and b being the multiplicative gain and additive offset respectively. The gain 
+and offset values vary from pixel to pixel and may vary slowly over time. Current 
+infra-red focal point arrays (IRFPAs) are limited by their inability to calibrate out 
+component variations [3]. Typically, off-board digital calibration is used to correct 
+nonuniformities in these detector arrays; Special calibration images are used to 
+calibrate the system at startup. One-time calibration procedures such as these do 
+not take into account other operating points and will fail to recalibrate for any drift 
+in the parameters. 
+2 Implementing Natural Constraints 
+A continuous calibration system must take advantage of natural constraints avail- 
+able during the normal operation of the sensors. One theory holds that biological 
+systems adapt to the long-term average of the stimulus. For example, the con- 
+straints for the three psychophysical examples mentioned above (curvature, motion 
+and color adaptation) may rely on the following constraints: 
+The Constant Average Statistics Constraint 701 
+The average line is straight. 
+The average motion is zero. 
+The average color is gray. 
+The system adapts over time in the direction of this average, where the average 
+must be taken over a very long time: from minutes to hours. We use two additional 
+constraints for offset/gain normalization, namely: 
+The average pixel intensities are identical. 
+The variances of the input for each pixel are all identical. 
+Each of these constraints assumes that the photoarray is periodically moving in 
+the real-world and that the average statistics each pixels sees should be constant 
+when averaged over a very long time. In pathological situations where humans or 
+machines are forced to stare at a single static scene for a long time, we violate this 
+assumption. 
+We estimate the time-varying mean and variance by using an exponentially shaped 
+window into the past. The equations for mean and variance are: 
+re(t) 1 jo �� 
+= - y(t - A)e-X/TdA 
+T 
+(2) 
+and 
+s(t) -- _1 ly(t - A) - m(t - A)le-X/TdA (3) 
+r 
+The re(t) and s(t) in Equation 2 and 3 can be expressed as low-pass filters with 
+inputs y(t) and ly(t) - m(t)l respectively. To simplify the hardware implementation 
+further, we chose the L (absolute value) definition of variance instead of the more 
+usual L2 definition. The L definition is an equally acceptable definition of signal 
+variation in terms of the complete calibration system. Using this definition, no 
+squares or square roots need be calculated. An added benefit of the L norm is that 
+it provides robustness to outliers in the estimation. 
+A zero-mean, unity variance  signal can then be produced with the following shift/ 
+normalization formula: 
+x(t) = y(t) - re(t) 
+s(t) (4) 
+Equation 2, Equation 3 and Equation 4 constitute a new algorithm for continuously 
+calibrating systems with gain and offset variations. Note that without additional 
+apriori knowledge about the values of the gains and offsets, it is impossible to recover 
+the true value of the signal x(t) given an infinite history of y(t). This is an ill-posed 
+problem even with fixed but unknown gain and offset parameters for each sensor. 
+All that can be done is to calibrate each sensor output to have zero offset and unity 
+variance. After calibration, each sensor would therefore all have the same offset and 
+variance when averaged over a long time. The fundamental assumption embedded 
+For simplicity the signal s(t) will be called the variance estimate throughout the rest of 
+this paper even though technically s(t) is neither the variance nor the standard deviation. 
+702 J. G. Harris and Y.. Chiang 
+y(t) 
+o 
+m(j) 
+Mean 
+estimation 
+R1 
+m(t) I 
+y(t..) 
+Vadance 
+estimation 
+, ,s(t) 
+Divider 
+x(t) 
+o 
+s(t) 
+Vra 
+o 
+m(t) 
+0 � 
+y(t) 
+x(t) 
+Figure 1: Left: block diagram of continuous-time calibration system, Right: 
+schematic of the divider circuit. 
+in this algorithm is that each sensor measures real-world quantities with the same 
+statistical properties (e.g., mean and variance). For example, this would mean 
+that all pixels in a camera should eventually see the same average intensity when 
+integrated over a long enough time. This assumption leads to other system-level 
+constraints-in this case, the camera must be periodically moving. 
+We have successfully demonstrated this algorithm in software for the case of nonuni- 
+formity (gain and offset) correction of images [6]. Since there may be potentially 
+thousands of sensors per chip, it is desirable to build calibration circuitry using 
+subthreshold analog MOS technology to achieve ultra-low power consumption[8]. 
+The next section describes the analog VLSI implementation of this algorithm. 
+3 Continuous-time calibration circuit 
+The block diagram of the continuous-time gain and offset calibration circuit is shown 
+in Figure la. This system includes three building blocks: a mean estimation circuit, 
+a variance estimation circuit and a divider circuit. As is shown, the mean of the 
+signal can be easily extracted by a RC low-pass filter circuit. Since there may 
+be potentially thousands of sensors per chip, it is desirable to build calibration 
+circuitry using subthreshold analog MOS technology to achieve ultra-low power 
+consumption[8]. 
+Figure 2 shows the schematic of the variance estimation circuit. A full-wave recti- 
+fier [8] operating in the sub-threshold region is used to obtain the absolute value 
+of the difference between the input and its mean. In the linear region, the current 
+Io,t is proportional to ly(t) -m(t)l. As indicated in Equation 3, Ioa has to be 
+low-pass filtered to obtain s(t). In Figure 2, transconductance amplifiers As, A4 
+and capacitor C2 are used to form a current mode low-pass filter. For signals in the 
+linear region, we can derive the Laplace transform of V1 as: 
+R 
+Vz (s) = RC2s -I- l I�t(s) (5) 
+which is a first-order low-pass filter for Io,t. The value of R is a function of several 
+The Constant Average Statistics Constraint 703 
+y(t) 
+lout Vl 
+Vb V. Vb Vr Vb3 
+Figure 2: Variance estimation circuit. The triangle sym

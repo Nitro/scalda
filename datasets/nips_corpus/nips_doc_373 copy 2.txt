@@ -1,0 +1,142 @@
+Rapidly Adapting Artificial Neural Networks for 
+Autonomous Navigation 
+Dean A. Pomerleau 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+The ALVINN (Autonomous Land Vehicle In a Neural Network) project addresses 
+the problem of training artificial neural networks in real time to perform difficult 
+perception tasks. ALVINN,is a back-propagation network that uses inputs from a 
+video camera and an imaging laser rangefinder to drive the CMU Naylab, a modified 
+Chevy van. This paper describes training techniques which allow ALVINN to learn 
+in under 5 minutes to autonomously control the Naylab by watching a human driver's 
+response to new situations. Using these techniques, ALVINN has been trained 
+to drive in a variety of circumstances including single-lane paved and unpaved 
+roads, multilane lined and unlined roads, and obstacle-ridden on- and off-road 
+environments, at speeds of up to 20 miles per hour. 
+1 INTRODUCTION 
+Previous trainable connectionist perception systems have often ignored important aspects of 
+the form and content of available sensor data. Because of the assumed impracticality of 
+training networks to perform realistic high level perception tasks, connectionist researchers 
+have frequently restricted their task domains to either toy problems (e.g. the T-C identification 
+problem [11] [6]) or fixed low level operations (e.g. edge detection [8]). While these restricted 
+domains can provide valuable insight into connectionist architectures and implementation 
+techniques, they frequently ignore the complexities associated with real world problems. 
+There are exceptions to this trend towards simplified tasks. Notable successes in high level 
+domains such as speech recognition [12], character recognition [5] and face recognition [2] 
+have been achieved using real sensor data. However, the results have come only in very 
+controlled environments, after careful preprocessing of the input to segment and label the 
+training exemplars. In addition, these successful connectionist perception systems have 
+ignored the fact that sensor data normally becomes available gradually and not as a monolithic 
+training set. In short, artificial neural networks previously have never been successfully trained 
+429 
+430 Pomerleau 
+Road Intensity Sharp Straight Sharp 
+Feedback Unit Left Ahead Right 
+45 Output 
+29 Hidden 
+Units 
+8x32 Range Finder 
+input Retina 
+30x32 Video 
+Input Retina 
+Sharp Straight Sharp 
+Left Ahead Right 
+30 Output 
+Units 
+5 Hidden 
+Units 
+30x32 Sensor 
+Retina 
+Figure 1' ALVINN's previous (left) and current (right) architectures 
+using sensor data in real time to perform a real world perception task. 
+The ALVINN (Autonomous Land Vehicle In a Neural Network) system remedies this short- 
+coming. ALVINN is a back-propagation network designed to drive the CMU Naylab, a 
+modified Chevy van. Using real time training techniques, the system quickly learns to au- 
+tonomously control the Naylab by watching a human driver's reactions. ALVINN has been 
+trained to drive in a variety of circumstances including single-lane paved and unpaved roads, 
+multilane lined and unlined roads and obstacle ridden on- and off-road environments, at 
+speeds of up to 20 miles per hour. This paper will primarily focus on improvements and 
+extensions made to the ALVINN system since the presentation of this work at the 1988 NIPS 
+conference [9]. 
+2 NETWORK ARCHITECTURE 
+The current architecture for an individual ALVINN driving network is significantly simpler 
+than the previous version (See Figure 1). The input layer now consists of a single 30x32 unit 
+retina onto which a sensor image from either the video camera or the laser rangefinder is 
+projected. Each of the 960 input units is fully connected to the hidden layer of 5 units, which 
+is in turn fully connected to the output layer. The 30 unit output layer is a linear representation 
+of the currently appropriate steering direction which may serve to keep the vehicle on the road 
+or to prevent it from colliding with nearby obstacles  . The centermost output unit represents 
+the travel straight ahead condition, while units to the left and right of center represent 
+successively sharper left and right tums. 
+The reductions in network complexity over previous versions have been made in response 
+to experience with ALVINN in actual driving situations. I have found that the distributed 
+nature of the internal representation allows a network of only 5 hidden units to accurately 
+drive in a variety of situations. I have also learned that multiple sensor inputs to a single 
+network are redundant and can be eliminated. For instance, when training a network on a 
+single-lane road, there is sufficient information in the video image alone for accurate driving. 
+Similarly, for obstacle avoidance, the laser rangefinder image is sufficient and the video image 
+The task a particular driving network performs depends on the type of input sensor image and the 
+driving situation it has been trained to handle. 
+Rapidly Adapting Artificial Neural Networks for Autonomous Navigation 431 
+is superfluous. The road intensity feedback unit has been eliminated on similar grounds. In 
+the previous architecture, it provided the network with the relative intensity of the road rs. 
+the non-road in the previous image. This information was unnecessary for accurate road 
+following, and undefined in new ALVINN domains such as off-road driving. 
+To drive the Navlab, an image from the appropriate sensor is reduced to 30 x 32 pixels and 
+projected onto the input layer. After propagating activation through the network, the output 
+layer's activation profile is translated into a vehicle steering command. The steering direction 
+dictated by the network is taken to be the center of mass of the hill of activation surrounding 
+the output unit with the highest activation level. Using the center of mass of activation instead 
+of the most active output unit when determining the direction to steer permits finer steering 
+corrections, thus improving ALVINN's driving accuracy. 
+3 TRAINING ON-THE-FLY 
+The most interesting recent improvement to ALVINN is the training technique. Originally, 
+ALVINN was trained with backpropagation using 1200 simulated scenes portraying roads 
+under a wide variety of weather and lighting conditions [9]. Once trained, the network was 
+able to drive the Navlab at up to 1.8 meters per second (3.5 mph) along a 400 meter path. 
+through a wooded area of the CMU campus in weather which included snowy, rainy, sunny 
+and cloudy situations. 
+Despite its apparent success, this training paradigm had serious shortcomings. It required 
+approximately 6 hours of Sun-4 CPU time to generate the synthetic road scenes, and then an 
+additional 45 minutes of Warp 2 computation time to train the network. Furthermore, while 
+effective at training the network to drive on a single-lane road, extending the synthetic training 
+paradigm to deal with more complex driving situations like multilane and off-road driving 
+would have required prohibitively complex artificial scene generators. 
+I have developed a scheme called training on-the-fly to deal with these problems. Using 
+this technique, the network learns to imitate a person as he drives. The network is trained 
+with back-propagation using the latest video camera image as input and the person's current 
+steering direction as the desired output. 
+There are two potential problems associated with this simple training on-the-fly scheme. First, 
+since the person steers the vehicle down the center of the road during training, the network 
+will never be presented with situations where it must recover from misalignment errors. When 
+driving for itself, the network may occasionally stray from the road center, so it must be 
+prepared to recover by steering the vehicle back to the middle of the road. The second 
+problem is that naively training the network with only the current video image and steering 
+direction may cause it to overlearn recent inputs. If the person drives the Naylab down a 
+stretch of straight road near the end of training, the network will be presented with a long 
+sequence of similar images. This sustained lack of diversity in the training set will cause the 
+network to forget what it had learned about driving on curved roads and instead learn to 
+always steer straight ahead. 
+Both problems associated with training on-the-fly stem from the fact that back-propagation 
+requires training data which is representative of the full task to be learned. To provide the 
+necessary variety of exemplars while still training on real data, the simple training on-the- 
+2There was formerly a 100 MFLOP Warp systolic array supercomputer onboard the Navlab. It has 
+been replaced by 3 Sun-4s, further necessitating the streamlined architecture described in the previous 
+section. 
+432 Pomerleau 
+Shifted and Rotated Images 
+I 
+Figure 2: The single original video image is shifted and rotated to create multiple training 
+exemplars in which the vehicle appears to be a different locations relative to the road. 
+fly scheme described' above must be modified. Instead of presenting the network with only 
+the current video image and steering direction, each original image is shifted and rotated in 
+software to create 14 additional images in which the vehicle appears to be situated differently 
+relative to the environment (See Figure 2). The sensor's position and orientation relative to 
+the ground plane are known, so precise transformations can be achieved using perspective 
+geometry. The correct steering direction as dictated by the driver for the original image is 
+altered for each of the transformed images to account for the altered vehicle placement 3. 
+Using transformed training patterns allows the network to learn how to recover from driving 
+errors. Also, overtraining on repetitive images is less of a problem, since the transformed 
+train

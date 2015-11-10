@@ -1,0 +1,146 @@
+Multi-time Models for Temporally Abstract 
+Planning 
+Doina Precup, Richard S. Sutton 
+University of Massachusetts 
+Amherst, MA 01003 
+{dprecup]rich} @cs.umass.edu 
+Abstract 
+Planning and learning at multiple levels of temporal abstraction is a key 
+problem for artificial intelligence. In this paper we summarize an ap- 
+proach to this problem based on the mathematical framework of Markov 
+decision processes and reinforcement learning. Current model-based re- 
+inforcement learning is based on one-step models that cannot represent 
+common-sense higher-level actions, such as going to lunch, grasping an 
+object, or flying to Denver. This paper generalizes prior work on tem- 
+porally abstract models [Sutton, 1995] and extends it from the prediction 
+setting to include actions, control, and planning. We introduce a more 
+general form of temporally abstract model, the multi-time model, and es- 
+tablish its suitability for planning and learning by virtue of its relationship 
+to the Bellman equations. This paper summarizes the theoretical frame- 
+work of multi-time models and illustrates their potential advantages in a 
+gridworld planning task. 
+The need for hierarchical and abstract planning is a fundamental problem in AI (see, e.g., 
+Sacerdoti, 1977; Laird et al., 1986; Korf, 1985; Kaelbling, 1993; Dayan & Hinton, 1993). 
+Model-based reinforcement learning offers a possible solution to the problem of integrating 
+planning with real-time learning and decision-making (Peng & Williams, 1993, Moore & 
+Atkeson, 1993; Sutton and Barto, 1998). However, current model-based reinforcement 
+learning is based on one-step models that cannot represent common-sense, higher-level 
+actions. Modeling such actions requires the ability to handle different, interrelated levels 
+of temporal abstraction. 
+A new approach to modeling at multiple time scales was introduced by Sutton (1995) based 
+on prior work by Singh, Dayan, and Sutton and Pinette. This approach enables models 
+of the environment at different temporal scales to be intermixed, producing temporally 
+abstract models. However, that work was concerned only with predicting the environment. 
+This paper summarizes an extension of the approach including actions and control of the 
+environment [Precup & Sutton, 1997]. In particular, we generalize the usual notion of a 
+Multi-time Models for Temporally Abstract Planning 1051 
+primitive, one-step action to an abstract action, an arbitrary, closed-loop policy. Whereas 
+prior work modeled the behavior of the agent-environment system under a single, given 
+policy, here we learn different models for a set of different policies. For each possible way 
+of behaving, the agent learns a separate model of what will happen. Then, in planning, it 
+can choose between these overall policies as well as between primitive actions. 
+To illustrate the kind of advance we are trying to make, consider the example shown in 
+Figure 1. This is a standard grid world in which the primitive actions are to move from one 
+grid cell to a neighboring cell. Imagine the learning agent is repeatedly given new tasks 
+in the form of new goal locations to travel to as rapidly as possible. If the agent plans at 
+the level of primitive actions, then its plans will be many actions long and take a relatively 
+long time to compute. Planning could be much faster if abstract actions could be used to 
+plan for moving from room to room rather than from cell to cell. For each room, the agent 
+learns two models for two abstract actions, one for traveling efficiently to each adjacent 
+room. We do not address in this paper the question of how such abstract actions could be 
+discovered without help; instead we focus on the mathematical theory of abstract actions. 
+In particular, we define a very general semantics for themina property that seems to be 
+required in order for them to be used in the general kind of planning typically used with 
+Markov decision processes. At the end of this paper we illustrate the theory in this example 
+problem, showing how room-to-room abstract actions can substantially speed planning. 
+4 unreliable 
+primitive actions 
+up 
+left --'- right Fail 33% 
+o the time 
+down 
+8 abstract actions 
+(to each room's 2 haftways) 
+Figure 1: Example Task. The Natural abstract actions are to move from room to room. 
+1 Reinforcement Learning (MDP) Framework 
+In reinforcement learning, a learning agent interacts with an environment at some discrete, 
+lowest-level time scale t = 0, 1, 2,... On each time step, the agent perceives the state of 
+the environment, st, and on that basis chooses a primitive action, at. In response to each 
+primitive action, at, the environment produces one step later a numerical reward, rt+l, 
+and a next state, st+. The agent's objective is to learn a policy, a mapping t�om states to 
+probabilities of taking each action, that maximizes the expected discounted future reward 
+from each state s: 
+- I 
+where 3'  [0, 1) is a discount-rate parameter, and E{} denotes an expectation implicitly 
+conditional on the policy ' being followed. The quantity v(s) is called the value of state s 
+under policy ', and v x is called the value function for policy '. The value under the optimal 
+policy is denoted: 
+v*(s) = max vr(s). 
+71' 
+Planning in reinforcement learning refers to the use of models of the effects of actions to 
+compute value functions, particularly v*. 
+1052 D. Precup and R. S. Sutton 
+We assume that the states are discrete and form a finite set, st 6 {1, 2,...,m}. This 
+is viewed as a temporary theoretical convenience; it is not a limitation of the ideas we 
+present. This assumption allows us to alternatively denote the value functions, v 'r and v*, 
+as column vectors, v  and v*, each having m components that contain the values of the 
+m states. In general, for any m-vector, x, we will use the notation z(s) to refer to its sth 
+component. 
+The model of an action, a, whether primitive or abstract, has two components. One is an 
+m x m matrix, P,, predicting the state that will result from executing the action in each 
+state. The other is a vector, g,, predicting the cumulative reward that will be received along 
+the way. In the case of a primitive action, P, is the matrix of 1-step transition probabilities 
+of the environment, times 
+where PT(s) denotes the sth column of p.T (these are the predictions corresponding to 
+state s) and st denotes the unit basis m-vector corresponding to st. The reward prediction, 
+g., for a primitive action contains the expected immediate rewards: 
+g.(s) = E {r,+t I s, = s,a, = a}, Vs 
+For any stochastic policy, w, we can similarly define its l-step model, g,r, P,r as: 
+P:(s) = 3/Er{st+, l st = s} and g=(s) = Er{rt+, Is,: s} Vs (1) 
+2 Suitability for Planning 
+In conventional planning, one-step models are used to compute value functions via the 
+Bellman equations for prediction and control. In vector notation, the prediction and control 
+Bellman equations are 
+v r= gr + P,v ' and v* = max{g, + P,v*}, (2) 
+respectively, where the max function is applied component-wise in the control equation. 
+In planning, these equalities are turned into updates, e.g., v+ 4-- g,r + ?,rye, which 
+converge to the value functions. Thus, the Bellman equations are usually used to define 
+and compute value functions given models of actions. Following Sutton (1995), here we 
+reverse the roles: we take the value functions as given and use the Bellman equations to 
+define and compute models of new, abstract actions. 
+In particular, a model can be used in planning only if it is stable and consistent with the 
+Bellman equations. It is useful to define special terms for consistency with each Bellman 
+equation. Let g, ? denote an arbitrary model (an m-vector and an m x m matrix). Then 
+this model is said to be valid for policy r [Sutton, 1995] if and only if limkoo Pk -- 0 
+and 
+v r= g + Pv '. (3) 
+Any valid model can be used to compute v ' via the iteration algorithm ' 
+v+ 1--- g + Pv. 
+This is a direct sense in which the validity of a model implies that it is suitable for planning. 
+We introduce here a parallel definition that expresses consistency with the control Bellman 
+equation. The model g, ? is said to be non-overpromising (NOP) if and only if ? has only 
+positive elements, limoo Pk = 0, and 
+v _> g + Pv, (4) 
+where the _> relation holds component-wise. If a NOP model is added inside the max op- 
+erator in the control Bellman equation (2), this condition ensures that the true value, v*, 
+will not be exceeded for any state. Thus, any model that does not promise more than it 
+Multi-time Models for Temporally Abstract Planning 1053 
+is achievable (is not 9verpromising) can serve as an option for planning purposes. The 
+one-step models of primitive actions are obviously NOP, due to (2). It is similarly straight- 
+forward to show that the one-step model of any policy is also NOP. 
+For some purposes, it is more convenient to write a model g, P as a single (m+ 1) x (m+ 1) 
+matrix: 
+-- 0 -- 
+P 
+We say that the model M has been put in homogeneous coordinates. The vectors corre- 
+sponding to the value functions can also be put into homogeneous coordinates, by adding 
+an initial element that is always 1. 
+Using this notation, new models can be combined using two basic operations: composition 
+and averaging. Two models M and M2 can be composed by matrix multiplication, yield- 
+ing a new model M - M M2. A set of models Mi can be averaged, weighted by a set of 
+diagonal matrices Di, such that Y'i Di = I, to yield a new model M = Y'i DiMi. Sutton 
+(1995) showed that the set of models that are valid for a policy ' is closed under compo- 
+sition and averaging. This enables models acting at different time scales to be mixed to- 
+gether, and the resulting model can still be used to compute v . We have proven that the set 
+of NOP models is also closed under composition and averaging [Precup & Sutton, 1997]. 
+These operations pe

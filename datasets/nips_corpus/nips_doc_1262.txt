@@ -1,0 +1,193 @@
+Support Vector Regression Machines 
+Harris Drucker* Chris J.C. Burges** Linda Kaufman** 
+Alex Smola** Vladimir Vapnik + 
+*Bell Labs and Monmouth University 
+Department of Electronic Engineering 
+West Long Branch, NJ 07764 
+**Bell Labs *AT&T Labs 
+Abstract 
+A new regression technique based on Vapnik's concept of support 
+vectors is introduced. We compare support vector regression (SVR) 
+with a committee regression technique (bagging) based on regression 
+trees and ridge regression done in feature space. On the basis of these 
+experiments, it is expected that SVR will have advantages in high 
+dimensionality space because SVR optimization does not depend on the 
+dimensionality of the input space. 
+1. Introduction 
+In the following, lower case bold characters represent vectors and upper case bold 
+characters represent matrices. Superscript t represents the transpose of a vector. y 
+represents either a vector (in bold) or a single observance of the dependent variable in the 
+presence of noise. y(V) indicates a predicted value due to the input vector x (v) not seen in 
+the training set. 
+Suppose we have an unknown function G(x) (the truth) which is a function of a vector 
+x (termed input space). The vector x t = [Xl,X2,...,xa] has d components where d is 
+termed the dimensionality of the input space. F(x,w) is a family of functions 
+parameterized by w. , is that value of w that minimizes a measure of error between 
+G(x) and F(x,,). Our objective is to estimate w with , by observing the N training 
+instances vj, j=I,...,N. We will develop two approximations for the truth G(x). The first 
+one is Fl(x,,) which we term a feature space representation. One (of many) such 
+feature vectors is: 
+t 2 2 
+z =[xl, ',xa,x lx2,',xixj,',xa-1 xa,xl ,',xa, 1 ] 
+which is a quadratic function of the input space components. Using the feature space 
+representation, then F1 (x,,) = zt,, that is, F1 (x,,) is linear in feature space although 
+156 H. Drucker, C. J. Burgex, L. Kaufman, A. Smola and V. Vapnik 
+it is quadratic in input space. In general, for a p'th 
+dimensional input space, the feature dimensionalityfof , is 
+where C. = 
+p+d-1 
+f = E CJ-1 
+i =d-1 
+n 
+k !(n4:)! 
+order polynomial and d'th 
+The second representation is a support vector regression (SVR) representation that was 
+developed by Vladimir Vapnik (1995): 
+N 
+F2(x,l )=(Ot-Oti)(VX+l ) e + b 
+i=1 
+F 2 is an expansion explicitly using the training examples. The rationale for calling it a 
+su, pport vector representation will be clear later as will the necessity for having both an 
+ct and an ct rather than just one multiplicative constant. In this case we must choose the 
+2N + 1 values of (X i ; and b. If we expand the term raised to the p'th power, we findf 
+coefficients that multiply the various powers and cross product terms of the components 
+of x. So, in this sense F looks very similar to F 2 in that they have the same number of 
+terms. However F hasf free coefficients while F 2 has 2N+l coefficients that must be 
+determined from the N training vectors. 
+We let ot represent the 2N values of ti and t. The optimum values for the components 
+of , or ot depend on our definition of the loss function and the objective function. Here 
+the primal objective function is: 
+N 
+tEL[yj-FCvj,)]+I I I 12 
+j=l 
+where L is a general loss function (to be defined later) and F could be F1 or F2, Yi is the 
+observation of G(x) in the presence of noise, and the last term is a regularizer. The 
+regularization constant is U which in typical developments multiplies the regularizer but 
+is placed in front of the first term for reasons discussed later. 
+If the loss function is quadratic, i.e., we L[.]=[.] 2, and we let F=F, i.e., the feature space 
+representation, the objective function may be minimized by using linear algebra 
+techniques since the feature space representation is linear in that space. This is termed 
+ridge regression (Miller, 1990). In particular let Vbe a matrix whose i'th row is the i'th 
+training vector represented in feature space (including the constant term 1 which 
+represents a bias). V is a matrix where the number of rows is the number of examples 
+(N) and the number of columns is the dimensionality of feature space f. Let E be the fxf 
+diagonal matrix whose elements are 1/U. y is the Nxl column vector of observations of 
+the dependent variable. We then solve the following matrix formulation for , using a 
+linear technique (Strang, 1986) with a linear algebra package (e.g., MATLAB): 
+Vty = [�tV + E] ' 
+The rationale for the regularization term is to trade off mean square error (the first term) 
+in the objective function against the size of the , vector. If U is large, then essentially we 
+are minimizing the mean square error on the training set which may give poor 
+generalization to a test set. We find a good value of U by varying U to find the best 
+performance on a validation set and then applying that U to the test set. 
+Support Vector Regression Machines 157 
+Let us now define a different type of loss function termed an e-insensitive loss (Vapnik, 
+1995): 
+0 
+g = 
+if I yi-F2(xi,')l 
+_  otherwise 
+This defines an e tube (Figure 1) so that if the predicted value is within the tube the loss 
+is zero, while if the predicted point is outside the tube, the loss is the magnitude of the 
+difference between the predicted value and the radius e of the tube. 
+Specifically, we minimize: 
+N � N 1 t 
+u(Zt + Zi) + 5-( w w) 
+i=1 i=1 
+where i or i * is zero if the sample point is inside the tube. If the observed point is 
+above the tube, i is the positive difference between the observed value and e and at 
+will be nonzero. Similary, i* will be nonzero if the observed point is below the tube 
+* 
+and in this case ai will be nonzero. Since an observed point can not be simultaneously 
+on both sides of the tube, either at or a will be nonzero, unless the point is within the 
+tube, in which case, both constants will be zero. If U is large, more emphasis is placed on 
+the error while if U is small, more emphasis is placed on the norm of the weights leading 
+to (hopefully) a better generalization. The constraints are: (for all i, i=l,N) 
+yt-(wtvi)-b-<�+i 
+i*>O 
+The corresponding Lagrangian is: 
+1 t v 
+�=�(w w) + u(ZUi + Zi) - 
+i=1 i=1 
+N 
+-  ai[ (wtvi )+b-yt+�+i] 
+i=1 
+N 
+* t * 
+i [Yi-( w vi)-b+�+i ] 
+i=1 
+N 
+- 
+i=1 
+where the � and ai are Lagrange multipliers. 
+We find a saddle point ofL (Vapnik, 1995) by differentiating with respect to wi, b, and  
+which results in the equivalent maximization of the (dual space) objective function: 
+N N 
+i=1 i=1 
+with the constraints: 
+N � * t 
+1 Z (i--i)(J--J)(�iYJ 4' 1)P 
+2 i,j=l 
+0<a/< U 0<ct<U i =I,...,N 
+N N 
+X_,a, = X_,a, 
+i=1 i=1 
+We must find N Largrange multiplier pairs (ai, a). We can also prove that the product of 
+at and ai is zero which means that at least one of these two terms is zero. A vi 
+* . 
+corresponding to a non-zero at or ai is termed a support vector. There can be at most N 
+support vectors. Suppose now, we have a new vector x �, then the corresponding 
+158 H. Drucker, C. J. Burges, L. Kaufman, A. Smola and V. Vapnik 
+prediction of y 0,) is: 
+N 
+= - + 
+i=l 
+Maximizing W is a quadratic programming problem but the above expression for W is 
+not in standard form for use in quadratic programming packages (which usually does 
+minimization). If we let 
+i = {Zi i+N -' {Zi i=l,...,N 
+then we minimize: 
+subject to the constraints 
+where 
+N 2N 
+and Os'_i<U i=1, ...,2N 
+i=l N+I 
+dij=(vvj +1) ' i,j= l,',N 
+We use an active set method (Bunch and Kaufman, 1980) to solve this 
+programming problem. 
+quadratic 
+2. Nonlinear Experiments 
+We tried three artificial functions from (Friedman, 1991) and a problem (Boston 
+Housing) from the UCI database. Because the first three problems are artificial, we 
+know both the observed values and the truths. Boston Housing has 506 cases with the 
+dependent variable being the median price of housing in the Boston area. There are 
+twelve continuous predictor variables. This data was obtaining from the UCI database 
+(anonymous ftp at ftp.ics.uci.edu in directory/pub/machine-learning-databases) In this 
+case, we have no truth, only the observations. 
+In addition to the input space representation and the SVR representation, we also tried 
+bagging. Bagging is a technique that combines regressors, in this case regression trees 
+(Breiman, 1994). We used this technique because we had a local version available. In the 
+case of regression trees, the validation set was used to prune the trees. 
+Suppose we have test points with input vectors x? ) i=I,M and make a prediction y?) 
+using any procedure discussed here. Suppose Yi is the actually observed value, which is 
+the truth G(x) plus noise. We define the prediction error (PE) and the modeling error 
+(ME): 
+M 
+Me= E (y? )-a(xO ) 2 
+M i=1 
+M 
+PE=- E(,y?)-yi)2 
+' i=1 
+For the three Friedman functions we calculated both the prediction error and modeling 
+Support Vector Regression Machines 159 
+error. For Boston Housing, since the truth was not known, we calculated the prediction 
+error only. For the three Friedman functions, we generated (for each experiment) 200 
+training set examples and 40 validation set examples. The validation set examples were 
+used to find the optimum regularization constant in the feature space representation. The 
+following procedure was followed. Train on the 200 members of the training set with a 
+choice of regularization constant and obtain the prediction error on the validation set. 
+Now repeat with a different regularization constant until a minimum of prediction error 
+occurs on the validation set. Now, use that regularizer constant that minimizes the 
+validation set prediction error and test on a 1000 example test set. This experiment was 
+repeated for 100 different training sets of size 200 and validation sets of size 40 but one 
+test set of size 1000. Different size polynomials 

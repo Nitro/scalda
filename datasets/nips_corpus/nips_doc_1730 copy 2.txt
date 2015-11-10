@@ -1,0 +1,152 @@
+Greedy importance sampling 
+Dale Schuurmans 
+Department of Computer Science 
+University of Waterloo 
+dale @ cs.uwaterloo .ca 
+Abstract 
+I present a simple variation of importance sampling that explicitly search- 
+es for important regions in the target distribution. I prove that the tech- 
+nique yields unbiased estimates, and show empirically it can reduce the 
+variance of standard Monte Carlo estimators. This is achieved by con- 
+centrating samples in more significant regions of the sample space. 
+1 Introduction 
+It is well known that general inference and learning with graphical models is computa- 
+tionally hard [ 1] and it is therefore necessary to consider restricted architectures [ 13], or 
+approximate algorithms to perform these tasks [3, 7]. Among the most convenient and 
+successful techniques are stochastic methods which are guaranteed to converge to a correct 
+solution in the limit of large samples [ 10, 11, 12, 15]. These methods can be easily applied 
+to complex inference problems that overwhelm deterministic approaches. 
+The family of stochastic inference methods can be grouped into the independent Monte 
+Carlo methods (importance sampling and rejection sampling [4, 10, 14]) and the dependent 
+Markov Chain Monte Carlo (MCMC) methods (Gibbs sampling, Metropolis sampling, and 
+hybrid Monte Carlo) [5, 10, 11, 15]. The goal of all these methods is to simulate drawing 
+a random sample from a target distribution P(z) (generally defined by a Bayesian network 
+or graphical model) that is difficult to sample from directly. 
+This paper investigates a simple modification of importance sampling that demonstrates 
+some advantages over independent and dependent-Markov-chain methods. The idea is to 
+explicitly search for important regions in a target distribution P when sampling from a 
+simpler proposal distribution Q. Some MCMC methods, such as Metropolis and hybrid 
+Monte Carlo, attempt to do something like this by biasing a local random search towards 
+higher probability regions, while preserving the asymptotic fair sampling properties of 
+the exploration [11, 12]. Here I investigate a simple direct approach where one draws 
+points from a proposal distribution Q but then explicitly searches in P to find points from 
+significant regions. The main challenge is to maintain correctness (i.e., unbiasedness) of 
+the resulting procedure, which we achieve by independently sampling search subsequences 
+and then weighting the sample points so that their expected weight under the proposal 
+distribution Q matches their true probability under the target P. 
+Greedy Importance Sampling 597 
+Importance sampling 
+� Draw z, ..., z, independently from Q. 
+� Weight each point zi by w(zi) = 
+Q(,) � 
+� For a random variable, f, estimate Ev(,) f(x) 
+by f- 
+_ 
+Indirect importance sampling 
+� Draw x, ...,x, independently from Q. 
+� Weight each point xi by u(xi) = /sP() 
+Q('i) ' 
+� For a random variable, f, estimate Eio(,) f(z) 
+Figure 1' Regular and indirect importance sampling procedures 
+2 Generalized importance sampling 
+Many inference problems in graphical models can be cast as determining the expected 
+value of a random variable of interest, f, given observations drawn according to a target 
+distribution P. That is, we are interested in computing the expectation E,(x) f(z). Usually 
+the random variable f is simple, like the indicator of some event, but the distribution P 
+is generally not in a form that we can sample from efficiently. Importance sampling is a 
+useful technique for estimating E,(x) f(z) in these cases. The idea is to draw independent 
+points zx, ..., z, from a simpler proposal distribution Q, but then weight these points 
+by w(z) = P(z)/Q(z) to obtain a fair representation of P. Assuming that we can 
+efficiently evaluate P(z) at each point, the weighted sample can be used to estimate de- 
+sired expectations (Figure 1). The correctness (i.e., unbiasedness) of this procedure is easy 
+to establish, since the expected weighted value of f under Q is just Ec2()f(z)w(z) = 
+Eex [f(x)w(x)] Q(x) = Eex If(z) 
+q()] Q(x)= -xex f(x)P(z) = Ep()f(z). 
+is technique can be implemented using indirect weights u(z) = P(z)/Q(z) and an 
+alternative estimator (Figure 1) that only requires us to compute a fixed multiple of P(z). 
+is preserves asymptotic cogectness because x Ei=x f(zi)u(zi) and x E=x u (zi) con- 
+verge to Ep() f(z) and  respectively, which yields f  Ep() f(z) (generally [4]). It 
+will always be possible to apply this extended approach below, but we drop it for now. 
+Importance stapling is an effective estimation technique when Q approximates P over 
+most of the domn, but it fails when Q misses high probability regions of P and system- 
+atically yields staples with sml weights. In this ce, the resulting estimator will have 
+high viance because the staple will almost always contn unrepresentative points but is 
+sometimes dominated by a few high weight points. To overcome this problem it is criti- 
+c to obtn data points from the important regions of P. Our goal is to avoid generating 
+systematically under-weight staples by explicitly seching for significant regions in the 
+tget distribution P. To do this, and mntn the unbiasedness of the resulting procedure, 
+we develop a series of extensions to importance stapling that e each provably cogect. 
+e first extension is to consider stapling blocks of points instead of just individu points. 
+Let BbeaptitionofX into finite blocksB, where esB = X, B B' = 0, 
+and each B is finite. (Note that B can be infinite.) e block stapling procedure 
+(Figure 2) draws independent blocks of points to construct the final staple, but then 
+weights points by their tget probability P(z) divided by the total block probability 
+Q(B(z)). For discrete spaces it is easy to verify that this procedure yields unbied esti- 
+mates, since EQ()[er()f(Xj)W(Xj)] : xeX [xeB(x) f(Xj)W(Xj) Q(x) = 
+$98 D. Schuurrnans 
+Block importance sampling 
+� Draw z, ..., z, independently from Q. 
+� For zi, recover block Bi = {zi,i, ..., zi,b }. 
+� Create a large sample out of the blocks 
+1,1  ...  l,bl  32,1  ... 2,b2  ' n,1  ... n,bn � 
+� Weight each zi,j by 
+� For a random variable, f, estimate E,(x) f(z) 
+Sliding window importance sampling 
+� Draw z, ..., z, independently from Q. 
+� For zi, recover block Bi, and let zi, = 
+- Get Zi,1 'S successors xi,1  :i,2  ... :i,rn 
+by climbing up ra - 1 steps from 
+- Get predecessors i,--rn+l   ... Xi,--1  :i,O 
+by climbing down ra - 1 steps from 
+- Weight w(zi,j)= P(x,j)/-]k=S_,+C2(x,k) 
+� Create final sample from successor points 
+:CI,1  ... :Cl,rn 1C2,1  .--:C2,rn ... n,1  ...:Cn,rn. 
+� For a random variable, f, estimate E,(,) f(z) 
+by ] =  E= E_- f(x,,j)w(x,,). 
+Figure 2: Block and sliding window importance sampling procedures 
+Crucially, this argument does not depend on how the partition of X is chosen. In fact, we 
+could fix any partition, even one that depended on the target distribution P, and still obtain 
+an unbiased procedure (so long as the partition remains fixed). Intuitively, this works be- 
+cause blocks are drawn independently from Q and the weighting scheme still produces a 
+fair representation of P. (Note that the results presented in this paper can all be extended 
+to continuous spaces under mild technical restrictions. However, for the purposes of clarity 
+we will restrict the technical presentation in this paper to the discrete case.) 
+The second extension is to allow countably infinite blocks that each have a discrete to- 
+tal order ..- < zi- < zi < zi+ < .-- defined on their elements. This order could 
+reflect the relative probability of zi and zj under P, but for now we just consider it 
+to be an arbitrary discrete order. To cope with blocks of unbounded length, we em- 
+ploy a sliding window sampling procedure that selects a contiguous sub-block of size 
+m from within a larger selected block (Figure 2). This procedure builds each indepen- 
+dent subsample by choosing a random point zx from the proposal distribution Q, de- 
+termining its containing block B(z), and then climbing up m - 1 steps to obtain the 
+successors zx, z2, ..., z,, and climbing down m - 1 steps to obtain the predecessors 
+z_,+x, ..., z_x, zo. The successor points (including zx) appear in the final sample, but 
+the predecessors are only used to determine the weights of the sample points. Weights 
+are determined by the target probability P(z) divided by the probability that the point 
+z appears in a random reconstruction under Q. This too yields an unbiased estimator 
+[ . ] [ t+,- ,() 
+since E() Ej= f(zj)w(zj) = EeX E=t f(z) Q(zt) : 
+6Bi=j-m+l 
+BE B x6 B j=! J 
+=_+ 
+(e middle line brews the sum into diQoint blocks and then reorders the sum so thin in- 
+stead of first choosing the stt point zt and then zt's successors zt, ..., Zt+m-X, we first 
+choose the successor point zj and then the st points zj-+x, ..., z i that could have led 
+to zj). Note that this derivation does not depend on the pticul block ptition nor on the 
+pticular discrete orderings, so long as they remEn fixed. is means thin, again, we can 
+use ptitions and orderings thin explicitly depend on P and still obtain a cogect procedure. 
+Greedy Importance Sampling 599 
+Greedy importance sampling (I-D) 
+� Draw Zl, .... :r. independently from Q. 
+� For each x, let xi,1 = xi: 
+- Compute successors xi,1, xi,2, ..., xi,, by taking 
+ra - 1 size e steps in the direction of increase. 
+- Compute predecessors xi,-,+l, ..., xi,_, xi,o by 
+taking ra- 1 size e steps in the direction of decrease. 
+- If an improper ascent or descent occurs, 
+truncate paths as shown on the upper right. 
+Weight w(xi,j) P(xi,j)/ J 
+- = 
+� Create the final sample from successor points 
+Igl,1  --. Xl,rn  Ig2,1  ... II2,rn  ... IIn,1  ... n,rn. 
+� For a random variable, f, estimate Ep() f(z

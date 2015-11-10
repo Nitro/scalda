@@ -1,0 +1,136 @@
+Hierarchical Recurrent Neural Networks for 
+Long-Term Dependencies 
+SMall El Hihi 
+Dept. Informatique et 
+Recherche Opdrationnelle 
+Universit de Montrdal 
+Montreal, Qc H3C-3J7 
+elhihiiro. mnontreal. ca 
+Yoshua Bengio * 
+Dept. Informatique et 
+Recherche Oprationnelle 
+Universit de Montreal 
+Montreal, Qc H3C-3J7 
+beng�oy�ro. umontreal. ca 
+Abstract 
+We have already shown that extracting long-term dependencies from se- 
+quential data is difficult, both for deterministic dynamical systems such 
+as recurrent networks, and probabilistic models such as hidden Markov 
+models (HMMs) or input/output hidden Markov models (IOHMMs). In 
+practice, to avoid this problem, researchers have used domain specific 
+a-priori knowledge to give meaning to the hidden or state variables rep- 
+resenting past context. In this paper, we propose to use a more general 
+type of a-priori knowledge, namely that the temporal dependencies are 
+structured hierarchically. This implies that long-term dependencies are 
+represented by variables with a long time scale. This principle is applied 
+to a recurrent network which includes delays and multiple time scales. Ex- 
+periments confirm the advantages of such structures. A similar approach 
+is proposed for HMMs and IOHMMs. 
+1 Introduction 
+Learning from examples basically amounts to identifying the relations between random 
+variables of interest. Several learning problems involve sequential data, in which the vari- 
+ables are ordered (e.g., time series). Many learning algorithms take advantage of this 
+sequential structure by assuming some kind of homogeneity or continuity of the model 
+over time, e.g., by sharing parameters for different times, as in Time-Delay Neural Net- 
+works (TDNNs) (Lang, Waibel and Hinton, 1990), recurrent neural networks (Rumelhart, 
+Hinton and Williams, 1986), or hidden Markov models (Rabiner and Juang, 1986). This 
+general a-priori assumption considerably simplifies the learning problem. 
+In previous papers (Bengio, Simard and Frasconi, 1994; Bengio and Frasconi, 1995a), we 
+have shown for recurrent networks and Markovian models that, even with this assumption, 
+dependencies that span longer intervals are significantly harder to learn. In all of the 
+systems we have considered for learning from sequential data, some form of representation 
+of context (or state) is required (to summarize all useful past information). The hard 
+learning problem is to learn to represent context, which involves performing the proper 
+*also, AT&T Bell Labs, Holmdel, NJ 07733 
+494 S.E. HIHI, Y. BENGIO 
+credit assi9nment through time. Indeed, in practice, recurrent networks (e.g., injecting 
+prior knowledge for grammar inference (Giles and Omlin, 1992; Frasconi et al., 1993)) 
+and HMMs (e.g., for speech recognition (Levinson, Rabiner and Sondhi, 1983; Rabiner 
+and Juang, 1986)) work quite well when the representation of context (the meaning of the 
+state variable) is decided a-priori. The hidden variable is not any more completely hidden. 
+Learning becomes much easier. Unfortunately, this requires a very precise knowledge of 
+the appropriate state variables, which is not available in many applications. 
+We have seen that the successes of TDNNs, recurrent networks and HMMs are based on a 
+general assumption on the sequential nature of the data. In this paper, we propose another, 
+simple, a-priori assumption on the sequences to be analyzed: the temporal dependencies 
+have a hierarchical structure. This implies that dependencies spanning long intervals are 
+robust to small local changes in the timing of events, whereas dependencies spanning 
+short intervals are allowed robe more sensitive to the precise timing of events. This yields 
+a multi-resolution representation of state information. This general idea is not new and 
+can be found in various approaches to learning and artificial intelligence. For example, in 
+convolutional neural networks, both for sequential data with TDNNs (Lang, Waibel and 
+Hinton, 1990), and for 2-dimensional data with MLCNNs (LeCun et al., 1989; Bengio, 
+LeCun and Henderson, 1994), the network is organized in layers representing features 
+of increasing temporal or spatial coarseness. Similarly, mostly as a tool for nalyzing 
+and preprocessin[ sequential or spatial data, wavelet transforms (Daubechies, 1990) also 
+represent such imormation at multiple resolutions. Multi-scale representations have also 
+been proposed to improve reinforcement learning systems (Singh, 1992; Dayan and Hinton, 
+1993; Sutton, 1995) and path planning systems. However, with these algorithms, one 
+generally assumes that the state of the system is observed, whereas, in this paper we 
+concentrate on the difficulty of learning what the state variable should represent. A 
+related idea using a hierarchical structure was presented in (Schmidhuber, 1992). 
+On the HMM side, several researchers (Brugnara et al., 1992; Suaudeau, 1994) have 
+attempted to improve HMMs for speech recognition to better model the different types 
+of variables, intrfnsically varying at different time scales in speech. In those papers, the 
+focus was on setting an a-priori representation, not on learning how to represent context. 
+In section 2, we attempt to draw a common conclusion from the analyses performed on 
+recurrent networks and HMMs to learn to represent long-term dependencies. This will 
+justify the proposed approach, presented in section 3. In section 4 a specific hierarchical 
+model is proposed for recurrent networks, using different time scales for different layers of 
+the network. Experiments performed with this model are described in section 4. Finally, 
+we discuss a similar scheme for HMMs and IOHMMs in section 5. 
+2 Too Many Products 
+In this section, we take another look at the analyses of (Bengio, Simard and Frasconi, 1994) 
+and (Bengio and Frasconi, 1995a), for recurrent networks and HMMs resvectivelv. The 
+objective is to draw a parallel between theproblems encountered with the tvo approaches, 
+in order to guide us towards some form of solution, and justify the proposals made here. 
+First, let us consider the deterministic dynamical systems (Bengio, Simard and Frasconi, 
+1994) (such as recurrent networks), which map an input sequence u, , UT to an output 
+sequence y,..., 0T. The state or context information is represented ' each time t by a 
+variable xt, for example the activities of all the hidden units of a recurrent network: 
+where ut is the system input at time t and f is a differentiable function (such as 
+tanh(Wxt_x + ut)). When the sequence of inputs ux, u2,..., UT is given, we can write 
+xt = ft(x.t-x) = ft(ft-(... f(xo))...). A learning criterion Ct yields gradients on out- 
+puts, and therefore on the state variables xt. Since parameters are shared across time, 
+learning using a gradient-based algorithm depends on the influence of parameters W on 
+Ct through all time steps before t: 
+OCt OCt Ozt OzT- 
+ow = 07- ow (2) 
+7' 
+Hierarchical Recurrent Neural Networks for Long-term Dependencies 495 
+The Jacobian matrix of derivatives 0_ can further be factored as follows: 
+Oxt Oxt Oxt-x Ox.+    
+Ox. - Oxt_x Oxt-2 ' Ox. - ff_x...f.+x (3) 
+Our earlier analysis (Bengio, Simard and Frasconi, 1994) shows that the difficulty revolves 
+around the matrix product in equation 3. In order to reliably store information in the 
+dynamics of the network, the state variable xt must remain in regions where Ifil < 1 
+(i.e., near enough to a stable attractor representing the stored information). However, the 
+above products then rapidly converge to 0 when t - v increases. Consequently, the sum 
+in 2 is dominated by terms corresponding to short-term dependencies (t - v is small). 
+Let us now consider the case of Markovian models (including HMMs and IOHMMs (Ben- 
+gio and Frasconi, 1995b)). These are probabilistic models, either of an output 
+sequence P(yx ...YT) (HMMs) or of an output sequence given an input sequence 
+P(Yx ...YTlux ...UT) (IOHMMs). Introducing a discrete state variable xt and using 
+MarkovJan assumptions of independence this probability can be factored in terms of tran- 
+sition probabilities P(xtlxt_x) (or P(xtlxt_x, ut)) and output probabilities P(ytlxt) (or 
+P(Ytlxt, ut)). According to the model, the distribution of the state xt at time t given the 
+state xT at an earlier time r is given by the matrix 
+P(x, lxT)- P(x, lxt_x)P(x,_lx,_2)...P(x+xlx ) (4) 
+where each of the factors is a matrix of transition probabilities (conditioned on inputs in 
+the case of IOHMMs). Our earlier analysis (Bengio and Frasconi, 1995a) shows that the 
+difficulty in representing and learning to represent context (i.e., learning what xt should 
+represent) revolves around equation 4. The matrices in the above equations have one 
+eigenvalue equal to 1 (because of the normalization constraint) and the others < 1. In 
+the case in which all eigenvalues are I the matrices have only I s and 0 s, l.e, we obtain 
+deterministic dynamics for IOHMMs or pure cycles for HMMs (which cannot be used to 
+model most interesting sequences). Otherwise the above product converges to a lower 
+rank matrix (some or most of the eigenvalues converge toward 0). Consequently, P(xt Ixr) 
+becomes more and more independent of xr as t - v increases. Therefore, both representing 
+and learning context becomes more difficult as the span of dependencies increases or when 
+the Markov model is more non-deterministic (transition probabilities not close to 0 or 1). 
+Clearly, a common trait of both analyses lies in taking too many products, too many time 
+steps, or too many transformations to relate the state variable at time v with the state vari- 
+able at time t > v, as in equations 3 and 4. Therefore the idea presented in the next section 
+is centered on allowing several paths between xr and xt, some with few transformations 
+and some with many transformations. At least through those with few transformations, 
+we expect context informat

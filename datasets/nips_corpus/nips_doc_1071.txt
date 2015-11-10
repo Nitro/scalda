@@ -1,0 +1,136 @@
+High-Performance Job-Shop Scheduling 
+With A Time-Delay TD(A) Network 
+Wei Zhang and Thomas G. Dietterich 
+Department of Computer Science 
+Oregon State University 
+Corvallis, Oregon 97331-3202 
+{zhangw, tgd}research. cs. orst. edu 
+Abstract 
+Job-shop scheduling is an important task for manufacturing indus- 
+tries. We are interested in the particular task of scheduling payload 
+processing for NASA's space shuttle program. This paper summa- 
+rizes our previous work on formulating this task for solution by the 
+reinforcement learning algorithm TD(A). A shortcoming of this 
+previous work was its reliance on hand-engineered input features. 
+This paper shows how to extend the time-delay neural network 
+(TDNN) architecture to apply it to irregular-length schedules. Ex- 
+perimental tests show that this TDNN-TD(A) network can match 
+the performance of our previous hand-engineered system. The tests 
+also show that both neural network approaches significantly out- 
+perform the best previous (non-learning) solution to this problem 
+in terms of the quality of the resulting schedules and the number 
+of search steps required to construct them. 
+I Introduction 
+In Tesauro's 1992 landmark work on TD-gammon, he showed that the temporal dif- 
+ference algorithm TD(A) [Sutton, 1988] can learn an excellent evaluation function 
+for the game of backgammon. This is the most successful application of reinforce- 
+ment learning to date. The goal of our research is to determine whether this success 
+can be duplicated in an application of industrial importance: Job-shop scheduling. 
+We are interested in a particular scheduling problem: space shuttle payload process- 
+ing for NASA. The goal is to schedule a set of tasks to satisfy a set of temporal and 
+resource constraints while also seeking to minimize the total duration (makespan) of 
+the schedule. The best existing method for this task is an iterative repair scheduler 
+that combines heuristics with simulated annealing [Zweben e! al., 1994]. In [Zhang 
+High-performance Job-Shop Scheduling with a Time-delay TD()) Network 1025 
+and Dietterich, 1995], we report initial results showing that a neural network-based 
+TD(A) scheduler can out-perform this iterative repair algorithm. 
+To obtain those results, we hand-engineered a set of input features. An advantage 
+of neural network algorithms, however, is that they can often learn good features 
+(i.e., hidden units) from more primitive, raw features. The work described in this 
+paper shows how to apply the time-delay neural network architecture [Langet 
+al., 1990, LeCun et al., 1989] to this task to learn from raw features and thereby 
+eliminate hand-engineering. 
+In the following sections, we first describe the scheduling task and show how this 
+task can be formulated for TD(A). We then discuss the problem of schedule rep- 
+resentation and our network architecture. Following this, we present experiments 
+on a set of simulated problems and discuss the results. These results show that the 
+time-delay network using low level features can not only match the performance of 
+the hand-engineered features--it can actually perform slightly better. 
+2 The NASA Domain and TD(A) for the Task 
+The NASA space shuttle payload processing (SSPP) domain requires scheduling 
+the tasks that must be performed to install and test the payloads that are placed 
+in the cargo bay of the space shuttle. In job-shop scheduling terminology, each 
+shuttle mission is a job, which has a fixed launch date. Each job consists of a 
+partially-ordered set of tasks that must be performed. Most of these tasks are pre- 
+tasks that must be performed prior to launch, but some are post-tasks that take 
+place after the shuttle has landed. Each task has a duration and a list of resource 
+requirements. The resources are grouped into resource pools. For each task and 
+each type of resource, the required amount of the resource must be obtained from a 
+single resource pool. A complete schedule must specify the start time of each task 
+and the resource pool by which each resource requirement of each task is satisfied. A 
+key goal of the scheduling system is to minimize the total duration of the schedule. 
+This is much more challenging than simply finding a feasible schedule. 
+Zweben et al. [1994] developed the following iterative repair method for solving 
+this scheduling problem. First, a critical path schedule is constructed by working 
+backward and forward from the launch and landing dates; resource constraints 
+are ignored. This critical-path schedule serves as the starting state for a state- 
+space search. In each state of this problem space, there are two possible operators 
+that can be applied. The PEASSIGN-POOL operator changes the pool assignment 
+for one of the resource requirements of a task. It is only applied when the pool 
+reassignment would allow the resource requirement to be successfully satisfied. The 
+MOVE operator moves a task to a different time and then reschedules all of the 
+temporal dependents of the task using the critical path method (leaving the resource 
+pool assignments of the dependents unchanged). The MOVE operator is only applied 
+to move a task to the first earlier or the first later time at which the violated resource 
+requirement can be satisfied. The iterative repair method uses a combination of 
+three heuristics to choose a task to repair. It prefers to move the task that (a) 
+requires an amount of resource nearly equal to the amount that is over allocated, 
+(b) has few temporal dependents, and (c) needs to be moved only a short distance to 
+satisfy the resource request. The overall control structure of the algorithm applies 
+simulated annealing to minimize a designated cost function. The search continues 
+until a schedule is found that has no constraint violations. 
+To view the scheduling problem as a reinforcement learning problem, we must de- 
+scribe the problem space and the reinforcement function. We employ the same 
+1026 W. ZHANG, T. G. DIETTERICH 
+problem space as Zweben et al. The starting state so is the critical path schedule 
+as discussed above. We define the reinforcement function R(s) to give a reinforce- 
+ment of-0.001 for each schedule s that still contains constraint violations. This 
+assesses a small penalty for each scheduling action, and it is intended to encourage 
+reinforcement learning to prefer actions that quickly find a good schedule. For any 
+schedule s that is free of violations, the reinforcement is the negative of the resource 
+dilation factor, -RDF(s, so). The RDF attempts to provide a scale-independent 
+measure of the length of the schedule, and this final reinforcement is intended to 
+encourage reinforcement learning to find short final schedules. 
+The RDF is defined as follows. Let capacity(i) be the capacity of resource type 
+/--that is, the combined capacity of all resource pools of resource type i. At each 
+time t in the schedule, let u(i, t) be the current utilization of resources of type i. 
+We define the resource utilization index RUI(i, t) for resource type i at time t to be 
+RUI(i,t) - max 1, capacity(i)J' If the resource is not over-allocated, RUI(i,t) is 
+1; otherwise it is the fraction of overallocation. The total resource utilization index 
+(TFIUI) for a schedule of length l is the sum of the resource utilization index taken 
+over all n resources and all/times: TRUI -- in__l -].lt= 1RUI(i,t). Given these 
+definitions, the resource dilation factor is defined as RDF(s, so) - 
+Now that we have specified how to view repair-based scheduling as a reinforcement 
+learning problem, we turn our attention to the learning algorithm. Suppose at a 
+given point in the learning process we have developed policy r, which says that in 
+state s the action to select is a - r(s). We can define an associated function f, 
+called the value function, such that f(s) tells the cumulative reward that we will 
+receive if we follow policy r from state s onward. Formally, f,(s) = =0/i(sj+x), 
+where N is the number of steps until a conflict-free schedule is found. 
+As in most reinforcement learning work, we will attempt to learn the value function 
+of the optimal policy r*, denoted f* = f,., rather than directly learning r*. Once 
+we have learned this optimal value function, we can transform it into the optimal 
+policy via a simple one-step lookahead search. To learn the value function, we apply 
+TD(A) as a form of value iteration. TD(A) is applied online to the sequences of 
+states and reinforcements that result from choosing actions according to the current 
+estimated value function, f. At each state s during learning, we conduct a one-step 
+lookahead search using the current estimated value function f to evaluate the states 
+resulting from applying each possible operator. We then select the action that 
+maximizes the predicted value of the resulting state s . After applying this action 
+and receiving the reward, we update our estimate of f to reflect the difference 
+between the value of f(s) and the more informed value R(s') q- f(s'). 
+3 Schedule Representation and Network Design 
+The main challenge for designing a schedule representation is that virtually all 
+methods for learning evaluation functions can only be applied to fixed-length vectors 
+of features. However, the length of schedules varies depending on the number of 
+tasks and the complexity of their temporal and resource constraints. In our previous 
+work, we hand-engineered a fixed set of features that summarized the structure 
+of the schedule. We included such features as the RDF of the current schedule, 
+the mean and standard deviation of the unused resource capacity of each resource 
+pool (negative if the pool is over-allocated), the mean and standard deviation of 
+the slack times (idle times between temporal dependents), and so on. However, 
+High-performance Job-Shop Scheduling with a Time-delay TD0) Network 102 7 
+task 1 task 2 
+I I 
+task 3i task 4 
+B1 B

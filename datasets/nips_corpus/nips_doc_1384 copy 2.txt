@@ -1,0 +1,151 @@
+Structure Driven Image Database 
+Retrieval 
+Jeremy S. De Bonet & Paul Viola 
+Artificial Intelligence Laboratory 
+Learning & Vision Group 
+545 Technology Square Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+EMAIL: jsdai.mit.edu & violaai.mit.edu 
+HOMEPAGE: http://www. ai .mir. edu/projects/lv 
+Abstract 
+A new algorithm is presented which approximates the perceived 
+visual similarity between images. The images are initially trans- 
+formed into a feature space which captures visual structure, tex- 
+ture and color using a tree of filters. Similarity is the inverse of 
+the distance in this perceptual feature space. Using this algorithm 
+we have constructed an image database system which can perform 
+example based retrieval on large image databases. Using carefully 
+constructed target sets, which limit variation to only a single visual 
+characteristic, retrieval rates are quantitatively compared to those 
+of standard methods. 
+i Introduction 
+Without supplementary information, there exists no way to directly measure the 
+similarity between the content of images. In general, one cannot answer a question of 
+the form: is image A more like image B or image C? without defining the criteria 
+by which this comparison is to be made. People perform such tasks by inferring 
+some criterion, based on their visual experience or by complex reasoning about the 
+situations depicted in the images. Humans are very capable database searchers. 
+They can perform simple searches like, find me images of cars, or more complex 
+or loosely defined searches like, find me images that depict pride in America. 
+In either case one must examine all, or a large portion, of the database. As the 
+prevalence and size of multimedia databases increases, automated techniques will 
+become critical in the successful retrieval of relevant information. Such techniques 
+must be able to measure the similarity between the visual content of natural images. 
+Structure Driven Image Database Retrieval 867 
+Many algorithms have been proposed for image database retrieval. For the most 
+part these techniques compute a feature vector from an image which is made up of 
+a handful of image measurements. Visual or semantic distance is then equated with 
+feature distance. Examples include color histograms, texture histograms, shape 
+boundary descriptors, eigenimages, and hybrid schemes (QBIC; Niblack et al. 
+1993; Virage,; Kelly, Cannon and Hush, 1995; Pentland, Picard and Sclaroff, 1995; 
+Picard and Kabir, 1993; Santini and Jain, 1996). A query to such a system typically 
+consists of specifying two types of parameters: the target values of each of the 
+measurements; and a set of weights, which determine the relative importance of 
+deviations from the target in each measurement dimension. The features used by 
+these systems each capture some very general property of images. As a result of 
+their lack of specificity however, many images which are actually very different in 
+content generate the same feature responses. 
+In contrast our approach extracts thousands of very specific features. These features 
+measure both local texture and global structure. The feature extraction algorithm 
+computes color, edge orientation, and other local properties at many resolutions. 
+This sort of multi-scale feature analysis is of critical importance in visual recogni- 
+tion and has been used successfully in the context of object recognition (von der 
+Malsburg, 1988; Rao and Ballard, 1995; Viola, 1996) 
+Our system differs from 
+such as edges or color, 
+related to one another. 
+ticular local properties, 
+tures can be extracted. 
+others because it detects not only first order relationships, 
+but also measures how these first order relationships are 
+Thus by finding patterns between image regions with par- 
+more complex - and therefore more discriminating - fea- 
+This type of repeated, non-linear, feature detection bears 
+a strong resemblance to the response properties of visual cortex cells (Desimone 
+et al., 1984). While the mechanism for the responses of these cells is not yet clear, 
+this work supports the conclusion that this type of representation is very useful in 
+practical visual processing. 
+2 Computing the Characteristic Signature 
+The texture-of-texture measurements are based on the outputs of a tree of non- 
+linear filtering operations. Each path through the tree creates a particular filter 
+network, which responds to certain structural organization in the image. Measur- 
+ing the appropriately weighted difference between the signatures of images in the 
+database and the set of query-images, produces a similarity measure which can be 
+used to rank and sort the images in the database. 
+The computation of the characteristic signature is straightforward. At the highest 
+level of resolution the image is convolved with a set of 25 local linear features 
+including oriented edges and bars. The results of these convolutions are 25 feature 
+response images. These images are then rectified by squaring, which extracts the 
+texture energy in the image, and then downsampled by a factor of two. At this 
+point there are 25 half scale output images which each measure a local textural 
+property of the input image. For example one image is sensitive to vertical edges, 
+and responds strongly to both skyscrapers and picket fences. 
+Convolution, rectification and downsampling is then repeated on each of these 25 
+half resolution images producing 625 quarter scale texture-of-texture images. The 
+second layer will respond strongly to regions where the texture specified in the first 
+layer has a particular spatial arrangement. For example if horizontal alignments 
+of vertical texture are detected, there will be a strong response to a picket fence 
+and little response to a skyscraper. With additional layers additional specificity is 
+868 J. $. D. Bonet and P. A. Viola 
+achieved; repeating this procedure a third time yields 15,625 meta-texture images 
+at eighth scale. 
+Each of the resulting meta-textures is then summed to compute a single value and 
+provides one element in the characteristic signature. When three channels of color 
+are included there are a total of 46,875 elements in the characteristic signature. Once 
+computed, the signature elements are normalized to reduce the effects of contrast 
+changes. 
+More formally the characteristic signature of an image is given by: 
+Si,j,k,c(I)-  Ei,j,k(I) (1) 
+pixels 
+where I is the image, i, j and k index over the different types of linear filters, and 
+Ic are the different color channels of the image. The definition of E is: 
+:(r) = 2 4 [(,v  r)] (2) 
+E,(r) = 2 4 [(,v  :(r))] (3) 
+Ei,j,k(I) -- 2 , [(F k  Ei,j(I))2] . (4) 
+where Fi is the ith filter and 2  is the downsampling operation. 
+3 Using Characteristic Signatures To Form Image Queries 
+In the query by image paradigm, we describe similarity in terms of the difference 
+between an image and a group of example query images. This is done by compar- 
+ing the characteristic signature of the image to the mean signature of the query 
+images. The relative importance of each element of the characteristic signature in 
+determining similarity is proportional to the inverse variance of that element across 
+the example-image group: 
+[ 
+VaT [Si,j,k,c(Iq)] (5) 
+i j k c 
+where Si,j,,c(Iq) and Vat [Si,j,,c(Iq)] are the mean and variance of the characteris- 
+tic signatures computed over the query set. This is a diagonal approximation of the 
+Mahalanobis distance (Duda and Hart, 1973). It has the effect of normalizing the 
+vector-space defined by the characteristic signatures, so that characteristic elements 
+which are salient within the group of query images contribute more to the overall 
+similarity of an image. 
+In Figure I three 2D projections of these 46,875 dimensional characteristic siature 
+space are shown. The data points marked with circles are generated by the 10 images 
+shown at the top of Figure 3. The remaining points are generated by 2900 distractor 
+images. Comparing (a) and (b) we see that in some projections the images cluster 
+tightly, while in others they are distributed. Given a sample of images from the 
+target set we can observe the variation in each possible projection is. Most of the 
+time the es shown in (a) will be strongly discounted by the algorithm because 
+these features are not consistent across the query set. Similly the axes from (b) 
+will receive a large weight because the target images have very consistent values. 
+The axes along which target oups cluster, however, differ from target group to 
+target oup. As a result it is not possible to conclude that the es in (b) are 
+simply better than the es in (a). In Fibre I (c) the same projection is shown 
+again this time with a different target set highlighted (with asterisks). 
+Structure Driven Image Database Retrieval 869 
+(a) (b) (c) 
+Figure 1: In some projections target groups do not cluster (a), and they do in 
+others (b). However, different target groups will not necessarily cluster in the same 
+projections (c). 
+4 Experiments 
+In the first set of experiments we use a database of 2900 images from 29 Corel Photo 
+CD (collections 1000-2900.) Figure 2 shows the results of typical user query on this 
+system. The top windows in each Figure contain the query-images submitted by 
+the user. The bottom windows show the thirty images found to be most similar; 
+similarity decreases from upper left (most similar) to lower right. 
+Though these examples provide an anecdotal indication that the system is generat- 
+ing similarity measures which roughly conform to human perception, it is difficult 
+to fully characterize the performance of this image retrieval technique. This is a 
+fundamental problem of the domain. Images vary from each other in an astronom- 
+ical number of ways, and similarity is perceived by human observers based upon 
+complex interactions between recognition, cognition, and

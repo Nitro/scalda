@@ -1,0 +1,197 @@
+Active Learning with Statistical Models 
+David A. Cohn, Zoubin Ghahramani, and Michael I. Jordan 
+cohnpsyche. mi. edu, zoubinpsyche. mi. edu, j ordanepsyche. mi. edu 
+Department of Brain and Cognitive Sciences 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+Abstract 
+For many types of learners one can compute the statistically op- 
+timal way to select data. We review how these techniques have 
+been used with feedforward neural networks [MacKay, 1992; Cohn, 
+1994]. We then show how the same principles may be used to select 
+data for two alternative, statistically-based learning architectures: 
+mixtures of Gaussians and locally weighted regression. While the 
+techniques for neural networks are expensive and approximate, the 
+techniques for mixtures of Gaussians and locally weighted regres- 
+sion are both efficient and accurate. 
+I ACTIVE LEARNING- BACKGROUND 
+An active learning problem is one where the learner has the ability or need to 
+influence or select its own training data. Many problems of great practical interest 
+allow active learning, and many even require it. 
+We consider the problem of actively learning a mapping X - Y based on a set of 
+training examples {(xi, Yi)}?=l, where xi E X and yi E Y. The learner is allowed 
+to iteratively select new inputs  (possibly from a constrained set), observe the 
+resulting output , and incorporate the new examples (f, ) into its training set. 
+The primary question of active learning is how to choose which  to try next. 
+There are many heuristics for choosing f based on intuition, including choosing 
+places where we don't have data, where we perform poorly [Linden and Weber, 
+1993], where we have low confidence [Thrun and MSller, 1992], where we expect it 
+706 David Cohn, Zoubin Ghahramani, Michael L Jordon 
+to change our model [Cohn et al, 1990], and where we previously found data that 
+resulted in learning [Schmidhuber and Storck, 1993]. 
+In this paper we consider how one may select  optimally from a statistical 
+viewpoint. We first review how the statistical approach can be applied to neural 
+networks, as described in MacKay [1992] and Cohn [1994]. We then consider two 
+alternative, statistically-based learning architectures: mixtures of Gaussians and 
+locally weighted regression. While optimal data selection for a neural network is 
+computationally expensive and approximate, we find that optimal data selection for 
+the two statistical models is efficient and accurate. 
+2 ACTIVE LEARNING- A STATISTICAL APPROACH 
+We denote the learner's output given input x as O(x). The mean squared error of 
+this output can be expressed as the sum of the learner's bias and variance. The 
+variance a(x) indicates the learner's uncertainty in its estimate at x. x Our goal 
+will be to select a new example : such that when the resulting example (', .) is 
+added to the training set, the integrated variance IV is minimized: 
+IV = f o'P(x)dx. (1) 
+Here, P(x) is the (known) distribution over X. In practice, we will compute a 
+2 at a number of random 
+Monte Carlo approximation of this integral, evaluating 
+points drawn according to P(x). 
+~ 2 the new variance at x given 
+Selecting  so as to minimize IV requires computing 
+(', .0). Until we actually commit to an , we do not know what corresponding .0 we 
+will see, so the minimization cannot be performed deterministically? Many learning 
+architectures, however, provide an estimate of P(.[) based on current data, so we 
+~2 Selecting  to minimize 
+can use this estimate to compute the e:rpectation of 
+the expected integrated variance provides a solid statistical basis for choosing new 
+examples. 
+2.1 
+EXAMPLE: ACTIVE LEARNING WITH A NEURAL 
+NETWORK 
+In this section we review the use of techniques from Optimal Experiment Design 
+(OED) to minimize the estimated variance of a neural network [Fedorov, 1972; 
+MacKay, 1992; Cohn, 1994]. We will assume we have been given a learner .0 - f0, 
+a training set {(xi, Yi)}?= and a parameter vector b that maximizes a likelihood 
+measure. One such measure is the minimum sum squared residual 
+S2 1 i 
+- m (yi - .O(xi)) 2 
+'. 
+2 
+ Unless explicitly denoted, .0 and aS are functions of x. For simplicity, we present our 
+results in the univariate setting. All results in the paper extend easily to the multivariate 
+case. 
+2This contrasts with related work by Plutowski and White [1993], which is concerned 
+with filtering an existing data set. 
+Active Learning with Statistical Models 707 
+The estimated output variance of the network is 
+2  S2 ( O__(wX ) :r / 02 S2 
+-1 
+The standard OED approach assumes normality and local linearity. These as- 
+sumptions allow replacing the distribution P(I) by its estimated mean () and 
+variance $2 The expected value of the new variance, ~2 is then: 
+� r, 
+- + ool. 
+where we define 
+For empirical results on the predictive power of Equation 2, see Cohn [1994]. 
+The advantages of minimizing this criterion are that it is grounded in statistics, 
+and is optimal given the assumptions. Furthermore, the criterion is continuous 
+and differentiable. As such, it is applicable in continuous domains with continuous 
+action spaces, and allows hillclimbing to find the best . 
+For neural networks, however, this approach has many disadvantages. The criterion 
+relies on simplifications and strong assumptions which hold only approximately. 
+Computing the variance estimate requires inversion of a Iwl x Iwl matrix for each 
+new example, and incorporating new examples into the network requires expensive 
+retraining. Paass and Kindermann [1995] discuss an approach which addresses some 
+of these problems� 
+3 MIXTURES OF GAUSSIANS 
+The mixture of Gaussians model is gaining popularity among machine learning prac- 
+titioners [Nowlan, 1991; Specht, 1991; Ghahramani and Jordan, 1994]. It assumes 
+that the data is produced by a mixture of N Gaussians gi, for i - 1, ..., N. We 
+can use the EM algorithm [Dempster et al, 1977] to find the best fit to the data, 
+after which the conditional expectations of the mixture can be used for function 
+approximation. 
+For each Gaussian gi we will denote the estimated input/output means as/,i and 
+2 a 2 � and O'xy,i. The conditional variance of 
+y,i and estimated covariances as r,i, 
+y given x may then be written 
+2 
+o'y21x,i -- o.2 . O'xy, i 
+y, 2 ' 
+O'x , i 
+We will denote as ni the (possibly fractional) number of training examples for which 
+gi takes responsibility: 
+m 
+= yli) 
+708 David Cohn, Zoubin Ghahramani, Michael I. Jordon 
+For an input x each gi has conditional expectation i and variance er .. 
+' y,z 
+O'xy, i [ -- ]Ix,i) , 
+O. x2,i \X 
+er 2 � eryl'i i + 
+y , -- rl i 
+These expectations and variances are mixed according to the prior probability tha't 
+gi has of being responsible for x' 
+P(xli) 
+hi .-:--hi(x)-- Ej?= 1 P(xlj ) ' 
+For input x then, the conditional expectation  of the resulting mixture and its 
+variance may be written: 
+-- hi Oi, erO _.  i ylx,i 1+ -- . 
+i:1 i=1 li O'x, i 
+2 
+In contrast to the variance estimate computed for a neural network, here er9 can be 
+computed efficiently with no approximations. 
+3.1 ACTIVE LEARNING WITH A MIXTURE OF GAUSSIANS 
+We want to select  to minimize (). With a mixture of Gaussians, the model's 
+estimated distribution of  given  is explicit: 
+N N 
+i=1 i=1 
+where ;i = hi(). Given this, calculation of (ff) is straightforward: we model the 
+change in each gi separately, calculating its expected variance given a new point 
+sampled from P(l , i) and weight this change by hi. The new expectations combine 
+to form the learner's new expected variance 
+: (3) 
+i=1 ni + hi erz,i 
+where the expectation can be computed exactly in closed form: 
+~2 
+O'x , i -- 
+O'x, i 
+nilzx,i -4- i ' 
+ni + i 
+n, n(- ,) n + i + (n + h) 
+Active Learning with Statistical Models 709 
+4 LOCALLY WEIGHTED REGRESSION 
+We consider here two forms of locally weighted regression (LWR): kernel regression 
+and the LOESS model Cleveland et al, 1988]. Kernel regression computes fi as an 
+average of the Yi in the data set, weighted by a kernel centered at x. The LOESS 
+model performs a linear regression on points in the data set, weighted by a kernel 
+centered at x. The kernel shape is a design parameter: the original LOESS model 
+uses a tricubic kernel; in our experiments we use the more common Gaussian 
+hi(x)  h(x - xi) = exp(-k(x - xi)2), 
+where k is a smoothing constant. For brevity, we will drop the argument x for hi(x), 
+and define n = Y4 hi. We can then write the estimated means and covariances as: 
+-- , x -- , cy -- 
+n / n 
+y =  hy 2 _ ; h(yi - y)2 2 2 _  
+n ' y -- n ' y Ix = y  ' 
+We use them to express the conditional expectations and their estimated variances: 
+2 
+2 ry 
+kernel:  = py, r = (4) 
+%1 1 + -- (5) 
+LOESS: 9 = py + ?- (x- p),  = n er 2 
+O' x \ 
+4.1 
+ACTIVE LEARNING WITH LOCALLY WEIGHTED 
+REGRESSION 
+Again we want to select : to minimize (). With LWR, the model's estimated 
+distribution of  given : is explicit: 
+P(I ) -- N(9(), 1()) 
+The estimate of () is also explicit. Defining  as the weight assigned to: by the 
+kernel, the learner's expected new variance is 
+%1 (x- ) 2 
+kernel: 
+where the expectation can be computed exactly in closed form: 
+(%) () =  + () (()- ) 
+ +   h(-)(9()- ) 
+ - d ;] + (n + ) ' ( + ) 
+710 David Cohn, Zoubin Ghahramani, Michael I. Jordon 
+5 EXPERIMENTAL RESULTS 
+Below we describe two sets of experiments demonstrating the predictive power of 
+the query selection criteria in this paper. In the first set, learners were trained on 
+data from a noisy sine wave. The criteria described in this paper were applied to 
+predict how a new training example selected at point : would decrease the learner's 
+variance. These predictions, along with the actual changes in variance when the 
+training points were queried and added, are plotted in Figure 1. 
+1,Neural Network 
+  ....... 

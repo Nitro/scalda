@@ -1,0 +1,183 @@
+A Charge-Based CMOS Parallel Analog 
+Vector Quantizer 
+Gert Cauwenberghs 
+Johns Hopkins University 
+ECE Department 
+3400 N. Charles St. 
+Baltimore, MD 21218-2686 
+gert@j hunix. hc f. j hu. edu 
+Volnei Pedroni 
+California Institute of Technology 
+EE Department 
+Mail Code 128-95 
+Pasadena, CA 91125 
+pedroni@romeo. caltech. edu 
+Abstract 
+We present an analog VLSI chip for parallel analog vector quantiza- 
+tion. The MOSIS 2.0 tzm double-poly CMOS Tiny chip contains an 
+array of 16 x 16 charge-based distance estimation cells, implementing a 
+mean absolute difference (MAD) metric operating on a 16-input analog 
+vector field and 16 analog template vectors. The distance cell includ- 
+ing dynamic template storage measures 60 x 78 /xm 2. Additionally, 
+the chip features a winner-take-all (WTA) output circuit of linear com- 
+plexity, with global positive feedback for fast and decisive settling of a 
+single winner output. Experimental results on the complete 16 x 16 VQ 
+system demonstrate correct operation with 34 dB analog input dynamic 
+range and 3 tzsec cycle time at 0.7 mW power dissipation. 
+1 Introduction 
+Vector quantization (VQ) [ 1] is a common ingredient in signal processing, for applications 
+of pattern recognition and data compression in vision, speech and beyond. Certain neural 
+network models for pattern recognition, such as Kohonen feature map classifiers [2], are 
+closely related to VQ as well. The implementation of VQ, in its basic form, involves a 
+search among a set of vector templates for the one which best matches the input vector, 
+whereby the degree of matching is quantified by a given vector distance metric. Effi- 
+780 Gert Cauwenberghs, Volnei Pedroni 
+cient hardware implementation requires a parallel search over the template set and a fast 
+selection and encoding of the winning template. The chip presented here implements 
+a parallel synchronous analog vector quantizer with 16 analog input vector components 
+and 16 dynamically stored analog template vectors, producing a 4-bit digital output word 
+encoding the winning template upon presentation of an input vector. The architecture is 
+fully scalable as in previous implementations of analog vector quantizers, e.g. [3,4,5,6], 
+and can be readily expanded toward a larger number of vector components and template 
+vectors without structural modification of the layout. Distinct features of the present 
+implementation include a linear winner-take-all (WTA) structure with globalized posi- 
+tive feedback for fast selection of the winning template, and a mean absolute difference 
+(MAD) metric for the distance estimations, both realized with a minimum amount of 
+circuitry. Using a linear charge-based circuit topology for MAD distance accumulation, 
+a wide voltage range for the analog inputs and templates is achieved at relatively low 
+energy consumption per computation cycle. 
+2 System Architecture 
+The core of the VQ consists of a 16 x 16 2-D array of distance estimation cells, configured 
+to interconnect columns and rows according to the vector input components and template 
+outputs. Each cell computes in parallel the absolute difference distance between one 
+component xj of the input vector x and the corresponding component yij of one of the 
+template vectors yi, 
+d(xj, yij) __ [Xj -- yij[ , i, j = 1... 16. (1) 
+The mean absolute difference (MAD) distance between input and template vectors is 
+accumulated along rows 
+^ 1 16 
+- -- Ixj - y'jl, i = 1... 16 (2) 
+d(x, yi) 16 j= 
+and presented to the WTA, which selects the single winner 
+k TM = argm.in3(x, y/) . (3) 
+! 
+Additional parts are included in the architecture for binary encoding of the winning 
+output, and for address selection to write and refresh the template vectors. 
+3 VLSI Circuit Implementation 
+The circuit implementation of the major components of the VQ, for MAD distance 
+estimation and WTA selection, is described below. Both MAD distance and WTA cells 
+operate in clocked synchronous mode using a precharge/evaluate scheme in the voltage 
+domain. The approach followed here offers a wide analog voltage range of inputs and 
+templates at low power weak-inversion MOS operation, and a fast and decisive settling of 
+the winning output using a single communication line for global positive feedback. The 
+output encoding and address decoding circuitry are implemented using standard CMOS 
+logic. 
+A Charge-Based CMOS Parallel Analog Vector Quantizer 781 
+WRi 
+WR 
+�  0.2 pF 
+4/2 y Z j 
+8/2 
+DIST 
+LO HI z i 
+Cc --0.1pF 
+z i 
+Vref 
+(a) (b) 
+PRE 
+Figure 1: Schematic of distance estimation circuitry. (a) Absolute distance cell. (b) 
+Output precharge circuitry. 
+3.1 Distance Estimation Cell 
+The schematic of the distance estimation cell, replicated along rows and columns of 
+the VQ array, is shown in Figure 1 (a). The cell contains two source followers, which 
+buffer the input voltage xj and the template voltage ytj. The template voltage is stored 
+dynamically onto Cstore, written or refreshed by activating WRi while the yj value is 
+presented on the xj input line. The WRi and WRi signal levels along rows of the VQ 
+array are driven by the address decoder, which selects a single template vector yi to be 
+written to with data presented at the input x when WR is active. 
+Additional lateral transistors connect symmetrically to the source follower outputs xj' 
+i t 
+and y j. By means of resi.stive division, the lateral transistors construct the maximum 
+! 
+and minimum of xj' and y' ai ,i Lo 
+j on j and aij , respectively. In particular, when xj is 
+much larger than y t j, the voltage z  j HI approaches x/ and the voltage zij L� approaches 
+i t 
+y.j. By symmetry, the complementary argument holds in case xj is much smaller than 
+� LO 
+y'j. Therefore, the differential component of aijI and  approximately represents the 
+absolute difference value of x and y'j: 
+i m_gi LO i t i / 
+a    max(x', y  ) - min(xj', y  ) (4) 
+-- Ixd' - yidt[  tc Ixj - Y'jl , 
+with tc the MOS back gate effect coefficient [7]. 
+The mean absolute difference (MAD) distances (2) are obtained by accumulating con- 
+782 Gert Cauwenberghs, Volnei Pedroni 
+tributions (4) along rows of cells through capacitive coupling, using the well known 
+technique of correlated double sampling. To this purpose, a coupling capacitor Cc is 
+provided in every cell, coupling its differential output to the corresponding output row 
+line. In the precharge phase, the maximum values zij  are coupled to the output by 
+activating HI, and the output lines are preset to reference voltage Vref by activating PRE, 
+Figure 1 (b). In the evaluate phase, PRE is de-activated, and the minimum values zi? � 
+are coupled to the output by activating LO. From (4), the resulting voltage outputs on 
+the floating row lines are given by 
+z i 
+1 i I.O. 
+= Vf (z? -z j ) (5) 
+j=l 
+1 6 
+ Vref--s: 'ij__  [xj--yij[. 
+The last term in (5) corresponds directly to the distance measure t(x, yi) in (2). Notice 
+that the negative sign in (5) could be reversed by interchanging clocks HI and LO, if 
+needed. Since the subsequent WTA stage searches for maximum z i, the inverted distance 
+metric is in the form needed for VQ. 
+Characteristics of the MAD distance estimation (5), measured directly on the VQ ar- 
+ray with uniform inputs xj and templates yij, are shown in Figure 2. The magnified 
+view in Figure 2 (b) clearly illustrates the effective smoothing of the absolute difference 
+function (4) near the origin, xj  yij. The smoothing is caused by the shift in xj' and 
+yij  due to the conductance of the lateral coupling transistors connected to the source 
+follower outputs in Figure 1 (a), and extends over a voltage range comparable to the 
+thermal voltage kT/q depending on the relative geometry of the transistors and current 
+bias level of the source followers. The observed width of the flat region in Figure 2 
+spans roughly 60 mV, and shows little variation for bias current settings below 0.5 
+Tuning of the bias current allows to balance speed and power dissipation requirements, 
+since the output response is slew-rate limited by the source followers. 
+3.2 Winner-Take-All Circuitry 
+The circuit implementation of the winner-take-all (WTA) function combines the com- 
+pact sizing and modularity of a linear architecture as in [4,8,9] with positive feedback 
+for fast and decisive output settling independent of signal levels, as in [6,3]. Typical 
+positive feedback structures for WTA operation use a logarithmic tree [6] or a fully 
+interconnected network [3], with implementation complexities of order O(n log n) and 
+O(n 2) respectively, n being the number of WTA inputs. The present implementation fea- 
+tures an O(n) complexity in a linear structure by means of globalized positive feedback, 
+communicated over a single line. 
+The schematic of the WTA cell, receiving the input z i and constructing the digital output 
+d/through global competition communicated over the COMM line, is shown in Figure 3. 
+The global COMM line is source connected to input transistor Mi and positive feedback 
+transistor Mf, and receives a constant bias current lb (^) from Mbl. Locally, the WTA 
+operation is governed by the dynamics of d.' on (parasitic) capacitor Cp. A high pulse 
+A Charge-Based CMOS Parallel Analog Vector Quantizer 783 
+0.0 
+-0.2 
+-0.8 
+-1.0 
+xj (v) 
+-0.12 
+.-.. -0.14 
+ -0.16 
+ -0.18 
+! 
+-0.20 
+-0.22 
+I I I I I 
+X j- y j (V) 
+(a) (b) 
+Figure 2: Distance estimation characteristics, (a) for various values of i . 
+Y j, 
+(b) magnified view. 
+on RST, resetting di' to zero, marks the beginning of the WTA cycle. With Mf initially 
+inactive, the total bias current n lb (wT^ through COMM is divided over all competing 
+WTA cells, according to the relative z i voltage levels, and each cell fraction is locally 
+mirrored by the Mml-Mm2 pair onto d/, charging Cp. The cell with the highest z i input 
+voltage receives the largest fraction of bias current, and charges C/ at the highest rate. 
+The winning o

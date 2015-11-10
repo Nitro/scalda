@@ -1,0 +1,150 @@
+Bangs, Clicks, Snaps, Thuds and Whacks: 
+an Architecture for Acoustic Transient 
+Processing 
+Fernando J. Pinedd 1) 
+fernando.pineda@jhuapl.edu 
+Gert Cauwenberghs (2) 
+gert @jhunix.hcf.jhu.edu 
+R. Timothy Edwards (2) 
+tim@bach.ece.jhu.edu 
+(1)]'he Applied Physics Laboratory 
+The Johns Hopkins University 
+Laurel, Maryland 20723-6099 
+(2Dept. of Electrical and Computer Engineering 
+The Johns Hopkins University 
+34th and Charles Streets 
+Baltimore Maryland 21218 
+ABSTRACT 
+We propose a neuromorphic architecture for real-time processing of 
+acoustic transients in analog VLSI. We show how judicious normalization 
+of a time-frequency signal allows an elegant and robust implementation 
+of a correlation algorithm. The algorithm uses binary multiplexing instead 
+of analog-analog multiplication. This removes the need for analog 
+storage and analog-multiplication. Simulations show that the resulting 
+algorithm has the same out-of-sample classification performance (-93% 
+correct) as a baseline template-matching algorithm. 
+1 INTRODUCTION 
+We report progress towards our long-term goal of developing low-cost, low-power, low- 
+complexity analog-VLSI processors for real-time applications. We propose a neuromorphic 
+architecture for acoustic processing in analog VLSI. The characteristics of the architecture 
+are explored by using simulations and real-world acoustic transients. We use acoustic 
+transients in our experiments because information in the form of acoustic transients 
+pervades the natural world. Insects, birds, and mammals (especially marine mammals) 
+all employ acoustic signals with rich transient structure. Human speech, is largely composed 
+of transients and speech recognizers based on transients can perform as well as recognizers 
+based on phonemes (Morgan, Boufiard,Greenberg, Hermansky, and Wu, 1995). Machines 
+also generate transients as they change state and as they wear down. Transients can be 
+used to diagnose wear and abnormal conditions in machines. 
+Architecture for Acoustic Transient Processing 735 
+In this paper, we consider how algorithmic choices that do not influence classification 
+performance, make an initially difficult-to-implement algorithm, practical to implement. 
+In particular, we present a practical architecture for performing real-time recognition of 
+acoustic transients via a correlation-based algorithm. Correlation in analog VLSI poses 
+two fundamental implementation challenges. First, there is the problem of template storage, 
+second, there is the problem of accurate analog multiplication. Both problems can be 
+solved by building sufficiently complex circuits. This solution is generally unsatisfactory 
+because the resulting processors must have less area and consume less power than their 
+digital counterparts in order to be competitive. Another solution to the storage problem is 
+to employ novel floating gate devices. At present such devices can store analog values 
+for years without significant degradation. Moreover, this approach can result in very 
+compact, yet computationally complex devices. On the other hand, programming floating 
+gate devices is not so straight-forward. It is relatively slow, it requires high voltage and it 
+degrades the floating gate each time it is reprogramme& Our solution is to side-step the 
+problem completely and to develop an algorithmic solution that requires neither analog 
+storage nor analog multiplication. Such an approach is attractive because it is both 
+biologically plausible and electronically efficient. We demonstrate that a high level of 
+classification performance on a real-word data set is achievable with no measurable loss 
+of performance, compared to a baseline correlation algorithm. 
+The acoustic transients used in our experiments were collected by K. Ryals and D. 
+Steigerwald and are described in (Pineda, Ryals, Steigerwald and Furth, 1995). These 
+transients consist of isolated Bangs, Claps, Clicks, Cracks, Dinks, Pings, Pops, Slaps, 
+Smacks, Snaps, Thuds and Whacks that were recorded on DAT tape in an office environment. 
+The ambient noise level was uncontrolled, but typical of a single-occupant office. 
+Approximately 221 transients comprising 10 classes were collected. Most of the energy 
+in one of our typical transients is dissipated in the first 10 ms. The remaining energy is 
+dissipated over the course of approximately 100 ms. The transients had durations of 
+approximately 20-100 ms. There was considerable in-class and extra-class variability in 
+duration. The duration of a transient was determined automatically by a segmentation 
+algorithm described below. The segmentation algorithm was also used to align the templates 
+in the correlation calculations. 
+2 THE BASELINE ALGORITHM 
+The baseline classification algorithm and its performance is described in Pineda, et al. 
+(1995). Here we summarize only its most salient features. Like many biologically motivated 
+acoustic processing algorithms, the preprocessing steps include time-frequency analysis, 
+rectification, smoothing and compression via a nonlinearity (e.g. Yang, Wang and Shamma, 
+1992). Classification is performed by correlation against a template that represents a 
+particular class. In addition, there is a training step which is required to create the 
+templates. This step is described in the correlation section below. We turn now to a 
+more detailed description of each processing step. 
+A. Time.frequency Analysis: Time-frequency analysis for the baseline algorithm and the 
+simulations performed in this work, was performed by an ultra-low power (5.5 mW) 
+analog VLSI filter bank intended to mimic the processing performed by the mammalian 
+cochlea (Furth, Kumar, Andreou and Goldstein, 1994). This real-time device creates a 
+time-frequency representation that would ordinarily require hours of computation on a 
+736 E J. Pineda, G. Cauwenberghs and R. T. Edwards 
+high-speed workstation. More complete descriptions can be found in the references. The 
+time-frequency representation produced by the filter bank is qualitatively similar to that 
+produced by a wavelet transformation. The center frequencies and Q-factors of each 
+channel are uniformly spaced in log space. The low frequency channel is tuned to a 
+center frequency of 100 Hz and Q-factor of 1.0, while the high frequency channel is 
+tuned to a center frequency of 6000 Hz and Q-factor 3.5. There are 31 output channels. 
+The 31-channel cochlear output was digitized and stored on disk at a raw rate of 256K 
+samples per second. This raw rate was distributed over 32 channels, at rates appropriate 
+for each channel (six rates were used, 1 kHz for the lowest frequency channels up to 32 
+kHz for the highest-frequency channels and the unfiltered channel). 
+B. Segmentation: Both the template calculation and the classification algorithm rely on 
+having a reliable segmenter. In our experiments, the transients are isolated and the noise 
+level is low, therefore a simple segmenter is all that is needed. Figure 2. shows a 
+segmenter that we implemented in software and which consists of a three layer neural 
+network. 
+Channel I [Threshold 
+Threshold 
+� 
+� 
+� 
+Threshold 
+Channel 31 IThreshold 
+Threshold 
+noisy segmentation bit 
+Lowpass HThreshold  
+I;=1 ms 
+Low pass JJThreshold 
+1;= 10 ms Jl 
+clean segmentation bit 
+Figure 2: Schematic diagram showing the segmenter network 
+The input layer receives mean subtracted and rectified signals from the cochlear filters. 
+The first layer simply thresholds these signals. The second layer consists of a single unit 
+that accumulates and rethresholds the thresholded signals. The second layer outputs a 
+noisy segmentation signal that is nonzero if two or more channels in the input layer 
+exceed the input threshold. Finally, the output neuron cleans up the segmentation signal 
+by low-pass filtering it with a time-scale of 10 ms (to fill in drop outs) and by low-pass 
+filtering it with a time-scale of 1 ms (to catch the onset of a transient). The outputs of the 
+two low-pass filters are OR'ed by the output neuron to produce a clean segmentation bit. 
+The four adjustable thresholds in the network were determined empirically so as to 
+maximize the number of true transients that were properly segmented while minimizing 
+the number of transients that were missed or cut in half. 
+�. Smoothing & Normalization: The raw output of the filter bank is rectified and smoothed 
+with a single pole filter and subsequently normalized. Smoothing was done with a the 
+Architecture for Acoustic Transient Processing 737 
+same time-scale (1-ms) in all frequency channels. Let X(t) be the instantaneous vector 
+of rectified and smoothed channel data, then the instantaneous output of the norrealizer is 
+(t)- X(t) Where 0 is a positive constant whose purpose is to prevent the 
+o+llxct)ll' 
+normalization stage from amplifying noise in the absence of a transient signal. With this 
+II  I{--0  iix(t)l[, <<0 and I(t, ,=1if Ix(t)ll, >> o. Thus 
+normalization we have (t)  , 
+0 effectively determines a soft input threshold that transients must exceed if they are to 
+be normalized and passed on to higher level processing. 
+A sequence of normalized vectors over a time-window of length T is used as the feature 
+vector for the correlation and classification stages of the algorithm. Figure 3. shows four 
+normalized feature vectors from one class of transients (concatenated together). 
+0 50 100 150 200 250 300 
+Time (ms) 
+Figure 3.: Normalized representation of the first 4 exemplars from one class of transients. 
+D. Correlation: The feature-vectors are correlated in the time-frequency domain against 
+a set of K time-frequency templates. The k -th feature-vector-template is precalculated 
+by averaging over a corpus of vectors from the k-th class. Thus, if C k represents 
+the k- th transient class, and if { )k represents an average over the elements in a class, 
+{ )= Then the template is of the form b(t)= {'(t)) The 
+e.g. '(t) 
+instantaneou

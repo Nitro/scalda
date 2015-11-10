@@ -1,0 +1,158 @@
+Hoeffding Races: Accelerating Model 
+Selection Search for Classification and 
+Function Approximation 
+Oded Maron 
+Artificial Intelligence Laboratory 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+Andrew W. Moore 
+lobotics Institute 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+Selecting a good model of a set of input points by cross validation 
+is a computationally intensive process, especially if the number of 
+possible models or the number of training points is high. Tech- 
+niques such as gradient descent are helpful in searching through 
+the space of models, but problems such as local minima, and more 
+importantly, lack of a distance metric between various models re- 
+duce the applicability of these search methods. Hoeffding Races is 
+a technique for finding a good model for the data by quickly dis- 
+carding bad models, and concentrating the computational effort at 
+differentiating between the better ones. This paper focuses on the 
+special case of leave-one-out cross validation applied to memory- 
+based learning algorithms, but we also argue that it is applicable 
+to any class of model selection problems. 
+1 Introduction 
+Model selection addresses high level decisions about how best to tune learning 
+algorithm architectures for particular tasks. Such decisions include which function 
+approximator to use, how to trade smoothness for goodness of fit and which fea- 
+tures are relevant. The problem of automatically selecting a good model has been 
+variously described as fitting a curve, learning a function, or trying to predict future 
+60 Maron and Moore 
+0.22 
+0.2 
+0.18 
+0.16 
+0.14 
+o. x2 
+1 3 5 7 9 
+k Nearest Neighbors Used 
+Figure 1: A space of models consisting of local-weighted-regression models with 
+different numbers of nearest neighbors used. The global minimum is at one-nearest- 
+neighbor, but a gradient descent algorithm would get stuck in local minima unless 
+it happened to start in in a model where k < 4. 
+instances of the problem. One can think of this as a search through the space of 
+possible models with some criterion of goodness such as prediction accuracy, com- 
+plexity of the model, or smoothness. In this paper, this criterion will be prediction 
+accuracy. Let us examine two common ways of measuring accuracy: using a test 
+set and leave-one-out cross validation (Wahba and Wold, 1975). 
+� The test set method arbitrarily divides the data into a training set and a 
+test set. The learner is trained on the training set, and is then queried with 
+just the input vectors of the test set. The error for a particular point is the 
+difference between the learner's prediction and the actual output vector. 
+� Leave-one-out cross validation trains the learner N times (where N is 
+the number of points), each time omitting a different point. We attempt to 
+predict each omitted point. The error for a particular point is the difference 
+between the learner's prediction and the actual output vector. 
+The total error of either method is computed by averaging all the error instances. 
+The obvious method of searching through a space of models, the brute force ap- 
+proach, finds the accuracy of every model and picks the best one. The time to find 
+the accuracy (error rate) of a particular model is proportional to the size of the test 
+set ITESTI, or the size of the training set in the case of cross validation. Suppose 
+that the model space is discretized into a finite number of models IMODELSI -- 
+then the amount of work required is O(IMODELS I x [TESTI) , which is expensive. 
+A popular way of dealing with this problem is gradient descent. This method can 
+be applied to find the parameters (or weights) of a model. However, it cannot be 
+used to find the structure (or architecture) of the model. There are two reasons for 
+Hoeffding Races: Accelerating Model Selection 61 
+this. First, we have empirically noted many occasions on which the search space is 
+peppered with local minima (Figure 1). Second, at the highest level we are selecting 
+from a set of entirely distinct models, with no numeric parameters over which to 
+hill-climb. For example, is a neural net with 100 hidden units closer to a neural net 
+with 50 hiden units or to a memory-based model which uses 3 nearest neighbors? 
+There is no viable answer to this question since we cannot impose a viable metric 
+on this model space. 
+The algorithm we describe in this paper, Hoeffding Races, combines the robustness 
+of brute force and the computational feasibility of hill climbing. We instantiated the 
+algorithm by specifying the set of models to be memory-based algorithms (Stan- 
+fill and Waltz, 1986) (Atkeson and Reinkensmeyer, 1989) (Moore, 1992) and the 
+method of finding the error to be leave-one-out cross validation. We will discuss 
+how to extend the algorithm to any set of models and to the test set method in the 
+full paper. We chose memory-based algorithms since they go hand in hand with 
+cross validation. Training is very cheap - simply keep all the points in memory, and 
+all the algorithms of the various models can use the same memory. Finding the 
+leave-one-out cross validation error at a point is cheap as making a prediction: sim- 
+ply cover up that point in memory, then predict its value using the current model. 
+For a discussion of how to generate various memory-based models, see (Moore et 
+al., 1992). 
+2 Hoeffding Races 
+The algorithm was inspired by ideas from (Haussler, 1992) and (Kaelbling, 1990) 
+and a similar idea appears in (Greiner and Jurisica, 1992). It derives its name from 
+Hoeffding's formula (Hoeffding, 1963), which concerns our confidence in the sample 
+mean of n independently drawn points Xl, ..., x. The probability of the estimated 
+1 
+mean Ees =  Y']i<i< xi being more than epsilon far away from the true mean 
+Et,.,e after n independently drawn points is bounded by: 
+where B bounds the possible spread of point values. 
+We would like to say that with confidence 1 - 5, our estimate of the mean is within 
+e of the true mean; or in other words, Pr(lEtre - Eest[ > e) < 5. Combining the 
+two equations and solving for e gives us a bound on how close the estimated mean 
+is to the true mean after n points with confidence 1 - 5: 
+os(2/, ) 
+(' V 2n 
+The algorithm starts with a collection of learning boxes. We call each model a 
+learning box since we are treating the models as if they were black boxes. We 
+are not looking at how complex or time-consuming each prediction is, just at the 
+input and output of the box. Associated with each learning box are two pieces of 
+information: a current estimate of its error rate and the number of points it has 
+been tested upon so far. The algorithm also starts with a test set of size N. For 
+leave-one-out cross validation, the test set is simply the training set. 
+62 Maron and Moore 
+F_.RROR 
+learning le.,ning learning learning learning learning le..a.,nin g 
+box #0 box #1 box  box #3 box 1 box t; box #6 
+Figure 2: An example where the best upper bound of learning box 2 eliminates 
+learning boxes l and 5. The size of e varies since each learning box has its own 
+upper bound on its error range, B. 
+At each point in the algorithm, we randomly select a point from the test set. We 
+compute the error at that point for all learning boxes, and update each learning 
+box's estimate of its own total error rate. In addition, we use Hoeffding's bound 
+to calculate how close the current estimate is to the true error for each learning 
+box. We then eliminate those learning boxes whose best possible error (their lower 
+bound) is still greater than the worst error of the best learning box (its upper 
+bound); see Figure 2. The intervals get smaller as more points are tested, thereby 
+racing the good learning boxes, and eliminating the bad ones. 
+We repeat the algorithm until we are left with just one learning box, or until we 
+run out of points. The algorithm can also be stopped once e has reached a certain 
+threshhold. The algorithm returns a set of learning boxes whose error rates are 
+insignificantly (to within e) different after N test points. 
+3 Proof of Correctness 
+The careful reader would have noticed that the confidence 5 given in the previous 
+section is incorrect. In order to prove that the algorithm indeed returns a set of 
+learning boxes which includes the best one, we'll need a more rigorous approach. 
+We denote by A the probability that the algorithm eliminates what would have 
+been the best learning box. The difference between A and 5 which was glossed over 
+in the previous section is that I -A is the confidence for the success of the entire 
+algrithm, while 1 - 5 is the confidence in Hoeffding's bound for one learning box 
+Hoeffding Races: Accelerating Model Selection 63 
+during one iteration of the algorithm. 
+We would like to make a formal connection between A and 5. In order to do that, let 
+us make the requirement of a correct algorithm more stringent. We'll say that the 
+algorithm is correct if every learning box is within e of its true error at every iteration 
+of the algorithm. This requirement encompasses the weaker requirement that we 
+don't eliminate the best learning box. An algorithm is correct with confidence A if 
+Pt{ all learning boxes are within e on all iterations} _ 1 - A. 
+We'll now derive the relationship between 5 and A by using the disjunctive proba- 
+bility inequality which states that Pr{A V B} _ Pr{A} + Pr{B}. 
+Let's assume that we have n iterations (we have n points in our test set), and that 
+we have m learning boxes (LB1 ... LB,). By Hoeffding's inequality, we know that 
+Pt{ a particular LB is within e on a particular iteration} _ I - 5 
+Flipping that around we get: 
+Pr{a particular LB is wrong on a particular iteration} < 5 
+Using the disjunctive inequality we can say 
+Pt{ a particular LB is wrong on iteration 1 
+a particular LB is wrong on iteration 2 
+a particular LB is 
+Let's rewrite this as:

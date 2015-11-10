@@ -1,0 +1,150 @@
+11 
+AN 
+OPTIMALITY PRINCIPLE FOR 
+UNSUPERVISED LEARNING 
+Terence D. Sanger 
+MIT AI Laboratory, NE43-743 
+Cambridge, MA 02139 
+(tds@wheaties.ai.mit.edu) 
+ABSTRACT 
+We propose an optimality principle for training an unsu- 
+pervised feedforward neural network based upon maximal 
+ability to reconstruct the input data from the network out- 
+puts. We describe an algorithm which can be used to train 
+either linear or nonlinear networks with certain types of 
+nonlinearity. Examples of applications to the problems of 
+image coding, feature detection, and analysis of random- 
+dot stereograms are presented. 
+1. INTRODUCTION 
+There are many algorithms for unsupervised training of neural networks, each of 
+which has a particular optimality criterion as its goal. (For a partial review, see 
+(Hinton, 1987, Lippmann, 1987).) We have presented a new algorithm for training 
+single-layer linear networks which has been shown to have optimality properties 
+associated with the Karhunen-Love expansion (Sanger, 1988b). We now show 
+that a similar algorithm can be applied to certain types of nonlinear feedforward 
+networks, and we give some examples of its behavior. 
+The optimality principle which we will use to describe the algorithm is based on the 
+idea of maximizing information which was first proposed as a desirable property of 
+neural networks by Linsker (1986, 1988). Unfortunately, measuring the information 
+in network outputs can be difficult without precise knowledge of the distribution 
+on the input data, so we seek another measure which is related to information 
+but which is easier to compute. If instead of maximizing information, we try to 
+maximize our ability to reconstruct the input (with minimum mean-squared error) 
+given the output of the network, we are able to obtain some useful results. Note 
+that this is not equivalent to maximizing information except in some special cases. 
+However, it contains the intuitive notion that the input data is being represented 
+by the network in such a way that very little of it has been lost. 
+12 Sanger 
+2. LINEAR CASE 
+We now summarize some of the results in (Sanger, 1988b). A single-layer linear 
+feedforward network is described by an MxN matrix C of weights such that if x is 
+a vector of N inputs and y is a vector of M outputs with M < N, we have y - Cx. 
+As mentioned above, we choose an optimality principle defined so that we can best 
+reconstruct the inputs to the network given the outputs. We want to minimize the 
+mean squared error El(x- )2] where x is the actual input which is zero-mean with 
+correlation matrix Q - E[xxT], and k is a linear estimation of this input given the 
+output y. The linear least squares estimate (LLSE) is given by 
+ = QCT(CQC)-y 
+and we will assume that  is computed in this way for any matrix C of weights 
+which we choose. The mean-squared error for the LLSE is given by 
+E[(x - k)2] = Q - QCT(CQC)-CQ 
+and it is well known that this is minimized if the rows of C are a linear combination of 
+the first M eigenvectors of the correlation matrix Q. One optimal choice of C is the 
+Singular Value Decomposition (SVD) of Q, for which the output correlation matrix 
+E[yy T] - CQC T will be the diagonal matrix of eigenvalues of Q. In this case, the 
+outputs are uncorrelated and the sum of their variances (traceE[yyT]) is maximal for 
+any set of M uncorrelated outputs. We can thus think of the eigenvectors as being 
+obtained by any process which maximizes the output variance while maintaining 
+the outputs uncorrelated. 
+We now define the optimal single-layer linear network as that network whose weights 
+represent the first M eigenvectors of the input correlation matrix Q. The optimal 
+network thus minimizes the mean-squared approximation error E[(x - )] given 
+the shape constraint that M < N. 
+2.1 LINEAR ALGORITHM 
+We have previously proposed a weight-update rule called the Generalized Hebbian 
+Algorithm, and proven that this algorithm causes the rows of the weight matrix C 
+to converge to the eigenvectors of the input correlation matrix Q (Sanger, 1988a,b). 
+The algorithm is given by: 
+C(t -t- 1) = C(t) -t- ? (y(t)x T (t) - LT[y(t)y T (t)]C(t)) 
+(1) 
+where ? is a rate constant which decreases as l/t, x(t) is an input sample vector, 
+y(t) - C(t)x(t), and LT is an operator which makes its matrix argument lower 
+triangular by setting all entries above the diagonal to zero. This algorithm can be 
+implemented using only a local synaptic learning rule (Sanger, 1988b). 
+Since the Generalized Hebbian Algorithm computes the eigenvectors of the input 
+correlation matrix Q, it is related to the Singular Value Decomposition (SVD), 
+An Optimality Principle for Unsupervised Learning 13 
+Figure 1: (a) original image. (b) image coded at .36 bits per picel. (c) masks 
+learned by the network which were used for vector quantized coding of 8c8 blocks of 
+the image. 
+Principal Components Analysis (PCA), and the Karhunen-Love Transform (KLT). 
+(For a review of several related algorithms for performing the KLT, see (Oja, 1983).) 
+2.2 IMAGE CODING 
+We present one example of the behavior of a single-layer linear network. (This 
+example appears in (Sanger, 1988b).) Figure 1 shows an original 256x256x8bit 
+image which was used for training a network. 8x8 blocks of the image were chosen 
+by scanning over the image, and these were used as training inputs to a network with 
+64 inputs and 8 outputs. After training, the set of weights for each output (figure 
+lc) represents a vector quantizing mask. Each 8x8 block of the input image is then 
+coded using the outputs of the network. Each output is quantized with a number of 
+bits related to the log of the variance, and the original figure is approximated from 
+the quantized outputs. The reconstruction of figure lb uses a total of 23 bits per 8x8 
+region, which gives a data rate of 0.36 bits per pixel. The fact that the image could 
+be represented using such a low bit rate indicates that the masks that were found 
+represent significant features which are useful for recognition. This image coding 
+technique is equivalent to block-coded KLT methods common in the literature. 
+14 Sanger 
+3. NONLINEAR CASE 
+In general, training a nonlinear unsupervised network to approximate nonlinear 
+functions is very difficult. Because of the large (infinite-dimensional) space of pos- 
+sible functions, it is important to have detailed knowledge of the class of functions 
+which are useful in order to design an efficient network algorithm. (Several peo- 
+ple pointed out to me that the talk implied such knowledge is not necessary, but 
+unfortunately such an implication is false.) 
+The network structure we consider is a linear layer represented by a matrix C (which 
+is perhaps an interior layer of a larger network) followed by node nonlinearities a(Yi) 
+where y is the i h linear output, followed by another linear layer (perhaps followed 
+by more layers). We assume that the nonlinearities a() are fixed, and that the only 
+parameters susceptible to training are the linear weights C. 
+If z is the M-vector of outputs after the nonlinearity, then we can write each com- 
+ponent z -- (yi) -- (cix) where ci is the i h row of the matrix C. Note that 
+the level contours of each function zi are determined entirely by the vector c, and 
+that the effect of a 0 is limited to modifying the output value. Intuitively, we thus 
+expect that if Yi encodes a useful parameter of the input x, then zi will encode the 
+same parameter, although scaled by the nonlinearity a(). 
+This can be formalized, and if we choose our optimality principle to again be min- 
+imum mean-squared linear approximation of the original input x given the output 
+z, the best solution remains when the rows of C are a linear combination of the first 
+M eigenvectors of the input correlation matrix Q (Bourlard and Kamp, 1988). 
+In two of the simulations, the nonlinearity a() which we use is a rectification non- 
+linearity, given by 
+y if y>O 
+0 if 
+Note that at most one of {er(yi), er(-y)} is nonzero at any time, so these two values 
+are uncorrelated. Therefore, if we maximize the variance of y (before the nonlin- 
+earity) while maintaining the elements of z (after the nonlinearity) uncorrelated, 
+we need 2M outputs in order to represent the data available from an M-vector y. 
+Note that 2M may be greater than the number of inputs N, so that the hidden 
+layer z can have more elements than the input. 
+3.1 NONLINEAR ALGORITHM 
+The nonlinear Generalized Hebbian Algorithm has exactly the same form as for 
+the linear case, except that we substitute the use of the output values after the 
+nonlinearity for the linear values. The algorithm is thus given by: 
+C(t + 1)= C()+ ? (z()xT()- LT[z(t)zT(t)lC(t)) (2) 
+where the elements of z are given by z() = er(yi()), with y() = C()x(t). 
+Although we have not proven that this algorithm converges, a heuristic analysis 
+of its behavior (for a rectification nonlinearity and Gaussian input distribution) 
+An Optimality Principle for Unsupervised Learning 15 
+shows that stable points may exist for which each row of (7 is proportional to 
+an eigenvector of Q, and pairs of rows are either the negative of each other or 
+orthogonal. In practice, the rows of C are ordered by decreasing output variance, 
+and occur in pairs for which one member is the negative of the other. This choice 
+of C will maximize the sum of the output variances for uncorrelated outputs, so 
+long as the input is Gaussian. It also allows optimal linear estimation of the input 
+given the output, so long as both polarities of each of the eigenvectors are present. 
+3.2 NONLINEAR EXAMPLES 
+3.2.1 Encoder Problem 
+We compare the performance of two nonlinear networks which have ]earned to 
+perform an identity mapping (the encoder problem). One is trained by back- 
+propagation, (Rumelhart et al., 1986) and the other has two hidden layers trained 
+using the unsupervised Hebbian algorithm, while the

@@ -1,0 +1,146 @@
+Transforming Neural-Net Output Levels 
+to Probability Distributions 
+John S. Denker and Yann leCun 
+AT&T Bell Laboratories 
+Holmdel, NJ 07733 
+Abstract 
+(1) The outputs of a typical multi-output classification network do not 
+satisfy the axioms of probability; probabilities should be positive and sum 
+to one. This problem can be solved by treating the trained network as a 
+preprocessor that produces a feature vector that can be further processed, 
+for instance by classical statistical estimation techniques. (2) We present a 
+method for computing the first two moments of the probability distribution 
+indicating the range of outputs that are consistent with the input and the 
+training data. It is particularly useful to combine these two ideas: we 
+implement the ideas of section i using Parzen windows, where the shape 
+and relative size of each window is computed using the ideas of section 2. 
+This allows us to make contact between important theoretical ideas (e.g. 
+the ensemble formalism) and practical techniques (e.g. back-prop). Our 
+results also shed new light on and generalize the well-known softmax 
+scheme. 
+i Distribution of Categories in Output Space 
+In many neural-net applications, it is crucial to produce a set of C numbers that 
+serve as estimates of the probability of C mutually exclusive outcomes. For exam- 
+ple, in speech recognition, these numbers represent the probability of C different 
+phonemes; the probabilities of successive segments can be combined using a Hidden 
+Markov Model. Similarly, in an Optical Character Recognition (OCR) applica- 
+tion, the numbers represent C possible characters. Probability information for the 
+best guess category (and probable runner-up categories) is combined with con- 
+text, cost information, etcetera, to produce recognition of multi-character strings. 
+853 
+854 Denker and leCun 
+According to the axioms of probability, these C numbers should be constrained to be 
+positive and sum to one. We find that rather than modifying the network architec- 
+ture and/or training algorithm to satisfy this constraint directly, it is advantageous 
+to use a network without the probabilistic constraint, followed by a statistical post- 
+processor. Similar strategies have been discussed before, e.g. (Fogelman, 1990). 
+The obvious starting point is a network with G output units. We can train the net- 
+work with targets that obey the probabilistic constraint, e.g. the target for category 
+0 is [1, 0, 0,.--], the target for category 1 is [0, 1, 0,..-], etcetera. This would 
+not, alas, guarantee that the actual outputs would obey the constraint. Of course, 
+the actual outputs can always be shifted and normalized to meet the requirement; 
+one of the goals of this paper is to understand the best way to perform such a 
+transformation. A more sophisticated idea would be to construct a network that 
+had such a transformation (e.g. softmax (Bridle, 1990; Rumelhart, 1989)) built 
+in even during training. We tried this idea and discovered numerous difficulties, 
+as discussed in (Denker and leCun, 1990). 
+The most principled solution is simply to collect statistics on the trained network. 
+Figures 1 and 2 are scatter plots of output from our OCR network (Le Gun et al., 
+1990) that was trained to recognize the digits 0 through 9'.' In the first figure, 
+the outputs tend to cluster around the target vectors [the points (T-,T + ) and 
+(T+,T-)], and even though there are a few stragglers, decision regions can be 
+found that divide the space into a high-confidence 0 region, a high-confidence 1 
+region, and a quite small rejection region. In the other figure, it can be seen that 
+the 3 versus 5 separation is very challenging. 
+In all cases, the plotted points indicate the output of the network when the input 
+image is taken from a special calibration dataset /2 that is distinct both from 
+the training set .M (used to train the network) and from the testing set 6 (used to 
+evaluate the generalization performance of the final, overall system). 
+This sort of analysis is applicable to a wide range of problems. The architecture of 
+the neural network (or other adaptive system) should be chosen to suit the problem 
+in each case. The network should then be trained using standard techniques. The 
+hope is that the output will constitute a sufficent statistic. 
+Given enough training data, we could use a standard statistical technique such 
+as Parzen windows (Duda and Hart, 1973) to estimate the probability density in 
+output space. It is then straightforward to take an unknown input, calculate the 
+corresponding output vector O, and then estimate the probability that it belongs 
+to each class, according to the density of points of category c at location O in the 
+scatter plot. 
+We note that methods such as Parzen windows tend to fail when the number of 
+dimensions becomes too large, because it is exponentially harder to estimate prob- 
+ability densities in high-dimensional spaces; this is often referred to as the curse 
+of dimensionality (Duda and Hart, 1973). Since the number of output units (typ- 
+ically 10 in our OCR network) is much smaller than the number of input units 
+(typically 400) the method proposed here has a tremendous advantage compared to 
+classical statistical methods applied directly to the input vectors. This advantage 
+is increased by the fact that the distribution of points in network-output space is 
+much more regular than the distribution in the original space. 
+Transforming Neural-Net Output Levels to Probability Distributions 855 
+Calibration 
+Category 1 
+Calibration 
+Category 0 
+Figure 1: Scatter Plot: Category 1 versus 0 
+One axis in each plane represents the activation level of output unit 
+j=O, while the other axis represents activation level of output unit j=l; 
+the other 8 dimensions of output space are suppressed in this projection. 
+Points in the upper and lower plane are, respectively, assigned category 
+1 and 0 by the calibration set. The clusters appear elongated because 
+there are so many ways that an item can be neither a 1 nor a 0'.' This 
+figure contains over 500 points; the cluster centers are heavily overexposed. 
+Calibration 
+Category 5 
+Calibration 
+Category 3 
+Figure 2: Scatter Plot: Category 5 versus 3 
+This is the same as the previous figure except for the choice of data 
+points and projection axes. 
+856 Denker and leCun 
+2 Output Distribution for a Particular Input 
+The purpose of this section is to discuss the effect that limitations in the quantity 
+and/or quality of training data have on the reliability of neural-net outputs. Only an 
+outline of the argument can be presented here; details of the calculation can be found 
+in (Denker and leCun, 1990). This section does not use the ideas developed in the 
+previous section; the two lines of thought will converge in section 3. The calculation 
+proceeds in two steps: (1) to calculate the range of weight values consistent with the 
+training data, and then (2) to calculate the sensitivity of the output to uncertainty in 
+weight space. The result is a network that not only produces a best guess output, 
+but also an error bar indicating the confidence interval around that output. 
+The best formulation of the problem is to imagine that the input-output relation 
+of the network is given by a probability distribution P(O, I) [rather than the usual 
+function O = f(I)] where I and O represent the input vector and output vec- 
+tor respectively. For any specific input pattern, we get a probability distribution 
+Po(01I), which can be thought of as a histogram describing the probability of 
+various output values. 
+Even for a definite input I, the output will be probabilistic, because there is never 
+enough information in the training set to determine the precise value of the weight 
+vector W. Typically there are non-triviM error bars on the training data. Even when 
+the training data is absolutely noise-free (e.g. when it is generated by a mathematical 
+function on a discrete input space (Denker et al., 1987)) the output can still be 
+uncertain if the network is underdetermined; the uncertainty arises from lack of 
+data quantity, not quality. In the real world one is faced with both problems: less 
+than enough data to (over)determine the network, and less than complete confidence 
+in the data that does exist. 
+We assume we have a handy method (e.g. back-prop) for finding a (local) minimum 
+l?g of the loss function E(W). A second-order Taylor expansion should be valid in 
+the vicinity of W. Since the loss function E is an additive function of training data, 
+and since probabilities are multiplicative, it is not surprising that the likelihood of a 
+weight configuration is an exponential function of the loss (Tishby, Levin and Solla, 
+1989). Therefore the probability can be modelled locally as a multidimensional 
+gaussian centered at 17V; to a reasonable (Denker and leCun, 1990) approximation 
+the probability is proportional to: 
+pm(W) = po(W)exp[-fi  hii(Wi- 12Vi)a/2] 
+i 
+(1) 
+where h is the second derivative of the loss (the Hessian), /3 is a scale factor that 
+determines our overall confidence in the training data, and p0 expresses any infor- 
+mation we have about prior probabilities. The sums run over the dimensions of 
+parameter space. The width of this gaussian describes the range of networks in the 
+ensemble that are reasonably consistent with the training data. 
+Because we have a probability distribution on W, the expression O = fw(I) gives 
+a probability distribution on outputs 0, even for fixed inputs I. We find that the 
+most probable output 0 corresponds to the most probable parameters 17V. This 
+unsurprising result indicates that we are on the right track. 
+Transforming Neural-Net Output Levels to Probability Distributions 857 
+We next would like to know what range of output values correspond to the allowed 
+range of parameter values. We start by calculating the sensitivity of

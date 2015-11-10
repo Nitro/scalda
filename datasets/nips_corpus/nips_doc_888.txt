@@ -1,0 +1,180 @@
+Classifying with Gaussian Mixtures and 
+Clusters 
+Nanda Kambhatla and Todd K. Leen 
+Department of Computer Science and Engineering 
+Oregon Graduate Institute of Science & Technology 
+P.O. Box 91000 Portland, OR 97291-1000 
+nandacse. ogi. edu, tleencse. ogi. edu 
+Abstract 
+In this paper, we derive classifiers which are winner-take-all (WTA) 
+approximations to a Bayes classifier with Gaussian mixtures for 
+class conditional densities. The derived classifiers include clustering 
+based algorithms like LVQ and k-Means. We propose a constrained 
+rank Gaussian mixtures model and derive a WTA algorithm for it. 
+Our experiments with two speech classification tasks indicate that 
+the constrained rank model and the WTA approximations improve 
+the performance over the unconstrained models. 
+I Introduction 
+A classifier assigns vectors from 7  (n dimensional feature space) to one of K 
+classes, partitioning the feature space into a set of K disjoint regions. A Bayesian 
+classifier builds the partition based on a model of the class conditional probability 
+densities of the inputs (the partition is optimal for the given model). 
+In this paper, we assume that the class conditional densities are modeled by mixtures 
+of Gaussians. Based on Nowlan's work relating Gaussian mixtures and clustering 
+(Nowlan 1991), we derive winner-take-all (WTA) algorithms which approximate a 
+Gaussian mixtures Bayes classifier. We also show the relationship of these algo- 
+rithms to non-Bayesian cluster-based techniques like LVQ and k-Means. 
+The main problem with using Gaussian mixtures (or WTA algorithms thereof) is the 
+explosion in the number of parameters with the input dimensionality. We propose 
+682 Nanda Kambhatla, Todd K. Leen 
+a constrained rank Gaussian mixtures model for classification. Constraining the 
+rank of the Gaussians reduces the effective number of model paxameters thereby 
+regulaxizing the model. We present the model and derive a WTA algorithm for it. 
+Finally, we compaxe the performance of the different mixture models discussed in 
+this paper for two speech classification tasks. 
+2 Gaussian Mixture Bayes (GMB) classifiers 
+Let x denote the feature vector (x 6 T), and (t]I,I = 1,...,K} denote the 
+classes. Class priors axe denoted p(I) and the class-conditional densities axe de- 
+noted p(x[ I). The discriminant function for the Bayes classifier is 
+(1) 
+An input feature vector x is assigned to class I if 6I(x) > J(x) VJ  I. Given the 
+class conditional densities, this choice minimizes the classification error rate (Duda 
+and Haxt 1973). 
+We model each class conditional density by a mixture composed of QI component 
+Gaussians. The Bayes discriminant function (see Figure 1) becomes 
+i(x )=p(I)E aj exp - (x-/j))2j (x-/) , (2) 
+j=l (2') /2  
+I and I 
+where/j Ej axe the mean and the covariance matrix of the jth mixture com- 
+ponent for I. 
+p('l )p(X IX  -1) 
+0.1 
+0.08 
+0.06 
+0.04 
+0.02 
+5 10 15 20 25 30 
+ X 
+Fig. 1: Figure showing the decision rule of a GMB classifier for a two class problem 
+with one input feature. The horizontal axis represents the feature and the vertical axis 
+represents the Bayes discriminant functions. In this example, the class conditional densities 
+are modelled as a mixture of two Gaussians and equal priors are assumed. 
+To implement the Gaussian mixture Bayes classifier (GMB) we first sepaxate the 
+training data into the different classes. We then use the EM algorithm (Dempster 
+Classifying with Gaussian Mixtures and Clusters 683 
+et al 1977, Nowlan 1991) to determine the parameters for the Gaussian mixture 
+density for each class. 
+3 Winner-take-all approximations to GMB classifiers 
+In this section, we derive winner-take-all (WTA) approximations to GMB classifiers. 
+We also show the relationship of these algorithms to non-Bayesian cluster-based 
+techniques like LVQ and k-Means. 
+3.1 The WTA model for GMB 
+The WTA assumptions (relating hard clustering to Gaussian mixtures; see (Nowlan 
+1991)) are: 
+� p(xl I) are mixtures of Gaussians as in (2). 
+� The summation in (2) is dominated by the largest term. This is equivalent 
+to assigning all of the responsibility for an observation to the Gaussian with 
+the highest probability of generating that observation (Nowlan 1991). 
+To draw the relation between GMB and cluster-based classifiers, we further assume 
+that: 
+� The mixing proportions (a) are equal for a given class. 
+� The number of mixture components Q is proportional to p(). 
+Applying all the above assumptions to (2), taking logs and discarding the terms 
+that are identical for each class, we get the discriminant function 
+Q [1 I 1 I-T I-l- ] 
+( x ) =- min 
+=1 1og(lyl) + (x - t) Ey (x- 
+The discriminant function (3) suggests an algorithm that approximates the Bayes 
+classifier. We segregate the feature vectors by class and then train a separate vector 
+ and the covariance 
+quantizer (VQ) for each class. We then compute the means 
+matrices Efor each Voronoi cell of each quantizer, and use (3) for classifying new 
+patterns. We call this algorithm VQ-Covariance. Note that this algorithm does 
+not do a maximum likelihood estimation of its parameters based on the probability 
+model used to derive (3). The probability model is only used to classify patterns. 
+3.2 The relation to LVQ and k-Means 
+Further assume that for each class, the mixture components are spherically sym- 
+metric with covariance matrix E = a2I, with a 2 identical for all classes. We obtain 
+the discriminant function, 
+37-(x) =- rain II x � 
+- II (4) 
+684 Nanda Karnbhatla, Todd K. Leen 
+This is exactly the discriminant function used by the learning vector quantizer 
+(LVQ; Kohonen 1989) algorithm. Though LVQ employs a discriminatory training 
+procedure (i.e it directly learns the class boundaries and does not explicitly build a 
+separate model for each class), the implicit model of the class conditional densities 
+used by LVQ corresponds to a GMB model under all the assumptions listed above. 
+This is also the implicit model underlying any classifier which makes its classification 
+decision based on the Euclidean distance measure between a feature vector and a 
+set of prototype vectors (e.g. a k-Means clustering followed by classification based 
+on (4)). 
+4 Constrained rank GMB classifiers 
+In the preceding sections, we have presented a GMB classifier and some WTA 
+approximations to GMB. Mixture models such as GMB generally have too many 
+parameters for small data sets. In this section, we propose a way of regularizing the 
+mixture densities and derive a WTA classifier for the regularized model. 
+4.1 The constrained rank model 
+In section 2, we assumed that the class conditional densities of the feature vectors 
+x are mixtures of Gaussians 
+p(x I ff) 
+1 . ixTi ] 
+_ I (x- 
+1 (x- I) T 
+I 
+exp  j Aj i  
+i----1 
+(5) 
+I and I 
+where y Ey are the means and covariance matrices for the jtn component 
+Gaussian. e3I. i and Ai are the orthonormal eigenvectors and eigenvalues of Ei 
+(ordered such that A > > At ). In (5) we have written the Mahalanobis 
+distance in terms of te - ' - 3n , 
+eigenvectors. 
+For a particular data point x, the Mahalanobis distance is very sensitive to changes 
+in the squared projections onto the trailing eigen-directions, since the variances 
+are very small in these directions. This is a potential problem with small data sets. 
+When there are insufficient data points to estimate all the parameters of the mixture 
+density accurately, the trailing eigen-directions and their associated eigenvalues are 
+likely to be poorly estimated. Using the Mahalanobis distance in (5) can lead to 
+erroneous results in such cases. 
+We propose a method for regularizing Gaussian mixture classifiers based on the 
+above ideas. We assume that the trailing n - m eigen-directions of each Gaussian 
+component are inaccurate due to over fitting to the training set. We rewrite the class 
+conditional densities (5) retaining only the leading m (0 < m _ n) eigen-directions 
+Classifying with Gaussian Mixtures and Clusters 685 
+in the determinants and the Mahalanobis distances 
+p(xlfl') =  % exp - (x-t) T ejiej'i  (x-I) 
+(271') / v/l[i=l j, i=1 Xj, ] 
+j=l m 2 m I I 
+We choose the value of m (the reduced rank) by cross-validation over a septate 
+validation set. Thus, our model can be considered to be regularizing or constraining 
+the cls conditional miure densities. 
+If we apply the above model and derive the Bayes discriminant functions (1), we 
+get, 
+rf I (x) = p(I) E oj exp -(x - t) T ejieji (x -- I) 
+,=1 
+(7) 
+We can implement a constrained rank Gaussian mixture Bayes (GMB-Reduced) 
+classifier based on (7) using the EM algorithm to determine the parameters of the 
+mixture density for each class. We segregate the data into different classes and use 
+the EM algorithm to determine the parameters of the full mixture density (5). We 
+then use (7) to classify patterns. 
+4.2 A constrained rank WTA algorithm 
+We now derive a winner-take-all (WTA) approximation for the constrained rank 
+mixture model described above. We assume (similar to section 3.1) that 
+� p(xlf ) are constrained mixtures of Gaussians as in (6). 
+� The summation in (6) is dominated by the largest term (the WTA assump- 
+tion). 
+� The mixing proportions (a) are equal for a given class and the number of 
+components Q is proportional to p(f). 
+Applying these assumptions to (7), taking logs and discarding the terms that are 
+identical for each class, we get the discriminant function 
+'(x) = - min log(AJi) + 
+j=l i=1 
+(8) 
+It is interesting to compare (8) with (3). Our model postulates that the trailing 
+n - ra eigen-directions of each Gaussian represent over fitting to noise in the training 
+set. The discriminant functions reflect this; (8) retains only those terms of (3) which 
+are in the leading ra eigen-directions of each Gaussian. 
+We can generate an algorithm based on (8) that approximates the reduced rank 
+Bayes classifier. We se

@@ -1,0 +1,168 @@
+Applications of Neural Networks in 
+Video Signal Processing 
+John C. Pearson, Clay D. Spence and Ronald Sverdlove 
+David Samoff Research Center 
+CN5300 
+Princeton, NJ 08543-5300 
+Abstract 
+Although color TV is an established technology, there are a number of 
+longstanding problems for which neural networks may be suited. Impulse 
+noise is such a problem, and a modular neural network approach is pre- 
+sented in this paper. The training and analysis was done on conventional 
+computers, while real-time simulations were performed on a massively par- 
+allel computer called the Princeton Engine. The network approach was 
+compared to a conventional alternative, a median filter. Real-time simula- 
+tions and quantitative analysis demonstrated the technical superiority of 
+the neural system. Ongoing work is investigating the complexity and cost 
+of implementing this system in hardware. 
+1 
+THE POTENTIAL FOR NEURAL NETWORKS IN 
+CONSUMER ELECTRONICS 
+Neural networks are most often considered for application in emerging new tech- 
+nologies, such as speech recognition, machine vision, and robotics. The fundamental 
+ideas behind these technologies are still being developed, and it will be some time 
+before products containing neural networks are manufactured. As a result, research 
+in these areas will not drive the development of inexpensive neural network hard- 
+ware which could serve as a catalyst for the field of neural networks in general. 
+In contrast, neural networks are rarely considered for application in mature tech- 
+nologies, such as consumer electronics. These technologies are based on established 
+principles of information processing and communication, and they are used in mil- 
+lions of products per year. The embedding of neural networks within such mass- 
+289 
+290 Pearson, Spence, and Sverdlove 
+market products would certainly fuel the development of low-cost network hardware, 
+as economics dictates rigorous cost-reduction in every component. 
+2 IMPULSE NOISE IN TV 
+The color television signaling standard used in the U.S. was adopted in 1953 (McI1- 
+wain and Dean, 1956; Pearson, 1975). The video information is first broadcast as an 
+amplitude modulated (AM) radio-frequency (RF) signal, and is then demodulated 
+in the receiver into what is called the composite video signal. The composite signal 
+is comprised of the high-bandwidth (4.:2 MHz) luminance (black and white) signal 
+and two low-bandwidth color signals whose amplitudes are modulated in quadrature 
+on a 3.58 MHz subcarrier. This signal is then further decoded into the red, green 
+and blue signals that drive the display. One image frame is formed by interlacing 
+two successive fields of 262.5 horizontal lines. 
+Electric sparks create broad-band RF emissions which are transformed into oscilla- 
+tory waveforms in the composite video signal, called AM impulses. See Figure 1. 
+These impulses appear on a television screen as short, horizontal, multi-colored 
+streaks which clearly stand out from the picture. Such sparks are commonly cre- 
+ated by electric motors. There is little spatial (within a frame) or temporal (between 
+frames) correlation between impulses. 
+General considerations suggest a two step approach for the removal of impulses from 
+the video signal - detect which samples have been corrupted, and replace them with 
+values derived from their spatio-temporal neighbors. Although impulses are quite 
+visible, they form a small fraction of the data, so only those samples detected as 
+corrupted should be altered. An interpolated average of some sort will generally be a 
+good estimate of impulse-corrupted samples because images are generally smoothly 
+varying in space and time. 
+There are a number of difficulties associated with this detection/replacement ap- 
+proach to the problem. There are many impulse-like waveforms present in normal 
+video, which can cause false positives or false alarms. See Figure 2. The algo- 
+rithms that decode the composite signal into RGB spread impulses onto neighboring 
+lines, so it is desirable to remove the impulses in the composite signal. However, 
+the color encoding within the composite signal complicates matters. The subcarrier 
+frequency is near the ringing frequency of the impulses and tends to hide the im- 
+pulses. Furthermore, the replacement function cannot simply average the nearest 
+Figure 1: Seven Representative AM Impulse Waveforms. They have been digitized 
+and displayed at the intervals used in digital receivers (8 bits, .07 usec). The largest 
+amplitude impulses are 20-30 samples wide, approximately 3% of the width of one 
+line of active video (752 samples). 
+Applications of Neural Networks in Video Signal Processing 291 
++128 
+-128 
+0 752 
+Figure 2: Corrupted Video Scan Line. (Top) Scan line of a composite video signal 
+containing six impulse waveforms. (Bottom) The impulse waveforms, derived by 
+subtracting the uncorrupted signal from the corrupted signal. Note the presence of 
+many impulse-like features in the video signal. 
+samples, because they represent different color components. The impulses also have 
+a wide variety of waveforms (Figure 1), including some variation caused by clipping 
+in the receiver. 
+3 MODULAR NEURAL NETWORK SYSTEM 
+The impulse removal system incorporates three small multi-layer perceptron net- 
+works (Rumelhart and McClelland, 1986), and all of the processing is confined to 
+one field of data. See Figure 3. The replacement function is performed by one 
+network, termed the i-net (i denotes interpolation). Its input is 5 consecutive 
+samples each from the two lines above and the two lines below the current line. 
+The network consists of 10 units in the first hidden layer, 5 in the second, and' one 
+output node trained to estimate the center sample of the current line. 
+The detection function employs 2 networks in series. (A single network detector 
+has been tried, but it has never performed as well as this two-stage detector.) The 
+inputs to the first network are 9 consecutive samples from the current line centered 
+on the sample of interest. It has 3 nodes in the first layer, and one output node 
+trained to compute a moving average of the absolute difference between the clean 
+and noisy signals of the current inputs. It is thus trained to function as a filter for 
+impulse energy, and is termed the e-net. The output of the e-net is then low-pass 
+filtered and sub-sampled to remove redundant information. 
+The inputs to the second network are 3 lines of 5 consecutive samples each, drawn 
+from the post-processed output of the e-net, centered on the sample of interest. 
+This network, like the e-net, has 3 nodes in the first layer and one output node. It 
+is trained to output 1 if the sample of interest is contaminated with impulse noise, 
+and 0 otherwise. It is thus an impulse detector, and is called the d-net. 
+The output of the d-net is then fed to a binary switch, which passes through to the 
+final system output either the output of the i-net or the original signal, depending 
+on whether the input exceeds an adjustable threshold. 
+292 Pearson, Spence, and Sverdlove 
+small 
+impulse 
+'pseudo- 
+,mpuise' 
+'edge' 
+big impulse 
+Origlnal Dlrty Picture 
+ve. potential.f.alse 
+s 
+potential false negative 
+potential true , m 
+positive 
+I 1 tap 
+Interpolated Original 
+4x5 taps IL switch 
+true positive � - 
+false negative 
+mama 
+I I w 
+Restored Picture 
+false positives 
+-small impulse let through 
+- . � blurred eyes 
+-big Impulse removed 
+Figure 3: The Neural Network AM Impulse Removal System. The cartoon face is 
+used to illustrate salient image processing characteristics of the system. The e-net 
+correctly signals the presence of the large impulse (chin), misses the small impulse 
+(forehead), and incorrectly identifies edges (nose) and points (eyes) as impulses. 
+The d-net correctly disregards the vertically correlated impulse features (nose) and 
+detects the large impulse (chin), but incorrectly misses the small impulse (forehead) 
+and the non-correlated impulse-like features (eyes). The i-net produces a fuzzy 
+(doubled) version of the original, which is used to replace segments identified as 
+corrupted by the d-net. 
+Experience showed that the d-net tended to produce narrow spikes in response to 
+impulse-like features of the image. To remove this source of false positives, the 
+output of the d-net is averaged over a 19 sample region centered on the sample of 
+interest. This reduces the peak amplitude of signals due to impulse-like features 
+much more than the broad signals produced by true impulses. An impulse is con- 
+sidered to be present if this smoothed signal exceeds a threshold, the level of which 
+is chosen so as to strike a balance between low false positive rates (high threshold), 
+and high true positive rates (low threshold). 
+Experience also showed that the fringes of the impulses were not being detected. 
+To compensate for this, sub-threshold d-net output samples are set high if they are 
+within 9 samples of a super-threshold d-net sample. Figure 4 shows the output of 
+the resulting trained system for one scan line. 
+The detection networks were trained on one frame of video containing impulses of 
+5 different amplitudes with the largest twenty times the smallest. Visually, these 
+ranged from non-objectionable to brightly colored. Standard incremental back- 
+propagation and conjugate gradient (NAG, 1990) were the training proceedures 
+used. The complexity of the e-net and d-net were reduced in phases. These nets 
+Applications of Neural Networks in Video Signal Processing 293 
+-255 NOISE 
+E-NET 
+0 752 
+Figure 4: Input and Network Signals. 
+began as 3 layer nets. After a phase of training, redundant nodes were identified 
+and removed, and training re-started. This process was repeated until there were 
+no redundant nodes. 
+4 
+REAL-TIME SIMULATION ON THE PRINCETON 
+ENGINE 
+The trained system was simulated in real-time on the Princeton Engine (Chin et. 
+al., 198

@@ -1,0 +1,143 @@
+Risk Sensitive Reinforcement Learning 
+Ralph Neuneier 
+Siemens AG, Corporate Technology 
+D-81730 Mtinchen, Germany 
+Ralph. Neuneier@mchp. siemens. de 
+Oliver Mihatsch 
+Siemens AG, Corporate Technology 
+D-81730 Mtinchen, Germany 
+O1 iver. Mihats ch@mchp. siemens. de 
+Abstract 
+As already known, the expected return of a policy in Markov Deci- 
+sion Problems is not always the most suitable optimality criterion. For 
+many applications control strategies have to meet various constraints like 
+avoiding very bad states (risk-avoiding) or generating high profit within 
+a short time (risk-seeking) although this might probably cause significant 
+costs. We propose a modified Q-learning algorithm which uses a single 
+continuous parameter  E [-1, 1] to determine in which sense the re- 
+sulting policy is optimal. For  = 0, the policy is optimal with respect 
+to the usual expected return criterion, while   1 generates a solution 
+which is optimal in worst case. Analogous, the closer  is to - 1 the more 
+risk seeking the policy becomes. In contrast to other related approaches 
+in the field of MDPs we do not have to transform the cost model or to 
+increase the state space in order to take risk into account. Our new ap- 
+proach is evaluated by computing optimal investment strategies for an 
+artificial stock market. 
+1 WHY IT SOMETIMES PAYS TO ACT CAUTIOUSLY 
+Reinforcement learning (RL) deals with the computation of favorable control policies in 
+sequential decision task. Its theoretical framework of Markov Decision Problems (MDPs) 
+evaluates and compares policies by their expected (sometimes discounted or averaged) sum 
+of the immediate returns or costs per time step (Bertsekas & Tsitsiklis, 1996). But there are 
+numerous applications which require a more sophisticated control scheme: e.g. a policy 
+should take into account that bad outcomes or states may be possible even if they are very 
+rare because they are so disastrous, that they should be certainly avoided. 
+An obvious example is the field of finance where the main question is how to invest re- 
+sources among various opportunities (e.g. assets like stocks, bonds, etc.) to achieve re- 
+markable returns while simultaneously controlling the risk exposure of the investments 
+due to changing markets or economic conditions. Many traders try to achieve this by a 
+Markovitz-like portfolio management which distributes capital according to return and risk 
+1032 R. Neuneier and O. Mihatsch 
+estimates of the assets. A new approach using reinforcement learning techniques which 
+additionally integrates trading costs and other market imperfections has been proposed in 
+Neuneier, 1998. Here, these algorithms are naturally extended such that an explicit risk 
+control is now possible. The investor can decide how much risk she/he is willing to accept 
+and then compute an optimal risk-averse investment strategy. Similar trade-off scenarios 
+can be formulated in robotics, traffic control and further application areas. 
+The fact that the popular expected value criterion is not always suitable has been already 
+known in the field of AI (Koenig & Simmons, 1994), control theory and reinforcement 
+learning (Heger, 1994 and Szepesvri, 1997). Several techniques have been proposed to 
+handle this problem. The most obvious way is to transform the sum of returns Y]t rt using 
+an appropriate utility function U which reflects the desired properties of the solution. Un- 
+fortunately, interesting nonlinear utility functions incorporating the variance of the return, 
+such as U( t rt) = t rt -- /(t rt -- E(t re)) 2, lead to non-Markovian decision 
+problems. The popular class of exponential utility functions U( t rt) -- exp( t rt) 
+preserves the Markov property but requires time dependent policies even for discounted 
+infinite horizon MDPs. Furthermore, it is not possible to formulate a corresponding model- 
+free learning algorithm. A further alternative changes the state space model by including 
+past returns as an additional state element at the cost of a higher dimensionality of the 
+MDP. Furthermore, it is not always clear in which way the states should be augmented. 
+One may also transform the cost model, i.e. by punishing large losses stronger than mi- 
+nor costs. While requiring a significant amount of prior knowledge, this also increases the 
+complexity of the MDP. 
+In contrast to these approaches we modify the popular Q-learning algorithm by introducing 
+a control parameter which determines in which sense the resulting policy is optimal. Intu- 
+itively and loosely speaking, our algorithm simulates the learning behavior of an optimistic 
+(pessimistic) person by overweighting (underweighting) experiences which are more pos- 
+itive (negative) than expected. This main idea will be made more precise in section 2 and 
+mathematically thoroughly analyzed in section 3. Using artificial data, we demonstrate 
+some properties of the new algorithm by constructing an optimal risk-avoiding investment 
+strategy (section 4). 
+2 RISK SENSITIVE Q-LEARNING 
+For brevity we restrict ourselves to the subclass of infinite horizon discounted Markov deci- 
+sion problems (MDP). Furthermore, we assume the immediate rewards being deterministic 
+functions of the current state and control action. Let $ = {1,..., n} be the finite state 
+space and U be the finite action space. Transition probabilities and immediate rewards are 
+denoted by Pij (u) and gi (u), respectively. 7 denotes the discount factor. Let II be the set 
+of all deterministic policies mapping states to control actions. 
+A commonly used objective is to learn a policy r that 
+maximizes (i,u) :=gi(u)+ E Tkgi(r(ik)) (1) 
+quantifying the expected reward if one executes control action u in state i and follows 
+the policy r thereafter. It is a well-known result that the optimal Q-values *(i, u) := 
+mazcn  (i, u) satisfy the following optimality equation 
+*(i u)=gi(u)+7EPij(u)max*(j,u' ) ViE$,uEU. (2) 
+ u'EU 
+jss 
+Any policy  with 7(i) = argmaxusu *(i, u) is optimal with respect to the expected 
+reward criterion. 
+Risk Sensitive Reinforcement Learning 1033 
+The Q-function  averages over the outcome of all possible trajectories (series of states) 
+of the Markov process generated by following the policy -. However, the outcome of a 
+specific realization of the Markov process may deviate significantly from this mean value. 
+The expected reward criterion does not consider any risk, although the cases where the 
+discounted reward falls considerably below the mean value is of a living interest for many 
+applications. Therefore, depending on the application at hand the expected reward ap- 
+proach is not always appropriate. Alternatively, Heger (1994) and Littman & Szepesvfiri 
+(1996) present a performance criterion that exclusively focuses on risk avoiding policies: 
+maximize(_Q(i,u):=gi(u)+ inf {7kgik(r(ik))}). (3) 
+i1,2,... 
+p(il,i2,...)>O 
+The Q-function Q (i, u) denotes the worst possible outcome if one executes control action 
+u in state i and follows the policy - thereafter. The corresponding optimality equation for 
+Q__*(i,u) :-- maxcn Q__ (i, u) is given by 
+Q*(i,u): gi(u) + 7 min maxQ*(j,u'). (4) 
+-- aS u'CU-- 
+pj(u)>O 
+Any policy _ satisfying (i) = arg max,eu Q_Q_* (i, u) is optimal with respect to this mini- 
+mal reward criterion. In most real world applications this approach is too restrictive because 
+it takes very rare events (that in practice never happen) fully into account. This usually leads 
+to policies with a lower average performance than the application requires. An investment 
+manager, for instance, which acts with respect to this very pessimistic objective function 
+will not invest at all. 
+To handle the trade-off between a sufficient average performance and a risk avoiding (risk 
+seeking) behavior, we propose a family of new optimality equations parameterized by a 
+meta-parameter  (-1 < t < 1): 
+O--pij(u)X'(gi(u)+7maxQ,(j,u')-Q,(i u)) Vi6$,u6U (5) 
+u' 6U 
+where ,I:' (x) :-- (1 -  sign(x))x. (In the next section we will show that a unique solution 
+Q,, of the above equation (5) exists.) Obviously, for  -- 0 we recover equation (2), 
+the optimality equation for the expected reward criterion. If we choose  to be positive 
+(0 <  < 1) then we overweight negative temporal differences 
+gi(u) + 7 max Q(j, u') - Q(i, u) < 0 (6) 
+u'EU 
+with respect to positive ones. Loosely speaking, we overweight transitions to states where 
+the future return is lower than the average one. On the other hand, we underweight transi- 
+tions to states that promise a higher return than in the average. Thus, an agent that behaves 
+according to the policy -,,(i) := argmax,u Q(i, u) is risk avoiding if t > 0. In the 
+limit t --+ 1 the policy -,, approaches the optimal worst-case policy , as we will show 
+in the following section. (To get an intuition about this, the reader may easily check that 
+the optimal worst-case Q-value Q* fulfills the modified optimality equation (5) for  --- 1.) 
+Similarly, the policy ',, becomes--risk seeking if we choose  to be negative. 
+It is straightforward to formulate a risk sensitive Q-learning algorithm that bases on the 
+modified optimality equation (5). Let OR(i, u; w) be a parametric approximation of the 
+Q-function Q(i, u). The states and actions encountered at time step k during simulation 
+are denoted by ik and u respectively. At each time step apply the following update rule: 
+d � = gik(u)+7maxO,(i+,u';w ()) -O,(i,u;w()), 
+u' EU 
+= w + ), (7) 
+1034 R. Neuneier and O. Mihatsch 
+where a? ) denotes a stepsize sequence. The following section analyzes the properties of 
+the new optimality equations and the corresponding Q-learning algorithm. 
+3 PROPERTIES OF THE RISK SENSITIVE Q-FUNCTION 
+Due to space limitations we are not able to give detailed proofs of our results. Instead, we 
+focus on interpreting their practical consequences. The proofs will be published elsewhere. 
+Bef

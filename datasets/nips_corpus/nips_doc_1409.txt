@@ -1,0 +1,139 @@
+Intrusion Detection with Neural Networks 
+Jake Ryan* 
+Department of Computer Sciences 
+The University of Texas at Austin 
+Austin, TX 78712 
+raven@cs. utexas. edu 
+Meng-Jang Lin 
+Department of Electrical and Computer Engineering 
+The University of Texas at Austin 
+Austin, TX 78712 
+mj @orac. ece. utexas. edu 
+Risto Miikkulainen 
+Department of Computer Sciences 
+The University of Texas at Austin 
+Austin, TX 78712 
+risto@cs. utexas. edu 
+Abstract 
+With the rapid expansion of computer networks during the past few years, 
+security has become a crucial issue for modern computer systems. A 
+good way to detect illegitimate use is through monitoring unusual user 
+activity. Methods of intrusion detection based on hand-coded rule sets or 
+predicting commands on-line are laborous to build or not very reliable. 
+This paper proposes a new way of applying neural networks to detect 
+intrusions. We believe that a user leaves a 'print' when using the system; 
+a neural network can be used to learn this print and identify each user 
+much like detectives use thumbprints to place people at crime scenes. If 
+a user's behavior does not match his/her print, the system administrator 
+can be alerted of a possible security breech. A backpropagation neural 
+network called NNID (Neural Network Intrusion Detector) was trained 
+in the identification task and tested experimentally on a system of 10 
+users. The system was 96% accurate in detecting unusual activity, with 
+7% false alarm rate. These results suggest that learning user profiles is 
+an effective way for detecting intrusions. 
+1 INTRODUCTION 
+Intrusion detection schemes can be classified into two categories: misuse and anomaly 
+intrusion detection. Misuse refers to known attacks that exploit the known vulnerabilities 
+of the system. Anomaly means unusual activity in general that could indicate an intrusion. 
+'Currently: MCI Communications Corp., 9001 N. IH 35, Austin, TX 78753; jake.ryan@mci.com. 
+944 J. Ryan, M-J. Lin and R. Miikkulainen 
+If the observed activity of a user deviates from the expected behavior, an anomaly is said 
+to occur. 
+Misuse detection can be very powerful on those attacks that have been programmed in 
+to the detection system. However, it is not possible to anticipate all the different attacks 
+that could occur, and even the attempt is laborous. Some kind of anomaly detection is 
+ultimately necessary. One problem with anomaly detection is that it is likely to raise many 
+false alarms. Unusual but legitimate use may sometimes be considered anomalous. The 
+challenge is to develop a model of legitimate behavior that would accept novel legitimate 
+use. 
+It is difficult to build such a model for the same reason that it is hard to build a comprehen- 
+sive misuse detection system: it is not possible to anticipate all possible variations of such 
+behavior. The task can be made tractable in three ways: (1) Instead of general legitimate 
+use, the behavior of individual users in a particular system can be modeled. The task of 
+characterizing regular patterns in the behavior of an individual user is an easier task than 
+trying to do it for all users simultaneously. (2) The patterns of behavior can be learned 
+for examples of legitimate use, instead of having to describe them by hand-coding possible 
+behaviors. (3) Detecting an intrusion real-time, as the user is typing commands, is very 
+difficult because the order of commands can vary a lot. In many cases it is enough to rec- 
+ognize that the distribution of commands over the entire login session, or even the entire 
+day, differs from the usual. 
+The system presented in this paper, NNID (Neural Network Intrusion Detector), is based on 
+these three ideas. NNID is a backpropagation neural network trained to identify users based 
+on what commands they use during a day. The system administrator runs NNID at the end 
+of each day to see if the users' sessions match their normal pattern. If not, an investigation 
+can be launched. The NNID model is implemented in a UNIX environment and consists of 
+keeping logs of the commands executed, forming command histograms for each user, and 
+learning the users' profiles from these histograms. NNID provides an elegant solution to 
+off-line monitoring utilizing these user profiles. In a system of 10 users, NNID was 96% 
+accurate in detecting anomalous behavior (i.e. random usage patterns), with a false alarm 
+rate of 7%. These results show that a learning offiine monitoring system such as NNID 
+can achieve better performance than systems that attempt to detect anomalies on-line in the 
+command sequences, and with computationally much less effort. 
+The rest of the paper outlines other approaches to intrusion detection and motivates the 
+NNID approach in more detail (sections 2 and 3), presents the implementation and an 
+evaluation on a real-world computer system (sections 4 and 5), and outlines some open 
+issues and avenues for future work (section 6). 
+2 INTRUSION DETECTION SYSTEMS 
+Many misuse and anomaly intrusion detection systems (IDSs) are based on the general 
+model proposed by Denning (1987). This model is independent of the platform, system vul- 
+nerability, and type of intrusion. It maintains a set of historical profiles for users, matches 
+an audit record with the appropriate profile, updates the profile whenever necessary, and re- 
+ports any anomalies detected. Another component, a rule set, is used for detecting misuse. 
+Actual systems implement the general model with different techniques (see Frank 1994; 
+Mukherjee et al. 1994, for an overview). Often statistical methods are used to measure how 
+anomalous the behavior is, that is, how different e.g. the commands used are from normal 
+behavior. Such approaches require that the distribution of subjects' behavior is known. 
+The behavior can be represented as a rule-based model (Garvey and Lunt 1991), in terms 
+of predictive pattern generation (Teng et al. 1990), or using state transition analysis (Porras 
+Intrusion Detection with Neural Networks 945 
+et al. 1995). Pattern matching techniques are then used to determine whether the sequence 
+of events is part of normal behavior, constitutes an anomaly, or fits the description of a 
+known attack. 
+IDSs also differ in whether they are on-line or off-line. Off-line IDSs are run periodi- 
+cally and they detect intrusions after-the-fact based on system logs. On-line systems are 
+designed to detect intrusions while they are happening, thereby allowing for quicker inter- 
+vention. On-line IDSs are computationally very expensive because they require continuous 
+monitoring. Decisions need to be made quickly with less data and therefore they are not as 
+reliable. 
+Several IDSs that employ neural networks for on-line intrusion detection have been pro- 
+posed (Debar et al. 1992; Fox et al. 1990). These systems learn to predict the next com- 
+mand based on a sequence of previous commands by a specific user. Through a shifting 
+window, the network receives the w most recent commands as its input. The network is 
+recurrent, that is, part of the output is fed back as the input for the next step; thus, the 
+network is constantly observing the new trend and forgets old behavior over time. The 
+size of the window is an important parameter: If w is too small, there will be many false 
+positives; if it is too big, the network may not generalize well to novel sequences. The most 
+recent of such systems (Debar et al. 1992) can predict the next command correctly around 
+80% of the time, and accept a command as predictable (among the three most likely next 
+commands) 90% of the time. 
+One problem with the on-line approach is that most of the effort goes into predicting the 
+order of commands. In many cases, the order does not matter much, but the distribution of 
+commands that are used is revealing. A possibly effective approach could therefore be to 
+collect statistics about the users' command usage over a period of time, such as a day, and 
+try to recognize the distribution of commands as legitimate or anomalous off-line. This is 
+the idea behind the NNID system. 
+3 THE NNID SYSTEM 
+The NNID anomaly intrusion detection system is based on identifying a legitimate user 
+based on the distribution of commands she or he executes. This is justifiable because 
+different users tend to exhibit different behavior, depending on their needs of the system. 
+Some use the system to send and receive e-mail only, and do not require services such as 
+programming and compilation. Some engage in all kinds of activities including editing, 
+programming, e-mail, Web browsing, and so on. However, even two users that do the same 
+thing may not use the same application program. For example, some may prefer the vi 
+editor to emacs, favor pine over elm as their mail utility program, or use gcc more 
+often than cc to compile C programs. Also, the frequency with which a command is 
+used varies from user to user. The set of commands used and their frequency, therefore, 
+constitutes a 'print' of the user, reflecting the task performed and the choice of application 
+programs, and it should be possible to identify the user based on this information. 
+It should be noted that this approach works even if some users have aliases set up as short- 
+hands for long commands they use frequently, because the audit log records the actual 
+commands executed by the system. Users' privacy is not violated, since the arguments to 
+a command do not need to be recorded. That is, we may know that a user sends e-mail five 
+times a day, but we do not need to know to whom the mail is addressed. 
+Building NNID for a particular computer system consists of the following three phases: 
+1. Collecting training data: Obtain the audit logs for each user for a period of several 
+days. For each day and user, form a vector that represents how often the user 
+executed each command. 
+946 J. Ryan, M-J. Lin and R. Miikkulainen 
+as awk bc bibtex calendar 
+cut c

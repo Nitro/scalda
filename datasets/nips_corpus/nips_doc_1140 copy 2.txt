@@ -1,0 +1,167 @@
+Effective Training of a Neural Network 
+Character Classifier for Word Recognition 
+Larry Yaeger 
+Apple Computer 
+5540 Bittersweet Rd. 
+Morgantown, IN 46160 
+larryy @ apple.con 
+Richard Lyon 
+Apple Computer 
+1 Infinite Loop, MS301-3M 
+Cupertino, CA 95014 
+lyon @apple.com 
+Abstract 
+Brandyn Webb 
+The Future 
+4578 Fieldgate Rd. 
+Oceanside, CA 92056 
+brandyn@ brainstorm.com 
+We have combined an artificial neural network (ANN) character 
+classifier with context-driven search over character segmentation, word 
+segmentation, and word recognition hypotheses to provide robust 
+recognition of hand-printed English text in new models of Apple 
+Computer's Newton MessagePad. We present some innovations in the 
+training and use of ANNs as character classifiers for word recognition, 
+including normalized output error, frequency balancing, error emphasis, 
+negative training, and stroke warping. A recurring theme of reducing a 
+priori biases emerges and is discussed. 
+1 INTRODUCTION 
+We have been conducting research on bottom-up classification techniques based on 
+trainable artificial neural networks (ANNs), in combination with comprehensive but 
+weakly-applied language models. To focus our work on a subproblem that is tractable 
+enough to lead to usable products in a reasonable time, we have restricted the domain to 
+hand-printing, so that strokes are clearly delineated by pen lifts. In the process of 
+optimizing overall performance of the recognizer, we have discovered some useful 
+techniques fir architecting and training ANNs that nust participate in a larger recognition 
+process. Some of these techniques--especially the normalization of output error, 
+frequency bdancing, and error emphasis--suggest a common theme of significant value 
+derived by reducing the effect of a priori biases in training data to better represent low 
+frequency, low probability stunpies, including second and third choice probabilities. 
+There is tunpie prior work in combining low-level classifiers with various search 
+strategies to provide integrated segmentation and recognition for writing (Tappert et al 
+1990) and speech (Remds et al 1992). And there is a rich background in the use of ANNs 
+as classifiers, including their use as a low-level, character classifier in a higher-level word 
+recognition system (Bengio et al 1995). But many questions remain regarding optimal 
+strategies for deploying and combining these methods to achieve acceptable (to a real 
+user) levels of performance. In this paper, we survey some of our experiences in 
+exploring refinements and improvements to these techniques. 
+2 SYSTEM OVERVIEW 
+Our recognition systetn, the Apple-Newton Print Recognizer (ANPR), consists of three 
+conceptual stages: Tentative Segtnentation, Classification, and Context-Driven Search. 
+The primm'y dam upon which we operate are simple sequences of (x,y) coordinate pairs, 
+808 L. Yaeger, R. Lyon and B. Webb 
+plus pen-up/down information, thus defining stroke primitives. The Segmentation stage 
+decides which strokes will be combined to produce segments--the tentative groupings of 
+strokes that will be treated as possible characters and produces a sequence of these 
+segments together with legal transitions between them. This process builds an implicit 
+graph which is then scored in the Classification stage and examined for a maximum 
+likelihood interpretation in the Search stage. 
+(x,y) Points & Pen-Lifts 
+Words 
+Segmentation Character - Classifier Character -- with Context 
+Segmentation Class 
+Hypotheses Hypotheses 
+Figure 1: A Simplified Block Diagram of Our Hand-Print Recognizer. 
+3 TRAINING THE NEURAL NETWORK CLASSIFIER 
+Except for an integrated multiple-representations architecture (Yaeger et al 1996) and the 
+training specifics detailed here, a fairly standard multi-layer perceptron trained with BP 
+provides the ANN character classifier at the heart of ANPR. Training an ANN character 
+classifier tbr use in a word recognition system, however, has different constraints than 
+would training such a system for stand-alone character recognition. All of the techniques 
+below, except/'or the annealing schedule, at least modestly reduce individual character 
+recognition accuracy, yet dramatically increase word recognition accuracy. 
+A large body of prior work exists to indicate the general applicability of ANN technology 
+ms classifiers providing good estimates of a posteriori probabilities of each class given the 
+input (Gish 1990, Richard and Lippmann 1991, Renals and Morgan 1992, Lippmann 
+1994, Morgan and Boufiard 1995, and others cited herein). 
+3.1 NORMALIZING OUTPUT ERROR 
+Despite their ability to provide good first choice a posteriori probabilities, we have found 
+that ANN classifiers do a poor job of representing second and third choice probabilities 
+when trained in the classic way--minimizing mean squared error for target vectors that 
+are all O's, except for a single 1 corresponding to the target class. This results in erratic 
+word recognition failures as the net fails to accurately represent the legitimate ambiguity 
+between characters. We speculated that reducing the pressure towards 0 relative to the 
+pressure towards 1 as seen at the output units, and thus reducing the large bias towards 
+0 in target vectors, might permit the net to better model these inherent ambiguities. 
+We implemented a technique for normalizing output error (NormOutErr) by reducing 
+the BP error for non-target classes relative to the target class by a factor that normalizes 
+the total non-target error seen at a given output unit relative to the total target error seen 
+at that unit. Assuming a training set with equal representation of classes, this 
+normalization should then be based on the number of non-target versus target classes in a 
+typical training vector, or, simply, the number of output units (minus one). Hence for 
+non-target output units, we scale the error at each unit by a constant: 
+e' = Ae 
+where e is the error at an output unit, and A is defined to be: 
+A=l/[d(Nouwuts-1) ] 
+where Noutput . is the number of output units, and d is a user-adjusted tuning parameter, 
+typically ranging from 0.1 to 0.2.- Error at the target output unit is unchanged. Overall, 
+this raises the activation values at the output units, due to the reduced pressure towards 
+zero, particularly fi)r low-probability samples. Thus the learning algorithm no longer 
+Effective Training of a NN Character Classifier for Word Recognition 809 
+converges to a minimum mean-squared error (MMSE) estimate of P(classl input), but to 
+an MMSE estimate of a nonlinear function f(P(classlinput), A) depending on the factor 
+A by which we reduced the error pressure toward zero. 
+Using a simple version of the technique of Boudard and Wellekens (1990), we worked 
+out what that resulting nonlinear function is. The net will attempt to converge to 
+minimize the modified quadratic error function 
+by setting its output y for a particular class to 
+y= p/(A-Ap+ p) 
+where p = P(classlinput), and A is as defined above. The inverse function is 
+p = yA/(yA + 1- y) 
+We verified the fit of this function by looking at histograms of character-level empirical 
+percentage-correct versus y, as in Figure 2. 
+0.9 
+0.8 p=P(correct) 
+0.6 ,, 
+0.5 
+0.4 
+0.3 
+0.2 
+0.1 
+0 
+0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 
+1 
+Figure 2: Empirical p vs. y Histogram for a Net Trained with A--0.11 (d=.l), with the 
+Corresponding Theoretical Curve. 
+Note that the lower-probability samples have their output activations raised significantly, 
+relative to the 45� line that A = 1 yields. 
+The primary benefit derived from this technique is that the net does a much better job of 
+representing second md third choice probabilities, and low probabilities in general. 
+Despite a small drop in top choice character accuracy when using NormOutErr, we obtain 
+a very significant increase in word accuracy by this technique. Figure 3 shows an 
+exaggerated example of this effect, for an atypically large value of d (0.8), which overly 
+penalizes character accuracy; however, the 30% decrease in word error rate is normal for 
+this technique. (Note: These data are from a multi-year-old experiment, and are not 
+necessarily representative of current levels of performance on any absolute scale.) 
+r 30 NonnOutErr = 10.0 [] 0.8 
+20 
+r 
+o 10 
+r 0 
+Character Error Word Error 
+Figure 3: Character and Word Error Rates for Two Different Values of NormOutErr (d). 
+A Value of 0.0 Disables NormOutErr, Yielding Normal BP. The Unusually High Value 
+of 0.8 (A-0.013) Pr(xluces Nearly Equal Pressures Towards 0 and 1. 
+810 L. Yaeger, R. Lyon and B. Webb 
+3.2 FREQUENCY BALANCING 
+Training data I�om natural English words and phrases exhibit very non-uniform priors for 
+the various character classes, and ANNs readily model these priors. However, as with 
+NormOutErr, we find that reducing the effect of these priors on the net, in a controlled 
+way, and thus forcing the net to allocate more of its resources to low-frequency, low- 
+probability classes is of significant benefit to the overall word recognition process. To 
+this end, we explicitly (partially) balance the frequencies of the classes during training. 
+We do this by probabilistically skipping and repeating patterns, based on a precomputed 
+repetition.['actor. Each presentation of a repeated pattern is warped uniquely, as 
+discussed later. 
+To compute the repetition factor for a class i, we Iirst compute a normalized frequency of 
+that class: 
+=si / s 
+where S i is the nmnber of sunples in class i, and is the average number of samples 
+over all classes, computed in the obvious way: 
+1 c 
+i=1 
+with C being the number of classes. Our repetition factor is then defined to be: 
+R i =(a/Fi) b 
+with a and b being user controls over the amount of skipping vs. repeating and the degree 
+of prior normalization, respectively. Typical values of a range t�om 0.2 to 0.8, while b 
+ranges from 0.5 to 0.9. The factor a < 1 lets us do mo

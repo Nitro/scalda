@@ -1,0 +1,131 @@
+Scheduling Straight-Line Code Using 
+Reinforcement Learning and Rollouts 
+Amy McGovern and Eliot Moss 
+{ amy I moss @ cs. umass. } 
+Department of Computer Science 
+University of Massachusetts, Amherst 
+Amherst, MA 01003 
+Abstract 
+The execution order of a block of computer instructions can make a 
+difference in its running time by a factor of two or more. In order to 
+achieve the best possible speed, compilers use heuristic schedulers ap- 
+propriate to each specific architecture implementation. However, these 
+heuristic schedulers are time-consuming and expensive to build. In this 
+paper, we present results using both rollouts and reinforcement learning 
+to construct heuristics for scheduling basic blocks. The rollout scheduler 
+outperformed a commercial scheduler, and the reinforcement learning 
+scheduler performed almost as well as the commercial scheduler. 
+1 Introduction 
+Although high-level code is generally written as if it were going to be executed sequen- 
+tially, many modern computers are pipelined and allow for the simultaneous issue of mul- 
+tiple instructions. In order to take advantage of this feature, a scheduler needs to reorder 
+the instructions in a way that preserves the semantics of the original high-level code while 
+executing it as quickly as possible. An efficient schedule can produce a speedup in execu- 
+tion of a factor of two or more. However, building a scheduler can be an arduous process. 
+Architects developing a new computer must manually develop a specialized instruction 
+scheduler each time a change is made in the proposed system. Building a scheduler auto- 
+matically can save time and money. It can allow the architects to explore the design space 
+more thoroughly and to use more accurate metrics in evaluating designs. 
+Moss et al. (1997) showed that iupervised learning techniques can induce excellent basic 
+block instruction schedulers for the Digital Alpha 21064 processor. Although all of the 
+supervised learning methods performed quite well, they shared several limitations. Super- 
+vised learning requires exact input/output pairs. Generating these training pairs requires 
+an optimal scheduler that searches every valid permutation of the instructions within a ba- 
+sic block and saves the optimal permutation (the schedule with the smallest running time). 
+However, this search was too time-consuming to perform on blocks with more than 10 in- 
+904 A. McGovern and E. Moss 
+structions, because optimal instruction scheduling is NP-hard. Using a semi-supervised 
+method such as reinforcement learning or rollouts does not require generating training 
+pairs, so the method can be applied to larger basic blocks and can be trained without know- 
+ing optimal schedules. 
+2 Domain Overview 
+Moss et al. (1997) gave a full description of the domain. This study presents an overview, 
+necessary details, our experimental method and detailed results for both rollouts and rein- 
+forcement learning. 
+We focused on scheduling basic blocks of instructions on the 21064 version (DEC, 1992) 
+of the Digital Alpha processor (Sites, 1992). A basic block is a set of instructions with a 
+single entry point and a single exit point. Our schedulers could reorder instructions within 
+a basic block but could not rewrite, add, or remove any instructions. The goal of each 
+scheduler is to find a least-cost valid ordering of the instructions. The cost is defined as the 
+simulated execution time of the block. A valid ordering is one that preserves the seman- 
+tically necessary ordering constraints of the original code. We insure validity by creating 
+a dependency graph that directly represents those necessary ordering relationships. This 
+graph is a directed acyclic graph (DAG). 
+The Alpha 21064 is a dual-issue machine with two different execution pipelines. Dual 
+issue occurs only if a number of detailed conditions hold, e.g., the two instructions match 
+the two pipelines. An instruction can take anywhere from one to many tens of cycles to 
+execute. Researchers at Digital have a publicly available 21064 simulator that also includes 
+a heuristic scheduler for basic blocks. We call that scheduler DEC. The simulator gives the 
+running time for a given scheduled block assuming all memory references hit the cache 
+and all resources are available at the beginning of the block. All of our schedulers used a 
+greedy algorithm to schedule the instructions, i.e., they built schedules sequentially from 
+beginning to end with no backtracking. 
+In order to test each scheduling algorithm, we used the 18 SPEC95 benchmark programs. 
+Ten of these programs are written in FORTRAN and contain mostly floating point calcula- 
+tions. Eight of the programs are written in C and focus more on integer, string, and pointer 
+calculations. Each program was compiled using the commercial Digital compiler at the 
+highest level of optimization. We call the schedules output by the compiler ORIG. This 
+collection has 447,127 basic blocks, containing 2,205,466 instructions. 
+3 Rollouts 
+Rollouts are a form of Monte Carlo search, first introduced by Tesauro and Galperin (1996) 
+for use in backgammon. Bertsekas et al. (1997a,b) have explored rollouts in other domains 
+and proven important theoretical results. In the instruction scheduling domain, rollouts 
+work as follows: suppose the scheduler comes to a point where it has a partial schedule and 
+a set of (more than one) candidate instructions to add to the schedule. For each candidate, 
+the scheduler appends it to the partial schedule and then follows a fixed policy 7r to schedule 
+the remaining instructions. When the schedule is complete, the scheduler evaluates the 
+running time and returns. When 7r is stochastic, this rollout can be repeated many times for 
+each instruction to achieve a measure of the average expected outcome. After rolling out 
+each candidate, the scheduler picks the one with the best average running time. 
+Our first set of rollout experiments compared three different rollout policies 7r. The theory 
+developed by Bertsekas et al. (1997a,b) proved that if we used the DEC scheduler as 
+we would perform no worse than DEC. An architect proposing a new machine might not 
+have a good heuristic available to use as 7r, so we also considered policies more likely to be 
+available. The first was the random policy, RANDOM-7r, which is a choice that is clearly 
+always available. Under this policy, the rollout makes all choices randomly. We also used 
+Scheduling Straight-Line Code Using RL and Rollouts 905 
+the ordering produced by the optimizing compiler ORIG, denoted ORIG-7r. The last rollout 
+policy tested was the DEC scheduler itself, denoted DEC-7r. 
+The scheduler performed only one rollout per candidate instruction when using ORIG-Tr 
+and DEC-7r because they are deterministic. We used 25 rollouts for RANDOM-7r. After 
+performing a number of rollouts for each candidate instruction, we chose the instruction 
+with the best average running time. As a baseline scheduler, we also scheduled each block 
+randomly. Because the running time increases quadratically with the number of rollouts, 
+we focused our rollout experiments on one program in the SPEC95 suite: applu. 
+Table 1 gives the performance of each rollout scheduler as compared to the DEC scheduler 
+on all 33,007 basic blocks of size 200 or less from applu. To assess the performance of each 
+rollout policy 7r, we used the ratio of the weighted execution time of the rollout scheduler 
+to the weighted execution time of the DEC scheduler. More concisely, the performance 
+measure was: 
+ratio: Y'all blocks rollout scheduler execution time � number of times block is executed 
+Y'all blocks DEC scheduler execution time � number of times block is executed 
+This means that a faster running time on the part of our scheduler would give a smaller 
+ratio. 
+Scheduler Ratio Scheduler Ratio 
+Random 1.3150 RANDOM-Tr 1.0560 
+ORIG-Tr 0.9895 DEC-Tr 0.9875 
+Table 1: Ratios of the weighted execution time of the rollout scheduler to the DEC sched- 
+uler. A ratio of less than one means that the rollouts outperformed the DEC scheduler. 
+All of the rollout schedulers far outperformed the random scheduler which was 31% slower 
+than DEC. By only adding rollouts, RANDOM-7r was able to achieve a running time only 
+$% slower than DEC. Only the schedulers using ORIG-7r and DEC-7r as a model outper- 
+formed the DEC scheduler. Using ORIG-7r and DEC-7r for rollouts produced a schedule 
+that was 1.1% faster than the DEC scheduler on average. Although this improvement may 
+seem small, the DEC scheduler is known to make optimal choices 99.13% of the time for 
+blocks of size 10 or less (Stefanovi6, 1997). 
+Rollouts were tested only on applu rather than on the entire SPEC95 benchmark suite due 
+to the lengthy computation time. Rollouts are costly because performing m rollouts on n 
+instructions is O (n 2 m), whereas a greedy scheduling algorithm is O (n). Again, because of 
+the time required, we only performed five runs of RANDOM-7r. Since DEC-7r and ORIG-7r 
+are deterministic, only one run was necessary. We also ran the random scheduler 5 times. 
+Each number reported above is the geometric mean of the ratios across the five runs. 
+Part of the motivation behind using rollouts in a scheduler is to obtain fast schedules without 
+spending the time to build a precise heuristic. With this in mind, we explored RANDOM-7r 
+more closely in a follow-up experiment. 
+Evaluation of the number of rollouts 
+This experiment considered how performance varies with the number ofrollouts. We tested 
+1, 5, 10, 25, and 50 rollouts per candidate instruction. We also varied the metric for choos- 
+ing among candidates. Instead of always choosing the instruction with the best average 
+performance, we also experimented with selecting the instruction with the absolute best 
+running time among its rollouts. We hypothesized that selection of the absolute best path 
+might lead to better performance overall. Thes

@@ -1,0 +1,142 @@
+Constructing Hidden Units 
+using Examples and Queries 
+Eric B. Baum Kevin J. Lang 
+NEC Research Institute 
+4 Independence Way 
+Princeton, NJ 08540 
+ABSTRACT 
+While the network loading problem for 2-layer threshold nets is 
+NP-hard when learning from examples alone (as with backpropaga- 
+tion), (Baum, 91) has now proved that a learner can employ queries 
+to evade the hidden unit credit assignment problem and PAC-load 
+nets with up to four hidden units in polynomial time. Empirical 
+tests show that the method can also learn far more complicated 
+functions such as randomly generated networks with 200 hidden 
+units. The algorithm easily approximates Wieland's 2-spirals func- 
+tion using a single layer of 50 hidden units, and requires only 30 
+minutes of CPU time to learn 200-bit parity to 99.7% accuracy. 
+1 Introduction 
+Recent theoretical results (Baum & Haussler, 89) promise good generalization from 
+multi-layer feedforward nets that are consistent with sufficiently large training sets. 
+Unfortunately, the problem of finding such a net has been proved intractable due 
+to the hidden unit credit assignment problem -- even for nets containing only 2 
+hidden units (Blum & Rivest, 88). While back-propagation works well enough on 
+simple problems, its luck runs out on tasks requiring more than a handful of hidden 
+units. Consider, for example, Alexis Wielands 2-spirals mapping from 2 to 
+{0, 1}. There are many sets of weights that would cause a 2-50-1 network to be 
+consistent with the training set of figure 3a, but backpropagation seems unable to 
+find any of them starting from random initial weights. Instead, the procedure drives 
+the net into a suboptimal configuration like the one pictured in figure 2b. 
+904 
+Constxucfing Hidden Units Using Examples and Queries 905 
++ 
+poY i - 
+Figure 1: The geometry of query learning. 
+In 1984, Valiant proposed a query learning model in which the learner can ask an 
+oracle for the output values associated with arbitrary points in the input space. 
+In the next section we shall see how this additional source of information can be 
+exploited to locate and pin down a network's hidden units one at a time, thus 
+avoiding the combinatorial explosion of possible hidden unit configurations which 
+can arise when one attempts to learn from examples alone. 
+2 How to find a hidden unit using queries 
+For now, assume that our task is to build a 2-layer network of binary threshold units 
+which computes the same function as an existing target network. Our first step 
+will be to draw a positive example x+ and a negative example x_ from our training 
+set. Because the target net maps these points to different output values, its hidden 
+layer representations for the points must also be different, so the hyperplane through 
+input space corresponding to one of the net's hidden units must intersect the line 
+segment bounded by the two points (see figure 1). We can reduce our uncertainty 
+about the location of this intersection point by a factor of 2 by asking the oracle 
+for the target net's output at m, the line segment's midpoint. If, for example, m 
+is mapped to the same output as x+, then we know that the hidden plane must 
+intersect the line segment between x_ and m, and we can then further reduce our 
+uncertainty by querying the midpoint of this segment. By performing b of queries 
+of this sort, we can determine to within b bits of accuracy the location of a point 
+p0 that lies on the hidden plane. Assuming that our input space has n dimensions, 
+after finding n - i more points on this hyperplane we can solve n equations in n 
+unknowns to find the weights of the corresponding hidden unit.1 
+1 The additional points Pi are obtained by perturbing p0 with various small vectors ri and then 
+diving back to the plane via a search that is slightly more complicated than the bisection method 
+by which we found p0. (Baum, 91) describes this search procedure in detail, as well as a technique 
+for verifying that all the points pl lie on the same hidden plane. 
+906 Baum and Lang 
+Figure 2: A backprop net before and after being trained on the 2-spirals task. 
+In these plots over input space, the her's hidden units are shown by lines while its 
+output is indicated by grey-level shading. 
+3 Can we find all of a network's hidden units? 
+Here is the crucial question: now that we have a procedure for finding one hid- 
+den unit whose hyperplane passes between a given pair of positive and negative 
+examples, 2 can we discover all of the her's hidden units by invoking this procedure 
+on a sequence of such example pairs? If the answer is yes, then we have got a viable 
+learning method because the net's output weights can be efficiently computed via 
+the linear programming problem that arises from forward-propagating the training 
+set through the net's first layer of weights. (Baum, 91) proves that for target nets 
+with four or fewer hidden units we can always find enough of them to compute the 
+required function. This result is a direct counterpoint to the theorem of (Blum & 
+Rivest, 88): by using queries, we can PAC learn in polynomial time small threshold 
+nets that would be NP-hard to learn from examples alone. 
+However, it is possible for an adversary to construct a larger target net and an 
+input distribution such that we may not find enough hidden units to compute the 
+target function even by searching between every pair of examples in our training 
+set. The problem is that more than one hidden plane can pass between a given pair 
+of points, so we could repeatedly encounter some of the hidden units while never 
+seeing others. 
+2This positive and negative terminology suggests that the target net possesses a single 
+output unit, but the method is not actually restricted to this case. 
+Constructing Hidden Units Using Examples and Queries 907 
+Figure 3: 2-spirals oracle, and net built by query learning. 
+Fortunately, the experiments described in the next section suggest that one can 
+find most of a net's hidden units in the average case. In fact, we may not even 
+need to find all of a network's hidden units in order to achieve good generalization. 
+Suppose that one of a network's hidden units is hard to find due to the rarity of 
+nearby training points. As long as our test set is drawn from the same distribution 
+as the training set, examples that would be misclassified due to the absence of 
+this plane will also be rare. Our experiment on learning 200-bit parity illustrates 
+this point: only 1/4 of the possible hidden units were needed to achieve 99.7% 
+generalization. 
+4 Learning random target nets 
+Although query learning might fail to discover hidden units in the worse case, the 
+following empirical study suggests that the method has good behavior in the average 
+case. In each of these learning experiments the target function was computed by a 
+2-layer threshold net whose k hidden units were each chosen by passing a hyperplane 
+through a set of n points selected from the uniform distribution on the unit n-sphere. 
+The output weights of each target net corresponded to a random hyperplane through 
+the origin of the unit k-sphere. Our training examples were drawn from the uniform 
+distribution on the corners of the unit n-cube and then classified according to the 
+target net. 
+To establish a performance baseline, we attempted to learn several of these functions 
+using backpropagation. For (n = 20, k = 20) we succeeded in training a net to 
+97% accuracy in less than a day, but when we increased the size of the problem 
+to (n = 100, k = 50) or (n = 200, k = 30), 150 hours of CPU time dumped our 
+backprop nets into local minima that accounted for only 90% of the training data. 
+908 Baum and Lang 
+In contrast, query learning required only 1.5 hours to learn either of the latter 
+two functions to 99% accuracy. The method continued to function well when we 
+increased the problem size to (n = 200, k = 200). In each of five trials at this 
+scale, a check of 104 training pairs revealed 197 or more hidden planes. Because the 
+networks were missing a couple of hidden units, their hidden-to-output mappings 
+were not quite linearly separable. Nevertheless, by running the perceptron algorithm 
+on 100 x k random examples, in each trial we obtained approximate output weights 
+whose generalization was 98% or better. 
+5 Learning 200-bit parity 
+Because the learning method described above needs to make real-valued queries in 
+order to localize a hidden plane, it cannot be used to learn a function that is only 
+defined on boolean inputs. Thus, we defined the parity of a real-valued vector to be 
+the function computed by the 2-layer parity net of (Rumelhart, Hinton & Williams, 
+1986), which has input weights of 1 hidden unit thresholds of  3  
+, 5, 5, ', n - 5, and 
+output weights alternating between i and -1. The n parallel hidden planes of this 
+net carve the input space into n + 1 diagonal slabs, each of which contains all of the 
+binary patterns with a particular number of 1's. 
+After adopting this definition of parity (which agrees with the standard definition on 
+boolean inputs), we applied the query learning algorithm to 200-dimensional input 
+patterns. A search of 30,000 pairs of examples drawn randomly and uniformly 
+from the corners of the unit cube revealed 46 of the 200 decision planes of the 
+target function. Using approximate output weights computed by the perceptron 
+algorithm, we found the nets generalization rate to be 99.7%. If it seems surprising 
+that the net could perform so well while lacking so many hidden planes, consider the 
+following. The target planes that we did find were the middle ones with thresholds 
+near 100, and these are the relevant ones for classifying inputs that contain about 
+the same number of 1's and O's. Because vectors of uniform random bits are unlikely 
+to contain many more 1's than O's or vice versa, we had little chance of stumbling 
+across hidden planes with high or low thre

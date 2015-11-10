@@ -1,0 +1,187 @@
+Computation of Smooth Optical Flow in a 
+Feedback Connected Analog Network 
+Alan Stocker * 
+Institute of Neuroinformatics 
+University and ETH Ztirich 
+Winterthurerstrasse 190 
+8057 Ztirich, Switzerland 
+Rodney Douglas 
+Institute of Neuroinformatics 
+University and ETH Ztirich 
+Winterthurerstrasse 190 
+8057 Ztirich, Switzerland 
+Abstract 
+In 1986, Tanner and Mead [1] implemented an interesting constraint sat- 
+isfaction circuit for global motion sensing in aVLSI. We report here a 
+new and improved aVLSI implementation that provides smooth optical 
+flow as well as global motion in a two dimensional visual field. The com- 
+putation of optical flow is an ill-posed problem, which expresses itself as 
+the aperture problem. However, the optical flow can be estimated by the 
+use of regularization methods, in which additional constraints are intro- 
+duced in terms of a global energy functional that must be minimized. We 
+show how the algorithmic constraints of Horn and Schunck [2] on com- 
+puting smooth optical flow can be mapped onto the physical constraints 
+of an equivalent electronic network. 
+1 Motivation 
+The perception of apparent motion is crucial for navigation. Knowledge of local motion of 
+the environment relative to the observer simplifies the calculation of important tasks such as 
+time-to-contact or focus-of-expansion. There are several methods to compute optical flow. 
+They have the common problem that their computational load is large. This is a severe 
+disadvantage for autonomous agents, whose computational power is restricted by energy, 
+size and weight. Here we show how the global regularization approach which is necessary 
+to solve for the ill-posed nature of computing optical flow, can be formulated as a local 
+feedback constraint, and implemented as a physical analog device that is computationally 
+efficient. 
+* correspondence to: alan@ini.phys.ethz.ch 
+Computation of Optical Flow in an Analog Network 707 
+2 Smooth Optical Flow 
+Horn and Schunck [2] defined optical flow in relation to the spatial and temporal changes 
+in image brightness. Their model assumes that the total image brightness E(x, y, t) does 
+not change over time; 
+d 
+E(x,y,t) -0. (1) 
+Expanding equation (1) according to the chain rule of differentiation leads to 
+  ,t) 0, (2) 
+E(x,y,t)u + E(x,y,t)v + = 
+F- 6x 
+where u -- dx/dt and v = dy/dt represent the two components of the local optical flow 
+vector. 
+Since there is one equation for two unknowns at each spatial location, the problem is 
+ill-posed, and there are an infinite number of possible solutions lying on the constraint 
+line for every location (x, y). However, by introducing an additional constraint the prob- 
+lem can be regularized and a unique solution can be found. 
+For example, Horn and Schunck require the optical flow field to be smooth. As a measure 
+of smoothness they choose the squares of of the spatial derivatives of the flow vectors, 
+= + + k(Sx J + (3) 
+One can also view this constraint as introducing a priori knowledge: the closer two points 
+are in the image space the more likely they belong to the projection of the same object. Un- 
+der the assumption of rigid objects undergoing translational motion, this constraint implies 
+that the points have the same, or at least very similar motion vectors. This assumption is 
+obviously not valid at boundaries of moving objects, and so this algorithm fails to detect 
+motion discontinuities [3]. 
+The computation of smooth optical flow can now be formulated as the minimization prob- 
+lem of a global energy functional, 
+f f ,F + S 2 dx dy > rain (4) 
+� 
+L 
+with F and S 2 as in equation (2) and (3) respectively. Thus, we exactly apply the approach 
+of standard regularization theory [4]: 
+Ax=y 
+x -- A-ly 
+II Ax- y II 
++ & IIP t1 = min 
+y: data 
+inverse problem, ill-posed 
+regularization 
+The regularization parameter, A, controls the degree of smoothing of the solution and its 
+closeness to the data. The norm, II � II, is quadratic. A difference in our case is that A 
+is not constant but depends on the data. However, if we consider motion on a discrete 
+time-axis and look at snapshots rather than continuously changing images, A is quasi- 
+stationary. 1 The energy functional (4) is convex and so, a simple numerical technique 
+like gradient descent would be able to find the global minimum. To compute optical flow 
+while preserving motion discontinuities one can modify the energy functional to include 
+a binary line process that prevents smoothing over discontinuities [4]. However, such an 
+functional will not be convex. Gradient descent methods would probably fail to find the 
+global amongst all local minima and other methods have to be applied. 
+In the aVLSI implementation this requires a much shorter settling time constant for the network 
+than the brightness changes in the image. 
+708 A. Stocker and R. Douglas 
+3 A Physical Analog Model 
+3.1 Continuous space 
+Standard regularization problems can be mapped onto electronic networks consisting of 
+conductances and capacitors [5]. Hutchinson et al. [6] showed how resistive networks can 
+be used to compute optical flow and Poggio et al. [7] introduced electronic network so- 
+lutions for second-order-derivative optic flow computation. However, these proposed net- 
+work architectures all require complicated and sometimes negative conductances although 
+Harris et al. [8] outlined a similar approach as proposed in this paper independently. Fur- 
+thermore, such networks were not implemented practically, whereas our implementation 
+with constant nearest neighbor conductances is intuitive and straightforward. 
+Consider equation (4): 
+L = L(u, v, Vu, Vv, x, y). 
+The Lagrange function L is sufficiently regular (L  C2), and thus it follows from cal- 
+culus of variation that the solution of equation (4) also suffices the linear Euler-Lagrange 
+equations 
+AV2u-Ex(Exu+Eyv+Et) = 0 (5) 
+AV2v- Ey(Exu + Esv + Et) = O. 
+The Euler-Lagrange equations are only necessary conditions for equation (4). The suffi- 
+cient condition for solutions of equations (5) to be a weak minimum is the strong Legendre- 
+condition, that is 
+Lvuvu > 0 and Lvvvv > 0, 
+which is easily shown to be true. 
+3.2 Discrete Space - Mapping to Resistive Network 
+By using a discrete five-point approximation of the Laplacian $72 on a regular grid, equa- 
+tions (5) can be rewritten as 
+/(Ui+i,j q- Ui--l,j q- Ui,j+l q- Ui,j--1 -- 4ui,j) -- Ex,(Ex,,ui,j q- Ey,vi,j + Et,):0 
+)t(Vi+l,j q-Vi--l,j q- Vi,j+l q- Vi,j--1 -4vi,) - Ey,,,(E,,jui, + Ey,jvi,j + Et,,j)=O 
+where i and j are the indices for the sampling nodes. Consider a single node of the resistive 
+network shown in Figure 1: 
+(6) 
+Figure 1: Single node of a resistive network. 
+From Kirchhoff's law it follows that 
+cd�, 
+dt = G(V/+, + V/_, + V/,j+i + V/,-i - 4V/,j) + Ii,, 
+(7) 
+Computation of Optical Flow in an Analog Network 709 
+where V/,j represents the voltage and Iim,j 
+two neighboring nodes and C the node capacitance. 
+In steady state, equation (7) becomes 
+G(V/+i,j + V/-1,j q- V/,j+i q- V/,j-1 - 4V/,j) + Iin,,, = O. 
+The analogy with equations (6) is obvious: 
+G < > 
+Iuini,5   
+Ivim,s   
+the input current. G is the conductance between 
+(8) 
+-E,s (E,. ui,j + Ey,,svi,j + Et,,s ) 
+-Ey,s (E,,j ui, + Ey,s vi,j + Et,s ) 
+(9) 
+To create the full system we use two parallel resistive networks in which the node voltages 
+Ui,j and V/,j represent the two components of the optical flow vector u and v. The input 
+currents Iuim,s and Ivim, are computed by a negative recurrent feedback loop modulated 
+by the input data, which are the spatial and temporal intensity gradients. 
+Notice that the input currents are proportional to the deviation of the local brightness con- 
+straint: the less the local optical flow solution fits the data the higher the current Iim,s will 
+be to correct the solution and vice versa. 
+Stability and convergence of the network are guaranteed by Maxwell's minimum power 
+principle [4, 9]. 
+4 The Smooth Optical Flow Chip 
+4.1 Implementation 
+G V, G V,., 
+G 
+V,j U V 
+� .- r - Gload 
+Figure 2: A single motion cell within the three layer network. For simplicity only one 
+resistive network is shown. 
+The circuitry consists of three functional layers (Figure 2). The input layer includes an 
+array of adaptive photoreceptors [ 10] and provides the derivatives of the image brightness 
+to the second layer. The spatial gradients are the first-order linear approximation obtained 
+by subtracting the two neighboring photoreceptor outputs. The second layer computes the 
+input current to the third layer according to equations (9). Finally these currents are fed 
+into the two resistive networks that report the optical flow components. 
+The schematics of the core of a single motion cell are drawn in Figure 3. The photoreceptor 
+and the temporal differentiator are not shown as well as the other half of the circuitry that 
+computes the y-component of the flow vector. 
+710 A. Stocker and R. Douglas 
+A few remarks are appropriate here: First, the two components of the optical flow vector 
+have to be able to take on positive and negative values with respect to some reference po- 
+tential. Therefore, a symmetrical circuit scheme is applied where the positive and negative 
+(reference voltage) values are carried on separate signal lines. Thus, the actual value is 
+encoded as the difference of the two potentials. 
+.4- 
+E t E t 
+[x([ Vx 
+temporal 
+differentiator 
+EMV 
++ 
+E x 
+_J_ tVViBias 
+V + 
+X DiffBias 
+OpBias Vref 
+Figure 3' Cell core schematics; only the circuitry related to the computation of the 
+x-component of the flow vector is shown. 
+Second, the limited linear range of the Gilbert multipliers leads to a narrow span of flow ve- 
+locities that can be computed reliably. However, the tuning can be such that the operational 
+range is either at high or very low velocities. Newer implementations are using modified 
+multipliers with a larger linear rang

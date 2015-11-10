@@ -1,0 +1,176 @@
+Estimating Conditional Probability 
+Densities for Periodic Variables 
+Chris M Bishop and Claire Legleye 
+Neural Computing Research Group 
+Department of Computer Science and Applied Mathematics 
+Aston University 
+Birmingham, B4 7ET, U.K. 
+c.m.bishop@aston.ac.uk 
+Abstract 
+Most of the common techniques for estimating conditional prob- 
+ability densities are inappropriate for applications involving peri- 
+odic variables. In this paper we introduce three novel techniques 
+for tackling such problems, and investigate their performance us- 
+ing synthetic data. We then apply these techniques to the problem 
+of extracting the distribution of wind vector directions from radar 
+scatterometer data gathered by a remote-sensing satellite. 
+I INTRODUCTION 
+Many applications of neural networks can be formulated in terms of a multi-variate 
+non-linear mapping from an input vector x to a target vector t. A conventional 
+neural network approach, based on least squares for example, leads to a network 
+mapping which approximates the regression of t on x. A more complete description 
+of the data can be obtained by estimating the conditional probability density of t, 
+conditioned on x, which we write as p(t Ix). Various techniques exist for modelling 
+such densities when the target variables live in a Euclidean space. However, a num- 
+ber of potential applications involve angle-like output variables which are periodic 
+on some finite interval (usually chosen to be (0,2r)). For example, in Section 3 
+642 Chris M. Bishop, Claire Legleye 
+we consider the problem of determining the wind direction (a periodic quantity) 
+from radar scatterometer data obtained from remote sensing measurements. Most 
+of the existing techniques for conditional density estimation cannot be applied in 
+such cases. 
+A common technique for unconditional density estimation is based on mixture mod- 
+els of the form 
+m 
+p(t) =  
+i=1 
+(1) 
+where ai are called mixing coefficients, and the kernel functions i(t) are frequently 
+chosen to be Gaussians. Such models can be used as the basis of techniques for con- 
+ditional density estimation by allowing the mixing coefficients, and any parameters 
+governing the kernel functions, to be general functions of the input vector x. This 
+can be achieved by relating these quantities to the outputs of a neural network 
+which takes x as input, as shown in Figure 1. Such an approach forms the basis of 
+conditional 
+density 
+p(tlx) 
+parameter 
+vector 
+input 
+vector 
+mixture 
+model 
+neural 
+network 
+Figure 1: A general framework for conditional density estimation 
+is obtained by using a feed-forward neural network whose outputs 
+determine the parameters in a mixture density model. The mixture 
+model then represents the conditional probability density of the 
+target variables, conditioned on the input vector to the network. 
+the 'mixture of experts' model (Jacobs et al., 1991) and has also been considered by 
+a number of other authors (White, 1992; Bishop, 1994; Lui, 1994). In this paper we 
+introduce three techniques for estimating conditional densities of periodic variables, 
+based on extensions of the above formalism for Euclidean variables. 
+Estimating Conditional Probability Densities for Periodic Variables 643 
+2 DENSITY ESTIMATION FOR PERIODIC VARIABLES 
+In this section we consider three alternative approaches to estimating the conditional 
+density p(01x ) of a periodic variable 0, conditioned on an input vector x. They are 
+based respectively on a transformation to an extended domain representation, the 
+use of adaptive circular normal kernel functions, and the use of fixed circular normal 
+kernels. 
+2.1 
+TRANSFORMATION TO AN EXTENDED VARIABLE 
+DOMAIN 
+The first technique which we consider involves finding a transformation from the 
+periodic variable 0  (0, 270 to a Euclidean variable X  (-cx>, cx>), such that stan- 
+dard techniques for conditional density estimation can be applied in X-space. In 
+particular, we seek a conditional density function (X[x) which is to be modelled 
+using a conventional Gaussian mixture approach as described in Section 1. Consider 
+the transformation 
+p(01x): + L2Ix) (2) 
+L=-c 
+Then it is clear by construction that the density model on the left hand side satisfies 
+the periodicity requirement p(O + 27fix ) = p(Olx). Furthermore, if the density 
+function (X]x) is normalized, then we have 
+p(OIx) dO 
+(3) 
+and so the corresponding periodic density p(0]x) will also be normalized. We now 
+model the density function (XI x) using a mixture of Gaussians of the form 
+m 
+i=1 
+(4) 
+where the kernel functions are given by 
+1 
+i(XIX)-- (27r)lo.i(X) exp - 
+{x- 
+27(x) ) (s) 
+and the parameters ai(x), ai(x) and Xi(x) are determined by the outputs of a 
+feed-forward network. In particular, the mixing coefficients ai(X) are governed by a 
+'softmax' activation function to ensure that they lie in the range (0, 1) and sum to 
+644 Chris M. Bishop, Claire Legleye 
+unity; the width parameters r (x) are given by the exponentials of the corresponding 
+network outputs to ensure their positivity; and the basis function centres Xi(x) are 
+given directly by network output variables. 
+The network is trained by maximizing the likelihood function, evaluated for set of 
+training data, with respect to the weights and biases in the network. For a training 
+set consisting of N input vectors x ' and corresponding targets 0 ', the likelihood is 
+given by 
+N 
+� = H P(Onlxn)p(xn) (6) 
+n=l 
+where p(x) is the unconditional density of the input data. Rather than work with � 
+directly, it is convenient instead to minimize an error function given by the negative 
+log of the likelihood. Making use of (2) we can write this in the form 
+E=-ln�,,,-5-'lnS-'(O + L2rlx ) 
+n L 
+(7) 
+where we have dropped the term arising from p(x) since it is independent of the 
+network weights. This expression is very similar to the one which arises if we 
+perform density estimation on the real axis, except for the extra summation over 
+L, which means that the data point 0  recurs at intervals of 2r along the X-axis. 
+This is not equivalent simply to replicating the data, however, since the summation 
+over L occurs inside the logarithm, rather than outside as with the summation over 
+data points n. 
+In a practical implementation, it is necessary to restrict the summation over L. For 
+the results presented in the next section, this summation was taken over 7 complete 
+periods of 2r spanning the range (-7r, 7r). Since the Gaussians have exponentially 
+decaying tails, this represents an extremely good approximation in almost all cases, 
+provided we take care in initializing the network weights so that the Gaussian 
+kernels lie in the central few periods. Derivatives of E with respect to the network 
+weights can be computed using the rules of calculus, to give a modified form of 
+back-propagation. These derivatives can then be used with standard optimization 
+techniques to find a minimum of the error function. (The results presented in the 
+next section were obtained using the BFGS quasi-Newton algorithm). 
+2.2 MIXTURES O1* CIRCULAR NORMAL DENSITIES 
+The second approach which we introduce is also based on a mixture of kernel func- 
+tions of the form (1), but in this case the kernel functions themselves are periodic, 
+thereby ensuring that the overall density function will be periodic. To motivate this 
+approach, consider the problem of modelling the distribution of a velocity vector 
+v in two dimensions (this arises, for example, in the application considered in Sec- 
+tion 3). Since v lives in a Euclidean plane, we can model the density function p(v) 
+using a mixture of conventional spherical Gaussian kernels, where each kernel has 
+Estimating Conditional Probability Densities for Periodic Variables 645 
+the form 
+1 ( 
+qb(v, v)= 2rrr2 exp 
+2 2 - 22 ] (8) 
+where (v, vy) are the Cartesian components of v, and (/a,/ay) are the components 
+of the center tt of the kernel. From this we can extract the conditional distribution 
+of the polar angle 0 of the vector v, given a value for v = Ilvll. This is easily done 
+with the transformation v = v cos O, v = v sin O, and defining 00 to be the polar 
+angle of tt, so that/a =/a cos00 and/a =/asin00, where/a = Ilttll. This leads to a 
+distribution which can be written in the form 
+1 
+qb(O) = 2rlo(A) exp{Acos(O- 0o)} 
+(9) 
+where the normalization coefficient has been expressed in terms of the zeroth order 
+modified Bessel function of the first kind, I0(A). The distribution (9) is known as a 
+circular normal or von Mises distribution (Mardia, 1972). The parameter A (which 
+depends on v in our derivation) is analogous to the (inverse) variance parameter in a 
+conventional normal distribution. Since (9) is periodic, we can construct a general 
+representation for the conditional density of a periodic variable by considering a 
+mixture of circular normal kernels, with parameters given by the outputs of a neural 
+network. The weights of the network can again be determined by maximizing the 
+likelihood function defined over a set of training data. 
+2.3 FIXED KERNELS 
+The third approach introduced here is again based on a mixture model in which 
+the kernel functions are periodic, but where the kernel parameters (specifying their 
+width and location) are fixed. The only adaptive parameters are the mixing coeffi- 
+cients, which are again determined by the outputs of a feed-forward network having 
+a softmax final-layer activation function. Here we consider a set of equally-spaced 
+circular normal kernels in which the width parameters are chosen to give a mod- 
+erate degree of overlap between the kernels so that the resulting representation for 
+the density function will be reasonably smooth. Again, a maximum likelihood for- 
+malism is employed to train the network. Clearly a major drawback of fixed-kernel 
+methods is that the number of kernels must grow exponentially with the dimen- 
+sionality of the outpu

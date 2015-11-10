@@ -1,0 +1,133 @@
+Reinforcement Learning Using Approximate 
+Belief States 
+Andr6s Rodriguez * 
+Artificial Intelligence Center 
+SRI International 
+333 Ravenswood Avenue, Menlo Park, CA 94025 
+rodriguez @ ai. sri. com 
+Ronald Parr, Daphne Ko!!er 
+Computer Science Department 
+Stanford University 
+Stanford, CA 94305 
+{parr, kolle r} @ cs. s tan ford. edu 
+Abstract 
+The problem of developing good policies for partially observable Markov 
+decision problems (POMDPs) remains one of the most challenging ar- 
+eas of research in stochastic planning. One line of research in this area 
+involves the use of reinforcement learning with belief states, probabil- 
+ity distributions over the underlying model states. This is a promis- 
+ing method for small problems, but its application is limited by the in- 
+tractability of computing or representing a full belief state for large prob- 
+lems. Recent work shows that, in many settings, we can maintain an 
+approximate belief state, which is fairly close to the true belief state. In 
+particular, great success has been shown with approximate belief states 
+that marginalize out correlations between state variables. In this paper, 
+we investigate two methods of full belief state reinforcement learning and 
+one novel method for reinforcement learning using factored approximate 
+belief states. We compare the performance of these algorithms on several 
+well-known problem from the literature. Our results demonstrate the im- 
+portance of approximate belief state representations for large problems. 
+1 Introduction 
+The Markov Decision Processes (MDP) framework [2] is a good way of mathematically 
+formalizing a large class of sequential decision problems involving an agent that is inter- 
+acting with an environment. Generally, an MDP is defined in such a way that the agent has 
+complete knowledge of the underlying state of the environment. While this formulation 
+poses very challenging research problems, it is still a very optimistic modeling assumption 
+that is rarely realized in the real world. Most of the time, an agent must face uncertainty 
+or incompleteness in the information available to it. An extension of this formalism that 
+generalizes MDPs to deal with this uncertainty is given by partially observable Markov 
+Decision Processes (POMDPs) [1, 11] which are the focus of this paper. 
+Solving a POMDP means finding an optimal behavior policy r*, that maps from the agent's 
+available knowledge of the environment, its belief state, to actions. This is usually done 
+through a function, V, that assigns values to belief states. In the fully observable (MDP) 
+*The work presented in this paper was done while the first author was at Stanford University. 
+Reinforcement Learning Using Approximate Belief States 103 7 
+case, a value function can be computed efficiently for reasonably sized domains. The 
+situation is somewhat different for POMDPs, where finding the optimal policy is PSPACE- 
+hard in the number of underlying states [6]. To date, the best known exact algorithms to 
+solve POMDPs are taxed by problems with a few dozen states [5]. 
+There are several general approaches to approximating POMDP value functions using rein- 
+forcement learning methods and space does not permit a full review of them. The approach 
+upon which we focus is the use of a belief state as a probability distribution over underlying 
+model states. This is in contrast to methods that manipulate augmented state descriptions 
+with finite memory [9, 12] and methods that work directly with observations [8]. 
+The main advantage of a probability distribution is that it summarizes all of the informa- 
+tion necessary to make optimal decisions [1]. The main disadvantages are that a model 
+is required to compute a belief state, and that the task of representing and updating belief 
+states in large problems is itself very difficult. In this paper, we do not address the problem 
+of obtaining a model; our focus is on the the most effective way of using a model. Even 
+with a known model, reinforcement learning techniques can be quite competitive with ex- 
+act methods for solving POMDPs [10]. Hence, we focus on extending the model-based 
+reinforcement learning approach to larger problems through the use of approximate belief 
+states. There are risks to such an approach: inaccuracies introduced by belief state approx- 
+imation could give an agent a hopelessly inaccurate perception of its relationship to the 
+environment. 
+Recent work [4], however, presents an approximate tracking approach, and provides theo- 
+retical guarantees that the result of this process cannot stray too far from the exact belief 
+state. In this approach, rather than maintaining an exact belief state, which is infeasible 
+in most realistically large problems, we maintain an approximate belief state, usually from 
+some restricted class of distributions. As the approximate belief state is updated (due to 
+actions and observations), it is continuously projected back down into this restricted class. 
+Specifically, we use decomposed belief states, where certain correlations between state 
+variables are ignored. 
+In this paper we present empirical results comparing three approaches to belief state rein- 
+forcement learning. The most direct approach is the use of a neural network with one input 
+for each element of the full belief state. The second is the SPOVA method [10], which 
+uses a function approximator designed for POMDPs and the third is the use of a neural net- 
+work with an approximate belief state as input. We present results for several well-known 
+problems in the POMDP literature, demonstrating that while belief state approximation is 
+ill-suited for some problems, it is an effective means of attacking large problems. 
+2 Basic Framework and Algorithms 
+A POMDP is defined as a tuple < $, A, O, 7, 7, (.9 > of three sets and three functions. 
+$ is a set of states, A is a set of actions and O is a set of observations. The transition 
+function 7: $ x A --> II(S) specifies how the actions affect the state of the world. It can 
+be viewed as T(si, a, s j) = P(sj I a, si), the probability that the agent reaches state s if it 
+currently is in state si and takes action a. The reward function 7: $ x A -->  determines 
+the immediate reward received by the agent The observation model (.9: S x A -> II(O) 
+determines what the agent perceives, depending on the environment state and the action 
+taken. O(s, a, o) = P(ola , s) is the probability that the agent observes o when it is in state 
+s, having taken the action a. 
+1038 A. Rodriguez, R. Parr andD. Koller 
+2.1 POMDP belief states 
+A belief state, b, is defined as a probability distribution over all states s 6 S, where b(s), 
+represents probability that the environment is in state s. After taking action a and observing 
+o, the belief state is updated using Bayes rule: 
+o(8', a, o) Es,s a, 
+= e�' I = Zs,so(sj,,o) 7-(8,, 
+The size of an exact belief state is equal to the number of states in the model. For large 
+problems, maintaining and manipulating an exact belief state can be problematic even if 
+the the transition model has a compact representation [4]. For example, suppose the state 
+space is described via a set of random variables X = {X, ... , X,}, where each Xi takes 
+on values in some finite domain Val(Xi), a particular s defines a value a:i  Val(Xi) for 
+each variable Xi. The full belief state representation will be exponential in n. We use the 
+approximation method analyzed by Boyen and Koller [4], where the variables are parti- 
+tioned into a set of disjoint clusters C... Ce and belief functions, b... be are maintained 
+over the variables in each cluster. At each time step, we compute the exact belief state, then 
+compute the individual belief functions by marginalizing out inter-cluster correlations. For 
+some assignment, ci, to variables in Ci, we obtain bi(ci) = Eycl P(�i, Y). An approxi- 
+mation of the original, full belief state is then reconstructed as b(s) e 
+: I'-[i----'1 bi(ci)' 
+By representing the belief state as a product of marginal probabilities, we are projecting 
+the belief state into a reduced space. While a full belief state representation for n state 
+variables would be exponential in n, the size of decomposed belief state representation is 
+exponential in the size of the largest cluster and additive in the number of clusters. For pro- 
+cesses that mix rapidly enough, the errors introduced by approximation will stay bounded 
+over time [4]. As discussed by Boyen and Koller [4], this type of decomposed belief state 
+is particularly suitable for processes that can themselves be factored and represented as a 
+dynamic Bayesian network [3]. In such cases we can avoid ever representing an exponen- 
+tially sized belief state. However, the approach is fully general, and can be applied in any 
+setting where the state is defined as an assignment of values to some set of state variables. 
+2.2 Value functions and policies for POMDPs 
+If one thinks of a POMDP as an MDP defined over belief states, then the well-known fixed 
+point equations for MDPs still hold. Specifically, 
+oO 
+where 7 is the discount factor and b  (defined above) is the next belief state. The optimal 
+policy is determined by the maximizing action for each belief state. In principle, we could 
+use Q-learning or value iteration directly to solve POMDPs. The main difficulty lies in the 
+fact that there are uncountably many belief states, making a tabular representation of the 
+value function impossible. 
+Exact methods for POMDPs use the fact that finite horizon value functions are piecewise- 
+linear and convex [11], ensuring a finite representation. While finite, this representation 
+can grow exponentially with the horizon, making exact approaches impractical in most set- 
+tings. Function approximation is an attractive alternative to exact methods. We implement 
+function approximation using a set of parameterized Q-functions, where Q, (b, W,) is the

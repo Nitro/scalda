@@ -1,0 +1,162 @@
+Relaxation Networks for Large Supervised Learning Problems 
+Joshua Alspector Robert B. Allen Anthony Jayakumar 
+Torsten Zeppenfeld and Ronny Meir 
+Bellcore 
+Morristown, NJ 07962-1910 
+Abstract 
+Feedback connections are required so that the teacher signal on the output 
+neurons can modify weights during supervised learning. Relaxation methods 
+are needed for learning static patterns with full-time feedback connections. 
+Feedback network learning techniques have not achieved wide popularity 
+because of the still greater computational efficiency of back-propagation. We 
+show by simulation that relaxation networks of the kind we are implementing in 
+VLSI are capable of learning large problems just like back-propagation 
+networks. A microchip incorporates deterministic mean-field theory learning as 
+well as stochastic Boltzmann learning. A multiple-chip electronic system 
+implementing these networks will make high-speed parallel learning in them 
+feasible in the future. 
+1. INTRODUCTION 
+For supervised learning in neural networks, feedback connections are required so that the 
+teacher signal on the output neurons can affect the learning in the network interior. Even 
+though back-propagation Ill networks are feedforward in processing, they have implicit 
+feedback paths during learning for error propagation. Networks with explicit, full-time 
+feedback paths can perform pattern completion [2] and can have interesting temporal and 
+dynamical properties in contrast to the single forward pass processing of multilayer 
+percepttons trained with back-propagation or other means. Because of the potential for 
+complex dynamics, feedback networks require a reliable method of relaxation for 
+learning and retrieval of static patterns. The Boltzmann machine [3] uses stochastic 
+settling while the mean-field theory (MFT) version [4] [5] uses a more computationally 
+efficient deterministic technique. 
+Neither of these feedback network learning techniques has achieved wide popularity 
+because of the greater computational efficiency of back-propagation. However, this is 
+likely to change in the near future because the feedback networks will be implemented in 
+VLSI [61 making them available for learning experiments on high-speed parallel hardware. 
+In this paper, we therefore raise the following questions: whether these types of learning 
+networks have the same representational and learning power as the more thoroughly 
+studied back-propagation methods, how learning in such networks scales with problem 
+size, and whether they can solve usefully large problems. Such questions are difficult to 
+1015 
+1016 
+answer with computer simulations because of the large amount of computer time 
+required compared to back-propagation, but, as we show, the indications are promising. 
+2. SIMULATIONS 
+2.1 Procedure 
+In this section, we compare back-propagation, Boltzmann machine, and MFT networks 
+on a variety of test problems. The back-propagation technique performs gradient descent 
+in weight space by differentiation of an objective function, usually the error, 
+= X; (s; si-) 2 
+outputs k 
+where s/- is the target output and s[ is the actual output. We choose to use the function 
+G =  [sk+log(s[-/s[) + (1-s{)1og[(1-s{)/(1-s[)]] (1) 
+outputs k 
+for a more direct comparison to the Boltzmann machine [71 which has 
+G =  pg+log(pf/p-) (2) 
+global states g 
+where pg is the probability of a global state. 
+Individual neurons in the Boltzmann machine have a probabilistic decision' rule such that 
+neuron k is in state s, = 1 with probability 
+1 
+Pi = l+e_net,/r (3) 
+where neti = wijsj is the net input to each neuron and T is a parameter that acts like 
+J 
+temperature in a physical system and is represented by the noise term in Eq. (4), which 
+follows. In the relaxation models, each neuron performs the activation computation 
+si = f (gain* (neti +noisei )) (4) 
+where f is a monotonic non-linear function such as tanh. In simulations of the 
+Boltzmann machine, this is a step function corresponding to a high value of gain. The 
+noise is chosen from a zero mean gaussian distribution whose width is proportional to the 
+temperature. This closely approximates the distribution in Eq. (3) and matches our 
+hardware implementation, which supplies uncorrelated noise to each neuron. The noise 
+is slowly reduced as annealing proceeds. For MYT learning, the noise is zero but the 
+gain term has a finite value proportional to 1/T taken from the annealing schedule. Thus 
+the non-linearity sharpens as 'annealing' proceeds. 
+The network is annealed in two phases, + and -, corresponding to clamping the outputs 
+in the desired state and allowing them to run free at each pattern presentation. The 
+learning rule which adjusts the weights wij from neuron j to neuron i is 
+AWij =sgn [ (S i Sj )+'-(S i Sj )- ]. (5) 
+Note that this measures the instantaneous correlations after annealing. For both phases 
+each synapse memorizes the correlations measured at the end of the annealing cycle and 
+weight adjustment is then made, (i.e., online). The sgn matches our hardware 
+1017 
+implementation which changes weights by one each time. 
+2.2 Scaling 
+To study learning time as a function of problem size, we chose as benchmarks the parity 
+and replication (identity) problems. The parity problem is the generalization of 
+exclusive-OR for arbitrary input size, n. It is difficult because the classification regions 
+are disjoint with every change of input bit, but it has only one output. The goal of the 
+replication problem is for the output to duplicate the bit pattern found on the input after 
+being transformed by the hidden layer. There are as many output neurons as input. For 
+the replication problem, we chose the hidden layer to have the same number of neurons 
+as the input layer, while for parity we chose the hidden layer to have twice the number as 
+the input layer. 
+For back-propagation simulations, we used a learning rate of 0.3 and zero momentum. 
+For MFT simulations, we started at a high temperature of rhi --K (1.4) 20 x/-(fanin) where 
+K - 1-10. We annealed in 20 steps dividing the temperature by 1.4 each time. The 
+fanin parameter is the number of inputs from other neurons to a neuron in the hidden 
+layer. We did 3 neuron update cycles at each temperature. For Boltzmann, we increased 
+this to 11 updates because of the longer equilibration time. We used high gain rather 
+than strictly binary units because of the possibility that the binary Boltzmann units would 
+have exactly zero net input making annealing fruitless. 
+10 -s 
+10 4 
+# cycles 
+10 3 
+10 2 
+101 
+Parity Comparison 
+i0 4 
+Replication Comparison 
+I I 
+o 5 1o 
+o 5 10 
+Input bits 
+Input Bits 
+Figure 1. Scaling of Parity (la) and Replication (lb) Problem with Input Size 
+Fig. la plots the results of an average of 10 runs and shows that the number of patterns 
+required to learn to 90% correct for parity scales as an exponential in n for all three 
+networks. This is not surprising since the training set size is exponential and no 
+constraints were imposed to help the network generalize from a small amount of data. 
+An activation range of -1 to 1 was used on both this problem and the replication problem. 
+There is no appreciable difference in learning as a function of patterns presented. Actual 
+1018 Alspector, Allen, Jayakumar, Zeppenfeld, and Meir 
+computer time is larger by an additional factor of n 2 to account for the increase in the 
+number of connections. Direct parallel implementation will reduce this additional factor 
+to less than n. Computer time for MYT learning was an additional factor of 10 slower 
+than back-propagation and stochastic Boltzmann learning was yet another factor of 10 
+slower. The hardware implementation will make these techniques roughly equal in speed 
+and far faster than any simulation of back-propagation. Fig. lb shows analogous results 
+for the replication problem. 
+2.3 NETtalk 
+As an example of a large problem, we chose the NETtalk [81 corpus with 20,000 words. 
+Fig. 2 shows the leaming curves for back-propagation, Boltzmann, and MFT learning. 
+An activation range of 0 to 1 gave the best results on this problem, possibly due to the 
+sparse coding of text and phonemes. We can see that back-propagation does better on 
+this problem which we believe may be due to the ambiguity in mapping letters to 
+multiple phonemic outputs. 
+0.2 
+i I I I 
+0.6 .............. ' ................................................................. , ....................................................................... 
+I 
+0.4 ................................................. r ...................... 
+'--O-- MFr(inc) 
+0 2.000 104 4.000 104 6.000 104 8.000 104 1.000 105 
+cycles 
+Figure 2. Learning Curves for NETtalk 
+2.4 Dynamic Range Manipulation 
+For all problems, we checked to see if reducing the dynamic range of the weights to 5 
+bits, equivalent to our VLSI implementation, would hinder learning. In most cases, there 
+was no effect. Dynamic range was a limitation for the two largest replication problems 
+with MFT. By adding an occasional global decay which decremented the absolute value 
+of the weights, we were able to achieve good learning. Our implementation is capable of 
+doing this. There was also a degradation of performance on the back-propagation 
+version of the parity problem which took about a factor of three longer to learn with a 5 
+bit weight range. 
+3. VLSI IMPLEMENTATION 
+The previous section shows that relaxation networks are as capable as back-propagation 
+networks of learning large problems even though they are slower in computer 
+simulations. We are, however, implementing these feedback networks in VLSI which 
+will speed up learning by many orders of magnitude. Our choice of learning technique 
+for implementation is due mainly to the local learning rule which makes it much easier to 
+cast these networks into electronics than back-propagation. 
+Figure 3. Photo of 32-Neuron Bellcore Learning Chip 
+Fig. 3 sh

@@ -1,0 +1,162 @@
+A 
+Neural Network Classifier for 
+the I1000 OCR Chip 
+John C. Platt and Timothy P. Allen 
+Synaptics, Inc. 
+2698 Orchard Parkway 
+San Jose, CA 95134 
+platt@synaptics.com, tpa@synaptics.com 
+Abstract 
+This paper describes a neural network classifier for the I1000 chip, which 
+optically reads the E13B font characters at the bottom of checks. The 
+first layer of the neural network is a hardware linear classifier which 
+recognizes the characters in this font. A second software neural layer 
+is implemented on an inexpensive microprocessor to clean up the re- 
+sults of the first layer. The hardware linear classifier is mathematically 
+specified using constraints and an optimization principle. The weights 
+of the classifier are found using the active set method, similar to Vap- 
+nik's separating hyperplane algorithm. In 7.5 minutes of SPARC 2 time, 
+the method solves for 1523 Lagrange multipliers, which is equivalent to 
+training on a data set of approximately 128,000 examples. The result- 
+ing network performs quite well: when tested on a test set of 1500 real 
+checks, it has a 99.995% character accuracy rate. 
+1 A BRIEF OVERVIEW OF THE I1000 CHIP 
+At Synaptics, we have created the I1000, an analog VLSI chip that, when combined 
+with associated software, optically reads the E13B font from the bottom of checks. 
+This E13B font is shown in figure 1. The overall architecture of the I1000 chip 
+is shown in figure 2. The I1000 recognizes checks hand-swiped through a slot. A 
+lens focuses the image of the bottom of the check onto the retina. The retina has 
+circuitry which locates the vertical position of the characters on the check. The 
+retina then sends an image vertically centered around a possible character to the 
+classifier. 
+The classifier in the I1000 has a tough job. It must be very accurate and immune 
+to noise and ink scribbles in the input. Therefore, we decided to use an integrated 
+segmentation and recognition approach (Martin  Pittman, 1992)(Platt, et al., 
+1992). When the classifier produces a strong response, we know that a character is 
+horizontally centered in the retina. 
+A Neural Network Classifier for the I1000 OCR Chip 939 
+Figure 1' The E13B font, as seen by the I1000 chip 
+I1000 chip 
+I 
+[retina c:;; winner 
+take - 
+r all 
+Ty best character 
+for vertically positioned hypothesis 
+check 42 confidences 
+microprocessor 
+Figure 2: The overall architecture of the I1000 chip 
+We decided to use analog VLSI to minimize the silicon area of the classifier. Be- 
+cause of the analog implementation, we decided to use a linear template classifier, 
+with fixed weights in silicon to minimize area. The weights are encoded as lengths 
+of transistors acting as current sources. We trained the classifier using only the 
+specification of the font, because we did not have the real E13B data at the time of 
+classifier design. The design of the classifier is described in the next section. 
+As shown in figure 2, the input to the classifier is an 18 by 24 pixel image taken 
+from the retina at a rate of 20 thousand frames per second. The templates in the 
+classifier are 18 by 22 pixels. Each template is evaluated in three different vertical 
+positions, to allow the retina to send a slightly vertically mis-aligned character. The 
+output of the classifier is a set of 42 confidences, one for each of the 14 characters in 
+the font in three different vertical positions. These confidences are fed to a winner- 
+take-all circuit (Lazzaro, et al., 1989), which finds the confidence and the identity 
+of the best character hypothesis. 
+2 SPECIFYING THE BEHAVIOR OF THE CLASSIFIER 
+Let us consider the training of one template corresponding to one of the characters 
+in the font. The template takes a vector of pixels as input. For ease of analog 
+implementation, the template is a linear neuron with no bias input: 
+o = 
+i 
+where O is the output of the template, Wi are the weights of the template, and Ii 
+are the input pixels of the template. 
+We will now mathematically express the training of the templates as three types 
+of constraints on the weights of the template. The input vectors used by these 
+constraints are the ideal characters taken from the specification of the font. 
+The first type of constraint on the template is that the output of the template 
+should be above 1 when the character that corresponds to the template is centered 
+940 J.C. PLATT, T. P. ALLEN 
+Figure 3: Examples of images from the bad set for the templates trained to detect 
+the zero character. These images are E13B characters that have been horizontally 
+and vertically offset from the center of the image. The black border around each of 
+the characters shows the boundary of the input field. Notice the variety of horizontal 
+and vertical shifts of the different characters. 
+in the horizontal field. Call the vector of pixels of this centered character Gi. This 
+constraint is stated as: 
+E WiGi _ 1 (2) 
+i 
+The second type of constraint on the template is to have an output much lower than 
+1 when incorrect or offset characters are applied to the template. We collect these 
+incorrect and offset characters into a set of pixel vectors B J , which we call the bad 
+set. The constraint that the output of the template be lower than a consan c for 
+all of the vectors in the bad set is expressed : 
+i 
+Together, constraints (2) and (3) permit use of a simple threshold to distinguish 
+between a positive classifier response and a negative one. 
+The bad set contains examples of the correct character for the template hat are 
+horizontally offset by a let two pels and vertically offse by up to one pixel. In 
+addition, examples of all other characters are added to the bad se at every horizon- 
+tal offse and with vertical offsets of up to one pixel (see figure 3). Vertically offset 
+examples are added o make the classifier resistant to characters whose belines 
+are slightly mismatched. 
+The third type of constraint on the template requires that the output be invariant 
+to the addition of a constan to all of the input pixels. This constrain makes the 
+clsifier immune to any changes in the background lighting level, k. This constraint 
+is equivalent o requiring the sum of the weights to be zero: 
+ m(Ii + k) =  mli   m = 0 (4) 
+i i i 
+Finally, an optimization principle is necessary to choose between all possible weight 
+vectors that hlfill constraints (2), (3), and (4). We minimize the perturbation of 
+the output of he emplate given uncorrelated random noise on he input. This 
+optimization principle is similar o training on a large data set, instead of simply 
+he ideal characters described by he specification. This optization principle is 
+equivalent to nimizing the sum of the square of he weights: 
+min  W (5) 
+Expressing the raining of he clsifier  a combination of consrhns and an 
+optimization principle allows us to compactly define is behavior. For example, 
+the combination of constraints (3) and (4) allows the clsifier to be immune to 
+situations when two partial characters appear in the image a the same ime. The 
+confluence of two characters in the image can be described : 
++ nl + 
+A Neural Network Classifier for the I1000 OCR Chip 941 
+where k is a background value and B and B[ are partial characters from the bad 
+set that appears on the left side and right side of the image, respectively. The 
+output of the template is then: 
+O �verlap --  Wi(]c q- B q- S[) '- y Wik q-  WiBI q-  WiB[ < 2c (7) 
+i i i i 
+Constraints (3) and (4) thus limit the output of the neuron to less than 2c when 
+two partial characters appear in the input. Therefore, we want c to be less than 
+0.5. In order to get a 2:1 margin, we choose c = 0.25. 
+The classifier is trained only on individual partial characters instead of all possible 
+combinations of partial characters. Therefore, we can specify the classifier using 
+only 1523 constraints, instead of creating a training set of approximately 128,000 
+possible combinations of partial characters. Applying these constraints is therefore 
+much faster than back-propagation on the entire data set. 
+Equations (2), (3) and (5) describe the optimization problem solved by Vapnik 
+(Vapnik, 1982) for constructing a hyperplane that separates two classes. Vapnik 
+solves this optimization problem by converting it into a dual space, where the in- 
+equality constraints become much simpler. However, we add the equality constraint 
+(4), which does not allow us to directly use Vapnik's dual space method. To over- 
+come this limitation, we use the active set method, which can fulfill any extra linear 
+equality or inequality constraints. The active set method is described in the next 
+section. 
+3 THE ACTIVE SET METHOD 
+Notice that constraints (2), (3), and (4) are all linear in Wi. Therefore, minimiz- 
+ing (5) with these constraints is simply quadratic programming with a mixture of 
+equality and inequality constraints. This problem can be solved using the active set 
+method from optimization theory (Gill, et al., 1981). 
+When the quadratic programming problem is solved, some of the inequality con- 
+straints and all of the equality constraints will be active. In other words, the ac- 
+tive constraints affect the solution as equality constraints. The system has bumped 
+into these constraints. All other constraints will be inactive; they will not affect 
+the solution. 
+Once we know which constraints are active, we can easily solve the quadratic mini- 
+mization problem with equality constraints via Lagrange multipliers. The solution 
+is a saddle point of the function: 
+1 
+ Wi 2 +  )}( A}jWj -C}) (8) 
+where } is the Lagrange multiplier of the kth active constraint, and A}j and C 
+are the linear and constant coefficients of the kth active constraint. For example, 
+if constraint (2) is the kth active constraint, then k = d and C}: 1. The saddle 
+point can be found via the set of linear equations: 
+m = (9) 
+k 
+ = -(AjiAki)-ic

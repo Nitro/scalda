@@ -1,0 +1,148 @@
+JANUS: Speech-to-Speech Translation Using 
+Connectionist and Non-Connectionist Techniques 
+Alex Waibe!* Ajay N. Jain* 
+Arthur McNair Joe Tebeiskis 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Hiroaki Saito 
+Keio University 
+Tokyo, Japan 
+Otto Schmidbauer 
+Siemens Corporation 
+Munich, Germany 
+Louise Osterholtz 
+Computational Linguistics Program 
+Carnegie Mellon University 
+Tilo S!oboda Monika Woszczyna 
+University of Karlsruhe 
+Karlsruhe, Germany 
+ABSTRACT 
+We present JANUS, a speech-to-speech translation system that utilizes 
+diverse processing strategies, including connectionist learning, tradi- 
+tional AI knowledge representation approaches, dynamic programming, 
+and stochastic techniques. JANUS translates continuously spoken 
+English and German into German, English, and Japanese. JANUS cur- 
+rently achieves 87% translation fidelity from English speech and 97% 
+from German speech. We present the JANUS system along with com- 
+parative evaluations of its interchangeable processing components, with 
+special emphasis on the connectionist modules. 
+*Also with University of Karlsruhe, Karlsruhe, Gemany. 
+*Now with Aliiant Techsystems Research and Technology Center, Hopkins, Minnesota. 
+183 
+184 Waibel, et al. 
+1 INTRODUCTION 
+In an age of increasing globalization of our economies and ever more efficient communi- 
+cation media, one important challenge is the need for effective ways of overcoming lan- 
+guage barriers. Human translation efforts are generally expensive and slow, thus 
+eliminating this possibility between individuals and around rapidly changing material (e.g. 
+newscasts, newspapers). This need has recently lead to a resurgence of effort in machine 
+translation--mostly of written language. 
+Much of human communication, however, is spoken, and the problem of spoken language 
+translation must also be addressed. If successful, speech-to-text translation systems could 
+lead to automatic subtitles in TV-broadcasts and cross-linguistic dictation. Speech-to- 
+speech translation could be deployed as interpreting telephone service in restricted domains 
+such as cross-linguistic hotel/conference reservations, catalog purchasing, travel planning, 
+etc., and eventually in general domains, such as person-to-person telephone calls. Apart 
+from telephone service, speech translation could facilitate multilingual negotiations and 
+collaboration in face-to-face or video-conferencing settings. 
+With the potential applications so promising, what are the scientific challenges? Speech 
+translation systems will need to address three distinct problems: 
+� Speech Recognition and Understanding: A naturally spoken utterance must be recog- 
+nized and understood in the context of ongoing dialog. 
+� Machine Translation: A recognized message must be translated from one language 
+into another (or several others). 
+� Speech Synthesis: A translated message must be synthesized in the target language. 
+Considerable challenges still face the development of each of the components, let alone the 
+combination of the three. Among them only speech synthesis is mature enough for com- 
+mercial systems to exist that can synthesize intelligible speech in several languages from 
+text. But even here, to guarantee acceptance of the translation system, research is needed to 
+improve naturalness and to allow for adaptation of the output speech (in the target lan- 
+guage) to the voice characteristics of the input speaker. Speech recognition systems to date 
+are generally limited in vocabulary size, and can only accept grammatically well-formed 
+utterances. They require improvement to handle spontaneous unrestricted dialogs. Machine 
+Translation systems require considerable development effort to work in a given language 
+pair and domain reasonably well, and generally require syntactically well-formed input 
+sentences. Improvements are needed to handle ill-formed sentences well and to allow for 
+flexibility in the face of changes in domain and language pairs. 
+Beyond the challenges facing each system component, the combination of the three also 
+introduces extra difficulties. Both the speech recognition and machine translation compo- 
+nents, must deal with spoken language ill-formed noisy input, both acoustically as well 
+as syntactically. Therefore, the speech recognition component must be concerned less with 
+transcription fidelity than semantic fidelity, while the MT-component must try to capture 
+the meaning or intent of the input sentence without being guaranteed a syntactically legal 
+sequence of words. In addition, non-symbolic prosodic information (intonation, rhythm, 
+etc.) and dialog state must be taken into consideration to properly translate an input utter- 
+ance. A closer cooperation between traditional signal processing and language level pro- 
+cessing must be achieved. 
+JANUS: Speech-to-Speech Translation 185 
+Input Translated 
+Utterance PARSEC Parse Utterance 
+ Network Transformer T 
+Speech 
+System 
+LR Language DecTalk 
+Parser Generator DTC01 
+Figure 1: High-level JANUS architecture 
+JANUS is our first attempt at multilingual speech translation. It is the result of a collabora- 
+five effort between ATR Interpreting Telephony Research Laboratories, Carnegie Mellon 
+University, Siemens Corporation, and the University of Karlsruhe. JANUS currendy 
+accepts continuously spoken sentences from a conference registration scenario, where a tic- 
+titious caller attempts to register to an international conference. The dialogs are read aloud 
+from dialog scripts that make use of a vocabulary of approximately 400 words. Speaker- 
+dependent and independent versions of the input recognition systems have been developed. 
+JANUS currendy accepts continuously spoken English and German input and produces 
+spoken German, English, and Japanese output as a result. 
+While JANUS has some of the limitations mentioned above, it is the first tri-lingual contin- 
+uous large vocabulary speech translation system to-date. It is a vehicle toward overcoming 
+some of the limitations described. A particular focus is the trainability of system compo- 
+nents, so that flexible, adaptive, and robust systems may result. JANUS is a hybrid system 
+that uses a blend of computational strategies: connectionist, statistical and knowledge 
+based techniques. This paper will describe each of JANUS's processing components sepa- 
+rately and particularly highlight the relative contributions of connectionist techniques 
+within this ensemble. Figure 1 shows a high-level diagram of JANUS's components. 
+2 SPEECH RECOGNITION 
+Two alternative speech recognition systems are currently used in JANUS: Linked Predic- 
+tive Neural Networks (LPNNs) and I.earned Vector Quantization networks (LVQ) (Tebel- 
+skis et al. 1991; Schmidbauer and Tebelskis 1992). They are both connectionist, 
+continuous-speech recognition systems, and both have vocabularies of approximately 400 
+English and 400 German words. Each use statistical bigram or word-pair grammars 
+derived from the conference registration database. The systems are based on canonical 
+phoneme models (states) that can be logically concatenated in any order to create models 
+for different words. The need for training data with labeled phonemes can be reduced by 
+first bootstrapping the networks on a small amount of speech with forced phoneme bound- 
+aries, then training on the whole database using only forced word boundaries. 
+In the LPNN system, each phoneme model is implemented by a predictive neural network. 
+Each network is trained to accurately predict the next frame of speech within segments of 
+speech corresponding to its phoneme model. Continuous scores (prediction errors) are 
+accumulated for various word candidates. The LPNN module produces either a single 
+186 Waibel, et al. 
+hypothesized sentence or the first N best hypotheses using a modified dynamic-program- 
+ming beam-search algorithm (Steinbiss 1989). The LPNN system has speaker-dependent 
+word accuracy rates of 93% with first-best recognition, and sentence accuracy of 69%. 
+LVQ is a vector clustering technique based on neural networks. We have used LVQ to 
+automatically cluster speech frames into a set of acoustic features; these features are fed 
+into a set of output units that compute the emission probability for HMM states. This tech- 
+nique gives speaker-dependent word accuracy rates of 98%, 86%, and 82% for English 
+conference registration tasks of perplexity 7, 61, and 111, respectively. The sentence rec- 
+ognition rate at perplexity 7 is 80%. 
+We are also evaluating other approaches to speech recognition, such as the Multi-State 
+TDNN for continuous-speech (Haffner, Franzini, and Waibel 1991) and a neural-network 
+based word spotting system that may be useful for modeling spontaneous speech effects 
+(Zeppenfield and Waibel 1992). The recognitions systems' text output serves as input to 
+the alternative parsing modules of JANUS. 
+3 LANGUAGE UNDERSTANDING AND TRANSLATION 
+3.1 LANGUAGE ANALYSIS 
+The translation module of JANUS is based on the Universal Parser Architecture (LIPA) 
+developed at Carnegie Mellon (Tomita and Carbonell 1987; Tomita and Nyberg 1988). It 
+is designed for efficient multi-lingual translation. Text in a source language is parsed into a 
+language independent frame-based interlingual representation. From the interlingua, text 
+can be generated in different languages. 
+The system requires hand-written parsing and generation grammars for each language to 
+be processed. The parsing grammars are based on a Lexical Functional Grammar formal- 
+ism, and are implemented using Tomita's Generalized LR parsing Algorithm (Tomita 
+1991). The generation grammars are compiled into LISP functions. Both parsing and gen- 
+eration with LIPA approach real-time. Figure 2 shows an example of the input, interlingual 
+representation, and the output of the JANUS system 
+3.2 PARSEC: CONNECTIONIST PARSING 
+JANUS can use a connectionist parser in place of th

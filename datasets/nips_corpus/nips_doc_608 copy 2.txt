@@ -1,0 +1,220 @@
+Probability Estimation from a Database 
+Using a Gibbs Energy Model 
+John W. Miller 
+Microsoft Research (9/1051) 
+One Microsoft Way 
+Redmond, WA 98052 
+Rodney M. Goodman 
+Dept. of Electrical Engineering (116-81) 
+California Institute of Technology 
+Pasadena, CA 91125 
+Abstract 
+We present an algorithm for creating a neural network which pro- 
+duces accurate probability estimates as outputs. The network im- 
+plements a Gibbs probability distribution model of the training 
+database. This model is created by a new transformation relating 
+the joint probabilities of attributes in the database to the weights 
+(Gibbs potentials) of the distributed network model. The theory 
+of this transformation is presented together with experimental re- 
+sults. One advantage of this approach is the network weights are 
+prescribed without iterative gradient descent. Used as a classifier 
+the network tied or outperformed published results on a variety of 
+databases. 
+1 INTRODUCTION 
+This paper addresses the problem of modeling a discrete database. The database 
+is viewed as a collection of independent samples from a probability distribution. 
+This distribution is called the underlying distribution. In contrast, the empirical 
+distribution is the distribution obtained if you take independent random samples 
+from the database (with replacement). The task of creating a probability model 
+can be separated into two parts. The first part is the problem of choosing statistics 
+of the samples which are expected to accurately represent the underlying distribu- 
+tion. The second part is the problem of choosing a model which is consistent with 
+these statistics. Under reasonable assumptions, the optimal solution to the second 
+problem is the method of Maximum Entropy. For a broad class of statistics, the 
+531 
+532 Miller and Goodman 
+Maximum Entropy solution is a Gibbs probability distribution (Slepian, 1972). In 
+this paper, the background and theoretical result of a transformation from joint 
+statistics to a Gibbs energy (or network weight) representation is presented. We 
+then outline the experimental test results of an efficient algorithm implementing 
+this transform without using gradient descent iteration. 
+2 BACKGROUND 
+Define a set T to be the set of attributes (or fields) in a database. For a particular 
+entry (or record) of the database, define the associated set of attribute values to be 
+the configuration w of the attributes. The set of attribute values associated with 
+a subset b C T is called a subconfiguration wb. Using this set notation the Gibbs 
+probability distribution may be defined: 
+p(W) --- Z -1 � e VT(w) 
+where 
+(1) 
+(2) 
+bCT 
+The function V is called the energy. The function Jo, called the potential function, 
+defines a real value for every subconfiguration of the set b. Z is the normalizing 
+constant that makes the sum of probabilities of all configurations equal to unity. 
+Prior work in the neural network literature using the Gibbs distribution (such as 
+the Boltzmann Machine) has primarily used second order models (J -- 0 if lb] > 2) 
+(Hinton, 1986). By adding new attributes not in the original database, second order 
+potentials have been used to model complex distributions. The work presented in 
+this paper, in contrast, uses higher order potentials to model complex probability 
+distributions. We begin by considering the case where every potential of every order 
+is used to model the distribution. 
+The Principle of Inclusion-Exclusion from set theory states that the following two 
+equations are equivalent: 
+g(A) 
+f(A) 
+bCA 
+= E(-1) It-bl g(b). (4) 
+bCA 
+The method of inverting an equation from the form of (3) into one in the form of 
+(q) is a special case of MSbius Inversion. Clifford-Hammersley (Kindermann, 1980) 
+used this relation to invert formula (2): 
+J.a(w) = E(-1) It-*l �(w) (5) 
+bCA 
+Define the probability of a subconfiguration p(wb) to be the probability that the 
+attributes in set b take on the values defined in the configuration w. Using (1) 
+to describe the probability distribution of subconfigurations, equation (5) can be 
+written: 
+JA(w) = E(-1) It-*l ln(p(wb) ) (6) 
+bCA 
+Probability Estimation from a Database Using a Gibbs Energy Model 533 
+3 A TRANSFORMATION TO GIBBS POTENTIALS 
+Equation (6) provides a technique for modeling distributions by potential functions 
+rather than directly through the observable joint statistics of sets of attributes. If 
+the model is truncated by setting high order potentials to zero, then the energy 
+model becomes an estimate of the model obtained by collecting the joint statistics, 
+rather than an exact equivalent. If equation (6) is used directly, the error in the 
+energy due to setting all potentials of order d to zero grows quickly with d. For 
+this reason (6) must be normalized if it is going to be used in a truncated modeling 
+scheme. A normalization version of equation (2) that corrects for the unequal 
+number of potentials of different orders is: 
+= _ (7) 
+bCA 
+This equation can be inverted to show the surprising result, a weight associated 
+with 
+JA(w) = ln(pA(W)) -- (IAI- 1) - E ln(pb(w)) (8) 
+tA 
+bA 
+For example, with three attribute values {x, y, z}, the following potentials are de- 
+fined: 
+J{z) = ln(p(x)) 
+J{y} = ln(p(y)) 
+J{z) = ln(p(z)) 
+J{zy} -- In(p(xy) 
+p(x)p(y) ) 
+J{yz} = In(p(yz) ) 
+k,p(y)p(z) 
+J{zz} = ln(p(zz) ) 
+k,p(z)p(z) 
+j{zyz} = ln ( p(xyz) ) 
+V/P( zY )P( YZ )P( X Z ) 
+For a given database sample, a potential is activated if all of its defined attribute 
+values are true for the sample. The weighted sum of all activated potentials recovers 
+an approximation of the probability of the database sample. If all potentials of every 
+order have been used to create the model, then this approximation is exactly the 
+probability of the sample in the empirical distribution. The correct weighting is 
+given by equation (7). For example it is easily verified that: 
+ln(p(xyz)) = J{zyz} + (J{zy} + J{zz) + J{yz}) 
+-1 
++(20) (J{x} + J{y} + J{z)). 
+534 Miller and Goodman 
+The Gibbs model truncated to second order potentials would estimate the proba- 
+bility in this example by: 
+(21)-1 () 
+ln(p(xyz))  (J{zy) d- J{zz) d- J{yz)) d- 
+ In V/p(xy)p(yz)p(xz) 
+-1 
+4 PROOF OF THE INVERSION FORMULA 
+Theorem: 
+Let T be a finite set. Each element of T will be called an attribute. Each attribute 
+can take on one of a finite set of states called attribute values. A collection of 
+attribute values for every element of T is called a configuration w. For all A C_ T 
+(including both the empty set A - 0 and the full set A - T), let VA(W) and JA(w) 
+be functions mapping the states of the elements of A to the real numbers. Define 
+= n)! . to be m choose n. 
+Let V(w) = 0, Jo(w) = 0, and let VA(W) = JA(w) if IAI = 1. 
+Then for IAI > 1: 
+and 
+(9) 
+JA('O) = VA() --  (IAI- 1) - V(w) (10) 
+b(A 
+I'I=IAI-- 
+are equivalent in that any assignment of VA and JA values for all A C_ T will satisfy 
+(9) if and only if they also satisfy (10). 
+Proof: 
+Let `7 be any assignment of the values JA(W) for all A _C T. Let 12 be any assignment 
+of all the values VA(W) for all A C- T. Then clearly (9) maps any assignment `7 to a 
+unique 12. We will represent this mapping by the function f, so (9) is abbreviated 
+� = f(,7). Similarly (10) maps any assignment 12 to a unique ,7. Equation (10) 
+will be abbreviated ,7 = g(12). The result of Lemma C1 below, applied with the 
+value 7) set to n, shows that f(g(12)) = �. In Lemma C2 below, it is shown 
+g(f(,7)) = ,7. Therefore the equations (9) and (10) are inverse one-to-one mappings 
+and the association of assignments between ,7 and V are identical for the two 
+equations. Q.E.D. 
+Lemma C 1: 
+Rather than simply showing f(g()2)) = 12, a more general result will be shown. Since 
+the number of potentials of a given order increases exponentially with the order, it 
+is useful to approximate the energy of a configuration by defining a maximum order 
+7) such that all potentials of greater order are assumed to be zero 
+Jb(w) ---- 0 V b such that Ibl > v. 
+Let IT(w) be the resulting approximation to the energy VA(w). Let IAI = . 
+Probability Estimation from a Database Using a Gibbs Energy Model 535 
+Given 
+JA() = v.(,,,) -  (n- )- 
+I,1=,',-  
+and the order 7) approximation to equation (7): 
+then 
+�(w) (11) 
+ Jb(), 
+,C_A 
+I'l=> 
+(12) 
+Note: 
+For the case D - n, the approximation is exact 
+�() = v(). 
+and so f(g(12)) = 12 is shown. 
+The lemma's result has a simple interpretation. The energy of a configuration is 
+approximated by a scaled average of the energies of the configurations of order 
+D. Using equation (1) to relate energies to probabilities, shows that the estimated 
+probability is a scaled geometric mean of the order D marginal probabilities. 
+Proof: 
+We start with the given equation for 13'A(W) 
+Use equation (11) to substitute Jb(w) out of the equation: 
+i=1 _ 
+Ibl= 14=1,1- 
+Separate the term in the first sum where i - D 
+Q,(w) = c_ (;-11)-lV,(w) + ,,=x (.-) -1 V(w) 
+- E E (i- 1) -x V(w). 
+By subtracting zt(w) from both sides using equation (12) and noting the second 
+summation over i has no terms when i - i we see that it is sufficient to show 
+536 Miller and Goodman 
+The right hand side inner double summation counts a given %(w) once for every b 
+such that c C b C_ A with i = [b[ = Icl + 1. This occurs exactly IAI- Icl-- - - i + 1 
+times. Thus 
+r k(:. 
+i - V,(w) = - n- i + 1 Ve(w). 
+- - i-1 
+Ibl=, 
+Now perform a change of variables. Let j = i - 1 on the right hand side 
+Z E �(w) - Z n-1 n-j V(w). 
+Ibl=* 14=5 
+Clearly both sides are identical since 
+Q.E.D. 
+Lemma C2: g(f(J))- ,7' 
+Let IAI -- n. It is sufficient to show that substituting V out of (10) using (9) yields 
+an identity: 
+JA(W) 
+b(2A,nl 
+E [b[- 1 Jb(w)-- E 
+bCA 
+- ibl_-_  
+-1 
+Separate the term in the first sum for which b = A 
+jA() : J() 
++ It, l- 1 
+bCA 
+-1 
+[bl_-n_ 1 - 
+;c(). 
+&(). 
+Subtract JA(w) from both sides. The right hand side doub

@@ -1,0 +1,189 @@
+Forecasting Demand for Electric Power 
+Jen-Lun Yuan and Terrence L. Fine 
+School of Electrical Engineering 
+Cornell University 
+Ithaca, NY 14853 
+Abstract 
+We are developing a forecaster for daily extremes of demand for 
+electric power encountered in the service area of a large midwest- 
+ern utility and using this application as a testbed for approaches 
+to input dimension reduction and decomposition of network train- 
+ing. Projection pursuit regression representations and the ability 
+of algorithms like SIR to quickly find reasonable weighting vectors 
+enable us to confront the vexing architecture selection problem by 
+reducing high-dimensional gradient searchs to fitting single-input 
+single-output (SISO) subnets. We introduce dimension reduction 
+algorithms, to select features or relevant subsets of a set of many 
+variables, based on minimizing an index of level-set dispersions 
+(closely related to a projection index and to SIR), and combine 
+them with backfitting to implement a neural network version of 
+projection pursuit. The performance achieved by our approach, 
+when trained on 1989, 1990 data and tested on 1991 data, is com- 
+parable to that achieved in our earlier study of backpropagation 
+trained networks. 
+I Introduction 
+Our work has the intertwined goals of: 
+(i) contributing to the improvement of the short-term electrical load (demand) 
+forecasts used by electric utilities to buy and sell power and ensure that they can 
+meet demand; 
+739 
+740 Yuan and Fine 
+(ii) reducing the computational burden entailed in gradient-based training of neural 
+networks and thereby enabling the exploration of architectures; 
+(iii) improving prospects for good statistical generalization by use of rational meth- 
+ods for reducing complexity through the identification of good small subsets of 
+variables drawn from a large set of candidate predictor variables (feature selection); 
+(iv) benchmarking backpropagation and neural networks as an approach to the 
+applied problem of load forecasting. 
+Our efforts proceed in the context of a problem suggested by the operational needs 
+of a particular electric utility to make daily forecasts of short-term load or demand. 
+Forecasts are made at midday (1 p.m.) on a weekday t ( Monday - Thursday), for 
+the next evening peak e(t) (occuring usually about 8 p.m. in the winter), the daily 
+minimum d(t + 1) (occuring about 4 a.m. the next morning ) and the morning 
+peak m(t + 1) (about noon ). In addition, on Friday we are to forecast these 
+three variables for the weekend through the Monday morning peak. These daily 
+extremes of demand are illustrated in an excerpt from our hourly load data plotted 
+in Figure 1. 
+4800 
+46OO 
+44OO 
+4200 
+4000 
+38OO 
+3600 
+34OO 
+number of hours 
+Figure 1' Hourly demand for two consecutive days showing the intended forecasting 
+variables. 
+In this paper, we focus on forecasting these extremal demands up to three days 
+ahead ( e.g. forecasting on Fridays). Neural network-based forecasters are devel- 
+oped which parallel the recently proposed method of slicing inverse regression (SIR) 
+(Li [1991]) and then use backfitting (Hastie and Tibshirani [1990]) to implement a 
+training algorithm for a projection pursuit model (Friedman [1987], Huber [1985]) 
+that can be implemented with a single hidden layer network. Our data consists of 
+hourly integrated system demand (MWH) and hourly temperatures measured at 
+three cities in the service area of a large midwestern utility during 1989-91. We use 
+1989 and 1990 for a training set and test over the whole of 1991, with the exception 
+of holidays that occur so infrequently that we have no training base. 
+Forecasting Demand for Electric Power 741 
+2 Baseline Performance 
+2.1 Previous Work on Load Forecasting 
+Since demand is a process which does not have a known physical or mathematical 
+model, we do not know the best achievable forecasting performance, and we are led 
+to making comparisons with methods and results reported elsewhere. There is a 
+substantial literature on short-term load forecasting, with Gross et al. [1987] and 
+Willis et al. [1984] providing good reviews of approaches based upon such statisti- 
+cal methods as linear least squares regression -nd Box-Jenkins and ARMAX time 
+series models. Many utilities rely upon the seemingly seat-of-the-pants estimates 
+produced by individuals who have been long employed at this task and who extrap- 
+olate from a large historical data base. In the past few years there have been several 
+efforts to employ neural networks trained through backpropagation. In two such 
+recent studies conducted at the Univ. of Washington an average peak error of 2.04% 
+was reported by Damborg et al. [1990] and an hourly load error of about 2.2% was 
+given by Connor et al. [1991]. However, the accuracies reported in the literature are 
+difficult to compare with since utilities are exposed to different operating conditions 
+(e.g., weather, residential/industrial balance). To provide a benchmark for the error 
+performance achieved by our method, we evaluated three basic forecasting models 
+on our data. These methods are based on a pair of features made plausible by the 
+scatter plots shown in Figure 2. 
+5000 
+4800 
+46OO 
+'' 4200 
+40OO 
+3800 
+5000 
+4800 
+3600 
+35OO 100 
+m(t) MWH mmIramr(t) oF 
+Figure 2: Evening peaks (Tue.-Fri.,1989-90) vs. morning peaks and temperatures. 
+2.2 Feature Selection and Homogeneous Data Types 
+Demand depends on predictable calendar factors such as the season, day-of-the- 
+week and time-of-day considerations. We grouped separately Mondays, Tuesdays 
+through Fridays, Saturdays, and Sundays, as well as holidays. In contrast to all 
+of the earlier work on this problem, we ignored seasonal considerations and let the 
+network and training algorithm adjust as needed. The advantage of this was the 
+ability to form larger training data sets. We thus constructed twelve networks, one 
+742 Yuan and Fine 
+type m(t+l) e(t) d(t+l) 
+Monday m(t-3) m(t) d(t-3) 
+Tue.-Fri. m(t-1) re(t) d(t-1) 
+Saturday re(t-l) re(t-l) d(t-1) 
+Sunday re(t-2) re(t-2) d(t- 2) 
+Table 1: Most recent peaks of a two-feature set 
+type 
+Monday 
+The.-Fri. 
+Saturday 
+Sunday 
+m(t+l) e(t) 
+LLS LOESS BP ILLS LOESS BP ILLS 
+3.78 2.45 2.42 
+3.01 2.44 1.98 
+3.37 2.60 2.36 
+4.83 3.28 3.79 
+1.73 2.43 1.59 
+1.89 3.04 1.65 
+4.54 3.76 3.10 
+4.89 2.74 3.81 
+d(t+l) 
+LOESS BP 
+4.40 3.30 2.69 
+3.29 3.81 2.49 
+3.48 3.25 2.06 
+4.26 2.44 3.03 
+Table 2: Forecasting accuracies (percentage absolute error) for three basic methods 
+for each pair consisting of one of these four types of days and one of the three 
+daily extremes to be forecast. Demand also depends heavily upon weather which is 
+the primary random factor affecting forecasts. This dependency can be seen in the 
+scatter plots of current demand vs. previous demand and temperature in Figure 2, 
+particularly in the projection onto the 'current demand-temperature' plane which 
+shows a pronounced U-shaped nonlinearity. A two-feature set consisting of the 
+most recent peaks and average temperatures over the three cities and the preceding 
+six hours is employed for testing all three models (Table 1). 
+2.3 Benchmark Results 
+The three basic forecasting models using the two-featured set arc: 
+1) linear regression model fitted to the data in Figure 2; 
+2) demand vs. temperature models which roughly model the U-shaped nonlinear 
+relationship, (LOESS with .5 span was employed for scatter plot smoothing); 
+3) backpropagation trained neural networks using 5 logistic nodes in a single hidden 
+layer. 
+The test set errors are given in Table 2. Note that among these three models, 
+BP-trained neural networks gives superior test set performance on all but Sundays. 
+These models all give results comparable to those obtained in our earlier work on 
+forecasting demands for Tuesday-Friday using autoregressive neural networks (Yuan 
+and Fine [1992]). 
+Forecasting Demand for Electric Power 743 
+3 Projection Pursuit Training 
+Satisfactory forecasting performance of the neural networks described above relies 
+on the appropriate choice of feature sets and network architectures. Unfortunately, 
+BP can only address the problem of appropriate architecture and relevant feature 
+sets through repeated time-consuming experiments. Modeling of high-dimensional 
+input features using gradient search requires extensive computation. We were thus 
+prompted to look at other network structures and at training algorithms that could 
+make it easier to explore architecture and training problems. Our initial attempt 
+combined the dimension reduction algorithm cf SIR (Li [1991]), currently replaced 
+by an algorithm of our devising sketched in Section 4, and backfitting (Hastie 
+et.al [1990]) to implement a neural network version of projection pursuit regres- 
+sion (PPR). 
+3.1 The Algorithm 
+A general nonlinear regression model for a forecast variable y in terms of a vector 
+x of input variables and model noise e, independent of x, is given by 
+y= (,). 
+A least mean square predictor is the conditional expectation E(y]x). The projection 
+pursuit model/approximation of this conditional expectation is given in terms of a 
+family of SISO functions , E2, ..,  by 
+k 
+z(ylx) = + 
+i----1 
+A single hidden layer neural network can approximate this representation by intro- 
+ducing subnets whose summed outputs approximate the individual 
+We train such a 'projection pursuit network' with nodes partitioned into subnets, 
+representing the Ei, by training the subnets individually in rotation. In this we 
+follow the statistical regression notion of backfitting. The subnet  is trained to 
+predict the residuals resulting from the difference between the weighted outputs of 
+the other k - 1 subnets and the true value of the demand variable. After a number 
+of training cycles one then proceeds to the next subnet and repeats the process. The 
+inputs to each subnet E are the low-dimensional projections/x of the regression 
+model. O

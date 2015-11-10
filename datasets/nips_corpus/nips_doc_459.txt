@@ -1,0 +1,161 @@
+Active Exploration in Dynamic Environments 
+Sebastian B. Thrun 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+E-mail: thrun@cs.cmu.edu 
+Knut Mfller 
+University of Bonn 
+Dept. of Computer Science 
+PoSmerstr. 164 
+D-5300 Bonn, Germany 
+Abstract 
+Whenever an agent learns to control an unknown environment, two oppos- 
+ing principles have to be combined, namely: exploration (long-term opti- 
+mization) and exploitation (short-term optimization). Many real-valued 
+connectionist approaches to learning control realize exploration by ran- 
+domness in action selection. This might be disadvantageous when costs 
+are assigned to negative experiences. The basic idea presented in this 
+paper is to make an agent explore unknown regions in a more directed 
+manner. This is achieved by a so-called competence map, which is trained 
+to predict the controller's accuracy, and is used for guiding exploration. 
+Based on this, a bistable system enables smoothly switching attention 
+between two behaviors - exploration and exploitation - depending on ex- 
+pected costs and knowledge gain. 
+The appropriateness of this method is demonstrated by a simple robot 
+navigation task. 
+INTRODUCTION 
+The need for exploration in adaptive control has been recognized by various au- 
+thors [MB89, Sut90, Moo90, Sch90, BBS91]. Many connectionist approaches (e.g. 
+[Me189, MB89]) distinguish a random ezploralion phase, at which a controller is 
+constructed by generating actions randomly, and a subsequent exploitation phase. 
+Random exploration usually suffers from three major disadvantages: 
+� Whenever cosls are assigned to certain experiences - which is the case for 
+various real-world tasks such as autonomous robot learning, chemical control. 
+flight control etc. -, exploration may become unnecessarily expensive. Intu- 
+itively speaking, a child would burn itself again and again simply because it is 
+531 
+532 Thrun and M611er 
+ :::::::::::::::::::::::::::::: ::: !i!i!ii:i:!:!:!:i:i:i:i:i:i i:iiiil ii!i!!::!:i:i:i:i:i:   
+,-t,,.to :[ world model ] �a't 
+Figure 1: The training of the model network is a system identification task. Weights 
+and biases of the network are estimated by gradient descent using the backpropagation 
+algorithm. 
+in its random phase. 
+� Random exploration is often inefficient in terms of learning time, too [Whi91, 
+Thr92]. Random actions usually make an agent waste plenty of time in already 
+well-explored regions in state space, while other regions may still be poorly 
+explored. Exploration happens by chance and is thus undirected. 
+� Once the exploitation phase begins, learning is finished and the system is unable 
+to adapt to time-varying, dynamic environments. 
+However, more efficient exploration techniques rely on knowledge about the learn- 
+ing process itself, which is used for guiding exploration. Rather than selecting ac- 
+tions randomly, these exploration techniques select actions such that the expected 
+knowledge gain is maximal. In discrete domains, this may be achieved by preferring 
+states (or state-action pairs) that have been visited less frequently [BS90], or less 
+recently [Sut90], or have previously shown a high prediction error [Moo90, Sch91]  
+For various discrete deterministic domains such exploration heuristics have been 
+proved to prevent from exponential learning time [Thr92] (exponential in size of 
+the state space). However, such techniques require a variable associated with each 
+state-action pair, which is not feasible if states and actions are real-valued. 
+A novel real-valued generalization of these approaches is presented in this paper. 
+A so-called competence map estimates the controllet's accuracy. Using this esti- 
+mation, the agent is driven into regions in state space with low accuracy, where 
+the resulting learning effect is assumed to be maximal. This technique defines a 
+directed exploration rule. In order to minimize costs during learning, exploration is 
+combined with an exploitation mechanism using selective attention, which allows 
+for switching between exploration and exploitation. 
+INDIRECT CONTROL USING FORWARD MODELS 
+In this paper we focus on an adaptive control scheme adopted from Jordan [Jot89]: 
+System identification (Fig. 1): Observing the input-output behavior of the un- 
+known world (environment), a model is constructed by minimizing the difference of 
+the observed outcome and its corresponding predictions. This is done with back- 
+propagation. 
+Action search using the model network (Fig. 2): Let an actual state s and 
+a goal state s* be given. Optimal actions are searched using gradient descent in 
+action space: starting with an initial action (e.g. randomly chosen), the next state 
+Note that these two approaches [Moo90, Sch91] are real-valued. 
+Active Exploration in Dynamic Environments 533 
+desired state 
+action -,- :....../ 
+current 5 =wor ! d In o d el odi next state , 
+E igradits 
+Figure 2: Using the model for optimizing actions (exploitation). Starting with some 
+initial action, gradient descent through the model network progressively improves actions. 
+ is predicted with the world model. The exploitation energy function 
+Eexp,o,, = (s* - s)T(s * - s) 
+measures the LMS-deviation of the predicted and the desired state. Since the 
+model network is differenttable, gradients of Zexploi t can be propagated back through 
+the model network. Using these gradients, actions are optimized progressively by 
+gradient descent in action space, minimizing Eexploi t. The resulting actions exploit 
+the world. 
+THE COMPETENCE MAP 
+The general principle of many enhanced exploration schemes [BS90, Sut90, Moo90, 
+TM91, Sch91, Thr92] is to select actions such that the resulting observations are 
+expected to optimally improve the controller. In terms of the above control scheme, 
+this may be realized by driving the agent into regions in state-action space where 
+the accuracy of the model network is assumed to be low, and thus the knowledge 
+gain by visiting these regions is assumed to be high. In order to estimate the 
+accuracy of the model network, we introduce the notion of a competence network 
+[Sch91, TM91]. Basically, this map estimates some upper bound of the LMS-error 
+of the model network. This estimation is used for exploring the world by selecting 
+actions which minimize the expected competence of the model, and thus maximize 
+the resulting learning effect. 
+However, training the competence map is not as straightforward, since it is impos- 
+sible to exactly predict the accuracy of the model network for regions in state space 
+not visited for some time. The training procedure for the competence map is based 
+on the assumption that the error increases (and thus competence decreases) slowly 
+for such regions due to relearning and environmental dynamics: 
+1. At each time tick, backpropagation learning is applied using the last state- 
+action pair as input, and the observed LMS-prediction error of the model as 
+target value (c.f. Fig. 3), normalized to (0, emax) (0__<emax__<l, SO far we used 
+$mx--1). 
+2. For some 2 randomly generated state-action pairs, the competence map is subse- 
+quently trained with target 1.0 (_< largest possible error emx) [ACL+90]. This 
+training step establishes a heuristic, realizing the loss of accuracy in unvisited 
+regions: over time, the output values of the competence map increase for these 
+regions. 
+Actions are now selected with respect to an energy function E which combines both 
+2in our simulations: five - with a small learning rate 
+534 Thrun and M511er 
+world model I 
+mode error 
+=]competence map[ pre. d. modelerror  
+Figure 3: Training the competence map to predict the error of the model by gradient 
+descent (see text). 
+exploration and exploitation: 
+E = (l-r) � Eexplore -}- r � Eexploit 
+with gain parameter P (0<P<l). Here the exploration energy 
+Eexplore ---- 1 -- competence(action) 
+(1) 
+is evaluated using the competence map - minimizing Expore is equivalent to maxi- 
+mizing the predicted model error. Since both the model net and the competence net 
+are differenttable, gradient descent in action space may be used for minimizing Eq. 
+(1). E combines exploration with exploitation: on the one hand minimizing Eexpoit 
+serves to avoid costs (short-term optimization), and on the other hand minimizing 
+Exptor ensures exploration (long-term optimization). F determines the portion of 
+both target functions - which can be viewed to represent behaviors - in the action 
+selection process. 
+Note that emax determines the character of exploration: if ema is large, the agent 
+is attracted by regions in state space which have previously shown high prediction 
+error. The smaller em is, the more the agent is attracted by rarely-visited regions. 
+EXPLORATION AND SELECTIVE ATTENTION 
+Clearly, exploration and exploitation are often conflicting and can hinder each other. 
+E.g. if exploration and exploitation pull a mobile robot into opposite directions, the 
+system will stay where it is. It therefore makes sense not to keep F constant during 
+learning, but sometimes to focus more on exploration and sometimes more on ex- 
+ploitation, depending on expected costs and improvements. In our approach, this is 
+achieved by determining the focus of attention P using the following bistable recur- 
+sive function which allows for smoothly switching attention between both policies. 
+At each step of action search, let eexploit ---- AEexpoit(a) and eexplore -- AEeplore(a) 
+denote the expected change of both energy functions by action a. With f(.) being 
+a positive and monotonically increasing function a, 
+E < r. f(eexploit) - (l-r). f(eexplore) (2) 
+compares the influence of action a on both energy functions under the current focus 
+of attention F. The new F is then derived by squashing n (with c>0)' 
+1 
+r , ,, 1 + e - (3) 
+awe chosed f(x) = e x in our simulations. 
+Active Exploration in Dynamic Environments 535 
+goal 
+obs

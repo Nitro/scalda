@@ -1,0 +1,158 @@
+Image representations for facial expression 
+coding 
+Marian Stewart Bartlett* 
+U.C. San Diego 
+marnisalk. edu 
+Javier R. Movellan 
+U.C. San Diego 
+movellancogsc�. ucsd. edu 
+Paul Ekman 
+U.C. San Francisco 
+ekmancompuserve. com 
+Gianluca Donato 
+Digital Persona, Redwood City, CA 
+gianlucaddigit alpersona. com 
+Joseph C. Hager 
+Network Information Res., SLC, Utah 
+j chager��bm. com 
+Terrence J. Sejnowski 
+Howard Hughes Medical Institute 
+The Salk Institute; U.C. San Diego 
+terrysalk. edu 
+Abstract 
+The Facial Action Coding System (FACS) (9) is an objective 
+method for quantifying facial movement in terms of component 
+actions. This system is widely used in behavioral investigations 
+of emotion, cognitive processes, and social interaction. The cod- 
+ing is presently performed by highly trained human experts. This 
+paper explores and compares techniques for automatically recog- 
+nizing facial actions in sequences of images. These methods include 
+unsupervised learning techniques for finding basis images such as 
+principal component analysis, independent component analysis and 
+local feature analysis, and supervised learning techniques such as 
+Fisher's linear discriminants. These data-driven bases are com- 
+pared to Gabor wavelets, in which the basis images are predefined. 
+Best performances were obtained using the Gabor wavelet repre- 
+sentation and the independent component representation, both of 
+which achieved 96% accuracy for classifying 12 facial actions. The 
+ICA representation employs 2 orders of magnitude fewer basis im- 
+ages than the Gabor representation and takes 90% less CPU time 
+to compute for new images. The results provide converging support 
+for using local basis images, high spatial frequencies, and statistical 
+independence for classifying facial actions. 
+I Introduction 
+Facial expressions provide information not only about affective state, but also about 
+cognitive activity, temperament and personality, truthfulness, and psychopathology. 
+The Facial Action Coding System (FACS) (9) is the leading method for measur- 
+ing facial movement in behavioral science. FACS is performed manually by highly 
+trained human experts. A FACS coder decomposes a facial expression into com- 
+ponent muscle movements (Figure 1). Ekman and Friesen described 46 distinct 
+facial movements, and over 7000 distinct combinations of such movements have 
+* To whom correspondence should be addressed. (UCSD 0523, La Jolla, CA 92093.) 
+This research was supported by NIH Grant No. 1F32 MH12417-01. 
+Image Representation.v for Facial Expression Coding 887 
+been observed in spontaneous behavior. An automated system would make facial 
+expression measurement more widely accessible as a research tool for behavioral sci- 
+ence and medicine. Such a system would also have application in human-computer 
+interaction tools and low bandwidth facial animation coding. 
+A number of systems have appeared in the computer vision literature for classifying 
+facial expressions into a few basic categories of emotion, such as happy, sad, or 
+surprised. While such approaches are important, an objective and detailed measure 
+of facial activity such as FACS is needed for basic research into facial behavior. In a 
+system being developed concurrently for automatic facial action coding, Cohn and 
+colleagues (7) employ feature point tracking of a select set of image points. Tech- 
+niques employing 2-D image filters have proven to be more effective than feature- 
+based representations for face image analysis [e.g. (6)]. Here we examine image 
+analysis techniques that densely analyze graylevel information in the face image. 
+This work surveys anal compares techniques for face image analysis as applied to 
+automated FACS encoding.  The analysis focuses on methods for face image repre- 
+sentation in which image graylevels are described as a linear superposition of basis 
+images. The techniques were compared on a common image testbed using common 
+similarity measures and classifiers. 
+We compared four representations in which the basis images were learned from 
+the statistics of the face image ensemble. These include unsupervised learning 
+techniques such as principal component analysis (PCA), and local feature analy- 
+sis (LFA), which are learned from the second-order dependences among the image 
+pixels, and independent component analysis (ICA) which is learned from the high- 
+order dependencies as well. We also examined a representation obtained through 
+supervised learning on the second-order image statistics, Fisher's linear discrimi- 
+nants (FLD). Classification performances with these data-driven basis images were 
+compared to Gabor wavelets, in which the basis images were pre-defined. We ex- 
+amined properties of optimal basis images, where optimal was defined in terms of 
+classification. 
+Generalization to novel faces was evaluated using leave-one-out cross-validation. 
+Two basic classifiers were employed: nearest neighbor and template matching, where 
+the templates were the mean feature vectors for each class. Two similarity measures 
+were employed for each classifier: Euclidean distance and cosine of the angle between 
+feature vectors. 
+2 
+AU 1 Inner brow raiser 
+AU 2 Outer brow raiser 
+AU 4 Brow lowerer 
+Figure 1- a. The facial muscles underlying six of the 46 facial actions. b. Cropped 
+face images and 5-images for three facial actions (AU's). 
+iA detailed description of this work appears in (8). 
+888 M. S. Bartlett, G. Donato, J. R. Movellan, J.. C. Hager, P. Elanan and T. J. Sejnowsla' 
+2 Image Database 
+We collected a database of image sequences of subjects performing specified facial 
+actions. The database consisted of image sequences of subjects performing specified 
+facial actions. Each sequence began with a neutral expression and ended with a high 
+magnitude muscle contraction. For this investigation, we used 111 sequences from 
+20 subjects and attempted to classify 12 actions: 6 upper face actions and 6 lower 
+face actions. Upper and lower-face actions were analyzed separately since facial 
+motions in the lower face do not effect the upper face, and vice versa (9). 
+The face was located in the first frame in each sequence using the centers of the 
+eyes and mouth. These coordinates were obtained manually by a mouse click. The 
+coordinates from Frame I were used to register the subsequent frames in the se- 
+quence. The aspect ratios of the faces were warped so that the eye and mouth 
+centers coincided across all images. The three coordinates were then used to rotate 
+the eyes to horizontal, scale, and finally crop a window of 60 x 90 pixels containing 
+the upper or lower face. To control for variations in lighting, logistic threshold- 
+ing and luminance scaling was performed (13). Difference images (6-images) were 
+obtained by subtracting the neutral expression in the first image of each sequence 
+from the subsequent images in the sequence. 
+3 Unsupervised learning 
+3.1 Eigenfaces (PCA) 
+A number of approaches to face image analysis employ data-driven basis vectors 
+learned from the statistics of the face image ensemble. Techniques such as eigen- 
+faces (17) employ principal component analysis, which is an unsupervised learning 
+method based on the second-order dependencies among the pixels (the pixelwise 
+covariances). PCA has been applied successfully to recognizing facial identity (17), 
+and full facial expressions (14). 
+Here we performed PCA on the dataset of 6-images, where each 6-image comprised 
+a point in R ' given by the brightness of the n pixels. The PCA basis images 
+were the eigenvectors of the covariance matrix (see Figure 2a), and the first p 
+components comprised the representation. Multiple ranges of components were 
+tested, from p = 10 to p - 200, and performance was also tested excluding the 
+first 1-3 components. Best performance of 79.3% correct was obtained with the 
+first 30 principal components, using the Euclidean distance similarity measure and 
+template matching classifier. 
+Padgett and Cottrell (14) found that a local PCA representation outperformed 
+global PCA for classifying full facial expressions of emotion. Following the meth- 
+ods in (14), a set of local basis images was derived from the principal components 
+of 15x15 image patches from randomly sampled locations in the 6-images (see 
+Figure 2d.) The first p principal components comprised a basis set for all image 
+locations, and the representation was downsampled by a factor of 4. Best perfor- 
+mance of 73.4% was obtained with components 2-30, using Euclidean distance and 
+template matching. Unlike the findings in (14), local basis images obtained through 
+PCA were not more effective than global PCA for facial action coding. A second 
+local implementation of PCA, in which the principal components were calculated 
+for fixed 15x 15 image patches also failed to improve over global PCA. 
+3.2 Local Feature Analysis (LFA) 
+Penev and Atick (15) recently developed a local, topographic representation based 
+on second-order image statistics called local feature analysis (LFA). The kernels are 
+derived from the principal component axes, and consist of a whitening step to 
+equalize the variance of the PCA coefficients, followed by a rotation to pixel space. 
+Image Representat'ons for Facial Expression Coding 889 
+bm 
+Ce 
+dm 
+Figure 2: a. First 4 PCA basis images. b. Four ICA basis images. The ICA basis 
+images are local, spatially opponent, and adaptive. c. Gabor kernels are local, 
+spatially opponent, and predefined. d. First 4 local PCA basis images. 
+We begin with the matrix P containing the principal component eigenvectors in 
+its columns, and Ai are the corresponding eigenvalues. Each row of the matrix K 
+serves as an element of the LFA image dictionary 2 
+K = PVP T where V = D-� = diag(--/) i = 1,...,p (1) 
+where Ai are the eigenvalues. The rows of K were found to have spatially local prop- 
+erties, and are topographic in the sense that they are inde

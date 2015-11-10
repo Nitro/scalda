@@ -1,0 +1,148 @@
+DTs: Dynamic Trees 
+Christopher K. I. Williams Nicholas J. Adams 
+Institute for Adaptive and Neural Computation 
+Division of Informatics, 5 Forrest Hill 
+Edinburgh, EH1 2QL, UK. http://www. anc. ed. ac. uk/ 
+ckiwdai. ed. ac. uk nickadai. ed. ac. uk 
+Abstract 
+In this paper we introduce a new class of image models, which we 
+call dynamic trees or DTs. A dynamic tree model specifies a prior 
+over a large number of trees, each one of which is a tree-structured 
+belief net (TSBN). Experiments show that DTs are capable of 
+generating images that are less blocky, and the models have better 
+translation invariance properties than a fixed, balanced TSBN. 
+We also show that Simulated Annealing is effective at finding trees 
+which have high posterior probability. 
+1 Introduction 
+In this paper we introduce a new class of image models, which we call dynamic 
+trees or DTs. A dynamic tree model specifies a prior over a large number of trees, 
+each one of which is a tree-structured belief net (TSBN). Our aim is to retain 
+the advantages of tree-structured belief networks, namely the hierarchical structure 
+of the model and (in part) the efficient inference algorithms, while avoiding the 
+blocky artifacts that derive from a single, fixed TSBN structure. One use for 
+DTs is as prior models over labellings for image segmentation problems. 
+Section 2 of the paper gives the theory of DTs, and experiments are described in 
+section 3. 
+2 Theory 
+There are two essential components that make up a dynamic tree network (i) the 
+tree architecture and (ii) the nodes and conditional probability tables (CPTs) in 
+the given tree. We consider the architecture question first. 
+DTs: Dynamic Trees 635 
+0 
+o o 
+o o o o 
+o o o o o o o o 
+oooooooooooooooo 
+(a) (b) 
+(c) (d) 
+Figure 1: (a) Naked nodes, (b) the balanced tree architecture, (c) a sample 
+from the prior over Z, (d) data generated from the tree in (c). 
+Consider a number of nodes arranged into layers, as in Figure l(a). We wish 
+to construct a tree structure so that any child node in a particular layer will be 
+connected to a parent in the layer above. We also allow there to be a null parent for 
+each layer, so that any child connected to it will become a new root. (Technically we 
+are constructing a forest rather than a tree.) An example of a structure generated 
+using this method is shown in Figure l(c). 
+There are a number of ways of specifying a prior over trees. If we denote by zi the 
+indicator vector which shows to which parent node i belongs, then the tree structure 
+is specified by a matrix Z whose columns are the individual zi vectors (one for each 
+node). The scheme that we have investigated so far is to set P(Z) = 1-[i P(zi). 
+In our work we have specified P(zi) as follows. Each child node is considered to 
+have a natural parent--its parent in the balanced structure shown in Figure 1 (b). 
+Each node in the parent layer is assigned an affinity for each child node, and 
+the natural parent has the highest affinity. Denote the affinity of node k in the 
+parent layer by ate. Then we choose P(zi -' ek) = ea/-]jpa  e aj, where/ is 
+some positive constant and ek is the unit vector with a 1 in position k. Note that 
+the null parent is included in the sum, and has affinity anull associated with it, 
+which affects the relative probability of orphans. We have named this prior the 
+full-time-node-employment prior as all the nodes participate in the creation of 
+the tree structure to some degree. 
+Having specified the prior over architectures, we now need to translate this into a 
+TSBN. The units in the tree are taken to be C-class multinomial random variables. 
+Each layer of the structure has associated with it a prior probability vector rt 
+and CPT Mr. Given a particular Z matrix which specifies a forest structure, the 
+probability of a particular instantiation of all of the random variables is simply 
+the product of the probabilities of all of the trees, where the appropriate root 
+probabilities and CPTs are picked up from the rts and Mrs. A sample generated 
+from the tree structure in Figure l(c) is shown in Figure l(d). 
+636 C. K. L Williams and N.J. Adams 
+Our intuition as to why DTs may be useful image models is based on the idea that 
+most pixels in an image are derived from a single object. We think of an object as 
+being described by a root of a tree, with the scale of the object being determined 
+by the level in the tree at which the root occurs. In this interpretation the CPTs 
+will have most of their probability mass on the diagonal. 
+Given some data at the bottom layer of units, we can form a posterior over the tree 
+structures and node instantiations of the layers above. This is rather like obtaining 
+a set of parses for a number of sentences using a context-free grammar . 
+In the DT model as described above different examples are explained by different 
+trees. This is an important difference with the usual priors over belief networks as 
+used, e.g. in Bayesian averaging over model structures. Also, in the usual case of 
+model averaging, there is normally no restriction to TSBN structures, or to tying 
+the parameters (rts and Mrs) between different structures. 
+2.1 Inference in DTs 
+We now consider the problem of inference in DTs, i.e. obtaining the posterior 
+P(Z, XhIXv) where Z denotes the tree-structure, Xv the visible units (the image 
+clamped on the lowest level) and Xh the hidden units. In fact, we shall concen- 
+trate on obtaining the posterior marginal P(ZIXv) , as we can obtain samples from 
+P(XnlXv, Z) using standard techniques for TSBNs. 
+There are a very large number of possible structures; in fact for a set of nodes cre- 
+ated from a balanced tree with branching factor b and depth D (with the top level 
+indexed by 1) there are rlY=2(b (d-2) q- l) b(-) possible forest structures. Our ob- 
+jective will be to obtain the maximum a posteriori (MAP) state from the posterior 
+P(ZIXv ) or P(Z)P(XvlZ) using Simulated Annealing? This is possible because 
+two components P(Z) and P(Xv[Z) are readily evaluated. P(Xv[Z) can be com- 
+puted from YIr(- (Xr)(Xr)), where (xr) and '(xr) are the Pearl-style vectors 
+of each root r of the forest. 
+An alternative to sampling from the posterior P(Z, XnlXv) is to use approximate 
+inference. One possibility is to use a mean-field-type approximation to the posterior 
+of the form Qz(Z)Qn(X,) (Zoubin Ghahramani, personal communication, 1998). 
+2.2 Comparing DTs to other image models 
+Fixed-structure TSBNs have been used by a number of authors as models of images 
+(Bouman and Shapiro, 1994), (Luettgen and Willsky, 1995). They have an attract- 
+ive multi-scale structure, but suffer from problems due to the fixed tree structure, 
+which can lead to very blocky segmentations. Markov Random Field (MRF) 
+models are also popular image models; however, one of their main limitations is 
+that inference in a MRF is NP-hard. Also, they lack an hierarchical structure. On 
+the other hand, stationarity of the process they define can be easily ensured, which 
+CFGs have a O(n a) algorithm to infer the MAP parse; however, this algorithm depends 
+crucially on the one-dimensional ordering of the inputs. We believe that the possibility of 
+crossed links in the DT architecture means that this kind of algorithm is not applicable to 
+the DT case. Also, the DT model can be applied to 2-d images, where the O(n ) algorithm 
+is not applicable. 
+2It is also possible to sample from the posterior using, e.g. Gibbs Sampling. 
+DTs: Dynamic Trees 63 7 
+is not the case for fixed-structure TSBNs. One strategy to overcome the fixed struc- 
+ture of TSBNs is to break away from the tree structure, and use belief networks 
+with cross connections e.g. (Dayan et al., 1995). However, this means losing the 
+linear-time belief-propagation algorithms that can be used in trees (Pearl, 1988) 
+and using approximate algorithms. While it is true that inference over DTs is also 
+NP-hard, we do retain aclean semantics based on the fact that we expect that 
+each pixel should belong to one object, which may lead to useful approximation 
+schemes. 
+3 Experiments 
+In this section we describe two experiments conducted on the DT models. The first 
+has been designed to compare the translation performance of DTs with that of the 
+balanced TSBN structure and is described in section 3.1. In section 3.2 we generate 
+2-d images from the DT model, find the MAP Dynamic Tree for these images, and 
+contrast their performance in relative to the balanced TSBN. 
+3.1 Comparing DTs with the balanced TSBN 
+We consider a 5-layer binary tree with 16 leaf nodes, as shown in Figure 1. Each node 
+in the tree is a binary variable, taking on values of white/black. The rt's, Mt's and 
+affinities were set to be equal in each layer. The values used were r = (0.75, 0.25) 
+with 0.75 referring to white, and M had values 0.99 on the diagonal and 0.01 off- 
+diagonal. The affinities 3 were set as 1 for the natural parent, 0 for the nearest 
+neighbour(s) of the natural parent, -o for non-nearest neighbours and anu = 0, 
+with/ -- 1.25. 
+(a) 5 black nodes 
+(b) 4 black nodes 
+Figure 2: Plots of the unnormalised log posterior vs position of the input pattern 
+for (a) the 5-black-nodes pattern and (b) 4-black-nodes pattern. 
+To illustrate the effects of translation, we have taken a stimulus made up of a bar 
+of five black pixels, and moved it across the image. The unnormalised log posterior 
+for a particular Z configuration is logP(Z) + logP(Xv]Z). This is computed for 
+the balanced TSBN architecture, and compared to the highest value that can be 
+found by conducting a search over Z. These results are plotted in Figure 2(a). 
+The x-axis denotes the position of the left hand end of the bar (running from I to 
+aThe affinities are defined up to the addition of an arbitrary constant. 
+638 C. K. L t4qlliams and N. d. Adams 
+12), and the y-axis shows the posterior probability. Note that due

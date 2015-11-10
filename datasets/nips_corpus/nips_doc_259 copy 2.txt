@@ -1,0 +1,167 @@
+550 Ackley and Littman 
+Generalization 
+and scaling 
+learning 
+in reinforcement 
+David H. Ackley 
+Michael L. Liftman 
+Cognitive Science Research Group 
+Bellcore 
+Morristown, NJ 07960 
+ABSTRACT 
+In associative reinforcement learning, an environment generates input 
+vectors, a learning system generates possible output vectors, and a re- 
+inforcement function computes feedback signals from the input-output 
+pairs. The task is to discover and remember input-output pairs that 
+generate rewards. Especially difficult cases occur when rewards are 
+rare, since the expected time for any algorithm can grow exponentially 
+with the size of the problem. Nonetheless, if a reinforcement function 
+possesses regularities, and a learning algorithm exploits them, learning 
+time can be reduced below that of non-generalizing algorithms. This 
+paper describes a neural network algorithm called complementary re- 
+inforcement back-propagation (CRBP), and reports simulation results 
+on problems designed to offer differing opportunities for generalization. 
+I REINFORCEMENT LEARNING REQUIRES SEARCH 
+Reinforcement learning (Sutton, 1984; Barto & Anandan, 1985; Acldey, 1988; Allen, 
+1989) requires more from a learner than does the more familiar supervised learning 
+paradigm. Supervised learning supplies the correct answers to the learner, whereas 
+reinforcement learning requires the learner to discover the correct outputs before 
+they can be stored. The reinforcement paradigm divides neatly into search and 
+learning aspects: When rewarded the system makes internal adjustments to learn 
+the discovered input-output pair; when punished the system makes internal adjust- 
+ments to search elsewhere. 
+Generalization and Scaling in Reinforcement Learning 551 
+1.1 MAKING REINFORCEMENT INTO ERROR 
+Following work by Anderson (1986) and Williams (1988), we extend the backprop- 
+agation algorithm to associative reinforcement learning. Start with a garden va- 
+riety backpropagation network: A vector i of n binary input units propagates 
+through zero or more layers of hidden units, ultimately reaching a vector s of ra 
+sigmoid units, each taking continuous values in the range (0,1). Interpret each sj 
+as the p?.obabilitit that an associated random bit oj takes on value 1. Let us call 
+the continuous, deterministic vector s the sea?'ct vector to distinguish it from the 
+stochastic binary output vector o. 
+Given an input vector, we forward propagate to produce a search vector s, and 
+then perform ra independent Bernoulli trials to produce an output vector o. The 
+i- o pair is evaluated by the reinforcement function and reward or punishment 
+ensues. Suppose reward occurs. We therefore want to make o more likely given i. 
+Backpropagation will do just that if we take o as the desired target to produce an 
+error vector (o- s) and adjust weights normally. 
+Now suppose punishment occurs, indicating o does not correspond with i. By choice 
+of error vector, backpropagation allows us to push the search vector in any direction; 
+which way should we go? In absence of problem-specific information, we cannot pick 
+an appropriate direction with certainty. Any decision will involve assumptions. A 
+very minimal don't be like o assumption employed in Anderson (1986), Williams 
+(1988), and Ackley (1989)--pushes s directly await from o by taking (s - o) as the 
+error vector. A slightly stronger be like not-o assumption employed in Barto & 
+Anandan (1985) and Ackley (1987)--pushes s directly toward the complement of o 
+by taking ((1 - o) - s) as the error vector. Although the two approaches always 
+agree on the signs of the error terms, they differ in magnitudes. In this work, 
+we explore the second possibility, embodied in an algorithm called complementa?'it 
+reinforcement back-p?'opa#ation ( CRBP). 
+Figure I summarizes the CRBP algorithm. The algorithm in the figure reflects three 
+modifications to the basic approach just sketched. First, in step 2, instead of using 
+the sj's directly as probabilities, we found it advantageous to stretch the values 
+using a parameter t/. When t/< 1, it is not necessary for the sj's to reach zero or 
+one to produce a deterministic output. Second, in step 6, we found it important 
+to use a smaller learning rate for punishment compared to reward. Third, consider 
+step 7: Another forward propagation is performed, another stochastic binary out- 
+put vector o* is generated (using the procedure from step 2), and o* is compared 
+to o. If they are identical and punishment occurred, or if they are different and 
+reward occurred, then another error vector is generated and another weight update 
+is performed. This loop continues until a different output is generated (in the case 
+of failure) or until the original output is regenerated (in the case of success). This 
+modification improved performance significantly, and added only a small percentage 
+to the total number of weight updates performed. 
+552 Ackley and Littman 
+0. Build a back propagation network with input dimensionality n and output 
+dimensionality rn. Let t = 0 and te = 0. 
+1. Pick random i E 2 ' and forward propagate to produce sj's. 
+2. Generate a binary output vector o. Given a uniform random variable  E [0, 1] 
+and parameter 0 < v _< 1, 
+1, if(sj +_>; 
+�'i = 0, otherwise. 
+3. Compute reinforcement r = f(i, o). Increment t. If r < 0, let te = t. 
+4. Generate output errors ej. If r > 0, let tj = oj, otherwise let tj = 1 - oj. Let 
+e = (l - s)sj(1 - s). 
+5. Backpropagate errors. 
+6. Update weights. Awt = Tetsj, using 7 = % if r > 0, and 7 - 7- otherwise, 
+with parameters 7+,7- > 0. 
+7. Forward propagate again to produce new sj's. Generate temporary output 
+vector o*. If (r > 0 and o*  o) or ( < 0 and o* = o), go to 4. 
+8. If te CC t, exit returning t, else go to 1. 
+Figure 1: Complementary Reinforcement Back Propagation--CRBP 
+2 ON-LINE GENERALIZATION 
+When there are many possible outputs and correct pairings are rare, the compu- 
+tational cost associated with the search for the correct answers can be profound. 
+The search for correct pairings will be accelerated if the search strategy can effec- 
+tively generalize the reinforcement received on one input to others. The speed of 
+an algorithm on a given problem relative to non-generalizing algorithms provides a 
+measure of generalization that we call on-line generalization. 
+O. Let a be an array of length 2 '. Set the a[i] to random numbers from 0 to 
+2 m - 1. Let t = te = O. 
+1. Pick a random input i C 2 '. 
+2. Compute reinforcement r: f(i, z[i]). Increment t. 
+3. If r < 0 let x[i] = (x[i] + 1) mod 2 ', and let te = t. 
+4. If te << t exit returning re, else go to 1. 
+Figure 2: The Table Lookup Reference Algorithm Tref(f, n, m) 
+Consider the table-lookup algorithm Tref(f, n, m) summarized in Figure 2. In this 
+algorithm, a separate storage location is used for each possible input. This prevents 
+the memorization of one i- o pair from interfering with any other. Similarly, 
+the selection of a candidate output vector depends only on the slot of the table 
+corresponding to the given input. The learning speed of Tref depends only on the 
+input and output dimensionalities and the number of correct outputs associated 
+Generalization and Scaling in Reinforcement Learning 553 
+with each input. When a problem possesses n input bits and n output bits, and 
+there is only one correct output vector for each input vector, Tref runs in about 4 n 
+time (counting each input-output judgment as one.) In such cases one expects to 
+take at least 2 '- z just to find one correct i - o pair, so exponential time cannot be 
+avoided without a priori information. How does a generalizing algorithm such as 
+CRBP compare to Tref? 
+3 SIMULATIONS ON SCALABLE PROBLEMS 
+We have tested CRBP on several simple problems designed to offer varying degrees 
+and types of generalization. In all of the simulations in this section, the following 
+detail. apply: Input and output bit counts are equal (n). Parameters are dependent 
+on n but independent of the reinforcement function f. /+ is hand-picked for each 
+n, ! /_ = /+/10 and  = 0.5. All data points are medians of five runs. The stopping 
+criterion te << t is interpreted as te +max(2000, 2 '+z) < t. The fit lines in the figures 
+are least squares solutions to a x b n, to two significant digits. 
+As a notational convenience, let c =   ij -- the fraction of ones in the input. 
+3.1 n-MAJORITY 
+Consider this majority rules problem: [if c > � then o -- 1 n else o = On]. The i-o 
+mapping is many-to-1. This problem provides an opportunity for what Anderson 
+(1986) called output generalization: since there are only two correct output states, 
+every pair of output bits are completely correlated in the cases when reward occurs. 
+o 
+10 7 
+10 6 
+10 5 
+10 4 
+10 3 
+10 2 
+101 
+10 0 
+o 1 2 3 
+74'2.0^n 
+230'1.6^n 
+0.76'4.2^n 
+4 5 6 7 8 9 1011 121314 
+n 
+Figure 3: The n-majority problem 
+Table 
+CRBP n-n-n 
+CRBP n-n 
+Figure 3 displays the simulation results. Note that although Tref is faster than 
+CRBP at small values of n, CRBP's slower growth rate (1.6 vs 4.2 n) allows it to 
+cross over and begin outperforming Tref at about 6 bits. Note also in violation of 
+!For n = I to 12, we used 1+ = {2.000, 1.550, 1.130, 0.979, 0.783, 0.709, 0.623, 0.525, 0.280, 
+0.219, 0.170, 0.121}. 
+554 Ackley and Littman 
+some conventional wisdom--that although n-majority is a linearly separable prob- 
+lem, the performance of CRBP with hidden units is better than without. Hidden 
+units can be helpful even on linearly separable problems--when there are oppor- 
+tunities for output generalization. 
+3.2 n-COPY AND THE 2k-ATTRACTORS FAMILY 
+As a second example, consider the n-copy problem: [o = i]. The i-o mapping is now 
+1-1, and the values of output bits in rewarding states are completely uncorrelated, 
+but the value of each output bit is completely correlated with the value of the 
+corresponding input bit. Figure 4 displays t

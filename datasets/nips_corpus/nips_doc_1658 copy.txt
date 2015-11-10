@@ -1,0 +1,142 @@
+Modeling High-Dimensional Discrete Data with 
+Multi-Layer Neural Networks 
+Yoshua Bengio 
+Dept. IRO 
+Universitd de Montrdal 
+Montreal, Qc, Canada, H3C 3J7 
+bengioyOiro. umontreal. ca 
+Abstract 
+Samy Bengio* 
+IDIAP 
+CP 592, rue du Simplon 4, 
+1920 Martigny, Switzerland 
+bengioOidiap. ch 
+The curse of dimensionality is severe when modeling high-dimensional 
+discrete data: the number of possible combinations of the variables ex- 
+plodes exponentially. In this paper we propose a new architecture for 
+modeling high-dimensional data that requires resources (parameters and 
+computations) that grow only at most as the square of the number of vari- 
+ables, using a multi-layer neural network to represent the joint distribu- 
+tion of the variables as the product of conditional distributions. The neu- 
+ral network can be interpreted as a graphical model without hidden ran- 
+dom variables, but in which the conditional distributions are tied through 
+the hidden units. The connectivity of the neural network can be pruned by 
+using dependency tests between the variables. Experiments on modeling 
+the distribution of several discrete data sets show statistically significant 
+improvements over other methods such as naive Bayes and comparable 
+Bayesian networks, and show that significant improvements can be ob- 
+tained by pruning the network. 
+1 Introduction 
+The curse of dimensionality hits particularly hard on models of high-dimensional discrete 
+data because there are many more possible combinations of the values of the variables than 
+can possibly be observed in any data set, even the large data sets now common in data- 
+mining applications. In this paper we are dealing in particular with multivariate discrete 
+data, where one tries to build a model of the distribution of the data. This can be used for 
+example to detect anomalous cases in data-mining applications, or it can be used to model 
+the class-conditional distribution of some observed variables in order to build a classifier. 
+A simple multinomial maximum likelihood model would give zero probability to all of 
+the combinations not encountered in the training set, i.e., it would most likely give zero 
+probability to most out-of-sample test cases. Smoothing the model by assigning the same 
+non-zero probability for all the unobserved cases would not be satisfactory either because 
+it would not provide much generalization from the training set. This could be obtained by 
+using a multivariate multinomial model whose parameters 0 are estimated by the maximum 
+a-posteriori (MAP) principle, i.e., those that have the greatest probability, given the training 
+data D, and using a diffuse prior P(O) (e.g. Dirichlet) on the parameters. 
+A graphical model or Bayesian network [6, 5] represents the joint distribution of random 
+variables Z1 ... Zn with 
+7' 
+P(Z1. . . Zn) = H P(Zilearentsi) 
+i=1 
+�Part of this work was done while S.B. was at CIRANO, Montreal, Qc. Canada. 
+Modeling High-Dimensional Discrete Data with Neural Networks 401 
+where Parents/ is the set of random variables which are called the parents of variable i 
+in the graphical model because they directly condition Zi, and an arrow is drawn, in the 
+graphical model, to Zi, from each of its parents. A fully connected left-to-right graphical 
+model is illustrated in Figure 1 (left), which corresponds to the model 
+P(ZI ' Zn) = H P(ZilZl 'Zi-1)' (1) 
+Figure 1: Left: a fully connected 'qeft-to-right graphical model. 
+Right: the architecture of a neural network that simulates a fully connected left-to-right 
+graphical model. The observed values Zi = zi are encoded in the corresponding input 
+unit group. hi is a group of hidden units. li is a group of output units, which depend 
+on z ... zi-, representing the parameters of a distribution over Zi. These conditional 
+probabilities P( ZiIZ ... Zi- ) are multiplied to obtain the joint distribution. 
+Note that this representation depends on the ordering of the variables (in that all previous 
+variables in this order are taken as parents). We call each combination of the values of 
+Parentsi a context. In the exact model (with the full table of all possible contexts) all the 
+orders are equivalent, but if approximations are used, different predictions could be made 
+by different models assuming different orders. 
+In graphical models, the curse of dimensionality shows up in the representation of condi- 
+tional distributions P(ZlParentsi) where Zi has many parents. If Zj E Parents can take 
+rtj values, there are I-Ij rtj different contexts which can occur in which one would like to 
+estimate the distribution of Zi. This serious problem has been addressed in the past by two 
+types of approaches, which are sometimes combined: 
+1. Not modeling all the dependencies between all the variables: this is the approach mainly 
+taken with most graphical models or Bayes networks [6, 5]. The set of independencies 
+can be assumed using a-priori or human expert knowledge or can be learned from data. 
+See also [2] in which the set Parentsi is restricted to at most one element, which is 
+chosen to maximize the correlation with 
+2. Approximating the mathematical form of the joint distribution with a form that takes only 
+into account dependencies of lower order, or only takes into account some of the possi- 
+ble dependencies, e.g., with the Rademacher-Walsh expansion or multi-binomial [1, 3], 
+which is a low-order polynomial approximation of a full joint binomial distribution (and 
+is used in the experiments reported in this paper). 
+The approach we are putting forward in this paper is mostly of the second category, al- 
+though we are using simple non-parametric statistics of the dependency between pairs of 
+variables to further reduce the number of required parameters. 
+In the multi-binomial model [3], the joint distribution of a set of binary variables is approx- 
+imated by a polynomial, Whereas the exact representation of P(Z -- z,... Zn = zn) 
+as a function of z... zn is a polynomial of degree rt, it can be approximated with a lower 
+402 Y. Bengio and S. Bengio 
+degree polynomial, and this approximation can be easily computed using the Rademacher- 
+Walsh expansion [I] (or other similar expansions, such as the Bahadur-Lazarsfeld ex- 
+pansion [1]). Therefore, instead of having 2 n parameters, the approximated model for 
+P(Z,... Zn) only requires O(n k) parameters. Typically, order k -- 2 is used. The model 
+proposed here also requires O(n 2) parameters, but it allows to model dependencies be- 
+tween tuples of variables, with more than 2 variables at a time. 
+In previous related work by Frey [4], a fully-connected graphical model is used (see Fig- 
+ure I, left) but each of the conditional distributions is represented by a logistic, which take 
+into account only first-order dependency between the variables: 
+1 
+P(Zi = 11Z ...Zi_l): 
+1 + exp(-w0 - Yj<i wjZj)' 
+In this paper, we basically extend Frey's idea to using a neural network with a hidden 
+layer, with a particular architecture, allowing multinomial or continuous variables, and we 
+propose to prune down the network weights. Frey has named his model a Logistic Au- 
+toregressive Bayesian Network or LARC. He argues that the prior variances on the logistic 
+weights (which correspond to inverse weight decays) should be chosen inversely propor- 
+tional to the number of conditioning variables (i.e. the number of inputs to the particular 
+output neuron). The model was tested on a task of learning to classify digits from 8x8 bi- 
+nary pixel images. Models with different orderings of the variables were compared and did 
+not yield significant differences in performance. When averaging the predictive probabili- 
+ties from 10 different models obtained by considering 10 different random orderings, Frey 
+obtained small improvements in likelihood but not in classification. The model performed 
+better or equivalently to other models tested: CART, naive Bayes, K-nearest neighbors, and 
+various Bayesian models with hidden variables (Helmholtz machines). These results are 
+impressive, taking into account the simplicity of the LARC model. 
+2 Proposed Architecture 
+The proposed architecture is a neural network implementation of a graphical model 
+where all the variables are observed in the training set, with the hidden units playing a sig- 
+nificant role to share parameters across different conditional distributions. Figure 1 (right) 
+illustrates the model in the simpler case of a fully connected (left-to-right) graphical model 
+(Figure 1, left). The neural network represents the parametrized function 
+fo(zl,... ,Zn) - log(PO(Zl = z,...,Zn -- Zn)) (2) 
+approximating the joint distribution of the variables, with parameters 0 being the weights of 
+the neural network. The architecture has three layers, with each layer organized in groups 
+associated to each of the variables. The above log-probability is computed as the sum of 
+conditional log-probabilities 
+n 
+fo(zl,... ,zn): y log(P(Zi = zi[gi(z1,...,Zi_l))) 
+where gi(z,..., zi-) is the vector-valued output of the i-th group of output units, and 
+it gives the value of the parameters of the distribution of Zi when Z = z, Z2 : 
+z2,..., Zi-1 = zi-. For example, in the ordinary discrete case, gi may be the vector 
+of probabilities associated with each of the possible values of the multinomial random 
+variable Zi. In this case, we have 
+In this example, a softmax output for the i-th group may be used to force these parameters 
+to be positive and sum to I, i.e., 
+egi,i t 
+gi,i  -- 
+Modeling High-Dimensional Discrete Data with Neural Networks 403 
+where g,i' are linear combinations of the hidden units outputs, with i  ranging over the 
+number of elements of the parameter vector associated with the distribution of Zi (for a 
+fixed value of Z1 ... Zi-). To guarantee that the functions gi(zl,..., zi-) only depend 
+on zl �.. zi-1 and not on any of zi �.. zn, the connectivity struture of the hi

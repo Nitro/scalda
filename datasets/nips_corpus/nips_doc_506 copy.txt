@@ -1,0 +1,163 @@
+Induction of Multiscale Temporal Structure 
+Michael C. Mo=er 
+Department of Computer Science & 
+Institute of Cognitive Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+Abstract 
+Learning structure in temporally-extended sequences is a difficult com- 
+putational problem because only a fraction of the relevant information is 
+available at any instant. Although variants of back propagation can in 
+principle be used to find structure in sequences, in practice they are not 
+sufficiently powerful to discover arbitrary contingencies, especially those 
+spanning long temporal intervals or involving high order statistics. For 
+example, in designing a connectionist network for music composition, we 
+have encountered the problem that the net is able to learn musical struc- 
+ture that occurs locally in time e.g., relations among notes within a mu- 
+sical phrase but not structure that occurs over longer time periods e.g., 
+relations among phrases. To address this problem, we require a means 
+of constructing a reduced description of the sequence that makes global 
+aspects more explicit or more readily detectable. I propose to achieve this 
+using hidden units that operate with different time constants. Simulation 
+experiments indicate that slower time-scale hidden units are able to pick 
+up global structure, structure that simply can not be learned by standard 
+back propagation. 
+Many patterns in the world are intrinsically temporal, e.g., speech, music, the un- 
+folding of events. Recurrent neural net architectures have been devised to accom- 
+modate time-varying sequences. For example, the architecture shown in Figure 1 
+can map a sequence of inputs to a sequence of outputs. Learning structure in 
+temporally-extended sequences is a difficult computational problem because the in- 
+put pattern may not contain all the task-relevant information at any instant. Thus, 
+275 
+276 Mozer 
+OUTPUT 
+co 
+Figure 1: A generic recurrent network architecture for processing input and output 
+sequences. Each box corresponds to a layer of units, each line to full connectivity 
+between layers. 
+the context layer must hold on to relevant aspects of the input history until a later 
+point in time at which they can be used. 
+In principle, variants of back propagation for recurrent networks (Rumelhart, Hin- 
+ton, & Williams, 1986; Williams & Zipset, 1989) can discover an appropriate rep- 
+resentation in the context layer for a particular task. In practice, however, back 
+propagation is not sufficiently powerful to discover arbitrary contingencies, espe- 
+cially those that span long temporal intervals or that involve high order statistics 
+(e.g., Mozer, 1989; Robwet, 1990; Schmidhuber, 1991). 
+Let me present a simple situation where back propagation fails. It involves remem- 
+bering an event over an interval of time. A variant of this task was first studied 
+by Schmidhuber (1991). The input is a sequence of discrete symbols: 1, B, �, D, 
+� .., I, �. The task is to predict the next symbol in the sequence. Each sequence 
+begins with either an I or a Y . call this the trigger symbol--and is followed by a 
+fixed sequence such as IBCDE, which in turn is followed by a second instance of the 
+trigger symbol, i.e., IIBODE][ or or YIBCDEY. To perform the prediction task, it is 
+necessary to store the trigger symbol when it is first presented, and then to recall 
+the same symbol five time steps later. 
+The number of symbols intervening between the two triggers call this the gap 
+can be varied. By training different networks on different gaps, we can examine 
+how difficult the learning task is as a function of gap. To better control the ex- 
+periments, all input sequences had the same length and consisted of either I or Y 
+followed by IBCDEFGHIJK. The second instance of the trigger symbol was inserted 
+at various points in the sequence. For example, IIBCDIEFGHIJK represents a gap of 
+4, YABCDEFGHYIJK a gap of 8. 
+Each training set consisted of two sequences, one with X and one with Y. Different 
+networks were trained on different gaps. The network architecture consisted of one 
+input and output unit per symbol, and ten context units. Twenty-five replications 
+of each network were run with different random initial weights. If the training set 
+was not learned within 10000 epochs, the replication was counted as a failure. 
+The primary result was that training sets with gaps of 4 or more could not be 
+learned reliably, as shown in Table 1. 
+Induction of Multiscale Temporal Structure 277 
+Table 1: Learning contingencies across gaps 
+gap ailures mean # epochs 
+to arn 
+2 0 408 
+4 36 7406 
+6 92 9830 
+8 100 10000 
+10 100 10000 
+The results are suprisingly poor. My general impression is that back propagation 
+is powerful enough to learn only structure that is fairly local in time. For instance, 
+in earlier work on neural net music composition (Mozer & Soukup, 1991), we found 
+that our network could master the rules of composition for notes within a musical 
+phrase, but not rules operating at a more global levelmrules for how phrases are 
+interrelated. 
+The focus of the present work is on devising learning algorithms and architectures 
+for better handling temporal structure at more global scales, as well as multiscale 
+or hierarchical structure. This difficult problem has been identified and studied by 
+several other researchers, including Miyata and Burr (1990), Robwet (1990), and 
+Schmidhuber (1991). 
+1 BUILDING A REDUCED DESCRIPTION 
+The basic idea behind my work involves building a reduced description (Hinton, 
+1988) of the sequence that makes global aspects more explicit or more reaxlily de- 
+tectable. The challenge of this approach is to devise an appropriate reduced descrip- 
+tion. I've experimented with a scheme that constructs a reduced description that is 
+essentially a bird's eye view of the sequence, sacrificing a representation of individ- 
+ual elements for the overall contour of the sequence. Imagine a musical tape played 
+at double the regular speed. Individual sounds are blended together and become 
+indistinguishable. However, coatset time-scale events become more explicit, such as 
+an ascending trend in pitch or a repeated progression of notes. Figure 2 illustrates 
+the idea. The curve in the left graph, depicting a sequence of individual pitches, 
+has been smoothed and compressed to produce the right graph. Mathematically, 
+smoothed and compressed means that the waveform has been low-pass filtered 
+and sampled at a lower rate. The result is a waveform in which the alternating 
+upwards and downwards flow is unmistakable. 
+Multiple views of the sequence are realized using context units that operate with 
+different time constants: 
+ci(t) = 'ici(t -- 1) q- (1 -- 'i) tanh[neti(t)], 
+(1) 
+where c/(t) is the activity of context unit i at time t, neti(t) is the net input to 
+unit i at time t, including activity both from the input layer and the recurrent 
+context connections, and ri is a time constant associated with each unit that has 
+the range (0, 1) and determines the responsiveness of the unit--the rate at which 
+278 Mozer 
+O) 
+p 
+i 
+t 
+c 
+h 
+iP. 
+reduc. d.. 
+descnption 
+time 
+time ., 
+compresse( 
+Figure 2: (a) A sequence of musical notes. The vertical axis indicates the pitch, the 
+horizontal axis time. Each point corresponds to a particular note. (b) A smoothed, 
+compact view of the sequence. 
+its activity changes. With 'i - 0, the activation rule reduces to the standard one 
+and the unit can sharply change its response based on a new input. With large 
+the unit is sluggish, holding on to much of its previous value and thereby averaging 
+the response to the net input over time. At the extreme of 'i -- 1, the second term 
+drops out and the unit's activity becomes fixed. Thus, large 'i smooth out the 
+response of a context unit over time. Note, however, that what is smoothed is the 
+activity of the context units, not the input itself as Figure 2 might suggest. 
+Smoothing is one property that distinguishes the waveform in Figure 2b from the 
+original. The other property, compactness, is also achieved by a large 'i, although 
+somewhat indirectly. The key benefit of the compact waveform in Figure 2b is that 
+it allows a longer period of time to be viewed in a single glance, thereby explicating 
+contingencies occurring in this interval during learning. The context unit activation 
+rule (Equation 1) permits this. To see why this is the case, consider the relation 
+between the error derivative with respect to the context units at time t, OE/Oc(t), 
+and the error back propagated to the previous step, t - 1. One contribution to 
+OE/Oci(t - 1), from the first term in Equation 1, is 
+OE 0 OE 
+Oci(t) Oci(t - 1) [r, ci(t - 1)] -- ri Oci(t)' 
+(2) 
+This means that when 'i is large, most of the error signal in context unit i at time 
+t is carried back to time t - 1. Intuitively, just as the activation of units with large 
+'i changes slowly forward in time, the error propagated back through these units 
+changes slowly too. Thus, the back propagated error signal can make contact with 
+points further back in time, facilitating the learning of more global structure in the 
+input sequence. 
+Time constants have been incorporated into the activation rules of other connec- 
+riohist architectures (Jordan, 1987; McClelland, 1979; Mozer, 1989; Pearlmutter, 
+1989; Pineda, 1987). However, none of this work has exploited time constants to 
+control the temporal responsivity of individual units. 
+Induction of Multiscale Temporal Structure 279 
+2 LEARNING AABA PHRASE PATTERNS 
+A simple simulation illustrates the benefits of temporal reduced descriptions. I 
+generated pseudo musical phrases consisting of five notes in ascending chromatic 
+order, e.g., F#s Gs 6#s As A#s or 04 0#4 D,t D#,t El, where the first pitch was selected 
+at random. x Pairs of phrases call them A and B were concatenated to form an 
+AABA pattern, terminated by a special END marker. The complete m

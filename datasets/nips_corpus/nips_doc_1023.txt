@@ -1,0 +1,151 @@
+A Dynamical Systems Approach for a Learnable Autonomous Robot 
+Jun Tani and Naohiro Fukumura 
+Sony Computer Science Laboratory Inc. 
+Takanawa Muse Building, 3-14-13 Higashi-gotanda, Shinagawa-ku,Tokyo, 141 JAPAN 
+Abstract 
+This paper discusses how a robot can learn goal-directed naviga- 
+tion tasks using local sensory inputs. The emphasis is that such 
+learning tasks could be formulated as an embedding problem of 
+dynamical systems: desired trajectories in a task space should be 
+embedded into an adequate sensory-based internal state space so 
+that an unique mapping from the internal state space to the motor 
+command could be established. The paper shows that a recurrent 
+neural network suffices in self-organizing such an adequate internal 
+state space from the temporal sensory input. In our experiments, 
+using a real robot with a laser range sensor, the robot navigated 
+robustly by achieving dynamical coherence with the environment. 
+It was also shown that such coherence becomes structurally sta- 
+ble as the global attractor is self-organized in the coupling of the 
+internal and the environmental dynamics. 
+1 Introduction 
+Conventionally, robot navigation problems have been formulated assuming a global 
+view of the world. Given a detailed map of the workspace, described in a global 
+coordinate system, the robot navigates to the specified goal by following this map. 
+However, in situations where robots have to acquire navigational knowledge based 
+on their own behaviors, it is important to describe the problems from the internal 
+views of the robots. 
+[Kuipers 87], [Mataric 92] and others have developed an approach based on land- 
+mark detection. The robot acquires a graph representation of landmark types as a 
+topological modeling of the environment through its exploratory travels using the 
+local sensory inputs. In navigation, the robot can identify its topological position 
+by anticipating the landmark types in the graph representation obtained. It is, 
+however, considered that this navigation strategy might be susceptible to erroneous 
+landmark-matching. If the robot is once lost by such a catastrophe, its recoverance 
+of the positioning might be difficult. We need certain mechanisms by which the 
+990 J. TANI, N. FUKUMURA 
+robot can recover autonomously from such failures. 
+We study the above problems by using the dynamical systems approach, expecting 
+that this approach would provide an effective representational and computational 
+framework. The approach focuses on the fundamental dynamical structure that 
+arises from coupling the internal and the environmental dynamics [Beer 95]. Here, 
+the objective of learning is to adapt the internal dynamical function such that the 
+resultant dynamical structure might generate the desired system behavior. The sys- 
+tem's performance becomes structurally stable if the dynamical structure maintains 
+a sufficiently large basin of attraction against possible perturbations. 
+We verify our claims through the implementation of 
+mobile robot equipped with a laser range sensor. The 
+tasks under the following assumptions and conditions. 
+its global position, but it navigates depending on its 
+our scheme on YAMABICO 
+robot conducts navigational 
+(1) The robot cannot access 
+local sensory (range image) 
+input. (2) There is no explicit landmarks accessible to the robot in the adopted 
+workspace. (3) The robot learns tasks of cyclic routing by following guidance of a 
+trainer. (4) The navigation should be robust enough against possible noise in the 
+environment. 
+2 NAVIGATION ARCHITECTURE 
+The YAMABICO mobile robot [Yuta and Iijima 90] was used as an experimen- 
+tal platform. The robot can obtain range images by a range finder consisting of 
+laser projectors and three CCD cameras. The ranges for 24 directions, covering a 
+160 degree arc in front of the robot, are measured every 150 milliseconds. In our 
+formulation, maneuvering commands are generated as the output of a composite 
+system consisting of two levels [Tani and Fukumura 94]. The control level generates 
+a collision-free, smooth trajectory using the range image, while the navigation level 
+directs the control level in a macroscopic sense, responding to the sequential branch- 
+ing that appears in the sensory flows. The control level is fixed; the navigation level, 
+on the other hand, can be adapted through learning. Firstly, let us describe the 
+control level. The robot can sense the forward range readings of the surrounding 
+environment, given in robot-centered polar coordinates by ri (1 _< i < N). The an- 
+gular range profile Ri is obtained by smoothing the original range readings through 
+applying an appropriate Gaussian filter. The maneuvering focus of the robot is the 
+maximum (the angular direction of the largest range) in this range profile. The 
+robot proceeds towards the maximum of the profile (an open space in the environ- 
+ment). The navigation level focuses on the topological changes in the range profile 
+as the robot moves. As the robot moves through a given workspace, the profile grad- 
+ually changes until another local peak appears when the robot reaches a branching 
+point. At this moment of branching the navigation level decides whether to transfer 
+the focus to the new local peak or to remain with the current one. It is noted that 
+this branching could be quite undeterministic one if applied to rugged obstacle en- 
+vironment. The robot is likely to fail to detect branching points frequently in such 
+environment. 
+The navigation level determines the branching by utilizing the range image obtained 
+at branch points. Since the pertinent information in the range profile at a given 
+moment is assumed to be only a small fraction of the total, we employ a vector 
+quantization technique, known as the Kohonen network [Kohonen 82], so that the 
+information in the profile may be compressed into specific lower-dimensional data. 
+The Kohonen network employed here consists of an /-dimensional lattice with m 
+nodes along each dimension (/=3 and m=6 for the experiments with YAMABICO). 
+The range image consisting of 24 values is input to the lattice, then the most 
+A Dynamical Systems Approach for a Learnable Autonomous Robot 991 
+Xn+l: I Cn+l 
+motor command [] I- 
+o o 
+Pn: sensory inputs Cn: context units 
+TPM's output space  
+of (6.6.6) 
+,,� winner ,. 
+Rn: range profile 
+Figure 1: Neural architecture for skill-based learning. 
+highly activated unit in the lattice, the winner unit, is found. The address of 
+the winner unit in the lattice denotes the output vector of the network. Therefore, 
+the navigation level receives the sensory input compressed into three dimensional 
+data. The next section will describe how the robot can generate right branching 
+sequences upon receiving the compressed range image. 
+3 Formulation 
+3.1 Learning state-action map 
+The neural adaptation schemes are applied to the navigation level so that it can 
+generate an adequate state-action map for a given task. Although some might con- 
+sider that such map can be represented by using a layered feed-forward network 
+with the inputs of the sensory image and the outputs of the motor command, this 
+is not always true. The local sensory input does not always correspond uniquely to 
+the true state of the robot (the sensory inputs could be the same for different robot 
+positions). Therefore, there exists an ambiguity in determining the motor command 
+solely from sensory inputs. This is a typical example of so-called non-Markovian 
+problems which have been discussed by Lin and Mitchell [Lin and Mitchell 92]. In 
+order to solve this ambiguity, a representation of contexts which are memories of 
+past sensory sequences is required. For this purpose, a recurrent neural network 
+(RNN) [Elman 90] was employed since its recurrent context states could represent 
+the memory of past sequences. The employed neural architecture is shown in Fig- 
+ure. 1. The sensory input Pn and the context units cn determine the appropriate 
+motor command x+. The motor command x takes a binary value of 0 (staying at 
+the current branch) or 1 (a transit to a new branch). The RNN learning of sensory- 
+motor (Pn,Xn+) sequences, sampled through the supervised training, can build the 
+desired state-action map by self-organizing adequate internal representation in time. 
+992 J. TANI, N. FUKUMURA 
+(a) 
+task space internal state space 
+(b) 
+task space internal state space 
+Figure 2: The desired trajectories in the task space and its mapping to the internal 
+state space. 
+3.2 Embedding problem 
+The objective of the neural learning is to embed a task into certain global attractor 
+dynamics which are generated from the coupling of the internal neural 'function and 
+the environment. Figure 2 illustrates this idea. We define the internal state of the 
+robot by the state of the RNN. The internal dynamics, which are coupled with the 
+environmental dynamics through the sensory-motor loop, evolve as the robot travels 
+in the task space. We assume that the desired vector field in the task space forms a 
+global attractor, such as a fixed point for a homing task or limit cycling for a cyclic 
+routing task. All that the robot has to do is to follow this vector flow by means of its 
+internal state-action map. This requires a condition: the vector field in the internal 
+state space should be self-organized as being topologically equivalent to that in the 
+task space in order that the internal state determine the action (motor command) 
+uniquely. This is the embedding problem from the task space to the internal state 
+space, and RNN learning can attain this, using various training trajectories. This 
+analysis conjectured that the trajectories in the task space can always converge into 
+the desired one as long as the task is embedded into the global attractor in the 
+internal state space. 
+4 Experiment 
+4.1 Task and training procedure 
+Figure 3 shows an example of the navigation task, (which is ad

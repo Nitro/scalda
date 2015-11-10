@@ -1,0 +1,138 @@
+Fast Neural Network Emulation of Dynamical 
+Systems for Computer Animation 
+Radek Grzeszczuk  Demetri Terzopoulos 2 Geoffrey Hinton 
+ Intel Corporation 
+Microcomputer Research Lab 
+2200 Mission College Blvd. 
+Santa Clara, CA 95052, USA 
+2 University of Toronto 
+Department of Computer Science 
+10 King's College Road 
+Toronto, ON M5S 3H5, Canada 
+Abstract 
+Computer animation through the numerical simulation of physics-based 
+graphics models offers unsurpassed realism, but it can be computation- 
+ally demanding. This paper demonstrates the possibility of replacing the 
+numerical simulation of nontrivial dynamic models with a dramatically 
+more efficient NeuroAnimator that exploits neural networks. Neu- 
+roAnimators are automatically trained off-line to emulate physical dy- 
+namics through the observation of physics-based models in action. De- 
+pending on the model, its neural network emulator can yield physically 
+realistic animation one or two orders of magnitude faster than conven- 
+tional numerical simulation. We demonstrate NeuroAnimators for a va- 
+riety of physics-based models. 
+1 Introduction 
+Animation based on physical principles has been an influential trend in computer graphics 
+for over a decade (see, e.g., [1, 2, 3]). This is not only due to the unsurpassed realism 
+that physics-based techniques offer. In conjunction with suitable control and constraint 
+mechanisms, physical models also facilitate the production of copious quantities of real- 
+istic animation in a highly automated fashion. Physics-based animation techniques are 
+beginning to find their way into high-end commercial systems. However, a well-known 
+drawback has retarded their broader penetration--compared to geometric models, physical 
+models typically entail formidable numerical simulation costs. 
+This paper proposes a new approach to creating physically realistic animation that differs 
+Emulation for Animation 883 
+radically from the conventional approach of numerically simulating the equations of mo- 
+tion of physics-based models. We replace physics-based models by fast emulators which 
+automatically learn to produce similar motions by observing the models in action. Our 
+emulators have a neural network structure, hence we dub them NeuroAnimators. 
+Our work is inspired in part by that of Nguyen and Widrow [4]. Their truck backer-upper 
+demonstrated the neural network based approximation and control of a nonlinear kinematic 
+system. We introduce several generalizations that enable us to tackle a variety of complex, 
+fully dynamic models in the context of computer animation. Connectionist approximations 
+of dynamical systems have been also been applied to robot control (see, e.g., [5, 6]). 
+2 The NeuroAnimator Approach 
+Our approach is motivated by the following considerations: Whether we are dealing with 
+rigid [2], articulated [3], or nonrigid [1] dynamic animation models, the numerical sim- 
+ulation of the associated equations of motion leads to the computation of a discrete-time 
+dynamical system of the form st+t = [st, ut, ft]. These (generally nonlinear) equations 
+express the vector $t+tst of state variables of the system (values of the system's degrees of 
+freedom and their velocities) at time t + 6t in the future as a function � of the state vector 
+st, the vector ut of control inputs, and the vector ft of external forces acting on the system 
+at time t. 
+Physics-based animation through the numerical simulation of a dynamical system requires 
+the evaluation of the map � at every timestep, which usually involves a non-trivial compu- 
+tation. Evaluating � using explicit time integration methods incurs a computational cost of 
+O(N) operations, where N is proportional to the dimensionality of the state space. Unfor- 
+tunately, for many dynamic models of interest, explicit methods are plagued by instability, 
+necessitating numerous tiny timesteps tSt per unit simulation time. Alternatively, implicit 
+time-integration methods usually permit larger timesteps, but they compute � by solving a 
+system of N algebraic equations, generally incurring a cost of O(N 3) per timestep. 
+Is it possible to replace the conventional numerical simulator by a significantly cheaper 
+alternative? A crucial realization is that the substitute, or emulator, need not compute 
+the map � exactly, but merely approximate it to a degree of precision that preserves the 
+perceived faithfulness of the resulting animation to the simulated dynamics of the physical 
+model. Neural networks offer a general mechanism for approximating complex maps in 
+higher dimensional spaces [7]. Our premise is that, to a sufficient degree of accuracy and 
+at significant computational savings, trained neural networks can approximate maps � not 
+just for simple dynamical systems, but also for those associated with dynamic models that 
+are among the most complex reported in the graphics literature to date. 
+The NeuroAnimator, which uses neural networks to emulate physics-based animation, 
+learns an approximation to the dynamic model by observing instances of state transitions, 
+as well as control inputs and/or external forces that cause these transitions. By generalizing 
+from the sparse examples presented to it, a trained NeuroAnimator can emulate an infinite 
+variety of continuous animations that it has never actually seen. Each emulation step costs 
+only O(N 2) operations, but it is possible to gain additional efficiency relative to a numer- 
+ical simulator by training neural networks to approximate a lengthy chain of evaluations 
+of the discrete-time dynamical system. Thus, the emulator network can perform super 
+ Note that � is in general a high-dimensional map from s+,+f _ s, where s, u, and f denote 
+the dimensionalities of the state, control, and external force vectors. 
+884 R. Grzeszczuk, D. Terzopoulos and G. E. Hinton 
+timesteps At -- n6t, typically one or two orders of magnitude larger than 6t for the com- 
+peting implicit time-integration scheme, thereby achieving outstanding efficiency without 
+serious loss of accuracy. 
+3 From Physics-Based Models to NeuroAnimators 
+Our task is to construct neural networks that approximate q in the dynamical system. We 
+propose to employ backpropagation to train feedforward networks N,, with a single layer 
+of sigmoidal hidden units, to predict future states using super timesteps At -- n6t while 
+containing the approximation error so as not to appreciably degrade the physical realism of 
+the resulting animation. The basic emulation step is st+At -- N,[st, ut, ft]. The trained 
+emulator network N, takes as input the state of the model, its control inputs, and the 
+external forces acting on it at time t, and produces as output the state of the model at 
+time t + At by evaluating the network. The emulation process is a sequence of these 
+evaluations. After each evaluation, the network control and force inputs receive new values, 
+and the network state inputs receive the emulator outputs from the previous evaluation. 
+Since the emulation step is large compared with the numerical simulation step, we resample 
+the motion trajectory at the animation frame rate, computing intermediate states through 
+linear interpolation of states obtained from the emulation. 
+3.1 Network Input/Output Structure 
+Fig. l(a) illustrates different emulator input/output structures. The emulator network has 
+a single set of output variables specifying st+At. In general, for a so-called active model, 
+which includes control inputs, under the influence of unpredictable applied forces, we em- 
+ploy a full network with three sets of input variables: st, ut, and ft, as shown in the figure. 
+For passive models, the control ut - 0 and the network simplifies to one with two sets of 
+inputs, st and ft. In the special case when the forces ft are completely determined by the 
+state of the system st, we can suppress the ft inputs, allowing the network to learn the ef- 
+fects of these forces from the state transition training data, thus yielding a simpler emulator 
+with two input sets st and ut. The simplest type of emulator has only a single set of in- 
+puts st. This emulator suffices to approximate passive models acted upon by deterministic 
+external forces. 
+3.2 Input and Output Transformations 
+The accurate approximation of complex functional mappings using neural networks can 
+be challenging. We have observed that a simple feedforward neural network with a single 
+layer of sigmoid units has difficulty producing an accurate approximation to the dynamics 
+of physical models. In practice, we often must transform the emulator to ensure a good 
+approximation of the map q. 
+A fundamental problem is that the state variables of a dynamical system can have a large 
+dynamic range (in principle, from -cx to +cx). To approximate a nonlinear map q ac- 
+curately over a large domain, we would need to use a neural network with many sigmoid 
+units, each shifted and scaled so that their nonlinear segments cover different parts of the 
+domain. The direct approximation of q is therefore impractical. A successful strategy is 
+to train networks to emulate changes in state variables rather than their actual values, since 
+state changes over small timesteps will have a significantly smaller dynamic range. Hence, 
+in Fig. 1 (b) (top) we restructure our simple network N. as a network N which is trained 
+Emulation for Animation 885 
+� ... 
+ft st+ ft � '... -- 
+ut 
+'  st+' 
+St � $t.hS Ut . 
+I I 8t+b,t. 
+(a) (b) 
+Figure 1: (a) Different types of emulators. (b) Transforming a simple feedforward neural 
+network Na, into a practical emulator network N, that is easily trained to emulate physics- 
+based models. The following operators perform the appropriate pre- and post-processing: 
+T[ transforms inputs to local coordinates, T normalizes inputs, T unnormalizes outputs, 
+t /x 
+Ty transforms outputs to global coordinates, Ty converts from a state change to the next 
+state (s

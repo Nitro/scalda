@@ -1,0 +1,157 @@
+Physiologically Based Speech Synthesis 
+Makoto Hirayama 
+tATR Human Information Processing Research Laboratories 
+2-2, Hikaridai, Seika-cho, Soraku-gun, Kyoto 619-02 Japan 
+Eric Vatikiotis-Bateson 
+:ATR Auditory and Visual Perception Research Laboratories 
+Kiyoshi Honda: 
+Yasuharu Koiket 
+Mitsuo Kawato* 
+Abstract 
+This study demonstrates a paradigm for modeling speech produc- 
+tion based on neural networks. Using physiological data from 
+speech utterances, a neural network learns the forward dynamics 
+relating motor commands to muscles and the ensuing articulator 
+behavior that allows articulator trajectories to be generated from 
+motor commands constrained by phoneme input strings and global 
+performance parameters. From these movement trajectories, a sec- 
+ond neural network generates PARCOR parameters that are then 
+used to synthesize the speech acoustics. 
+I INTRODUCTION 
+Our group has attempted to model speech production computationally as a process 
+in which linguistic intentions are realized as speech through a causal succession of 
+patterned behavior. Our aim is to gain insight into the cognitive and neurophysi- 
+ological mechanisms governing this complex skilled behavior as well as to provide 
+plausible models of speech synthesis and possibly recognition based on the physi- 
+ology of speech production. It is the use of physiological data (EMG) representing 
+*Also, Laboratory of Parallel Distributed Processing, Research Institute for Electronic 
+Science, HokkaJdo University, Sapporo, HokkaJdo 060, Japan 
+658 
+Physiologically Based Speech Synthesis 659 
+motor commands to muscles that distinguishes our modeling effort from those of 
+others who use neural networks for articulation-based synthesis and/or inference 
+of the dynamical constraints on speech motor control (Jordan, 1986, Jordan, 1990, 
+Bailly, Laboissiere, and Schwalz, 1992, Saltzman, 1986, Bengio, Houde, and Jor- 
+dan, 1992). This paper reports two areas in which implementation of the speech 
+production scheme shown in Figure 1 has progressed. Initially, we concentrated on 
+modeling the dynamics underlying articulation so that phoneme strings can spec- 
+ify motor commands to muscles, which then specify phoneme-specific articulator 
+behavior (Hirayama, Vatikiotis-Bateson, Kawato, and Jordan, 1992). A neural net- 
+work learned the forward dynamics relating motor commands to muscles and the 
+ensuing articulator behavior associated with prosodically intact, but phonemically 
+simplified, reiterant speech utterances. Then, a cascade neural network (Kawato, 
+Maeda, Uno, and Suzuki, 1990) containing the forward dynamics model along with a 
+suitable smoothness criterion (Uno, Kawato, and Suzuki, 1989) was used to produce 
+continuous motor commands from a sequence of discrete articulatory targets cor- 
+responding to the phoneme input string. From this sequence of motor commands, 
+appropriate articulator trajectories were then generated. 
+Intention to Speak 
+Intended Phoneme 
+Sequence Parameters 
+[ Gestural Target Specification 
+( Articulatory Targets 
+[ Motor Command Generation 
+ Motor Commarid 
+[ Musculo-Skeletal System 
+Global Performance 
+( Articulator Movement 
+[ Acoustic Transformation ] 
+; Acoustic Wave 
+Figure 1: Conceptual scheme of speech production 
+Although the results of this early work were encouraging, there were two technical 
+limitations obstructing our effort to model real speech. First, using optoelectronic 
+transduction techniques, only simple speech samples whose primary articulators 
+were the lips and jaw could be recorded, hence the use of reiterant ha. Without dy- 
+namic tongue data, real speech could not be modeled. Also, the reiterant paradigm 
+introduced a degree of rhythmical movement behavior not observed in real speech. 
+The second limitation was that activity of only four muscles and generally only one 
+dimension of articulator motion could be recorded simultaneously. Thus, agohist- 
+antagonist muscle activity was not represented even for this limited set of artic- 
+ulators. Technical improvements in data acquisition and their consequences for 
+the subsequent dynamical modeling of real speech are presented in the next two 
+sections. The second area of progress has been to implement the transform from 
+model- generated articulator trajectories to acoustic output. A neural network is 
+660 Hirayama, Vatikiotis-Bateson, Honda, Koike, and Kawato 
+used to acquire the mapping between articulation and acoustics in terms of PAR- 
+COR parameters (Itakura and Saito, 1969), which are correlated with vocal tract 
+area functions. Speech signals are then generated using a PARCOR synthesizer 
+from articulator input and appropriate glottal sources (currently, the residual of 
+the PARCOR analysis). The results of this modeling for real and reiterant speech 
+are reported in the final section of the paper. 
+2 EMPIRICAL DEVELOPMENTS 
+In order to acquire data more suitable for real speech modeling, two additional 
+experiments were run in which articulator position, EMG and acoustic data were 
+recorded while the same subject produced real and reiterant speech utterances 5-8 
+seconds long at different speaking rates and styles (e.g., casual vs. precise). In 
+the first of these, a sophisticated optoelectronic device, OPTOTRAK (Northern 
+Digital, Inc.), was used because it permitted simultaneous recording of numerous 
+3D articulator positions for the lips, jaw and head, ten EMG channels, the speech 
+acoustics, and even dynamic tongue-palate contact patterns. These data were used 
+for modeling of the forward dynamics (see Figure 2) and the forward acoustics. 
+Real speech utterances collected with this system were heavily loaded with labial 
+stops, /p,b,m/, and labiodental fricatives, /f,v/, as well as many low vowels /a, 
+ae/. Since surface EMG was used, it was difficult to obtain reliable recordings of 
+jaw opening (anterior belly of the digastric), and closing (medial pterygoid) muscles. 
+More recently, an electromagnetic position traking system, EMMA (Perkell, Cohen, 
+Svirsky, Matthies, Garabieta, and Jackson, 1992), was used to transduce midsagittal 
+motions of the tongue tip and tongue blade as well as the lips, jaw, and head. 
+Data were collected for the same speech utterances used in the OPTOTRAK and 
+original experiments as well as more natural utterances. Reiterant speech was also 
+recorded for ta. For this experiment, surface and hooked-wire EMG techniques 
+were combined, which enabled nine orofacial and extrinsic tongue muscles to be 
+recorded for jaw opening and closing, lip opening and closing, and tongue raising 
+and lowering. The most important aspects of the signal processing for modeling 
+the forward dynamics concern the numerical differentiation of articulator position 
+to obtain velocity and acceleration, and the severe low-pass filtering (including 
+rectification and integration) of the EMG to from 2000 Hz to 20-40 Hz. Both of 
+these introduce spatiotemporal distortions, whose effects on the forward dynamics 
+model are currently being examined. 
+3 MODELING THE FORWARD DYNAMICS 
+The forward dynamics model was obtained using a 3-layer perceptton with back 
+propagation (Rumelhart, Hinton, and Williams, 1986). Inputs to the network were 
+instantaneous position and velocity for each dimension of articulator motion, and 
+the EMG signals of 9-10 related muscles, which serve as the record of motor com- 
+mands to muscles; outputs were accelerations for each dimension of motion. Figure 2 
+shows an example of predicting lip and jaw accelerations from 10 orofacial muscles 
+for the 'natural' test utterance, Pam put the bobbin in the frying pan and added 
+more puppy parts to the boiling potato soup. As shown by the generalization re- 
+suits in Figure 2, the acquired model produced appropriate acceleration trajectories 
+Physiologically Based Speech Synthesis 661 
+for real speech utterances, suggesting that utterance complexity is not a limiting 
+factor in this approach. 
+--Network Output ........ Experimental Data 
+Upper Lip .... 
+Lower Lip ' ' ';  ' � 
+Jaw 
+I I I I I 
+0 200 400 600 800 1000 
+Figure 2: Estimated acceleration over time (5 ms samples) for vertical motion of the three 
+articulators is compared to that of the test sentence: Pam put the bobbin in the frying 
+pan and added more puppy parts to the boiling potato soup. 
+Motor Commands 
+(Integrated EMG) 
+Accelerlation 
+Predictor 
+VEL (Forward) 
+POS Dynamics 
+'1 
+Movement Trajectory 
+Figure 3: The musculo-skeletal forward dynamics model for producing articulator move- 
+ment trajectories is implemented as a recurrent network. Continuous motor command 
+(EMG) input drives the network, which uses estimated acceleration at time tn, to predict 
+new velocity (integration) and position (double integration) values at the next time step 
+tn+l. D is a one-sample delay unit. The network is initialized with position and velocity 
+values taken from the test utterance at tO. 
+Network training resulted in a one-step look-ahead predictor of the articulator dy- 
+namics, and was connected recurrently as shown in Figure 3. Using only initial 
+values of articulator position and velocity for the first sample and continuous EMG 
+input, estimated acceleration is looped back and summed with the velocities and 
+positions of the input layer to predict their values for each time step. This is per- 
+haps an overly stringent test of the acquired model because errors are cumulative 
+over the entire utterance 5-8 second utterance. Yet the network outputs appropri- 
+ate articulator trajectories for the entire utterance. Figure 4 shows the generated 
+trajectory for vertical motion of the jaw during reiterant production of ba (recorded 
+with the electromagnetometer). While the trajectory generated by the network 
+tends to underestimate movement amplitude and introduce a small DC offset, it 
+preserves the temporal properties of the test utterance very well everywhere except 
+before a phrasal pause. Although good

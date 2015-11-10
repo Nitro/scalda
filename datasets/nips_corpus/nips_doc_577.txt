@@ -1,0 +1,186 @@
+Memory-based Reinforcement Learning: Efficient 
+Computation with Prioritized Sweeping 
+Andrew W. Moore 
+awmai.mit.edu 
+NE43-759 MIT AI Lab. 
+545 Technology Square 
+Cambridge MA 02139 
+Christopher G. Atkeson 
+cgaai.mit.edu 
+NE43-771 MIT AI Lab. 
+545 Technology Square 
+Cambridge MA 02139 
+Abstract 
+We present a new algorithm, Prioritized Sweeping, for efficient prediction 
+and control of stochastic Markov systems. Incremental learning methods 
+such as Temporal Differencing and Q-learning have fast real time perfor- 
+mance. Classical methods are slower, but more accurate, because they 
+make full use of the observations. Prioritized Sweeping aims for the best 
+of both worlds. It uses all previous experiences both to prioritize impor- 
+tant dynamic programming sweeps and to guide the exploration of state- 
+space. We compare Prioritized Sweeping with other reinforcement learning 
+schemes for a number of different stochastic optimal control problems. It 
+successfully solves large state-space real time problems with which other 
+methods have difficulty. 
+1 STOCHASTIC PREDICTION 
+The paper introduces a memory-based technique, prioritized sweeping, which is used 
+both for stochastic prediction and reinforcement learning. A fuller version of this 
+paper is in preparation [Moore and Atkeson, 1992]. Consider the 500 state Markov 
+system depicted in Figure 1. The system has sixteen absorbing states, depicted by 
+white and black circles. The prediction problem is to estimate, for every state, the 
+long-term probability that it will terminate in a white, rather than black, circle. 
+The data available to the learner is a sequence of observed state transitions. Let us 
+consider two existing methods along with prioritized sweeping. 
+263 
+264 Moore and Atkeson 
+Figure 1: A 500-state 
+Markov system. Each 
+state has a random number 
+(mean 5) of random suc- 
+cessors chosen within the 
+local neighborhood. 
+Temporal Differenclng (TD) is an elegant incremental algorithm [Sutton, 1988] 
+which has recently had success with a very large problem [Tessufo, 1991]. 
+The classical method proceeds by building a maximum likelihood model of the 
+state transitions. qij (the transition probability from i to j) is estimated by 
+Number of observations i -- j (1) 
+J = Number of occasions in state i 
+After t + 1 observations the new absorption probability estimates are computed to 
+satisfy, for each terminal state k, the linear system 
+frlk [t + 1] = ik + Z f9 [t + 1] (2) 
+jEsuccs(1)nNONTERM$ 
+where the fri [/]'s are the absorption probabilities we are trying to learn, where 
+succs(i) is the set of all states which have been observed as immediate successors 
+of i and NONTERMS is the set of non-terminal states. 
+This set of equations is solved after each transition is observed. It is solved using 
+Gauss-Seidel an iterative method. What initial estimates should be used to start 
+the iteration? An excellent answer is to use the previous absorption probability 
+estimates fri [/]. 
+Prioritized sweeping is designed to combine the advantages of the classical 
+method with the advantages of TD. It is described in the next section, but let us 
+first examine performance on the original 500-state example of Figure 1. Figure 2 
+shows the result. TD certainly learns: by 100,000 observations it is estimating the 
+terminal-white probability to an RMS accuracy of 0.1. However, the performance 
+of the classical method appears considerably better than TD: the same error of 0.1 
+is obtained after only 3000 observations. 
+Figure 3 indicates why temporal differencing may nevertheless often be more useful. 
+TD requires far less computation per observation, and so can obtain more data in 
+real time. Thus, after 300 seconds, TD has had 250,000 observations and is down 
+Memory-based Reinforcement Learning: Efficient Computation with Prioritized Sweeping 265 
+Mean 4- Standard Dev'n TD Classical Pri. Sweep 
+After 100,000 observations 0.40 4- 0.077 0.024 4- 0.0063 0.024 4- 0.0061 
+After 300 seconds 0.079 4- 0.067 0.23 4- 0.038 0.021 4- 0.0080 
+Table 1: RMS prediction error: mean and standard deviation for ten experiments. 
+0.4 
+0.3 
+0.2 
+, 0.1 
+TD 
+Classical -- 
+Pri. Sweep 
+100 300 le 3e le4 3e4 le$ 
+No. observations (log scale) 
+Figure 2: RMS prediction against ob- 
+servation during three learning algo- 
+rithms. 
+0.$ 
+L. 0.45 
+ 0.4 
+0.3 
+o.2 
+ o. os 
+TD 
+Clar, zical 
+Pri. Sweep 
+0.3 I 3 10 30 100 300 
+Real time, seconds (log scale) 
+Figure 3: RMS prediction against real 
+time 
+to an error of 0.05, whereas even after 300 seconds the classical method has only 
+1000 observations and a much cruder estimate. 
+In the same figures we see the motivation behind prioritized sweeping. Its perfor- 
+mance relative to observations is almost as good as the classical method, while its 
+performance relative to real time is even better than TD. 
+The graphs in Figures 2 and 3 were based on only one learning experiment each. 
+Ten further experiments, each with a different random 500 state problem, were run. 
+The results are given in Table 1. 
+2 PRIORITIZED SWEEPING 
+A longer paper [Moore and Atkeson, 1992] will describe the algorithm in detail. 
+Here we summarize the essential insights, and then simply present the algorithm 
+in Figure 4. The closest relation to prioritized sweeping is the search scheduling 
+technique of the A* algorithm [Nilsson, 1971]. Closely related research is being 
+performed by [Peng and Williams, 1992] into a similar algorithm to prioritized 
+sweeping, which they call Dyna-Q-queue. 
+� The memory requirements of learning a N, x N, matrix, where N, is the number 
+of states, may initially appear prohibitive, especially since we intend to operate 
+with more than 10,000 states. However, we need only allocate memory for the 
+266 Moore and Atkeson 
+Promote state/recent (the source of the most recent transition) to top of priority 
+queue. 
+While we are allowed further processing and priority queue not empty 
+2.1 Remove the top state from the priority queue. Call it i 
+2.2 Am,= = 0 
+2.3 for each k E TERMS 
+jesuccs(i)nNONTERMS 
+fri : =Pnew 
+Ar x : = max(Am.x, A) 
+2.4 for each i t E preds(i) 
+P := i,iAm x 
+if i  not on queue, or P exceeds the current priority 
+of i , then promote i  to new priority P. 
+Figure 4: The prioritized sweeping algorithm. This sequence of operations is exe- 
+cuted each time a transition is observed. 
+experiences the system actually has, and for a wide class of physical systems 
+there is not enough time in the lifetime of the physical system to run out of 
+memory. 
+We keep a record of all predecessors of each state. When the eventual absorp- 
+tion probabilities of a state are updated, its predecessors are alerted that they 
+may need to change. A priority value is assigned to each predecessor according 
+to how large this change could be possibly be, and it is placed in a priority 
+queue. 
+After each real-world observation i -- j, the transition probability estimate 
+ij is updated along with the probabilities of transition to all other previously 
+observed successors of i. Then state i is promoted to the top of the priority 
+queue so that its absorption probabilities are updated immediately. Next, we 
+continue to process further states from the top of the queue. Each state that 
+is processed may result in the addition or promotion of its predecessors within 
+the queue. This loop continues for a preset number of processing steps or until 
+the queue empties. 
+If a real world observation is interesting, all its predecessors and their earlier an- 
+cestors quickly find themselves near the top of the priority queue. On the other 
+hand, if the real world observation is unsurprising, then the processing immediately 
+proceeds to other, more important areas of state-space which had been under con- 
+sideration on the previous time step. These other areas may be different from those 
+in which the system currently finds itself. 
+Memory-based Reinforcement Learning: Efficient Computation with Prioritized Sweeping 267 
+15 States 117 States 
+605 States 4528 States 
+Q 800 > 25000 > 500000 > 500000 
+Dyna-PI+ 400 500 36000 > 500000 
+Dyna-OPT 300 900 21000 245000 
+PriSweep 150 1200 6000 59000 
+Table 2: Number of observations before 98% of decisions were subsequently optimal. 
+Dyna and Prioritized Sweeping were each allowed to process ten states per real-world 
+observation. 
+3 LEARNING CONTROL FROM REINFORCEMENT 
+Prioritized sweeping is also directly applicable to stochastic control problems. Re- 
+membering all previous transitions allows an additional advantage for control-- 
+exploration can be guided towards areas of state space in which we predict we are 
+ignorant. This is achieved using the exploration philosophy of [Kaelbling, 1990] 
+and [Sutton, 1990]: optimism in the face of uncertainty. 
+4 RESULTS 
+Results of some maze problems of significant size are shown in Table 2. Each 
+state has four actions: one for each direction. Blocked actions do not move. One 
+goal state (the star in subsequent figures) gives 100 units of reward, all others give 
+no reward, and there is a discount factor of 0.99. Trials start in the bottom left 
+corner. The system is reset to the start state whenever the goal state has been 
+visited ten times since the last reset. The reset is outside the learning task: it is 
+not observed as a state transition. Prioritized sweeping is tested against a highly 
+tuned Q-learner [Watkins, 1989] and a highly tuned Dyna [Sutton, 1990]. The 
+optimistic experimentation method (described in the full paper) can be applied to 
+other algorithms, and so the results of optimistic Dyna-learning is also included. 
+The same mazes were also run as a stochastic problem in which requested actions 
+were randomly corrupted 50% of the time. The gap between Dyna-OPT and Prior- 
+itized Sweeping was reduced in these cases. For example, on a stochastic 4528-state 
+maze Dyna-OPT took 310,000 steps and Prioritized sweeping took 200,000. 
+We also have results for a fi

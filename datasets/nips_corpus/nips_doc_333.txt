@@ -1,0 +1,189 @@
+Shaping the State Space Landscape in Recurrent 
+Networks 
+Patrice Y. Sirnard * 
+Computer Science Dept. 
+University of Rochester 
+Rochester, NY 14627 
+Jean Pierre Raysz 
+LIUC 
+Universit de Caen 
+14032 Caen Cedex 
+France 
+Abstract 
+Bernard Victorri 
+ELSAP 
+Universit de Caen 
+14032 Caen Cedex 
+France 
+Fully recurrent (asymmetrical) networks can be thought of as dynamic 
+systems. The dynamics can be shaped to perform content addressable 
+memories, recognize sequences, or generate trajectories. Unfortunately 
+several problems can arise: First, the convergence in the state space is 
+not guaranteed. Second, the learned fixed points or trajectories are not 
+necessarily stable. Finally, there might exist spurious fixed points and/or 
+spurious attracting trajectories that do not correspond to any patterns. 
+In this paper, we introduce a new energy function that presents solutions 
+to all of these problems. We present an efficient gradient descent algorithm 
+which directly acts on the stability of the fixed points and trajectories and 
+on the size and shape of the corresponding basin and valley of attraction. 
+The results are illustrated by the simulation of a small content addressable 
+memory. 
+1 INTRODUCTION 
+Recurrent neural networks have the capability of storing information in the state 
+of their units. The temporal evolution of these states constitutes the dynamics of 
+the system and depends on the weights and the input of the network. In the case 
+of symmetric connections, the dynamics have been shown to be convergent [2] and 
+various procedures are known for finding the weights to compute different tasks. 
+In unconstrained neural networks however, little is known about how to train the 
+weights of the network when the convergence of the dynamics is not guaranteed. 
+In his review paper [1], Hirsh defines the conditions which must be satisfied for 
+*Now with AT&T Bell Laboratories, Crawfords Corner Road, Holmdel, NJ 07733 
+105 
+106 Simard, Raysz, and Victorri 
+some given dynamics to converge, but does not provide mechanisms for finding the 
+weights to implement these dynamics. 
+In this paper, a new energy function is introduced which reflects the convergence 
+and the stability of the dynamics of a network. A gradient descent procedure on 
+the weights provides an algorithm to control interesting properties of the dynamics 
+including contraction over a subspace, stability, and convergence. 
+2 AN ENERGY FUNCTION TO ENFORCE STABILITY 
+This section introduces a new energy function which can be used in com- 
+bination with the backpropagation algorithm for recurrent networks (cf. [6; 
+5]). The continuous propagation rule is given by the equation: 
+Ti Ot- -xi + gi wijxj + Ii (1) 
+t is the activation of unit i, gi is a differentiable function, wij is the weight 
+where x i 
+from unit j to unit i, and T/and Ii are respectively the time constant and the input 
+for unit i. A possible discretization of this equation is 
+i = xi+'i -.i+g wii:i +Ii (2) 
+= 
+-t is the activation of unit i at the discrete time step t. Henceforth, only 
+Where x i 
+the discrete version of the propagation equation will be considered and the tilda in 
+ will be omitted to avoid heavy notations. 
+2.1 MAKING THE MAPPING CONTRACTING OR EXPANDING 
+IN A GIVEN DIRECTION 
+Using the Taylor expansion, G(x  + dx ) can be written as 
+G(x t + dx t) = G(x t) + G'(xt) � dx t + o(llxtl]) (4) 
+where G'(x t) is the linear application derived from G(x t) and the term o(llx'll) 
+tends toward 0 faster than llx'11 . The mapping G is contracting in the direction of 
+the unitary vector D if 
+IIG(x' + cO) - G(x')ll _< lieOil 
+ellG'(').DII _< e 
+IIG'(')-DII < 1 
+where e is a small positive constant. 
+Accordingly, the following energy function is considered 
+E,(X,D) = (11G'(X). 8112 - Cx) 
+(5) 
+(6) 
+Shaping the State Space Landscape in Recurrent Networks 107 
+where Kx is the target contracting rate at X in the direction D. Depending on 
+whether we choose Kx larger or smaller than 1, minimizing E,(X, D) will make 
+the mapping at X contracting or expanding in the direction D. Note that D can 
+be a complex vector. 
+The variation of Es(X, D) in respect to wren is equal to: 
+owm. = 2(11a'(X)DII 2 - K) .  Dj Owm. oxjD 
+(7) 
+Assuming the activation function is of the form 2, the gradient operator yields: 
+OG(X) at) 
+= + 
+(8) 
+where ui = 
+evaluated: 
+To compute 
+the following expression needs to be 
+O2Gdx) at ( 
+x + wik Ow,.)wij + 5i,5i.g'(ui) (9) 
+which in turn requires the evaluation of oz If we assume that for output units, 
+x = X and oz - 0, we will improve the stability of the fixed point when 
+the visible units are clamped to the input. What we want however, is to increase 
+stability for the network when the input units are unclamped (or hidden). This 
+means that for every unit (including output units), we have to evaluate 0xa 
+Since we are at the (unstable) fixed point, we have: 
+If we derived this equation with respect to wren we get' 
+Oxi = g, (6rniXn + E wid Owmn) (11) 
+In matrix form: 
+c = g'(y + we) (12) 
+0x, g' is a diagonal (square) matrix such that gi = g (1 wijxJ) 
+Where ci = ow, , 
+and g. = 0 for i  j (note that g'w  wf), y is a vector such that Yi = &nixn and 
+w is te weight matrix. If we solve this we get' 
+c = (Id - g'w)'g'y 
+(13) 
+That is: 
+Ow,. = (L-')i'g'(u')x (14) 
+108 Simard, Raysz, and Victorri 
+where the matrix L is given by: 
+x is the activation of the unit at the fixed point so it is the clamped value for the 
+visible unit, and xo for the hidden unit (the system converges to a stable fixed 
+point when the visible units are clamped). 
+To obtain the target rate of contraction Kx at X in the direction D, the weights 
+are updated iteratively according to the delta rule: 
+OE.(X,L) (16) 
+Awii =-rl Owij 
+This updating rule has the advantages and disadvantages of gradient descent algo- 
+rithms. 
+2.2 COMPLEXITY 
+The algorithm given above can be implemented in O(N 2) storage and O(N a) steps, 
+where N is the number of units. This complexity however can be improved by 
+avoiding inverting the matrix L using a local algorithm such as the one presented in 
+[7]. Another implementation of this energy function can be achieved using Lagrange 
+multipliers. This method exactly evaluates oi by using a backward pass [9]. Its 
+complexity depends on how many steps the network is unfolded in time. 
+2.3 GLOBAL STABILITY 
+Global convergence can be obtained if D is parallel the eigenvector corresponding 
+to the largest eigenvalue of G(X). Indeed, in that case G(X) � D is the largest 
+eigenvalue of G(X). If X is a fixed point, the Ostrowski theorem [4; 3] guarantees 
+X is stable if and only if the maximum eigenvalue of the JacobJan of G is less than 
+I in modulus. 
+Fortunately, the eigenvector corresponding to the largest eigenvalue can easily be 
+computed using an efficient iterative method [8]. By choosing D in that direction, 
+fixed points can be made stable. 
+3 RESULTS 
+To simplify the following discussion, V is defined to be the unitary eigenvector 
+corresponding to the largest eigenvalue of the JacobJan of G. 
+The energy function E, can be used in at least three ways. First it can be used to 
+accelerate the convergence toward an internal state upon presentation of a specific 
+input p. This is done by increasing the rate of contraction in the direction of V. The 
+chosen value for Kx, is therefore small with respect to 1. The resulting network 
+will settle faster and therefore compute its output sooner. Second, E, can be used 
+to neutralize spurious fixed points by making them unstable. If the mapping G 
+Shaping the State Space Landscape in Recurrent Networks 109 
+is expanding in the direction of V the fixed point will be unstable, and will never 
+be reached by the system. The corresponding target value Kx should be larger 
+than 1. Third, and most importantly, it can be used to force stability of the fixed 
+points when doing associative memory. Recurrent backpropagation (RBP) [7] can 
+be used to make the patterns fixed points, but there is no guarantee that these will 
+be stable. By making G contract along the direction V, this problem can be solved. 
+Furthermore, one can hope that by making the eigenvalue close to 1, smoothness in 
+the derivatives will make the basins of attraction larger. This can be used to absorb 
+and suppress spurious neighboring stable fixed points. 
+The following experiment illustrates how the unstable fixed points learned with RBP 
+can be made more stable using the energy function E,. Consider a network of eight 
+fully connected units with two visible input/output units. The network is subject 
+to the dynamic specified by the equation 2. Three patterns are presented on the 
+two visible units. They correspond to the coordinates of the three points (0.3, 0.7), 
+(0.8, 0.4) and (0.2, 0.1) which were chosen randomly. The learning phase for each 
+pattern consists of 1) clamping the visible units while propagating for five iterations 
+(to let the hidden units settle), 2) evaluating the difference between the activation 
+resulting from the incoming connections of the visible units and the value of the 
+presented pattern (this is the error), 3) backpropagating the corresponding error 
+signals and 4) updating the weight. This procedure can be used to make a pattern 
+a fixed point of the system [6]. Unfortunately, there is no guarantee that these 
+fixed points will be stable. Indeed, after learning with RBP only, the maximum 
+eigenvalue of the Jacobian of G for each fixed point is shown in table I (column 
+EV, no Es). As can be seen, the maximum eigenvalue of two of the three patterns 
+is larger than one. 
+pattern 0 
+pattern 1 
+pattern 2 
+0.30 0.70 1.063 
+0.80 0.40 1.172 
+0.20 0.10 0.783 
+EV, using E, 
+0.966 
+0.999 
+0.710 
+Table 1: Patterns and corresponding norms of maximum eigenvalues (EV) of the 
+free system, with and without the stability constraint. 
+For a better understanding of what this means, the network can be vie

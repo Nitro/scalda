@@ -1,0 +1,143 @@
+Against Edges: Function Approximation with 
+Multiple Support Maps 
+Trevor Darrell and Alex Pentland 
+Vision and Modeling Group, The Media Lab 
+Massachusetts Institute of Technology 
+E15-388, 20 Ames Street 
+Cambridge MA, 02139 
+Abstract 
+Networks for reconstructing a sparse or noisy function often use an edge 
+field to segment the function into homogeneous regions, This approach 
+assumes that these regions do not overlap or have disjoint parts, which is 
+often false. For example, images which contain regions split by an occlud- 
+ing object can't be properly reconstructed using this type of network. We 
+have developed a network that overcomes these limitations, using support 
+maps to represent the segmentation of a signal. In our approach, the sup- 
+port of each region in the signal is explicitly represented. Results from 
+an initial implementation demonstrate that this method can reconstruct 
+images and motion sequences which contain complicated occlusion. 
+Introduction 
+The task of efficiently approximating a function is central to the solution of many 
+important problems in perception and cognition. Many vision algorithms, for in- 
+stance, integrate depth or other scene attributes into a dense map useful for robotic 
+tasks such as grasping and collision avoidance. Similarly, learning and memory are 
+often posed as a problem of generalizing from stored observations to predict future 
+behavior, and are solved by interpolating a surface through the observations in an 
+appropriate abstract space. Many control and planning problems can also be solved 
+by finding an optimal trajectory given certain control points and optimization con- 
+straints. 
+388 
+Against Edges: Function Approximation with Multiple Support Maps 389 
+In general, of course, finding solutions to these approximation problems is an ill- 
+posed problem, and no exact answer can be found without the application of some 
+prior knowledge or assumptions. Typically, one assumes the surface to be fit is either 
+locally smooth or has some particular parametric form or basis function description. 
+Many successful systems have been built to solve such problems in the cases where 
+these assumptions are valid. However in a wide range of interesting cases where 
+there is no single global model or universal smoothness constraint, such systems 
+have difficulty. These cases typically involve the approximation or estimation of 
+a heterogeneous function whose typical local structure is known, but which also 
+includes an unknown number of abrupt changes or discontinuities in shape. 
+2 Approximation of Heterogeneous Functions 
+In order to accurately approximate a heterogeneous function with a minimum num- 
+ber of parameters or interpolation units, it is necessary to divide the function into 
+homogeneous chunks which can be approximated parsimoniously. When there is 
+more than one homogeneous chunk in the signal/function, the data must be seg- 
+mented so that observations of one object do not intermingle with and corrupt the 
+approximation of another region. 
+One simple approach is to estimate an edge map to denote the boundaries of ho- 
+mogeneous regions in the function, and then to regularize the function within such 
+boundaries. This method was formalized by Geman and Geman (1984), who de- 
+veloped the line-process to insert discontinuities in a regularization network. A 
+regularized solution can be efficiently computed by a neural network, either using 
+discrete computational elements or analog circuitry (Poggio et al. 1985; Terzopou- 
+los 1988). In this context, the line-process can be thought of as an array of switches 
+placed between interpolation nodes (Figure la). As the regularization proceeds in 
+this type of network, the switches of the line process open and prevent smoothing 
+across suspected discontinuities. Essentially, these switches are opened when the 
+squared difference between neighboring interpolated values exceeds some thresh- 
+old (Blake and Zisserman 1987; Geiger and Girosi 1991). In practice a continuation 
+method is used to avoid problems with local minima, and a continuous non-linearity 
+is used in place of a boolean discontinuity. The term resistive fuse is often used 
+to describe these connections between interpolation sites (Harris et al. 1990). 
+3 Limitations of Edge-based Segmentation 
+An edge-based representation assumes that homogeneous chunks of a function are 
+completely connected, and have no disjoint subregions. For the visual reconstruction 
+task, this implies that the projection of an object onto the image plane will always 
+yield a single connected region. While this may be a reasonable assumption for 
+certain classes of synthetic images, it is not valid for realistic natural images which 
+contain occlusion and/or transparent phenomena. 
+While a human observer can integrate over gaps in a region split by occlusion, the 
+line process will prevent any such smoothing, no matter how close the subregions 
+are in the image plane. When these disjoint regions are small (as when viewing 
+an object through branches or leaves), the interpolated values provided by such a 
+390 
+Darrell and Pentland 
+(a) 
+(b) 
+Figure 1: (a) Regularization network with line-process. Shaded circles represent 
+data nodes, while open circles represent interpolation nodes. Solid rectangles indi- 
+cate resistors; slashed rectangles indicate resistive fuses. (b) Regularization net- 
+work with explicit support maps; support process can be implemented by placing 
+resistive fuses between data and interpolation nodes (other constraints on support 
+are described in text). 
+network will not be reliable, since observation noise can not be averaged over a large 
+number of samples. 
+Similarly, an edge-based approach cannot account for the perception of motion 
+transparency, since these stimuli have no coherent local neighborhoods. Human 
+observers can easily interpolate 3-D surfaces in transparent random-dot motion 
+displays (Husain et al. 1989). In this type of display, points only last a few frames, 
+and points from different surfaces are transparently intermingled. With a line- 
+process, no smoothing or integration would be possible, since neighboring points 
+in the image belong to different 3-D surfaces. To represent and process images 
+containing this kind of transparent phenomena, we need a framework that does not 
+rely on a global 2D edge map to make segmentation decisions. By generalizing 
+the regularization/surface interpolation paradigm to use support maps rather than 
+a line-process, we can overcome limitations the discontinuity approach has with 
+respect to transparency. 
+4 Using Support Maps for Segmentation 
+Our approach decomposes a heterogeneous function into a set of individual approx- 
+imations corresponding to the homogeneous regions of the function. Each approx- 
+imation covers a specific region, and ues a support map to indicate which points 
+belong to that region. Unlike an edge-based representation, the support of an ap- 
+proximation need not be a connected region -- in fact, the support can consist of a 
+scattered collection of independent points! 
+Against Edges: Function Approximation with Multiple Support Maps 391 
+For a single approximation, it is relatively straight-forward to compute a support 
+map. Given an approximation, we can find the support it has in the function by 
+thresholding the residual error of that approximation. In terms of analog regular- 
+ization, the support map (or support process can be implemented by placing a 
+resistive fuse between the data and the interpolating units (Figure lb). 
+A single support map is limited in usefulness, since only one region can be approxi- 
+mated. In fact, it reduces to the outlier rejection paradigm of certain robust esti- 
+mation methods, which are known to have severe theoretical limits on the amount 
+of outlier contamination they can handle (Meet et al. 1991; Li 1985). To represent 
+true heterogeneous stimuli, multiple support maps are needed, with one support 
+map corresponding to each homogeneous (but not necessarily connected) region. 
+We have developed a method to estimate a set of these support maps, based on find- 
+ing a minimal length description of the function. We adopt a three-step approach: 
+first, we generate a set of candidate support maps using simple thresholding tech- 
+niques. Second, we find the subset of these maps which minimally describes the 
+function, using a network optimization to find the smallest set of maps that covers 
+all the observations. Finally, we re-allocate the support in this subset, such that 
+only the approximation with the lowest residual error supports a particular point. 
+4.1 Estimating Initial Support Fields 
+Ideally, we would like to consider all possible support patterns of a given dimension 
+as candidate support maps. Unfortunately, the combinatorics of the problem makes 
+this impossible; instead, we attempt to find a manageable number of initial maps 
+which will serve as a useful starting point. 
+A set of candidate approximations can be obtained in many ways. In our work we 
+have initialized their surfaces either using a table of typical values or by fitting a 
+small fixed regions of the function. We denote each approximation of a homogeneous 
+region as a tuple, (ai,,t,F/), where g/ = {sii} is a support map, t = {uii} is 
+the approximated surface, and /= {rij } is the residual error computed by taking 
+the difference of t with the observed data. (The scalar ai is used in deciding 
+which subset of approximations are used in the final representation.) The support 
+fields are set by thresholding the residual field based on our expected (or assumed) 
+observation variance 8. 
+1 if (ria) 2 < 0 } 
+$ij ---- 0 otherwise 
+4.2 Estimating the Number of Regions 
+Perhaps the most critical problem in recovering a good heterogeneous description 
+is estimating how many regions are in the function. Our approach to this problem 
+is based on finding a sm

@@ -1,0 +1,175 @@
+Learning Complex Boolean Functions: 
+Algorithms and Applications 
+Arlindo L. Oliveira and Alberto Sangiovanni-Vincentelli 
+Dept. of EECS 
+UC Berkeley 
+Berkeley CA 94720 
+Abstract 
+The most commonly used neural network models are not well suited 
+to direct digital implementations because each node needs to per- 
+form a large number of operations between floating point values. 
+Fortunately, the ability to learn from examples and to generalize is 
+not restricted to networks of this type. Indeed, networks where each 
+node implements a simple Boolean function (Boolean networks) can 
+be designed in such a way as to exhibit similar properties. Two 
+algorithms that generate Boolean networks from examples are pre- 
+sented. The results show that these algorithms generalize very 
+well in a class of problems that accept compact Boolean network 
+descriptions. The techniques described are general and can be ap- 
+plied to tasks that are not known to have that characteristic. Two 
+examples of applications are presented: image reconstruction and 
+hand-written character recognition. 
+I Introduction 
+The main objective of this research is the design of algorithms for empirical learning 
+that generate networks suitable for digital implementations. Although threshold 
+gate networks can be implemented using standard digital technologies, for many 
+applications this approach is expensive and inefficient. Pulse stream modulation 
+[Murray and Smith, 1988] is one possible approach, but is limited to a relatively 
+small number of neurons and becomes slow if high precision is required. Dedicated 
+911 
+912 Oliveira and Sangiovanni-Vincentelli 
+boards based on DSP processors can achieve very high performance and are very 
+flexible but may be too expensive for some applications. 
+The algorithms described in this paper accept as input a training set and generate 
+networks where each node implements a relatively simple Boolean function. Such 
+networks will be called Boolean networks. Many applications can benefit from 
+such an approach because the speed and compactness of digital implementations 
+is still unmatched by its analog counterparts. Additionally, many alternatives are 
+available to designers that want to implement Boolean networks, from full-custom 
+design to field programmable gate arrays. This makes the digital alternative more 
+cost effective than solutions based on analog designs. 
+Occam's razor [Blumer e! al., 1987; Rissanen, 1986] provides the theoretical founda- 
+tion for the development of algorithms that can be used to obtain Boolean networks 
+that generalize well. According to this paradigm, simpler explanations for the avail- 
+able data have higher predictive power. The induction problem can therefore be 
+posed as an optimization problem: given a labeled training set derive the 
+less complex Boolean network that is consistent  with the training set. 
+Occam's razor, however, doesn't help in the choice of the particular way of mea- 
+suring complexity that should be used. In general, different types of problems may 
+require different complexity measures. The algorithms described in section 3.1 and 
+3.2 are greedy algorithms that aim at minimizing one specific complexity measure: 
+the size of the overall network. Although this particular way of measuring com- 
+plexity may prove inappropriate in some cases, we believe the approach proposed 
+can be generalized and used with minor modifications in many other tasks. The 
+problem of finding the smallest Boolean network consistent with the training set is 
+NP-hard [Garey and Johnson, 1979] and cannot be solved exactly in most cases. 
+Heuristic approaches like the ones described are therefore required. 
+2 Definitions 
+We consider the problem of supervised learning in an attribute based description 
+language. The attributes (input variables) are assumed to be Boolean and every 
+exemplar in the training set is labeled with a value that describes its class. Both 
+algorithms try to maximize the mutual information between the network output 
+and these labels. 
+Let variable X take the values {z, z2, ...z,} with probabilities p(z),p(z2)...p(z,). 
+The entropy of X is given by H(X) - -j p(cj)logp(cj) and is a measure 
+of the uncertainty about the value of X. The uncertainty about the value 
+of X when the value of another variable Y is known is given by H(XIY ) - 
+-- i P(Yi ) Ej P( Xj lYi ) log p( xj lYi ). 
+The amount by which the uncertainty of X is reduced when the value of variable Y 
+is known, I(Y,X) - H(X) - H(XIY) is called the mutual information between Y 
+and X. In this context, Y will be a variable defined by the output of one or more 
+nodes in the network and X will be the target value specified in the training set. 
+1Up to sortie specified level. 
+Learning Complex Boolean Functions: Algorithms and Applications 913 
+3 Algorithms 
+3.1 Muesli - An algorithm for the design of nmlti-level logic networks 
+This algorithm derives the Boolean network by performing gradient descent in the 
+mutual information between a set of nodes and the target values specified by the 
+labels in the training set. 
+In the pseudo code description of the algorithm given in figure 1, the function 
+computes the mutual information between the nodes in S (viewed as a multi-valued 
+variable) and the target output. 
+muesli(ntist) { 
+nlist - sort_nlist_by_T(nlist,1); 
+sup *- 2; 
+while (not_done(Mist) ^ sup < max_sup) { 
+act +- 0; 
+do { 
+act q- q- ; 
+success +- improve_mi(act, nlist, sup); 
+) while (success -- FALSE A act  max_act); 
+if (success - TRUE) { 
+sup *- 2; 
+while (success = TRUE) 
+success +- improve_mi(act, nlist, sup); 
+else sup q- q- ; 
+improve_mi(act, nlist, sup) { 
+nlist +- sort_nlist_by_27(nlist, act); 
+f - best_function(nlist, act, sup); 
+if (I(nlist[l:act-1] t_J f) > I(nlist[l:act])) 
+nlist .- nlist t_J f; 
+return(TRUE); 
+else return(FALSE); 
+Figure 1: Pseudo-code for the Muesli algorithm. 
+The algorithm works by keeping a list of candidate nodes, nlist, that initially con- 
+tains only the primary inputs. The act variable selects which node in nlist is active. 
+Initially, act is set to 1 and the node that provides more information about the out- 
+put is selected as the active node. Function improve_mi() tries to combine the 
+active node with other nodes as to increase the mutual information. 
+Except for very simple functions, a point will be reached where no further improve- 
+914 Oliveira and Sangiovanni-Vincentelli 
+merits can be made for the single most informative node. The value of act is then 
+increased (up to a pre-specified maximum) and improve_rot is again called to select 
+auxiliary features using other nodes in nlist as the active node. If this fails, the 
+value of sup (size of the support of each selected function) is increased until no 
+further improvements are possible or the target is reached. 
+The function sort_nlist_by_T(nlist, act) sorts the first act nodes in the list by de- 
+creasing value of the information they provide about the labels. More explicitly, the 
+first node in the sorted list is the one that provides maximal information about the 
+labels. The second node is the one that will provide more additional information 
+after the first has been selected and so on. 
+Function improve_rot() calls best_function(nlist, act,sup) to select the Boolean 
+function f that takes as inputs node nlist[act] plus sup-1 other nodes and maximizes 
+I(nlist[1: act- 1] U f). When sup is larger than 2 it is unfeasible to search all 22p 
+possible functions to select the desired one. However, given sup input variables, 
+finding such a function is equivalent to selecting a partition 2 of the 2 sup points in 
+the input space that maximizes a specific cost function. This partition is found using 
+the Kernighan-Lin algorithm [Kernighan and Lin, 1970] for graph-partitioning. 
+Figure 2 exemplifies how the algorithm works when learning the simple Boolean 
+function f - ab + cde from a complete training set. In this example, the value of 
+sup is always at 2. Therefore, only 2 input Boolean functions arc generated. 
+mi([ ]) = 0.0 
+Fails to find fix,?) with mi([f]) > 0.52 
+Select x = ab Set act = 2; 
+a a [ a  x 
+nlist = [a,b,c,d,e] nlist = [x,c,d,e,a,b] nlist = [x,c,d,e,a,b] 
+act = 1 act = 1 act = 2 
+mi([a]) = 0.16 mi([x]) = 0.52 mi([x,c]) = 0.63 
+Select y = cd 
+a 
+nlist = [x,y,e,a,b,c,d] 
+act = 2 
+mi([x,y]) = 0.74 
+Select w = ye 
+a 
+ d 
+d 
+nlist = [x,y,e,a,b,c,d] 
+act = 2 
+mi([x,w]) = 0.93 
+Fails to find f(w,?) with mi([x,f]) > 0.93 
+Set act = 0; Select z = x+w 
+a 
+z 
+nlist = [z,x,y,a,b,c,d,e] 
+act = 1 
+mi([z]) = 0.93 
+Figure 2: The muesli algorithm, illustrated 
+2A single output Boolean function is equivalent to a partition of the input space in two 
+sets. 
+Learning Complex Boolean Functions: Algorithms and Applications 915 
+3.2 Fulfringe - a network generation algorithm based on decision trees 
+This algorithm uses binary decision trees [Quinlan, 1986] as the basic underlying 
+representation. A binary decision tree is a rooted, directed, acyclic graph, where 
+each terminal node (a node witl no outgoing edges) is labeled with one of the 
+possible output labels and each non-terminal node has exactly two outgoing edges 
+labeled 0 and 1. Each non-terminal node is also labeled with the name of the 
+attribute that is tested at that node. A decision tree can be used to classify a 
+particular example by starting at the root node and taking, until a terminal is 
+reached, the edge labeled with the value of the attribute tested at the current node. 
+Decision trees are usually built in a greedy way. At each step, the algorithm greedily 
+selects the attribute to be tested as the one that provides maximal informa6on about 
+the label of the examples that reached that node in the decision tree. It then recurs 
+after splitting these examples according to the value of the tested attribute. 
+Fulltinge works by identifying patterns near the fringes of the decision tree and 
+using them to build new features. Th

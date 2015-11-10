@@ -1,0 +1,179 @@
+Mixtures of Controllers for 
+Jump Linear and Non-linear Plants 
+Timothy W. Cacciatore 
+Department of Neurosciences 
+University of California at San Diego 
+La Jolla, CA 92093 
+Steven J. Nowlan 
+Synaptics, Inc. 
+2698 Orchard Parkway 
+San Jose, CA 95134 
+Abstract 
+We describe an extension to the Mixture of Experts architecture for 
+modelling and controlling dynamical systems which exhibit nulti- 
+ple modes of behavior. This extension is based on a Markov process 
+model, and suggests a recurrent network for gating a set of linear 
+or non-linear controllers. The new architecture is demonstrated to 
+be capable of learning effective control strategies for jump linear 
+and non-linear plants with multiple modes of behavior. 
+I Introduction 
+Many stationary dynamic systems exhibit significantly different behaviors under 
+different operating conditions. To control such complex systems it is computation- 
+ally more efficient to decompose the problem into smaller subtasks, with different 
+control strategies for different operating points. When detailed information about 
+the plant is available, gain scheduling has proven a successful method for designing a 
+global control (Shamma and Athans, 1992). The system is partitioned by choosing 
+several operating points and a linear model for each operating point. A controller 
+is designed for each linear model and a method for interpolating or 'scheduling' the 
+gains of the controllers is chosen. 
+The control problem becomes even more challenging when the system to be con- 
+trolled is non-stationary, and the mode of the system is not explicitly observable. 
+One important, and well studied, class of non-stationary systems are jump linear 
+systems of the form: 8--- - A(i)x + B(i)u. where x represents the system state, 
+dt -- 
+719 
+720 Cacciatore and Nowlan 
+u the input, and i, the stochastic parameter that determines the mode of the sys- 
+tem, is not explicitly observable. To control such a system, one must estimate the 
+mode of the system from the input-output behavior of the plant and then choose 
+an appropriate control strategy. 
+For many complex plants, an appropriate decomposition is not known a priori. One 
+approach is to learn the decomposition and the piecewise solutions in parallel. The 
+Mixture of Experts architecture (Nowlan 1990, Jacobs et al 1991) was proposed as 
+one approach to simultaneously learning a task decomposition and the piecewise 
+solutions in a neural network context. This architecture has been applied to con- 
+trol simple stationary plants, when the operating mode of the plant was explicitly 
+available as an input to the gating network (Jacobs and Jordan 1991). 
+There is a problem with extending this architecture to deal with non-stationary 
+systems such as jump linear systems. The original formulation of this architecture 
+was based on an assumption of statistical independence of training pairs appropriate 
+for classification tasks. However, this assumption is inappropriate for modelling the 
+causal dependencies in control tasks. We derive an extension to the original Mixture 
+of Experts architecture which we call the Mixture of Controllers. This extension 
+is based on an nth order Markov model and can be implemented to control non- 
+stationary plants. The new derivation suggests the importance of using recurrence 
+in the gating network, which then learns to estimate the conditional state occupancy 
+for sequences of outputs. The power of the architecture is illustrated by learning 
+control and switching strategies for simple jmnp linear and non-stationary non- 
+linear plants. The modified recurrent architecture is capable of learning both the 
+control and switching for these plants, while a non-recurrent architecture fails to 
+learn an adequate control. 
+2 Mixtures of Controllers 
+The architecture of the system is shown in figure 1. xt denotes the vector of inputs 
+to the controller at time t and yt is the corresponding overall control output. The 
+architecture is identical to the Mixture of Experts architecture, except that the 
+gating network has become recurrent, receiving its outputs from the previous time 
+step as part of its input. The underlying statistical model, and corresponding train- 
+ing procedure for the Mixture of Controllers, is quite different from that originally 
+proposed for the Mixture of Experts. 
+We assume that the system we are interested in controlling has N different modes 
+or states I and we will have a distinct control 3Ik for each mode. In general we are 
+interested in the likelihood of producing a sequence of control outputs F1,..., .W 
+given a sequence of inputs xl, � �., zr. This likelihood can be computed as: 
+L(yx . . .yTIx . . .XT) 
+= 1-I P(ytl& = k,xt)P(st-- klm...yt_,x...xt) 
+t k 
+= (1) 
+t k 
+1This is an idealization and if N is unknown it is safest to overestimate it. 
+Mixtures of Controllers for Jump Linear and Non-Linear Plants 721 
+xt 
+l 
+Sel----i�1t 2 
+�t 3 
+Yt 
+Figure 1: The Mixture of Controllers architecture. M1, M2 and M3 
+are feedforward networks implementing controls appropriate for different 
+modes of the system to be controlled. The gating network (Sel.) is 
+recurrent and uses a softmax non-linearity to compute the weight to 
+be assigned to each of the control outputs. The weighted sum of the 
+controls is then used as the overall control for the plant. 
+where bt  represents the probability of producing the desired control yt given the 
+input xt and that the system is in state k. 7t  represents the conditional probability 
+of being in state k given the sequence of inputs and outputs seen so far. In order 
+to make the problem tractable, we assume that this conditional probability is com- 
+pletely determined by the current input to the system and the previous state of the 
+system: 
+Thus we are assuming that our control can be approximated by a Markov process, 
+and since we are assuming thai the mode of [he sys[em is no[ explici[ly available, [his 
+becomes a hidden Markov model. This Markov assumption leads to [he particular 
+recurten[ gating archi[ec[ure used in the Mixlure of Controllers. 
+If we make [he same gaussian assumptions used in [he original Mixture of ExperIs 
+model, we can define a gradien[ descent procedure for maximizing the log of [he 
+likelihood given in Equation 1. Assume 
+k 2 2 
+-(Yt-Yt ) /2a 
+deane 
+: ', ', , = fit % and 
+Lt 
+Then the derivative of the likelihood with respect to the output of one of the con- 
+trollers becomes: 
+= (2) 
+ay2 
+722 Cacciatore and Nowlan 
+The derivative of the likelihood with respect to a weight in one of the control net- 
+works is computed by accumulating partial derivatives over the sequence of control 
+outputs: 
+0 log L 0 log L Oyt  (3) 
+OWq -- Z Oytk 'OOWq' 
+t 
+For the gating network, we once again use a softmax non-linearity so: 
+Then 
+exp gt  
+Zj exp g 
+O lo___g L = -(Rt _ ?})7L. (4) 
+The derivatives for the weights in the gating network are again computed by accu- 
+mulating partial derivatives over output sequences' 
+0 log L 0 log L Og 
+o,o (5) 
+t 
+Equations (2) and (4) turn out to be quite similar to those derived for the original 
+Mixture of Experts architecture. The primary difference is the appearance of/3} 
+rather than b in the expression for/i}. The appearance of/3 is a direct. result of 
+the recurrence introduced into the gating network. /3 can be computed as part of 
+a modified back propagation through time algorithm for the gating network using 
+the recurrence: 
+/3 = b +  wkj/3+, (6) 
+where 
+Equation (6) is the analog of the backward pass in the forward-backward algorithm 
+for standard hidden Markov models. 
+In the simulations reported in the next section, we used an online gradient descent. 
+procedure which employs an approximation for/} which uses only one step of back 
+propagation through time. This approximation did not appear to significantly affect 
+the final performance of the recurrent architecture. 
+3 Results 
+The performances of the recurrent Mixture of Controllers and non-recurrent Mixture 
+of Experts were compared on three control tasks: a first order jump linear system, 
+a second order jump linear system, and a tracking task that required two non- 
+linear controllers. The object of the first two jump-linear tasks was to control a 
+plant which switched randomly between two linear systems. The resulting overall 
+systems were highly non-linear. In both the first and second order cases it was 
+Mixtures of Controllers for Jump Linear and Non-Linear Plants 723 
+First Order Model Traning Error 
+First Order Model Trajectory 
+20000 200 
+Non-recurrenl 15 0 
+15000 
+lo0 
+ 10(20 0  5 0 '',, 
+uJ 
+ideal 
+Recurrsnt 
+0%0 100 20 0 0 50 -10 0 10 10 
+Figure 2: Left: Training convergence of Mixtures of Experts and Mix- 
+tures of Controllers on first order jump linear system. The vertical axis 
+is average squared error over training sequences and horizontal axis is 
+the number of training sequences seen. Right: Sample test trajectory 
+of first order jump linear system under control of Mixture of Controllers. 
+The system switches states at times 50 and 100. 
+desired to drive all plant outputs to zero (zero-forcing control). Neither the first or 
+second order systems could be successfully controlled by a single linear controller. 
+For both jump-linear tasks, the architecture of the Mixture of Controllers and Mix- 
+ture of Experts consisted of two linear experts, and a one layer gating network. 
+The input to the experts was the plant output at the previous time step, while the 
+input to the gating network was the ratio of the plant outputs at the two preceding 
+time steps. An ideal linear controller was designed for each mode of the system. 
+Training targets were derived from outputs of the appropriate ideal controller, us- 
+ing the known mode of the system for the training trajectories. The parameters 
+of the gating and control networks were updated after each pass through sample 
+trajectories which contained several stat

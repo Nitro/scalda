@@ -1,0 +1,149 @@
+612 
+Constrained Differential Optimization 
+John C. Platt 
+Alan H. Ban' 
+California Institute of Technology, Pasadena, CA 91125 
+Abstract 
+Many optimization models of neural networks need constraints to restrict the space of outputs to 
+a subspace which satisfies external criteria. Optimizations using energy methods yield forces which 
+act upon the state of the neural network. The penalty method, in which quadratic energy constraints 
+are added to an existing optimization energy, has become popular recently, but is not guaranteed 
+to satisfy the constraint conditions when there are other forces on the neural model or when there 
+are multiple constraints. In this paper, we present the basic differential multiplier method (BDMM), 
+which satisfies constraints exactly; we create forces which gradually apply the constraints over time, 
+using neurons that estimate Lagrange multipliers. 
+The basic differential multiplier method is a differential version of the method of multipliers 
+from Numerical Analysis. We prove that the differential equations locally converge to a constrained 
+minimum. 
+Examples of applications of the differential method of multipliers include enforcing permutation 
+codewords in the analog decoding problem and enforcing valid tours in the traveling salesman problem. 
+1. Introduction 
+Optimization is ubiquitous in the field of neural networks. Many learning algorithms, such as 
+back-propagation, xs optimize by minimizing the difference between expected solutions and observed 
+solutions. Other neural algorithms use differential equations which minimize an energy to solve 
+a specified computational problem, such as associative memory, � differential solution of the trav- 
+eling salesman problem, &� analog decoding? and linear programming? Furthermore, Lyapunov 
+methods show that various models of neural behavior find minima of particular functions. a,� 
+Solutions to a constrained optimization problem are restricted to a subset of the solutions of the 
+corresponding unconswained optimization problem. For example, a mutual inhibition circuit e requires 
+one neuron to be on and the rest to be off. Another example is the waveling salesman problem? 
+where a salesman tries to minimize his travel distance, subject to the constraint that he must visit 
+every city exactly once. A third example is the curve fitting problem, where elastic splines are as 
+smooth as possible, while still going through data pointsfi Finally, when digital decisions are being 
+made on analog data, the answer is constrained to be bits, either 0 or 1. xa 
+A constrained optimization problem can be stated as 
+minimi.e f(_.x), (1) 
+subject to g(/) ----- 0, 
+where _.x is the state of the neural network, a position vector in a high-dimensional space; f(x__) is a 
+scalar energy, which can be imagined as the height of a landscape as a function of position _.x; g(_x) = 0 
+is a scalar equation describing a subspace of the state space. During constrained optimization, the 
+state should be attracted to the subspace g(l} = 0, then slide along the subspace until it reaches the 
+locally smallest value of f(_x) on (x_) = 0. 
+In section 2 of the paper, we describe classical methods of constrained optimization, such as the 
+penalty method and Laglange multipliers. 
+Section 3 introduces the basic differential multiplier method (BDMM) for constrained optimiza- 
+tion, which calculates a good local minimum. If the constrained optimization problem is convex, then 
+the local minimum is the global minimum; in general, finding the global minimum of non-convex 
+problems is fairly difficult. 
+In section 4, we show a Lyapunov function for the BDMM by drawing on an analogy from 
+physics. 
+@ American Institute of Physics 1988 
+613 
+In section 5, augmented Lagrangians, an idea from optimization theory, enhances the convergence 
+properties of the BDMM. 
+In section 6, we apply the differential algorithm to two neural problems, and discuss the insen- 
+sitivity of BDMM to choice of parameters. Parameter sensitivity is a persistent problem in neural 
+networks. 
+2. Classical Methods of Constrained Optimization 
+This section discusses two methods of constrained optimization, the penalty method and Lagrange 
+multipliers. The penalty method has been previously used in differential optimization. The basic 
+differential multiplier method developed in this paper applies Lagrange multipliers to differential 
+optimization. 
+2.1. The Penalty Method 
+The penalty method is analogous to adding a rubber band which attracts the neural state to 
+the subspace !/(_x) = 0. The penalty method adds a quadratic energy term which penalizes viola- 
+tions of constraints. s Thus, the constrained minimization problem (1) is converted to the following 
+unconstrained minimization problem: 
+minimize �ven,qtv(_x} = f(_x) + �(!/(_x}) 2. 
+(2) 
+= o 
+Figure 1. The penalty method makes a trough in state space 
+The penalty method can be extended to fulfill multiple constraints by using more than one rubber 
+band. Namely, the constrained optimization problem 
+minimize f(_x), (3) 
+subject to !7-.(_x) = O; a = 1, 2,..., n; 
+is converted into unconstrained optimization problem 
+minimize 6enalW(a:)= f(x) + Z ca(ga(a:))2' (4) 
+The penalty method has several convenient features. First, it is easy to use. Second, it is globally 
+convergent to the correct answer as c,,  oo. s Third, it allows compromises between constraints. For 
+example, in the case of a spline curve fitting input data, there can be a compromise between fitting 
+the data and making a smooth spline. 
+614 
+However, the penalty method has a number of disadvantages. First, for finite constraint strengths 
+�,,, it doesn't fulfill the constraints exactly. Using multiple rubber band constraints is like building 
+a machine out of rubber bands: the machine would not hold together perfectly. Second, as more 
+constraints are added, the constraint strengths get harder to set, especially when the size of the 
+network (the dimensionality of x_) gets large. 
+In addition, there is a dilemma to the setting of the constraint strengths. If the strengths are small, 
+then the system finds a deep local minimum, but does not fulfill all the constraints. If the strengths 
+are large, then the system quickly fulfills the constraints, but gets stuck in a poor local minimum. 
+2.2. Lagrange Multipliers 
+Lagrange multiplier methods also convert constrained optimization problems into unconstrained 
+extremization problems. Namely, a solution to the equation (1) is also a critical point of the energy 
+CLagrange(_Z) = f(2:) q- g(). (5) 
+A is called the Lagrange multiplier for the constraint g(z_) -- 0. s 
+A direct consequence of equation (5) is that the gradient of f is collinear to the gradient of g at 
+the constrained extrema (see Figure 2). The constant of proportionality between Vf and Vg is -A: 
+veL.,,..,e = o= v! + XVg. (6) 
+We use the collinearity of Vf and Vg in the design of the BDMM. 
+contours of f 
+Vg 
+=0 
+Figure 2. At the constrained minimum, Vf = -AVg 
+A simple example shows that Lagrange multipliers provide the exlxa degrees of freedom necessary 
+to solve constrained optimization problems. Consider the problem of finding a point (z, y) on the 
+line x + y = 1 that is closest to the origin. Using Lagrange multipliers, 
+�Lasranse = za + Ya + A(z + y - 1) 
+(7) 
+Now, take the derivative with respect to all variables, z, y, and A. 
+8�Lag..g = 2y + A = 0 
+(s) 
+615 
+With the extra variable A, there are now three equations in three unknowns. In addition, the last 
+equation is precisely the constraint equation. 
+3. The Basic Differential Multiplier Method for Constrained Optimization 
+This section presents a new neural algorithm for constrained optimization, consisting of dif- 
+ferential equations which estimate Lagrange multipliers. The neural algorithm is a variation of the 
+method of multipliers, first presented by Hestenes  and PowelP 6. 
+3.1. Gradient Descent does not work with Lagrange Multipliers 
+The simplest differential optimization algorithm is gradient descent, where the state variables of 
+the network slide downhill, opposite the gradient. Applying gradient descent to the energy in equation 
+(5) yields 
+:i = Lagrange = f  a/' 
+ax ax (9) 
+Note that there is a auxiliary differential equation for A, which is an additional neuron necessary 
+to apply the constraint g(a:) = 0. Also, recall that when the system is at a constrained extremum, 
+Vf = -AVg, hence, fi: = 0. 
+Energies involving Lagrange multipliers, however, have critical points which tend to be saddle 
+points. Consider the energy in equation (5). If  is frozen, the energy can be decreased by sending 
+A to +oo or -oo. 
+Gradient descent does not work with Lagrange multipliers, because a critical point of the energy 
+in equation (5) need not be an attractor for (9). A stationary point must be a local minimum in order 
+for gradient descent to converge. 
+3.2. The New Algorithm: the Basic Differential Multiplier Method 
+We present an alternative to differential gradient descent that estimates the Lagrange multipliers, 
+so that the constrained minima are attractors of the differential equations, instead of repulsors. The 
+differential equations that solve (1) is 
+i,= 
+axl axi ' 
+i = 
+(o) 
+Equation (10) is similar to equation (9). As in equation (9), constrained extrema of the ener .gy 
+(5) are stationary points of equation (10). Notice, however, the sign inversion in the equation for A, 
+as compared to equation (9). The equation (10) is performing gradient ascent on A. The sign flip 
+makes the BDMM stable, as shown in section 4. 
+Equation (10) corresponds to a neural network with anti-symmetric connections between the A 
+neuron and all of the _x neurons. 
+3.3. Extensions to the Algorithm 
+One extension to equation (10) is an algorithm for constrained minimization with multiple con- 
+straints. Adding an extra neuron for every equality constraint and summing all of the constraint for

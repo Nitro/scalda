@@ -1,0 +1,191 @@
+Refining PID Controllers using Neural Networks 
+Gary M. Scott 
+Department of Chemical Engineering 
+1415 Johnson Drive 
+University of Wisconsin 
+Madison, WI 53706 
+Jude W. Shavlik 
+Department of Computer Sciences 
+1210 W. Dayton Street 
+University of Wisconsin 
+Madison, WI 53706 
+W. Harmon Ray 
+Department of Chemical Engineering 
+1415 Johnson Drive 
+University of Wisconsin 
+Madison, WI 53706 
+Abstract 
+The KBANN approach uses neural networks to refine knowledge that can 
+be written in the form of simple propositional rules. We extend this idea 
+further by presenting the MANNCON algorithm by which the mathematical 
+equations governing a PID controller determine the topology and initial 
+weights of a network, which is further trained using backpropagation. We 
+apply this method to the task of controlling the outflow and temperature 
+of a water tank, producing statistically-significant gains in accuracy over 
+both a standard neural network approach and a non-learning PID con- 
+troller. Furthermore, using the PID knowledge to initialize the weights of 
+the network produces statistically less variation in testset accuracy when 
+compared to networks initialized with small random numbers. 
+1 INTRODUCTION 
+Research into the design of neural networks for process control has largely ignored 
+existing knowledge about the task at hand. One form this knowledge (often called 
+the domain theory) can take is embodied in traditional controller paradigms. The 
+555 
+556 Scott, Shavlik, and Ray 
+recently-developed KBANN (Knowledge-Based Artificial Neural Networks) approach 
+(Towell et al., 1990) addresses this issue for tasks for which a domain theory (written 
+using simple propositional rules) is available. The basis of this approach is to use 
+the existing knowledge to determine an appropriate network topology and initial 
+weights, such that the network begins its learning process at a good starting 
+point. 
+This paper describes the MANNCON (Multivariable Artificial Neural Network Con- 
+trol) algorithm, a method of using a traditional controller paradigm to determine 
+the topology and initial weights of a network. The used of a PID controller in this 
+way eliminates network-design problems such as the choice of network topology 
+(i.e., the number of hidden units) and reduces the sensitivity of the network to the 
+initial values of the weights. Furthermore, the initial configuration of the network 
+is closer to its final state than it would normally be in a randomly-configured net- 
+work. Thus, the MANNCON networks perform better and more consistently than 
+the standard, randomly-initialized three-layer approach. 
+The task we examine here is learning to control a Multiple-Input, Multiple-Output 
+(MIMO) system. There are a number of reasons to investigate this task using neu- 
+ral networks. One, it usually involves nonlinear input-output relationships, which 
+matches the nonlinear nature of neural networks. Two, there have been a number 
+of successful applications of neural networks to this task (Bhat & McAvoy, 1990; 
+Jordan & Jacobs, 1990; Miller et al., 1990). Finally, there are a number of existing 
+controller paradigms which can be used to determine the topology and the initial 
+weights of the network. 
+2 CONTROLLER NETWORKS 
+The MANNCON algorithm uses a Proportional-Integral-Derivative (PID) controller 
+(Stephanopoulos, 1984), one of the simplest of the traditional feedback controller 
+schemes, as the basis for the construction and initialization of a neural network con- 
+troller. The basic idea of PID control is that the control action u (a vector) should 
+be proportional to the error, the integral of the error over time, and the temporal 
+derivative of the error. Several tuning parameters determine the contribution of 
+these various components. Figure 1 depicts the resulting network topology based 
+on the PID controller paradigm. The first layer of the network, that from y,p (de- 
+sired process output or setpoint) and Y(n-) (actual process output of the past time 
+step), calculates the simple error (e). A simple vector difference, 
+e: y,p -- y 
+accomplishes this. The second layer, that between e, e(n-x), and e, calculates the 
+actual error to be passed to the PID mechanism. In effect, this layer acts as a 
+steady-state pre-compensator (Ray, 1981), where 
+e = Gie 
+and produces the current error and the error signals at the past two time steps. 
+This compensator is a constant matrix, Gi, with values such that interactions at a 
+steady state between the various control loops are eliminated. The final layer, that 
+between e and u(n) (controller output/plant input), calculates the controller action 
+Refining PID Controllers using Neural Networks 557 
+U(n-1) 
+1 
+1 
+Ysp 
+Y(n-1) 
+G I 
+d() 
+u(. 
+Water 
+Tank 
+Y() 
+e 
+e(n-1) 
+1 
+1 
+1 
+1 
+wco 
+wHO 
+WC1 
+WIll 
+wC2 
+WH2 
+Figure 1' MANNCON network showing weights that are initialized using 
+Ziegler-Nichols tuning parameters. 
+based on the velocity form of the discrete PID controller: 
+UC(n) = UC(n_I) -'[- WCOel(n) q- WClel(n_I) q- WC2el(n-2) 
+where woo, we1, and we2 are constants determined by the tuning parameters of the 
+controller for that loop. A similar set of equations and constants (wHO, WIll, WH2) 
+exist for the other controller loop. 
+Figure 2 shows a schematic of the water tank (Ray, 1981) that the network con- 
+trols. This figure also shows the controller variables (Fc and FH), the tank output 
+variables (F(h) and T), and the disturbance variables (Fd and Td). The controller 
+cannot measure the disturbances, which represent noise in the system. 
+M^NNCON initializes the weights of Figure 1's network with values that mimic 
+the behavior of a PID controller tuned with Ziegler-Nichols (Z-N) parameters 
+(Stephanopoulos, 1984) at a particular operating condition. Using the KB^NN 
+approach (Towell et al., 1990), it adds weights to the network such that all units 
+in a layer are connected to all units in all subsequent layers, and initializes these 
+weights to small random numbers several orders of magnitude smaller than the 
+weights determined by the PID parameters. We scaled the inputs and outputs of 
+the network to be in the range [0, 1]. 
+Initializing the weights of the network in the manner given above assumes that the 
+activation functions of the units in the network are linear, that is, 
+Oj,linear -- WjiOi 
+558 
+Scott, Shavlik, and Ray 
+Cold Stream (at Tc) 
+Fc 
+Hot Stream (at TH) 
+Disturbance 
+L 
+T = Temperature 
+F = Flow Rate 
+h 
+Output 
+F(h),T 
+Figure 2: Stirred mixing tank requiring outflow and temperature control. 
+Table 1: Topology and initialization of networks. 
+Network Topology Weight Initialization 
+1. Standard neural network 3-layer (14 hidden units) random 
+2. MANNCON network I PID topology random 
+3. MANNCON network II PID topology Z-N tuning 
+The strength of neural networks, however, lie in their having nonlinear (typically 
+sigmoidal) activation functions. For this reason, the MaNNCON system initially sets 
+the weights (and the biases of the units) so that the linear response dictated by the 
+PID initialization is appro:rimated by a sigmoid over the output range of the unit. 
+For units that have outputs in the range [-1, 1], the activation function becomes 
+2 
+-1 
+Oj'sigm�id -- 1 + exp(-2.31  WjiOi) 
+where wji are the linear weights described above. 
+Once MaNNCON configures and initializes the weights of the network, it uses a set 
+of training examples and backpropagation to improve the accuracy of the network. 
+The weights initialized with PID information, as well as those initialized with small 
+random numbers, change during backpropagation training. 
+3 EXPERIMENTAL DETAILS 
+We compared the performance of three networks that differed in their topology 
+and/or their method of initialization. Table i summarizes the network topology 
+and weight initialization method for each network. In this table, PID topology 
+is the network structure shown in Figure 1. Random weight initialization sets 
+Refining PID Controllers using Neural Networks 559 
+Table 2: Range and average duration of setpoints for experiments. 
+Experiment Training Set Testing Set 
+i [0.1,0.9] [0.1,0.9] 
+22 instances 22 instances 
+2 [0.1,0.9] [0.1,0.9] 
+22 instances 80 instances 
+a [0.4, 0.6] [0.1, 0.9] 
+22 instances 80 instances 
+all weights to small random numbers centered around zero. We also compare these 
+networks to a (non-learning) PID controller. 
+We trained the networks using backpropagation over a randomly-determined sched- 
+ule of setpoint y,p and disturbance d changes that did not repeat. The setpoints, 
+which represent the desired output values that the controller is to maintain, are the 
+temperature and outflow of the tank. The disturbances, which represent noise, are 
+the inflow rate and temperature of a disturbance stream. The magnitudes of the 
+setpoints and the disturbances formed a Gaussian distribution centered at 0.5. The 
+number of training examples between changes in the setpoints and disturbances 
+were exponentially distributed. 
+We performed three experiments in which the characteristics of the training and/or 
+testing set differed. Table 2 summarizes the range of the setpoints as well as their 
+average duration for each data set in the experiments. As can be seen, in Experiment 
+1, the training set and testing sets were qualitatively similar; in Experiment 2, the 
+test set was of longer duration setpoints; and in Experiment 3, the training set was 
+restricted to a subrange of the testing set. We periodically interrupted training and 
+tested the network. Results are averaged over 10 runs (Scott, 1991). 
+We used the error at the output of the tank (y in Figure 1) to determine the network 
+error (at u) by propagating the error backward through the plant (Psaltis et al., 
+1988). In this method, the error signal at the input to the tank is given by 
+ui '- ft(nelui)  yj 
+where 6ui represents the simple error at the output of the water tank and 6ui is the 
+error signal a

@@ -1,0 +1,149 @@
+Spoken Letter Recognition 
+Mark Fanty & Ronald Cole 
+Dept. of Computer Science and Engineering 
+Oregon Graduate Institute 
+Beaverton, OR 97006 
+Abstract 
+Through the use of neural network classifiers and careful feature selection, 
+we have achieved high-accuracy speaker-independent spoken letter recog- 
+nition. For isolated letters, a broad-category segmentation is performed 
+Location of segment boundaries allows us to measure features at specific 
+locations in the signal such as vowel onset, where important information 
+resides. Letter classification is performed with a feed-forward neural net- 
+work. Recognition accuracy on a test set of 30 speakers was 96%. Neu- 
+ral network classifiers are also used for pitch tracking and broad-category 
+segmentation of letter strings. Our research has been extended to recog- 
+nition of names spelled with pauses between the letters. When searching 
+a database of 50,000 names, we achieved 95% first choice name retrieval. 
+Work has begun on a continuous letter classifier which does frame-by-frame 
+phonetic classification of spoken letters. 
+I INTRODUCTION 
+Although spoken letter recognition may seem like a modest goal because of the 
+small vocabulary size, it is a most difficult task. Many letter pairs, such as M-N 
+and B-D, differ by a single articulatory feature. Recent advances in classification 
+technology have enabled us to achieve new levels of accuracy on this task [Cole 
+el al., 1990, Cole and Fanty, 1990, Fanty and Cole, 1990]. The EAR (English 
+Alphabet Recognition) system developed in our laboratory recognizes letters of the 
+English alphabet, spoken in isolation by any speaker, at 96% accuracy. We achieve 
+this level of accuracy by training neural network classifiers with empirically derived 
+features--features selected on the basis of speech knowledge, and refined through 
+220 
+Spoken Letter Recognition 221 
+experimentation. This process results in significantly better performance than just 
+using raw data such as spectral coefficients. 
+We have extended our research to retrieval of names from spellings with brief pauses 
+between the letters, and to continuous spellings. This paper provides an overview of 
+these systems with an emphasis on our use of neural network classifiers for several 
+separate components. In all cases, we use feedforward networks, with full connec- 
+tivity between adjacent layers. The networks are trained using back propagation 
+with conjugate gradient descent. 
+2 ISOLATED LETTER RECOGNITION 
+2.1 SYSTEM OVERVIEW 
+Data capture is performed using a Sennheiser HMD 224 noise-canceling micro- 
+phone, lowpass filtered at 7.6 kHz and sampled at 16 kHz per second. 
+Signal processing routines produce the following representations every 3 msecs: 
+(a) zero crossing rate: the number of zero crossings of the waveform in a 10 msec 
+window; (b) amplitude: the peak-to-peak amplitude (largest positive value minus 
+largest negative value) in a 10 msec window in the waveform; (c) filtered amplitude: 
+the peak-to-peak amplitude in a 10 msec window in the waveform lowpass filtered 
+at 700 Hz; (d) DFT: a 256 point FFT (128 real numbers) computed on a 10 msec 
+Hanning window; and (e) spectral difference: the squared difference of the averaged 
+spectra in adjacent 24 msec intervals. 
+Pitch tracking is performed with a neural network which locates peaks in the 
+filtered (0-700 Hz) waveform that begin pitch periods. described in section 2.2. 
+Broad-category segmentlon divides the utterance into contiguous intervals and 
+assigns one of four broad category labels to each interval: CLOS (closure or back- 
+ground noise), SON (sonorant interval), FRIC (fricative) and STOP. The segmenter, 
+modified from [April 1988], uses cooperating knowledge sources which apply rules 
+to the signal representations, most notably ptp0-700, pitch and zc0-8000. 
+Feature measurement is performed on selected locations in the utterance, based 
+upon the broad-category boundaries. A total of 617 inputs are used by the classifier. 
+Letter classification is performed by a network with 52 hidden units and 26 
+output units, one per letter. 
+2.2 NEURAL NETWORK PITCH TRACKER 
+Pitch tracking is achieved through a network which classifies each peak in the wave- 
+form as to whether it begins a pitch period [Barnard el al., 1991]. The waveform 
+is lowpass filtered at 700 Hz and each positive peak is classified using information 
+about it and the preceding and following four peaks. For each of the nine peaks, 
+the following information is provided. (1) the amplitude, (2) the time difference be- 
+tween the peak and the candidate peak, (3) a measure of the similarity of the peak 
+and the candidate peak (point-by-point correlation), (4) the width of the peak, and 
+(5) the negative amplitude or most negative value preceding the peak. The network 
+222 Fanty and Cole 
+was trained on the TIMIT database, and agrees with expert labelers about 98% of 
+the time. It performs well on our data without retraining. 
+2.3 NEURAL NETWORK LETTER CLASSIFIER 
+Each letter (except W) has a single SON segment (e.g. the /iy/in T, the whole 
+letter M). This segment always exists, and provides the temporal anchor for most 
+of the feature measurements. The previous consonant is the STOP or FRIC (e.g. B 
+or C) before the SON. If there is no STOP or FRIC (e.g. E), the 200 msec interval 
+before the SON is treated as a single segment for feature extraction. After dozens 
+of experiments, we arrived at the following feature set: 
+DFT coefficients from the consonant preceding the SON. The consonant is di- 
+vided into thirds temporally; from each third, 32 averaged values are extracted 
+linearly from 0 to 8kHz. All DFT inputs are normalized locally so that the 
+largest value from a given time slice becomes 1.0 and the smallest becomes 0.0. 
+(96 values) 
+DFT coefficients from the SON. From each seventh of the SON, 32 averaged 
+values are extracted linearly from 0 to 4kHz. (224 values) 
+DFT coefficients following the SON. At the point of maximum zero-crossing 
+rate in the 200 msec after the SON, 32 values are extracted linearly from 0 to 
+8kHz. (32 values) 
+DFT coefficients from the second and fifth frame of the SON--32 values from 
+each frame extracted linearly from 0 to 4kHz. These are not averaged over 
+time, and will reflect formant movement at the SON onset. (64 values) 
+DFT coefficients from the location in the center of the SON with the largest 
+spectral difference linear from 0 to 4kHz. This samples the formant locations 
+at the vowel-nasal boundary in case the letter is M or N. (32 values) 
+Zero-crossing rate in 11 18-msec segments (198 msec) before the SON, in 11 
+equal-length segments during the SON and in 11 18-msec segments after the 
+SON. This provides an absolute time scale before and after the SON which 
+could help overcome segmentation errors. (33 values) 
+Amplitude from before, during and after the SON represented the same way 
+as zero-crossing. (33 values) 
+Filtered amplitude represented the same way as amplitude. (33 values) 
+Spectral difference represented like zero-crossing and amplitude except the 
+maximum value for each segment is used instead of the average, to avoid 
+smoothing the peaks which occur at boundaries. (33 values) 
+Inside the SON, the spectral center of mass from 0 to 1000 Hz, measured in 10 
+equal segments. (10 values) 
+Inside the SON, the spectral center of mass from 1500 to 3500 Hz, measured 
+in 10 equal segments. (10 values) 
+Median pitch, the median distance between pitch peaks in the center of the 
+SON. (1 value) 
+Duration of the SON. (1 value) 
+Spoken Letter Recognition 223 
+* Duration of the consonant before the SON. (1 value) 
+. High-resolution representation of the amplitude at the SON onset: five values 
+from 12 msec before the onset to 30 msec after the onset. (5 values) 
+. Abruptness of onset of the consonant before the SON, measured as the largest 
+two-frame jump in amplitude in the 30 msec around the beginning of the con- 
+sonant. (1 value) 
+* The label of the segment before the SON: CLOS, FRIC or STOP. (3 values) 
+. The largest spectral difference value from 100 msec before the SON onset to 21 
+msec after, normalized to accentuate the difference between B and V. (1 value) 
+. The number of consistent pitch peaks in the previous consonant. (1 value) 
+. The number of consistent pitch peaks before the previous consonant. (1 value) 
+. The presence of the segment sequence CLOS FRIC after the SON (an indicator 
+of X or H). (1 binary value) 
+All inputs to our network were normalized: mapped to the interval [0.0, 1.0]. We 
+attempted to normalize so that the entire range was well utilized. In some instances, 
+the normalization was keyed to particular distinctions. For example, the center of 
+mass in the spectrum from 0 to 1000 Hz was normalized so that E was low and A 
+was high. Other vowels, such as O would have values off the scale and would map 
+to 1.0, but the feature was added specifically for E/A distinctions. 
+2.4 PERFORMANCE 
+During feature development, two utterances of each letter from 60 speakers were 
+used for training and 60 additional speakers served as the test set. For the final 
+performance evaluation, these 120 speakers were combined to form a large training 
+set. The final test set consists of 30 new speakers. The network correctly classified 
+95.9% of the letters. 
+The E-set {B,C,D,E,G,P,T,V,Z} and MN are the most difficult letters to classify. 
+We trained separate network for just the M vs. N distinction and another for just 
+the letters in the E-set [Fanty and Cole, 1990]. Using these networks as a second 
+pass when the first network has a response in the E-set or in {M,N}, the performance 
+rose slightly to 96%. 
+As mentioned above, all feature development was performed by training on half the 
+training speakers and testing on the other half. The development set performance 
+was 93.5% when using all the features. With only the 448 DFT values (not spectral 
+difference or cente

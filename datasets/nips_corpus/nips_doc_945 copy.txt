@@ -1,0 +1,164 @@
+PCA-Pyramids for Image Compression* 
+Horst Bischof 
+Department for Pattern Recognition 
+and Image Processing 
+Technical University Vienna 
+Treitlstrafie 3/1832 
+A-1040 Vienna, Austria 
+bis@prip. tuwien. ac. at 
+Kurt Hornik 
+Institut fiir Statistik und 
+Wahrscheinlichkeitstheorie 
+Technische Universit/it Wien 
+Wiedner Hauptstrafie 8-10/1071 
+A-1040 Vienna, Austria 
+Kurt.Hornik@ci.tuwien.ac.at 
+Abstract 
+This paper presents a new method for image compression by neural 
+networks. First, we show that we can use neural networks in a py- 
+ramidal framework, yielding the so-called PCA pyramids. Then we 
+present an image compression method based on the PCA pyramid, 
+which is similar to the Laplace pyramid and wavelet transform. 
+Some experimental results with real images are reported. Finally, 
+we present a method to combine the quantization step with the 
+learning of the PCA pyramid. 
+1 Introduction 
+In the past few years, a lot of work has been done on using neural networks for 
+image compression, cf. e.g. (Cottrell et al., 1987; Sanger, 1989; Mougeot et al., 1991; 
+Schweizer et al., 1991)). Typically, networks which perform a Principal Component 
+Analysis (PCA) were employed; for a recent overview of PCA networks, see (Baldi 
+and Hornik, 1995). 
+A well studied and thoroughly understood PCA network architecture is the linear 
+autoassociative network, see (Baldi and Hornik, 1989; Bourlard and Kamp, 1988). 
+This network consists of N input and output units and M < N hidden units, and is 
+*This work was supported in part by a grant from the Austrian National Fonds zur 
+FSrderung der wissenschaftlichen Forschung (No. S7002MAT) to Horst Bischof. 
+942 Horst Bischof, Kurt Hornik 
+trained (usually by back-propagation) to reproduce the input at the output units. 
+All units are linear. Bourlard & Kamp (Bourlard and Kamp, 1988) have shown that 
+at the minimum of the usual quadratic error function �, the hidden units project 
+the input on the space spanned by the first M principal components of the input 
+distribution. In fact, as long as the output units are linear, nothing is gained by 
+using non-linear hidden units. On average, all hidden units have equal variance. 
+However, PCA is not the only method for image compression. Among many others, 
+the Laplace Pyramid (Burt and Adelson, 1983) and wavelets (Mallat, 1989) have 
+successfully been used to compress images. Of particular interest is the fact that 
+these techniques provide a hierarchical representation of the image which can be 
+used for progressive image transmission. However, these hierarchical methods are 
+not adaptive. 
+In this paper, we present a combination of autoassociative networks with hierar- 
+chical methods. We propose the so-called PCA pyramids, which can be seen as 
+an extension of image pyramids with a learning algorithm as well as cascaded lo- 
+cally connected autoassociative networks. In other words, we combine the structure 
+of image pyramids and neural network learning algorithms, resulting in learning 
+pyramids. 
+The structure of this paper is as follows. We first present image pyramids and, in 
+particular, the PCA pyramid. Then, we discuss how these pyramids can be used 
+for image compression, and present some experimental results. Next, we discuss a 
+method to combine the quantization step of compression with the transformation. 
+Finally, we give some conclusions and an outline of further research. 
+2 The PCA Pyramid 
+Before we introduce the PCA pyramid, let us describe regular image pyramids. 
+For a discussion of irregular pyramids and their relation to neural networks, see 
+(Bischof, 1993). In the simplest case, each successive level of the pyramid is obtained 
+from the previous level by a filtering operation followed by a sampling operator. 
+More general functions can be used to achieve the desired reduction. We therefore 
+call them reduction functions. The structure of a pyramid is determined by the 
+neighbor relations within the levels of the pyramid and by the father-son relations 
+between adjacent levels. A cell (if it is not at the base level) has a set of children 
+(sons) at the level directly below which provide input to the cell, a set of neighbors 
+(brothers/sisters) at the same level, and (if it is not the apex of the pyramid) a 
+set of parents (fathers) at the level directly above. We denote the structure of a 
+(regular) pyramid by the expression n x n/r, where n x n (the number of sons) is 
+the size of the reduction window and r the reduction factor which describes how 
+the number of cells decreases from level to level. 
+2.1 PCA Pyramids 
+Since a pyramid reduces the information content of an image level by level, an 
+objective for the reduction function would be to preserve as much information as 
+possible, given the restrictions imposed by the structure of the pyramid, or equiva- 
+lently, to minimize the information loss by the reduction function. This naturally 
+PCA-Pyramids for Image Compression 943 
+leads to the idea of representing the pyramid by a suitable PCA network. Among 
+the many alternatives for such networks, we have chosen the autoassociative net- 
+works for two reasons. First, the analysis of Hornik & Kuan (Hornik and Kuan, 
+1992) shows that these networks are more stable than competing models. Second, 
+autoassociative networks have the nice feature that they automatically provide us 
+with the expansion function (weights from the hidden layer to output layer). 
+Since the neural network should have the same connectivity as the pyramid (i.e., 
+the same father-son relations), its topology is determined by the structure of the 
+pyramid. In this paper, we confine ourselves to the 4 x 4/4 pyramid for two reasons. 
+First, the 4 x 4/4 pyramid has the nice property that every cell has the same number 
+of fathers, which results in homogeneous networks. Second, as experiments have 
+shown (Bischof, 1993) the results achieved with this pyramid are similar to other 
+structures, e.g. the 5 x 5/4 pyramid, using fewer weights. 
+i = g(In) 
+In I -- E(I 1 ) -- E(R(In)) 
+(a) General Setting 
+In+l 
+i;, 
+Ill 
+I 
+(b) 4/2 pyramid 
+(c) Correspon- 
+ding network 
+Figure 1: From the structure of the pyramid to the topology of the network 
+Figure i depicts the one-dimensional situation of a 4/2 pyramid (this is the one- 
+dimensional counterpart of the two-dimensional 4 x 4/2 pyramid). Figure la shows 
+the general goal to be achieved and the notations employed; Figure lb shows a 4/2 
+pyramid. When constructing the corresponding network, we start at the output 
+layer (i.e., I). For an n/r pyramid we typically choose the size of the output layer 
+as n. Next, we have to include all fathers of the cells in the output layer as hidden 
+units. Finally, we have to include all sons of the hidden layer cells in the input 
+layer. For the 4/2 pyramid, this results in an 8-3-4 network as shown in Figure lc. 
+A similar construction yields an 8 x 8-3 x 3-4 x 4 network for the 4 x 4/4 pyramid. 
+The next thing to consider are the constraints on the network weights due to the 
+overlaps in the pyramid. To completely cover the input image with output units, 
+we can shift the network only by four cells in each direction. Therefore, the hidden 
+units at the borders overlap. For the 4/2 pyramid, the left and right hidden units 
+must have identical weights. In the case of the 4 x 4/4 pyramid, the network has 
+four independent units. 
+The thus constructed network can be trained by some suitable learning algorithm, 
+typically of the back-propagation type, using batches of an image as input for trM- 
+944 Horst Bischof, Kurt Hornik 
+ning the first pyramid level. After that, the second level of the pyramid can be 
+trained in the same way using the first pyramid level as training data, and so on. 
+2.2 PCA-Laplace Pyramid and Image Compression 
+Thus far, we have introduced a network which can learn the reduction function R 
+and the expansion function E of a pyramid. Analogously to the Laplace pyramid 
+and the wavelet transform we can now introduce the level Li of the PCA-Laplace 
+pyramid, given by 
+= - = - E(R(Id) 
+It should be noted that during learning we exactly minimize the squared Laplace 
+(a) First 2 levels of a Laplace pyramid 
+(upper half) and PCA-Laplace pyramid 
+(lower half) (grey = 0) 
+(b) Reconstruction error of house 
+image with quantization of 3 bits, 4 
+bits, 7 bits, and reconstructed image 
+Figure 2: Results of PCA-Laplace-Pyramid 
+level. The original image I0 can be completely recovered from level I and the 
+Laplace levels L0,..., L_ by 
+Io = E(. . . E(E(I,) + L,_, ) + L,-2) . . .) + Lo. 
+Since the level I is rather small (e.g., 32 x 32 pixels) and the levels of the PCA- 
+Laplace pyramid are typically sparse (i.e., many pixels are zero, see Figure 2a) and 
+can therefore be compressed considerably by a conventional compression algorithm 
+PCA-Pyramids for Image Compression 945 
+(e.g. Lempel-Ziv (Ziv and Lempel, 1977)), this image representation results in a 
+lossless image compression algorithm. 
+In order to achieve higher compression ratios we can quantize the levels of the PCA- 
+Laplace pyramid. In this case, the compression is lossy, because the original image 
+cannot be recovered exactly. The compression ratio and the amount of loss can be 
+controlled by the number of bits used to quantize the levels of the PCA-Laplacian. 
+To measure the difference between the compressed and the original image, we use 
+the normalized mean squared error (NMSE) as in (Cottrell et al., 1987; Sanger, 
+1989). The NMSE is given by the mean squared error divided by the average 
+squared intensity of the image, i.e., 
+MSE ((Io - C(I0)) 2) 
+NMSE =  = 
+(i0 ) (i0 ) , 
+where I0 and C(Io) are the original and the compressed image, respectively. The 
+compression ratio is measured by the amount of bits used to store I0, divided by 
+the amount of bits used to store C(Io). 
+2.3 Results 
+For the results reported here we trained the networks by a conjugate gradient al- 
+gorithm for 10

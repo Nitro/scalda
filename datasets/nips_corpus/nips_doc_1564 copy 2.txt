@@ -1,0 +1,139 @@
+Improved Switching 
+among Temporally Abstract Actions 
+Richard S. Sutton Satinder Singh 
+AT&T Labs 
+Florham Park, NJ 07932 
+{sutton,baveja} @research.att.com 
+Doina Precup Balaraman Ravindran 
+University of Massachusetts 
+Amherst, MA 01003-4610 
+{ dprecup,ravi } @ c s. umas s. edu 
+Abstract 
+In robotics and other control applications it is commonplace to have a pre- 
+existing set of controllers for solving subtasks, perhaps hand-crafted or 
+previously learned or planned, and still face a difficult problem of how to 
+choose and switch among the controllers to solve an overall task as well as 
+possible. In this paper we present a framework based on Markov decision 
+processes and semi-Markov decision processes for phrasing this problem, 
+a basic theorem regarding the improvement in performance that can be ob- 
+tained by switching flexibly between given controllers, and example appli- 
+cations of the theorem. In particular, we show how an agent can plan with 
+these high-level controllers and then use the results of such planning to find 
+an even better plan, by modifying the existing controllers, with negligible 
+additional cost and no re-planning. In one of our examples, the complexity 
+of the problem is reduced from 24 billion state-action pairs to less than a 
+million state-controller pairs. 
+In many applications, solutions to parts of a task are known, either because they were hand- 
+crafted by people or because they were previously learned or planned. For example, in 
+robotics applications, there may exist controllers for moving joints to positions, picking up 
+objects, controlling eye movements, or navigating along hallways. More generally, an intelli- 
+gent system may have available to it several temporally extended courses of action to choose 
+from. In such cases, a key challenge is to take full advantage of the existing temporally ex- 
+tended actions, to choose or switch among them effectively, and to plan at their level rather 
+than at the level of individual actions. 
+Recently, several researchers have begun to address these challenges within the framework of 
+reinforcement learning and Markov decision processes (e.g., Singh, 1992; Kaelbling, 1993; 
+Dayan & Hinton, 1993; Thrun and Schwartz, 1995; Sutton, 1995; Dietterich, 1998; Parr & 
+Russell, 1998; McGovern, Sutton & Fagg, 1997). Common to much of this recent work is 
+the modeling of a temporally extended action as a policy (controller) and a condition for 
+terminating, which we together refer to as an option (Sutton, Precup & Singh, 1998). In 
+this paper we consider the problem of effectively combining given options into one overall 
+policy, generalizing prior work by Kaelbling (1993). Sections 1-3 introduce the framework; 
+our new results are in Sections 4 and 5. 
+Improved Switching among Temporally Abstract Actions 1067 
+1 Reinforcement Learning (MDP) Framework 
+In a Markov decision process (MDP), an agent interacts with an environment at some dis- 
+crete, lowest-level time scale t -- 0, 1, 2,... On each time step, the agent perceives the state 
+of the environment, st E ,_q, and on that basis chooses aprimitive action, at  ,4. In response 
+to each action, at, the environment produces one step later a numerical reward, rt+l, and 
+a next state, st+l. The one-step model of the environment consists of the one-step state- 
+transition probabilities and the one-step expected rewards, 
+a = = a) and : E{g'tq-1 I st: 8,at: a) 
+Pss' = Pr{St+l = s' [ st s, at r s , 
+for all s, s  E ,_q and a E .4. The agent's objective is to learn an optimal Markov policy, a 
+mapping from states to probabilities of taking each available primitive action, 7r � ,_q x .4 --+ 
+[0, 1], that maximizes the expected discounted future reward from each state s: 
+Vr(s) = E{rt+ + ffrt+2 +... [ st 
+= E r(s,a)[r +Eps,V(s')], 
+aEA s  
+where 7r(s, a) is the probability with which the policy 7r chooses action a  .4s in state $, and 
+7  [0, 1] is a discount-rate parameter. V  (s) is called the value of state s under policy 7r, and 
+V  is called the state-value function for 7r. The optimal state-value function gives the value of 
+a state under an optimal policy: V* (s) = max V  (s): maxE As [r +  Ys, Ps' V* (s')]. 
+Given V*, an optimal policy is easily formed by choosing in each state $ any action that 
+achieves the maximum in this equation. A parallel set of value functions, denoted Q and Q*, 
+and Bellman equations can be defined for state-action pairs, rather than for states. Planning 
+in reinforcement learning refers to the use of models of the environment to compute value 
+functions and thereby to optimize or improve policies. 
+2 Options 
+We use the term options for our generalization of primitive actions to include temporally 
+extended courses of action. Let ht,T = st, at, rt+l, st+i, at+i, � � �, rT, ST be the history 
+sequence from time t < T to time T, and let f denote the set of all possible histories in 
+the given MDP. Options consist of three components: an initiation set 27 C_ ,3, a policy 
+7r � f x .4 --+ [0, 1], and a termination condition/3 � f --+ [0, 1]. An option o = (27, 7r,/3) 
+can be taken in state $ if and only if $ E 27. If o is taken in state st, the next action at 
+is selected according to 7c($t, .). The environment then makes a transition to st+i, where 
+o terminates with probability/3(ht,t+), or else continues, determining at+l according to 
+7r(ht,t+l, .), and transitioning to state st+e, where o terminates with probability 
+etc. We call the general options defined above semi-Markov because 7r and/3 depend on the 
+history sequence; in Markov options 7r and/3 depend only on the current state. Semi-Markov 
+options allow timeouts, i.e., termination after some period of time has elapsed, and other 
+extensions which cannot be handled by Markov options. 
+The initiation set and termination condition of an option together limit the states over which 
+the option's policy must be defined. For example, a h.and-crafted policy 7r for a mobile robot 
+to dock with its battery charger might be defined only for states 27 in which the battery charger 
+is within sight. The termination condition/3 would be defined to be 1 outside of 27 and when 
+the robot is successfu.lly docked. 
+We can now define policies over options. Let the set of options available in state $ be denoted 
+Os; the set of all options is denoted (_9 = [-Js$ Os. When initiated in a state st, the Markov 
+policy over options  � ,_q x (_9 --+ [0, 1] selects an option o E Ost according to the probability 
+distribution la($t, '). The option o is then taken in st, determining actions until it terminates 
+in st+k, at which point a new option is selected, according to ($t+k, '), and so on. In this 
+way a policy over options, , determines a (non-stationary) policy over actions, or fiat policy, 
+7r: f(). We define the value of a state $ under a general flat policy 7r as the expected return 
+1068 R. S. Sutton, S. Singh, D. Precup and B. Ravindran 
+if the policy is started in s: 
+vrr(8) de_f E{rt+l + h'rt+2 + ' [ �(r,s,t)}, 
+where �(r, s, t) denotes the event of r being initiated in s at time t. The value of a state 
+under a general policy (i.e., a policy over options)/ can then be defined as the value of 
+the state under the corresponding flat policy: V'(s) de____f Vf(/)(8). An analogous definition 
+can be used for the option-value function, Q'(s, o). For semi-Markov options it is useful 
+to define Q' (h, o) as the expected discounted future reward after having followed option o 
+through history h. 
+3 SMDP Planning 
+Options are closely related to the actions in a special kind of decision problem known as a 
+semi-Markov decision process, or SMDP (Puterman, 1994; see also Singh, 1992; Bradtke & 
+Duff, 1995; Mahadevan et. al., 1997; Parr & Russell, 1998). In fact, any MDP with a fixed 
+set of options is an SMDP. Accordingly, the theory of SMDPs provides an important basis for 
+a theory of options. In this section, we review the standard SMDP framework for planning, 
+which will provide the basis for our extension. 
+Planning with options requires a model of their consequences. The form of this model is 
+given by prior work with SMDPs. The reward part of the model of o for state s E $ is the 
+total reward received along the way: 
+r: = E{rt+ + h, rt+2 + ... + h,k-rt+k l �(o,s,t) }, 
+where �(o, s, t) denotes the event of o being initiated in state s at time t. The state-prediction 
+part of the model is 
+oo 
+PTs' : EP(s',k)3'k,E{h'6*'s+ I �(o,s,t)}, 
+k=l 
+for all s' E $, where p(s , k) is the probability that the option terminates in s' after k steps. 
+We call this kind of model a multi-time model because it describes the outcome of an option 
+not at a single time but at potentially many different times, appropriately combined. 
+Using multi-time models we can write Bellman equations for general policies and options. 
+For any general Markov policy/, its value functions satisfy the equations: 
+V(s) = E /(s,o)[r�+ Ep:s,V'(s')] and Q'(s,o): r:+ Ep:s,V'(s'). 
+oGO, s' s' 
+Let us denote a restricted set of options by (9 and the set of all policies selecting only from 
+options in (9 by I1((9). Then the optimal value function given that we can select only from (9 
+is Vc(s ) = maxo6Os [r + Es, P8' Vc(s')]' A corresponding optimal policy, denoted/, 
+is any policy that achieves Vc, i.e., for which V'3 (s) -- Vc(8 ) in all states 8 E $. If Vc and 
+the models of the options are known, then/ can be formed.by choosing in any proportion 
+among the maximizing options in the equation above for Vc. 
+It is straightforward to extend MDP planning methods to SMDPs. For example, synchronous 
+value iteration with options initializes an approximate value function Vo(s) arbitrarily and 
+then updates it by: 
++ s. 
+o0 
+Note that this algorithm reduces to conventional value iteration in the special case in which 
+(9 = ,A. Standard results from SMDP theory guarantee that such processes converge for 
+Im

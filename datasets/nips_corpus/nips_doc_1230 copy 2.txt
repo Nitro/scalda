@@ -1,0 +1,162 @@
+Maximum Likelihood Blind Source 
+Separation: A ContextsSensitive 
+Generalization of ICA 
+Barak A. Pearlmutter 
+Computer Science Dept, FEC 313 
+University of New Mexico 
+Albuquerque, NM 87131 
+bap@cs.unm.edu 
+Lucas C. Parra 
+Siemens Corporate Research 
+755 College Road East 
+Princeton, NJ 08540-6632 
+lucas@scr.siemens.com 
+Abstract 
+In the square linear blind source separation problem, one must find 
+a linear unmixing operator which can detangle the result xi(t) of 
+mixing n unknown independent sources $i(t) through an unknown 
+n x n mixing matrix A(t) of causal linear filters: xi = j aij * $j. 
+We cast the problem as one of maximum likelihood density estima- 
+tion, and in that framework introduce an algorithm that searches 
+for independent components using both temporal and spatial cues. 
+We call the resulting algorithm Contextual ICA, after the (Bell 
+and Sejnowski 1995) Infomax algorithm, which we show to be a 
+special case of cICA. Because cICA can make use of the temporal 
+structure of its input, it is able separate in a number of situations 
+where standard methods cannot, including sources with low kur- 
+tosis, colored Gaussian sources, and sources which have Gaussian 
+histograms. 
+I The Blind Source Separation Problem 
+Consider a set of n indepent sources si(t),..., sn(t). We are given n linearly dis- 
+torted sensor reading which combine these sources, xi - -,j aijsj, where aij is a 
+filter between source j and sensor i, as shown in figure la. This can be expressed 
+as 
+Xi(t) ----   aji(T)$j(t- T) --  aji , $j 
+j r=O j 
+614 B. A. Pearlmutter and L. C. Parra 
+x I x 2 
+4 
+t)[Y{(t-1) .... ;wO))] Yt 
+x I x 2 
+� . . x n � . o x n 
+Figure 1: The left diagram shows a generative model of data production for blind 
+source separation problem. The cICA algorithm fits the reparametrized generative 
+model on the right to the data. Since (unless the mixing process is singular) both 
+diagrams give linear maps between the sources and the sensors, they are mathe- 
+matically equivalent. However, (a) makes the transformation from s to x explicit, 
+while (b) makes the transformation from x to y, the estimated sources, explicit. 
+or, in matrix notation, x(t) - -.r__0 A(r)s(t - r) = A � s. The square linear blind 
+source separation problem is to recover s from x. There is an inherent ambiguity 
+' = bi * si where bi(r) is some 
+in this, for if we define a new set of sources s ' by s i 
+invertable filter, then the various si are independent, and constitute just as good a 
+. Similarly the 
+solution to the problem as the true si, since xi = -.j(aij * b -) * sj 
+sources could be arbitrarily permuted. 
+Surprisingly, up to permutation of the sources and linear filtering of the individual 
+sources, the problem is well posed--assuming that the sources sj are not Gaussian. 
+The reason for this is that only with a correct separation are the recovered sources 
+truly statistically independent, and this fact serves as a sufficient constraint. Under 
+the assumptions we have made, x and further assuming that the linear transforma- 
+tion A is invertible, we will speak of recovering yi(t) -- j wji * xj where these 
+Yi are a filtered and permuted version of the original unknown si. For clarity of 
+exposition, will often refer to the solution and refer to the yi as the recovered 
+sources, rather than refering to an point in the manifold of solutions and a set of 
+consistent recovered sources. 
+2 Maximum likelihood density estimation 
+Following Pham, Garrat, and Jutten (1992) and Belouchrani and Cardoso (1995), 
+we cast the BSS problem as one of maximum likelihood density estimation. In the 
+MLE framework, one begins with a probabilistic model of the data production pro- 
+cess. This probabilistic model is parametrized by a vector of modifiable parameters 
+w, and it therefore assigns a w-dependent probability density p(x0, xx,...; w) to a 
+each possible dataset x0, xi, .... The task is then to find a w which maximizes this 
+probability. 
+There are a number of approaches to performing this maximization. Here we apply 
+Without these assumptions, for instance in the presence of noise, even a linear mixing 
+process leads to an optimal unmixing process that is highly nonlinear. 
+Maximum Likelihood Blind Source Separation: Contextual ICA 615 
+the stochastic gradient method, in which a single stochastic sample x is chosen from 
+the dataset and -dlogp(x; w)/dw is used as a stochastic estimate of the gradient 
+of the negative likelihood t-dlogp(x(t); w)/dw. 
+2.1 The likelihood of the data 
+The model of data production we consider is shown in figure la. In that model, the 
+sensor readings x are an explicit linear function of the underlying sources s. 
+In this model of the data production, there are two stages. In the first stage, the 
+sources independently produce signals. These signals are time-dependent, and the 
+probability density of source i producing value sj(t) at time t is fj(sj(t)lsj(t - 
+1), sj (t - 2),...). Although this source model could be of almost any differentiable 
+form, we used a generalized autoregressive model described in appendix A. For 
+expository purposes, we can consider using a simple AR model, so we model sj(t) - 
+bj(1)sj(t - 1) + bj(2)sj(t - 2) +... + bj(T)sj(t- T) + rj, where rj is an lid random 
+variable, perhaps with a complicated density. 
+It is important to distinguish two different, although related, linear filters. When 
+the source models are simple AR models, there are two types of linear convolutions 
+being performed. The first is in the way each source produces its signal: as a linear 
+function of its recent history plus a white driving term, which could be expressed 
+as a moving average model, a convolution with a white driving term, sj - bj � rj. 
+The second is in the way the sources are mixed: linear functions of the output of 
+each source are added, xi - j aji * $j -- Ej (aji * bj) * rj. Thus, with AR sources, 
+the source convolution could be folded into the convolutions of the linear mixing 
+process. 
+If we were to estimate values for the free parameters of this model, i.e. to estimate 
+the filters, then the task of recovering the estimated sources from the sensor output 
+would require inverting the linear A ---- (aij), as well as some technique to guarantee 
+its non-singularity. Such a model is shown in figure la. Instead, we parameterize 
+the model by W -- A -x, an estimated unmixing matrix, as shown in figure lb. 
+In this indirect representation, s is an explicit linear function of x, and therefore 
+x is only an implicit linear function of s. This parameterization of the model is 
+equally convenient for assigning probabilities to samples x, and is therefore suitable 
+for MLE. Its advantage is that because the transformation from sensors to sources 
+is estimated explicitly, the sources can be recovered directly from the data and the 
+estimated model, without invertion. Note that in this inverse parameterization, the 
+estimated mixture process is stored in inverse form. The source-specific models fi 
+are kept in forward form. Each source-specific model i has a vector of parameters, 
+which we denote w (i) . 
+We are now in a position to calculate the likelihood of the data. For simplicity we use 
+a matrix W of real numbers rather than FIR filters. Generalizing this derivation to 
+a matrix of filters is straightforward, following the same techniques used by Lambert 
+(1996), Torkkola (1996), A. Bell (1997), but space precludes a derivation here. 
+The individual generative source models give 
+p(y(t)ly(t- 1), y(t- 2),...) - H fi(yi(t)lyi(t- 1),yi(t- 2),...) 
+i 
+(1) 
+616 B. A. Pearlmutter and L. C. Parra 
+where the probability densities fi are each parameterized by vectors w (i). Using 
+these equations, we would like to express the likelihood of x(t) in closed form, 
+given the history x(t - 1),x(t -2), .... Since the history is known, we therefore 
+also know the history of the recovered sources, y(t - 1),y(t - 2), .... This means 
+that we can calculate the density p(y(t)ly(t - 1),...). Using this, we can express 
+the density of x(t) and expand  = log/5(x;w) - loglW I + -.j logfj(yj(t)lyj(t- 
+1),yj(t - 2),... ;w (j)) There are two sorts of parameters which we must take the 
+derivative with respect to: the matrix W and the source parameters w(J). The 
+source parameters do not influence our recovered sources, and therefore have a 
+simple form 
+A 
+dG dfj(yj;wj)/dwj 
+dwj fj(yj;wj) 
+However, a change to the matrix W changes y, which introduces a few extra terms. 
+Note that dlog IWI/dW -- W -T, the transpose inverse. Next, since y = Wx, we 
+see that dyj/dW = (01x10) T, a matrix of zeros except for the vector x in row j. 
+Now we note that dfj(.)/dW term has two logical components: the first from the 
+effect of changing W upon yj (t), and the second from the effect of changing W upon 
+yj (t - 1), yj (t - 2), .... (This second is called the recurrent term, and such terms 
+are frequently dropped for convenience. As shown in figure 3, dropping this term 
+here is not a reasonable approximation.) 
+dfj(yj(t)lyj(t- 1),...;wj) _ Ofj 
+dW Oyj(t) 
+Ofj dyj(t- r) 
+dyj(t) + E Oyj(t r) dW 
+dW r - 
+Note that the expression dye(t-r) is the only matrix, and it is zero except for the 
+dW 
+jth row, which is x(t- r). The expression Ofj/Oyj(t) we shall denote fj(.), and the 
+expression OfjOyj(t - r) we shall denote f()(.). We then have 
+where (expr(j))j denotes the column vector whose elements are expr(1),..., expr(n). 
+2.2 The natural gradient 
+Following Amari, Cichocki, and Yang (1996), we follow a pseudogradient. Instead of 
+using equation 2, we post-multiply this quantity by wTw. Since this is a positive- 
+definite matrix, it does not affect the stochastic gradient convergence criteria, and 
+the resulting quantity simplifies in a fashion that neatly eliminates the costly matrix 
+inversion otherwise required. Convergence is also accelerated. 
+3 Experiments 
+We conducted a number of experiments to test the efficacy

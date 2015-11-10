@@ -1,0 +1,143 @@
+Call-based Fraud Detection in Mobile 
+Communication Networks using a Hierarchical 
+Regime-Switching Model 
+Jaakko Hollm(n 
+Helsinki University of Technology 
+Lab. of Computer and Information Science 
+P.O. Box 5400, 02015 HUT, Finland 
+Jaakko.Hollmen@hut.fi 
+Volker Tresp 
+Siemens AG, Corporate Technology 
+Dept. Information and Communications 
+81730 Munich, Germany 
+Volker. Treslmchp.siemens.de 
+Abstract 
+Fraud causes substantial losses to telecommunication carriers. Detec- 
+tion systems which automatically detect illegal use of the network can be 
+used to alleviate the problem. Previous approaches worked on features 
+derived from the call patterns of individual users. In this paper we present 
+a call-based detection system based on a hierarchical regime-switching 
+model. The detection problem is formulated as an inference problem on 
+the regime probabilities. Inference is implemented by applying the junc- 
+tion tree algorithm to the underlying graphical model. The dynamics are 
+learned from data using the EM algorithm and subsequent discriminative 
+training. The methods are assessed using fraud data from a real mobile 
+communication network. 
+1 INTRODUCTION 
+Fraud is costly to a network carrier both in terms of lost income and wasted capacity. It has 
+been estimated that the telecommunication industry looses approximately 2-5% of its total 
+revenue to fraud. The true losses are expected to be even higher since telecommunication 
+companies are reluctant to admit fraud in their systems. A fraudulent attack causes lots of 
+inconveniences to the victimized subscriber which might motivate the subscriber to switch 
+to a competing carrier. Furthermore, potential new customers would be very reluctant to 
+switch to a carrier which is troubled with fraud. 
+Mobile communication networks --which are the focus of this work-- are particularly 
+appealing to fraudsters as the calling from the mobile terminal is not bound to a physical 
+place and a subscription is easy to get. This provides means for an illegal high-profit 
+business requiring minimal investment and relatively low risk of getting caught. Fraud is 
+890 d. Hollmbn and V. Tresp 
+usually initiated by a mobile phone theft, by cloning the mobile phone card or by acquiring 
+a subscription with false identification. After intrusion the subscription can be used for 
+gaining free services either for the intruder himself or for his illegal customers in form of 
+call-selling. In the latter case, the fraudster sells calls to customers for reduced rates. 
+The earliest means of detecting fraud were to register overlapping calls originating from 
+one subscription, evidencing card cloning. While this procedure efficiently detects cloning, 
+it misses a large share of other fraud cases. A more advanced system is a velocity trap which 
+detects card cloning by using an upper speed limit at which a mobile phone user can travel. 
+Subsequent calls from distant places provide evidence for card cloning. Although a velocity 
+trap is a powerful method of detecting card cloning, it is ineffective against other types of 
+fraud. Therefore there is great interest in detection systems which detect fraud based on 
+an analysis of behavioral patterns (Barson et al., 1996, Burge et al., 1997, Fawcett and 
+Provost, 1997, Taniguchi et al., 1998). 
+In an absolute analysis, a user is classified as a fraudster based on features derived from 
+daily statistics summarizing the call pattern such as the average number of calls. In a differ- 
+ential analysis, the detection is based on measures describing the changes in those features 
+capturing the transition from a normal use to fraud. Both approaches have the problem 
+of finding efficient feature representations describing normal and fraudulent behavior. As 
+they usually derive features as summary statistics over one day, they are plagued with a 
+latency time of up to a day to detect fraudulent behavior. The resulting delay in detection 
+can already lead to unacceptable losses and can be exploited by the fraudster. For these 
+reasons real-time fraud detection is seen to be the most important development in fraud 
+detection (Pequeno, 1997). 
+In this paper we present a real-time fraud detection system which is based on a stochastic 
+generative model. In the generative model we assume a variable victimized which indicates 
+if the account has been victimized by a fraudster and a second variable fraud which indi- 
+cates if the fraudster is currently performing fraud. Both variables are hidden. Furthermore, 
+we have an observed variable call which indicates if a call being is performed or not. The 
+transition probabilities from no-call to call and from call to no-call are dependent on the 
+state of the variable fraud. Overall, we obtain a regime-switching time-series model as de- 
+scribed by Hamilton (1994), with the modifications that first, the variables in the time series 
+are not continuous but binary and second, the switching variable has a hierarchical struc- 
+ture. The benefit of the hierarchical structure is that it allows us to model the time-series 
+at different time scales. At the lowest hierarchical level, we model the dynamical behavior 
+of the individual calls, at the next level the transition from normal behavior to fraudulent 
+behavior and at the highest level the transition to being victimized. To be able to model a 
+time-series at different temporal resolutions was also the reason for introducing a hierarchy 
+into a hidden Markov model for Jordan, Ghahramani and Saul (1997). Fortunately, our 
+hidden variables have only a small number of states such that we do not have to work with 
+the approximation techniques those authors have introduced. 
+Section 2 introduces our hierarchical regime-switching fraud model. The detection prob- 
+lem is formulated as an inference problem on the regime probabilities based on subscriber 
+data. We derive iterative algorithms for estimating the hidden variables fraud and victim- 
+ized based on past and present data (filtering) or based on the complete set of observed 
+data (smoothing). We present EM learning rules for learning the parameters in the model 
+using observed data. We develop a gradient based approach for fine tuning the emission 
+probabilities in the non-fraud state to enhance the discrimination capability of the model. 
+In Section 3 we present experimental results. We show that a system which is fine-tuned on 
+real data can be used for detecting fraudulent behavior on-line based on the call patterns. 
+In Section 4 we present conclusions and discuss further applications and extensions of our 
+fraud model. 
+Fraud Detection Using a Hierarchical Regime-Switching Model 891 
+2 THE HIERARCHICAL REGIME-SWITCHING FRAUD 
+MODEL 
+2.1 THE GENERATIVE MODEL 
+The hierarchical regime-switching model consists of three variables which evolve in time 
+stochastically according to first-order Markov chains. The first binary variable vt (victim- 
+ized) is equal to one if the account is currently being victimized by a fraudster and zero 
+otherwise. The states of this variable evolve according to the state transition probabili- 
+ties piVj -- P(vt = ilvt- = j); i,j = 0, 1. The second binary variable st (fraud)is 
+equal to one if the fraudster currently performs fraud and is equal to zero if the fraudster 
+is inactive. The change between actively performing fraud and intermittent silence is typ- 
+ical for a victimized account as is apparent from Figure 3. Note that this transient bursty 
+behavior of a victimized account would be difficult to capture with a pure feature based 
+approach. The states of this variable evolve following the state transition probabilities 
+Pi%k = P(st = i]vt = j, st-i = k, );i,j, k = 0, 1. Finally, the binary variable Yt (call) 
+is equal to one if the mobile phone is being used and zero otherwise with state transition 
+matrix Pik = P(yt -- ilst - j, Yt- = k); i, j, k = O, 1. Note that this corresponds to the 
+assumption of exponentially distributed call duration. Although not quite realistic, this is 
+the general assumption in telecommunications. Typically, both the frequency of calls and 
+the lengths of the calls are increased when fraud is executed. The joint probability of the 
+time series up to time T is then 
+T T T 
+r(v, r(vo, yo)If 
+P(vtlvt-) If P(stlvt'st-1) H P(Ytlst'yt-1) (1) 
+t=l t=l t=l 
+where in the experiments we used a sampling time of one minute. Furthermore, Vr = 
+{vo,...,vr}, ST = {So,...,ST}, YT = {Yo,...,YT} and P(vo, so, Yo) is the prior dis- 
+tribution of the initial states. 
+Y Yt+ 
+Figure 1: Dependency graph of the hierarchical regime-switching fraud model. The square 
+boxes denote hidden variables and the circles observed variables. The hidden variable vt 
+on the top describes whether the subscriber account is victimized by fraud. The hidden 
+variable st indicates if fraud is currently being executed. The state of st determines the 
+statistics of the variable call Yt. 
+2.2 INFERENCE: FILTERING AND SMOOTHING 
+When using the fraud detection system, we are interested to estimate the probability that 
+an account is victimized or that fraud is currently occurring based on the call patterns up to 
+the current point in time (filtering). We can calculate the probabilities of the states of the 
+hidden variables by applying the following equations recursively with t - 1, ..., T. 
+892 
+P(vt - i, st_ = klYt_ ) = 
+EPiP(vt 
+l 
+d. Hollmdn and V. Tresp 
+-1 -- 1,$t-1 -' klYt-i) 
+P(vt -- i,$t -- j]Yt-1) -- E p;ikP(vt '-- i,$t-1: klYt-1) 
+Y P(vt = i, st - jlYt_l) 
+P(vt : i, st = jlYt) -- c .py,;u,_ 
+where c is a scaling factor. These equations can be derived from the junction tree algorithm 
+for the Bayesian networks (Jensen, 1996). We obtain the probability of victimization and 
+fraud by simple marginalization 
+j i 
+In some cases --in particular for the EM learning rules in the next section-- we might 
+be interested in estimating the probabilities of the hidden states at some time in the 

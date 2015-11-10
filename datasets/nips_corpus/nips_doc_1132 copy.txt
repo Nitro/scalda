@@ -1,0 +1,163 @@
+Recurrent Neural Networks for Missing or 
+Asynchronous Data 
+Yoshua Bengio * 
+Dept. Informatique et 
+Recherche Oprationnelle 
+Universit de Montreal 
+Montreal, Qc H3C-3J7 
+bengioyiro. umontreal. ca 
+Francois Gingras 
+Dept. Informatique et 
+Recherche Oprationnelle 
+Universit de Montreal 
+Montreal, Qc H3C-3J7 
+gingrasiro. umontreal. ca 
+Abstract 
+In this paper we propose recurrent neurM networks with feedback into the input 
+units for handling two types of data analysis problems. On the one hand, this 
+scheme can be used for static data when some of the input variables are missing. 
+On the other hand, it can also be used for sequential data, when some of the 
+input variables are missing or are available at different frequencies. Unlike in the 
+case of probabilistic models (e.g. Gaussian) of the missing variables, the network 
+does not attempt to model-the distribution of the missing variables given the 
+observed variables. Instead it is a more discriminant approach that fills in the 
+missing variables for the sole purpose of minimizing a learning criterion (e.g., to 
+minimize an output error). 
+I Introduction 
+Learning from examples implies discovering certain relations between variables of interest. The 
+most general form of learning requires to essentially capture the joint distribution between these 
+variables. However, for many specific problems, we are only interested in predicting the value 
+of certain variables when the others (or some of the others) are given. A distinction is therefore 
+made between input variables and output variables. Such a task requires less information (and 
+less parameters, in the case of a parameterized model) than that of estimating the full joint 
+distribution. For example in the case of classification problems, a traditional statistical approach 
+is based on estimating the conditional distribution of the inputs for each class, as well as the 
+class prior probabilities (thus yielding the full joint distribution of inputs and classes). A more 
+discriminant approach concentrates on estimating the class boundaries (and therefore requires 
+less parameters), as for example with a feedforward neural network trained to estimate the output 
+class probabilities given the observed variables. 
+However, for many learning problems, only some of the input variables are given for each partic- 
+ular training c.ase, and the missing variables differ from case to case. The simplest way to deal 
+with this msmng data problem consists in replacing the missing values by their unconditional 
+mean. It can be used with discriminant training algorithms such as those used with feed- 
+forward neural networks. However, in some problems, one can obtain better results by taking 
+advantage of the dependencies between the input variables. A simple idea therefore consists 
+*also, AT&T Bell Labs, Holmdel, NJ 07733 
+396 Y. BENGIO, F. GINGRAS 
+I (4) J 1 
+J (3) I 1 
+I (90) J l 
+,' 1 
+4 
+2 
+1 
+Figure 1: Architectures of the recurrent networks in the experiments. On the left a 90-3-4 
+architecture for static data with missing values, on the right a 6-3-2-1 architecture with multiple 
+time-scales for asynchronous sequential data. Small squares represent a unit delay. The number 
+of units in each layer is inside the rectangles. The time scale at which each layer operates is on 
+the right of each rectangle. 
+in replacingthe missing input variables by their conditional expected value, when the observed 
+input variables are given. An even better scheme is to compute the expected output given the 
+observed inputs, e.g. with a mixture of Gaussian. Unfortunately, this amounts to estimating the 
+full joint distribution of all the variables. For example, with rti inputs, capturing the possible 
+effect of each observed variable on each missing variable would require O(n) parameters (at least 
+one parameter to capture some co-occurrence statistic on each pair of input variables). Many 
+related approaches have been proposed to deal with missing inputs using a Gaussian (or Gaussian 
+mixture) model (Ahmad and Tresp, 1993; Tresp, Ahmad and Neuneier, 1994; Ghahramani and 
+Jordan, 1994). In the experiments presented here, the proposed recurrent network is compared 
+with a Gaussian mixture model trained with EM to handle missing values (Ghahramani and 
+Jordan, 1994). 
+The approach proposed in section 2 is more economical than the traditional Gaussian-based 
+approaches for two reasons. Firstly, we take advantage of hidden units in a recurrent network, 
+which might be less numerous than the inputs. The number of parameters depends on the 
+product or-the number of hidden units and the number of inputs. The hidden units only need to 
+capture the dependencies between input variables which have some dependencies, and which are 
+useful to reducing the output error. The second advantage is indeed that training is based on 
+optimizing the desired criterion (e.g., reducing an output error), rather than predicting as well 
+as possible the values of the missinginputs. The recurrent network is allowed to relax for a few 
+iterations (typically as few as 4 or 5) in order to fill-in some values for the missing inputs and 
+produce an output. In section 3 we present experimental results with this approach, comparing 
+the results with those obtained with a feedforward network. 
+In section 4 we propose an extension of this scheme to sequential data. In this case, the network 
+is not relaxing: inputs keep changing with time and the network maps an input sequence (with 
+possibly missing . ) . . . . . advantage of this extension is that 
+values to an output sequence The main 
+it allows to deaI with sequential data in which the variables occur at different frequencies. This 
+type of problem is frequent for example with economic or financial data. An experiment with 
+asynchronous data is presented in section 5. 
+2 Relaxing Recurrent Network for Missing Inputs 
+Networks with feedback such as those proposed in (Almeida, 1987; Pineda, 1989) can be applied 
+to learning a static input/output mapping when some of the inputs are missing. In both cases, 
+however, one has to wait for the network to relax either to a fixed point (assuming it does find 
+one) or to a stable distribution (in the case of the Boltzmann machine). In the case of fixed- 
+point recurrent networks, the trai/in algorithm assumes that a fixed p$int has been reached. 
+The gradient with respect to the weights is then computed in order to move the fixed point 
+to a more desirable position. The approach we have preferred here avoids such an assumption. 
+Recurrent Neural Networks for Missing or Asynchronous Data 3 9 7 
+Instead it uses a more explicit optimization of the whole behavior of the network as it unfolds 
+in time, fills-in the missing inputs and produces an output. The network is trained to minimize 
+some function of its output by back-propagation through time. 
+Computation of Outputs Given Observed Inputs 
+Given: input vector u = [ui,u2,...,u,,] 
+Result: output vector y=[yi,y2,...,yno] 
+1. Initialize for t = O: 
+For i = 1 ...nu,z0,i 4- 0 
+For i = 1... ni, if ui is missing then z0d(i) 4- E(i), 
+Else z0d(i) 4- ui. 
+2. Loop over time: 
+Fort- 1 tot 
+For/= 1...n. 
+If i = I(k) is an input unit and uk is not missing then 
+zt, i 4- u k 
+Else 
+zt,, 4- (1 - 7)zt-,i + 7f('t�s. 
+where Si is a set of links from unit pt to unit i, 
+each with weight wt and a discrete delay 
+(but terms for which t - dt < 0 were not considered). 
+3. Collect outputs by averaging at the end of the sequence: 
+Yi 4-- EtT__i V t Zt,o(i) 
+Back-Propagation 
+The back-propagation computation requires an extra set of variables kt and b, which will contain 
+respectively o and w c after this computation. 
+Given: output gradient vector 
+OC __ 
+Result: input gradient uu and parameter gradient oc 
+1. Initialize unit gradients using outside gradient: 
+Initialize kt,i = 0 for all t and i. 
+For i = 1... no, initialize t,O(i) 
+2. Backward loop over time: 
+For t = T to 1 
+For i- n....1 
+If i = I(k) is an input unit and uk is not missing then 
+no backward propagation 
+Else 
+For l  Si 
+If t - dt > 0 
+q- 7Wl;t,if' (l�S, WlZt-dt,p, ) 
+l 4-- l q- 'Yft(EIS, WlZt-dt,pt)art-dt,pt 
+3. Collect input gradients: 
+For i = 1...hi, 
+If ui is missing, then 
+oc 
+0%-7 4- 0 
+Else 
+oc 
+The observed inputs are clamped for the whole duration of the sequence. The missing units 
+corresponding to missing inputs are initialized to their unconditional expectation and their value 
+is then updated using the feedback links for the rest of the sequence (just as if they were hidden 
+units). To help stability of the network and prevent it from finding periodic solutions (in which 
+the outputs have a correct output only periodically), output supervision is given for several time 
+steps. A fixed vector v, with vt  0 and t vt - i specifies a weighing scheme that distributes 
+398 Y. BENGIO, F. GINGRAS 
+the responsibility for producing the correct output among different time steps. Its purpose is to 
+encourage the network to develop stable dynamics which gradually converge toward the correct 
+output (thus the weights vt were chosen to gradually increase with t). 
+The neuron transfer function was a hyperbolic tangent in our experiments. The inertial term 
+weighted by 7 (in step 3 of the forward propagation algorithm below) was used to help the 
+network find stable solutions. The parameter 7 was fixed by hand. In the experiments described 
+below, a value of 0.7 was used, but near values yielded similar results. 
+This module can therefore be combined within a hybrid system composed of several modules by 
+propagating gradient through the combined system (as in (Bottou and Gallinari, 1991)). For 
+example, as in Figure 2, there might be another module taking as input the recurrent network's 
+output. In this case the recurrent network can be seen as a feature extractor that accepts 
+data with missing values in input and computes a set of features that are nev

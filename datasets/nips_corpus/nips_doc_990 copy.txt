@@ -1,0 +1,152 @@
+Gaussian Processes for Regression 
+Christopher K. I. Williams 
+Neural Computing Research Group 
+Aston University 
+Birmingham B4 7ET, UK 
+c. k. i. williamsaston. ac. uk 
+Carl Edward Rasmussen 
+Department of Computer .Science 
+University of Toronto 
+Toronto, ONT, M5S 1A4, Canada 
+carlcs. toronto. edu 
+Abstract 
+The Bayesian analysis of neural networks is difficult because a sim- 
+ple prior over weights implies a complex prior distribution over 
+functions. In this paper we investigate the use of Gaussian process 
+priors over functions, which permit the predictive Bayesian anal- 
+ysis for fixed values of hyperparameters to be carried out exactly 
+using matrix operations. Two methods, using optimization and av- 
+eraging (via Hybrid Monte Carlo) over hyperparameters have been 
+tested on a number of challenging problems and have produced 
+excellent results. 
+I INTRODUCTION 
+In the Bayesian approach to neural networks a prior distribution over the weights 
+induces a prior distribution over functions. This prior is combined with a noise 
+model, which specifies the probability of observing the targets t given function 
+values y, to yield a posterior over functions which can then be used for predictions. 
+For neural networks the prior over functions has a complex form which means 
+that implementations must either make approximations (e.g. MacKay, 1992) or use 
+Monte Carlo approaches to evaluating integrals (Neal, 1993). 
+As Neal (1995) has argued, there is no reason to believe that, for real-world prob- 
+lems, neural network models should be limited to nets containing only a small 
+number of hidden units. He has shown that it is sensible to consider a limit where 
+the number of hidden units in a net tends to infinity, and that good predictions can 
+be obtained from such models using the Bayesian machinery. He has also shown 
+that a large class of neural network models will converge to a Gaussian process prior 
+over functions in the limit of an infinite number of hidden units. 
+In this paper we use Gaussian processes specified parametrically for regression prob- 
+lems. The advantage of the Gaussian process formulation is that the combination of 
+Gaussian Processes for Regression 515 
+the prior and noise models can be carried out exactly using matrix operations. We 
+also show how the hyperparameters which control the form of the Gaussian process 
+can be estimated from the data, using either a maximum likelihood or Bayesian 
+approach, and that this leads to a form of Automatic Relevance Determination 
+(Mackay 1993; Neal 1995). 
+2 PREDICTION WITH GAUSSIAN PROCESSES 
+A stochastic process is a collection of random variables {Y(a:)la: e X) indexed by a 
+set X. In our case X will be the input space with dimension d, the number of inputs. 
+The stochastic process is specified by, giving the probability distribution for every 
+finite subset of variables Y(a:(1)),... Y(a: (k)) in a consistent manner. A Gaussian 
+process is a stochastic process which can be fully specified by its mean function 
+/(a) = E[Y(a:)] and its covariance function C(a:, a:') = E[(Y(a:)-/(a:))(Y(a:')- 
+/(a:'))]; any finite set of points will have a joint multivariate Gaussian distribution. 
+Below we consider Gaussian processes which have/(a:) = 0. 
+In section 2.1 we will show how to parameterise covariances using hyperparameters; 
+for now we consider the form of the covariance C as given. The training data 
+consists of n pairs of inputs and targets {(a:( �, t(i)), i = 1... n}. The input vector 
+for a test case is denoted a: (with no superscript). The inputs are d-dimensional 
+xl,..., xa and the targets are scalar. 
+The predictive distribution for a test case a: is obtained from the n + 1 dimensional 
+joint Gaussian distribution for the outputs of the n training cases and the test 
+case, by conditioning on the observed targets in the training set. This procedure is 
+illustrated in Figure 1, for the case where there is one training point and one test 
+point. In general, the predictive distribution is Gaussian with mean and variance 
+() = kT()K-lt (1) 
+= (2) 
+where k(a:) : (C(a:,a:()),...,C(a:,a:('))) , K is the covariance matrix for the 
+training cases Kij = C(a:(0, a:(J)), and t = (t(),..., t(')) y. 
+The matrix inversion step in equations (1) and (2) implies that the algorithm has 
+O(n a) time complexity (if standard methods of matrix inversion are employed); 
+for a few hundred data points this is certainly feasible on workstation computers, 
+although for larger problems some iterative methods or approximations may be 
+needed. 
+2.1 PARAMETERIZING THE COVARIANCE FUNCTION 
+There are many choices of covariance functions which may be reasonable. Formally, 
+we are required to specify functions which will generate a non-negative definite 
+covariance matrix for any set of points (a:(1),..., a:(k)). From a modelling point of 
+view we wish to specify covariances so that points with nearby inputs will give rise 
+to similar predictions. We find that the following covariance function works well: 
+1 d 
+C(e (i), a: (j)) : v0exp{- Zw'(x?)- x?))2) (3) 
+/--1 
+d 
++ao + al E (i),(j) 
+x . + vlS(i,j), 
+/=1 
+516 C.K.I. WILLIAMS, C. E. RASMUSSEN 
+p(y) 
+Figure 1: An illustration of prediction using a Gaussian process. There is one training 
+case (z (1), t (1)) and one test case for which we wish to predict y. The ellipse in the left- 
+hand plot is the one standard deviation contour plot of the joint distribution of yl and 
+y. The dotted line represents an observation yl = t (1). In the right-hand plot we see 
+the distribution of the output for the test case, obtained by conditioning on the observed 
+target. The y axes have the same scale in both plots. 
+where 0 = log(v0, vt, wl,..., wa, ao, at) plays the role of hyperparameters 1. We 
+define the hyperparameters to be the log of the variables in equation (4) since these 
+are positive scale-parameters. 
+The covariance function is made up of three parts; the first term, a linear regression 
+term (involving a0 and al) and a noise term vtS(i,j). The first term expresses the 
+idea that cases with nearby inputs will have highly correlated outputs; the wt pa- 
+rameters allow a different distance measure for each input dimension. For irrelevant 
+inputs, the corresponding wt will become small, and the model will ignore that in- 
+put. This is closely related to the Automatic Relevance Determination (ARD) idea 
+of MacKay and Neal (MacKay, 1993; Neal 1995). The v0 variable gives the overall 
+scale of the local correlations. This covariance function is valid for all input dimen- 
+sionalities as compared to splines, where the integrated squared ruth derivative is 
+only a valid regularizer for 2m > d (see Wahba, 1990). a0 and al are variables 
+controlling the scale the of bias and linear contributions to the covariance. The last 
+term accounts for the noise on the data; vl is the variance of the noise. 
+Given a covariance function, the log likelihood of the training data is given by 
+i logdet K - tTK-t--  log2r. (4) 
+In section 3 we will discuss how the hyperparameters in C can be adapted, in 
+response to the training data. 
+2.2 RELATIONSHIP TO PREVIOUS WORK 
+The Gaussian process view provides a unifying framework for many regression meth- 
+ods. ARMA models used in time series analysis and spline smoothing (e.g. Wahba, 
+1990 and earlier references therein) correspond to Gaussian process prediction with 
+x We call 0 the hyperparameters as they correspond closely to hyperparameters in neural 
+networks; in effect the weights have been integrated out exactly. 
+Gaussian Processes for Regression 517 
+a particular choice of covariance function 2. Gaussian processes have also been used 
+in the geostatistics field (e.g. Cressie, 1993), and are known there as kriging, but 
+this literature has concentrated on the case where the input space is two or three 
+dimensional, rather than considering more general input spaces. 
+This work is similar to Regularization Networks (Poggio and Girosi, 1990; Girosi, 
+Jones and Poggio, 1995), except that their derivation uses a smoothness functional 
+rather than the equivalent covariance function. Poggio et al suggested that the 
+hyperparameters be set by cross-validation. The main contributions of this paper 
+are to emphasize that a maximum likelihood solution for 0 is possible, to recognize 
+the connections to ARD and to use the Hybrid Monte Carlo method in the Bayesian 
+treatment (see section 3). 
+3 TRAINING A GAUSSIAN PROCESS 
+The partial derivative of the log likelihood of the training data I with respect to 
+all the hyperparameters can be computed using matrix operations, and takes time 
+O(na). In this section we present two methods which can be used to adapt the 
+hyperparameters using these derivatives. 
+3.1 MAXIMUM LIKELIHOOD 
+In a maximum likelihood framework, we adjust the hyperparameters so as to max- 
+imize that likelihood of the training data. We initialize the hyperparameters to 
+random values (in a reasonable range) and then use an iterative method, for exam- 
+ple conjugate gradient, to search for optimal values of the hyperparameters. Since 
+there are only a small number of hyperparameters (d + 4) a relatively small number 
+of iterations are usually sufficient for convergence. However, we have found that 
+this approach is sometimes susceptible to local minima, so it is advisable to try a 
+number of random starting positions in hyperparameter space. 
+3.2 INTEGRATION VIA HYBRID MONTE CARLO 
+According to the Bayesian formalism, we should start with a prior distribution P(O) 
+over the hyperparameters which is modified using the training data D to produce 
+a posterior distribution P(OID ). To make predictions we then integrate over the 
+posterior; for example, the predicted mean (a) for test input a is given by 
+= f 0()p(01D)d0 (5) 
+where )0(a:) is the predicted mean (as given by equation 1) for a particular value of 
+0. It is not feasible to do this integration analytically, but the 

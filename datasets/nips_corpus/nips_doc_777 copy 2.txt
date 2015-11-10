@@ -1,0 +1,163 @@
+Assessing the Quality of Learned Local Models 
+Stefan Schaal Christopher G. Atkeson 
+Department of Brain and Cognitive Sciences & The Artifical Intelligence Laboratory 
+Massachusetts Institute of Technology 
+545 Technology Square, Cambridge, MA 02139 
+email: sschaal@ ai.mit.edu, cga ai.mit.edu 
+Abstract 
+An approach is presented to learning high dimensional functions in the case 
+where the learning algorithm can affect the generation of new data. A local 
+modeling algorithm, locally weighted regression, is used to represent the learned 
+function. Architectural parameters of the approach, such as distance metrics, are 
+also localized and become a function of the query point instead of being global. 
+Statistical tests are given for when a local model is good enough and sampling 
+should be moved to a new area. Our methods explicitly deal with the case where 
+prediction accuracy requirements exist during exploration: By gradually shifting 
+a center of exploration and controlling the speed of the shift with local pre- 
+diction accuracy, a goal-directed exploration of state space takes place along the 
+fringes of the current data support until the task goal is achieved. We illustrate 
+this approach with simulation results and results from a real robot learning a 
+complex juggling task. 
+1 
+INTRODUCTION 
+Every learning algorithm faces the problem of sparse data if the task to be learned is suf- 
+ficiently nonlinear and high dimensional. Generalization from a limited number of data 
+points in such spaces will usually be strongly biased. If, however, the learning algorithm 
+has the ability to affect the creation of new experiences, the need for such bias can be re- 
+duced. This raises the questions of (1) how to sample data the most efficient, and (2) how 
+to assess the quality of the sampled data with respect to the task to be leamed. To address 
+these questions, we represent the task to be learned with local linear models. Instead of 
+constraining the number of linear models as in other approaches, infinitely many local 
+models are permitted. This corresponds to modeling the task with the help of (hyper-) 
+tangent planes at every query point instead of representing it in a piecewise linear fash- 
+ion. The algorithm applied for this purpose, locally weighted regression (LWR), stems 
+from nonparametric regression analysis (Cleveland, 1979, Miiller, 1988, Hirdle 1990, 
+Hastie&Tibshirani, 1991). In Section 2, we will briefly outline LWR. Section 3 discusses 
+160 
+Assessing the Quality of Learned Local Models 161 
+several statistical tools for assessing the quality of a learned linear LWR model, how to 
+optimize the architectural parameters of LWR, and also how to detect outliers in the data. 
+In contrast to previous work, all of these statistical methods are local, i.e., they depend on 
+the data in the proximity of the current query point and not on all the sampled data. A 
+simple exploration algorithm, the shifting setpoint algorithm (SSA), is used in Section 4 
+to demonstrate how the properties of LWR can be exploited for learning control. The 
+SSA explicitly controls prediction accuracy during learning and samples data with the 
+help of optimal control techniques. Simulation results illustrate that this method work 
+well in high dimensional spaces. As a final example, the methods are applied to a real 
+robot learning a complex juggling task in Section 5. 
+2 LOCALLY WEIGHTED REGRESSION 
+Locally linear models constitute a good compromise between locally constant models 
+such as nearest neighbors or moving average and locally higher order models; the former 
+tend to introduce too much bias while the latter require fitting many parameters which is 
+computationally expensive and needs a lot of data. The algorithm which we explore here, 
+locally weighted regression (LWR) (Atkeson, 1992, Moore, 1991, Schaal&Atkeson, 
+1994), is closely related to versions suggested by Cleveland et al. (1979, 1988) and 
+Farmer&Siderowich (1987). A LWR model is trained by simply storing every experi- 
+ence as an input/output pair in memory. If an output yq is to be generated from a given 
+input xq, the it is computed by fitting a (hyper-) tangent plane at xe by means of weight- 
+ed regression: 
+3(x ) = [(WX)V WX ]4 (WX)* Wy (1) 
+where X is an mx(n+ 1) matrix of inputs to the regression, y the vector of corresponding 
+outputs, 3(x) the vector of regression parameters, and W the diagonal mxm matrix of 
+weights. The requested yresults from evaluating the tangent plane at xq, i.e., y = 
+The elements of W give points which are close to the current query point x a larger n- 
+fluence than those which are far away. They are determined by a Gaussian kernel: 
+wi(x) = exp((x i - x)rD(xq)(xi- x) / 2k(x) 2) (2) 
+w, is the weight'for the i th data point (xi, Yi) in memory given query point x. The ma- 
+Wix D(x) weights the contribution of the individual input dimensions, and the factor 
+k(xq) determines how local the regression will be. D and k are architectural parameters 
+of LWR and can be adjusted to optimize the fit of the local model. In the following we 
+will just focus on optimizing k, assuming that D normalizes the inputs and needs no fur- 
+ther adjustment; note that, with some additional complexity, our methods would also hold 
+for locally tuning D. 
+3 
+ASSESSING THE LOCAL FIT 
+In order to measure the goodness of the local model, several tests have been suggested. 
+The most widely accepted one is leave-one-out cross validation (CV) which calculates the 
+prediction error of every point in memory after recalculating (1) without this point 
+(Wahba&Wold 1975, Maron&Moore 1994). As an alternative measure, Cleveland et al. 
+(1988) suggested Mallow's Ct,-test, originally developed as a way to select covariates in 
+linear regression analysis (Mallow, 1966). Hastie&Tibshirani (1991) showed that CV and 
+the Cp-test are closely related for certain classes of analyses. Hastie&Tibshirani (1991) 
+162 Schaal and Atkeson 
+also presented pointwise standard-error bands to assess the confidence in a fitted value 
+which correspond to confidence bands in the case of an unbiased fit. All these tests are 
+essentially global by requiring statistical analysis over the entire range of data in mem- 
+ory. Such a global analysis is computationally costly, and it may also not give an ade- 
+quate measure at the current query site xq: the behavior of the function to be approxi- 
+mated may differ significantly in different places, and an averaging over all these behav- 
+iors is unlikely to be representative for all query sites (Fan&Gijbels, 1992). 
+It is possible to convert some of the above measures to be local. Global cross validation 
+has a relative in linear regression analysis, the PRESS residual error (e.g., Myers, 1990), 
+here formulated as a mean squared local cross validation error: 
+1 , w,(y,- x/r[3) , n'= E w2 p'= n' p (3) 
+MSEc�ss(xq)- n'--p ,= 1-w,xT(xrwrwx)-x,w, ,= ' n 
+n is the number of data points in memory contributing with a weight w e greater than 
+some small constant (e.g., we > 0.01) to the regression, and p is the dimensionality of . 
+The PRESS statistic performs leave-one-out cross validation computationally very effi- 
+cient by not requiring the recalculation of [3 (Eq.(1)) for every excluded point. 
+Analogously, prediction intervals from linear regression analysis (e.g., Myers, 1990) can 
+be transformed to be a local measure too: 
+I = xr[3 + t,/2..._ v, s/1 + x r (xrwrwx)- x, (4) 
+where s 2 is an estimate of the variance at x: 
+s2(x,) = (X[3- y)r WrW(X[3- y) 
+n'- p' (5) 
+and t,/.,_v, is Student's t-value of n'-p' degrs of frdom for a 1(1-a)% predic- 
+tion bound. e dkt intecremfion of (4)  pricfion bounds is only possible if y is 
+an unbi estimate, which is usually hd m demine. 
+Finally, e PRESS statistic c flso be used for locfl outlier detfion. For is puose it 
+is refoulamd  a smddized individufl PRESS residual: 
+e,.c,s (x) = w'(Y - xr[3) (6) 
+s ]l- wixr (xrwrwx)4x,w, 
+This measure has zero mean and unit variance. If it exceeds a certain threshold for a point 
+x,, the point can be called an outlier. 
+An important ingredient to forming the measures (3)-(6) lies in the definition of n' and 
+p' as given in (3). Imagine that the weighting function (2) is not Gaussian but rather a 
+function that clips data points whose distance from the current query point exceeds a cer- 
+tain threshold and that the remaining r data points all contribute with unit weight. This 
+reduced data regression coincides correctly with a r-data regression since n' = r. In the 
+case of the soft-weighting (2), the definition of n' ensures the proper definition of the 
+moments of the data. However, the definition of p', i.e., the degrees of freedom of the re- 
+gression, is somewhat arbitrary since it is unclear how many degrees of freedom have ac- 
+Assessing the Quality of Learned Local Models 163 
+tually been used. Defining p' as in (3) guarantees that p'< n' and renders all results 
+more pessimistic when only a small number of data points contribute to the regression. 
+2 
+1,5- 
+1- 
+0.5- 
+0- 
+-0.5 
+-0.2 
+2 
+:',;. .. q � :,; l: 1.' ' 
+,;'.' ',.' ! 
+0.2 0.4 0.6 0.8 
+1.2 
+1,5. 
+-0.5 
+-0.2 
+2 
+0 0.2 0.4 0.6 0.8 
+1.2 
+(�) 
+1.5-  y-predicted .  i 
+� 
+..... Iedtn mteal 
+0.5- . ......... ;   . 
+0- 
+-0.5 
+Fige 1: ting e L fit usg: (a) 
+glob cross vidation; (b) local oss valida- 
+tion; (c) local prection ts. 
+The statistical tests (3) and (4) can not only be 
+used as a diagnostic tool, but they can also 
+serve to optimize the architectural parameters 
+of LWR. This results in a function fitting tech- 
+nique which is called supersmoothing in statis- 
+tics (Hastie&Tibshirani, 1991). Fan&Gijbels 
+(1992) investigated a method for this purpose 
+that required estimation of the second deriva- 
+tive of the function to be approximated and the 
+data density distribution. These two measures 
+are not trivially obtained in high dimens

@@ -1,0 +1,137 @@
+Policy Search via Density Estimation 
+Andrew Y. Ng 
+Computer Science Division 
+U.C. Berkeley 
+Berkeley, CA 94720 
+ang @ cs. berkeley. edu 
+Ronald Parr 
+Computer Science Dept. 
+Stanford University 
+Stanford, CA 94305 
+parr @ cs. stanford. edu 
+Daphne Koller 
+Computer Science Dept. 
+Stanford University 
+Stanford, CA 94305 
+kolle r@ cs. stanfo rd. edu 
+Abstract 
+We propose a new approach to the problem of searching a space of 
+stochastic controllers for a Markov decision process (MDP) or a partially 
+observable Markov decision process (POMDP). Following several other 
+authors, our approach is based on searching in parameterized families 
+of policies (for example, via gradient descent) to optimize solution qual- 
+ity. However, rather than trying to estimate the values and derivatives 
+of a policy directly, we do so indirectly using estimates for the proba- 
+bility densities that the policy induces on states at the different points 
+in time. This enables our algorithms to exploit the many techniques for 
+efficient and robust approximate density propagation in stochastic sys- 
+tems. We show how our techniques can be applied both to deterministic 
+propagation schemes (where the MDP's dynamics are given explicitly in 
+compact form,) and to stochastic propagation schemes (where we have 
+access only to a generative model, or simulator, of the MDP). We present 
+empirical results for both of these variants on complex problems. 
+1 Introduction 
+In recent years, there has been growing interest in algorithms for approximate planning 
+in (exponentially or even infinitely) large Markov decision processes (MDPs) and par- 
+tially observable MDPs (POMDPs). For such large domains, the value and Q-functions 
+are sometimes complicated and difficult to approximate, even though there may be simple, 
+compactly representable policies which perform very well. This observation has led to par- 
+ticular interest in direct policy search methods (e.g., [9, 8, 1]), which attempt to choose a 
+good policy from some restricted class II of policies. In our setting, II = {ro: 0 C I ' } is 
+a class of policies smoothly parameterized by 0 C 11 m . If the value of ro is differentiable 
+in 0, then gradient ascent methods may be used to find a locally optimal 'o. However, 
+estimating values of ro (and the associated gradient) is often far from trivial. One simple 
+method for estimating ro's value involves executing one or more Monte Carlo trajectories 
+using ro, and then taking the average empirical return; cleverer algorithms executing sin- 
+gle trajectories also allow gradient estimates [9, 1]. These methods have become a standard 
+approach to policy search, and sometimes work fairly well. 
+In this paper, we propose a somewhat different approach to this value/gradient estimation 
+problem. Rather than estimating these quantities directly, we estimate the probability den- 
+sity over the states of the system induced by ro at different points in time. These time slice 
+Policy Search via Density Estimation 1023 
+densities completely determine the value of the policy 7to. While density estimation is not 
+an easy problem, we can utilize existing approaches to density propagation [3, 5], which al- 
+low users to specify prior knowledge about the densities, and which have also been shown, 
+both theoretically and empirically, to provide robust estimates for time slice densities. We 
+show how direct policy search can be implemented using this approach in two very differ- 
+ent settings of the planning problem: In the first, we have access to an explicit model of the 
+system dynamics, allowing us to provide an explicit algebraic operator that implements the 
+approximate density propagation process. In the second, we have access only to a genera- 
+tive model of the dynamics (which allows us only to sample from, but does not provide an 
+explicit representation of, next-state distributions). We show how both of our techniques 
+can be combined with gradient ascent in order to perform policy search, a somewhat subtle 
+argument in the case of the sampling-based approach. We also present empirical results for 
+both variants in complex domains. 
+2 Problem description 
+A Markov Decision Process (MDP) is a tuple (S, so, A,/, P) where:  S is a (possibly 
+infinite) set of states; so C $ is a start state; A is a finite set of actions; / is a reward 
+function trl � S  [0,/,n:]; P is a transition model P � S x A  As, such that 
+P( s I s, a) gives the probability of landing in state s  upon taking action a in state s. 
+A stochastic policy is a map 7r � $  AA, where 7r(a I s) is the probability of taking action 
+a in state s. There are many ways of defining a policy 7r's quality or value. For a horizon 
+T and discount factor 3`, the finite horizon discounted value function VT,. [7r] is defined by 
+V0,7171-]($ ) -- .R($); Vt+1,7171-]($) -- ]($) q- 3` Ea 71'(a I $) Es, P(s' l s,a)�,,[w](s'). 
+For an infinite state space (here and below), the summation is replaced by an integral. We 
+can now define several optimality criteria. The finite horizon total reward with horizon 
+T is Vy[7r] = Vy, l[7r](so). The infinite horizon discounted reward with discount 3' < 
+1 is V.[7r] = limr_, VT,,[7r](so). The infinite horizon average reward is V,a[7r ] = 
+limT_ 1 
+ VT, 1 [7r] (So), where we assume that the limit exists. 
+Fix an optimality criterion V. Our goal is to find a policy that has a high value. As dis- 
+cussed, we assume we have a restricted set II of policies, and wish to select a good 7r C II. 
+We assume that II - {7to ] 0  11 m } is a set of policies parameterized by 0  11 m, and 
+that 7to (a I s) is continuously differentiable in 0 for each s, a. As a very simple example, 
+we may have a one-dimensional state, two-action MDP with sigmoidal 7to, such that the 
+probability of choosing action ao at state x is 7ro(ao [ x) = 1/(1 + exp(-0 - 02x)). 
+Note that this framework also encompasses cases where our family II consists of policies 
+that depend only on certain aspects of the state. In particular, in POMDPs, we can restrict 
+attention to policies that depend only on the observables. This restriction results in a sub- 
+class of stochastic memory-free policies. By introducing artificial memory bits into the 
+process state, we can also define stochastic limited-memory policies. [6] 
+Each 0 has a value V[O] = V[7ro], as specified above. To find the best policy in II, we can 
+search for the 0 that maximizes V[O]. If we can compute or approximate V[O], there are 
+many algorithms that can be used to find a local maximum. Some, such as NeMer-Mead 
+simplex search (not to be confused with the simplex algorithm for linear programs), require 
+only the ability to evaluate the function being optimized at any point. If we can compute 
+or estimate V[O]'s gradient with respect to 0, we can also use a variety of (deterministic or 
+stochastic) gradient ascent methods. 
+We write rewards as R(s) rather than R(s, a), and assume a single start state rather than an 
+initial-state distribution, only to simplify exposition; these and several other minor extensions are 
+trivial. 
+1024 A. Y. Ng, R. Parr and D. Koller 
+3 Densities and value functions 
+Most optimization algorithms require some method for computing V[O] for any 0 (and 
+sometimes also its gradient). In many real-life MDPs, however, doing so exactly is com- 
+pletely infeasible, due to the large or even infinite number of states. Here, we will consider 
+an approach to estimating these quantities, based on a density-based reformulation of the 
+value function expression. A policy r induces a probability distribution over the states at 
+each time t. Letting �(o) be the initial distribution (giving probability 1 to so), we define 
+the time slice distributions via the recurrence: 
+(1) 
+It is easy to verify that the standard notions of value defined earlier can reformulated in 
+terms of �(t). e.g., Vr,,[r](so) r 
+, -- Y'-t=0 � R), where � is the dot-product operation 
+(equivalently, the expectation of R with respect to �(t)). Somewhat more subtly, for the 
+case of infinite horizon average reward, we have that V, vg [r] = �() � R, where �() is 
+the limiting distribution of (1), if one exists. 
+This reformulation gives us an alternative approach to evaluating the value of a policy ro' 
+we first compute the time slice densities �(t) (or �()), and then use them to compute the 
+value. Unfortunately, that modification, by itself, does not resolve the difficulty. Repre- 
+senting and computing probability densities over large or infinite spaces is often no easier 
+than representing and computing value functions. However, several results [3, 5] indicate 
+that representing and computing high-quality approximate densities may often be quite 
+feasible. The general approach is an approximate density propagation algorithm, using 
+time-slice distributions in some restricted family  For example, in continuous spaces, E 
+might be the set of multivariate Gaussians. 
+The approximate propagation algorithm modifies equation (1) to maintain the time-slice 
+densities in E. More precisely, for a policy ro, we can view (1) as defining an operator 
+(I)[0] that takes one distribution in As and returns another. For our current policy roo, 
+we can rewrite (1) as: �(t+) = (i)[0o](�(t)). In most cases, E will not be closed under 
+(I); approximate density propagation algorithms use some alternative operator , with the 
+properties that, for � 6 =' (a) (�) is also in E, and (b) (�) is (hopefully)close to (1)(6). 
+We use ,[0] to denote the approximation to (I)[0], and ((t) to denote (,[0])(t)(�(�)). If 
+, is selected carefully, it is often the case that ((t) is close to �(t). Indeed, a standard 
+contraction analysis for stochastic processes can be used to show: 
+Proposition 1 Assume that for all t, I1(I)(� ('9) - '(((*))ll -< - Then there exists some 
+constant/X such that for all t, 
+In some cases, ,X might be arbitrarily small, in

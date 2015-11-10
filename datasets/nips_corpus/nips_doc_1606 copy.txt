@@ -1,0 +1,205 @@
+Learning sparse codes with a 
+mixture-of-Gaussians prior 
+Bruno A. Olshausen 
+Department of Psychology and 
+Center for Neuroscience, UC Davis 
+1544 Newton Ct. 
+Davis, CA 95616 
+baolshausenucdavis. edu 
+K. Jarrod Millman 
+Center for Neuroscience, UC Davis 
+1544 Newton Ct. 
+Davis, CA 95616 
+kjmillmanucdavis. edu 
+Abstract 
+We describe a method for learning an overcomplete set of basis 
+functions for the purpose of modeling sparse structure in images. 
+The sparsity of the basis function coefficients is modeled with a 
+mixture-of-Gaussians distribution. One Gaussian captures non- 
+active coefficients with a small-variance distribution centered at 
+zero, while one or more other Gaussians capture active coefficients 
+with a large-variance distribution. We show that when the prior is 
+in such a form, there exist efficient methods for learning the basis 
+functions as well as the parameters of the prior. The performance 
+of the algorithm is demonstrated on a number of test cases and 
+also on natural images. The basis functions learned on natural 
+images are similar to those obtained with other methods, but the 
+sparse form of the coefficient distribution is much better described. 
+Also, since the parameters of the prior are adapted to the data, no 
+assumption about sparse structure in the images need be made a 
+priori, rather it is learned from the data. 
+I Introduction 
+The general problem we address here is that of learning a set of basis functions 
+for representing natural images efficiently. Previous work using a variety of opti- 
+mization schemes has established that the basis functions which best code natural 
+images in terms of sparse, independent components resemble a Gabor-like wavelet 
+basis in which the basis functions are spatially localized, oriented and bandpass in 
+spatial-frequency [1, 2, 3, 4]. In order to tile the joint space of position, orienta- 
+tion, and spatial-frequency in a manner that yields useful image representations, 
+it has also been advocated that the basis set be overcomplete [5], where the num- 
+ber of basis functions exceeds the dimensionality of the images being coded. A 
+major challenge in learning overcomplete bases, though, comes from the fact that 
+the posterior distribution over the coefficients must be sampled during learning. 
+When the posterior is sharply peaked, as it is when a sparse prior is imposed, then 
+conventional sampling methods become especially cumbersome. 
+842 B. A. Olshausen and K. J. Millman 
+One approach to dealing with the problems associated with overcomplete codes and 
+sparse priors is suggested by the form of the resulting posterior distribution over the 
+coefficients averaged over many images. Shown below is the posterior distribution of 
+one of the coefficients in a 4 x's overcomplete representation. The sparse prior that 
+was imposed in learning was a Cauchy distribution and is overlaid (dashed line). It 
+would seem that the coefficients do not fit this imposed prior very well, and instead 
+want to occupy one of two states: an inactive state in which the coefficient is set 
+nearly to zero, and an active state in which the coefficient takes on some significant 
+non-zero value along a continuum. This suggests that the appropriate choice of 
+prior is one that is capable of capturing these two discrete states. 
+10 
+-4 -2 0 2 4 
+coeffx:tenl vaJue 
+Figure 1: Posterior distribution of coefficients with Cauchy prior overlaid. 
+Our approach to modeling this form of sparse structure uses a mixture-of-Gaussians 
+prior over the coefficients. A set of binary or ternary state variables determine 
+whether the coefficient is in the active or inactive state, and then the coefficient 
+distribution is Gaussian distributed with a variance and mean that depends on 
+the state variable. An important advantage of this approach, with regard to the 
+sampling problems mentioned above, is that the use of Gaussian distributions allows 
+an analytical solution for integrating over the posterior distribution for a given 
+setting of the state variables. The only sampling that needs to be done then is over 
+the binary or ternary state variables. We show here that this problem is a tractable 
+one. This approach differs from that taken previously by Attias [6] in that we do 
+not use variational methods to approximate the posterior, but rather we rely on 
+sampling to adequately characterize the posterior distribution over the coefficients. 
+2 Mixture-of-Gaussians model 
+An image, I(x, y), is modeled as a linear superposition of basis functions, qbi(x, y), 
+with coefficients ai, plus Gaussian noise v(x,y): 
+I(x,y) = E ai q3i(x,y) + v(x,y) (1) 
+i 
+In what follows this will be expressed in vector-matrix notation as I - (I, a + v. 
+The prior probability distribution over the coefficients is factoffal, with the distri- 
+bution over each coefficient ai modeled as a mixture-of-Gaussians distribution with 
+either two or three Gaussians (fig. 2). A set of binary or ternary state variables si 
+then determine which Gaussian is used to describe the coefficients. 
+The total prior over both sets of variables, a and s, is of the form 
+P(a, s) = H P(ailsi)P(si) (2) 
+i 
+Learning Sparse Codes with a Mixture-of-Gaussians Prior 843 
+Two Gaussians 
+(binary state variables) 
+Three Gaussians 
+(ternary state variables) 
+si=-I 
+P(ai) 
+si--O 
+si=l 
+ a i 
+Figure 2: Mixture-of-Gaussians prior. 
+where P(si) determines the probability of being in the active or inactive states, and 
+P(ailsi) is a Gaussian distribution whose mean and variance is determined by the 
+current state si. 
+The total image probability is then given by 
+(3) 
+where 
+P(ila, O) _ 1 __ ii_al = 
+- --e , (4) 
+P(als, O) 1 _ 1_. (a_/(s))t Aa(s) (a--/(s)) 
+= --e  (5) 
+ZA(s) 
+r(10) -  -' '  
+-  (6) 
+ZA 
+and the parameters O include )v, I,, Aa(s), p(s), and As. Aa(s) is a diagonal in- 
+verse covariance matrix with elements Aa(s)ii = )a (si). (The notations Aa(s) and 
+p(s) are used here to explicitly reflect the dependence of the means and variances 
+of the ai on si.) As is also diagonal (for now) with elements Asii = )s. The model 
+is illustrated graphically in figure 3. 
+ternary) 
+Figure 3: Image model. 
+844 B. A. Olshausen and K. J. Millman 
+3 Learning 
+The objective function for learning the parameters of the model is the average 
+log-likelihood: 
+C = (logP(II0)) (7) 
+Maximizing this objective will minimize the lower bound on coding length. 
+Learning is accomplished via gradient ascent on the objective, 12. The learning rules 
+for the parameters As, Aa(s), it(s) and (I, are given by: 
+= 1 (8) 
+2 
+0i 
+_ 1 [(*(Si -- U)}p(slI,O ) 
+(*(s - u) (K(u) - 2a(u)m(u) + u(u)))r(li,0)] (0) 
+0i 
+m(u) 
+Ore(u) 
+= - - (10) 
+0i 
+0 
+where u takes on values 0,1 (binary) or -1,0,1 (ternary) and K(s) = H-(s) + 
+&(s) &(s) r. (& and H are defined in eqs. 15 and 16 in the next section.) Note 
+that in these expressions we have dropped the outer brackets averaging over images 
+simply to reduce clutter. 
+Thus, for each image we must sample from the posterior P(slI, 0) in order to collect 
+the appropriate statistics needed for learning. These statistics must be accumulated 
+over many different images, and then the parameters are updated according to the 
+rules above. Note that this approach differs from that of Atti [6] in that we do 
+not attempt to sum over all states, s, or to use the variational approximation to 
+approximate the posterior. Instead, we are effectively summing only over those 
+states that are most probable according to the posterior. We conjecture that this 
+scheme will work in practice because the posterior has significant probability only 
+for a small fraction of states s, and so it can be well-characterized by a relatively 
+small number of samples. Next we present an efficient method for Gibbs sampling 
+from the posterior. 
+4 Sampling and inference 
+In order to sample from the posterior P(s]I, 0), we first cast it in Boltzmann form: 
+P(s[I, 0) o e -E(s) (12) 
+where 
+E(s) = - log P(s, I[0) = - logP(s10 ) / P(Ila , 0)P(a[s, O)da 
+Learning Sparse Codes with a Mixture-of-Gaussians Prior 845 
+and 
+1 
+: $T As s + log ZAa(s) + Eals(&, s) +  log det H(s) + const. 
+Eals(a, s) 
+(13) 
+VVaEals(a, s ) = NTI  q- Aa(s) 
+I )T 
+_ AN II - 'I'al 2 + (a- p(s) Aa(s) (a- p(s)) (14) 
+= 2 
+= argmin Eals(a, s) (15) 
+a 
+= (16) 
+Gibbs-sampling on P(s[I, 0) can be performed by flipping state variables si accord- 
+ing to 
+P(si 4- s ) = 
+P(si 4- s ) = 
+I (binary) (17) 
+lq_eAE(sis a) 
+1 
+l+eA!(,i,)[l+e_a!(,i,) ] (ternary) (18) 
+Where s a = s-7 in the binary case, and s a and s  are the two alternative states in 
+the ternary case. AE(si 4- s ) denotes the change in E(s) due to changing si to 
+s  and is given by: 
+1 
+AE(si 4-s a) --  
+A,,(si) + Asi As, + log(1 + AA,,J/i) + 
+log ha, (s (a)) 
+^2 _ 2tiAv i _ JiiAv ] 
+Aalai 1 + AA, Jii + A(iVi) 
+(19) 
+where Asi = s  - si, AA, = A(s ) - A,(si), J = H -I, and vi = Aai($i)i($i). 
+Note that all computations for considering a change of state are local and involve 
+only terms with index i. Thus, deciding whether or not to change state can be 
+computed quickly. However, if a change of state is accepted, then we must update 
+J. Using the Sherman-Morrison formula, this can be kept to an O(N 2) computation: 
+J 4- J- 1 + A.a J J jT (20) 
+As long as accepted state changes are rare (which we have found to be the case for 
+sparse distributions), then Gibbs sampling may be performed quickly and efficiently. 
+In addition, H and J are generally very sparse matrices, so as the system is scaled 
+up the number of elements of a that are affected by a flip of si will be relatively 
+few. 
+In order to code images under this model, a single state of the coefficients must be 
+chosen for a given image. We use for this purpose the MAP estimator: 
+& = argmaxP(alI,.,O ) (21) 
+. = argmaxP(slI, 0 ) (22) 
+Maximizing the posterior distribution over s is accomplished by assigning a tem- 
+perature, 
+P(slI, 0) cre 
+(

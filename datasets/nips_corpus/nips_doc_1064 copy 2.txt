@@ -1,0 +1,158 @@
+Improved Gaussian Mixture Density 
+Estimates Using Bayesian Penalty Terms 
+and Network Averaging 
+Dirk Ormoneit 
+Institut fiir Informatik (H2) 
+Technische Universitit Miinchen 
+80290 Miinchen, Germany 
+ormoneit @inf ormatik. tu-muenchen. de 
+Volker Tresp 
+Siemens AG 
+Central Research 
+81730 Miinchen, Germany 
+Volker. Tresp@zfe.siemens. de 
+Abstract 
+We compare two regularization methods which can be used to im- 
+prove the generalization capabilities of Gaussian mixture density 
+estimates. The first method uses a Bayesian prior on the parame- 
+ter space. We derive EM (Expectation Maximization) update rules 
+which maximize the a posterior parameter probability. In the sec- 
+ond approach we apply ensemble averaging to density estimation. 
+This includes Breiman's bagging, which recently has been found 
+to produce impressive results for classification networks. 
+I Introduction 
+Gaussian mixture models have recently attracted wide attention in the neural net- 
+work community. Important examples of their application include the training of 
+radial basis function classifiers, learning from patterns with missing features, and 
+active learning. The appeal of Gaussian mixtures is based to a high degree on the 
+applicability of the EM (Expectation Maximization) learning algorithm, which may 
+be implemented as a fast neural network learning rule ([Now91], [Orm93]). Severe 
+problems arise, however, due to singularities and local maxima in the log-likelihood 
+function. Particularly in high-dimensional spaces these problems frequently cause 
+the computed density estimates to possess only relatively limited generalization ca- 
+pabilities in terms of predicting the densities of new data points. As shown in this 
+paper, considerably better generalization can be achieved using regularization. 
+Improved Gaussian Mixture Density Estimates Using Bayesian Penalty Terms 543 
+We will compare two regularization methods. The first one uses a Bayesian prior 
+on the parameters. By using conjugate priors we can derive EM learning rules 
+for finding the MAP (maximum a posteriori probability) parameter estimate. The 
+second approach consists of averaging the outputs of ensembles of Gaussian mixture 
+density estimators trained on identical or resampled data sets. The latter is a form 
+of bagging which was introduced by Breiman ([Bre94]) and which has recently 
+been found to produce impressive results for classification networks. By using the 
+regularized density estimators in a Bayes classifier ([THA93], [HT94], [KL95]), we 
+demonstrate that both methods lead to density estimates which are superior to the 
+unregularized Gaussian mixture estimate. 
+2 Gaussian Mixtures and the EM Algorithm 
+Consider theproblem of estimating the probability density of a continuous random 
+vector x 6 7 a based on aset x* = {xkll _< k _< rn} ofiid. realizations ofx. As a den- 
+sity model we choose the class of Gaussian mixtures p(xlO ) = 
+where the restrictions tq > 0 and Ei=l tgi '-- 1 apply. O denotes the parameter 
+vector (tq, Iti, Ei):I- The p(xli , Iti, Zi) are multivariate normal densities: 
+p(xli, It,, i) - (2,r)- Ii 1-1/2 exp [- 1/2(x - Iti )- 1( __ Iti )]. 
+The Gaussian mixture model is well suited to approximate a wide class of continuous 
+probability densities. Based on the model and given the data x*, we may formulate 
+the log-likelihood as 
+l(O) = log P(xklO) - E 1�gE mp(xli, iti Ed. 
+k=l k=l i=1 ' 
+Maximum likelihood parameter estimates 6 may efficiently be computed with the 
+EM (Expectation Maximization) algorithm ([DLR77]). It consists of the iterative 
+application of the following two steps: 
+1. In the E-step, based on the current parameter estimates, the posterior 
+probability that unit i is responsible for the generation of pattern x a is 
+estimated as 
+tqP(x li' iti' Ei) (1) 
+h/: Eint=l tq,p(xli', iti,, Ei,) ' 
+2. In the M-step, we obtain new parameter estimates (denoted by the prime): 
+m Ek=l hi k:rk 
+t I E h/ (2) It: , (3) 
+tgi -- m k:l En__l h i 
+t-- Ekm__l hik(gCk __ Itti)(gCk __ It)t 
+-- (4) 
+Note that n'i is a scalar, whereas It'i denotes a d-dimensional vector and 
+is a d x d matrix. 
+It is well known that training neural networks as predictors using the maximum 
+likelihood parameter estimate leads to overfitting. The problem of overfitting is 
+even more severe in density estimation due to singularities in the log-likelihood 
+function. Obviously, the model likelihood becomes infinite in a trivial way if we 
+concentrate all the probability mass on one or several samples of the training set. 
+544 D. ORMONEIT, V. TRESP 
+In a Gaussian mixture this is just the case if the center of a unit coincides with 
+one of the data points and E approaches the zero matrix. Figure I compares the 
+true and the estimated probability density in a toy problem. As may be seen, 
+the contraction of the Gaussians results in (possibly infinitely) high peaks in the 
+Gaussian mixture density estimate. A simple way to achieve numerical stability 
+is to artificially enforce a lower bound on the diagonal elements of E. This is a 
+very rude way of regularization, however, and usually results in low generalization 
+capabilities. The problem becomes even more severe in high-dimensional spaces. 
+To yield reasonable approximations, we will apply two methods of regularization, 
+which will be discussed in the following two sections. 
+o? 
+Figure 1' True density (tefO and unregu/arized density estimation (right). 
+3 Bayesian Regularization 
+In this section we propose a Bayesian prior distribution on the Gaussian mixture 
+parameters, which leads to a numerically stable version of the EM algorithm. We 
+first select a family of prior distributions on the parameters which is conjugate*. 
+Selecting a conjugate prior has a number of advantages. In particular, we obtain 
+analytic solutions for the posterior density and the predictive density. In our case, 
+the posterior density is a complex mixture of densities t. It is possible, however, to 
+derive EM-update rules to obtain the MAP parameter estimates. 
+A conjugate prior of a single multivariate normal density is a product of a normal 
+density N(/ql/2,l-lEi) and a Wishart density Wi(E-llc,fi)([Bun94]). A proper 
+conjugate prior for the the mixture weightings/ -- (/l, ...,/) is a Dirichlet density 
+D(/17) t. Consequently, the prior of the overall Gaussian mixture is the product 
+D(17) 1-Iin___l N(Izilft,l-li)Wi(-ll,fl ). Our goal is to find the MAP parameter 
+estimate, that is parameters which assume the maximum of the log-posterior 
+lp(O) : Z:=llOgZ=l/qP(xkli,/zi,Ei)+logD(/17 ) 
++ :=111og N(/zil/, ]-lEi)-[-log Wi(E-llc, fi)]. 
+As in the unregularized case, we may use the EM-algorithm to find a local maximum 
+*A family F of probability distributions on O is said to be conjugateif, for every r E F, 
+the posterior r(O[x) also belongs to F ([Rob94]). 
+tThe posterior distribution can be written as a sum of n ' simple terms. 
+tThose densities are defined as follows (b and c are normalizing constants): 
+D(l'r) 
+Improved Gaussian Mixture Density Estimates Using Bayesian Penalty Terms 545 
+of lp (6}). The E-step is identical to (1). The M-step becomes 
+m Ekm=l hik3jk ._ 111 
+, E: h + -  () :  
+(6) 
+r/ = E, h( x - ;)(x - ;)' + .(; - )(; - )' + 2/ (7) 
+E?=i h', + 2.- d 
+As typical for conjugate priors, prior knowledge corresponds to a set of artificial 
+training data which is also reflected in the EM-update equations. In our experi- 
+ments, we focus on a prior on the variances which is implemented by/? : 0, where 
+0 denotes the d x d zero matrix. All other parameters we set to neutral values: 
+7i=1 �i:l<i<n, a=(d+l)/2, 1=0, fi=/I d 
+I a is the d x d unity matrix. The choice of a introduces a bias which favors large 
+variances�. The effect of various values of the scalar/ on the density estimate is 
+illustrated in figure 2. Note that if/ is chosen too small, overfitting still occurs. If 
+it is chosen to large, on the other hand, the model is too constraint to recognize the 
+underlying structure. 
+O7 
+o 
+Figure 2: Regularized density estimates (left:/ = 0.05, right:'/ = 0.1). 
+Typically, the optimal _value for/ is not known a priori. The simplest procedure 
+consists of using that fi which leads to the best performance on a validation set, 
+analogous to the determination of the optimal weight decay parameter in neural 
+network training. Alternatively, / might be determined according to appropriate 
+Bayesian methods ([Mac91]). Either way, only few additional computations are 
+required for this method if compared with standard EM. 
+4 Averaging Gaussian Mixtures 
+In this section we discuss the averaging of several Gaussian mixtures to yield im- 
+proved probability density estimation. The averaging over neural network ensembles 
+has been applied previously to regression and classification tasks ([PC93]). 
+There are several different variants on the simple averaging idea. First, one may 
+train all networks on the complete set of training data. The only source of dis- 
+agreement between the individual predictions consists in different local solutions 
+found by the likelihood maximization procedure due to different starting points. 
+Disagreement is essential to yield an improvement by averaging, however, so that 
+this proceeding only seems advantageous in cases where the relation between train- 
+ing data and weights is extremely non-deterministic in the sense that in training, 
+�If A is distributed according to Wi(Ala, j?), then E[A -] = (a-(d + 1)/2)-/. In our 
+case A is E -, so that E[Ei] -- e�./ for a - (d + 1)/2. 
+546 D. ORMONEIT, V. TRESP 
+different solutions are found from different random starting points. A straightfor- 
+ward way to increase the disagreement is to train each network on a resampled 
+version of the original data set. If we resample the data without replacement, the 
+size of each training set is reduced, in our experiments to 70% of the original. The 
+ave

@@ -1,0 +1,152 @@
+Second order derivatives for network 
+pruning: Optimal Brain Surgeon 
+Babak Hassibi* and David G. Stork 
+Ricoh California Research Center 
+2882 Sand Hill Road, Suite 115 
+Menlo Park, CA 94025-7022 
+stork@crc.ricoh.com 
+and 
+* Department of Electrical Engineering 
+Stanford University 
+Stanford, CA 94305 
+Abstract 
+We investigate the use of information from all second order derivatives of the error 
+function to perform network pruning (i.e., removing unimportant weights from a trained 
+network) in order to improve generalization, simplify networks, reduce hardware or 
+storage requirements, increase the speed of further training, and in some cases enable rule 
+extraction. Our method, Optimal Brain Surgeon (OBS), is significantly better than 
+magnitude-based methods and Optimal Brain Damage [Le Cun, Denker and Solla, 1990], 
+which often remove the wrong weights. OBS permits the pruning of more weights than 
+other methods (for the same error on the training set), and thus yields better 
+generalization on test data. Crucial to OBS is a recursion relation for calculating the 
+inverse Hessian matrix H -l from training data and structural information of the net. OBS 
+permits a 90%, a 76%, and a 62% reduction in weights over backpropagation with weight 
+decay on three benchmark MONK's problems [Thrun et al., 1991]. Of OBS, Optimal 
+Brain Damage, and magnitude-based methods, only OBS deletes the correct weights from 
+a trained XOR network in every case. Finally, whereas Sejnowski and Rosenberg [1987] 
+used 18,000 weights in their NETtalk network, we used OBS to prune a network to just 
+1560 weights, yielding better generalization. 
+1 Introduction 
+A central problem in machine learning and pattern recognition is to minimize the system complexity 
+(description length, VC-dimension, etc.) consistent with the training data. In neural networks this 
+regularization problem is often cast as minimizing the number of connection weights. Without such weight 
+elimination overfitting problems and thus poor generalization will result. Conversely, if there are too few 
+weights, the network might not be able to learn the training data. 
+If we begin with a trained network having too many weights, the questions then become: Which weights 
+should be eliminated? How should the remaining weights be adjusted for best performance? How can such 
+network pruning be done in a computationally efficient way? 
+164 
+Second order derivatives for network pruning: Optimal Brain Surgeon 165 
+Magnitude based methods [Hertz, Krogh and Palmer, 1991] eliminate weights that have the smallest 
+magnitude. This simple and naively plausible idea unfortunately often leads to the elimination of the wrong 
+weights m small weights can be necessary for low error. Optimal Brain Damage [Le Cun, Denker and 
+Solla, 1990] uses the criterion of minimal increase in training error for weight elimination. For 
+computational simplicity, OBD assumes that the Hessian matrix is diagonal; in fact, however, Hessians for 
+every problem we have considered are strongly non-diagonal, and this leads OBD to eliminate the wrong 
+weights. The superiority of the method described here m Optimal Brain Surgeon -- lies in great pan to the 
+fact that it makes no restrictive assumptions about the form of the network's Hessian, and thereby 
+eliminates the correct weights. Moreover, unlike other methods, OBS does not demand (typically slow) 
+retraining after the pruning of a weight. 
+2 Optimal Brain Surgeon 
+In deriving our method we begin, as do Le Cun, Denker and Solla [1990], by considering a network trained 
+to a local minimum in error. The functional Taylor series of the error with respect to weights (or 
+parameters, see below) is: 
+- � + � � H. + o(llwll (a) 
+where H -- 2E/ow2 is the Hessian matrix (containing all second order derivatives) and the superscript 
+T denotes vector transpose. For a network trained to a local minimum in error, the first (linear) term 
+vanishes; we also ignore the third and all higher order terms. Our goal is then to set one of the weights to 
+zero (which we call wq) to minimize the increase in error given by Eq. 1. Eliminating wq is expressed as: 
+T. SW 4' Wq = 0 (2) 
+Swq + wq = 0 or more generally eq 
+where eq is the unit vector in weight space corresponding to (scalar) weight wq. Our goal is then to solve: 
+T. Sw + Wq = 0} (3) 
+Minq {Min5 w {� Sw T. H. Sw} such that eq 
+To solve Eq. 3 we form a Lagrangian from Eqs. 1 and 2: 
+L = �tSw T. H. Sw + ,t, (eq T- Sw + Wq) (4) 
+where ,t. is a Lagrange undetermined multiplier. We take functional derivatives, employ the constraints of 
+Eq. 2, and use matrix inversion to find that the optimal weight change and resulting change in error are: 
+2 
+_ 1 wq (5) 
+wq H -'eq and Lq 2[H-]qq 
+- [H_]qq 
+Note that neither H nor H 4 need be diagonal (as is assumed by Le Cun et al.); moreover, our method 
+recalculates the magnitude of all the weights in the network, by the left side of Eq. 5. We call Lq the 
+saliency of weight q -- the increase in error that results when the weight is eliminated -- a definition 
+more general than Le Cun et al.'s, and which includes theirs in the special case of diagonal H. 
+Thus we have the following algorithm: 
+Optimal Brain Surgeon procedure 
+1. Train a reasonably large network to minimum error. 
+2. Compute H 4. 
+3. Find the q that gives the smallest saliency Lq = Wq2/(2[H4]qq). If this candidate error 
+increase is much smaller than E, then the qth weight should be deleted, and we 
+proceed to step 4; otherwise go to step 5. (Other stopping criteria can be used too.) 
+4. Use the q from step 3 to update all weights (Eq. 5). Go to step 2. 
+5. No more weights can be deleted without large increase in E. (At this point it may be 
+desirable to retrain the network. / 
+Figure 1 illustrates the basic idea. The relative magnitudes of the error after pruning (before retraining, if 
+any) depend upon the particular problem, but to second order obey: E(mag) > E(OBD) > E(OBS), which is 
+the key to the superiority of OBS. In this example OBS and OBD lead to the elimination of the same 
+weight (weight 1). In many cases, however, OBS will eliminate different weights than those eliminated by 
+OBD (cf. Sect. 6). We call our method Optimal Brain Surgeon because in addition to deleting weights, it 
+166 Hassibi and Stork 
+calculates and changes the strengths of other weights without the need for gradient descent or other 
+incremental retraining. 
+Figure 1: Error as a function of two weights in a 
+network. The (local) minimum occurs at weight 
+w*, found by gradient descent or other learning 
+method. In this illustration, a magnitude based 
+pruning technique (mag) then removes the 
+smallest weight, weight 2; Optimal Brain 
+Damage before retraining (OBD) removes 
+weight 1. In contrast, our Optimal Brain 
+Surgeon method (OBS) not only removes weight 
+1, but also automatically adjusts the value of 
+weight 2 to minimize the error, without 
+retaining. The error surface here is general in 
+that it has different curvatures (second 
+derivatives) along different directions, a 
+minimum at a non-special weight value, and a 
+non-diagonal Hessian (i.e., principal axes are not 
+parallel to the weight axes). We have found (to 
+our surprise) that every problem we have 
+investigated has strongly non-diagonal Hessians 
+-- thereby explaining the improvment of our 
+method over that of Le Cun et al. 
+3 Computing the inverse Hessian 
+The difficulty appears to be step 2 in the OBS procedure, since inverting a matrix of thousands or millions 
+of terms seems computationally inn'actable. In what follows we shall give a general derivation of the 
+inverse Hessian for a fully trained neural network. It makes no difference whether it was trained by 
+backpropagation, competitive learning, the Boltzmann algorithm, or any other method, so long as 
+derivatives can be taken (see below). We shall show that the Hessian can be reduced to the sample 
+covmance matrix associated with certain gradient vectors. Furthermore, the gradient vectors necessary for 
+OBS are normally available at small computational cost; the covariance form of the Hessian yields a 
+recursive formula for computing the inverse. 
+Consider a general non-linear neural network that maps an input vector in of dimension n i into an output 
+vector o of dimension n o, according to the following: 
+o = F(w, in) (6) 
+where w is an n dimensional vector representing the neural network's weights or other parameters. We 
+shall refer to w as a weight vector below for simplicity and definiteness, but it must be stressed that w could 
+represent any continuous parameters, such as those describing neural transfer function, weight sharing, and 
+so on. The mean square error corresponding to the training set is defined as: 
+1 (t[/ l _ otkl)r(t[k ] _ otkl ) (7) 
+E = 2P k=l 
+where P is the number of mining patterns, and t [kl and o [kl are the desired response and network response 
+for the k th training pattern. The first derivative with respect to w is: 
+oE =_1  oF(w, in[kl)(t[] _o[]) (8) 
+ Pk=l 
+and the second derivative or Hessian is: 
+o32E 1 P o3F(w,in [kl) oF(w,in[kl) r o2F(w, in[kl).(t[l:]_o[l: ] 
+H-- - = o o - � 2 )] (9) 
+Second order derivatives for network pruning: Optimal Brain Surgeon 167 
+Next we consider a network fully trained to a local minimum in error at w*. Under this condition the 
+network response o [kl will be close to the desired response t [k], and hence we neglect the term involving 
+(tkl - oP, l). Even late in pruning, when this error is not small for a single pauern, this approximation can be 
+justified (see next Section). This simplification yields: 
+1 P oF(w,in [k]) cgF(w, in[k]) T 
+H =__ 1  o w (10) 
+If out network has just a single output, we may define the n-dimensional data vector XP, I of derivatives as: 
+X [k] m �F(w'in[k]) 
+o w (11) 
+ThusEq. 10 can be written as: H = 1 x[k ] x[k] T (12) 
+Pk=l 
+If instead our network has multiple output units, then X

@@ -1,0 +1,136 @@
+Using a neural net to instantiate a 
+deformable model 
+Christopher K. I. Williams Michael D. Revow and Geoffrey E. Hinton 
+Department of Computer Science, University of Toronto 
+Toronto, Ontario, Canada M5S 1A4 
+Abstract 
+Deformable models are an attractive approach to recognizing non- 
+rigid objects which have considerable within class variability. How- 
+ever, there are severe search problems associated with fitting the 
+models to data. We show that by using neural networks to provide 
+better starting points, the search time can be significantly reduced. 
+The method is demonstrated on a character recognition task. 
+In previous work we have developed an approach to handwritten character recogni- 
+tion based on the use of deformable models (Hinton, Williams and Revow, 1992a; 
+Revow, Williams and Hinton, 1993). We have obtained good performance with this 
+method, but a major problem is that the search procedure for fitting each model to 
+an image is very computationally intensive, because there is no efficient algorithm 
+(like dynamic programming) for this task. In this paper we demonstrate that it is 
+possible to compile down some of the knowledge gained while fitting models to 
+data to obtain better starting points that significantly reduce the search time. 
+1 DEFORMABLE MODELS FOR DIGIT RECOGNITION 
+The basic idea in using deformable models for digit recognition is that each digit has 
+a model, and a test image is classified by finding the model which is most likely to 
+have generated it. The quality of the match between model and test image depends 
+on the deformation of the model, the amount of ink that is attributed to noise and 
+the distance of the remaining ink from the deformed model. 
+*Current address: Department of Computer Science and Applied Mathematics, Aston 
+University, Birmingham B4 7ET, UK. 
+966 Christopher K. I. Williams, Michael D. Revow, Geoffrey E. Hinton 
+More formally, the two important terms in assessing the fit are the prior probabil- 
+ity distribution for the instantiation parameters of a model (which penalizes very 
+distorted models), and the imaging model that characterizes the probability distri- 
+bution over possible images given the instantiated model 1. Let I be an image, M 
+be a model and z be its instantiation parameters. Then the evidence for model M 
+is given by 
+PUIM) - / P(zlM)PUIM, z)dz (1) 
+The first term in the integrand is the prior on the instantiation parameters and the 
+second is the imaging model i.e., the likelihood of the data given the instantiated 
+model. P(MlI ) is directly proportional to P(I[M), as we assume a uniform prior 
+on each digit. 
+Equation i is formally correct, but if z has more than a few dimensions the evalua- 
+tion of this integral is very computationally intensive. However, it is often possible 
+to make an approximation based on the assumption that the integrand is strongly 
+peaked around a (global) maximum value z*. In this case, the evidence can be ap- 
+proximated by the highest peak of the integrand times a volume factor A(zlI , M), 
+which measures the sharpness of the peak 2. 
+P(IIM) - P(z*IM)P(IIz*, M)A(zII, M ) (2) 
+By Taylor expanding around z* to second order it can be shown that the volume 
+factor depends on the determinant of the Hessian of log P(z, IIM ) . Taking logs 
+of equation 2, defining E&! as the negative log of P(z* IM), and E!it as the cor- 
+responding term for the imaging model, then the aim of the search is to find the 
+minimum of Etot -Ede! + E!it. Of course the total energy will have many local 
+minima; for the character recognition task we aim to find the global minimum by 
+using a continuation method (see section 1.2). 
+1.1 SPLINES, AFFINE TRANSFORMS AND IMAGING MODELS 
+This section presents a brief overview of our work on using deformable models for 
+digit recognition. For a fuller treatment, see Revow, Williams and Hinton (1993). 
+Each digit is modelled by a cubic B-spline whose shape is determined by the posi- 
+tions of the control points in the object-based frame. The models have eight control 
+points, except for the one model which has three, and the seven model which has 
+five. To generate an ideal example of a digit the control points are positioned at 
+their home locations. Deformed characters are produced by perturbing the con- 
+trol points away from their home locations. The home locations and covariance 
+matrix for each model were adapted in order to improve the performance. 
+The deformation energy only penalizes shape deformations. Affine transformations, 
+i.e., translation, rotation, dilation, elongation, and shear, do not change the under- 
+lying shape of an object so we want the deformation energy to be invariant under 
+them. We achieve this by giving each model its own object-based frame and 
+computing the deformation energy relative to this frame. 
+This framework has been used by many authors, e.g. Grenander et al (1991). 
+2The Gaussian approximation has been popularized in the neural net community by 
+MacKay (1992). 
+Using a Neural Net to Instantiate a Deformable Model 967 
+The data we used consists of binary-pixel images of segmented handwritten digits. 
+The general flavour of a imaging model for this problem is that there should be a 
+high probability of inked pixels close to the spline, and lower probabilities further 
+away. This can be achieved by spacing out a number of Gaussian ink generators 
+uniformly along the contour; we have found that it is also useful to have a uniform 
+background noise process over the area of the image that is able to account for 
+pixels that occur far away from the generators. The ink generators and background 
+process define a mixture model. Using the assumption that each data point is 
+generated independently given the instantiated model, P(IIz*, M) factors into the 
+product of the probability density of each black pixel under the mixture model. 
+1.2 RECOGNIZING ISOLATED DIGITS 
+For each model, the aim of the search is to find the instantiation parameters that 
+minimize Esot. The search starts with zero deformations and an initial guess for 
+the affine parameters which scales the model so as to lie over the data with zero 
+skew and rotation. A small number of generators with the same large variance are 
+placed along the spline, forming a broad, smooth ridge of high ink-probability along 
+the spline. We use a search procedure similar to the (iterative) Expectation Max- 
+imization (EM) method of fitting an unconstrained mixture of Gaussians, except 
+that (i) the Gaussians are constrained to lie on the spline (ii) there is a deforma- 
+tion energy term and (iii) the affine transformation must be recalculated on each 
+iteration. During the search the number of generators is gradually increased while 
+their variance decreases according to predetermined annealing schedule 3. 
+After fitting all the models to a particular image, we wish to evaluate which of the 
+models best explains the data. The natural measure is the sum of Eyit, 
+and the volume factor. However, we have found that performance is improved by 
+including four additional terms which are easily obtained from the final fits of the 
+model to the image. These are (i) a measure which penalizes matches in which 
+there are beads far from any inked pixels (the beads in white space problem), 
+and (ii) the rotation, shear and elongation of the affine transform. It is hard to 
+decide in a principled way on the correct weightings for all of these terms in the 
+evaluation function. We estimated the weightings from the data by training a 
+simple postprocessing neural network. These inputs are connected directly to the 
+ten output units. The output units compete using the softmax function which 
+guarantees that they form a probability distribution, summing to one. 
+2 PREDICTING THE INSTANTIATION PARAMETERS 
+The search procedure described above is very time consuming. However, given many 
+examples of images and the corresponding instantiation parameters obtained by the 
+slow method, it is possible to train a neural network to predict the instantiation 
+parameters of novel images. These predictions provide better starting points, so the 
+search time can be reduced. 
+�The schedule starts with 8 beads increasing to 60 beads in six steps, with the variance 
+decreasing from 0.04 to 0.0006 (measured in the object frame). The scale is set in the 
+object-based frame so that each model is 1 unit high. 
+968 Christopher K. I. Williams, Michael D. Revow, Geoffrey E. Hinton 
+2.1 PREVIOUS WORK 
+Previous work on hypothesizing instantiation parameters can be placed into two 
+broad classes, correspondence based search and parameter space search. In corre- 
+spondence based search, the idea is to extract features from the image and identify 
+corresponding features in the model. Using sufficient correspondences the instantia- 
+tion parameters of the model can be determined. The problem is that simple, easily 
+detectable image features have many possible matches, and more complex features 
+require more computation and are more difficult to detect. Grimson (1990) shows 
+how to search the space of possible correspondences using an interpretation tree. 
+An alternative approach, which is used in Hough transform techniques, is to di- 
+rectly work in parameter space. The Hough transform was originally designed for 
+the detection of straight lines in images, and has been extended to cover a number 
+of geometric shapes, notably conic sections. Ballard (1981) further extended the 
+approach to arbitrary shapes with the Generalized Hough Transform. The param- 
+eter space for each model is divided into cells (binned), and then for each image 
+feature a vote is added to each parameter space bin that could have produced that 
+feature. After collecting votes from all image features we then search for peaks in 
+the parameter space accumulator array, and attempt to verify pose. The Hough 
+transform can be viewed as a crude way of approximatin

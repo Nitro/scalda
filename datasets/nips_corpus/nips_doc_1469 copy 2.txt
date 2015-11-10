@@ -1,0 +1,153 @@
+Applications of multi-resolution neural 
+networks to mammography 
+Clay D. Spence and Paul Sajda 
+Sarnoff Corporation 
+CN5300 
+Princeton, NJ 08543-5300 
+{cspence, psajda}@sarnoff. com 
+Abstract 
+We have previously presented a coarse-to-fine hierarchical pyra- 
+mid/neural network (HPNN) architecture which combines multi- 
+scale image processing techniques with neural networks. In this 
+paper we present applications of this general architecture to two 
+problems in mammographic Computer-Aided Diagnosis (CAD). 
+The first application is the detection of microcalcifications. The 
+coarse-to-fine HPNN was designed to learn large-scale context in- 
+fbrmation fbr detecting small objects like microcalcifications. Re- 
+ceiver operating characteristic (ROC) analysis suggests that the 
+hierarchical architecture improves detection performance of a well 
+established CAD system by roughly 50 %. The second application 
+is to detect mammographic masses directly. Since masses are large, 
+extended objects, the coarse-to-fine HPNN architecture is not suit- 
+able for this problem. Instead we construct a fine-to-coarse HPNN 
+architecture which is designed to learn small-scale detail structure 
+associated with the extended objects. Our initial results applying 
+the fine-to-coarse HPNN to mass detection are encouraging, with 
+detection perfbrmance improvements of about 36 %. We conclude 
+that the ability of the HPNN architecture to integrate information 
+across scales, both coarse-to-fine and fine-to-coarse, makes it well 
+suited tbr detecting objects which may have contextual clues or 
+detail structure occurring at scales other than the natural scale of 
+the object. 
+1 Introduction 
+In a previous paper [8] we presented a coarse-to-fine hierarchical pyramid/neural 
+network (HPNN) architecture that combines multi-scale image processing tech- 
+Applications of Multi-Resolution Neural Networks to Mammography 939 
+niques with neural networks to search for small targets in images (see figure 1A). 
+To search an image we apply the network at a position and use its output as an 
+estimate of the probability that a target (an object of the class we wish to find) is 
+present there. We then repeat this at each position in the image. In the coarse- 
+to-fine HPNN, the hidden units of networks operating at low resolution or coarse 
+scale learn associated coztext information, since the targets themselves are difficult 
+to detect at low resolution. The context is then passed to networks searching at 
+higher resolution. The use of context can significantly improve detection perfor- 
+mance since small objects have few distinguishing features. In the HPNN each of 
+the networks receives information directly from only a small part of several feature 
+images, and so the networks can be relatively simple. The network at the highest 
+resolution integrates the contextual information learned at coatset resolutions to 
+detect the object of interest. 
+The HPNN architecture can be extended by considering the implications of inverting 
+the infbrmation flow in the coarse-to-fine architecture. This fine-to-coarse HPNN 
+would have networks extracting detail structure at fine resolutions of the image 
+and then passing this detail information to networks operating at coatset scales 
+(see figure lB). For many types of objects, information about the fine structure is 
+important for discriminating between different classes. The fine-to-coarse HPNN is 
+therefbre a natural architecture for exploiting fine detail information for detecting 
+extended objects. 
+In this paper, we present our experiences in applying the HPNN framework to 
+two problems in mammographic Computer-Aided Diagnosis (CAD); that of detect- 
+ing microcalcifications in mammograms and that of detecting malignant masses in 
+mammograms. The coarse-to-fine HPNN architecture is well-suited for the micro- 
+calcification problem, while the fine-to-coarse HPNN is suited fbr mass detection. 
+We evaluate the performance and utility of the HPNN framework by considering 
+its effects on reducing false positive rates in a well characterized CAD system. 
+The University of Chicago (UofC) has been actively developing'mammographic 
+CAD systems for microcalcification and mass detection [6] and has been evaluating 
+their performance clinically. A general block diagram showing the basic processing 
+elements of these CAD systems is shown in figure 2. First, a pre-processing step 
+is used to segment the breast area and increase the overall signal-to-noise levels in 
+the image. Regions of interest (ROIs) are defined at this stage, representing local 
+areas of the breast which potentially contain a cluster of microcalcifications or a 
+mass. The next stage typically involves feature extraction and rule-based/heuristic 
+analysis, in order to prune false positives. The remaining POIs are classified as 
+positive or negative by a statistical classifier or neural network. The CAD system 
+is used as a second reader, aiding the radiologist by pointing out spots to double 
+check. One of the key requirements of CAD is that false positive rates be low 
+enough that radiologists will not ignore the CAD system output. Therefore it is 
+critical to reduce false positive rates of CAD systems without significant reductions 
+in sensitivity. In this paper we evaluate the HPNN framework within the context 
+of reducing the false positive rates of the UofC CAD systems for microcalcification 
+and mass detection. In both cases the HPNN acts as a post-processor of the UofC 
+CAD system. 
+2 Microcalcification detection 
+Microcalcifications are calcium deposits in breast tissue that appear as very small 
+bright dots in mammograms. Clusters of microcalcifications frequently occur around 
+tumors. Unfortunately microcalcification clusters are sometimes missed, since they 
+940 C. D. Spence and P Sajda 
+P(t) 
+P(t) 
+Figure 1: Hierarchical pyramid/neural network architectures for (A) detecting mi- 
+crocalcifications and (B) detecting masses. In (A) context is propagated fi'om low 
+to high resolution via the hidden units of low resolution networks. In (B) small 
+scale detail information is propagated from high to low resolution. In both cases 
+the output of the last integration network is an estimate of the probability that a 
+target is present. 
+Mammogram :J Pre-processing :- 
+Feature extraction 
+and rule-based/ Statistical/NN Mass or 
+: classifier : Cluster locations 
+heurist c aria ysis 
+Figure 2: Block diagram for a typical CAD detection system. 
+can be quite subtle and the radiologists can only spend about a minute evaluating 
+a patient's mammograms. 
+Data used fbr the microcalcification experiments was provided by The University of 
+Chicago. The first set of data consists of 50 true positive and 86 false positive POIs. 
+These POIs are 99x99 pixels and digitized at 100 micron resolution. A second set 
+of data t�om the UofC clinical testing database included 47 true positives and 103 
+false positives, also 99x99 and sampled at 100 micron resolution. 
+We trained the coarse-to-fine HPNN architecture in figure 1A as a detector fbr indi- 
+vidual calcifications. For each level in the pyramid a network is trained, beginning 
+with the network at low resolution. The network at a particular pyramid level is 
+applied to one pixel at a time in the image at that resolution, and so produces an 
+output at each pixel. All of the networks are trained to detect microcalcifications, 
+however, at low resolutions the microcalcifications are not directly detectable. To 
+achieve better than chance performance, the networks at those levels must learn 
+something about the context in which microcalcifications appear. To integrate 
+context information with the other tatures the outputs of hidden units from low 
+resolution networks are propagated hierarchically as inputs to networks operating 
+at higher resolutions. 
+Input to the neural networks cone from an integrated feature pyramid (IFP) [1]. 
+To construct the IFP, we used steerable filters [3] to compute local orientation 
+energy. The steering properties of these filters enable the direct computation of 
+the orientation having maximum energy. We constructed features which represent, 
+at each pixel location, the maximum energy (energy at 0,,x), the energy at the 
+Applications of Multi-Resolution Neural Networks to Mammography 941 
+cc HPNN Chicago NN 
+Az anz FPF FPF Az nz FPF FPF 
+TPF=i.0 TPF=i.0 
+1 .93 .03 .24 .11 .88 .04 .50 .11 
+2 .94 .02 .21 .11 .91 .02 .43 .10 
+3 .94 .03 .39 .19 .91 .03 .48 .19 
+4 .93 .03 .48 .15 .90 .05 .56 .21 
+5 .93 .03 .51 .06 .88 .05 .68 .21 
+Table 1: Comparison of HPNN and Chicago networks. 
+orientation perpendicular to 0mx (0,x -90�), and the energy at the diagonal 
+(energy at 0,x - 45�).  The resulting features are input into the coarse-to-fine 
+network hierarchy. 
+In examining the truth data for the ROI data set, we found that the experts who 
+specified the microcalcification positions often made errors in these positions of 
+up to 4-2 pixels of the correct position. To take this uncertainty in position into 
+account, we used the tbllowing error function 
+pPos xp xENeg 
+(1) 
+which we have called the Uncertain Object Position (UOP) error function [7]. 2 
+is the network's output when applied to position x.) It is essentially the cross- 
+entropy error, but for positive examples the probability of generating a positive 
+output (j(x), in this case) has been replaced by the probability of generating at 
+least one positive output in a region or set of pixels p in the image. In our case each 
+p is a five-by-five pixel square centered on the location specified by the expert. To 
+this we added the standard weight decay regularization term. The regularization 
+constant was adjusted to minimize the ten-fold cross-validation error. 
+The coarse-to-fine HPNN was applied to each input ROI, and an image was con- 
+structed fi'om the output of the Level 0 network at each pixel. Each of these pixel 
+values is

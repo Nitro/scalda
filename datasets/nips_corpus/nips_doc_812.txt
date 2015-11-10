@@ -1,0 +1,159 @@
+I II 
+Learning Mackey-Glass from 25 
+examples, Plus or Minus 2 
+Mark Plutowski* Garrison Cottrell* Halbert White** 
+Institute for Neural Computation 
+*Department of Computer Science and Engineering 
+**Department of Economics 
+University of California, San Diego 
+La Jolla, CA 92093 
+Abstract 
+We apply active exemplar selection (Plutowski & White, 1991; 
+1993) to predicting a chaotic time series. Given a fixed set of ex- 
+amples, the method chooses a concise subset for training. Fitting 
+these exemplars results in the entire set being fit as well as de- 
+sired. The algorithm incorporates a method for regulating network 
+complexity, automatically adding exemplars and hidden units as 
+needed. Fitting examples generated from the Mackey-Glass equa- 
+tion with fractal dimension 2.1 to an rmse of 0.01 required about 25 
+exemplars and 3 to 6 hidden units. The method requires an order 
+of magnitude fewer floating point operations than training on the 
+entire set of examples, is significantly cheaper than two contend- 
+ing exemplar selection techniques, and suggests a simpler active 
+selection technique that performs comparably. 
+I Introduction 
+Plutowski & White (1991; 1993), have developed a method of active selection of 
+training exemplars for network learning. Active selection uses information about 
+the state of the network when choosing new exemplars. The approach uses the sta- 
+tistical sampling criterion Integrated Squared Bias (ISB) to derive a greedy selection 
+method that picks the training example maximizing the decrement in this measure. 
+(ISB is a special case of the more familiar Integrated Mean Squared Error in the 
+case that noise variance is zero.) We refer to this method as AISB. The method 
+automatically regulates network complexity by growing the network as necessary 
+1135 
+1136 Plutowski, Cottrell, and White 
+to fit the selected exemplars, and terminates when the model fits the entire set of 
+available examples to the desired accuracy. Hence the method is a nonparametric 
+regression technique. In this paper we show that the method is practical by apply- 
+ing it to the Mackey-Glass time series prediction task. We compare AISB with 
+the method of training on all the examples. AISB consistently learns the time 
+series from a small subset of the available examples, finding solutions equivalent 
+to solutions obtained using all of the examples. The networks obtained by AISB 
+consistently perform better on test data for single step prediction, and do at least 
+as well at iterated prediction, but are trained at much lower cost. 
+Having demonstrated that this particular type of exemplar selection is worthwhile, 
+we compare AISB with three other exemplar selection methods which are easier 
+to code and cost leas to compute. We compare the total cost of training, as well 
+as the size of the exemplar sets selected. One of the three contending methods was 
+suggested by the AISB algorithm, and is also an active selection technique, as its 
+calculation involves the network state. Among the four exemplar selection methods, 
+we find that the two active selection methods provide the greatest computational 
+savings and select the most concise training sets. 
+2 The Method 
+We are provided with a set of N candidate examples of the form (zi,g(zi)). 
+Given g, we can denote this as z v. Let f(-, w) denote the network function pa- 
+rameterized by weights w. For a particular subset of the examples denoted z n, let 
+w, = wn (z ') minimize 
+- w)) 
+Let w* be the best set of weights, which minimizes 
+(g(x) - f(x, w'))2p(dx), 
+where  is the distribution over the inputs. Our objective is to select a subset x 
+of x v such that n : N, while minimizing f(f(z, w,)- f(x, w*))2p(dx). Thus, 
+we desire a subset representative of the whole set. We choose the z C zv giving 
+weights wn that minimize the Integrated Squared Bias (ISB): 
+ISB(x ') =/(g(z)- f(z, 
+(1) 
+We generate z ' incrementally. Given a candidate example ,+, let + = 
+(x n, ,+). Selecting x I optimally with respect to (1) is straightforward. Then 
+given x minimizing ISB(x), we opt to select x,+  zv maximizing ISB(x) - 
+ISB(: +). Note that using this property for ,+ will not necessarily deliver the 
+globally optimal solution. Nevertheless, this approach permits a computationally 
+feasible and attractive method for sequential selection of training examples. 
+Learning Mackey-Glass from 25 Examples, Plus or Minus 2 1137 
+Choosing z.+i to maximize this decrement directly is expensive. We use the follow- 
+ing simple approximation (see Plutowski & White, 1991) for justification): Given 
+z ', select z,+ ( arg max,+iAISB(5:n+i Ix), where 
+and 
+N 
+ats(i.+, =/'k'tbn+l' Z Vwf(zi, wn)(g(,r,) -- f(a&, ton)), 
+i=1 
+A'ff.,n+' -- (g(5,+x)- f(.+i , w,))'V,f(,+x, wn)'[H(x',w.)] -1, 
+= y]. vwf(,, 
+In practice we approximate H appropriately for the task at hand. Although we 
+arrive at this criterion by making use of approximations valid for large n, this crite- 
+rion has an appealing interpretation as picking the single example having individual 
+error gradient most highly correlated with the average error gradient of the entire 
+set of examples. Learning with this example is therefore likely to be especially in- 
+formative. The AISB criterion thus possesses heuristic appeal in training sets of 
+any size. 
+3 The Algorithm 
+Before presenting the algorithm we first explain certain implementation details. We 
+integrated the AISB criterion with a straightforward method for regulating network 
+complexity. We begin with a small network nd an initial training set composed of 
+a single exemplar. When a new exemplar is added, if training stalls, we rndomize 
+the network weights and restart training. After 5 stalls, we grow the network by 
+adding another unit to each hidden layer. 
+Before we can select a new exemplar, we require that the network fit the current 
+training set sufficiently well. Let en( m) measure the rmse (root mean squared 
+error) network fit over rn arbitrary examples m when trained on z n. Let F,  + 
+denote the rmse fit we require over the current set of n exemplars before selecting 
+a new one. Let FN  + denote the rmse fit desired over all N examples. (Our 
+goal is en(x N) _ F.) It typically suffices to set Fn = Fv, that is, to train to a fit 
+over the exemplars which is at least as stringent as the fit desired over the entire 
+set (normalized for the number of exemplars.) However,. active selection sometimes 
+chooses a new exemplar too close to previously selected exemplars even when this 
+is the case. This is easy to detect, and in this case we reject the new exemplar and 
+continue with training. 
+We use an exemplar spacingparameter d to detect when a new exemplar is too 
+close to a previous selection. Two examples zi and zj are closein this sense if 
+they are within Euclidean distance d, and if additionally [g(z)-�(zj)[ _ Fv. The 
+additional condition allows the new exemplar to be accepted even when it is close to 
+a previous selection in input space, provided it is sufficiently far away in the output 
+space. In our experiments, the input and output space are of the same scale, so we 
+set d = Ft. When a new selection is too close to a current exemplar, we reject the 
+1138 Plutowski, Cottrell, and White 
+new selection, reduce F, by 20%, and continue training, resetting Fn = FN when 
+a subsequent selection is appended to the current training set. We now outline the 
+algorithm: 
+Initialize: 
+� Specify user-set parameters: initial network size, the desired fit Fv, the 
+exemplar spacing parameter, and the maximum number of restarts. 
+� Select the first training set, x = {x}. Set n = 1 and Fn = FN. Train the 
+network on x until en(x l) _< F,. 
+While(e.(x v) > F.) { 
+Select a new exemplar, zn+  z v, maximizing AISB. 
+If (z.+ is too close to any z 6 z) { 
+Reject 
+Reduce F. by 20%. } 
+Else { 
+Append Zn+ to z n. 
+Increment n. 
+Set F, = Fv. } 
+While(en (z ) > F) { 
+Train the network on the current training set 
+restarting and growing as necessary. }} 
+4 The Problem 
+We generated the data from the Mackey-Glass equation (Mackey & Glass, 1977), 
+with r = 17, a = 0.2, and b = 0.1. We integrated the equation using fourth order 
+Runge-Kutta with step size 0.1, and the history initialized to 0.5. We generated two 
+data sets. We iterated the equation for 100 time steps before beginning sampling; 
+this marks t = 0. The next 1000 time steps comprise Data Set 1. We generated 
+Data Set 2 from the 2000 examples following t = 5000. 
+We used the standard feed-forward network architecture with [0, 1] sigmoids and one 
+or two hidden layers. Denoting the time series as x(t), the inputs were x(t), z(t - 
+6), z(/- 12), z(t- 18), and the desired output is z(t +6) (Lavedes & Farbet, 1987). 
+We used conjugate gradient optimization for all of the training runs. The line search 
+routine typically required 5 to 7 passes through the data set for each downhill step, 
+and was restricted to use no more than 10. 
+Initgaily, the single hidden layer network has a single hidden unit, and the 2 hidden 
+layer network has 2 units per hidden layer. A unit is added to each hidden layer 
+when growing either architecture. All methods use the same growing procedure. 
+Thus, other exemplar selection techniques are implemented by modifying how the 
+next training set is obtained at the beginning of the outer while loop. The method 
+of using all the training examples uses only the inner while loop. 
+In preliminary experiments we evaluated sensitivity of AISB to the calculation of 
+H. We compared two ways of estimating H, in terms of the number of exemplars 
+Learning Mackey-Glass from 25 Examples, Plus or Minus 2 1139 
+selected and the total cost of training. The first approach uses the diagonal terms 
+of H (Plutowski & White, 1993). The second approach replaces H with the identity 
+matrix. Evaluated over 10 separate runs, fitting 500 examples to an rmse

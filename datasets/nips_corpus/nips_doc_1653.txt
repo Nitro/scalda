@@ -1,0 +1,146 @@
+Managing Uncertainty in Cue Combination 
+Zhiyong Yang 
+Department of Neurobiolog Box 3209 
+Duke University Medical Center 
+Durham, NC 27710 
+zhyyan@duke. edu 
+Richard S. Zemel 
+Department of Psychology 
+University of Arizona 
+Tucson, AZ 85721 
+zemel@u. arizona. edu 
+Abstract 
+We develop a hierarchical generative model to study cue combi- 
+nation. The model maps a global shape parameter to local cue- 
+specific parameters, which in turn generate an intensity image. 
+Inferring shape from images is achieved by inverting this model. 
+Inference produces a probability distribution at each level; using 
+distributions rather than a single value of underlying variables at 
+each stage preserves information about the validity of each local 
+cue for the given image. This allows the model, unlike standard 
+combination models, to adaptively weight each cue based on gen- 
+eral cue reliability and specific image context. We describe the 
+results of a cue combination psychophysics experiment we con- 
+ducted that allows a direct comparison with the model. The model 
+provides a good fit to our data and a natural account for some in- 
+teresting aspects of cue combination. 
+Understanding cue combination is a fundamental step in developing computa- 
+tional models of visual perception, because many aspects of perception naturally 
+involve multiple cues, such as binocular stereo, motion, texture, and shading. It is 
+often formulated as a problem of inferring or estimating some relevant parameter, 
+e.g., depth, shape, position, by combining estimates from individual cues. 
+An important finding of psychophysical studies of cue combination is that cues 
+vary in the degree to which they are used in different visual environments. Weights 
+assigned to estimates derived from a particular cue seem to reflect its estimated 
+reliability in the current scene and viewing conditions. For example, motion 
+and stereo are weighted approximately equally at near distances, but motion is 
+weighted more at far distances, presumably due to distance limits on binocular 
+disparity. s Experiments have also found these weightings sensitive to image ma- 
+nipulations; if a cue is weakened, such as by adding noise, then the uncontami- 
+nated cue is utilized more in making depth judgments. 9 A recent study 2 has shown 
+that observers can adjust the weighting they assign to a cue based on its relative 
+utility for a particular task. From these and other experiments, we can identify two 
+types of information that determine relative cue weightings: (1) cue reliability: its 
+relative utility in the context of the task and general viewing conditions; and (2) 
+region informativeness: cue information available locally in a given image. 
+A central question in computational models of cue combination then concerns how 
+these forms of uncertainty can be combined. We propose a hierarchical generative 
+870 Z. Yang and R. S. Zemel 
+model. Generative models have a rich history in cue combination, as they underlie 
+models of Bayesian perception that have been developed in this area?, 5The nov- 
+elty in the generative model proposed here lies in its hierarchical nature and use 
+of distributions throughout, which allows for both context-dependent and image- 
+specific uncertainty to be combined in a principled manner. 
+Our aims in this paper are dual: to develop a combination model that incorporates 
+cue reliability and region informativeness (estimated across and within images), 
+and to use this model to account for data and provide predictions for psychophys- 
+ical experiments. Another motivation for the approach here stems from our recent 
+probabilistic framework,  which posits that every step of processing entails the 
+representation of an entire probability distribution, rather than just a single value 
+of the relevant underlying variable(s). Here we use separate local probability dis- 
+tributions for each cue estimated directly from an image. Combination then entails 
+transforming representations and integrating distributions across both space and 
+cues, taking across- and within-image uncertainty into account. 
+1 IMAGE GENERATION 
+In this paper we study the case of combining shading and texture. Standard shape- 
+from-shading models exclude texture, ,8 while standard shape-from-texture mod- 
+els exclude shading. ? Experimental results and computational arguments have 
+supported a strong interaction between these cues, � but no model accounting for 
+this interaction has yet been worked out. 
+The shape used in our experiments is a simple surface: 
+Z = B(1- z), I'1 <= 1, lYl <= I (1) 
+where Z is the height from the zy plane. B is the only shape parameter. 
+Our image formation model is a hierarchical generative model (see Figure 1). The 
+top layer contains the global parameter B. The second layer contains local shad- 
+ing and texture parameters S, T = {Si, T/}, where i indexes image regions. The 
+generation of local cues from a global parameter is intended to allow local uncer- 
+tainties to be introduced separately into the cues. This models specific conditions 
+in realistic images, such as shading uncertainty due to shadows or specularities, 
+and texture uncertainty when prior assumptions such as isotropicity are violated. 4 
+Here we introduce uncertainty by adding independent local noise to the underly- 
+ing shape parameter; this manipulation is less realistic but easier to control. 
+Local Shading ({S}) Local Texture ({T}) 
+Image (I) 
+Figure 1: Left: The generative model of image formation. Right: Two sample 
+images generated by the image formation procedure. B = 1.4 in both. Left: r = 
+0.05, rt = 0. Right: r = 0, rt = 0.05. 
+The local cues are sampled from Gaussian distributions: p(SilB) = A/'(f(B); r,); 
+iv(T[B) = ;V (g(B); rt). f (B), g(B) describe how the local cue parameters depend 
+Managing Uncertainty in Cue Combination 8 71 
+on the shape parameter B, while rr and rrt represent the degree of noise in each 
+cue. In this paper, to simplify the generation process we set f(B) = g(B) = B. 
+From {$i } and { }, two surfaces are generated; these are essentially two separate 
+noisy local versions of B. The intensity image combines these surfaces. A set 
+of same-intensity texsels sampled from a uniform distribution are mapped onto 
+the texture surface, and then projected onto the image plane under orthogonal 
+projection. The intensity of surface pixels not contained within these texsels are 
+determined generated from the shading surface using Lambertjan shading. Each 
+image is composed of 10 x 10 non-overlapping regions, and contains 400 x 400 
+pixels. Figure 1 shows two images generated by this procedure. 
+2 COMBINATION MODEL 
+We create a combination, or recognition model by inverting the generative model 
+of Figure 1 to infer the shape parameter B from the image. An important aspect of 
+the combination model is the use of distributions to represent parameter estimates 
+at each stage. This preserves uncertainty information at each level, and allows it to 
+play a role in subsequent inference. 
+The overall goal of combination is to infer an estimate of B given some image I. We 
+derive our main inference equation using a Bayesian integration over distributions: 
+?(BI) = f ?(BIS, T)?(S, TI0dSdT (2) 
+P(S, TI) ~ I-I (3) 
+i 
+P(BlS, T) -- P(B)P(S, TIB)//P(B)P(S, TIB)d* ~ P(SIB)P(TIB) (4) 
+i 
+To simplify the two components we have assumed that the prior over B is uniform, 
+and that the S, T am conditionally independent given B, and given the image. This 
+third assumption is dubious but is not essential in the model, as discussed below. 
+We now consider these two components in turn. 
+2.1 Obtaining local cue-specific representations from an image 
+One component in the inference equation, P(S, TII ), describes local cue- 
+dependent information in the particular image I. We first define intermediate 
+representations S, T that are dependent on shading and texture cues, respectively. 
+The shading representation is the curvature of a horizontal section: S = f(B) = 
+2B(1 + 4z2B2) -a/2. The texture representation is the cosine of the surface slant: 
+T = g(B) = (1 + 4z2B2) -/. Note that these S, T variables do not match those 
+used in the generative model; ideally we could have used these cue-dependent 
+variables, but generating images from them proved difficult. 
+Some image pre-processing must take place in order to estimate values and un- 
+certainties for these particular local variables. The approach we adopt involves a 
+simple statistical matching procedure, similar to k-nearest neighbors, applied to 
+local image patches. After applying Gaussian smoothing and band-pass filtering 
+to the image, two representations of each patch am obtained using separate shad- 
+ing and texture filters. For shading, image patches are represented by forming a 
+histogram of --; for texture, the patch is represented by the mean and standard 
+deviation of the amplitude of Gabor filter responses at 4 scales and orientations. 
+This representation of a shading patch is then compared to a database of similar 
+872 Z gang and R. S. Zemel 
+patch representations. Entries in the shading database are formed by first select- 
+ing a particular value of B and try, generating an image patch, and applying the 
+appropriate filters. Thus S = fiB) and the noise level rr are known for each entry, 
+allowing an estimate of these variables for the new patch to be formed as a linear 
+combination of the entries with similar representations. An analogous procedure, 
+utilizing a separate database, allows 7' and an uncertainty estimate to be derived 
+for texture. Both databases have 60 different b, rr pairs, and 10 samples of each pair. 
+Based on this procedure we obtain for each image patch mean values M[, M/t and 
+uncertainty values V?, V/t for Si,Ti. These determine P(I[S),P(I[T), which are 
+approximated as Gaussians. Taking into account the Gaussian priors for $i, 
+P(S, 1I) = P(IlS,)P($, ) .., exp(-'--(S- M[)')exp(

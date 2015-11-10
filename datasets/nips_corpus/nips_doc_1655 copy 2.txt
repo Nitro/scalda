@@ -1,0 +1,142 @@
+Bayesian Network Induction via Local 
+Neighborhoods 
+Dimitris Margaritis 
+Department of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+D.M a rg a ri tis @ cs. cmu. edu 
+Sebastian Thrun 
+Department of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+S. Thrun @ cs. cmu. edu 
+Abstract 
+In recent years, Bayesian networks have become highly successful tool for di- 
+agnosis, analysis, and decision making in real-world domains. We present an 
+efficient algorithm for learning Bayes networks from data. Our approach con- 
+structs Bayesian networks by first identifying each node's Markov blankets, then 
+connecting nodes in a maximally consistent way. In contrast to the majority of 
+work, which typically uses hill-climbing approaches that may produce dense and 
+causally incorrect nets, our approach yields much more compact causal networks 
+by heeding independencies in the data. Compact causal networks facilitate fast in- 
+ference and are also easier to understand. We prove that under mild assumptions, 
+our approach requires time polynomial in the size of the data and the number of 
+nodes. A randomized variant, also presented here, yields comparable results at 
+much higher speeds. 
+1 Introduction 
+A great number of scientific fields today benefit from being able to automatically estimate 
+the probability of certain quantities of interest that may be difficult or expensive to observe 
+directly. For example, a doctor may be interested in estimating the probability of heart 
+disease from indications of high blood pressure and other directly measurable quantities. 
+A computer vision system may benefit from a probability distribution of buildings based 
+on indicators of horizontal and vertical straight lines. Probability densities proliferate the 
+sciences today and advances in its estimation are likely to have a wide impact on many 
+different fields. 
+Bayesian networks are a succinct and efficient way to represent a joint probability distri- 
+bution among a set of variables. As such, they have been applied to fields such as those 
+mentioned [Herskovits90][Agosta88]. Besides their ability for density estimation, their 
+semantics lend them to what is sometimes loosely referred to as causal discovery, namely 
+directional relationships among quantities involved. It has been widely accepted that the 
+most parsimonious representation for a Bayesian net is one that closely represents the causal 
+independence relationships that may exist. For these reasons, there has been great interest 
+in automatically inducing the structure of Bayesian nets automatically from data, preferably 
+also preserving the independence relationships in the process. 
+Two research approaches have emerged. The first employs independence properties of 
+the underlying network that produced the data in order to discover parts of its structure. 
+This approach is mainly exemplified by the SGS and PC algorithms in [Spirtes93], as well 
+506 D. Margaritis and S. Thrun 
+Figure 1: On the left, an example of a Markov blanket of variable X is shown. The members of 
+the blanket are shown shaded. On the right, an example reconstruction of a 5 x 5 rectangular net of 
+branching factor 3 by the algorithm presented in this paper using 20000 samples. Indicated by dotted 
+lines are 3 directionality errors. 
+as for restricted classes such as trees [Chow68] and polytrees [Rebane87]. The second 
+approach is concerned more with data prediction, disregarding independencies in the data. 
+It is typically identified with a greedy hill-climbing or best-first beam search in the space 
+of legal structures, employing as a scoring function a form of data likelihood, sometimes 
+penalized for network complexity. The result is a local maximum score network structure 
+for representing the data, and is one of the more popular techniques used today. 
+This paper presents an approach that belongs in the first category. It addresses the two main 
+shortcomings of the prior work which, we believe, are preventing its use from becoming 
+more widespread. These two disadvantages are: exponential execution times, and proneness 
+to errors in dependence tests used. The former problem is addressed in this paper in two 
+ways. One is by identifying the local neighborhood of each variable in the Bayesian net 
+as a preprocessing step, in order to facilitate the recovery of the local structure around 
+each variable in polynomial time under the assumption of bounded neighborhood size. The 
+second, randomized version goes one step further, employing a user-specified number of 
+randomized tests (constant or logarithmic) in order to ascertain the same result with high 
+probability. The second disadvantage of this research approach, namely proneness to errors, 
+is also addressed by the randomized version, by using multiple data sets (if available) and 
+Bayesian accumulation of evidence. 
+2 The Grow-Shrink Markov Blanket Algorithm 
+The concept of the Markov blanket of a variable or a set of variables is central to this paper. 
+The concept itself is not new. For example, see [Pearl88]. It is surprising, however, how 
+little attention it has attracted for all its being a fundamental property of a Bayesian net. 
+What is new in this paper is the introduction of the explicit use of this idea to effectively 
+limit unnecessary computation, as well as a simple algorithm to compute it. The definition 
+of a Markov blanket is as follows: denoting V as the set of variables and X(XS Y as the 
+conditional dependence of X and Y given the set S, the Markov blanket B ) C_ V of 
+X C V is any set of variables such that for any Y C V - BL(X) - {X}, X BL(x) Y' 
+In other words, BL(X) completely shields variable X from any other variable in V. The 
+notion of a minimal Markov blanket, called a Markov boundary, is also introduced in 
+[Pearl88] and its uniqueness shown under certain conditions. The Markov boundary is 
+not unique in certain pathological situations, such as the equality of two variables. In 
+our following discussion we will assume that the conditions necessary for its existence and 
+uniqueness are satisfied and we will identify the Markov blanket with the Markov boundary, 
+using the notation B (X) for the blanket of variable X from now on. It is also illuminating 
+to mention that, in the Bayesian net framework, the Markov blanket of a node X is easily 
+identifiable from the graph: it consists of all parents, children and parents of children of 
+X. An example Markov blanket is shown in Fig. 1. Note that any of these nodes, say Y, is 
+dependent with X given B(X) - {Y}. 
+Bayesian Network Induction via Local Neighborhoods 507 
+1. S - 13. 
+2. While 3 Y C V - {X} such that Y +-'>S X, do S -- S U {Y}. 
+3. While 3 Y C S such that Y OS-{Y} X, do S <-- S - {Y}. 
+4. B(X) -- S. 
+[Growing phase] 
+[Shrinking phase] 
+Figure 2: The basic Markov blanket algorithm. 
+The algorithm for the recovery of the Markov blanket of X is shown in Fig. 2. The idea 
+behind step 2 is simple: as long as the Markov blanket property of X is violated (ie. there 
+exists a variable in V that is dependent on X), we add it to the current set S until there are 
+no more such variables. In this process however, there may be some variables that were 
+added to S that were really outside the blanket. Such variables would have been rendered 
+independent from X at a later point when intervening nodes of the underlying Bayesian 
+net were added to S. This observation necessitates step 3, which identifies and removes 
+those variables. The algorithm is efficient, requiring only O (n) conditional tests, making 
+its running time O(n IDI), where n = IVI and D is the set of examples. For a detailed 
+derivation of this bound as well as a formal proof of correctness, see [Margaritis99]. In 
+practice one may try to minimize the number of tests in step 3 by heuristically ordering the 
+variables in the loop of step 2, for example by ascending mutual information or probability 
+of dependence between X and Y (as computed using the X 2 test, see section 5). 
+3 Grow-Shrink (GS) Algorithm for Bayesian Net Induction 
+The recovery of the local structure around each node is greatly facilitated by the knowledge 
+of the nodes' Markov blankets. What would normally be a daunting task of employ- 
+ing dependence tests conditioned on an exponential number of subsets of large sets of 
+variables--even though most of their members may be irrelevant--can now be focused on 
+the Markov blankets of the nodes involved, making structure discovery much faster and 
+more reliable. We present below the plain version of the GS algorithm that utilizes blanket 
+information for inducing the structure of a Bayesian net. At a later point of this paper, we 
+will present a robust, randomized version that has the potential of being faster and more 
+reliable, as well as being able to operate in an anytime manner. 
+In the following N(X) represents the direct neighbors of X. 
+[ Compute Markov Blankets ] 
+For all X  V, compute the Markov blanket B (X). 
+[ Compute Graph Structure ] 
+For all X  V and Y  B (X), determine Y to be a direct neighbor of X if X and 
+Y are dependent given S for all S C_ T, where T is the smaller of B(X) - {Y} and 
+B(Y)- {X}. 
+[ Orient Edges ] 
+For all X E V and Y C N(X), orient Y --> X if there exists a variable Z  
+N(X) - N(Y) - {Y} such that Y and Z are dependent given S U {X} for all S C_ U, 
+where U is the smaller of B(Y) - {Z} and B(Z) - {Y}. 
+[ Remove Cycles ] 
+Do the following while there exist cycles in the graph: 
+1. Compute the set of edges C = {X --> Y such that X --> Y is part of a cycle}. 
+2. Remove the edge in C that is part of the greatest number of cycles, and put it in 
+R. 
+508 D. Margaritis and $. Thrun 
+[ Reverse Edges ] 
+Insert each edge from R in the graph, reversed. 
+[ Propagate Directions ] 
+For all X C V and Y C N(X) such that neither Y --> X nor X - Y, execute the 
+following rule until it no longer applies: If there exists a direct

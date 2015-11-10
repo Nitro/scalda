@@ -1,0 +1,139 @@
+Human Face Detection in Visual Scenes 
+Henry A. Rowley Shumeet Baluja Takeo Kanade 
+hat @ cs.cmu.edu baluj a @ cs. cmu.edu tk @ cs. cmu .edu 
+School of Computer Science, Carnegie Mellon University, Pittsburgh, PA 15213, USA 
+Abstract 
+We present a neural network-based face detection system. A retinally 
+connected neural network examines small windows of an image, and 
+decides whether each window contains a face. The system arbitrates 
+between multiple networks to improve performance over a single network. 
+We use a bootstrap algorithm for training, which adds false detections 
+into the training set as training progresses. This eliminates the difficult 
+task of manually selecting non-face training examples, which must be 
+chosen to span the entire space of non-face images. Comparisons with 
+another state-of-the-art face detection system are presented; our system 
+has better performance in terms of detection and false-positive rates. 
+1 INTRODUCTION 
+In this paper, we present a neural network-based algorithm to detect frontal views of faces 
+in gray-scale images. The algorithms and training methods are general, and can be applied 
+to other views of faces, as well as to similar object and pattern recognition problems. 
+Training a neural network for the face detection task is challenging because of the difficulty 
+in characterizing prototypical non-face images. Unlike in face recognition, where the 
+classes to be discriminated are different faces, in face detection, the two classes to be 
+discriminated are images containing faces and images not containing faces. It is easy 
+to get a representative sample of images which contain faces, but much harder to get a 
+representative sample of those which do not. The size of the training set for the second 
+class can grow very quickly. 
+We avoid the problem of using a huge training set of non-faces by selectively adding images 
+to the training set as training progresses [Sung and Poggio, 1994]. This bootstrapping 
+method reduces the size of the training set needed. Detailed descriptions of this training 
+method, along with the network architecture are given in Section 2. In Section 3 the 
+performance of the system is examined. We find that the system is able to detect 92.9% of 
+faces with an acceptable number of false positives. Section 4 compares this system with a 
+similar system. Conclusions and directions for future research are presented in Section 5. 
+2 DESCRIPTION OF THE SYSTEM 
+Our system consists of two major parts: a set of neural network-based filters, and a system 
+to combine the filter outputs. Below, we describe the design and training of the filters, 
+876 H.A. ROWLEY, S. BALUJA, T. KANADE 
+which scan the input image for faces. This is followed by descriptions of algorithms for 
+arbitrating among multiple networks and for merging multiple overlapping detections. 
+2.1 STAGE ONE: A NEURAL-NETWORK-BASED FILTER 
+The first component of our system is a filter that receives as input a small square region of 
+the image, and generates an output ranging from 1 to - 1, signifying the presence or absence 
+of a face, respectively. To detect faces anywhere in the input, the filter must be applied at 
+every location in the image. To allow detection of faces larger than the window size, the 
+input image is repeatedly reduced in size (by subsampling), and the filter is applied at each 
+size. The set of scaled input images is known as an image pyramid, and is illustrated in 
+Figure 1. The filter itself must have some invariance to position and scale. The amount 
+of invariance in the filter determines the number of scales and positions at which the filter 
+must be applied. 
+With these points in mind, we can give the filtering algorithm (see Figure 1). It consists 
+of two main steps: a preprocessing step, followed by a forward pass through a neural 
+network. The preprocessing consists of lighting correction, which equalizes the intensity 
+values across the window, followed by histogram equalization, which expands the range of 
+intensities in the window [Sung and Poggio, 1994]. The preprocessed window is used as 
+the input to the neural network. The network has retinal connections to its input layer; the 
+receptive fields of each hidden unit are shown in the figure. Although the figure shows a 
+single hidden unit for each subregion of the input, these units can be replicated. Similar 
+architectures are commonly used in speech and character recognition tasks [Waibel et al., 
+1989, Le Cun et al., 1989]. 
+Input image pyramid Extracted window Correct lighting Histogram equalization Receptive fields 
+:-??--?-! '. ' :::!-i ! : ......... '' .... -::'..::' � :- .................  Hidden units 
+  :- ':_:2-..: :' [?] } : :; - : Network  tput 
+v' 
+Preprocessing Neural network 
+Figure 1: The basic algorithm used for face detection. 
+Examples of output from a single filter are shown in Figure 2. In the figure, each box 
+represents the position and size of a window to which the neural network gave a positive 
+response. The network has some invariance to position and scale, which results in multiple 
+boxes around some faces. Note that there are some false detections; we present methods to 
+eliminate them in Section 2.2. We next describe the training of the network which generated 
+this output. 
+2.1.1 Training Stage One 
+To train a neural network to serve as an accurate filter, a large number of face and non-face 
+images are needed. Nearly 1050 face examples were gathered from face databases at CMU 
+and Harvard. The images contained faces of various sizes, orientations, positions, and 
+intensities. The eyes and upper lip of each face were located manually, and these points 
+were used to normalize each face to the same scale, orientation, and position. A 20-by-20 
+pixel region containing the face is extracted and preprocessed (by apply lighting correction 
+and histogram equalization). In the training set, 15 faces were created from each original 
+image, by slightly rotating (up to 10 �), scaling (90%-110%), translating (up to half a pixel), 
+Human Face Detection in Visual Scenes 877 
+Figure 2: Images with all 
+the above threshold detec- 
+tions indicated by boxes. 
+Figure 3: Example face im- 
+ages, randomly mirrored, ro- 
+tated, translated, and scaled 
+by small amounts. 
+and mirroring each face. A few example images are shown in Figure 3. 
+It is difficult to collect a representative set of non-faces. Instead of collecting the images 
+before training is started, the images are collected during training, as follows [Sung and 
+Poggio, 1994]: 
+1. Create 1000 non-face images using random pixel intensities. 
+2. Train a neural network to produce an output of 1 for the face examples, and - 1 for 
+the non-face examples. 
+3. Run the system on an image of scenery which contains no faces. Collect subimages 
+in which the network incorrectly identifies a face (an output activation > 0). 
+4. Select up to 250 of these subimages at random, and add them into the training set. 
+Go to step 2. 
+Some examples of non-faces that are collected during training are shown in Figure 4. We 
+used 120 images for collecting negative examples in this bootstrapping manner. A typical 
+training run selects approximately 8000 non-face images from the 146,212,178 subimages 
+that are available at all locations and scales in the scenery images. 
+.: ......  .. .  , ... :. 
+........ ....... : ' 
+, .-:,.,, .,  ,,,-,.. F ,- f'.. -' ,. ..,.E/.- 
+,* ' ' ;7 t ' � .... Lx.,..>f .' * .. 
+, *,..;_d[,, � ..... -'' * .........  ...... :* Z .... 
+' ' '. . '.;'s:..T'* 2' ' ---,.:* ':' ' ..... ::-**-'-;'*: ' 
+'? *' *  '  - - '' ::x' *' *: :: I 
+' .--:, ., '* ,'. ' - ,., - c- - * 
+.... � ' **-*.,* 'd' ' ,..,.*<.:, '......-:c:;****', 
+Figure 4: Some non-hce examples which e collected during training. 
+2.2 STAGE TWO: ARBITRATION AND MERGING OVERLAPPING 
+DETECTIONS 
+The examples in Figure 2 showed that just one network cannot eliminate all false detections. 
+To reduce the number of false positives, we apply two networks, and use arbitration to 
+produce the final decision. Each network is trained in a similar manner, with random 
+initial weights, random initial non-face images, and random permutations of the order of 
+presentation of the scenery images. The detection and false positive rates of the individual 
+networks are quite close. However, because of different training conditions and because 
+of self-selection of negative training examples, the networks will have different biases and 
+will make different errors. 
+For the work presented here, we used very simple arbitration strategies. Each detection 
+by a filter at a particular position and scale is recorded in an image pyramid. One way to 
+878 H.A. ROWLEY, S. BALUJA, T. KANADE 
+combine two such pyramids is by ANDing. This strategy signals a detection only if both 
+networks detect a face at precisely the same scale and position. This ensures that, if a 
+particular false detection is made by only one network, the combined output will not have 
+that error. The disadvantage is that if an actual face is detected by only one network, it will 
+be lost in the combination. Similar heuristics, such as ORing the outputs, were also tried. 
+Further heuristics (applied either before or after the arbitration step) can be used to improve 
+the performance of the system. Note that in Figure 2, most faces are detected at multiple 
+nearby positions or scales, while false detections often occur at single locations. At each 
+location in an image pyramid representing detections, the number of detections within a 
+specified neighborhood of that location can be counted. If the number is above a threshold, 
+then that location is classified as a face. These detections are then collapsed down to a 
+single point, located at their centroid. when this is done before arbitration, the centroid 
+locations rather than the actual outp

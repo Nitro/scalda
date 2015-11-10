@@ -1,0 +1,136 @@
+Autoencoders, Minimum Description Length 
+and Helmholtz Free Energy 
+Geoffrey E. Hinton 
+Department of Computer Science 
+University of Toronto 
+6 King's College Road 
+Toronto M5S 1A4, Canada 
+Richard S. Zemel 
+Computational Neuroscience Laboratory 
+The Salk Institute 
+10010 North Torrey Pines Road 
+La Jolla, CA 92037 
+Abstract 
+An autoencoder network uses a set of recognition weights to convert an 
+input vector into a code vector. It then uses a set of generative weights to 
+convert the code vector into an approximate reconstruction of the input 
+vector. We derive an objective function for training autoencoders based 
+on the Minimum Description Length (MDL) principle. The aim is to 
+minimize the information required to describe both the code vector and 
+the reconstruction error. We show that this information is minimized 
+by choosing code vectors stochastically according to a Boltzmann distri- 
+bution, where the generafive weights define the energy of each possible 
+code vector given the input vector. Unfortunately, if the code vectors 
+use distributed representations, it is exponentially expensive to compute 
+this Boltzmann distribution because it involves all possible code vectors. 
+We show that the recognition weights of an autoencoder can be used to 
+compute an approximation to the Boltzmann distribution and that this ap- 
+proximation gives an upper bound on the description length. Even when 
+this bound is poor, it can be used as a Lyapunov function for learning 
+both the generafive and the recognition weights. We demonstrate that 
+this approach can be used to learn factorial codes. 
+1 INTRODUCTION 
+Many of the unsupervised learning algorithms that have been suggested for neural networks 
+can be seen as variations on two basic methods: Principal Components Analysis (PCA) 
+3 
+4 Hinton and Zemel 
+and Vector Quantization (VQ) which is also called clustering or competitive learning. 
+Both of these algorithms can be implemented simply within the autoencoder framework 
+(Baldi and Hornik, 1989; Hinton, 1989) which suggests that this framework may also 
+include other algorithms that combine aspects of both. VQ is powerful because it uses 
+a very non-linear mapping from the input vector to the code but weak because the code 
+is a purely local representation. Conversely, PCA is weak because the mapping is linear 
+but powerful because the code is a distributed, factoriel representation. We describe a 
+new objective function for training autoencoders that allows them to discover non-linear, 
+factoriel representations. 
+2 THE MINIMUM DESCRIPTION LENGTH APPROACH 
+One method of deriving a cost function for the activities of the hidden units in an autoencoder 
+is to apply the Minimum Description Length (MDL) principle (Rissanen 1989). We imagine 
+a communication game in which a sender observes an ensemble of training vectors and must 
+then communicate these vectors to a receiver. For our purposes, the sender can walt until 
+all of the input vectors have been observed before communicating any of them - an online 
+method is not required. Assuming that the components of the vectors are finely quantized 
+we can ask how many bits must be communicated to allow the receiver to reconstruct the 
+input vectors perfectly. Perhaps the simplest method of communicating the vectors would 
+be to send each component of each vector separately. Even this simple method requires 
+some further specification before we can count the number of bits required. To send the 
+value, zi,c, of component i of input vector c we must encode this value as a bit string. If 
+the sender and the receiver have already agreed on a probability distribution that assigns 
+a probability p(z) to each possible quantized value, z, Shannon's coding theorem implies 
+that z can be communicated at a cost that is bounded below by - 1ogp(z) bits. Moreover, 
+by using block coding techniques we can get arbitrarily close to this bound so we shall 
+treat it as the true cost. For coding real values to within a quantization width of t it is 
+often convenient to assume a Gaussian probability distribution with mean zero and standard 
+deviation r. Provided that r is large compared with t, the cost of coding the value z is then 
+-log/+ 0.5 log 2ro '2 + z2/2o '. 
+This simple method of communicating the training vectors is generally very wasteful. If 
+the components of a vector are correlated it is generally more efficient to convert the input 
+vector into some other representation before communicating it. The essence of the MDL 
+principle is that the best model of the data is the one that minimizes the total number of 
+bits required to communicate it, including the bits required to describe the coding scheme. 
+For an autoencoder it is convenient to divide the total description length into three terms. 
+An input vector is communicated to the receiver by sending the activities of the hidden 
+units and the residual differences between the true input vector and the one that can be 
+reconstructed from the hidden activities. There is a code cost for the hidden activities and a 
+reconstruction cost for the residual differences. In addition there is a one-time model cost 
+for communicating the weights that are required to convert the hidden activities into the 
+output of the net. This model cost is generally very important within the MDL framework, 
+but in this paper we will ignore it. In effect, we are considering the limit in which there is 
+so much data that this limited model cost is negligible. 
+PCA can be viewed as a special case of MDL in which we ignore the model cost and we limit 
+the code cost by only using m hidden units. The question of how many bits are required 
+Autoencoders, Minimum Description Length, and Helmhotz Free Energy 5 
+to code each hidden unit activity is also ignored. Thus the only remaining term is the 
+reconstruction cost. Assuming that the residual differences are encoded using a zero-mean 
+Gaussian with the same predetermined variance for each component, the reconstruction 
+cost is minimized by minimizing the squared differences. 
+Similarly, VQ is a version of MDL in which we limit the code cost to at most log m bits by 
+using only m winner-take-all hidden units, we ignore the model cost, and we minimize the 
+reconstruction cost. 
+In standard VQ we assume that each input vector is converted into a specific code. Sur- 
+prisingly, it is more efficient to choose the codes stochastically so that the very same input 
+vector is sometimes communicated using one code and sometimes using another. This type 
+ofstochastic VQ is exactly equivalent to maximizing the log probability of the data under 
+a mixture of Gaussians model. Each code of the VQ then corresponds to the mean of a 
+Gaussian and the probability of picking the code is the posterior probability of the input 
+vector under that Gaussian. Since this derivation of the mixture of Gaussians model is 
+crucial to the new techniques described later, we shall describe it in some detail. 
+2.1 The bits-back argument 
+The description length of an input vector using a particular code is the sum of the code cost 
+and reconstruction cost. We define this to be the energy of the code, for reasons that will 
+become clear later. Given an input vector, we define the energy of a code to be the sum 
+of the code cost and the reconstruction cost. If the prior probability of code i is ri and its 
+squared reconstruction error is d the energy of the code is 
+k d 2 
+Ei = - log ri - k log t +  log 2rr  + 2r-- 5 (1) 
+where k is the dimensionality of the input vector, r 2 is the variance of the fixed Gaussian 
+used for encoding the reconstruction errors and t is the quantization width. 
+Now consider the following situation: We have fitted a VQ to some training data and, for a 
+particular input vector, two of the codes are equally good in the sense that they have equal 
+energies. In a standard VQ we would gain no advantage from the fact that there are two 
+equally good codes. However, the fact that we have a choice of two codes should be worth 
+something. It does not matter which code we use so if we are vague about the choice of 
+code we should be able to save one bit when communicating the code. 
+To make this argument precise consider the following communication game: The sender 
+is already communicating a large number of random bits to the receiver, and we want to 
+compute the additional cost of communicating some input vectors. For each input vector 
+we have a number of alternative codes hi ...hi...h, and each code has an energy, Ei. In a 
+standard VQ we would pick the code, j, with the lowest energy. But suppose we pick code 
+i with a probability pi that depends on Ei. Our expected cost then appears to be higher 
+since we sometimes pick codes that do not have the minimum value of E. 
+< Cost 
+(2) 
+where < ... > is used to denote an expected value. However, the sender can use her 
+freedom of choice in stochastically picking codes to communicate some of the random 
+6 Hinton and Zemel 
+bits that need to be communicated anyway. It is easy to see how random bits can be used 
+to stochastically choose a code, but it is less obvious how these bits can be recovered by 
+the receiver, because he is only sent the chosen code and does not know the probability 
+distribution from which it was picked. This distribution depends on the particular input 
+vector that is being communicated. To recover the random bits, the receiver waits until all 
+of the training vectors have been communicated losslessly and then runs exactly the same 
+learning algorithm as the sender used. This allows the receiver to recover the recognition 
+weights that are used to convert input vectors into codes, even though the only weights that 
+are explicitly communicated from the sender to the receiver are the generative weights that 
+convert codes into approximate reconstructions of the input. After learning the recognition 
+weights, the receiver can reconstruct the

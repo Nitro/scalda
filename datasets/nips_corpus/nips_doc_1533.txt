@@ -1,0 +1,158 @@
+Source Separation as a 
+By-Product of Regularization 
+Sepp Hochreiter 
+Fakultiit ffir Informatik 
+Technische Universitiit Mfinchen 
+80290 Mfinchen, Germany 
+ho chre it  inf ormat ik. tu-muenchen. de 
+Jiirgen Schmidhuber 
+IDSIA 
+Corso Elvezia 36 
+6900 Lugano, Switzerland 
+j uergen�ds�a. ch 
+Abstract 
+This paper reveals a previously ignored connection between two 
+important fields: regularization and independent component anal- 
+ysis (ICA). We show that at least one representative of a broad 
+class of algorithms (regularizers that reduce network complexity) 
+extracts independent features as a by-product. This algorithm is 
+Flat Minimum Search (FMS), a recent general method for finding 
+low-complexity networks with high generalization capability. FMS 
+works by minimizing both training error and required weight pre- 
+cision. According to our theoretical analysis the hidden layer of 
+an FMS-trained autoassociator attempts at coding each input by 
+a sparse code with as few simple features as possible. In experi- 
+ments the method extracts optimal codes for difficult versions of 
+the noisy bars benchmark problem by separating the underlying 
+sources, whereas ICA and PCA fail. Real world images are coded 
+with fewer bits per pixel than by ICA or PCA. 
+1 INTRODUCTION 
+In the field of unsupervised learning several information-theoretic objective func- 
+tions (OFs) have been proposed to evaluate the quality of sensory codes. Most OFs 
+focus on properties of the code components -- we refer to them as code component- 
+oriented OFs, or COCOFs. Some COCOFs explicitly favor near-factorial, mini- 
+mally redundant codes of the input data [2, 17, 23, 7, 24] while others favor local 
+codes [22, 3, 15]. Recently there has also been much work on COCOFs encouraging 
+biologically plausible sparse distributed codes [19, 9, 25, 8, 6, 21, 11, 16]. 
+While COCOFs express desirable properties of the code itself they neglect the costs 
+of constructing the code from the data. E.g., coding input data without redun- 
+460 S. Hochreiter and d. Schmidhuber 
+dancy may be very expensive in terms of information required to describe the code- 
+generating network, which may need many finely tuned free parameters. We believe 
+that one of sensory coding's objectives should be to reduce the cost of code genera- 
+tion through data transformations, and postulate that an important scarce resource 
+is the bits required to describe the mappings that generate and process the codes. 
+Hence we shift the point of view and focus on the information-theoretic costs of 
+code generation. We use a novel approach to unsupervised learning called low- 
+complexity coding and decoding (LocOCODE [14]). Without assuming particular 
+goals such as data compression, subsequent classification, etc., but in the spirit 
+of research on minimum description length (MDL), L OCOCOD E generates so-called 
+lococodes that (1) convey information about the input data, (2) can be computed 
+from the data by a low-complexity mapping (LCM), and (3) can be decoded by an 
+LCM. We will see that by minimizing coding/decoding costs LOCOCODE can yield 
+efficient, robust, noise-tolerant mappings for processing inputs and codes. 
+Lococodes through regularizers. To implement LOCOCODE we apply regular- 
+ization to an autoassociator (AA) whose hidden layer activations represent the code. 
+The hidden layer is forced to code information about the input data by minimizing 
+training error; the regularizer reduces coding/decoding costs. Our regularizer of 
+choice will be Flat Minimum Search (FMS) [13]. 
+2 FLAT MINIMUM SEARCH: REVIEW AND ANALYSIS 
+FMS is a general gradient-based method for finding low-complexity networks with 
+high generalization capability. FMS finds a large region in weight space such that 
+each weight vector from that region has similar small error. Such regions are called 
+flat minima. In MDL terminology, few bits of information are required to pick a 
+weight vector in a flat minimum (corresponding to a low-complexity network) -- 
+the weights may be given with low precision. FMS automatically prunes weights 
+and units, and reduces output sensitivity with respect to remaining weights and 
+units. Previous FMS applications focused on supervised learning [12, 13]. 
+Notation. Let O,H,! denote index sets for output, hidden, and input units, 
+respectively. For I 6 0 tO H, the activation yl of unit 1 is yl _ f (s/), where 
+Sl -- Zm WlmY m is the net input of unit I (m 6 H for 1  0 and m  I for 1  H), 
+Wtm denotes the weight on the connection from unit m to unit l, f denotes the 
+activation function, and for m  I, ym denotes the m-th component of an input 
+vector. W = I(O x H) tO (H x I)[ is the number of weights. 
+Algorithm. FMS' objective function E features an unconventional error term: 
+B 
+/ c9y  2 
+i,j: iOUH kO kO 
+2 
+, Ow / 
+E = Eq + .kB is minimized by gradient descent, where Eq is the training set mean 
+squared error (MSE), and A a positive regularization constant scaling B's in- 
+fluence. Choosing A corresponds to choosing a tolerable error level (there is no a 
+priori optimal way of doing so). B measures the weight precision (number of 
+bits needed to describe all weights in the net). Given a constant number of output 
+units, FMS can be implemented efficiently, namely, with standard backprop's order 
+of computational complexity [13]. 
+Source Separation as a By-Product of Regularization 461 
+2.1 FMS: A Novel Analysis 
+Simple basis functions (BFs). A BF is the function determining the activation 
+of a code component in response to a given input. Minimizing B's term 
+T1 
+� - Z 
+i,j: iGOUH 
+obviously reduces output sensitivity with respect to weights (and therefore units). 
+T1 is responsible for pruning weights (and, therefore, units). T1 is one reason why 
+low-complexity (or simple) BFs are preferred: weight precision (or complexity) is 
+mainly determined by 
+Owij ' 
+Sparseness. Because T1 tends to make unit activations decrease to zero it favors 
+sparse codes. But T1 also favors a sparse hidden layer in the sense that few hidden 
+units contribute to producing the output. B's second term 
+T2 ' 
+2 
+kGO i,j: iGOkJH ZkGo (o_QjL 2 
+Owij / 
+punishes units with similar influence on the output. We reformulate it: 
+W log 
+Few separated basis functions. Hence FMS tries to figure out a way of using 
+(1) as few BFs as possible for determining the activation of each output unit, while 
+simultaneously (2) using the same BFs for determining the activations of as many 
+output units as possible (common BFs). (1) and T1 separate the BFs: the force to- 
+wards simplicity (see T1) prevents input information from being channelled through 
+a single BF; the force towards few BFs per output makes them non-redundant. (1) 
+and (2) cause few BFs to determine all outputs. 
+Summary. Collectively T1 and T2 (which make up B) encourage sparse codes 
+based on few separated simple basis functions producing all outputs. Due to space 
+limitations a nore detailed analysis (e.g. linear output activation) had to be left to 
+a TR [14] (on the WWW). 
+See intermediate steps in [14]. We observe: (1) an output unit that is very sensitive 
+with respect to two given hidden units will heavily contribute to T2 (compare the 
+numerator in the last term of T2). (2) This large contribution can be reduced by 
+making both hidden units have large impact on other output units (see denominator 
+in the last term of T2). 
+ol + i,iE Z Z 1o�� ). 
+462 S. Hochreiter and d. Schmidhuber 
+3 EXPERIMENTS 
+We compare LOCOCODE to independent component analysis (ICA, e.g., [5, 1, 
+4, 18]) and principal component analysis (PCA, e.g., [20]). ICA is realized by 
+Cardoso's JADE algorithm, which is based on whitening and subsequent joint diag- 
+onalization of 4th-order cumulant matrices. To measure the information conveyed 
+by resulting codes we train a standard backprop net on the training set used for 
+code generation. Its inputs are the code components; its task is to reconstruct the 
+original input. The test set consists of 500 off-training set exemplars (in the case 
+of real world images we use a separate test image). Coding efficiency is the average 
+number of bits needed to code a test set input pixel. The code components are 
+scaled to the interval [0, 1] and partitioned into discrete intervals. Assuming inde- 
+pendence of the code components we estimate the probability of each discrete code 
+value by Monte Carlo sampling on the training set. To obtain the test set codes' 
+bits per pixel (Shannon's optimal value) the average sum of all negative logarithms 
+of code component probabilities is divided by the number of input components. All 
+details necessary for reimplementation are given in [14]. 
+Noisy bars adapted from [10, 11]. The input is a 5 x 5 pixel grid with horizontal 
+and vertical bars at random positions. The task is to extract the independent 
+ In 
+features (the bars). Each of the 10 possible bars appears with probability . 
+contrast to [10, 11] we allow for bar type mixing -- this makes the task harder. 
+Bar intensities vary in [0.1, 0.5]; input units that see a pixel of a bar are activated 
+correspondingly others adopt activation -0.5. We add Gaussian noise with variance 
+0.05 and mean 0 to each pixel. For ICA and PCA we have to provide information 
+about the number (ten) of independent sources (tests with n assumed sources will 
+be denoted by ICA-n and PCA-n). LOCOCODE does not require this -- using 25 
+hidden units (HUs) we expect LOCOCODE to prune the 15 superfluous HUs. 
+Results. See Table 1. While the reconstruction errors of all methods are similar, 
+LOCOCODE has the best coding efficiency. 15 of the 25 HUs are indeed automati- 
+cally pruned: LOCOCODE finds an optimal factorial code which exactly mirrors the 
+pattern generation process. PCA codes and ICA-15 codes, however, are unstruc- 
+tured and dense. While ICA-10 codes are almost sparse and do recognize some 
+sources, the sources are not clearly separat

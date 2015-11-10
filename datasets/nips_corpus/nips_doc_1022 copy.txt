@@ -1,0 +1,149 @@
+Stable Fitted Reinforcement Learning 
+Geoffrey J. Gordon 
+Computer Science Department 
+Carnegie Mellon University 
+Pittsburgh PA 15213 
+ggordon@cs.cmu.edu 
+Abstract 
+We describe the reinforcement learning problem, motivate algo- 
+rithms which seek an approximation to the Q function, and present 
+new convergence results for two such algorithms. 
+I INTRODUCTION AND BACKGROUND 
+Imagine an agent acting in some environment. At time t, the environment is in some 
+state xt chosen from a finite set of states. The agent perceives xt, and is allowed to 
+choose an action at from some finite set of actions. The environment then changes 
+state, so that at time (t + 1) it is in a new state Xt+l chosen from a probability 
+distribution which depends only on xt and at. Meanwhile, the agent experiences a 
+real-valued cost ct, chosen from a distribution which also depends only on xt and 
+at and which has finite mean and variance. 
+Such an environment is called a Markov decision process, or MDP. The reinforce- 
+ment learning problem is to control an MDP to minimize the expected discounted 
+cost '-t /tct for some discount factor -/ E [0, 1]. Define the function Q so that 
+Q(x, a) is the cost for being in state x at time 0, choosing action a, and behaving 
+optimally from then on. If we can discover Q, we have solved the problem: at each 
+step, we may simply choose at to minimize Q(xt,at). For more information about 
+MDPs, see (Watkins, 1989, Bertsekas and Tsitsiklis, 1989). 
+We may distinguish two classes of problems, online and offline. In the offline prob- 
+lem, we have a full model of the MDP: given a state and an action, we can describe 
+the distributions of the cost and the next state. We will be concerned with the 
+online problem, in which our knowledge of the MDP is limited to what we can dis- 
+cover by interacting with it. To solve an online problem, we may approximate the 
+transition and cost functions, then proceed as for an offline problem (the indirect 
+approach); or we may try to learn the Q function without the intermediate step 
+(the direct approach). Either approach may work better for any given problem: the 
+Stable Fitted Reinforcement Learning 1053 
+direct approach may not extract as much information from each observation, but 
+the indirect approach may introduce additional errors with its extra approximation 
+step. We will be concerned here only with direct algorithms. 
+Watkins' (1989) Q-learning algorithm can find the Q function for small MDPs, 
+either online or offline. Convergence with probability I in the online case 
+was proven in (Jaakkola et al., 1994, Tsitsiklis, 1994). For large MDPs, ex- 
+act Q-learning is too expensive: representing the Q function requires too much 
+space. To overcome this difficulty, we may look for an inexpensive approxima- 
+tion to the Q function. In the offline case, several algorithms for this purpose 
+have been proven to converge (Gordon, 1995a, Tsitsiklis and Van Roy, 1994, 
+Baird, 1995). For the online case, there are many fewer provably convergent al- 
+gorithms. As Baird (1995) points out, we cannot even rely on gradient descent for 
+large, stochastic problems, since we must observe two independent transitions from 
+a given state before we can compute an unbiased estimate of the gradient. One 
+of the algorithms in (Tsitsiklis and Van Roy, 1994), which uses state aggregation 
+to approximate the Q function, can be modified to apply to online problems; the 
+resulting algorithm, unlike Q-learning, must make repeated small updates to its 
+control policy, interleaved with comparatively lengthy periods of evaluation of the 
+changes. After submitting this paper, we were advised of the paper (Singh et al., 
+1995), which contains a different algorithm for solving online MDPs. In addition, 
+our newer paper (Gordon, 1995b) proves results for a larger class of approximators. 
+There are several algorithms which can handle restricted versions of the online 
+problem. In the case of a Markov chain (an MDP where only one action is available 
+at any time step), Sutton's TD(A) has been proven to converge for arbitrary linear 
+approximators (Sutton, 1988, Dayan, 1992). For decision processes with linear 
+transition functions and quadratic cost functions (the so-called linear quadratic 
+regulation problem), the algorithm of (Bradtke, 1993) is guaranteed to converge. 
+In practice, researchers have had mixed success with approximate reinforcement 
+learning (Tesauro, 1990, Boyan and Moore, 1995, Singh and Sutton, 1996). 
+The remainder of the paper is divided into four sections. In section 2, we summarize 
+convergence results for offline Q-learning, and prove some contraction properties 
+which will be useful later. Section 3 extends the convergence results to online 
+algorithms based on TD(0) and simple function approximators. Section 4 treats 
+nondiscounted problems, and section 5 wraps up. 
+2 OFFLINE DISCOUNTED PROBLEMS 
+Standard offline Q-learning begins with an MDP M and an initial Q function q(0). 
+Its goal is to learn q(n), a good approximation to the optimal Q function for M. To 
+accomplish this goal, it performs the series of updates q(i+l) _ TM(q(i)), where the 
+component of Tq (q(i)) corresponding to state x and action a is defined to be 
+[Tq(q(i))]a -- Ca + /E Pray nn (i) 
+yb 
+Y 
+Here ca is the expected cost of performing action a in state x; Pau is the probability 
+that action a from state x will lead to state y; and ff is the discount factor. 
+Oine Q-learning converges for discounted MDPs because T is a contraction in 
+max norm. That is, for all vectors q and r, 
+II TM(q) - TM(r)l 5 11 q -- r l[ 
+where ]] q II  mx, I I, Therefore, by the contraction mapping theorem, TM 
+has a unique fixed point q*, and the sequence q(i) converges linearly to q*. 
+1054 G.J. GORDON 
+It is worth noting that a weighted version of offline Q-learning is also guaranteed 
+to converge. Consider the iteration 
+q(i+) _ (I + aD(TM - I))(q(i)) 
+where a is a positive learning rate and D is an arbitrary fixed nonsingular diagonal 
+matrix of weights. In this iteration, we update some Q values more rapidly than 
+others, as might occur if for instance we visited some states more frequently than 
+others. (We will come back to this possibility later.) This weighted iteration is a 
+max norm contraction, for sufficiently small a: take two Q functions q and r, with 
+[[ q - r ][ = 1. Suppose a is small enough that the largest element of aD is B < 1, 
+and let b > 0 be the smallest diagonal element of aD. Consider any state x and 
+action a, and write da for the corresponding element of aD. We then have 
+_ (1 - da)l 
+< 
+_ (1 - b(1 - -/))/ 
+so (I - aD + aDTM) is a max norm contraction with factor (1 - b(1 - -/)). The 
+fixed point of weighted Q-learning is the same as the fixed point of unweighted 
+Q-learning: TM(q*) = q* is equivalent to aD(TM - I)q* = O. 
+The difficulty with standard (weighted or unweighted) Q-learning is that, for MDPs 
+with many states, it may be completely infeasible to compute TM(q) for even one 
+value of q. One way to avoid this difficulty is fitted Q-learning: if we can find 
+some function MA so that MA o TM is much cheaper to compute than TM, we can 
+perform the fitted iteration q(i+l) = MA (TM (q(i))) instead of the standard offline Q- 
+learning iteration. The mapping MA implements a function approximation scheme 
+(see (Gordon, 1995a)); we assume that q(0) can be represented as MA(q) for some 
+q. The fitted offline Q-learning iteration is guaranteed to converge to a unique fixed 
+point if MA is a nonexpansion in max norm, and to have bounded error if 
+is near q* (Gordon, 1995a). 
+Finally, we can define a fitted weighted Q-learning iteration: 
+q(i+l) = (! + aMAD(TM -- I))(q �) 
+If MA is a max norm nonexpansion and M = MA (these conditions are satisfied, 
+for example, by state aggregation), then fitted weighted Q-learning is guaranteed 
+to converge: 
+(I+ aMAD(TM - I))q = 
+((I- MA) + MA(I + aD(TM - I)))q 
+MA(I + aD(TM - I)))q 
+since MAq = q for q in the range of MA. (Note that q(i+) is guaranteed to be in the 
+range of MA if q(i) is.) The last line is the composition of a max norm nonexpansion 
+with a max norm contraction, and so is a max norm contraction. 
+The fixed point of fitted weighted Q-learning is not necessarily the same as the fixed 
+point of fitted Q-learning, unless MA can represent q* exactly. However, if MA is 
+linear, we have that 
+(I + aMAD(TM - I))(q + c) = c + MA(I + aD(TM - I)))(q + c) 
+for any q in the range of MA and c perpendicular to the range of MA. In particular, 
+if we take c so that q* - c is in the range of MA, and let q = MAq be a fixed point 
+Stable Fitted Reinforcement Learning 1055 
+of the weighted fitted iteration, then we have 
+[Iq*-q[[ = I[(I+aMAD(TM--I))q*--(I+aMAD(TM--I))q[[ 
+- II c 4. MA(I 4- D(TM - I)))q* - MA(I + aD(TM - I)))q II 
+< 
+Ilq*-qll < b(1- -/) 
+That is, if MA is linear in addition to the conditions for convergence, we can bound 
+the error for fitted weighted Q-learning. 
+For ofline problems, the weighted version of fitted Q-learning is not as useful  the 
+unweighted version: it involves about the same amount of work per iteration, the 
+contraction factor may not be  good, the error bound may not be as tight, and it 
+requires M = MA in addition to the conditions for convergence of the unweighted 
+iteration. On the other hand,  we shall see in the next section, the weighted 
+algorithm can be applied to online problems. 
+3 ONLINE DISCOUNTED PROBLEMS 
+Consider the following algorithm, which is a natural generalization of TD(0) (Sut- 
+ton, 1988) to Markov decision problems. (This algorithm has been called 
+sarsa (Singh and Sutton, 1996).) Start with some initial Q function q(0). Re- 
+peat the following steps for i from 0 onwards. Let r (i) be a policy chosen according 
+to some predetermined tradeoff between exploration and exploitation for the Q 
+function q(i). Now, put the agent in M's start state and allow it to follow the policy

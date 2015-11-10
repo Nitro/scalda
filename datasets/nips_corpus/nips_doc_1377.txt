@@ -1,0 +1,154 @@
+A General Purpose Image Processing Chip: 
+Orientation Detection 
+Ralph Etienne-Cummings and Donghui Cai 
+Department of Electrical Engineering 
+Southern Illinois University 
+Carbondale, IL 62901-6603 
+Abstract 
+A 80 x 78 pixel general purpose vision chip for spatial focal plane 
+processing is presented. The size and configuration of the processing 
+receptive field are programmable. The chip's architecture allows the 
+photoreceptor cells to be small and densely packed by performing all 
+computation on the read-out, away from the array. In addition to the 
+raw intensity image, the chip outputs four processed images in parallel. 
+Also presented is an application of the chip to line segment orientation 
+detection, as found in the retinal receptive fields of toads. 
+1 INTRODUCTION 
+The front-end of the biological vision system is the retina, which is a layered structure 
+responsible for image acquisition and pre-processing. The early processing is used to 
+extract spatiotemporal information which helps perception and survival. This is 
+accomplished with cells having feature detecting receptive fields, such as the edge 
+detecting center-surround spatial receptive fields of the primate and cat bipolar cells 
+[Spillmann, 1990]. In toads, the receptive fields of the retinal cells are even more 
+specialized for survival by detecting prey and predator (from size and orientation 
+filters) at this very early stage [Spillmann, 1990]. 
+The receptive of the retinal cells performs a convolution with the incident image in 
+parallel and continuous time. This has inspired many engineers to develop retinomorphic 
+vision systems which also imitate these parallel processing capabilities [Mead, 1989; 
+Camp, 1994]. While this approach is ideal for fast early processing, it is not space 
+efficient. That is, in realizing the receptive field within each pixel, considerable die area 
+is required to implement the convolution kernel. In addition, should programmability be 
+required, the complexity of each pixel increases drastically. The space constraints are 
+eliminated if the processing is performed serially during read-out. The benefits of this 
+approach are 1) each pixel can be as small as possible to allow high resolution imaging, 
+2) a single processor unit is used for the entire retina thus reducing mis-match problems, 
+3) programmability can be obtained with no impact on the density of imaging array, and 
+874 tL Etienne-Cummings and D. Cai 
+4) compact general purpose focal plane visual processing is realizable. The space 
+constrains are then transformed into temporal restrictions since the scanning clock speed 
+and response time of the processing circuits must scale with the size of the array. 
+Dividing the army into sub-arrays which are scanned in parallel can help this problem. 
+Clearly this approach departs from the architecture of its biological counterpart, however, 
+this method capitalizes on the main advantage of silicon which is its speed. This is an 
+example of mixed signal neuromorphic engineering, where biological ideas are mapped 
+onto silicon not using direct imitation (which has been the preferred approach in the past) 
+but rather by realizing their essence with the best silicon architecture and computational 
+circuits. 
+This paper presents a general purpose vision chip for spatial focal plane processing. Its 
+architecture allows the photoreceptor cells to be small and densely packed by performing 
+all computation on the read-out, away from the array. Performing computation during 
+read-out is ideal for silicon implementation since no additional temporal over-head is 
+required, provided that the processing circuits are fast enough. The chip uses a single 
+convolution kernel, per parallel sub-array, and the scanning bit pattern to realize various 
+receptive fields. This is different from other focal plane image processors which and 
+usually restricted to hardwired convolution kernels, such as oriented 2D Gabor filters 
+[Camp, 1994]. In addition to the raw intensity image, the chip outputs four processed 
+versions per sub-array. Also presented is an application of the chip to line segment 
+orientation detection, as found in the retinal receptive fields of toads [Spillmann, 1990]. 
+2 THE GENERAL PURPOSE IMAGE PROCESSING CHIP 
+2.1 System Overview 
+This chip has an 80 row by 78 column photocell army partitioned into four independent 
+sub-arrays, which are scanned and output in parallel, (see figure 1). Each block is 40 row 
+by 39 column, and has its own convolution kernel and output circuit. The scanning 
+circuit includes three parts: virtual ground, control signal generator (CSG), and scanning 
+output transformer. Each block has its own virtual ground and scanning output 
+transformer in both x direction (horizontal) and y direction (vertical). The control signal 
+generator is shared among blocks. 
+2.2 Hardware Implementation 
+The photocell is composed of phototransistor, photo current amplifier, and output 
+control. The phototransistor performance light transduction, while the amplifier 
+magnifies the photocurrent by three orders of magnitude. The output control provides 
+multiple copies of the amplified photocunent which is subsequently used for focal plane 
+image processing. 
+The phototransistor is a parasitic PNP transistor in an Nwell CMOS process. The 
+current amplifier uses a pair of diode connected pmosfets to obtain a logarithmic 
+relationship between light intensity and output current. This circuit also amplifies the 
+photocurrent from nanoamperes to microamperes. The photocell sends three copies of the 
+output currents into three independent buses. The connections from the photocell to the 
+buses are controlled by pass transistors, as shown in Fig. 2. The three current outputs 
+allow the image to be processed using multiple receptive field organization (convolution 
+kernels), while the raw image is also output. The row (column) buses provides currents 
+for extracting horizontally (vertically) oriented image features, while the original bus 
+provides the logarithmically compressed intensity image. 
+The scanning circuit addresses the photocell array by selecting groups of cells at one time. 
+Since the output of the cells are currents, virtual ground circuits are used on each bus to 
+mask the > I pF capacitance of the buses. The CSG, implemented with shift registers 
+A General Purpose Image Processing Chip: Orientation Detection 875 
+v 
+, 
+I 
+Figure 1: Block diagram of the chip. 
+produces signals which select photocells and control th6 scanning output transformer. 
+The scanning output transformer converts currents from all row buses into Ivrx and Ice,x, 
+and converts currents from all row buses into Ivory and Ice,y. This transformation is 
+required to implement the various convolution kernels discussed later. 
+The output transformer circuits are controlled by a central CSG and a peripheral CSG. 
+These two generators have identical structures but different initial values. It consists of 
+an n-bit shift register in x direction (horizontally) and an m-bit shift register in y direction 
+(vertically). A feedback circuit is used to restore the scanning pattern into the x shift 
+register after each row scan is completed. This is repeated until all the row in each block 
+are scanned. 
+The control signals from the peripheral and central CSGs select all the cells covered by a 
+2D convolution mask (receptive field). The selected cells send Ixy to the original bus, 
+to the row bus, and Iyp to the column bus. The function of the scanning output 
+transformer is to identify which rows (columns) are considered as the center (Ice, or Iceny ) 
+or periphery (I or Irony) of the convolution kernel, respectively. Figure 3 shows how a 
+3x3 convolution kernel can be constructed. 
+Figure 4 shows how the output transformer works for a 3x3 mask. Only row bus 
+transformation is shown in this example, but the same mechanism applies to the column 
+bus as well. The photocell array is m row by n column, and the size is 3x3. The XC (x 
+center) and YC (y center) come from the central CSG; while XP (x peripheral) and YP (y 
+peripheral) come from the peripheral CSG. After loading the CSG, the initial values of 
+XP and YP are both 00011...1. The initial values of XC and YC are both 10111... 1. 
+This identifies the central cell as location (2, 2). The currents from the central row 
+(column) are summed to form Ic, and Iceny, while all the peripheral cells are summed to 
+form Iperx and Ipy. This is achieved by activating the switches labeled XC, YC, XP and 
+YP in figure 2. XPi (YP,) {i=l, 2 .... , n} controls whether the output current of one cell 
+876 R. Etienne-Cummings and D. Cai 
+vc c 
+xc  
+Ixy 
+Original Bus < 
+Column Bus < 
+Row Bus < 
+lphoto  
+Amplifier and Mirror 
+lyp 
+-YP 
+XP 
+Figure 2: Connections between a photo- 
+cell and the current buses. 
+(1,1) (1,2) (1,3 
+(2,1) (2,2)  
+(3,1) (3,2) (3,3} 
+Figure 3: 
+field. 
+' Iori 
+(1j) (1 
+Iperx (2J) (2,2) (23)- -lcenx 
+(3,1) (3,2) (33) 
+(2,1) (2,2) (2,3) 
+I ceny 
+-- Ipery  
+Constructing a 3x3 receptive 
+goes to the row (column) bus. Since XPi (YP) is connected to the gate of a pmos 
+switch, a 0 in XPi (YP0 it turns on. YC (XCi) {i=l, 2 ..... n} controls whether a row 
+(column) bus connects to Ice,x bus in the same way. On the other hand, the connection 
+from a row (column) bus to Ipcrx bus is controlled by an nmos and a pmos switch. The 
+connection is made if and only if YC, (XCi), an nmos switch, is 1 and YPi (XPi), a pmos 
+switches, is 0. The intensity image is obtained directly when XCi and YC are both 0. 
+Hence, Ior i = I(2,2), Icenx = Irow2 = 1(2,1) + 1(2,2) + 1(2,3) and Iper = Irowt + Irow3 = I(1,1) + 
+I(1,2) + I(1,3) + I(3,1) + I(3,2) + I(3,3). 
+The convolution kernel can be programmed to perform many image processing tasks by 
+loading the scanning circuit with the appropriate bit pattern. This is illustrated by 
+configuring the chip to perform image smoothing and edge extracti

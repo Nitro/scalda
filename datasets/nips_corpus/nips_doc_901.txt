@@ -1,0 +1,142 @@
+Finding Structure in Reinforcement Learning 
+Sebastian Thrun 
+University of Bonn 
+Department of Computer Science III 
+ROmerstr. 164, D-53117 Bonn, Germany 
+E-mail: thrun @carbon.informatik.uni-bonn.de 
+Anton Schwartz 
+Dept. of Computer Science 
+Stanford University 
+Stanford, CA 94305 
+Email: schwartz@cs.stanford.edu 
+Abstract 
+Reinforcement learning addresses the problem of learning to select actions in order to 
+maximize one's performance in unknown environments. To scale reinforcement learning 
+to complex real-world tasks, such as typically studied in AI, one must ultimately be able 
+to discover the structure in the world, in order to abstract away the myriad of details and 
+to operate in more tractable problem spaces. 
+This paper presents the SKILLS algorithm. SKILLS discovers skills, which are partially 
+defined action policies that arise in the context of multiple, related tasks. Skills collapse 
+whole action sequences into single operators. They are learned by minimizing the com- 
+pactness of action policies, using a description length argument on their representation. 
+Empirical results in simple grid navigation tasks illustrate the successful discovery of 
+structure in reinforcement learning. 
+1 Introduction 
+Reinforcement learning comprises a family of incremental planning algorithms that construct 
+reactive controllers through real-world experimentation. A key scaling problem of reinforce- 
+ment learning, as is generally the case with unstructured planning algorithms, is that in large 
+real-world domains there might be an enormous number of decisions to be made, and pay-off 
+may be sparse and delayed. Hence, instead of learning all single fine-grain actions all at the 
+same time, one could conceivably learn much faster if one abstracted away the myriad of 
+micro-decisions, and focused instead on a small set of important decisions. But this imme- 
+diately raises the problem of how to recognize the important, and how to distinguish it from 
+the unimportant. 
+This paper presents the SKILLS algorithm. SKILLS finds partially defined action policies, 
+called skills, that occur in more than one task. Skills, once found, constitute parts of solutions 
+to multiple reinforcement learning problems. In order to find maximally useful skills, a 
+description length argument is employed. Skills reduce the number of bytes required to 
+describe action policies. This is because instead of having to describe a complete action 
+policy for each task separately, as is the case in plain reinforcement learning, skills constrain 
+multiple task to pick the same actions, and thus reduce the total number of actions required 
+386 Sebastian Thrun, Anton Schwartz 
+for representing action policies. However, using skills comes at a price. In general, one 
+cannot constrain actions to be the same in multiple tasks without ultimately suffering a loss 
+in performance. Hence, in order to find maximally useful skills that infer a minimum loss in 
+performance, the SKILLS algorithm minimizes a function of the form 
+E - PERFORMANCE LOSS + r I � DESCRIPTION LENGTH. (1) 
+This equation summarizes the rationale of the SKILLS approach. The reminder of this paper 
+gives more precise definitions and learning rules for the terms PERFORMANCE LOSS and 
+DESCRIPTION LENGTH, using the vocabulary of reinforcement learning. In addition, 
+experimental results empirically illustrate the successful discovery of skills in simple grid 
+navigation domains. 
+2 Reinforcement Learning 
+Reinforcement learning addresses the problem of learning, through experimentation, to act 
+so as to maximize one's pay-off in an unknown environment. Throughout this paper we will 
+assume that the environment of the learner is a partially controllable Markov chain [ 1 ]. At 
+any instant in time the learner can observe the state of the environment, denoted by s 6 S, 
+and apply an action, a 6 A. Actions change the state of the environment, and also produce 
+a scalar pay-off value, denoted by r,a  . Reinforcement learning seeks to identify an 
+action policy, r � S ) A, i.e., a mapping from states s  S to actions a  A that, if actions 
+are selected accordingly, maximizes the expected discounted sum of future pay-off 
+Here 7 (with 0 < 7 _< 1) is a discount factor that favors pay-offs reaped sooner in time, and 
+rt refers to the expected pay-off at time t. In general, pay-off might be delayed. Therefore, 
+in order to learn an optimal 7r, one has to solve a temporal credit assignment problem [11]. 
+To date, the single most widely used algorithm for learning from delayed pay-off is Q- 
+Learning [14]. Q-Learning solves the problem of learning r by learning a value function, 
+denoted by Q � S x A > R. Q maps states s  S and actions a 6 A to scalar values. 
+After learning, Q(s, a) ranks actions according to their goodness: The larger the expected 
+cumulative pay-off for picking action a at state s, the larger the value Q(s, a). Hence Q, once 
+learned, allows to maximize/ by picking actions greedily with respect to Q: 
+r(s) = argmax Q(s, a) 
+a6A 
+The value function Q is learned on-line through experimentation. Initially, all values Q(s, a) 
+are set to zero. Suppose during learning the learner executes action a at state s, which leads to 
+a new state s t and the immediate pay-off r,,. Q-Learning uses this state transition to update 
+Q(s,a)' 
+Q(s,a) < ..- (1 - o).Q(s,a) + o. (r,a + 7' V(s')) (3) 
+with V(s t) : maxQ(s',a) 
+The scalar a (0<a_<l) is the learning rate, which is typically set to a small value that is 
+decayed over time. Notice that if Q(s, a) is represented by a lookup-table, as will be the 
+case throughout this paper, the Q-Learning rule (3) has been shown i to converge to a value 
+function (?�Pt(s, a) which measures the future discounted pay-off one can expect to receive 
+upon applying action a in state s, and acting optimally thereafter [5, 14]. The greedy policy 
+7r(s) = argmax a )�Pt(s, O) maximizes/. 
+under certain conditions concerning the exploration scheme, the environment and the learning rate 
+Finding Structure in Reinforcement Learning 387 
+3 Skills 
+Suppose the learner faces a whole collection of related tasks, denoted by B, with identical 
+states S and actions A. Suppose each task b E B is characterized by its individual pay- 
+off function, denoted by rb(s, a). Different tasks may also face different state transition 
+probabilities. Consequently, each task requires a task-specific value function, denoted by 
+Qb(s, a), which induces a task-specific action policy, denoted by r. Obviously, plain Q- 
+Learning, as described in the previous section, can be employed to learn these individual 
+action policies. Such an approach, however, cannot discover the structure which might 
+inherently exist in the tasks. 
+In order to identify commonalities between different tasks, the SKILLS algorithm allows a 
+learner to acquire skills. A skill, denoted by k, represents an action policy, very much like 
+r. There are two crucial differences, however. Firstly, skills are only locally defined, on a 
+subset $ of all states $. $ is called the domain of skill k. Secondly, skills are not specific 
+to individual tasks. Instead, they apply to entire sets of tasks, in which they replace the 
+task-specific, local action policies. 
+Let K denote the set of all skills. In general, some skills may be appropriate for some tasks, 
+but not for others. Hence, we define a vector of usage values u, (with 0 <_ u, < 1 for 
+all k E K and all b E B). Policies in the SKILLS algorithm are stochastic, and usages 
+determine how frequently skill k is used in task b. At first glance, u, might be interpreted 
+as a probability for using skill k when performing task b, and one might always want to 
+use skill k in task b if u,, = 1, and never use skill k if u, - 0. 2 However, skills might 
+overlap, i.e., there might be states s which occurs in several skill domains, and the usages 
+might add to a value greater than 1. Therefore, usages are normalized, and actions are drawn 
+probabilistically according to the normalized distribution: 
+P(kls) = b,. m(s) (with � = 0) (4) 
+)__2 
+ktEK 
+Here P,(kls) denotes theprobabilityfor using skill k at state s, if the learner faces task b. The 
+indicator function rn (s) is the membership function for skill domains, which is 1 if s E 
+and 0 otherwise. The probabilistic action selection rule (4) makes it necessary to redefine 
+the value � (s) of a state s. If no skill dictates the action to be taken, actions will be drawn 
+according to the Q,-optimal policy 
+r(s) = argmaxQ(s,a), 
+as is the case in plain Q-Learning. The probability for this to happen is 
+Pf(s) : l- 5-}. 
+kEK 
+Hence, the value of a state is the weighted sum 
+vb(s) = P;�) . + P(kl) 
+kEK 
+with V*(s) = Q(s, vc(s)) = maxQ(s,a) 
+Why should a learner use skills, and what are the consequences? Skills reduce the freedom 
+to select actions, since multiple policies have to commit to identical actions. Obviously, such 
+2This is exactly the action selection mechanism in the SKILLS algorithm if only one skill is 
+applicable at any given state s. 
+388 Sebastian Thrun, Anton Schwartz 
+a constraint will generally result in a loss in performance. This loss is obtained by comparing 
+the actual value of each state s, � (s), and the value if no skill is used, Vo* (s)- 
+LOSS =  -,V*(s)-Vb(s) (6) 
+s6S b6B 
+= LOSS(s) 
+If actions prescribed by the skills are close to optimal, i.e., if V* (s)  Vb(s)(Vs  S), the 
+loss will be small. If skill actions are poor, however, the loss can be large. 
+Counter-balancing this loss is the fact that skills give a more compact representation of the 
+learner's policies. More specifically, assume (without loss of generality) actions can be 
+represented by a single byte, and consider the total number of bytes it takes to represent 
+the policies of all tasks b E B. In the absence of skills, representing all individual policies 
+requires IBI � IS[ bytes, one byte for ea

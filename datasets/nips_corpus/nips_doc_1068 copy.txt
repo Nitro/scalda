@@ -1,0 +1,141 @@
+Implementation Issues in the Fourier 
+Transform Algorithm 
+Yishay Mansour* Sigal Sahar t 
+Computer Science Dept. 
+Tel-Aviv University 
+TeLAviv, ISRAEL 
+Abstract 
+The Fourier transform of boolean functions has come to play an 
+important role in proving many important learnability results. We 
+aim to demonstrate that the Fourier transform techniques are also 
+a useful and practical algorithm in addition to being a powerful 
+theoretical tool. We describe the more prominent changes we have 
+introduced to the algorithm, ones that were crucial and without 
+which the performance of the algorithm would severely deterio- 
+rate. One of the benefits we present is the confidence level for each 
+prediction which measures the likelihood the prediction is correct. 
+I INTRODUCTION 
+Over the last few years the Fourier Transform (FT) representation of boolean func- 
+tions has been an instrumental tool in the computational learning theory commu- 
+nity. It has been used mainly to demonstrate the learnability of various classes of 
+functions with respect to the uniform distribution. The first connection between the 
+Fourier representation and learnability of boolean functions was established in [6] 
+where the class AC � was learned (using its FT representation) in O(n p�y-�g(n)) 
+time. The work of [5] developed a very powerful algorithmic procedure: given a 
+function and a threshold parameter it finds in polynomial time all the Fourier co- 
+efficients of the function larger than the threshold. Originally the procedure was 
+used to learn decision trees [5], and in [8, 2, 4] it was used to learn polynomial size 
+DNF. The FT technique applies naturally to the uniform distribution, though some 
+of the learnability results were extended to product distribution [1, 3]. 
+*e-mail: mansour@cs.tau.ac.il 
+re-mail: gMes@cs.tau.ac.il 
+Implementation Issues in the Fourier Transform Algorithm 261 
+A great advantage of the FT algorithm is that it does not make any assumptions 
+on the function it is learning. We can apply it to any function and hope to obtain 
+large Fourier coefficients. The prediction function simply computes the sum of 
+the coefficients with the corresponding basis functions and compares the sum to 
+some threshold. The procedure is also immune to some noise and will be able to 
+operate even if a fraction of the examples are maliciously misclassified. Its drawback 
+is that it requires to query the target function on randomly selected inputs. 
+We aim to demonstrate that the FT technique is not only a powerful theoretical 
+tool, but also a practical one. In the process of implementing the Fourier algorithm 
+we enhanced it in order to improve the accuracy of the hypothesis we generate while 
+maintaining a desirable run time. We have added such feartures as the detection 
+of inaccurate approximations on the fly and immediate correction of the errors 
+incurred at a minimal cost. The methods we devised to choose the right parame- 
+ters proved to be essential in order to achieve our goals. Furthermore, when making 
+predictions, it is extremely beneficial to have the prediction algorithm supply an 
+indicator that provides the confidence level we have in the prediction we made. Our 
+algorithm provides us naturally with such an indicator as detailed in Section 4.1. 
+The paper is organized as follows: section 2 briefly defines the FT and describes 
+the algorithm. In Section 3 we describe the experiments and their outcome and in 
+Section 4 the enhancements made. We end with our conclusions in Section 5. 
+2 FOURIER TRANSFORM (FT) THEORY 
+In this section we briefly introduce the FT theory and algorithm. its connection to 
+learning and the algorithm that finds the large coefficients. A comprehensive survey 
+of the theoretical results and proofs can be found in [7]. 
+We consider boolean functions of n variables: f: {0, 1}'* -- {-1, 1}. We define the 
+inner product: < g, f >= 2-'* '{0,i}n f(z)g(z) = E[g. f], where E is the ex- 
+pected value with respect to the uniform distribution. The basis is defined as follows: 
+for each z  {0, 1}'*, we define the basis function Xz(z,...,z,,) = (-1) :z' 
+Any function of n boolean inputs can be uniquely expressed as a linear combination 
+of the basis functions. For a function f, the z ta Fourier coefficient of f is denoted 
+by ](z), i.e., f(z) = --,{0,1}n ](z)X,(x). The Fourier coefficients are computed 
+by ](z) =< f, X, > and we call z the coefficient-name of ](z). We define a t-sparse 
+function to be a function that has at most t non-zero Fourier coefficients. 
+2.1 PREDICTION 
+Our aim is to approximate the target function f by a t-sparse function h. In many 
+cases h will simply include the large coefficients of f. That is, if A = {zx,..., z,} 
+is the set of z's for which ](zi) is large, we set h(x) = '.,^ aixz,(x), where 
+at is our approximation of ](zi). The hypothesis we generate using this process, 
+h(x), does not have a boolean output. In order to obtain a boolean prediction 
+we use $ign(h(x)), i.e., output +1 if h(x) >_ 0 and -1 if h(x) < 0. We want to 
+bound the error we get from approximating f by h using the expected error squared, 
+E[(f - h)2]. It can be shown that bounding it bounds the boolean prediction error 
+probability, i.e., Pr[f(z)  sign(h(x))] _< E[(f- h)2]. For a given t, the t-sparse 
+262 Y. MANSOUR, S. SAHAR 
+hypothesis h that minimizes E[(f- h) 2] simply includes the t largest coefficients of 
+f. Note that the more coefficients we include in our approximation and the better 
+we approximate their values, the smaller E[(f- h) 2] is going to be. This provides 
+us with the motivation to find the large coefficients. 
+2.2 FINDING THE LARGE COEFFICIENTS 
+The algorithm that finds the large coefficients receives as inputs a function f (a 
+black-box it can query) and an interest threshold parameter 0 > 0. It outputs a list 
+of coefficient-names that (1) includes all the coefficients-names whose correspond- 
+ing coefficients are large, i.e., at least 0, and (2) does not include too many 
+coefficient-names. The algorithm runs in polynomial time in both 1/0 and n. 
+I SUBROUTINE search(a) 
+IF TEST[f, , t] THEN IF JaJ = n THEN OUTPUT a 
+ELSE search(a0); search(a.); 
+Figure 1: Subroutine search 
+The basic idea of the algorithm is to perform a search in the space of the coefficient- 
+names of f. Throughout the search algorithm (see Figure (1)) we maintain a prefix 
+of a coefficient-name and try to estimate whether any of its extensions can be 
+a coefficient-name whose value is large. The algorithm commences by calling 
+search(A) where A is the empty string. On each invocation it computes the pred- 
+icate TEST[f, c,0]. If the predicate is true, it recursively calls search(c0) and 
+search(cl). Note that if TEST is very permissive we may reach all the coeffi- 
+cients, in which case our running time will not be polynomial; its implementation 
+is therefore of utmost interest. Formally, TEST[f, c, 0] computes whether 
+2 
+Eze{o,i},-,,Eye{o,i},,[f(yx)xa(y)] _ 0 2, where k = IIll. 
+Define f,(z) = YoeIo,x)--k ](a/?)Xo(z). It can be shown that the expected value 
+in (1) is exactly the sum of the squares of the coefficients whose prefix is a, i.e., 
+2 
+Eeio,}.-,Eyeio,p,[f(yz)x,(y)] = E[f(z)] = '.ei0,}._/(a/?), implying 
+that if there exists a coefficient ]](c/?)] _> d, then E[f] _> 02: This condition 
+guarantees the correctness of our algorithm, namely that we reach all the large 
+coefficientso We would like also to bound the number of recursive calls that search 
+performs. We can show that for at most 1/02 of the prefixes of size k, TEST[f, a, O] 
+is true. This bounds the number of recursive calls in our procedure by 
+In TEST we would like to compute the expected value, but in order to do so 
+efficiently we settle for an approximation of its valueo This can be done as follows: 
+(1) choose rni random zi 6 {01} n-k, (2) choose m2 random yi,j  {0,1} , (3) 
+query f on yi,jxi (which is why we need the query model--to query f on many 
+points with the same prefix z) and receive f(y,jz), and (4) compute the estimate 
+m 1 m 
+as, Ba = x '4=  -1= f(Yi,ixi)Xa(Yi,J Again for more details see [7]. 
+r 1 ' 
+3 EXPERIMENTS 
+We implemented the FT algorithm (Section 2.2) and went forth to run a series of 
+experiments� The parameters of each experiment include the target function, 0 rni 
+Implementation Issues in the Fourier Transform Algorithm 263 
+and rn2. We briefly introduce the parameters here and defer the detailed discussion. 
+The parameter 0 determines the threshold between small and large coefficients, 
+thus controlling the number of coefficients we will output. The parameters m I and 
+m 2 determine how accurately we approximate the TEST predicate. Failure to ap- 
+proximate it accurately may yield faulty, even random, results (e.g., for a ludicrous 
+choice of m = 1 and m2 = 1) that may cause the algorithm to fail (as detailed in 
+Section 4.3). An intelligent choice of ml and m2 is therefore indispensable. This 
+issue is discussed in greater detail in Sections 4.3 and 4.4. 
+Figure 2: Typical frequency plots and typical errors. Errors occur in two cases: (1) the algorithm 
+predicts a +1 response when the actual response is -1 (the lightly shaded area), and (2) the algorithm 
+predicts a -1 response, while the true response is +1 (the darker shaded area). 
+Figures (3)-(5) present representative results of our experiments in the form of 
+graphs that evaluate the output hypothesis of the algorithm on randomly chosen 
+test points. The target function, f, returns a boolean response, +1, while the FT 
+hypothesis returns a real response. We therefore present, for each experiment, a 
+graph constituting of two curves: the frequency of the values of the hypothesis, 
+h(z), when f(x) = +1, and the second curve for f(z) = -1. If the two curves 
+intersect, their intersection represents the inherent error the algorithm makes. 
+Figure 3: Decision trees of dep

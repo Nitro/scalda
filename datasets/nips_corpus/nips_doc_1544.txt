@@ -1,0 +1,160 @@
+Experimental Results on Learning Stochastic 
+Memoryless Policies for Partially Observable 
+Markov Decision Processes 
+John K. Williams 
+Department of Mathematics 
+University of Colorado 
+Boulder, CO 80309-0395 
+jkwillia @ euclid. colorado.edu 
+Satinder Singh 
+AT&T Labs-Research 
+180 Park Avenue 
+Florham Park, NJ 07932 
+baveja @research.att.com 
+Abstract 
+Partially Observable Markov Decision Processes (POMDPs) constitute 
+an important class of reinforcement learning problems which present 
+unique theoretical and computational difficulties. In the absence of the 
+Markov property, popular reinforcement learning algorithms such as 
+Q-learning may no longer be effective, and memory-based methods 
+which remove partial observability via state-estimation are notoriously 
+expensive. An alternative approach is to seek a stochastic memoryless 
+policy which for each observation of the environment prescribes a 
+probability distribution over available actions that maximizes the 
+average reward per timestep. A reinforcement learning algorithm 
+which learns a locally optimal stochastic memoryless policy has been 
+proposed by Jaakkola, Singh and Jordan, but not empirically verified. 
+We present a variation of this algorithm, discuss its implementation, 
+and demonstrate its viability using four test problems. 
+1 INTRODUCTION 
+Reinforcement learning techniques have proven quite effective in solving Markov 
+Decision Processes (MDPs), control problems in which the exact state of the 
+environment is available to the learner and the expected result of an action depends only 
+on the present state [10]. Algorithms such as Q-learning learn optimal deterministic 
+policies-for MDPs rules which for every state prescribe an action that maximizes the 
+expected future reward. In many important problems, however, the exact state of the 
+environment is either inherently unknowable or prohibitively expensive to obtain, and 
+only a limited, possibly stochastic observation of the environment is available. Such 
+1074 d. K. Williams and S. Singh 
+Partially Observable Markov Decision Processes (POMDPs) [3, 6] are often much more 
+difficult than MDPs to solve [4]. Distinct sequences of observations and actions 
+preceding a given observation in a POMDP may lead to different probabilities of 
+occupying the underlying exact states of the MDP. If the efficacy of an action depends 
+on the hidden exact state of the environment, an optimal choice may require knowing 
+the past history as well as the current observation, and the problem is no longer Markov. 
+In light of this difficulty, one approach to solving POMDPs is to explore the 
+environment while building up a memory of past observations, actions and rewards 
+which allows estimation of the current hidden state [1]. Such methods produce 
+deterministic policies, but they are computationally expensive and may not scale well 
+with problem size. Furthermore, policies that require state-estimation using memory 
+may be complicated to implement. 
+Memoryless policies are particularly appropriate for problems in which the state is 
+expensive to obtain or inherently difficult to estimate, and they have the advantage of 
+being extremely simple to act upon. For a POMDP, the optimal memoryless policy is 
+generally a stochastic policy one which for each observation of the environment 
+prescribes a probability distribution over the available actions. In fact, examples of 
+POMDPs can be constructed for which a stochastic policy is arbitrarily better than the 
+optimal deterministic policy [9]. An algorithm proposed by Jaakkola, Singh and Jordan 
+(JSJ) [2], which we investigate here, learns memoryless stochastic policies for POMDPs. 
+2 POMDPs AND DIFFERENTIAL-REWARD Q-VALUES 
+We assume that the environment has discrete states $ = { s , s 2, .. sV}, and the learner 
+chooses actions from a set  State transitions depend only on the current state s and the 
+action a taken (the Markov property); they occur with probabilities P(s,s') and result in 
+expected rewards/(s,s'). In a POMDP, the learner cannot sense exactly the state s of 
+the environment, but rather perceives only an observation or message from a set 
+9/' = {m 1, m 2, .. m M} according to a conditional probability distribution P(m[s). The 
+learner will in general not know the size of the underlying state space, its transition 
+probabilities, reward function, or the conditional distributions of the messages. 
+In MDPs, there always exists a policy which simultaneously maximizes the expected 
+future reward for all states, but this is not the case for POMDPs [9]. An appropriate 
+alternative measure of the merit of a stochastic POMDP policy 7r(a[m) is the asymptotic 
+average reward per timestep, R , that it achieves. In seeking an optimal stochastic 
+policy, the JSJ algorithm makes use of Q-values determined by the infinite-horizon 
+differential reward for each observation-action pair (m, a). In particular, if r, denotes the 
+reward obtained at time t, we may define the differential-reward Q-values by 
+Qr(s,a)= Er[r t -R r Is = s,a =a]; Qr(m,a)= E[QX'(s,a) lM(s)=m](1) 
+t=l 
+where M is the observation operator. Note that E[rt] ---> R 'r as t ---> 0% so the summand 
+converges to zero. The value functions V(s) and VOn) may be defined similarly. 
+3 POLICY IMPROVEMENT 
+The JSJ algorithm consists of a method for evaluating Qr and V r and a mechanism for 
+using them to improve the current policy. Roughly speaking, if Qr(m, a) > V(m), then 
+action a realized a higher differential reward than the average for observation m, and 
+assigning it a slightly greater probability will increase the average reward per timestep, 
+R We interpret the quantities Am(a) = Qr(m, a) - Vr(m) as comprising a gradient of 
+R ' in policy space. Their projections onto the probability simplexes may then be written 
+An Algorithm which Learns Stochastic Memoryless Policies for POMDPs 1075 
+as 8m = Am -<Am, l> 1/I. , where 1 is the one-vector (1,1,...,1), <, > is the inner product, 
+and ]4 is the number of actions, or 
+1 1 r 
+8m(a) = Am(a) - T,,)m (a') = Qr(m, a) - T,,Q (m, a'). (2) 
+For sufficiently small , an improved policy 7r'(a]m) may be obtained by the increments 
+r'(alm ) = r(alm) +em 8re(a) � (3) 
+In practice, we also enforce r'(al TM) > Pm,'n for all a and m to guarantee continued 
+exploration. The original JSJ algorithm prescribed using Am(a) in place of 8re(a) in 
+equation (3), followed by renormalization [2]. Our method has the advantage that a 
+given value of A yields the same increment regardless of the current value of the policy, 
+and it ensures that the step is in the correct direction. We also do not require the 
+differential-reward value estimate, V 'r. 
+4 Q-EVALUATION 
+As the POMDP is simulated under a fixed stochastic policy 7r, every occurrence of an 
+observation-action pair (m,a) begins a sequence of rewards which can be used to 
+estimate Qr(m, a). Exploiting the fact that the Qr(m, a) are defined as sums, the JSJ Q- 
+evaluation method recursively averages the estimates from all such sequences using a so- 
+called every-visit Monte-Carlo method. In order to reduce the bias and variance 
+caused by the dependence of the evaluation sequences, a factor/ is used to discount their 
+shared tails. Specifically, at time t the learner makes observation mr, takes action at, 
+and obtains reward r,. The number of visits K(mt, at) is incremented, the tail discount 
+rate 7(m,a) = 1-K(m,a) -m, and the following updates are performed (the indicator 
+function Zt (m, a) is 1 if (m, a) = (mr, at) and 0 otherwise). 
+fl(m, a) = 
+Q(m,a) = 
+C(m,a) = 
+/Tt (m,a)  . /Tt (m,a) 
+1- K(m,a) ]7[m,a)fl(m,a) -[ K(m,a) 
+,gt (m,a) 1 
+1- K(m,a) ]Q(m,a) + (m,a) [rt - R] 
+1- Zt(m'a)]c(m,a) 
+K(m,a)l 
+(tail discount factor) (4) 
+( Q%estimate ) (5) 
++ (m, a) (cumulative discount effect) (6) 
+R = (1 - I/t)R + (I/t) rt (R%estimate) 
+(7) 
+Q(m, a) = Q(m, a) - C(m, a) [R -Rota]; Roa = R (Q%estimate correction) (8) 
+Other schedules for ?'(m, a) are possible---see [2] and the correction provided by (8) 
+need not be performed at every step, but can be delayed until the Q-estimate is needed. 
+This evaluation method can be used as given for a policy-iteration type algorithm in 
+which independent T-step evaluations of Q are interspersed with policy improvements 
+as prescribed in section 3. However, an online version of the algorithm which performs 
+policy improvement after every step requires that old experience be gradually forgotten 
+so that the Q-estimate can respond to more recent experience. To achieve this, we 
+multiply the previous estimates of fl, Q, and C at each timestep by a decay factor 
+o, 0 < o < 1, before they are updated via equations (4)-(6), and replace equation (7) by 
+R = a(1 - l/t) R + [1 - a(1 - l/t)] rt. (9) 
+An alternative method, which also works reasonably well, is to multiply K and t by o: at 
+each timestep instead. 
+1076 J. K. 'lliams and S. Singh 
+(a) 
+A -1 
+A 
++1 
+B 
++1 
+O.1 
+(b) o 
+-o.$ .......................... i ............... i ..............  ............. 
+100(30 20000 :30000 40000 50000 
+numbor c iterations 
+(c) '  ' . ........ i ................ 
+number of iterations 
+Figure 1: (a) Schematic of confounded two-state POMDP, (b) evolution of the R - 
+estimate, and (c) evolution of 7r(A) (solid) and :rr(B) (dashed) for e = 0.0002, o: = 0.9995. 
+5 EMPIRICAL RESULTS 
+We present only results from single runs of our online algorithm, including the modified 
+JSJ policy improvement and Q-evaluation procedures described above. Results from the 
+policy iteration version are qualitatively similar, and statistics performed on multiple 
+runs verify that those shown are representative of the algorithm's behavior. To simplify 
+the presentation, we fix a constant learning rate, e, and decay factor, o:, for each problem, 
+and we use Pm,', = 0.02 throughout. Note, however, that appropriate schedules or online 
+heuristics for decreasing e and Pm,., whi

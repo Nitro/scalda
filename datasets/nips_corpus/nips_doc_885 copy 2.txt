@@ -1,0 +1,159 @@
+SARDNET: A Self-Organizing Feature 
+Map for Sequences 
+Daniel L. James and Risto Miikkulainen 
+Department of Computer Sciences 
+The University of Texas at Austin 
+Austin, TX 78712 
+dlj ames, ristocs. utexas. edu 
+Abstract 
+A self-organizing neural network for sequence classification called 
+SARDNET is described and analyzed experimentally. SARDNET 
+extends the Kohonen Feature Map architecture with activation re- 
+tention and decay in order to create unique distributed response 
+patterns for different sequences. SARDNET yields extremely dense 
+yet descriptive representations of sequential input in very few train- 
+ing iterations. The network has proven successful on mapping ar- 
+bitrary sequences of binary and real numbers, as well as phonemic 
+representations of English words. Potential applications include 
+isolated spoken word recognition and cognitive science models of 
+sequence processing. 
+I INTRODUCTION 
+While neural networks have proved a good tool for processing static patterns, classi- 
+fying sequential information has remained a challenging task. The problem involves 
+recognizing patterns in a time series of vectors, which requires forming a good inter- 
+nal representation for the sequences. Several researchers have proposed extending 
+the self-organizing feature map (Kohonen 1989, 1990), a highly successful static 
+pattern classification method, to sequential information (Kangas 1991; Samara- 
+bandu and Jakubowicz 1990; Scholtes 1991). Below, three of the most recent of 
+these networks are briefly described. The remainder of the paper focuses on a new 
+architecture designed to overcome the shortcomings of these approaches. 
+578 Daniel L. James, Risto Miikkulainen 
+Recently, Chappel and Taylor (1993) proposed the Temporal Kohonen Map (TKM) 
+architecture for classifying sequences. The TKM keeps track of the activation his- 
+tory of each node by updating a value called leaky integrator potential, inspired by 
+the membrane potential in biological neural systems. The activity of a node depends 
+both on the current input vector and the previous input vectors, represented by the 
+node's potential. A given sequence is processed by mapping one vector at a time, 
+and the last winning node serves to represent the entire sequence. This way, there 
+needs to be a separate node for every possible sequence, which is a disadvantage 
+when the number of sequences to be classified is large. The TKM also suffers from 
+loss of context. Which node wins depends almost entirely upon the most recent 
+input vectors. For example, the string baaaa would most likely map to the same 
+node as aaaaa, making the approach applicable only to short sequences. 
+The SOFM-S network proposed by van Harmelen (1993) extends TKM such that 
+the activity of each map node depends on the current input vector and the past 
+activation of all map nodes. The SOFM-S is an improvement of TKM in that con- 
+textual information is not lost as quickly, but it still uses a single node to represent 
+a sequence. 
+The TRACE feature map (Zandhuis 1992) has two feature map layers. The first 
+layer is a topological map of the individual input vectors, and is used to generate 
+a trace (i.e. path) of the input sequence on the map. The second layer then maps 
+the trace pattern to a single node. In TRACE, the sequences are represented by 
+distributed patterns on the first layer, potentially allowing for larger capacity, but 
+it is difficult to encode sequences where the same vectors repeat, such as baaaa. All 
+a-vectors would be mapped on the same unit in the first layer, and any number of 
+a-vectors would be indistinguishable. 
+The architecture described in this paper, SARDNET (Sequential Activation Re- 
+tention and Decay NETwork), also uses a subset of map nodes to represent the 
+sequence of vectors. Such a distributed approach allows a large number of repre- 
+sentations be packed into a small map--like sardines. In the following sections, 
+we will examine how SARDNET differs from conventional self-organizing maps and 
+how it can be used to represent and classify a large number of complex sequences. 
+2 THE SARDNET ARCHITECTURE 
+Input to SARDNET consists of a sequence of n-dimensional vectors S -- 
+V,V2,V3, ..., Vt (figure 1). The components of each vector are real values in 
+the interval [0, 1]. For example, each vector might represent a sample of a speech 
+signal in n different frequencies, and the entire sequence might constitute a spoken 
+word. The SARDNET input layer consists of n nodes, one for each component in 
+the input vector, and their values are denoted as A -- (a, a2, a3, ..., an). The map 
+consists of m x m nodes with activation ojk, i _< j, k _< m. Each node has an 
+n-dimensional input weight vector Wjk, which determines the node's response to 
+the input activation. 
+In a conventional feature map network as well as in SARDNET, each input vector 
+is mapped on a particular unit on the map, called the winner or the maximally 
+responding unit. In SARDNET, however, once a node wins an input, it is made 
+SARDNET: A Self-Organizing Feature Map for Sequences 5 79 
+Sequence of Input vectors 
+v, v2 v, 
+Input units 
+Previous winners 
+Input weight vector 
+Winning unit j/: 
+Figure 1: The SARDNET architecture. A sequence of input vectors activates 
+units on the map one at a time. The past winners are excluded from further 
+competition, and their activation is decayed gradually to indicate position in the 
+sequence. 
+INITIALIZATION: Clear all map nodes to zero. 
+MAIN LOOP: While not end of sequence 
+1. Find unactivated weight .vector that best matches the input. 
+2. Assign 1.0 activation to that unit. 
+3. Adjust weight vectors of the nodes in the neighborhood. 
+4. Exclude the winning unit from subsequent competition. 
+5. Decrement activation values for all other active nodes. 
+RESULT: Sequence representation = activated nodes ordered by activation values 
+Table 1: The $ARDNET training algorithm. 
+uneligible to respond to the subsequent inputs in the sequence. This way a different 
+map node is allocated for every vector in the sequence. As more vectors come in, 
+the activation of the previous winners decays. In other words, each sequence of 
+length I is represented by I active nodes on the map, with their activity indicating 
+the order in which they were activated. The algorithm is summarized in table 1. 
+Assume the maximum length of the sequences we wish to classify is l, and each input 
+vector component can take on p possible values. Since there are pn possible input 
+vectors, lp ' map nodes are needed to represent all possible vectors in all possible 
+positions in the sequence, and a distributed pattern over the lp ' nodes can be used 
+to represent all p,t different sequences. This approach offers a significant advantage 
+over methods in which p,t nodes would be required for pt sequences. 
+The specific computations of the SARDNET algorithm are as follows: The winning 
+node (j, k) in each iteration is determined by the Euclidean distance Djk of the 
+580 Daniel L. James, Risto Miikkulainen 
+input vector A and the node's weight vector Wjk: 
+f 
+Djk = (wjk,i - ai) 2. (1) 
+i=0 
+The unit with the smallest distance is selected as the winner and activated with 1.0. 
+The weights of this node and all nodes in its neighborhood are changed according 
+to the standard feature map adaptation rule: 
+Aws -- a(wj,i - ai), (2) 
+where a denotes the learning rate. As usual, the neighborhood starts out large 
+and is gradually decreded  the map becomes more ordered. As the last step in 
+processing an input vector, the activation j of all active units in the map are 
+decayed proportional to the decay parameter d: 
+,(t + 1) = d,(t), 0 < d < 1. (a) 
+As in the standard feature map, as the weight vectors adapt, input vectors gradually 
+become encoded in the weight vectors of the winning units. Because weights are 
+changed in local neighborhoods, neighboring weight vectors are forced to become 
+as similar as possible, and eventually the network forms a topological layout of the 
+input vector space. In SARDNET, however, if an input vector occurs multiple times 
+in the same input sequence, it will be represented multiple times on the map as well. 
+In other words, the map representation expands those areas of the input space that 
+are visited most often during an input sequence. 
+3 EXPERIMENTS 
+SARDNET has proven successful in learning and recognizing arbitrary sequences 
+of binary and real numbers, as well as sequences of phonemic representations for 
+English words. This section presents experiments on mapping three-syllable words. 
+This data was selected because it shows how SARDNET can be applied to complex 
+input derived from a real-world task. 
+3.1 INPUT DATA 
+The phonemic word representations were obtained from the CELEX database of the 
+Max Planck Institute for Psycholinguistics and converted into International Pho- 
+netic Alphabet (IPA)-compliant representation, which better describes similarities 
+among the phonemes. The words vary from five to twelve phonemes in length. Each 
+phoneme is represented by five values: place, manner, sound, chromacity and sonor- 
+ity. For example, the consonant p is represented by a single vector (bilabial, stop, 
+artvoiced, nil, nil), or in terms of real numbers, (.125, .167, .750, 0, 0). The diph- 
+thong sound ai as in buy, is represented by the two vectors (nil, vowel, voiced, 
+front, low) and (nil, vowel, voiced, front-center, hi-mid), or in real numbers, 
+(0, 1, .25, .2, 1) and (0, 1, .25, .4, .286). 
+There are a total of 43 phonemes in this data set, including 23 consonants and 20 
+vowels. To represent all phonemic sequences of length 12, TKM and SOFM-S would 
+SARDNET: A Self-Organizing Feature Map for Sequences 581 
+% aumcy 
+1 
+O.ffi 
+0.9 
+0.9? 
+0.96 
+16 25 M 49 e4 81 
+mild)ira/nod# 
+Figure 2: Accuracy of SARDNET for different map and data set sizes. 
+The accuracy is measured as a percentage of unique representations out of all wor

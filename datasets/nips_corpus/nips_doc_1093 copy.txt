@@ -1,0 +1,142 @@
+Model Matching and SFMD 
+Computation 
+Steve Rehfuss and Dan Hammerstrom 
+Department of Computer Science and Engineering 
+Oregon Graduate Institute of Science and Technology 
+P.O.Box 91000, Portland, OR 97291-1000 USA 
+stevercse. ogi. edu, stromasi. corn 
+Abstract 
+In systems that process sensory data there is frequently a model 
+matching stage where class hypotheses are combined to recognize a 
+complex entity. We introduce a new model of parallelism, the Single 
+Function Multiple Data (SFMD) model, appropriate to this stage. 
+SFMD functionality can be added with small hardware expense to 
+certain existing SIMD architectures, and as an incremental addition 
+to the programming model. Adding SFMD to an SIMD machine 
+will not only allow faster model matching, but also increase its 
+flexibility as a general purpose machine and its scope in performing 
+the initial stages of sensory processing. 
+I INTRODUCTION 
+In systems that process sensory data there is frequently a post-classification stage 
+where several independent class hypotheses are combined into the recognition of 
+a more complex entity. Examples include matching word models with a string 
+of observation probabilities, and matching visual object models with collections 
+of edges or other features. Current parallel computer architectures for processing 
+sensory data focus on the classification and pre-classification stages (Hammerstrom 
+1990) .This is reasonable, as those stages likely have the largest potential for speedup 
+through parallel execution. Nonetheless, the model-matching stage is also suitable 
+for parallelism, as each model may be matched independently of the others. 
+We introduce a new style of parallelism, Single Function Multiple Data (SFMD), 
+that is suitable for the model-matching stage. The handling of interprocessor syn- 
+chronization distinguishes the SFMD model from the SIMD and MIMD models: 
+SIMD synchronizes implicitly at each instruction, SFMD synchronizes implicitly 
+at conditional expression or loop boundaries, and MIMD synchronizes explicitly at 
+714 S. REHFUSS, D. HAMMERSTROM 
+arbitrary inter-processor communication points. Compared to MIMD, the use of 
+implicit synchronization makes SFMD easier to program and cheaper to implement. 
+Compared to SIMD, the larger granularity of synchronization gives SFMD increased 
+flexibility and power. 
+SFMD functionality can be added with small hardware expense to SIMD architec- 
+tures already having a high degree of processor autonomy. It can be presented as an 
+incremental addition to programmer's picture of the machine, and applied as a com- 
+piler optimization to existing code written in an SIMD version of 'C'. Adding SFMD 
+to an SIMD machine will not only allow faster model matching, but also increase 
+its flexibility as a general purpose machine, and increase its scope in performing the 
+initial stages of sensory processing. 
+2 SIMD ARCHITECTURE AND PROGRAMMING 
+As background, we first review SIMD parallelism. In SIMD, multiple processing 
+elements, or PEs, simultaneously execute identical instruction sequences, each pro- 
+cessing different data. The instruction stream is produced by a controller, or se- 
+quencer. Generally, each PE has a certain amount of local memory, which only it 
+can access directly. All PEs execute a given instruction in the stream at the same 
+time, so are synchronized at each instruction. Thus synchronization is implicit, the 
+hardware need not support it, and the programmer need (can) not manage it. SIMD 
+architectures differ in the functionality of their PEs. If PEs can independently ad- 
+dress local memory at differing locations, rather than all having to access the same 
+address at a given step, the architecture is said to have local addressing. If PEs can 
+independently determine whether to execute a given instruction, rather than having 
+this determined by the sequencer, the architecture has local conditional execution. 
+Note that all PEs see the same instruction stream, yet a given PE executes only 
+one branch of any if-then-else, and so must idle while other PEs execute the other 
+branch. This is the cost of synchronizing at each instruction. 
+3 MODEL MATCHING 
+We view models as pieces of a priori knowledge, interrelating their components. 
+Models are matched against some hypothesis set of possible features. Matching 
+produces a correspondence between components of the model and elements of the 
+hypothesis set, and also aligns the model and the set (pose estimation in vision, 
+and time-alignment in speech). An essential fact is that, because models are 
+known a priori, in cases where there are many models it is usually possible and 
+profitable to construct an index into the set of models. Use of the index at runtime 
+restricts the set of models that need actually be matched to a few, high-probability 
+ones. 
+Model-matching is a common stage in sensory data processing. Phoneme, character 
+and word HMMs are models, where the hypothesis set is a string of observations 
+and the matching process is either of the usual Viterbi or trellis procedures. For 
+phonemes and characters, the HMMs used typically all have the same graph struc- 
+ture, so control flow in the matching process is not model-dependent and may be 
+encoded in the instruction stream. Word models have differing structure, and con- 
+trol fiov is model-dependent. In vision, model-matching has been used in a variety 
+of complicated ways (cf. (Suetens, Fua & Hanson 1992)), for example, graph models 
+may have constraints between node attribute values, to be resolved during matching. 
+Model Matching and SFMD Computation 715 
+4 DATA AND KNOWLEDGE PARALLELISM 
+SIMD is a type of computer architecture. At the algorithm level, it corresponds 
+to data parallelism. Data parallelism, applying the same procedure in parallel to 
+multiple pieces of data, is the most common explicit parallelization technique.and is 
+the essence of the Single Program Multiple Data (SPMD) programming model. On 
+a distributed memory machine, SPMD can be stylized as given a limited amount 
+of (algorithmic) knowledge to be applied to a large piece of data, distribute the data 
+and broadcast the knowledge. 
+In sensory processing systems, conversely, one may have a large amount of knowl- 
+edge (many models) that need to be applied to a (smallish) piece of data, for ex- 
+ample, a speech signal frame or segment, or a restricted region of an image. In this 
+case, it makes sense to distribute the knowledge and broadcast the data. Model- 
+matching often works well on an SIMD architecture, e.g. for identical phoneme 
+models. Hovever, when matching requires differing control flow between models, 
+an SIMD implementation can be inefficient. 
+Data and knowledge parallelism are asymmetrical, however, in two ways. First, 
+all data must normally be processed, while there are usually indexing techniques 
+that greatly restrict the number of models that actually must be matched. Sec- 
+ond, processing an array element frequently requires information about neighboring 
+elements; when the data is partitioned among multiple processors, this may re- 
+quire inter-processor communication and synchronization. Conversely, models on 
+different processors can be matched to data in their local memories without any 
+inter-processor communication. The latter observation leads to the SFMD model. 
+5 PROGRAMMING MODEL 
+We view support for SFMD as functionality to be added to an existing SIMD ma- 
+chine to increase its flexibility, scope, and power. As such, the SFMD programming 
+model should be an extension of the SIMD one. Given an SIMD architecture with 
+the local addressing and local conditional execution, SFMD programming is made 
+available at the assembly language level by adding three constructs: 
+distribute n tells the sequencer and PEs that the next n instructions are to be 
+distributed for independent execution on the PEs. We call the next n 
+instructions an SFMD block. 
+sync tells the individual PEs to suspend execution and signal the controller (barrier 
+synchronization). This is a no-op if not within an SFMD block. 
+branch-local one or more local branch instruction(s), including a loop construct; 
+the branch target must lie within the enclosing SFMD block. This is a 
+no-op if not within an SFMD block. 
+We further require that code within an SFMD block contain only references to PE- 
+local memory; none to global (sequencer) variables, to external memory or to the 
+local memory of another PE. It must also contain no inter-PE communication.. 
+When the PEs are independently executing an SFMD block, we say that the system 
+is in SFMD mode, and refer to normal execution as SIMD mode. 
+When programming in a data-parallel 'C'-like language for an SIMD machine, use of 
+SFMD functionality can be an optimization performed by the compiler, completely 
+hidden from the user. Variable type and usage analysis can determine for any given 
+block of code whether the constraints on non-local references are met, and emit 
+716 S. REHFUSS, D. HAMMERSTROM 
+code for SFMD execution if so. No new problems are introduced for debugging, as 
+SFMD execution is semantically equivalent to executing on each PE sequentially, 
+and can be executed this way during debugging. 
+To the programmer, SFMD ameliorates two inefficiencies of SIMD programming: (i) 
+in conditionals, a PE need not be idle while other PEs execute the branch it didn't 
+take, and (ii) loops and recursions may execute a processor-dependent number of 
+times. 
+6 HARDWARE MODEL AND COST 
+We are interested in embedded, delivery system applications. Such systems must 
+have few chips; scalability to 100's or 1000's of chips is not an issue. Parallelism 
+is thus achieved with multiple PEs per chip. As off-chip I/O is always expensive 
+compared to computation , such chips can contain only a relatively small number 
+of processors. Thus, as feature size decreases, area will go to local memory and 
+processor complexity, rath

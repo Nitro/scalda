@@ -1,0 +1,123 @@
+Learning Appearance Based Models: 
+Mixtures of Second Moment Experts 
+Christoph Bregler and Jitendra Malik 
+Computer Science Division 
+University of California at Berkeley 
+Berkeley, CA 94720 
+email: bregler@cs.berkeley. edu, malik@cs.berkeley. edu 
+Abstract 
+This paper describes a new technique for object recognition based on learning 
+appearance models. The image is decomposed into local regions which are 
+described by a new texture representation called Generalized Second Mo- 
+ments that are derived from the output of multiscale, multiorientation filter 
+banks. Class-characteristic local texture features and their global composition 
+is learned by a hierarchical mixture of experts architecture (Jordan & Jacobs). 
+The technique is applied to a vehicle database consisting of 5 general car 
+categories (Sedan, Van with back-doors, Van without back-doors, old Sedan, 
+and Volkswagen Bug). This is a difficult problem with considerable in-class 
+variation. The new technique has a 6.5% misclassification rate, compared to 
+eigen-images which give 17.4% misclassification rate, and nearest neighbors 
+which give 15.7% misclassification rate. 
+1 Introduction 
+Until a few years ago neural network and other statistical learning techniques were not very 
+popular in computer vision domains. Usually such techniques were only applied to artificial 
+visual data or non-mainstream problems such as handwritten digit recognition. 
+A significant shift has occurred recently with the successful application of appearance-based 
+or viewer-centered techniques for object recognition, supplementing the use of 3D models. 
+Appearance-based schemes rely on collections of images of the object. A principal advantage 
+is that they implicitly capture both shape and photometric information(e.g. surface reflectance 
+variation). They have been most sucessfully applied in the domain of human faces [ 15, 11, 1, 
+14] though other 3d objects under fixed lighting have also been considered [13]. View-based 
+representations lend themselves very naturally to learning from examples- principal component 
+analysis[15, 13] and radial basis functions[l] have been used. 
+Approaches such as principal component analysis (or eigen-images) use global representations 
+at the image level. The objective of our research was to develop a representation which would 
+846 C. Bregler and J. Malik 
+be more '1ocalist', where representations of different 'parts' of the object would be composed 
+together to form the representation of the object as a whole. This appears to be essential in order 
+to obtain robustness to occlusion and ease of generalization when different objects in a class may 
+have variations in particular parts but not others. A part based view is also more consistent with 
+what is known about human object recognition (Tanaka and collaborators). 
+In this paper, we propose a domain independent part decomposition using a 2D grid representation 
+of overlapping local image regions. The image features of each local patch are represented using a 
+new texture descriptor that we call Generalized Second Moments. Related representations have 
+already been successfully applied to other early-vision tasks like stereopsis, motion, and texture 
+discrimination. Class-based local texture features and their global relationships are induced using 
+the Hierarchical Mixtures of Experts Architecture (HME) [8]. 
+We apply this technique to the domain of vehicle classification. The vehicles are seen from behind 
+by a camera mounted above a freeway(Figure 1). We urge the reader to examine Figure 3 to see 
+examples of the in class variations in the 5 different categories. Our technique could classify five 
+broader categories with an error of as low as 6.5% misclassification, while the best results using 
+eigen-images and nearest neighbor techniques were 17.4% and 15.7% mis-classification error. 
+Figure 1' Typical shot of the freeway segment 
+2 Representation 
+An appearance based representation should be able to capture features that discriminate the 
+different object categories. It should capture both local textural and global structural information 
+This corresponds roughly to the notion in 3D object models of (i) parts (ii) relationship between 
+parts. 
+2.1 Structural Description 
+Objects usually can be decomposed into parts. A face consists of eyes, nose, and mouth. Cars 
+are made out of window screens, tail lights, license plates etc. The question is what granularity is 
+appropriate and how much domain knowledge should be exploited. A car could be a single part in 
+a scene, a license plate could be a part, or the letters in the license plate could be the decomposed 
+parts. Eyes, nose, and mouth could be the most important parts of a face for recognition, but 
+maybe other parts are important as well. 
+It would be advantageous if each part could be described in a decoupled way using a representation 
+that was most appropriate for it. Object classification should be based on these local part 
+descriptions and the relationship between the parts. The partitioning reduces the complexity 
+greatly and invariance to the precise relation between the parts could be achieved. 
+For our domain of vehicle classification we don't believe it is appropriate to explicitly code any 
+Learning Appearance Based Models: Mixtures of Second Moment Experts 847 
+part decomposition. The kind and number of useful parts might vary across different car makes. 
+The resolution of the images (100x100 pixel) restricts us to a certain degree of granularity. We 
+decided to decompose the image using a 2D grid of overlapping tiles or Gaussian windows but 
+only local classification for each tile region is done. The content of each local tile is represented 
+by a feature vector (next section). The generic grid representation allows the mixture of experts 
+architecture to induce class-based part decomposition, and extract local texture and global shape 
+features. For example the outline of a face could be represented by certain orientation dominances 
+in the local tiles at positions of the face boundary. The eyes are other characteristic features in 
+the tiles. 
+2.2 Local Features 
+We wanted to extract characteristic features from each local tile. The traditional computer vision 
+approach would be to find edges and junctions. The weakness of these representations is that 
+they do not capture the richness of textured regions, and the hard decision thresholds make the 
+measurement process non-robust. 
+An alternative view is motivated by our understanding of processing in biological vision systems. 
+We start by convolving image regions with a large number of spatial filters, at various orientations, 
+phases, and scales. The response values of such filters contain much more general information 
+about the local neighborhood, a fact that has now been recognized and exploited in a number of 
+early vision tasks like stereopsis, motion and texture analysis [16, 9, 6, 12, 7]. 
+Although this approach is loosely inspired by the current understanding of processing in the 
+early stages of the primate visual system, the use of spatial filters has many advantages from a 
+pure analytical viewpoint[9, 7]. We use as filter kernels, orientation selective elongated Gaussian 
+derivatives. This enables one to gain the power of orientation specific features, such as edges, 
+without the disadvantage of non-robustness due to hard thresholds. If multiple orientations are 
+present at a single point (e.g. junctions), they are represented in a natural way. Since multiple 
+scales are used for the filters, no ad hoc choices have to be made for the scale parameters of 
+the feature detectors. Interestingly the choices of these filter kernels can also be motivated in a 
+learning paradigm as they provide very useful intermediate layer units in convolutional neural 
+networks [3]. 
+The straightforward approach would then be to characterize each image pixel by such a vector 
+of feature responses. However note that there is considerable redundancy in the filter responses- 
+particularly at coarse scales, the responses of filters at neighboring pixels are strongly correlated. 
+We would like to compress the representation in some way. One approach might be to subsample 
+at coarse scales, another might be to choose feature locations with local magnitude maxima or 
+high responses across several directions. However there might be many such interesting points 
+in an image region. It is unclear how to pick the right number of points and how to order them. 
+Leaving this issue of compressing the filter response representation aside for the moment, let 
+us study other possible representations of low level image data. One way of representing the 
+texture in a local region is to calculate a windowed second moment matrix [5]. Instead of finding 
+maxima of filter responses, the second moments of brightness gradients in the local neighborhood 
+are weighted and averaged with a circular Gaussian window. The gradient is a special case of 
+Gaussian oriented filter banks. The windowed second moment matrix takes into account the 
+response of all filters in this neighborhood. The disadvantage is that gradients are not very 
+orientation selective and a certain scale has to be selected beforehand. Averaging the gradients 
+washes out the detailed orientation information in complex texture regions. 
+Orientation histograms would avoid this effect and have been applied successfully for classi- 
+fication [4]. Elongated families of oriented and scaled kernels could be used to estimate the 
+orientation at each point. But as pointed out already, there might be more than one orientation at 
+each point, and significant information is lost. 
+848 C. Bregler and J. Malik 
+Figure 2: Left image: The black rectangle outlines the selected area of interest. Right image: The 
+reconstructed scale and rotation distribution of the Generalized Second Moments. The horizontal 
+axis are angles between 0 a

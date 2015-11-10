@@ -1,0 +1,168 @@
+Using Curvature Information for 
+Fast Stochastic Search 
+Genevieve B. Orr 
+Dept of Computer Science 
+Willamette University 
+900 State Street 
+Salem, OR 97301 
+gorr@willamette.edu 
+Todd K. Leen 
+Dept of Computer Science and Engineering 
+Oregon Graduate Institute of 
+Science and Technology 
+P.O.Box 91000, Portland, Oregon 97291-1000 
+tleen@cse.ogi.edu 
+Abstract 
+We present an algorithm for fast stochastic gradient descent that 
+uses a nonlinear adaptive momentum scheme to optimize the late 
+time convergence rate. The algorithm makes effective use of cur- 
+vature information, requires only (9(n) storage and computation, 
+and delivers convergence rates close to the theoretical optimum. 
+We demonstrate the technique on linear and large nonlinear back- 
+prop networks. 
+Improving Stochastic Search 
+Learning algorithms that perform gradient descent on a cost function can be for- 
+mulated in either stochastic (on-line) or batch form. The stochastic version takes 
+the form 
+= + 
+where cot is the current weight estimate, Pt is the learning rate, G is minus the 
+instantaneous gradient estimate, and xt is the input at time t x. One obtains the 
+corresponding batch mode learning rule by taking/ constant and averaging G over 
+all x. 
+Stochastic learning provides several advantages over batch learning. For large 
+datasets the batch average is expensive to compute. Stochastic learning eliminates 
+the averaging. The stochastic update can be regarded as a noisy estimate of the 
+batch update, and this intrinsic noise can reduce the likelihood of becoming trapped 
+in poor local optima [1, 2]. 
+We assume that the inputs are i.i.d. This is achieved by random sampling with re- 
+placement from the training data. 
+Using Curvature Information for Fast Stochastic Search 607 
+The noise must be reduced late in the training to allow weights to converge. After 
+settling within the basin of a local optimum w., learning rate annealing allows con- 
+vergence of the weight error v = w - w.. It is well-known that the expected squared 
+weight error, E[[v[ 2] decays at its maximal rate oc 1It with the annealing schedule 
+Io/t. Furthermore to achieve this rate one must have 0 > Icrit = 1/(2Amin) where 
+Amin is the smallest eigenvalue of the Hessian at w. [3, 4, 5, and references therein]. 
+Finally the optimal io, which gives the lowest possible value of E[[v[ 2] is 0 = 1/A. 
+In multiple dimensions the optimal learning rate matrix is (t) = (l/t)7-/-,where 
+7-/is the Hessian at the local optimum. 
+Incorporating this curvature information into stochastic learning is difficult for two 
+reasons. First, the Hessian is not available since the point of stochastic learning is 
+not to perform averages over the training data. Second, even if the Hessian were 
+available, optimal learning requires its inverse - which is prohibitively expensive to 
+compute 2 
+The primary result of this paper is that one can achieve an algorithm that behaves 
+optimally, i.e. as if one had incorporated the inverse of the full Hessian, without 
+the storage or computational burden. The algorithm, which requires only O(n) 
+storage and computation (n = number of weights in the network), uses an adaptive 
+momentum parameter, extending our earlier work [7] to fully non-linear problems. 
+We demonstrate the performance on several large back-prop networks trained with 
+large datasets. 
+Implementations of stochastic learning typically use a constant learning rate during 
+the early part of training (what Darken and Moody [4] call the search phase) to ob- 
+tain exponential convergence towards a local optimum, and then switch to annealed 
+learning (called the converge phase). We use Darken and Moody's adaptive search 
+then converge (ASTC) algorithm to determine the point at which to switch to 1It 
+annealing. ASTC was originally conceived as a means to insure 0 > Icrit during 
+the annealed phase, and we compare its performance with adaptive momentum as 
+well. We also provide a comparison with conjugate gradient optimization. 
+1 Momentum in Stochastic Gradient Descent 
+The adaptive momentum algorithm we propose was suggested by earlier work on 
+convergence rates for annealed learning with constant momentum. In this section 
+we summarize the relevant results of that work. 
+Extending (1) to include momentum leaves the learning rule 
+(2) 
+where  is the momentum parameter constrained so that 0 <  < 1. Analysis of 
+the dynamics of the expected squared weight error E[ Ivl 2 ] with it = io/t learning 
+rate annealing [7, 8] shows that at late times, learning proceeds as for the algorithm 
+without momentum, but with a scaled or effective learning rate 
+_ uo (3) 
+This result is consistent with earlier work on momentum learning with small, con- 
+stant !, where the same result holds [9, 10, 11] 
+2Venter [6] proposed a 1-D algorithm for optimizing the convergence rate that estimates 
+the Hessian by time averaging finite differences of the gradient and scalin the learning 
+rate by the inverse. Its extension to multiple dimensions would require O(n ) storage and 
+O(n 3) time for inversion. Both are prohibitive for large models. 
+608 G. B. Orr and T. K. Leen 
+If we allow the effective learning rate to be a matrix, then, following our comments 
+in the introduction, the lowest value of the misadjustment is achieved when Pe# = 
+7-/-x [7, 8]. Combining this result with (3) suggests that we adopt the heuristic s 
+= ! - (4) 
+where opt is a matrix of momentum parameters, I is the identity matrix, and P0 
+is a scalar. 
+We started with a scalar momentum parameter constrained by 0 < / < 1. The 
+equivalent constraint for our matrix/opt is that its eigenvalues lie between 0 and 
+1. Thus we require P0  1/Amax where Amax is the largest eigenvalue of 
+A scalar annealed learning rate P0/t combined with the momentum parameter/?opt 
+ought to provide an effective learning rate asymptotically equal to the optimal learn- 
+ing rate 7-/-. This rate 1) is achieved without ever performing a matrix inversion 
+on 7-/ and 2) is independent of the choice of P0, subject to the restriction in the 
+previous paragraph. 
+We have dispensed with the need to invert the Hessian, and we next dispense with 
+the need to store it. First notice that, unlike its inverse, stochastic estimates of 
+are readily available, so we use a stochastic estimate in (4). Secondly according to 
+(2) we do not require the matrix/op, but rather/?opt times the last weight up- 
+date. For both linear and non-linear networks this dispenses with the O(n 2) storage 
+requirements. This algorithm, which we refer to as adaptive momentum, does not 
+require explicit knowledge or inversion of the Hessian, and can be implemented very 
+efficiently as is shown in the next section. 
+2 Implementation 
+The algorithm we propose is 
+t+x = + C(t,xt ) + (5) 
+where Awt -= w - w_  d t is a stochtic estimate of the Hessian at time t. 
+We first consider a single layer fdforwd line network. Since the weights con- 
+necting the inputs to different outputs e independent of each other we need only 
+discuss the ce for one output node. Each output node is then treated identically. 
+For one output node d N inputs, the Hessi is  = (xxT) e x where 
+indicates eectation over the inputs x and where x T is the trspose of x. The 
+single-step estimate of the hessi is then just , = xtx. The momentum term 
+becomes 
+- = = - (6) 
+Written in his way, we noe ha here is no matrix multiplication, jus he vector 
+dot product w, d vector addition that e both O(n). For M output nodes, 
+he Mgori is hen O(N) where N = NM is the total number weights in he 
+network. 
+For nonlinear networks the problem is somewhat more complicated. To compute 
+tAt we use the algorithm developed by Pearlmutter [12] for computing the prod- 
+uct of the hessian times an arbitrary vector. 4 The equivalent of one forward-back 
+awe refer to (4) as a heuristic since we have no theoretical results on the dynamics of 
+the squared weight error for learning with this matrix of momentum parameters. 
+4We actually use a slight modification that calculates the Iinearized Hessian times a 
+vector: Df�Df Aw where Df is the Jacobian of the network output (vector) with respect 
+to the weights, and � indicates a tensor product. 
+Using Curvature Information for Fast Stochastic Search 609 
+1%=0.1 I 
+I 2 3 4 ,5 
+a) Log(t) b) 
+Log( E[ Ivl 2 ] ) 
+-1 
+-2 
+-3 
+Log( E[ Ivl 2 ] ) 
+'1 ______.._;... I B--adaptive I 
+-2 �=u'u ---x i. 
+-3 �=0'01 
+1 2 Log(t)3 4 
+Figure 1: 2-D LMS Simulations: Behavior of log(E[Iv12]) over an ensemble of 1000 net- 
+2 
+works with A1 = .4 and A] = 4, a = 1. a) P0 = 0.1 with various p. Dashed curve 
+corresponds to adaptive momentum. b) p adaptive for various p0. 
+propagation is required for this calculation. Thus, to compute the entire weight up- 
+date requires two forward-backward propagations, one for the gradient calculation 
+and one for computing t Awt. 
+The only constraint on p0 is that P0 < 1/,X,a. We use the on-line algorithm 
+developed by LeCun, Simard, and Pearlmutter [13] to find the largest eigenvalue 
+prior to the start of training. 
+3 Examples 
+In the following two subsections we examine the behavior of annealed learning with 
+adaptive momentum on networks previously trained to a point close to an optimum, 
+where the noise dominates. We look at very simple linear nets, large linear nets, and 
+a large nonlinear net. In section 3.3 we couple adaptive momentum with automatic 
+switching from constant to annealed learning. 
+3.1 Linear Networks 
+We begin with a simple 2-D LMS network. Inputs xt are gaussian distributed with 
+zero mean and the targets d at each timestep t are dt= w,Txt + et where et is zero 
+mean gaussian noise, and w, is the optimal weight vector. The weight error at time 
+t is just v m COt -- CO,. 
+Figure i displays results for both constant and adaptive momentum with averages 
+computed over an ensemble of 1000 networks. Figure (la) shows the decay o

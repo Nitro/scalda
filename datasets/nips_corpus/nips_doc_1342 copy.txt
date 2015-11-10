@@ -1,0 +1,163 @@
+Regression with Input-dependent Noise: 
+A Gaussian Process Treatment 
+Paul W. Goldberg 
+Department of Computer Science 
+University of Warwick 
+Coventry, CV4 7AL, UK 
+pgdcs. arick. ac. uk 
+Christopher K.I. Williams 
+Neural Computing Research Group 
+Aston University 
+Birmingham B4 7ET, UK 
+�. k. i. williamsaston. a�. uk 
+Christopher M. Bishop 
+Microsoft Research 
+St. George House 
+I Guildhall Street 
+Cambridge, CB2 3NH, UK 
+cmbishopmicrosoft. com 
+Abstract 
+Gaussian processes provide natural non-parametric prior distribu- 
+tions over regression functions. In this paper we consider regression 
+problems where there is noise on the output, and the variance of 
+the noise depends on the inputs. If we assume that the noise is 
+a smooth function of the inputs, then it is natural to model the 
+noise variance using a second Gaussian process, in addition to the 
+Gaussian process governing the noise-free output value. We show 
+that prior uncertainty about the parameters controlling both pro- 
+cesses can be handled and that the posterior distribution of the 
+noise rate can be sampled from using Markov chain Monte Carlo 
+methods. Our results on a synthetic data set give a posterior noise 
+variance that well-approximates the true variance. 
+1 Background and Motivation 
+A very natural approach to regression problems is to place a prior on the kinds of 
+function that we expect, and then after observing the data to obtain a posterior. 
+The prior can be obtained by placing prior distributions on the weights in a neural 
+494 P. W. Goldberg, C. K. I. Williams and C. M. Bishop 
+network, although we would argue that it is perhaps more natural to place priors di- 
+rectly over functions. One tractable way of doing this is to create a Gaussian process 
+prior. This has the advantage that predictions can be made from the posterior using 
+only matrix multiplication for fixed hyperparameters and a global noise level. In 
+contrast, for neural networks (with fixed hyperparameters and a global noise level) 
+it is necessary to use approximations or Markov chain Monte Carlo (MCMC) meth- 
+ods. Rasmussen (1996) has demonstrated that predictions obtained with Gaussian 
+processes are as good as or better than other state-of-the art predictors. 
+In much of the work on regression problems in the statistical and neural networks 
+literatures, it is assumed that there is a global noise level, independent of the input 
+vector x. The book by Bishop (1995) and the papers by Bishop (1994), MacKay 
+(1995) and Bishop and Qazaz (1997) have examined the case of input-dependent 
+noise for parametric models such as neural networks. (Such models are said to 
+heteroscedastic in the statistics literature.) In this paper we develop the treatment 
+of an input-dependent noise model for Gaussian process regression, where the noise 
+is assumed to be Gaussian but its variance depends on x. As the noise level is non- 
+negative we place a Gaussian process prior on the log noise level. Thus there are 
+two Gaussian processes involved in making predictions: the usual Gaussian process 
+for predicting the function values (the y-process), and another one (the z-process) 
+for predicting the log noise level. Below we present a Markov chain Monte Carlo 
+method for carrying out inference with this model and demonstrate its performance 
+on a test problem. 
+1.1 Gaussian processes 
+A stochastic process is a collection of random variables {Y(x)[x 6 X} indexed by 
+a set X. Often X will be a space such as 7E a for some dimension d, although it 
+could be more general. The stochastic process is specified by giving the probability 
+distribution for every finite subset of variables Y(x),...,Y(xk) in a consistent 
+manner. A Gaussian process is a stochastic process which can be fully specified 
+by its mean function it(x) = E[Y(x)] and its covariance function Cp(;r,x') = 
+E[(Y (x)-it(x))(Y (x')-it(x'))]; any finite set of points will have a joint multivariate 
+Gaussian distribution. Below we consider Gaussian processes which have it(a;) -- O. 
+This assumes that any known offset or trend in the data has been. removed. A 
+non-zero it(x) is easily incorporated into the framework at the expense of extra 
+notational complexity. 
+A covariance function is used to define a Gaussian process; it is a parametrised 
+function from pairs of a:-values to their covariance. The form of the covariance 
+function that we shall use for the prior over functions is given by 
+(ld ) 
+Cy(x(i),x (j)) = vyexp - E wyt(x? - x?)) 2 + Jy6(i,j) (1) 
+l=l 
+where v- specifies the overall y-scale and .-x/2 
+w. t is the length-scale associated with 
+the /th coordinate. Jr is a jitter term (as discussed by Neal, 1997), which is 
+added to prevent ill-conditioning of the covariance matrix of the outputs. Jr is a 
+typically given a small value, e.g. 10 -6. 
+For the prediction problem we are given n data points D = ((xi,tl),(x2,ta), 
+In�ut-dependent Noise: A Gaussian Process Treatment 495 
+..., (x,t)), where ti is the observed output value at xi. The t's are assumed 
+to have been generated from the true y-values by adding independent Gaussian 
+noise whose variance is x-dependent. Let the noise variance at the n data points 
+be r = (r(x), r(a:2),..., r(xn)). Given the assumption of a Gaussian process prior 
+over functions, it is a standard result (e.g. Whittle, 1963) that the predictive distri- 
+bution P(t*lx* ) corresponding to a new input a:* is t*  N(i(x*),a2(x*)), where 
+= + 
+a2(x *) = C�(a:*,z*) + r(x*) - k(x*)(K� + Kjv)-k�(x *) (3) 
+where the noise-free covariance matrix Ky satisfies [Ky]o = Cr(xi, xj), and 
+ky(x*) = (Cy(x*,Xl),...,Cy(x*,Xn)) T, KN -- diag(r) and t = (tl,...,tn) T, 
+and V/a2(ze *) gives the error bars or confidence interval of the prediction. 
+In this paper we do not specify a functional form for the noise level r(x) but we do 
+place a prior over it. An independent Gaussian process (the z-process) is defined to 
+be the log of the noise level. Its values at the training data points are denoted by 
+z = (z,..., zn), so that r = (exp(z),..., exp(zn)). The prior for z has a covariance 
+function Cz(x(i), x0)) similar to that given in equation 1, although the parameters 
+vz and the wzt's can be chosen to be different to those for the y-process. We also 
+add the jitter term Jz5(i, j) to the covariance function for Z, where Jz is given the 
+value 10 -2 . This value is larger than usual, for technical reasons discussed later. 
+We use a zero-mean process for z which carries a prior assumption that the average 
+noise rate is approximately I (being e to the power of components of z). This is 
+suitable for the experiment described in section 3. In general it is easy to add an 
+offset to the z-process to shift the prior noise rate. 
+2 An input-dependent noise process 
+We discuss, in turn, sampling the noise rates and making predictions with fixed val- 
+ues of the parameters that control both processes, and sampling from the posterior 
+on these parameters. 
+2.1 Sampling the Noise Rates 
+The predictive distribution for t*, the output at a point x*, is P(t*lt ) = 
+f P(t*lt, r(z))P(zlt)dz. Given a z vector, the prediction P(t*lt, r(z)) is Gaus- 
+sian with mean and variance given by equations 2 and 3, but P(zlt ) is difficult to 
+handle analytically, so we use a Monte Carlo approximation to the integral. Given 
+a representative sample {zx,..., zk} of log noise rate vectors we can approximate 
+the integral by the sum -} j P(t*l,r(zj) ). 
+We wish to sample from the distribution P(zlt ). As this is quite difficult, we sample 
+instead from P(y, zlt); a sample for P(zlt ) can then be obtained by ignoring the 
+y values. This is a similar approach to that taken by Neal (1997) in the case of 
+Gaussian processes used for classification or robust regression with t-distributed 
+noise. We find that 
+P(y, zlt ) cr P(tly, r(z))P(y)P(z ). (4) 
+We use Gibbs sampling to sample from P(y, zlt ) by alternately sampling from 
+P(z lY, t) and P(ylz, t). Intuitively were are alternating the fitting of the curve (or 
+496 P. W. Goldberg, C. K. I. Williams and C. M. Bishop 
+y-process) with fitting the noise level (z-process). These two steps are discussed 
+in turn. 
+� Sampling from P(y]t,z) 
+For y we have that 
+P(ult, z) cr P(tlu, r(z))P(y ) 
+where 
+(s) 
+n ( �,_y,)2) (6) 
+P(tlY'r(z)) = 1-I (2rri)X/2 exp 2ri ' 
+i=1 
+Equation (6) can also be written as P(tly, r(z)) ~ N(t, Ks). Thus P(ylt, z) is 
+a multivariate Gaussian with mean (K  + K)-KXt and covariance matrix 
+(K  + KX) - which can be sampled by standard methods. 
+� Sampling from P(zlt, y) 
+For fixed y and t we obtain 
+P(zly,) cr P(tly, z)P(z). 
+(7) 
+The form of equation 6 means that it is not easy to sample z as a vector. Instead 
+we can sample its components separately, which is a standard Gibbs sampling al- 
+gorithm. Let zi denote the ith component of z and let z-i denote the remaining 
+components. Then 
+1 ((ti-yi)2)p(zilz_i) ' 
+P(zilz_i,y,t) o (2rexp(zi))/2 exp 2exp(zi) 
+(8) 
+P(zilz_i) is the distribution of zi conditioned on the values of z-i. The com- 
+putation of P(zi[z-i) is very similar to that described by equations (2) and (3), 
+except that C�(-,-) is replaced by Cz(., .) and there is no noise so that r(-) will be 
+identically zero. 
+We sample from P(zilz-i,y,t) using rejection sampling. We first sample from 
+P(zilz_i), and then reject according to the term exp{-zi/2-21-(ti- yi) 2 exp(-zi)} 
+(the likelihood of local noise rate zi), which can be rescaled to have a maximum 
+value of I over zi. Note that it is not necessary to perform a separate matrix 
+inversion for each i when computing the P(zilz_i) terms; the required matrices 
+can be computed efficiently from the inverse of Kz. We find that the average 
+rejection rate is approximately two-thirds, which makes the method we currently use 
+reasonably efficient. Note that it is also possible to incorporate the term exp(-zi/2) 
+from the likelihood into the mean of the Gaussian P(zilz_i) to reduce the rejection 

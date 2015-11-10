@@ -1,0 +1,134 @@
+A SNoW-Based Face Detector 
+Ming-Hsuan Yang Dan Roth Narendra Ahuja 
+Department of Computer Science and the Beckman Institute 
+University of Illinois at Urbana-Champaign 
+Urbana, IL 61801 
+mhyangvision. ai.uiu�. edu danrcs.uiu�. edu ahuj avision. ai.uiu�. edu 
+Abstract 
+A novel learning approach for human face detection using a network 
+of linear units is presented. The SNoW learning architecture is a 
+sparse network of linear functions over a pre-defined or incremen- 
+tally learned feature space and is specifically tailored for learning 
+in the presence of a very large number of features. A wide range of 
+face images in different poses, with different expressions and under 
+different lighting conditions are used as a training set to capture 
+the variations of human faces. Experimental results on commonly 
+used benchmark data sets of a wide range of face images show that 
+the SNoW-based approach outperforms methods that use neural 
+networks, Bayesian methods, support vector machines and oth- 
+ers. Furthermore, learning and evaluation using the SNoW-based 
+method are significantly more efficient than with other methods. 
+I Introduction 
+Growing interest in intelligent human computer interactions has motivated a recent 
+surge in research on problems such as face tracking, pose estimation, face expression 
+and gesture recognition. Most methods, however, assume human faces in their input 
+images have been detected and localized. 
+Given a single image or a sequence of images, the goal of face detection is to identify 
+and locate human faces regardless of their positions, scales, orientations, poses and 
+illumination. To support automated solutions for the above applications, this has 
+to be done efficiently and robustly. The challenge in building an efficient and robust 
+system for this problem stems from the fact that human faces are highly non-rigid 
+objects with a high degree of variability in size, shape, color and texture. 
+Numerous intensity-based methods have been proposed recently to detect human 
+faces in a single image or a sequence of images. Sung and Poggio [24] report an 
+example-based learning approach for locating vertical frontal views of human faces. 
+They use a number of Gaussian clusters to model the distributions of face and 
+non-face patterns. A small window is moved over an image to determine whether a 
+face exists using the estimated distributions. In [16], a detection algorithm is pro- 
+posed that combines template matching and feature-based detection method using 
+hierarchical Markov random fields (MRF) and maximum a posteriori probability 
+(MAP) estimation. Colmenarez and Huang [4] apply Kullback relative information 
+for maximal discrimination between positive and negative examples of faces. They 
+use a family of discrete Markov processes to model faces and background patterns 
+and estimate the density functions. Detection of a face is based on the likelihood 
+A SNo W-Based Face Detector 863 
+ratio computed during training. Moghaddam and Pentland [12] propose a prob- 
+abilistic method that is based on density estimation in a high dimensional space 
+using an eigenspace decomposition. In [20], Rowley et al. use an ensemble of neural 
+networks to learn face and non-face patterns for face detection. Schneiderman et al. 
+describe a probabilistic method based on local appearance and principal component 
+analysis [23]. Their method gives some preliminary results on profile face detection. 
+Finally, hidden Markov models [17], higher order statistics [17], and support vector 
+machines (SVM) [14] have also been applied to face detection and demonstrated 
+some success in detecting upright frontal faces under certain lighting conditions. 
+In this paper, we present a face detection method that uses the SNoW learning 
+architecture [18, 3] to detect faces with different features and expressions, in different 
+poses, and under different lighting conditions. SNoW (Sparse Network of Winnows) 
+is a sparse network of linear functions that utilizes the Winnow update rule [10]. 
+SNoW is specifically tailored for learning in domains in which the potential number 
+of features taking part in decisions is very large, but may be unknown a priori. Some 
+of the characteristics of this learning architecture are its sparsely connected units, 
+the allocation of features and links in a data driven way, the decision mechanism 
+and the utilization of an efficient update rule. SNoW has been used successfully on 
+a variety of large scale learning tasks in the natural language domain [18, 13, 5, 19] 
+and this is its first use in the visual processing domain. 
+In training the SNoW-based face detector, we use a set of 1,681 face images from 
+Olivetti [22], UMIST [6], Harvard [7], Yale [1] and FERET [15] databases to cap- 
+ture the variations in face patterns. In order to compare our approach with other 
+methods, our experiments involve two benchmark data sets [20, 24] that have been 
+used in other works on face detection. The experimental results on these benchmark 
+data sets (which consist of 225 images with 619 faces) show that our method out- 
+performs all other methods evaluated on this problem, including those using neural 
+networks [20], Kullback relative information [4], naive Bayes [23] and support vector 
+machines [14], while being significantly more efficient computationally. Along with 
+these experimental results we describe further experiments that provide insight into 
+some of the theoretical and practical considerations of SNoW-based learning sys- 
+tems. In particular, we study the effect of learning with primitive as well as with 
+multi-scale features, and discuss some of the sources of the success of the approach. 
+2 The SNoW System 
+The SNoW (Sparse Network of Winnows) learning architecture is a sparse network 
+of linear units over a common pre-defined or incrementally learned feature space. 
+Nodes in the input layer of the network represent simple relations over the input 
+and are being used as the input features. Each linear unit is called a target node and 
+represents relations which are of interes over the input examples; in the current 
+application, only two target nodes are being used, one as a representation for a .face 
+pattern and the other for a non-face pattern. Given a set of relations (i.e., types of 
+features) that may be of interest in the input image, each input image is mapped into 
+a set of features which are active (present) in it; this representation is presented 
+to the input layer of SNoW and propagates to the target nodes. (Features may 
+take either binary value, just indicating the fact that the feature is active (present) 
+or real values, reflecting its strength; in the current application, all features are 
+binary. See Sec 3.1.) Target nodes are linked via weighted edges to (some of the) 
+input features. Let At = {i,...,im} be the set of features that are active in an 
+example and are linked to the target node t. Then the linear unit is active if and 
+t t 
+only if Y.i  wi > Or, where w i is the weight on the edge connecting the ith feature 
+to the target node t, and Ot is its threshold. 
+In the current application a single SNoW unit which includes two subnetworks, one 
+864 M.-H. Yang, D. Roth and N. Ahuja 
+for each of the targets, is used. A given example is treated autonomously by each 
+target subnetwork; that is, an image labeled as a face is used as a positive example 
+for the face target and as a negative example for the non-face target, and vice-versa. 
+The learning policy is on-line and mistake-driven; several update rules can be used 
+within SNOW. The most successful update rule, and the only one used in this 
+work is a variant of Littlestone's Winnow update rule, a multiplicative update rule 
+tailored to the situation in which the set of input features is not known a priori, as 
+in the infinite attribute model [2]. This mechanism is implemented via the sparse 
+architecture of SNOW. That is, (1) input features are allocated in a data driven 
+way - an input node for the feature i is allocated only if the feature i is active 
+in the input image and (2) a link (i.e., a non-zero weight) exists between a target 
+node t and a feature i if and only if i has been active in an image labeled t. Thus, 
+the architecture also supports augmenting the feature types at later stages or from 
+external sources in a flexible way, an option we do not use in the current work. 
+The Winnow update rule has, in addition to the threshold 0t at the target t, two 
+update parameters: a promotion parameter a > I and a demotion parameter 0 < 
+ < 1. These are being used to update the current representation of the target t (the 
+set of weights w) only when a mistake in prediction is made. Let At - {i,..., ira} 
+be the set of active features that are linked to the target node t. If the algorithm 
+t < 0t) and the received label is 1, the active weights in 
+predicts 0 (that is, ie,4t wi - 
+t t 
+the current example are promoted in a multiplicative fashion: Vi 6 .At, wi - a. w i. 
+If the algorithm predicts I (ieAt w > 0t) and the received label is 0, the active 
+t t All other weights 
+weights in the current example are demoted: Vi  .At, w i - 'wi. 
+are unchanged. The key property of the Winnow update rule is that the number 
+of examples  it requires to learn a linear function grows linearly with the number 
+of relevant features and only logarithmically with the total number of features. 
+This property seems crucial in domains in which the number of potential features 
+is vast, but a relatively small number of them is relevant (this does not mean that 
+only a small number of them will be active, or have non-zero weights). Winnow 
+is known to learn efficiently any linear threshold function and to be robust in the 
+presence of various kinds of noise and in cases where no linear-threshold function can 
+make perfect classification, and still maintain its abovementioned dependence on the 
+number of tota

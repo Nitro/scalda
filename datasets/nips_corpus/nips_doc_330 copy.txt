@@ -1,0 +1,158 @@
+Neural Network Implementation of Admission Control 
+Rodolfo A. Milito, Isabelle Guyon, and Sara A. Soila 
+AT&T Bell Laboratories, Crawfords Corner Rd., Holmdel, NJ 07733 
+Abstract 
+A feedforward layered network implements a mapping required to control an 
+unknown stochastic nonlinear dynamical system. Training is based on a 
+novel approach that combines stochastic approximation ideas with back- 
+propagation. The method is applied to control admission into a queueing sys- 
+tem operating in a time-varying environment. 
+1 INTRODUCTION 
+A controller for a discrete-time dynamical system must provide, at time tn, a value u n for 
+the control variable. Information about the state of the system when such decision is 
+made is available through the observable Yn. The value Un is determined on the basis of 
+the current observation Yn and the preceding control action Un-1. Given the information 
+In = (Yn , Un-1 ), the controller implements a mapping In -- Un. 
+Open-loop controllers suffice in static s. ituations which require a single-valued control 
+policy u � a constant mapping I n ---) U , regardless of I n. Closed-loop controllers pro- 
+vide a dynamic control action Un, determined by the available information I n. This work 
+addresses the question of training a neural network to implement a general mapping 
+In --') ttn' 
+The problem that arises is the lack of training patterns: the appropriate value Un for a 
+given input I n is not known. The quality of a given control policy can only be assessed by 
+using it to control the system, and monitoring system performance. The sensitivity of the 
+performance to variations in the control policy cannot be investigated analytically, since 
+the system is unknown. We show that such sensitivity can be estimated within the stan- 
+dard framework of stochastic approximation. The usual back-propagation algorithm is 
+used to determine the sensitivity of the output Un to variations in the parameters W of the 
+network, which can thus be adjusted so as to improve system performance. 
+The advantage of a neural network as a closed-loop controller resides in its ability to 
+accept inputs (In, In-1, ..., In-p). The additional p time steps into the past provide infor- 
+mation about the history of the controlled system. As demonstrated here, neural network 
+controllers can capture regularities in the structure of time-varying environments, and are 
+particularly powerful for tracking time variations driven by stationary stochastic 
+processes. 
+493 
+494 Milito, Guyon, and Solla 
+2 CONTROL OF STOCHASTIC DYNAMICAL SYSTEMS 
+Consider a dynamical system for which the state xn is updated at discrete times 
+tn = n 5. The control input u n in effect at time tn affects the dynamical evolution, and 
+Xn+l = f(xn, un, ). (2.1) 
+Here n} is a stochastic process which models the intrinsic randomness of the system as 
+well as external, unmeasurable disturbances. The variable xn is not accessible to direct 
+measurement, and knowledge about the state of the system is limited to the observable 
+Yn = h (xn). (2.2) 
+Our goal is to design a neural network controller which produces a specific value un for 
+the control variable to be applied at time tn, given the available information 
+In --- (yn, 
+In order to design a controller which implements the appropriate control policy I n ---) un, 
+a specification of the purpose of controlling the dynamical system is needed. There is 
+typically a function of the observable, 
+Jn = H(yn), (2.3) 
+which measures system performance. It follows from Eqs.(2.1)-(2.3) that the 
+composition G = H o h o fdetermines 
+Jn = G (Xn-, Un-l, n-l), (2.4) 
+a function of the state x of the system, the control variable u, and the stochastic variable 
+. The quantity of interest is the expectation value of the system performance, 
+averaged with respect to . 
+average 
+<Jn> = <J-/(Yn)>g, (2.5) 
+This expectation value can be estimated by the long-run 
+1 N 
+since for an ergodic system JN -) <Jn> as N  oo. The goal of the controller is to 
+generate a sequence {Un}, 1 < n < N of control values, such that the average 
+performance <Jn> stabilizes to a desired value J*. 
+The parameters W of the neural network are thus to be adapted so as to minimize a cost 
+function 
+Neural Network Implementation of Admission Control 495 
+1 
+E(W) = (<Zn> - j,)2. 
+The dependence of E(W) on W is implicit: the value of <Jn> depends on the controlling 
+sequence {Un}, which depends on the parameters W of the neural network. 
+On-line training proceeds through a gradient descent update 
+Wn+ = Wn-q VwEn(W), 
+(2.8) 
+towards the minimization of the instantaneous deviation 
+1 
+En(W) =  (Jn+l - j*)2. (2.9) 
+There is no specified target for the output un that the controller is expected to provide in 
+response to the input In = (Yn, Un-1 ). The output Un can thus be considered as a variable 
+u, which controls the subsequent performance: Jn+l = G(xn, u, n), as follows from 
+Eq. (2.4). Then 
+aEn(W) OG l u=u. Vwu 
+VwEn(W) - }Jn+l aU 
+= qn+ { u=.. Vwu. 
+(2.10) 
+The factor VwU measures the sensitivity of the output of the neural network controller to 
+changes in the internal parameters W: at fixed input In, the output un is a function only 
+of the network parameters W. The gradient of this scalar function is easily computed 
+using the standard back-propagation algorithm ( Rumelhart et al, 1986). 
+The factor OG/Ou measures the sensitivity of the system performance Jn+ to changes in 
+the control variable. The information about the system needed to evaluate this derivative 
+is not available: unknown are the functions fwhich describes how Xn+l is affected by Un 
+at fixed Xn, and the function h which describes how this dependence propagates to the 
+observable Yn+l. The algorithm is rendered operational through the use of stochastic 
+approximation (Kushner, 1971): assuming that the average system performance <Jn> is a 
+monotonically increasing function of u, the sign of the partial derivative }<Jn>/}u is 
+positive. Stochastic approximation amounts to neglecting the unknown fluctuations of 
+this derivative with u, and approximating it by a conslant positive value, which is then 
+absorbed in a redefinition of the step size q > 0. 
+The on-line update rule then becomes: 
+Wn+l -' Wn --  (Jn+l -- J*) VWUn. 
+(2.11) 
+As with stochastic approximation, the on-line gradient update uses the instantaneous 
+gradient based on the current measurement Jn +1, rather than the gradient of the expected 
+496 Milito, Guyon, and Solla 
+value <Jn >, whose deviations with respect to the target J* are to be minimized. The 
+combined use of back-propagation and stochastic approximation to evaluate VwEn (W), 
+leading to the update rule of Eq. (2.11), provides a general and powerful learning rule for 
+neural network controllers. The only requirement is that the average performance <Jn> 
+be indeed a monotonic function of the control variable u. 
+In the following section we illustrate the application of the algorithm to an admission 
+controller for a traffic queueing problem. The advantage of the neural network over a 
+standard stochastic approximation approach becomes apparent when the mapping which 
+produces Un is used to track a time-varying environment generated by a stationary 
+stochastic process. A straightforward extension of the approach discussed above is used 
+to train a network to implement a mapping (In, In-I, ..., In-t,) ) Un. The additionalp 
+time steps into the past provide information on the history of the controlled system, and 
+allow the network to capture regularities in the time variations of the environment. 
+3 A TWO-TRAFFIC QUEUEING PROBLEM 
+Consider an admission controller for a queueing system. As depicted in Fig. 1, the system 
+includes a server, a queue, a call admission mechanism, and a controller. 
+local arrivals 
+SERVER 
+arrivals 
+admission QUEUE 
+admissions 
+rate 
+rejections 
+controller 
+,ndonments 
+services 
+Figure 1: Admission controller for a two-traffic queuing problem. 
+Neural Network Implementation of Admission Control 497 
+The need to serve two independent traffic streams with a single server arises often in 
+telecommunication networks. In a typical situation, in addition to remote arrivals which 
+can be monitored at the control node, there are local arrivals whose admission to the 
+queue can be neither monitored nor regulated. Within this limited information scenario, 
+the controller must execute a policy that meets specified performance objectives. Such is 
+the situation we now model. 
+Two streams are offered to the queueing system: remote traffic and local traffic. Both 
+streams are Poisson, i.e., the interarrival times are independently and exponentially 
+distributed, with mean 1/). Calls originated by the remote stream can be controlled, by 
+denying admission to the queue. Local calls are neither controlled nor monitored. While 
+the arrival rate )a of remote calls is fixed, the rate )�(t) of local calls is time-varying. It 
+depends on the state of a stationary Markov chain to be described later (Kleinrock, 1975). 
+The service time required by a call of any type is an exponentially distributed random 
+variable, with mean 1 /g. 
+Calls that find an empty queue on arrival get immediately into service. Otherwise, they 
+wait in queue. The service discipline is first in first out, non-idling. Every arrival is 
+assigned a patience threshold :, independently drawn from a fixed but unknown 
+distribution that characterizes customer behavior. If the waiting time in queue exceeds its 
+patience threshold, the call abandons. 
+Ideally, every incoming call should be admitted. The server, however, cannot process, on 
+the average, more than g calls per unit time. Whenever the offered load 
+p = [3 R + 3�(t)]/g approaches or exceeds 1, the queue starts to build up. Long 
+queues result in long delays, which in mm induce heavy abandonments. To keep the 
+abandonments within tolerable limits, it becomes necessary to reject some remote 
+ar

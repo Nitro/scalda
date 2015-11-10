@@ -1,0 +1,143 @@
+316 Atkeson 
+Using Local Models to Control Movement 
+Christopher G. Atkeson 
+Department of Brain and Cognitive Sciences 
+and the Artificial Intelligence Laboratory 
+Massachusetts Institute of Technology 
+NE43-771,545 Technology Square 
+Cambridge, MA 02139 
+cga@ai.mit.edu 
+ABSTRACT 
+This paper explores the use of a model neural network for motor 
+learning. Steinbuch and Taylor presented neural network designs to 
+do nearest neighbor lookup in the early 1960s. In this paper their 
+nearest neighbor network is augmented with a local model network, 
+which fits a local model to a set of nearest neighbors. The network 
+design is equivalent to local regression. This network architecture 
+can represent smooth nonlinear functions, yet has simple training 
+rules with a single global optimum. The network has been used 
+for motor learning of a simulated arm and a simulated running 
+machine. 
+1 INTRODUCTION 
+A common problem in motor learning is approximating a continuous function from 
+samples of the function's inputs and outputs. This paper explores a neural net- 
+work architecture that simply remembers experiences (samples) and builds a local 
+model to answer any particular query (an input for which the function's output is 
+desired). This network design can represent smooth nonlinear functions, yet has 
+simple training rules with a single global optimum for building a local model in 
+response to a query. Our approach is to model complex continuous functions us- 
+ing simple local models. This approach avoids the difficult problem of finding an 
+appropriate structure for a global model. A key idea is to form a training set for 
+the local model network after a query to be answered is known. This approach 
+Using Local Models to Control Movement 317 
+allows us to include in the training set only relevant experiences (nearby samples). 
+The local model network, which may be a simple network architecture such as a 
+perceptron, forms a model of the portion of the function near the query point. This 
+local model is then used to predict the output of the function, given the input. The 
+local model network is retrained with a new training set to answer the next query. 
+This approach minimizes interference between old and new data, and allows the 
+range of generalization to depend on the density of the samples. 
+Steinbuch (Steinbuch 1961, Steinbuch and Piske 1963) and Taylor (Taylor 1959, 
+Taylor 1960) independently proposed neural network designs that used a local rep- 
+resentation to do nearest neighbor lookup and pointed out that this approach could 
+be used for control. They used a layer of hidden units to compute an inner product 
+of each stored vector with the input vector. A winner-take-all circuit then selected 
+the hidden unit with the highest activation. This type of network can find near- 
+est neighbors or best matches using a Euclidean distance metric (Kazmierczak and 
+Steinbuch 1963). In this paper their nearest neighbor lookup network (which I will 
+refer to as the memory network) is augmented with a local model network, which 
+fits a local model to a set of nearest neighbors. 
+The ideas behind the network design used in this paper have a long history. Ap- 
+proaches which represent previous experiences directly and use a similar experience 
+or similar experiences to form a local model are often referred to as nearest neighbor 
+or k-nearest neighbor approaches. Local models (often polynomials) have been used 
+for many years to smooth time series (Sheppard 1912, Sherriff 1920, Whittaker and 
+Robinson 1924, Macauley 1931) and interpolate and extrapolate from limited data. 
+Lancaster and alkauskas (1986) refer to nearest neighbor approaches as moving 
+least squares and survey their use in fitting surfaces to arbitrarily spaced points. 
+Eubank (1988) surveys the use of nearest neighbor estimators in nonparametric 
+regression. Farmer and Sidorowich (1988) survey the use of nearest neighbor and 
+local model approaches in modeling chaotic dynamic systems. 
+Crain and Bhattacharyya (1967), Falconer (1971), and McLain (1974) suggested 
+using a weighted regression to fit a local polynomial model at each point a function 
+evaluation was desired. All of the available data points were used. Each data point 
+was weighted by a function of its distance to the desired point in the regression. 
+Mcintyre, Pollard, and Smith (1968), Pelto, Elkins, and Boyd (1968), Legg and 
+Brent (1969), Palmer (1969), Walters (1969), Lodwick and Whittle (1970), Stone 
+(1975) and Franke and Nielson (1980) suggested fitting a polynomial surface to a set 
+of nearest neighbors, also using distance weighted regression. Cleveland (1979) pro- 
+posed using robust regression procedures to eliminate outlying or erroneous points 
+in the regression process. A program implementing a refined version of this ap- 
+proach (LOESS) is available by sending electronic mail containing the single line, 
+send dloess from a, to the address netlib@research.att.com (Grosse 1989). Cleve- 
+land, Devlin and Grosse (1988) analyze the statistical properties of the LOESS 
+algorithm and Cleveland and Devlin (1988) show examples of its use. Stone (1977, 
+1982), Devroye (1981), Cheng (1984), Li (1984), Farwig (1987), and Mallet (1987) 
+318 Atkeson 
+provide analyses of nearest neighbor approaches. Franke (1982) compares the per- 
+formance of nearest neighbor approaches with other methods for fitting surfaces to 
+data. 
+2 THE NETWORK ARCHITECTURE 
+The memory network of Steinbuch and Taylor is used to find the nearest stored 
+vectors to the current input vector. The memory network computes a measure of 
+the distance between each stored vector and the input vector in parallel, and then a 
+winner take all network selects the nearest vector (nearest neighbor). Euclidean 
+distance has been chosen as the distance metric, because the Euclidean distance is 
+invariant under rotation of the coordinates used to represent the input vector. 
+The memory network consists of three layers of units: input units, hidden or memory 
+units, and output units. The squared Euclidean distance between the input vector 
+(i) and a weight vector (wk) for the connections of the input units to hidden unit 
+k is given by: 
+d = (i- wk)W (i- wa) = iTi -- 2iTw/ + 
+Since the quantity iTi is the same for all hidden units, minimizing the distance 
+between the input vector and the weight vector for each hidden unit is equivalent 
+to maximizing: 
+iTw/ -- 1/2WTW/ 
+This quantity is the inner product of the input vector and the weight vector for 
+hidden unit k, biased by half the squared length of the weight vector. 
+Dynamics of the memory network neurons allow the memory network to output a 
+sequence of nearest neighbors. These nearest neighbors form the selected training 
+sequence for the local model network. Memory unit dynamics can be used to allocate 
+free memory units to new experiences, and to forget old training points when the 
+capacity of the memory network is fully utilized. 
+The local model network consists of only one layer of modifiable weights preceded by 
+any number of layers with fixed connections. There may be arbitrary preprocessing 
+of the inputs of the local model, but the local model is linear in the parameters 
+used to form the fit. The local model network using the LMS training algorithm 
+performs a linear regression of the transformed inputs against the desired outputs. 
+Thus, the local model network can be used to fit a linear regression model to the 
+selected training set. With multiplicative interactions between inputs the local 
+model network can be used to fit a polynomial surface (such as a quadratic) to the 
+selected training set. An alternative implementation of the local model network 
+could use a single layer of sigma-pi units. 
+This network design has simple training rules. In the memory network the weights 
+are simply the values of the components of input and output vectors, and the bias 
+for each memory unit is just half the squared length of the corresponding input 
+weight vector. No search for weights is necessary, since the weights are directly 
+Using Local Models to Control Movement 319 
+Figure 1: Simulated Planar Two-joint Arm 
+given by the data to be stored. The local model network is linear in the weights, 
+leading to a single optimum which can be found by linear regression or gradient 
+descent. Thus, convergence to the global optimum is guaranteed when forming a 
+local model to answer a particular query. 
+This network architecture was simulated using k-d tree data structures (Friedman, 
+Bentley, and Finkel 1977) on a standard serial computer and also using parallel 
+search on a massively parallel computer, the Connection Machine (Hillis 1985). A 
+special purpose computer is being built to implement this network in real time. 
+3 APPLICATIONS 
+The network has been used for motor learning of a simulated arm and a simulated 
+running machine. The network performed surprisingly well in these simple evalua- 
+tions. The simulated arm was able to follow a desired trajectory after only a few 
+practice movements. Performance of the simulated running machine in following a 
+series of desired velocities was also improved. This paper will report only on the 
+arm trajectory learning. 
+Figure i shows the simulated 2-joint planar arm. The problem faced in this sim- 
+ulation is to learn the correct joint torques to drive the arm along the desired 
+trajectory (the inverse dynamics problem). In addition to the feedforward control 
+signal produced by the network described in this paper, a feedback controller was 
+also used. 
+Figure 2 shows several learning curves for this problem. The first point in each 
+of the curves shows the performance generated by the feedback controller alone. 
+The error measure is the RMS torque error during the movement. The highest 
+curve shows the performance of a nearest neighbor method without a local model. 
+The nearest point was used to generate the torques for the 

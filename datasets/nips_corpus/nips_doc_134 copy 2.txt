@@ -1,0 +1,165 @@
+4O 
+EFFICIENT PARALLEL LEARNING 
+ALGORITHMS FOR NEURAL NETWORKS 
+Alan H. Kramer and A. Sangiovanni-Vincentelli 
+Department of EECS 
+U.C. Berkeley 
+Berkeley, CA 94720 
+ABSTRACT 
+Parallelizable optimization techniques are applied to the problem of 
+learning in feedforward neural networks. In addition to having supe- 
+rior convergence properties, optimization techniques such as the Polak- 
+Ribiere method are also significantly more efficient than the Back- 
+propagation algorithm. These results are based on experiments per- 
+formed on small boolean learning problems and the noisy real-valued 
+learning problem of hand-written character recognition. 
+INTRODUCTION 
+The problem of learning in feedforward neural networks has received a great deal 
+of attention recently because of the ability of these networks to represent seemingly 
+complex mappings in an efficient parallel architecture. This learning problem can 
+be characterized as an optimization problem, but it is unique in several respects. 
+Function evaluation is very expensive. However, because the underlying network is 
+parallel in nature, this evaluation is easily parallelizable. In this paper, we describe 
+the network learning problem in a numerical framework and investigate parallel 
+algorithms for its solution. Specifically, we compare the performance of several 
+parallelizable optimization techniques to the standard Back-propagation algorithm. 
+Experimental results show the clear superiority of the numerical techniques. 
+2 NEURAL NETWORKS 
+A neural network is characterized by its architecture, its node functions, and its 
+interconnection weights. In a learning problem, the first two of these are fixed, so 
+that the weight values are the only free parameters in the system. when we talk 
+about weight space we refer to the parameter space defined by the weights in a 
+network, thus a weight vector w is a vector or a point in weightspace which defines 
+the values of each weight in the network. We will usually index the components of 
+a weight vector as wij, meaning the weight value on the connection from unit i to 
+unit j. Thus N(w, r), a network function with n output units, is an n-dimensional 
+vector-valued function defined for any weight vector w and any input vector r: 
+N(w, r)--[o(w,r),o2(w,r),...,o,(w,r)] T 
+Efficient Parallel Learning Algorithms 
+where oi is the ith output unit of the network. Any node j in the network has input 
+ii(w,r) = ,Efanin o,(w,r)w, and output o(w,r) - f(i(w,r)), where f0 is 
+the node function. The evaluation of N() is inherently parallel and the time to 
+evaluate N() on a single input vector is O(#layers). If pipelining is used, multiple 
+input vectors can be evaluated in constant time. 
+3 LEARNING 
+The learning problem for a neural network refers to the problem of finding a 
+network function which approximates some desired target function T0, defined 
+over the same set of input vectors as the network function. The problem is simplified 
+by asking that the network function match the target function on only a finite set of 
+input vectors, the training set R. This is usually done with an error measure. The 
+most common measure is sum-squared error, which we use to define the instance 
+error between N(w, r) and T(r) at weight vector w and input vector r: 
+eN,T(w,r) -  � (T/(r) - �i(w,r)) 2- �liT(r)- N(w,r)ll 2. 
+iEoutputs 
+We can now define the error function between N 0 and T() over R as a function 
+of w: 
+EN,T,R(w) =  eN,T(w,r)' 
+r6R 
+The learning problem is thus reduced to finding a w for which EN,T,R(w) is min- 
+imized. If this minimum value is zero then the network function approximates the 
+target function exactly on all input vectors in the training set. Henceforth, for no- 
+tational simplicity we will write e 0 and E 0 rather than eN,T0 and. EN,T,s0. 
+4 OPTIMIZATION TECHNIQUES 
+As we have framed it here, the learning problem is a classic problem in optimization. 
+More specifically, network learning is a problem of function approximation, where 
+the approximating function is a finite parameter-based system. The goal is to find 
+a set of parameter values which minimizes a cost function, which in this case, is a 
+measure of the error between the target function and the approximating function. 
+Among the optimization algorithms that can be used to solve this type of problem, 
+gradient-based algorithms have proven to be effective in a variety of applications 
+{Avriel, 1976}. These algorithms are iterative in nature, thus wk is the weight 
+vector at the kh iteration. Each iteration is characterized by a search direction 
+and a step c. The weight vector is updated by taking a step in the search direction 
+as below: 
+for(k=o; evaluate(w) != CONVERGED; ++k) { 
+d = determine_search_direction(); 
+k = deermine_sep(); 
+Wk+ 1 = W k + Otkd k; 
+} 
+42 Kramer and Sangiovanni-Vincentelli 
+If d is a direction of descent, such as the negative of the gradient, a sufficiently 
+small step will reduce the value of E0. Optimization algorithms vary in the way 
+they determine c and d, but otherwise they are structured as above. 
+5 CONVERGENCE CRITERION 
+The choice of convergence criterion is important. An algorithm must terminate 
+when E 0 has been sufficiently minimized. This may be done with a threshold on 
+the value of E(), but this alone is not sufficient. In the case where the error surface 
+contains bad local minirod, it is possible that the error threshold will be unattain- 
+able, and in this case the algorithm will never terminate. Some researchers have 
+proposed the use of an iteration limit to guarantee termination despite an unattain- 
+able error threshold {Fahlman, 1989}. Unfortunately, for practical problems where 
+this limit is not known a priori, this approach is inapplicable. 
+A necessary condition for w* to be a minimum, either local or global, is that the 
+gradient g(w*) = VE(w*) = 0. Hence, the most usual convergence criterion for 
+optimization algorithms is [[g(w)[ I < e where e is a sufficiently small gradient 
+threshold. The downside of using this as a convergence test is that, for successful 
+trials, learning times will be longer than they would be in the case of an error thresh- 
+old. Error tolerances are usually specified in terms of an acceptable bit error, and 
+a threshold on the mazimum bit error (MBE) is a more appropriate representation 
+of this criterion than is a simple error threshold. For this reason we have chosen 
+a convergence criterion consisting of a gradient threshold and an MBE threshold 
+(r), terminating when ][g(w)][ < e or MBE(w) _< r, where MBE() is defined as: 
+MBE(w) =max ( max (�(Ti(r) -oi(w,r)))) . 
+rcR k,i�outputs 
+6 STEEPEST DESCENT 
+Steepest Descent is the most classical gradient-based optimization algorithm. In 
+this algorithm the search direction dk is always the negative of the gradient - the 
+direction of steepest descent. For network learning problems the computation of 
+g(w), the gradient of E(w), is straightforward: 
+where 
+where for output units 
+while for all other units 
+g(w) = rE(w) 
+w(w,) 
+0e(w,r) 
+Owij 
+51(w, r) 
+6j(w, r) 
+d (w,) =  W(w,), 
+= 
+rER 
+_ [O(w, r) O(w, ) O(w, ) T 
+ , ,o'', � 
+Ow Ow2 Ow.m 
+-- oi(w,r)Sj(w,r), 
+/j(i(w,,))(o(w, ,)- 3 (r)), 
+yj(i(w,,))  (w,,)w}. 
+k E fanout 
+Efficient Parallel Learning Algorithms 43 
+The evaluation of g is thus almost dual to the evaluation of N; while the latter feeds 
+forward through the net, the former feeds back. Both computations are inherently 
+parallelizable and of the same complexity. 
+The method of Steepest Descent determines the step (: by inexact linesearch, mean- 
+ing that it minimizes E(w - (dk). There are many ways to perform this com- 
+putation, but they are all iterative in nature and thus involve the evaluation of 
+E(w - ( d) for several values of (. As each evaluation requires a pass through 
+the entire training set, this is expensive. Curve fitting techniques are employed to 
+reduce the number of iterations needed to terminate a linesearch. Again, there are 
+many ways to curve fit . We have employed the method of false position and used 
+the Wolfe Test to terminate a linesearch {Luenberger, 1986). In practice we find 
+that the typical linesearch in a network learning problem terminates in 2 or 3 iter- 
+ations. 
+7 PARTIAL CONJUGATE GRADIENT METHODS 
+Because linesearch guarantees that E(w+) < E(w), the Steepest Descent algo- 
+rithm can be proven to converge for a large class of problems {Luenberger, 1986). 
+Unfortunately, its convergence rate is only linear and it suffers from the problem 
+of cross-stitching {Luenberger, 1986), so it may require a large number of iter- 
+ations. One way to guarantee a faster convergence rate is to make use of higher 
+order derivatives. Others have investigated the performance of algorithms of this 
+class on network learning tasks, with mixed results {Becker, 1989). We are not 
+interested in such techniques because they are less parallelizable than the methods 
+we have pursued and because they are more expensive, both computationally and 
+in terms of storage requirements. Because we are implementing our algorithms on 
+the Connection Machine, where memory is extremely limited, this last concern is 
+of special importance. We thus confine our investigation to algorithms that require 
+explicit evaluation only of g, the first derivative. 
+Conjugate gradient techniques take advantage of second order information to avoid 
+the problem of cross-stitching without requiring the estimation and storage of the 
+Hessian (matrix of second-order partials). The search direction is a combination of 
+the current gradient and the previous search direction: 
+dk+ -- -g+ + fid. 
+There are various rules for determining/?; we have had the most success with the 
+Polak-Ribiere rule, where/? is determined from g+ and g according to 
+(g+l -- gk) T � g+i 
+As in the Steepest Descent algorithm, a is determined by linesearch. With a sim- 
+ple rei

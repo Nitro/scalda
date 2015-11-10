@@ -1,0 +1,184 @@
+An Alternative 
+Model for Mixtures of 
+Experts 
+Lei Xu 
+Dept. of Computer Science, The Chinese University of Hong Kong 
+Shatin, Hong Kong, Email lxu@cs.cuhk.hk 
+Michael I. Jordan 
+Dept. of Brain and Cognitive Sciences 
+MIT 
+Cambridge, MA 02139 
+Geoffrey E. Hinton 
+Dept. of Computer Science 
+University of Toronto 
+Toronto, M5S 1A4, Canada 
+Abstract 
+We propose an alternative model for mixtures of experts which uses 
+a different parametric form for the gating network. The modified 
+model is trained by the EM algorithm. In comparison with earlier 
+models--trained by either EM or gradient ascent--there is no need 
+to select a learning stepsize. We report simulation experiments 
+which show that the new architecture yields faster convergence. 
+We also apply the new model to two problem domains: piecewise 
+nonlinear function approximation and the combination of multiple 
+previously trained classifiers. 
+I INTRODUCTION 
+For the mixtures of experts architecture (Jacobs, Jordan, Nowlan  Hinton, 1991), 
+the EM algorithm decouples the learning process in a manner that fits well with the 
+modular structure and yields a considerably improved rate of convergence (Jordan  
+Jacobs, 1994). The favorable properties of EM have also been shown by theoretical 
+analyses (Jordan  Xu, in press; Xu  Jordan, 1994). 
+It is difficult to apply EM to some parts of the mixtures of experts architecture 
+because of the nonlinearity of softmax gating network. This makes the maximiza- 
+634 Lei Xu, Michael L Jordan, Geoffrey E. Hinton 
+tion with respect to the parameters in gating network nonlinear and analytically 
+unsolvable even for the simplest generalized linear case. Jordan and Jacobs (1994) 
+suggested a double-loop approach in which an inner loop of iteratively-reweighted 
+least squares (IRLS) is used to perform the nonlinear optimization. However, this 
+requires extra computation and the stepsize must be chosen carefully to guarantee 
+the convergence of the inner loop. 
+We propose an alternative model for mixtures of experts which uses a different para- 
+metric form for the gating network. This form is chosen so that the maximization 
+with respect to the parameters of the gating network can be handled analytically. 
+Thus, a single-loop EM can be used, and no learning stepsize is required to guar- 
+antee convergence. We report simulation experiments which show that the new 
+architecture yields faster convergence. We also apply the model to two problem do- 
+mains. One is a piecewise nonlinear function approximation problem with smooth 
+blending of pieces specified by polynomial, trigonometric, or other prespecified ba- 
+sis functions. The other is to combine classifiers developed previously--a general 
+problem with a variety of applications (Xu, et al., 1991, 1992). Xu and Jordan 
+(1993) proposed to solve the problem by using the mixtures of experts architecture 
+and suggested an algorithm for bypassing the difficulty caused by the softmax gat- 
+ing networks. Here, we show that the algorithm of Xu and Jordan (1993) can be 
+regarded as a special case of the single-loop EM given in this paper and that the 
+single-loop EM also provides a further improvement. 
+2 MIXTURES OF EXPERTS AND EM LEARNING 
+The mixtures of experts model is based on the following conditional mixture: 
+K 
+P(y]x, O) = -.gj(x,y)P(y]x, Oj), 
+j----1 
+1 exp- 1 
+P(ylx, 0j) - (2)./2lrjl/2 fj(x, wj)]'Ff[y - (1) 
+where x � R , and O consists of y, {Oj } K, and Oj consists of {wj } K, {r }. The 
+vector fj(x, wj) i,s the output ofthe j-th expert net. The scalar gj(x,,),j = 1,...,K 
+is given by the softmax function: 
+gj(, v) = 
+i 
+In this equation, 3j(x,y),j = 1,..., K are the outputs of the gating network. 
+The parameter O is estimated by Maximum Likelihood (ML), where the log likeli- 
+hood is given by L = -].t In P(y(t)lx(), 0). The ML estimate can be found iteratively 
+using the EM algorithm as follows. Given the current estimate O(), each iteration 
+consists of two steps. 
+(1) E-step. For each pair {x(t),y(t)}, compute hk)(y(t)]x (t)) -- P(j]x(t),y(t)), and 
+then form a set of objective functions: 
+Q(Oj) -  h)(y(t)[x (t)) lnP(y(t)[x(t),Oj), j - 1,...,K; 
+t 
+An Alternative Model for Mixtures of Experts 635 
+Qg(') = Z Z hk)(Y(t)lx(t))lngk)(x(t),'(k)) ' 
+(3) 
+(2) M-step. Find a new estimate O (k+x) - $n(+X)lK u (+x)} with: 
+� -- ll. vj l j-'l, 
+0 +) = argmax Q(Oj),j = 1,.--,K; v (+x) = argmax Qg(v). 
+(4) 
+In certain cases, for example when fj(z, wj) is linear in the parameters wj, 
+maxoj Q(Oj) can be solved by solving OQ/OOj = O. When fj(x, wj) is nonlinear 
+with respect to wj, however, the maximization cannot be performed analytically. 
+Moreover, due to the nonlinearity of softmax, may, Qg(y) cannot be solved analyti- 
+cally in any case. There are two possibilities for attacking these nonlinear optimiza- 
+tion problems. One is to use a conventional iterative optimization technique (e.g., 
+gradient ascent) to perform one or more inner-loop iterations� The other is to simply 
+find a new estimate such that Q(O +)) >_ Q(O)), Qg(u (+)) >_ Qg(u()). Usu- 
+ally, the algorithms that perform a full maximization during the M step are referred 
+as EM algorithms, and algorithms that simply increase the Q function during the 
+M step as GEM algorithms. In this paper we will further distinguish between 
+EM algorithms requiring and not requiring an iterative inner loop by designating 
+them as double-loop EM and single-loop EM respectively. 
+Jordan and Jacobs (1994) considered the case of linear ttj(x,y) - v][x, 1] with 
+and semi-linear fj(wj Ix, 1])with nonlinear fj(.). They proposed a 
+double-loop EM algorithm by using the IRLS method to implement the inner-loop 
+iteration. For more general nonlinear j(x,,) and fj(x, Oj), Jordan and Xu (in 
+press) showed that an extended IRLS can be used for this inner loop. It can be 
+shown that IRLS and the extension are equivalent to solving eq. (3) by the so-called 
+Fisher Scoring method� 
+3 A NEW GATING NET AND A SINGLE-LOOP EM 
+To sidestep the need for a nonlinear optimization routine in the inner loop of the 
+EM algorithm, we propose the following modified gatlug network: 
+P(xl') = aj(Yj)-lbj(x)exp{cj(Yj)Ttj(x)} (5) 
+where y = aj,yj,j = 1,...,K}, tj(x) is a vector of sufficient statistics, and the 
+P(xlyj)'s are density functions from the exponential family. The most common 
+example is the Gaussian: 
+i exp i 
+In eq. (5), gj(x, v) is actually the posterior probability P(jIx) that x is assigned to 
+the partition corresponding to the j-th expert net, obtained from Bayes' rule: 
+g(x, ,) = P(jlx) = aP(xlr,.i)/P(x,r,), P(x,r,)= Z a'P(xla)' (7) 
+i 
+636 Lei Xu, Michael I. Jordan, Geoffrey E. Hinton 
+Inserting this gj(x,u) into the model eq. (1), we get 
+r(ylx, e) =  r(x, v) r(ylx, O r). 
+$ 
+(s) 
+If we do ML estimation directly on this P(ylx, 0) and derive an EM algorithm, 
+we again find that the maximization max Qg(y) cannot be solved analytically. To 
+avoid this difficulty, we rewrite eq. (8) as: 
+r(y,x) = r(ylx, o)r(x,v) =  ajr(xlv)r(ylx, Oj). (9) 
+This suggests an asymmetrical representation for the joint density. We accordingly 
+perform ML estimation based on L' - -]t In p(y(t), x(t)) to determine the param- 
+eters a j, yj, Oj of the gating net and the expert nets. This can be done by the 
+following EM algorithm: 
+(1) E-step. Compute 
+h)(y() Ix(t)) = a)r(x(OlY?))r(Y(t)ix(t), 0)) 
+E, a?)r(x(t)lY?))P(Y(t)lx(t), 0J)); (10) 
+Then let Q(Oj),j  1,...,K be the same  given in eq. (3), and decompose Qg(y) 
+further int6 
+Q(yj) :  h)(y(t)[x(t))lnP(x(t)[yj), j : I,...,K; 
+t 
+Qa = hk)(y(t)[x(t))lnaj, with a= {al,''',aK). (11) 
+t j 
+(2). M-step. Find a new estimate for j = 1,..., K 
+� (k+) 
+05 k+l) argmaxo s Qj(Oj), ,j argmaxvs 
+= = 
+(k+) = argma Q, .t. E = 1. (1) 
+The maximization for the expert nets is the same  in eq. (4). However, for the 
+gating net the maximization now becomes analytically solvable  long  P(x]yj) 
+is from the exponential family. That is, we have: 
+i 
+t 
+In particular, when P(xyj) is a Gaussian density, the update becomes: 
+m+l) = I 
+t 
+1 
+(+) _ 
+3 -- 
+ h)(y(')lx('))[x(')- 
+t 
+(14) 
+An Alternative Model for Mixtures of Experts 637 
+Two issues deserve to be emphasized further: 
+(1) The gating nets eq. (2) and eq. (5) become identical when 3j(x,t/) = lnaj + 
+In bj(x)+cj(vj)Ttj(x)-ln a(vj). In other words, the gating net in eq. (5) explicitly 
+uses this function family instead of the function family defined by a multilayer 
+feedforward network. 
+(2) It follows from eq. (9) that max In P(y, xIO) = max [lnP(ylz, e) q- In P(zl)]. 
+So, the solution given by eqs. (10) through (14) is actually different from the one 
+given by the original eqs. (3) and (4). The former tries to model both the mapping 
+from x to y and the input x, while the latter only models the mapping from x and 
+y. In fact, here we learn the parameters of the gating net and the expert nets via 
+an asymmetrical representation eq. (9) of the joint density P(y, x) which includes 
+P(ylx) implicitly. However, in the testing phase, the total output still follows eq. 
+(8). 
+4 PIECEWISE NONLINEAR APPROXIMATION 
+The simple form fj(x, wj) = wf[x, 1] is not the only case to which single-loop EM 
+applies. Whenever fj (x, wj) can be written in a form linear in the parameters: 
+fj(x, wj) = E wi,jrki,j(x) + wo,j = w/[qbj(x), 11, 
+i 
+(15) 
+where (ki,j(z)are prespecified basis functions, maxoj Q(Oj),j = 1,-..,K in eq. (3) 
+is still a weighted least squares problem that can be solved analytically. One useful 
+special case is when q3i,j(x) are canonical polynomial terms x[ x.. rd 
+� x d , ri >_ O. In 
+this case, the mixture of experts model implements piecewise polynomial approxi- 
+mations. Another case is that cki,j(x) is I-Iisin[(jrxx)cos[(jrrxx),ri >_ O, in which 
+case the mixture of experts implements piecewise trigonometric approximations. 
+5 COMBINING MULTIPLE CLASSIFIERS 
+Given pattern classes Ci, i = 1

@@ -1,0 +1,153 @@
+A Framework for Multiple-Instance Learning 
+Oded Maron 
+NE43-755 
+AI Lab, M.I.T 
+Cambridge, MA 02139 
+oded@ai.mit.edu 
+Tomils Lozano-P6rez 
+NE43-836a 
+AI Lab, M.I.T. 
+Cambridge, MA 02139 
+tlp@ai.mit.edu 
+Abstract 
+Multiple-instance learning is a variation on supervised learning, where the 
+task is to learn a concept given positive and negative bags of instances. 
+Each bag may contain many instances, but a bag is labeled positive even 
+if only one of the instances in it falls within the concept. A bag is labeled 
+negative only if all the instances in it are negative. We describe a new 
+general framework, called Diverse Density, for solving multiple-instance 
+learning problems. We apply this framework to learn a simple description 
+of a person from a series of images (bags) containing that person, to a stock 
+selection problem, and to the drug activity prediction problem. 
+1 Introduction 
+One of the drawbacks of applying the supervised learning model is that it is not always possible 
+for a teacher to provide labeled examples for training. Multiple-instance learning provides a 
+new way of modeling the teacher's weakness. Instead of receiving a set of instances which 
+are labeled positive or negative, the learner receives a set of bags that are labeled positive or 
+negative. Each bag contains many instances. A bag is labeled negative if all the instances in 
+it are negative. On the other hand, a bag is labeled positive if there is at least one instance in it 
+which is positive. From a collection of labeled bags, the learner tries to induce a concept that 
+will label individual instances correctly. This problem is harder than even noisy supervised 
+learning since the ratio of negative to positive instances in a positively-labeled bag (the noise 
+ratio) can be arbitrarily high. 
+The first application of multiple-instance learning was to drug activity prediction. In the 
+activity prediction application, one objective is to predict whether a candidate drug molecule 
+will bind strongly to a target protein known to be involved in some disease state. Typically, 
+A Framework for Multiple-Instance Learning 571 
+one has examples of molecules that bind well to the target protein and also of molecules that 
+do not bind well. Much as in a lock and key, shape is the most important factor in determining 
+whether a drug molecule and the target protein will bind. However, drug molecules are 
+flexible, so they can adopt a wide range of shapes. A positive example does not convey what 
+shape the molecule took in order to bind - only that one of the shapes that the molecule can 
+take was the right one. However, a negative example means that none of the shapes that the 
+nolecule can achieve was the right key. 
+The multiple-instance learning model was only recently formalized by [Dietterich et al., 1997]. 
+They assume a hypothesis class of axis-parallel rectangles, and develop algorithms for dealing 
+with the drug activity prediction problem described above. This work was followed by [Long 
+and Tan, 1996], where a high-degree polynomial PAC bound was given for the number of 
+examples needed to learn in the multiple-instance learning model. [Auer, 1997] gives a more 
+efficient algorithm, and [Blum and Kalai, 1998] shows that learning from multiple-instance 
+examples is reducible to PAC-learning with two sided noise and to the Statistical Query model. 
+Unfortunately, the last three papers make the restrictive assumption that all instances from all 
+bags are generated independently. 
+In this paper, we describe a framework called Diverse Density for solving multiple-instance 
+problems. Diverse Density is a measure of the intersection of the positive bags minus the union 
+of the negative bags. By maximizing Diverse Density we can find the point of intersection 
+(the desired concept), and also the set of feature weights that lead to the best intersection. 
+We show results of applying this algorithm to a difficult synthetic training set as well as the 
+musk data set from [Dietterich et al., 1997]. We then use Diverse Density in two novel 
+applications: one is to learn a simple description of a person from a series of images that are 
+labeled positive if the person is somewhere in the image and negative otherwise. The other is 
+to deal with a high amount of noise in a stock selection problem. 
+2 Diverse Density 
+We motivate the idea of Diverse Density through a molecular example. Suppose that the 
+shape of a candidate molecule can be adequately described by a feature vector. One instance 
+of the molecule is therefore represented as a point in n-dimensional feature space. As the 
+molecule changes its shape (through both rigid and non-rigid transformations), it will trace out 
+a manifold through this n-dimensional space  . Figure l(a) shows the paths of four molecules 
+through a 2-dimensional feature space. 
+If a candidate molecule is labeled positive, we know that in at least one place along the 
+manifold, it took on the right shape for it to fit into the target protein. If the molecule is labeled 
+negative, we know that none of the conformations along its manifold will allow binding with 
+the target protein. If we assume that there is only one shape that will bind to the target protein, 
+what do the positive and negative manifolds tell us about the location of the correct shape 
+in feature space? The answer: it is where all positive feature-manifolds intersect without 
+intersecting any negative feature-manifolds. For example, in Figure 1 (a) it is point A. 
+Unfortunately, a multiple-instance bag does not give us complete distribution information, 
+but only some arbitrary sample from that distribution. In fact, in applications other than 
+drug discovery, there is not even a notion of an underlying continuous manifold. Therefore, 
+Figure l(a) becomes Figure l(b). The problem of trying to find an intersection changes 
+i In practice, one needs to restrict consideration to shapes of the molecule that have sufficiently low 
+potential energy. But, we ignore this restriction in this simple illustration. 
+572 O. Maron and T. Lozano-Prez 
+positive negaltlve bag 
+bag 1 
+positive � 
+balg. # 2  point A 
+(a) 
+e different shapes that a molecule can 
+te on e represent  a path. e inter- 
+section point of positive paths is where they 
+took on the sine shape. 
+positive negative bag 
+bag #1 0 
+0 
+X 
+X 0 z 
+0 
+positive X 0 z 
+bag #2 X point A 0 z 
+0 ion 
+ x  o 
+x o 
+ x  
+o  
+ x x  o 
+o x  
+ x x  XoX 
+bag 3 0 
+0 
+(b) 
+Samples taken along the paths. Section B 
+is a high density area, but point A is a high 
+Diverse Density area. 
+Figure 1' A motivating example for Diverse Density 
+to a problem of trying to find an area where them is both high density of positive points 
+and low density of negative points. The difficulty with using regular density is illustrated in 
+Figure 1 (b), Section B. We are not just looking for high density, but high Diverse Density. 
+We define Diverse Density at a point to be a measure of how many different positive bags have 
+instances near that point, and how far the negative instances are from that point. 
+2.1 Algorithms for multiple-instance learning 
+In this section, we derive a probabilistic measure of Diverse Density, and test it on a difficult 
+artificial data set. We denote positive bags as B/+, the jth point in that bag as B, and the 
+value of the k th feature of that point as Bk. Likewise, Bj represents a negative point. 
+Assuming for now that the true concept is a single point t, we can find it by maximizing 
+Pr(z -- t I Bl+, ' , B +, Bi-', ', B) over all points z in feature space. If we use Bayes' 
+rule and an uninformative prior over the concept location, this is equivalent to maximizing 
+the likelihood Pr(Bl+,..., B +, Bi-,..., B I z -- t). By making the additional assumption 
+that the bags are conditionally independent given the target concept t, the best hypothesis is 
+argmax: Hi Pr(B/+ I z -- t) Hi Pr(B- [ z -- t). Using Bayes' rule once more (and again 
+assuming a uniform prior over concept location), this is equivalent to 
+arg max 1-'I Pr(x: t I B/+) 1I Pr(x: t I B?). (1) 
+i i 
+This is a general definition of maximum Diverse Density, but we need to define the terms in the 
+products to instantiate it. One possibility is a noisy-or model: the probability that not all points 
+missed the target is Pr(z -- t I B/+) = Pr(z = t I B+ B+ 
+il, i2,'' '): 1-1-lj(1-Pr(x -- 
+and likewise Pr(z: t ] B? ) = Ild (1 - Pr(z: t I Bjj)). We model the causal probability of 
+an individual instance on a potential target as related to the distance between them. Namely, 
+Pr(z: t I Bid): exp(- II - � 112) � Intuitively, if one of the instances in a positive bag 
+is close to z, then Pr(z = t I B) is high. Likewise, if every positive bag has an instance 
+close to z and no negative bags are close to z, then z will have high Diverse Density. Diverse 
+Density at an intersection of n bags is exponentially higher than it is at an intersection of n - 1 
+bags, yet all it takes is one well placed negative instance to drive the Diverse Density down. 
+A Framework for Multiple-Instance Learning 573 
+Figure 2: Negative and positive bags drawn from the same distribution, but labeled according 
+to their intersection with the middle square. Negative instances are dots, positive are numbers. 
+The square contains at least one instance from every positive bag and no negatives, 
+The Euclidean distance metric used to measure closeness depends on the features that 
+describe the instances. It is likely that some of the features are irrelevant, or that some should 
+be weighted to be more important than others. Luckily, we can use the same framework to 
+find not only the best location in feature space, but also the best weighting of the features. 
+Once again, we find the best scaling of the individual features by finding the scalings that 
+maximize Diverse Density. The algorithm returns both a location x and a scaling vector s, 

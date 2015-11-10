@@ -1,0 +1,160 @@
+Learning with Product Units 
+Laurens R. Leerink 
+Australian Gilt Securities LTD 
+37-49 Pitt Street 
+NSW 2000, Australia 
+laurens@sedal.su.oz.au 
+C. Lee Giles 
+NEC Research Institute 
+4 Independence Way 
+Princeton, NJ 08540, USA 
+giles@research.nj .nec.com 
+Bill G. Horne 
+NEC Research Institute 
+4 Independence Way 
+Princeton, NJ 08540, USA 
+horne@research.nj.nec.com 
+Marwan A. Jabri 
+Department of Electrical Engineering 
+The University of Sydney 
+NSW 2006, Australia 
+marwan@sedal.su.oz.au 
+Abstract 
+Product units provide a method of automatically learning the 
+higher-order input combinations required for efficient learning in 
+neural networks. However, we show that problems are encoun- 
+tered when using backpropagation to train networks containing 
+these units. This paper examines these problems, and proposes 
+some atypical heuristics to improve learning. Using these heuristics 
+a constructive method is introduced which solves well-researched 
+problems with significantly less neurons than previously reported. 
+Secondly, product units are implemented as candidate units in the 
+Cascade Correlation (Fahlman & Lebiere, 1990) system. This re- 
+sulted in smaller networks which trained faster than when using 
+sigmoidal or Gaussian units. 
+I Introduction 
+It is well-known that supplementing the inputs to a neural network with higher-order 
+combinations of the inputs both increases the capacity of the network (Cover, 1965) 
+and the the ability to learn geometrically invariant properties (Giles & Maxwell, 
+538 Laurens Leerink, C. Lee Giles, Bill G. Home, Marwan A. Jabri 
+1987). However, there is a combinatorial explosion of higher order terms as the 
+number of inputs to the network increases. Yet in order to implement a certain 
+logical function, in most cases only a few of these higher order terms are required 
+(Redding et al., 1993). 
+The product units (PUs) introduced by (Durbin & Rumelhart, 1989) attempt to 
+make use of this fact. These networks have the advantage that, given an appropriate 
+training algorithm, the units can automatically learn the higher order terms that 
+are required to implement a specific logical function. 
+In these networks the hidden layer units compute the weighted product of the inputs, 
+that is 
+N N 
+I x' instead of  xiwi (1) 
+i=1 i=1 
+as in standard networks. An additional advantage of PUs is the increased infor- 
+mation capacity of these units compared to standard summation networks. It is 
+approximately 3N (Durbin & Rumelhart, 1989), compared to 2N for a single 
+threshold logic function (Cover, 1965), where N is the number of inputs to the 
+unit. 
+The larger capacity means that the same functions can be implemented by networks 
+containing less units. This is important for certain applications such as speech 
+recognition where the data bandwidth is high or if realtime implementations are 
+desired. 
+When PUs are used to process Boolean inputs, best performance is obtained 
+(Durbin & Rumelhart, 1989) by using inputs of {+1,-1}. If the imaginary compo- 
+nent is ignored, with these inputs, the activation function is equivalent to a cosine 
+summation function with {-1,+1} inputs mapped {1,0} (Durbin & Rumelhart, 
+1989). In the remainder of this paper the terms product unit (PU) and cos(inc) 
+unit will be used interchangeably as all the problems examined have Boolean inputs. 
+2 Learning with Product Units 
+As the basic mechanism of a PU is multiplicative instead of additive, one would 
+expect that standard neural network training methods and procedures cannot be 
+directly applied when training these networks. This is indeed the case. If a neural 
+network simulation environment is available the basic functionality of a PU can be 
+obtained by simply adding the cos function cos(r. input) to the existing list of 
+transfer functions. This assumes that Boolean mappings are being implemented 
+and the appropriate {-1, +1} - {1,0} mapping has been performed on the input 
+vectors. However, if we then attempt to train a network on on the parity-6 problem 
+shown in (Durbin & Rumelhart, 1989), it is found that the standard backpropa- 
+gation (BP) algorithm simply does not work. We have found two main reasons for 
+this. 
+The first is weight initialization. A typical first step in the backpropagation proce- 
+dure is to initialize all weights to small random values. The main reason for this 
+is to use the dynamic range of the sigmoid function and it's derivative. However, 
+the dynamic range of a PU is unlimited. Initializing the weights to small random 
+Learning with Product Units 539 
+values results in an input to the unit where the derivative is small. So apart from 
+choosing small weights centered around nr with n = +1, +2,... this is the worst 
+possible choice. In our simulations weights were initialized randomly in the range 
+[-2, 2]. In fact, learning seems insensitive to the size of the weights, as long as they 
+are large enough. 
+The second problem is local minima. Previous reports have mentioned this prob- 
+lem, (Lapedes & Farber, 1987) commented that using sin's often leads to nu- 
+merical problems, and nonglobal minima, whereas sigmoids seemed to avoid such 
+problems. This comment summarizes our experience of training with PUs. For 
+small problems (less than 3 inputs) backpropagation provides satisfactory training. 
+However, when the number of inputs are increased beyond this number, even with 
+the weight initialization in the correct range, training usually ends up in a local 
+minima. 
+3 Training Algorithms 
+With these aspects in mind, the following training algorithms were evaluated: online 
+and batch versions of Backpropagation (BP), Simulated Annealing (SA), a Random 
+Search Algorithm (RSA) and combinations of these algorithms. 
+BP was used as a benchmark and for use in combination with the other algorithms. 
+The Delta-Bar-Delta learning rate adaptation rule (Jacobs, 1988) was used along 
+with the batch version of BP to accelerate convergence, with the parameters were 
+set to 0 = 0.35, = 0.05 and 4 = 0.90. RSA is a global search method (i.e. 
+the whole weight space is explored during training). Weights are randomly chosen 
+from a predefined distribution, and replaced if this results in an error decrease. SA 
+(Kirkpatrick et al., 1983) is a standard optimization method. The operation of SA 
+is similar to RSA, with the difference that with a decreasing probability solutions 
+are accepted which increase the training error. The combination of algorithms were 
+chosen (BP & SA, BP & RSA) to combine the benefits of global and local search. 
+Used in this manner, BP is used to find the local minima. If the training error at 
+the minima is sufficiently low, training is terminated. Otherwise, the global method 
+initializes the weights to another position in weight space from which local training 
+can continue. 
+The BP-RSA combination requires further explanation. Several BP-(R)SA combi- 
+nations were evaluated, but best performance was obtained using a fixed number of 
+iterations of BP (in this case 120) along with one initial iteration of RSA. In this 
+manner BP is used to move to the local minima, and if the training error is still 
+above the desired level the RSA algorithm generates a new set of random weights 
+from which BP can start again. 
+The algorithms were evaluated on two problems, the parity problem and learning all 
+logical functions of 2 and 3 inputs. The infamous parity problem is (for the product 
+unit at least) an appropriate task. As illustrated by (Durbin & Rumelhart, 1989), 
+this problem can be solved by one product unit. The question is whether the 
+training algorithms can find a solution. The target values are {-1, +1}, and the 
+output is taken to be correct if it has the correct sign. The simulation results are 
+shown in Table 1. It should be noted that one epoch of both SA and RSA involves 
+540 Laurens Leerink, C. Lee Giles, Bill G. Home, Marwan A. Jabri 
+relaxing the network across the training set for every weight, so in computational 
+terms their epoch values should be multiplied by a factor of (N + 1). 
+Parity Online BP Batch BP SA RSA 
+N ncov epoch conv epoch conv epoch conv epoch 
+6 10 30.4 7 34 10 12.6 10 15.2 
+8 8 101.3 2 700 10 52.8 10 45.4 
+10 6 203.3 0 - 10 99.9 10 74.1 
+Table 1: The parity N problem: The table shows nco, the number of runs out of 
+10 that have converged and epoch, the average number of training epochs required 
+when training converged. 
+For the parity problem it is clear that local learning alone does not provide good 
+convergence. For this problem, global search algorithms have the following advan- 
+tages: (1) The search space is bounded (all weights are restricted to [-2, +2]) (2) 
+The dimension of search space is low (maximum of 11 weights for the problems 
+examined). (3) The fraction of the weight space which satisfies the parity problem 
+relative to the total bounded weight space is high. 
+In a second set of simulations, one product unit was trained to calculate all 2(2 N) 
+logical functions of the N input variables. Unfortunately, this is only practical for 
+N  {2,3}. For N = 2 there are only 16 functions, and a product unit has no 
+problem learning all these functions rapidly with all four training algorithms. In 
+comparison a single summation unit can learn 14 (not the XOR & XNOR functions). 
+For N--3, a product unit is able to implement 208 of the 256 functions, while a single 
+summation unit could only implement 104. The simulation results are displayed in 
+Table 2. 
+lo,qic Hepoch loic Hepoch Hloic Hepoch 1oic Hepoch Hlogic Hepoch 
+147.3 I 42.6 I 189.2 [ 20.5 [ 196.1 I 43.8 I 167.4 I 60.2 I 208 [ 44.3 
+Table 2: Learning all logical functions of 3 inputs: The rows display to9ic, the 
+average number of logical functions implemented by a product unit and epoca, the 
+number of epochs required for convergence. Ten simulations were performed for 
+each of the 256 logical functions, each for a maximum of 1,000 iterations. 
+4

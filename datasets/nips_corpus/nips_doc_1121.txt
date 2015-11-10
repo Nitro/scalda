@@ -1,0 +1,152 @@
+Stable Linear Approximations to 
+Dynamic Programming for Stochastic 
+Control Problems with Local Transitions 
+Benjamin Van Roy and John N. Tsitsiklis 
+Laboratory for Information and Decision Systems 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+e-mail: bvr@mit.edu, jnt@mit.edu 
+Abstract 
+We consider the solution to large stochastic control problems by 
+means of methods that rely on compact representations and a vari- 
+ant of the value iteration algorithm to compute approximate cost- 
+to-go functions. While such methods are known to be unstable in 
+general, we identify a new class of problems for which convergence, 
+as well as graceful error bounds, are guaranteed. This class in- 
+volves linear parameterizations of the cost-to-go function together 
+with an assumption that the dynamic programming operator is a 
+contraction with respect to the Euclidean norm when applied to 
+functions in the parameterized class. We provide a special case 
+where this assumption is satisfied, which relies on the locality of 
+transitions in a state space. Other cases will be discussed in a full 
+length version of this paper. 
+I INTRODUCTION 
+Neural networks are well established in the domains of pattern recognition and 
+function approximation, where their properties and training algorithms have been 
+well studied. Recently, however, there have been some successful applications of 
+neural networks in a totally different context - that of sequential decision making 
+under uncertainty (stochastic control). 
+Stochastic control problems have been studied extensively in the operations research 
+and control theory literature for a long time, using the methodology of dynamic 
+programming [Bertsekas, 1995]. In dynamic programming, the most important 
+object is the cost-to-go (or value) function, which evaluates the expected future 
+1046 B.V. ROY, J. N. TSITSIKLIS 
+cost to be incurred, as a function of the current state of a system. Such functions 
+can be used to guide control decisions. 
+Dynamic programming provides a variety of methods for computing cost-to-go 
+functions. Unfortunately, dynamic programming is computationally intractable in 
+the context of many stochastic control problems that arise in practice. This is 
+because a cost-to-go value is computed and stored for each state, and due to the 
+curse of dimensionality, the number of states grows exponentially with the number 
+of variables involved. 
+Due to the limited applicability of dynamic programming, practitioners often rely 
+on ad hoc heuristic strategies when dealing with stochastic control problems. Sev- 
+eral recent success stories - most notably, the celebrated Backgammon player of 
+Tesauro (1992) - suggest that neural networks can help in overcoming this limita- 
+tion. In these applications, neural networks are used as compact representations 
+that approximate cost-to-go functions using far fewer parameters than states. This 
+approach offers the possibility of a systematic and practical methodology for ad- 
+dressing complex stochastic control problems. 
+Despite the success of neural networks in dynamic programming, the algorithms 
+used to tune parameters are poorly understood. Even when used to tune the pa- 
+rameters of linear approximators, algorithms employed in practice can be unstable 
+[Boyan and Moore, 1995; Gordon, 1995; Tsitsiklis and Van Roy, 1994]. 
+Some recent research has focused on establishing classes of algorithms and compact 
+representation that guarantee stability and graceful error bounds. Tsitsiklis and Van 
+Roy (1994) prove results involving algorithms that employ feature extraction and in- 
+terpolative architectures. Gordon (1995) proves similar results concerning a closely 
+related class of compact representations called averagers. However, there remains 
+a huge gap between these simple approximation schemes that guarantee reasonable 
+behavior and the complex neural network architectures employed in practice. 
+In this paper, we motivate an algorithm for tuning the parameters of linear com- 
+pact representations, prove its convergence when used in conjunction with a class 
+of approximation architectures, and establish error bounds. Such architectures are 
+not captured by previous results. However, the results in this paper rely on addi- 
+tional assumptions. In particular, we restrict attention to Markov decision problems 
+for which the dynamic programming operator is a contraction with respect to the 
+Euclidean norm when applied to functions in the parameterized class. Though 
+this assumption on the combination of compact representation and Markov deci- 
+sion problem appears restrictive, it is actually satisfied by several cases of practical 
+interest. In this paper, we discuss one special case which employs affine approxima- 
+tions over a state space, and relies on the locality of transitions. Other cases will 
+be discussed in a full length version of this paper. 
+2 MARKOV DECISION PROBLEMS 
+We consider infinite horizon, discounted Markov decision problems defined on a 
+finite state space $ = {1,...,n} [Bertsekas, 1995]. For every state i � $, there is 
+a finite set U(i) of possible control actions, and for each pair i,j � $ of states and 
+control action u � U(i) there is a probability pij(u) of a transition from state i to 
+state j given that action u is applied. Furthermore, for every state i and control 
+action u � U(i), there is a random variable ciu which represents the one-stage cost 
+if action u is applied at state i. 
+Let/ � [0, 1) be a discount factor. Since the state spaces we consider in this paper 
+Stable Linear Approximations Programming for Stochastic Control Problems 104 7 
+are finite, we choose to think of cost-to-go functions mapping states to cost-to-go 
+values in terms of cost-to-go vectors whose components are the cost-to-go values 
+of various states. The optimal cost-to-go vector V* E n is the unique solution to 
+Bellman's equation: 
+V/* = min (Z[ciu] q-/ Epij(u)Vj*), Vie S. (1) 
+uev(i) 
+j$ 
+If the optimal cost-to-go vector is known, optimal decisions can be made at any 
+state i as follows: 
+u*-arg min (E[ciu] q-/?EPij(u)Vj*) Vie $. 
+uU(i) ' 
+j$ 
+There are several algorithms for computing V* but we only discuss the value itera- 
+tion algorithm which forms the basis of the approximation algorithm to be consid- 
+ered later on. We start with some notation. We define the dynamic programming 
+operator as the mapping T: '  ' with components Ti:    defined by 
+Ti(V) ---- min (E[ciu] q-/EPij(u)Vj) Vi E $. (2) 
+uU(i) ' 
+j$ 
+It is well known and easy to prove that T is a maximum norm contraction. In 
+particular, 
+liT(V) - v(v')lloo V'lloo, vv, v' e 
+The value iteration algorithm is described by 
+V(t + )= T(V(t)), 
+where V(0) is an arbitrary vector in ' used to initialize the algorithm. It is easy 
+to see that the sequence {V(t)} converges to V*, since T is a contraction. 
+3 APPROXIMATIONS TO DYNAMIC PROGRAMMING 
+Classical dynamic programming algorithms such as value iteration require that we 
+maintain and update a vector V of dimension n. This is essentially impossible when 
+n is extremely large, as is the norm in practical applications. We set out to overcome 
+this limitation by using compact representations to approximate cost-to-go vectors. 
+In this section, we develop a formal framework for compact representations, describe 
+an algorithm for tuning the parameters of linear compact representations, and prove 
+a theorem concerning the convergence properties of this algorithm. 
+3.1 COMPACT REPRESENTATIONS 
+A compact representation (or approximation architecture) can be thought of as a 
+scheme for recording a high-dimensional cost-to-go vector V E ' using a lower- 
+dimensional parameter vector w E m (m << n). Such a scheme can be described by 
+a mapping : m  ' which to any given parameter vector w E  associates 
+a cost-to-go vector '(w). In particular, each component 'i (w) of the mapping is 
+the ith component of a cost-to-go vector represented by the parameter vector w. 
+Note that, although we may wish to represent an arbitrary vector V E n, such a 
+scheme allows for exact representation only of those vectors V which happen to lie 
+in the range of . 
+In this paper, we are concerned exclusively with linear compact representations of 
+the form V(w) - Mw, where M E nxm is a fixed matrix representing our choice 
+of approximation architecture. In particular, we have zi (w) - Miw, where Mi (a 
+row vector) is the ith row of the matrix M. 
+1048 B.V. ROY, J. N. TSITSIKLIS 
+3.2 A STOCHASTIC APPROXIMATION SCHEME 
+Once an appropriate compact representation is chosen, the next step is to generate 
+a parameter vector w such that Z(w) approximates V*. One possible objective is 
+to minimize squared error of the form IIMw- V*I]. If we were given a fixed set 
+of N samples ((i, Vii ), (i9., Vi), ..., (iN, Vi )) of an optimal cost-to-go vector V*, it 
+seems natural to choose a parameter vector w that minimizes -,v=l (Mijw- V_.*) 9' 
+On the other hand, if we can actively sample as many data pairs as we want, one 
+at a time, we might consider an iterative algorithm which generates a sequence of 
+parameter vectors (w(t)) that converges to the desired parameter vector. One such 
+algorithm works as follows: choose an initial guess w(0), then for each t  (0, 1,...) 
+sample a state i(t) from a uniform distribution over the state space and apply the 
+iteration 
+w(t + 1)-w(t)-(t)(Mi(t)w(t)- Vi(t) ) T 
+* (3) 
+where {a(t)) is a sequence of diminishing step sizes and the superscript T denotes 
+a transpose. Such an approximation scheme conforms to the spirit of traditional 
+function approximation - the algorithm is the common stochastic gradient descent 
+method. However, as discussed in the introduction, we do not have access to such 
+samples of the optimal cost-to-go vector. We therefore need more sophisticated 
+methods for tuning parameters. 
+One possibility involves the use of an algorithm similar to that of Eq

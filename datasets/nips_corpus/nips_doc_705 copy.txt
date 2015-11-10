@@ -1,0 +1,181 @@
+Bayesian Backprop in Action: 
+Pruning Committees Error Bars 
+and an Application to Spectroscopy 
+Hans Henrik Thodberg 
+Danish Meat Research Institute 
+Maglegaardsvej 2, DK-4000 Roskilde 
+hodbergnn. meare. dk 
+Abstract 
+MacKay's Bayesian framework for backpropagation is conceptually 
+appealing as well as practical. It automatically adjusts the weight 
+decay parameters during training, and computes the evidence for 
+each trained network. The evidence is proportional to our belief 
+in the model. The networks with highest evidence turn out to 
+generalise well. In this paper, the framework is extended to pruned 
+nets, leading to an Ockham Factor for tuning the architecture 
+to the data. A committee of networks, selected by their high 
+evidence, is a natural Bayesian construction. The evidence of a 
+committee is computed. The framework is illustrated on real-world 
+data from a near infrared spectrometer used to determine the fat 
+content in minced meat. Error bars are computed, including the 
+contribution from the dissent of the committee members. 
+I THE OCKHAM FACTOR 
+William of Ockham's (1285-1349) principle of economy in explanations, can be 
+formulated as follows: 
+If several theories account for a phenomenon we should prefer the 
+simplest which describes the data su.fficiently well. 
+208 
+Bayesian Backprop in Action 209 
+The principle states that a model has two virtues: simplicity and goodness of fit. 
+But what is the meaning of sufficiently well - i.e. what is the optimal trade-off 
+between the two virtues? With Bayesian model comparison we can deduce this 
+trade-off. 
+We express our belief in a model as its probability given the data, and use Bayes' 
+formula: 
+P(7/ID ) = P(DI7/)P(7/) (1) 
+We assume that the prior belief P(7/) is the same for all models, so we can compare 
+models by comparing P(D 17/) which is called the evidence for 7/, and acts as a 
+quality measure in model comparison. 
+Assume that the model has a single tunable parameter w with a prior range Awprior 
+so that P(w17/) = 1/Awprior. The most probable (or maximum posterior) value 
+wxr of the parameter w is given by the maximum of 
+P(wlD, 7/)-- P(DIw,7/)P(w17/) 
+p(Di7/) (2) 
+The width of this distribution is denoted Awpoaterio r. The evidence P(D I 7/) is 
+obtained by integrating over the posterior w distribution and approximating the 
+integral: 
+P(D[7/) = / P(Dlw,7/)P(w17/)dw (3) 
+= P(DlwuP,7/)A? (4) 
+/x Wprior 
+Evidence = Likelihood x OckhamFactor (5) 
+The evidence for the model is the product of two factors: 
+The best fit likelihood, i.e. the probability of the data given the model and 
+the tuned parameters. It measures how well the tuned model fits the data. 
+The integrated probability of the tuned model parameters with their un- 
+certainties, i.e. the collapse of the available parameter space when the data 
+is taken into account. This factor is small when the model has many pa- 
+rameters or when some parameters must be tuned very accurately to fit 
+the data. It is called the Ockham Factor since it is large when the model is 
+simple. 
+By optimizing the modelling through the evidence framework we can avoid the 
+overfitting problem as well as the equally important underfitting problem. 
+2 THE FOUR LEVELS OF INFERENCE 
+In 1991-92 MacKay presented a comprehensive and detailed framework for combi- 
+ning backpropagation neural networks with Bayesian statistics (MacKay, 1992). He 
+outlined four levels of inference which applies for instance to a regression problem 
+where we have a training set and want to make predictions for new data: 
+210 Thodberg 
+Level 1 Make predictions including error bars for new input data. 
+Level 2 Estimate the weight parameters and their uncertainties. 
+Level 3 Estimate the scale parameters (the weight decay parameters and the noise 
+scale parameter) and their uncertainties. 
+Level 4 Select the network architecture and for that architecture select one of the 
+w-minima. Optionally select a committee to reflect the uncertainty on this 
+level. 
+Level i is the typical goal in an application. But to make predictions we have to 
+do some modelling, so at level 2 we pick a net and some weight decay parameters 
+and train the net for a while. But the weight decay parameters were picked rather 
+arbitrarily, so on level 3 we set them to their inferred maximum posterior (MP) 
+value. We alternate between level 2 and 3 until the network has converged. This is 
+still not the end, because also the network architecture was picked rather arbitrarily. 
+Hence level 2 and 3 are repeated for other architectures and the evidences of these 
+are computed on level 4. (Pruning makes level 4 more complicated, see section 6). 
+When we make inference on each of these levels, there are uncertainties which are 
+described by the posterior distributions of the parameters which are inferred. The 
+uncertainty on level 2 is described by the Hessian (the second derivative of the net 
+cost function with respect to the weights). The uncertainty on level 3 is negligible 
+if the number of weight decays parameters is small compared to the number of 
+weights. The uncertainty on level 4 is described by the committee of networks with 
+highest evidence within some margin (discussed below). 
+The uncertainties are used for two purposes. Firstly they give rise to error bars on 
+the predictions on level 1. And secondly the posterior uncertainty divided by the 
+prior uncertainty (the Ockham Factor) enters the evidence. 
+MacKay's approach differs in two respects from other Bayesian approaches to neural 
+nets: 
+It assumes the Gaussian approximation to the posterior weight distribution. 
+In contrast, the Monte Carlo approach of (Neal, 1992) does not suffer from 
+this limitation. 
+It determines maximum posterior values of the weight decay parameters, 
+rather than integrating them out as done in (Buntine and Weigend, 1991). 
+It is difficult to justify these choices in general. The Gaussian approximation is 
+believed to be good when there are at least 3 training examples per weight (MacKay, 
+1992). The use of MP weight decay parameters is the superior method when there 
+are ill-defined parameters, as there usually is in neural networks, where some weights 
+are typically poorly defined by the data (MacKay, 1993). 
+3 BAYESIAN NEURAL NETWORKS 
+The training set D consists of N cases of the form (x, t). We model t as a function 
+of x, t = y(x) + t,, where t, is Gaussian noise and y(x) is computed by a neural 
+Bayesian Backprop in Action 211 
+network 7/ with weights w. The noise scale is a free parameter/ = 1/a. The 
+probability of the data (the likelihood) is 
+P(DIw,/,7/) cr exp(-/Eo) (6) 
+- ! (7) 
+ED = 2 
+where the sum extends over the N cases. 
+In Bayesian modelling we must specify the prior distribution of the model param- 
+eters. The model contains k adjustable parameters w, called weights, which are 
+in general split into several groups, for instance one per layer of the net. Here we 
+consider the case with all weights in one group. The general case is described in 
+(MacKay, 1992) and in more details in (Thodberg, 1993). The prior of the weights 
+w is 
+P(wl,,7/)  exp(-/Ew) (8) 
+-- !Ew2 
+Ew = 2 (9) 
+/ and  are called the scales of the model and are free parameters determined by 
+the data. 
+The most probable values of the weights given the data, some values of the scales 
+(to be determined later) and the model, is given by the maximum of 
+P(wlD,/,,7/) = P(DIw,/,,7/)P(wI/,,7/) 
+P(DI,,7/) cr exp(-/C) (10) 
+C -- ED+6Ew (11) 
+So the maximum posterior weights according to the probabilistic interpretation are 
+identical to the weights obtained by minimising the familiar cost function C with 
+weight decay parameter 6. This is the well-known Bayesian account for weight 
+decay. 
+4 MACKAY'S FORMULAE 
+The single most useful result of MacKay's analysis is a simple formula for the MP 
+value of the weight decay parameter 
+ED 7 
+Mr = -- (12) 
+Err N-7 
+where 7 is the number of well-determined parameters which can be approximated 
+by the actual number of parameters k, or computed more accurately from the 
+eigenvalues hi of the Hessian VVED: 
+k 
+(13) 
+i--1 
+The MP value of the noise scale is/Mr = N/(2C). 
+212 Thodberg 
+The evidence for a neural network 7/ is, as in section 1, obtained by integration 
+over the posterior distribution of the inferred parameters, which gives raise to the 
+Ockham Factors: 
+Ev(7) = log P(DI) 
+log Ock(w) 
+Ock(/) 
+_ N - 7 N log 47r__C 
+2 2 N 
++ log Ock(w) + log Ock(/) + log Ock({) (14) 
+k 
+__ 1 MP 7 h! 15) 
+- Zl�g +log +hlog2 ( 
+= V4'/( N - 7) Ock({) = V/-/7 (16) 
+log 2 log 2 
+The first line in (14) is the log likelihood. The Ockham Factor for the weights 
+Ock(w) is small when the eigenvalues Ai of the Hessian are large, corresponding to 
+well-determined weights.  is the prior range of the scales and is set (subjectively) 
+to 10 a. 
+The expression (15) (valid for a network with a single hidden layer) contains a 
+symmetry factor h!2 a. This is because the posterior volume must include all w 
+configurations which are equivalent to the particular one. The hidden units can be 
+permuted, giving a factor h! more posterior volume. And the sign of the weights to 
+and from every hidden unit can be changed giving 2 a times more posterior volume. 
+5 COMMITTEES 
+For a given data set we usually train several networks with different numbers of 
+hidden units and different initial weights. Several of these networks have evidence 
+near or at the maximal value, but the networks differ in their predictions. The 
+different solutions are interpreted as components of the posterior distribution and 
+the correct Bayesian answer is obtained by averaging the predictions over the solu- 
+tions, weighted by their posterior probabilities, i.e. their evidences. However, the 
+evidence is not accurately determined, primarily due to the Gaussian approxima- 
+tion. This means that instead of weighting with Ev(7/) we should use the weight 
+exp(log Ev/A(log Ev)), w

@@ -1,0 +1,156 @@
+Fast Learning by Bounding Likelihoods 
+in S igmoid Type Belief Networks 
+Tommi Jaakkola 
+tommi@psyche.mit.edu 
+Lawrence K. Saul 
+lksaul@psyche.mit.edu 
+Michael I. Jordan 
+jordan@psyche.mit.edu 
+Department of Brain and Cognitive Sciences 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+Abstract 
+Sigmoid type belief networks, a class of probabilistic neural net- 
+works, provide a natural framework for compactly representing 
+probabilistic information in a variety of unsupervised and super- 
+vised learning problems. Often the parameters used in these net- 
+works need to be learned from examples. Unfortunately, estimat- 
+ing the parameters via exact probabilistic calculations (i.e, the 
+EM-algorithm) is intractable even for networks with fairly small 
+numbers of hidden units. We propose to avoid the infeasibility of 
+the E step by bounding likelihoods instead of computing them ex- 
+actly. We introduce extended and complementary representations 
+for these networks and show that the estimation of the network 
+parameters can be made fast (reduced to quadratic optimization) 
+by performing the estimation in either of the alternative domains. 
+The complementary networks can be used for continuous density 
+estimation as well. 
+I Introduction 
+The appeal of probabilistic networks for knowledge representation, inference, and 
+learning (Pearl, 1988) derives both from the sound Bayesian framework and from 
+the explicit representation of dependencies among the network variables which al- 
+lows ready incorporation of prior information into the design of the network. The 
+Bayesian formalism permits full propagation of probabilistic information across the 
+network regardless of which variables in the network are instantiated. In this sense 
+these networks can be inverted probabilistically. 
+This inversion, however, relies heavily on the use of look-up table representations 
+Fast Learning by Bounding Likelihoods in Sigmoid Type Belief Networks 529 
+of conditional probabilities or representations equivalent to them for modeling de- 
+pendencies between the variables. For sparse dependency structures such as trees 
+or chains this poses no difficulty. In more realistic cases of reasonably interdepen- 
+dent variables the exact algorithms developed for these belief networks (Lauritzen &: 
+Spiegelhalter, 1988) become infeasible due to the exponential growth in the size of 
+the conditional probability tables needed to store the exact dependencies. Therefore 
+the use of compact representations to model probabilistic interactions is unavoidable 
+in large problems. As belief network models move away from tables, however, the 
+representations can be harder to assess from expert knowledge and the important 
+role of learning is further emphasized. 
+Compact representations of interactions between simple units have long been em- 
+phasized in neural networks. Lacking a thorough probabilistic interpretation, how- 
+ever, classical feed-forward neural networks cannot be inverted in the above sense; 
+e.g. given the output pattern of a feed-forward neural network it is not feasible 
+to compute a probability distribution over the possible input patterns that would 
+have resulted in the observed output. On the other hand, stochastic neural net- 
+works such as Boltzman machines admit probabilistic interpretations and therefore, 
+at least in principle, can be inverted and used as a basis for inference and learning 
+in the presence of uncertainty. 
+Sigmoid belief networks (Neal, 1992) form a subclass of probabilistic neural networks 
+where the activation function has a sigmoidal form - usually the logistic function. 
+Neal (1992) proposed a learning algorithm for these networks which can be viewed 
+as an improvement of the algorithm for Boltzmann machines. Recently Hinton et al. 
+(1995) introduced the wake-sleep algorithm for layered bi-directional probabilistic 
+networks. This algorithm relies on forward sampling and has an appealing coding 
+theoretic motivation. The Helmholtz machine (Dayan et al., 1995), on the other 
+hand, can be seen as an alternative technique for these architectures that avoids 
+Gibbs sampling altogether. Dayan et al. also introduced the important idea of 
+bounding likelihoods instead of computing them exactly. Saul et al. (1995) sub- 
+sequently derived rigorous mean field bounds for the likelihoods. In this paper we 
+introduce the idea of alternative - extended and complementary - representations 
+of these networks by reinterpreting the nonlinearities in the activation function. We 
+show that deriving likelihood bounds in the new representational domains leads to 
+efficient (quadratic) estimation procedures for the network parameters. 
+2 The probability representations 
+Belief networks represent the joint probability of a set of variables {S} as a product 
+of conditional probabilities given by 
+P(S1,...,Sn)-' II P(Sklpa[k])' (1) 
+k-1 
+where the notation pa[k], parents of $k, refers to all the variables that directly 
+influence the probability of $} taking on a particular value (for equivalent represen- 
+tations, see Lauritzen et al. 1988). The fact that the joint probability can be written 
+in the above form implies that there are no cycles in the network; i.e. there exists 
+an ordering of the variables in the network such that no variable directly influences 
+any preceding variables. 
+In this paper we consider sigmoid belief networks where the variables S are binary 
+530 T. JAAKKOLA, L. K. SAUL, M. I. JORDAN 
+(0/1), the conditional probabilities have the form 
+P($ilpa[i]) - g((25i - 1) WijSj ) (2) 
+and the weights Wij are zero unless $j is a parent of $i, thus preserving the feed- 
+forward directionality of the network. For notational convenience we have assumed 
+the existence of a bias variable whose value is clamped to one. The activation 
+function g(-) is chosen to be the cumulative Gaussian distribution function given by 
+1 _ ' 1 jo�� (-)dz 
+g(x) =  e-dz =  e- (3) 
+Although very similar to the standard logistic function, this activation function 
+derives a number of advantages from its integral representation. In particular, we 
+may reinterpret the integration  a margina]ization and thereby obtain alternative 
+representations for the network. We consider two such representations. 
+We derive an extended representation by making explicit the nonlinearities in the 
+activation function. More precisely, 
+= 
+ 1 -[z-(s,-)  ,s]dZ  
+d P(, Zlpa[i])dZ (4) 
+This suggests defining the extended network in terms of the new conditional proba- 
+bilities P(S, Zlpa[i]). By construction then the original binary network is obtained 
+by marginalizing over the extra variables Z. In this sense the extended network is 
+(marginally) equivalent to the binary network. 
+We distinguish a complementary representation from the extended one by writing 
+the probabilities entirely in terms of continuous variables . Such a representation 
+can be obtained from the extended network by a simple transformation of variables. 
+The new continuous variables are defined by 2 = (2Si - 1)Zi, or, equivalently, 
+by Zi = I,l = where 0(.) is the step function. Performing this 
+transformation yields 
+1 -[2-(2)]  
+which defines a network of conditionally Gaussian variables. The ?iginal network 
+in this ce can be recovered by conditional marginalization over Z where the con- 
+ditioning variables are 0(). 
+Figure 1 below summarizes the relationships between the different representations. 
+As will become clear later, working with the alternative representations instead 
+of the original binary representation can lead to more flexible and efficient (let- 
+squares) parameter estimation. 
+3 The learning problem 
+We consider the problem of learning the parameters of the network from instantia- 
+tions of variables contained in a training set. Such instantiations, however, need not 
+ While the binary variables are the outputs of each unit the continuous variables pertain 
+to the inputs - hence the name complementary. 
+Fast Learning by Bounding Likelihoods in Sigmoid Type Belief Networks 531 
+Extended network 
+...... 
+__ / .-  txansiormatlon oI 
+over,. / 
+Figure 1: The relationship between the alternative representations. 
+be complete; there may be variables that have no value assignments in the training 
+set as well as variables that are always instantiated. The tacit division between 
+hidden (H) and visible (V) variables therefore depends on the particular training 
+example considered and is not an intrinsic property of the network. 
+To learn from these instantiations we adopt the principle of maximum likelihood 
+to estimate the weights in the network. In essence, this is a density estimation 
+problem where the weights are chosen so as to match the probabilistic behavior 
+of the network with the observed activities in the training set. Central to this 
+estimation is the ability to compute likelihoods (or log-likelihoods) for any (partial) 
+configuration of variables appearing in the training set. In other words, if we let 
+X v be the configuration of visible or instantiated variables 2 and X H denote the 
+hidden or uninstantiated variables, we need to compute marginal probabilities of 
+the form 
+logP(X v) = log E p(xV,x u) (6) 
+X H 
+If the training samples are independent, then these log marginMs can be added to 
+give the overall log-likelihood of the training set 
+log P(training set) = E log P(X v*) (7) 
+Unfortunately, computing each of these marginal probabilities involves summing 
+(integrating) over an exponential number of different configurations assumed by 
+the hidden variables in the network. This renders the sum (integration) intractable 
+in all but few special cases (e.g. trees and chains). It is possible, however, to instead 
+find a manageable lower bound on the log-likelihood and optimize the weights in 
+the network so as to maximize this bound. 
+To obtain such a lower bound we resort to Jensen's inequality: 
+U p(xH

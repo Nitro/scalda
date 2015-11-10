@@ -1,0 +1,158 @@
+Using Analytic QP and Sparseness to Speed 
+Training of Support Vector Machines 
+John C. Platt 
+Microsoft Research 
+1 Microsoft Way 
+Redmond, WA 98052 
+jplatt @ microsoft.com 
+Abstract 
+Training a Support Vector Machine (SVM) requires the solution of a very 
+large quadratic programming (QP) problem. This paper proposes an al- 
+gorithm for training SVMs: Sequential Minimal Optimization, or SMO. 
+SMO breaks the large QP problem into a series of smallest possible QP 
+problems which are analytically solvable. Thus, SMO does not require 
+a numerical QP library. SMO's computation time is dominated by eval- 
+uation of the kernel, hence kernel optimizations substantially quicken 
+SMO. For the MNIST database, SMO is 1.7 times as fast as PCG chunk- 
+ing; while for the UCI Adult database and linear SVMs, SMO can be 
+1500 times faster than the PCG chunking algorithm. 
+1 INTRODUCTION 
+In the last few years, there has been a surge of interest in Support Vector Machines 
+(SVMs) [ 1]. SVMs have empirically been shown to give good generalization performance 
+on a wide variety of problems. However, the use of SVMs is still limited to a small group of 
+researchers. One possible reason is that training algorithms for SVMs are slow, especially 
+for large problems. Another explanation is that SVM training algorithms are complex, 
+subtle, and sometimes difficult to implement. This paper describes a new SVM learning 
+algorithm that is easy to implement, often faster, and has better scaling properties than the 
+standard SVM training algorithm. The new SVM learning algorithm is called Sequential 
+Minimal Optimization (or SMO). 
+1.1 OVERVIEW OF SUPPORT VECTOR MACHINES 
+A general non-linear SVM can be expressed as 
+u -- E �qyiK(i'aT) - b 
+i 
+(1) 
+558 J. C. Platt 
+where u is the output of the SVM, K is a kernel function which measures the similarity 
+of a stored training example :i to the input :, Yi E {-1, +1} is the desired output of the 
+classifier, b is a threshold, and cti are weights which blend the different kernels [1]. For 
+linear SVMs, the kernel function K is linear, hence equation (1) can be expressed as 
+u = tY. :- b (2) 
+where  = Y'-i CtiYi:i. 
+Training of an SVM consists of finding the cti. The training is expressed as a minimization 
+of a dual quadratic form: 
+minq(c) =minl r r r 
+5 a  E E yiyjK(i'j)OqOj -- E Oq, (3) 
+i=1 j=l i1 
+subject to box constraints, 
+and one linear equality constraint 
+O_<ai_<C, Vi, (4) 
+N 
+E yicti - O. (5) 
+i=1 
+The cti are Lagrange multipliers of a primal quadratic programming (QP) problem: there 
+is a one-to-one correspondence between each cti and each training example :i. 
+Equations (3-5) form a QP problem that the SMO algorithm will solve. The SMO algo- 
+rithm will terminate when all of the Karush-Kuhn-Tucker (KKT) optimality conditions of 
+the QP problem are fulfilled. These KKT conditions are particularly simple: 
+O i ---- 0  yiui _> 1, 0 < o i < C  yiui ---- 1, O i = C =: yiui _< 1, (6) 
+where ui is the output of the SVM for the ith training example. 
+1.2 PREVIOUS METHODS FOR TRAINING SUPPORT VECTOR MACHINES 
+Due to its immense size, the QP problem that arises from SVMs cannot be easily solved via 
+standard QP techniques. The quadratic form in (3) involves a Hessian matrix of dimension 
+equal to the number of training examples. This matrix cannot be fit into 128 Megabytes if 
+there are more than 4000 training examples. 
+Vapnik [9] describes a method to solve the SVM QP, which has since been known as 
+chunking. Chunking relies on the fact that removing training examples with cti = 0 
+does not change the solution. Chunking thus breaks down the large QP problem into a 
+series of smaller QP sub-problems, whose object is to identify the training examples with 
+non-zero cti. Every QP sub-problem updates the subset of the cti that are associated with 
+the sub-problem, while leaving the rest of the cti unchanged. The QP sub-problem consists 
+of every non-zero cti from the previous sub-problem combined with the M worst examples 
+that violate the KKT conditions (6), for some M [1]. At the last step, the entire set of 
+non-zero cti has been identified, hence the last step solves the entire QP problem. 
+Chunking reduces the dimension of the matrix from the number of training examples to 
+approximately the number of non-zero cti. If standard QP techniques are used, chunking 
+cannot handle large-scale training problems, because even this reduced matrix cannot fit 
+into memory. Kaufman [3] has described a QP algorithm that does not require the storage 
+of the entire Hessian. 
+The decomposition technique [6] is similar to chunking: decomposition breaks the large 
+QP problem into smaller QP sub-problems. However, Osuna et al. [6] suggest keeping a 
+Analytic QP and Sparseness to Speed Training of Support Vector Machines 559 
+Oq =0 
+ot2=C 
+=C =0 
+ot2=C 
+ot 2 =0 ot 2 =0 
+Y : Y2 : oq -ot 2 = k 
+=c 
+Y = Y2 : oh + ot 2 -- k 
+Figure 1: The Lagrange multipliers ct and ct2 must fulfill all of the constraints of the full 
+problem. The inequality constraints cause the Lagrange multipliers to lie in the box. The 
+linear equality constraint causes them to lie on a diagonal line. 
+fixed size matrix for every sub-problem, deleting some examples and adding others which 
+violate the KKT conditions. Using a fixed-size matrix allows SVMs to be trained on very 
+large training sets. Joachims [2] suggests adding and subtracting examples according to 
+heuristics for rapid convergence. However, until SMO, decomposition required the use of 
+a numerical QP library, which can be costly or slow. 
+2 SEQUENTIAL MINIMAL OPTIMIZATION 
+Sequential Minimal Optimization quickly solves the SVM QP problem without using nu- 
+merical QP optimization steps at all. SMO decomposes the overall QP problem into fixed- 
+size QP sub-problems, similar to the decomposition method [7]. 
+Unlike previous methods, however, SMO chooses to solve the smallest possible optimiza- 
+tion problem at each step. For the standard SVM, the smallest possible optimization prob- 
+lem involves two elements of G because the G must obey one linear equality constraint. At 
+each step, SMO chooses two ai to jointly optimize, finds the optimal values for these cti, 
+and updates the SVM to reflect these new values. 
+The advantage of SMO lies in the fact that solving for two cti can be done analytically. 
+Thus, numerical QP optimization is avoided entirely. The inner loop of the algorithm can 
+be expressed in a short amount of C code, rather than invoking an entire QP library routine. 
+By avoiding numerical QP, the computation time is shifted from QP to kernel evaluation. 
+Kernel evaluation time can be dramatically reduced in certain common situations, e.g., 
+when a linear SVM is used, or when the input data is sparse (mostly zero). The result of 
+kernel evaluations can also be cached in memory [1]. 
+There are two components to SMO: an analytic method for solving for the two cti, and 
+a heuristic for choosing which multipliers to optimize. Pseudo-code for the SMO algo- 
+rithm can be found in [8, 7], along with the relationship to other optimization and machine 
+learning algorithms. 
+2.1 SOLVING FOR TWO LAGRANGE MULTIPLIERS 
+To solve for the two Lagrange multipliers Ctl and ct2, SMO first computes the constraints on 
+these multipliers and then solves for the constrained minimum. For convenience, all quan- 
+tities that refer to the first multiplier will have a subscript 1, while all quantities that refer 
+to the second multiplier will have a subscript 2. Because there are only two multipliers, 
+560 J. C. Platt 
+the constraints can easily be displayed in two dimensions (see figure 1). The constrained 
+minimum of the objective function must lie on a diagonal line segment. 
+The ends of the diagonal line segment can be expressed quite simply in terms of ct2. Let 
+s: ylY2. The following bounds apply to ct2: 
+i i 1)C) (7) 
+L = m&x(0, ct2 + $o1 -- ($ n t- 1)C), H = min(C, ct2 +sctl - (s - . 
+Under normal circumstances, the objective function is positive definite, and there is a min- 
+imum along the direction of the linear equality constraint. In this case, SMO computes the 
+minimum along the direction of the linear equality constraint: 
+y2(E1 - E2) 
+new 
+O2 --- O2 {- K(:i, :1) -3- K(:2, :2) - 2K(:l, a72) ' (8) 
+where Ei = ui - Yi is the error on the ith training example. As a next step, the constrained 
+minimum is found by clipping ct ew into the interval [L, H]. The value of ctl is then 
+computed from the new, clipped, ct2: 
+tnew 
+1 O1 q- $(O2  new,clipped\ 
+= - t 2 j. (9) 
+For both linear and non-linear SVMs, the threshold b is re-computed after each step, so that 
+the KKT conditions are fulfilled for both optimized examples. 
+2.2 HEURISTICS FOR CHOOSING WHICH MULTIPLIERS TO OPTIMIZE 
+In order to speed convergence, SMO uses heuristics to choose which two Lagrange multi- 
+pliers to jointly optimize. 
+There are two separate choice heuristics: one for Ctl and one for ct2. The choice of 
+provides the outer loop of the SMO algorithm. If an example is found to violate the KKT 
+conditions by the outer loop, it is eligible for optimization. The outer loop alternates single 
+passes through the entire training set with multiple passes through the non-bound cti (cti 
+{0, C}). The multiple passes terminate when all of the non-bound examples obey the KKT 
+conditions within e. The entire SMO algorithm terminates when the entire training set 
+obeys the KKT conditions within e. Typically, e = 10 -3. 
+The first choice heuristic concentrates the CPU time on the examples that are most likely to 
+violate the KKT conditions, i.e., the non-bound subset. As the SMO algorithm progresses, 
+cti that are at the bounds are likely to stay at the bounds, while cti that are not at the bounds 
+will move as other examples are optimized. 
+As a further optimization, SMO uses the shrinking heuristic proposed in [2]. After the pass 
+through the entire training set, shrinking fin

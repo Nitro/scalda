@@ -1,0 +1,167 @@
+Efficient Computation of Complex 
+Distance Metrics Using Hierarchical 
+Filtering 
+Patrice Y. Simard 
+AT&T Bell Laboratories 
+Holmdel, NJ 07733 
+Abstract 
+By their very nature, memory based algorithms such as KNN or 
+Parzen windows require a computationally expensive search of a 
+large database of prototypes. In this paper we optimize the search- 
+ing process for tangent distance (Simard, LeCun and Denker, 1993) 
+to improve speed performance. The closest prototypes are found 
+by recursively searching included subsets of the database using dis- 
+tances of increasing complexity. This is done by using a hierarchy 
+of tangent distances (increasing the number of tangent vectors from 
+0 to its maximum) and multiresolution (using wavelets). At each 
+stage, a confidence level of the classification is computed. If the 
+confidence is high enough, the computation of more complex dis- 
+tances is avoided. The resulting algorithm applied to character 
+recognition is close to three orders of magnitude faster than com- 
+puting the full tangent distance on every prototypes. 
+I INTRODUCTION 
+Memory based algorithms such as KNN or Parzen xvindoxvs have been extensively 
+used in pattern recognition. (See (Dasarathy, 1991) for a survey.) Unfortunately, 
+these algorithms often rely on simple distances (such as Euclidean distance, Ham- 
+ming distance, etc.). As a result, they suffer from high sensitivity to simple trans- 
+formations of the input patterns that should leave the classification unchanged (e.g. 
+translation or scaling for 2D images). To make the problem worse, these algorithms 
+168 
+Efficient Computation of Complex Distance Metrics Using Hierarchical Filtering 169 
+are further limited by extensive computational requirements due to the large number 
+of distance computations. (If no optimization technique is used, the computational 
+cost is given in equation 1.) 
+computational cost 
+number of distance 
+x (1) 
+prototypes complexity 
+Recently, the problem of transformation sensitivity has been addressed by the intro- 
+duction of a locally transformation-invariant metric, the tangent distance (Simard, 
+LeCun and Denker, 1993). The basic idea is that instead of measuring the distance 
+d(A, B) between two patterns A and B, their respective sets of transformations TA 
+and TB are approximated to the first order, and the distance between these two 
+approximated sets is computed. Unfortunately, the tangent distance becomes com- 
+putationally more expensive as more transformations are taken into consideration, 
+which results in even stronger speed requirements. 
+The good news is that memory based algorithms are well suited for optimization 
+using hierarchies of prototypes, and that this is even more true when the distance 
+complexity is high. In this paper, we applied these ideas to tangent distance in two 
+ways: 1) Finding the closest prototype can be done by recursively searching included 
+subsets of the database using distances of increasing complexity. This is done by 
+using a hierarchy of tangent distances (increasing the number of tangent vectors 
+from 0 to its maximum) and nmltiresolution (using wavelets). 2) A confidence level 
+can be computed for each distance. If the confideuce in the classification is above a 
+threshold early on, there is no need to compute the more expensive distances. The 
+two methods are described in the next section. Their application on a real world 
+problem will be shown in the result section. 
+2 FILTERING USING A HIERARCHY OF DISTANCES 
+Our goal is to compute the distance fi'om one unknown pattern to every prototype 
+in a large database in order to determine which one is the closest. It is fairly obvious 
+that some patterns are so different from each other that a very crude approximation 
+of our distance can tell us so. There is a wide range of variation in computation time 
+(and performance) depending on the choice of the distance. For instance, computing 
+the Euclidean distance on -pixel images is a factor n/k of the computation of 
+computing it on k-pixels images. 
+Similarly, at a given resolution, computing the tangent distance with m tangent 
+vectors is (m + 1)- times as expensive as computing the Euclidean distance (m = 0 
+tangent vectors). 
+This observations provided us with a hierarchy of about a dozen different distances 
+ranging in computation time from 4 multiply/adds (Euclidean distance on a 2 x 2 
+averaged image) to 20,000 lnultiply/adds (tangent distance, 7 tangent vectors, 16 x 
+16 pixel images). The resulting filtering algorithm is very straightforward and is 
+exemplified in Figure 1. 
+The general idea is to store the database of prototypes several times at different 
+resolutions and with different tangent vectors. Each of these resolutions and groups 
+of tangent vectors defines a distance di. These distances are ordered in increasing 
+170 Simard 
+Prototypes 
+10,00 
+Euc. Dist I 
+2x2 
+Cost: 4 
+Confidence 
+3,500 
+Unknown Pattern 
+Euc. Dist 
+4x4 
+Cost: 16 
+Confidence 
+I [Tang. Dist 
+..._.14 vectors 
+I_ ' 
+Cost:2000C 
+Confidence 
+Category 
+Figure 1: Pattern recognition using a hierarchy of distance. The filter proceed 
+from left (starting with the whole database) to right (where only a few prototypes 
+remain). At each stage distances between prototypes and the unknown pattern are 
+computed, sorted and the best candidate prototypes are selected for the next stage. 
+As the complexity of the distance increases, the number of prototypes decreases, 
+making computation feasible. At each stage a classification is attempted and a 
+confidence score is computed. If the confidence score is high enough, the remaining 
+stages are skipped. 
+accuracy and complexity. The first distance dl is computed on all (K0) prototypes 
+of the database. The closest K patterns are then selected and identified to the 
+next stage. This process is repeated for each of the distances; i.e. at each stage i, 
+the distance di is computed on each I,;i-1 patterns selected by the previous stage. 
+Of course, the idea is that. as the complexity of the distance increases, the number 
+of patterns on which this distance must be computed decreases. At the last stage, 
+the most complex and accurate distance is computed on all remaining patterns to 
+determine the classification. 
+The only difficult part is to det. ermine the ninimum /i patterns selected at each 
+stage for which the filtering does not decrease the overall performance. Note that 
+if the last distance used is the most accurate distance, setting all ICi to the number 
+of patterns in the database will give optimal performance (at the most expensive 
+cost). Increasing Ki always improves the performance in the sense that it allows to 
+find patterns that are closer for the next distance measure di+. The simplest way 
+to determine Ki is by selecting a validation set and plotting the performance on this 
+validation set as a function of Ki. The optimal Ix'i is then determined graphically. 
+An automatic way of computing each I,;,: is currently being developed. 
+This method is very useful when the performance is not degraded by choosing small 
+ICi. In this case, the distance evaluation is done using distance metrics which are 
+relatively inexpensive to compute. The computation cost becomes: 
+Efficient Computation of Complex Distance Metrics Using Hierarchical Filtering 171 
+number of distance 
+computational cost  y, prototypes x complexity (2) 
+i at stage i at stage i 
+Curves showing the performance as a fimction of the value of Ni will be shown in 
+the result section. 
+3 
+PRUNING THE SEARCH USING CONFIDENCE 
+SCORES 
+If a confidence score is computed at each stage of the distance evaluation, it is 
+possible for certain patterns to avoid completely computing the most expensive 
+distances. In the extreme case, if the Euclidean distance between two patterns is 0, 
+there is really no need to compute the tangent distance. A simple (aud crude) way 
+to compute a confidence score at a given stage i, is to find the closest prototype 
+(for distance di) in each of the possible classes. The distance difference between the 
+closest class and the next closest class gives an approximation of a confidence of 
+this classification. A simple algorithm is then to compare at stage i the confidence 
+score cip of the current unknown pattern p to a threshold Oi, and to stop the 
+classification process for this pattern as soon as cip> Oi. The classification will 
+then be determined by the closest prototype at. this stage. The computation time 
+will therefore be different depending on the pattern to be classified. Easy patterns 
+will be recognized very quickly while difficult patterns will need to be compared to 
+some of the prototypes using the most complex distance. The total computation 
+cost is therefore: 
+computational cost 
+nulnber of distance probability 
+prototypes x complexity x t,o reach (3) 
+at stage i at stage i stage i 
+Note that if all Oi are high, the performance is maximized but so is the cost. We 
+therefore wish to find the smallest value of Oi which does not degrade the perfor- 
+mance (increasing Oi always improves the performance). As in the previous section, 
+the simplest way to determine the optimal Oi is graphically with a validation set.. 
+Example of curves representing the performance as a function of Oi will be given in 
+the result section. 
+4 CHOSING A GOOD HIERARCHY OPTIMIZATION 
+4.1 k-d tree 
+Several hierarchies of distance are possible for optimizing the search process. An 
+incremental nearest neighbor search algorithm based on k-d tree (Broder, 1990) 
+was implemented. The k-d tree structure was interesting because it can potentially 
+be used with tangent distance. Indeed, since the separating hyperplanes have n-1 
+dimension, they can be made parallel to many tangent vectors at the same time. 
+As much as 36 images of 256 pixels with each 7 t. angent vectors can be separated 
+into two group of 18 images by one hypcrplane which is parallel to all tangent 
+172 Simard 
+v

@@ -1,0 +1,117 @@
+Postal Address Block Location Using A 
+Convolutional Locator Network 
+Ralph Wolf and John C. Platt 
+Synaptics, Inc. 
+2698 Orchard Parkway 
+San Jose, CA 95134 
+Abstract 
+This paper describes the use of a convolutional neural network 
+to perform address block location on machine-printed mail pieces. 
+Locating the address block is a difficult object recognition problem 
+because there is often a large amount of extraneous printing on a 
+mail piece and because address blocks vary dramatically in size and 
+shape. 
+We used a convolutional locator network with four outputs, each 
+trained to find a different corner of the address block. A simple 
+set of rules was used to generate ABL candidates from the network 
+output. The system performs very well: when allowed five guesses, 
+the network will tightly bound the address delivery information in 
+98.2% of the cases. 
+1 INTRODUCTION 
+The U.S. Postal Service delivers about 350 milhon mail pieces a day. On this scale, 
+even highly sophisticated and custom-built sorting equipment quickly pays for itseft. 
+Ideally, such equipment would be able to perform optical character recognition 
+(OCR) over an image of the entire mail piece. However, such large-scale OCR is 
+impractical given that the sorting equipment must recognize addresses on 18 mail 
+pieces a second. Also, the large amount of advertising and other irrelevant text that 
+can be found on some mail pieces could easily confuse or overwhelm the address 
+recognition system. For both of these reasons, character recognition must occur 
+745 
+746 Wolf and Platt 
+Figure 1: Typical address blocks from our data set. Notice the wide variety in 
+the shape, size, justification and number of lines of text. Also notice the detached 
+ZIP code in the upper right example. Note: The USPS requires us to preserve the 
+confidentiality of the mail stream. Therefore, the name fields of all address block 
+figures in this paper have been scrambled for publication. However, the network 
+was trained and tested using unmodified images. 
+only on the relevant portion of the envelope: the destination address block. The 
+system thus requires an address block location (ABL) module, which draws a tight 
+bounding box around the destination address block. 
+The ABL problem is a challenging object recognition task because address blocks 
+vary considerably in their size and shape (see figure 1). In addition, figures 2 and 3 
+show that there is often a great deal of advertising or other information on the mail 
+piece which the network must learn to ignore. 
+Conventional systems perform ABL in two steps (Caviglione, 1990) (Palumbo, 
+1990). First, low-level features, such as blobs of ink, are extracted from the im- 
+age. Then, address block candidates are generated using complex rules. Typically, 
+there are hundreds of rules and tens of thousands of lines of code. 
+The architecture of our ABL system is very different from conventional systems. 
+Instead of using low-level features, we train a neural network to find high-level 
+abstract features of an address block. In particular, our neural network detects 
+the corners of the bounding box of the address block. By finding abstract features 
+instead of trying to detect the whole address block in one step, we build a large 
+degree of scale and shape invariance into the system. By using a neural network, 
+we do not need to develop explicit rules or models of address blocks, which yields a 
+more accurate system. 
+Because the features are high-level, it becomes easy to combine these features into 
+object hypotheses. We use simple address block statistics to convert the corner 
+features into object hypotheses, using only 200 lines of code. 
+Postal Address Block Location Using a Convolutional Locator Network 747 
+2 SYSTEM ARCHITECTURE 
+Our ABL system takes 300 dpi grey scale images as input and produces a list of the 
+5 most likely ABL candidates as output. The system consists of three parts: the 
+preprocessor, a convolutional locator network, and a candidate generator. 
+2.1 PREPROCESSOR 
+The preprocessor serves two purposes. First, it substantially reduces the resolution 
+of the input image, therefore decreasing the computational requirements of the 
+neural network. Second, the preprocessor enhances spatial frequencies in the image 
+which are associated with address text. The recipe used for the preprocessing is as 
+follows: 
+1: Clip the top 20, of the image. 
+2: Spatgaily filter with a passband of 0.3 to 1.4min. 
+3: Take the absolute value of each pixel. 
+4: Low-pass filter and subsample by a factor of 16 in X and Y. 
+5: Perform a linear contrast stretch, mapping the darkest 
+pixel to 1.0 and the lightest pixel to 0.0. 
+The effect of this preprocessing can be seen in figures 2 and 3. 
+2.2 CONVOLUTIONAL LOCATOR NETWORK 
+We use a convolutional locator network (CLN) to find the corners of the bounding 
+box. Each layer of a CLN convolves its weight pattern in two dimensions over the 
+outputs of the previous layer (LeCun, 1989) (Fukushima, 1980). Unlike standard 
+convolutional networks, the output of a CLN is a set of images, in which regions 
+of activity correspond to recognition of a particular object. We train an output 
+neuron of a CLN to be on when the receptive field of that neuron is over an object 
+or feature, and off everywhere else. 
+CLNs have been previously used to assist in the segmentation step for optical charac- 
+ter recognition, where a neuron is trained to turn on in the center of every character, 
+regardless of the identity of the character (Martin, 1992) (Platt, 1992). The recogni- 
+tion of an address block is a significantly more difficult image segmentation problem 
+because address blocks vary over a much wider range than printed characters (see 
+figure 1). 
+The output of the CLN is a set of four feature maps, each corresponding to one 
+corner of the address block. The intensity of a pixel in a given feature map represents 
+the likelihood that the corresponding corner of the address block is located at that 
+pixel. 
+Figure 4 shows the architecture of our convolutional locator network (CLN). It has 
+three layers of trainable weights, with a total of 22,800 free parameters. The network 
+was trained via weight-shared backpropagation. The network was trained for 23 
+epochs on 800 mail piece images. This required 125 hours of cpu-time on an i860 
+based computer. Cross validation and final testing was done with two additional 
+748 Wolf and Platt 
+................................................................................................... ' .' ' '.E ..... -'- ......  ..... � ............... 
+: ............... :-.'-:-:-:-:, o:x-'.-,x-:-.-.:- .............. :--.-.-- ............................................. 'i:..:!: ............... ..-:>'<3.':'-'-: ............ ': ............ 
+.:..-.:.:.:.:.:..-..-.:.:,'-:.:. � , , :-: ....... . ............... ... ............. :-:::: ....................... .:'.:-...:!..- .... .:.:�..,:.: ........................ .. ................... . .... 
+:.:.:..-.:.:.:.:.:.:.:.:.:..-.: ., '.,., ...:.:$t1:.:]ll:lE.$.i:-..:!........x-..:.:.:.:....:.:.:.:.:.:-:.:.:.:.:.-..:.:.-..:.......:....:-:.:-:.:.:...-:.:.:.:..?:....:.:.:.:.:.:.:.:.:.:.:.:.:.:.:....:.:.:.:.:.:.:.:.:<.:.:.:.: 
+====================== '- : .:::::::::::::::::::::::E:E:i:E:i:i:i:i:i:i:i:i:i:i:E:!:i:i:i:i:!:i:E:i:i::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.::::::: 
+. =====================: . ..'.' . ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 
+:::::::::::::::::::::::::::::::::: .' .. � .E .. x.- � n' .-. :'.. � n. - .' ..:.:.:.:.::.:.;-:.:.:-::.:.::.:.:.:.:.:.:.:..:.:.:.:.::.:.:.::::.:::.:::.:.:::---::::::.:-::::.::.:::.:.:.:.:.:.:.:.:.:. 
+..................... :.: ..... .....:....-': ......... ...'....:.:..... ......... . ..................................................................... . .................... 
+...........  ... ,.. .......: :..:. .....: ...x-...-...-.-.-..-..-.: ..-..-.:.:..-.: .:. :.:. :.:.:-: ..-.:..-..-.:.-..:. :..-.:.:..-..-. :..-..-.:.:.:.:.:. :..-...-: :: ::: .':: :::-::::.'.-: .-::.'.-: :: .-:: :::::::::::::::::::::::::::: :: :.'.-::: .-::'-:.-.'::.-. '...-::::::: .-.'.-: :::'.::.-'..-'.: :.-:: :.-:::::: ::-'.-:::;:.'::: :: ::::::: :::: 
+.::::::::::::::..::::::-...::::::::::::-:.-:..:::.-:::::::::::5:::.:.:.:---::::.:.:.:::::..--:.--<--...:-..:::..::::::.::.-.:.:.:.-.::::-'..5:.':,-...::..--:::::..-::.:::----:---:::.-..:.:.:.:::.::::-.:.:::.:::::::::-.-i:E::....-:.:---....-.::::-.:::-.::.:.:.--c.::.:...-:..-::-.:.:.:.:.:.:.:.:-...:.:.::.:.:.-.;.:-::::::::..-.-:::.:....:::::.... 
+::.:: ................ ' '.'-'',: ' : :':' ':'' :' ': :'' :':':' ':E:':':': ':':': -:' ':':: :':':':': :':':':':':.-.: :':':':':'.'-.E::E!:i:i::!E: ..': '':':':iiE!EE!ii:'::.::':':'E!:E::!i!E:E.i:ili! 
+............. ' ''''''7 :. ..... : . .:.' ..' .' '' ' '. :' ' ' :'': . ' ' ';';''':;-:-';o-;':;;:'::-:;'--';'-';.-;'::::':';-;:.;:?'---'-':..;' 
+-2::..:.-.-.--..-.-.:7.---..-.--....-.---3.:-.-:.....-..--..-..-..-.:-..-.-.-.-..-.............-......-..... 2.:'?'''-'-'-.' :':-.-.-'-::-: '':-:-.-:': ....... '-' '-'-'-:-.':-:':-''. ':-:.'.':'.. 
+� .?...-.-.......-.-.. .:...---.---..---:..--.:.-..-.- ..... ........ -.. -...-:.:..-..--.-- -.. -..-.-.--. ......... ....- ....... '....... ...... '.......-........................ ..;..-......-.............-.......... 
+...:......:...:..:...:.-:......., ?.-., .:. -x.:,,-.-.,x:.:. :.,..:::::.:.$.--. ::..- ... : ..-....':.: .........:.... . .. -...-..... ....... -. .-.--. .... ............................. 
+..... ..'.-. -. � :. . ........ . '. ',',#_-'::-...-:.-:.-.-..-,,,:..'. -.': ..''.:'. '..'...' .'.:.......:...'....':::?'?.''?':'??''?:::::':?:E.''??''C' 
+� � ....... '

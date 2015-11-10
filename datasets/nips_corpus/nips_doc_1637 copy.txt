@@ -1,0 +1,142 @@
+Learning to Parse Images 
+Geoffrey E. Hinton and Zoubin Ghahramani 
+Gatsby Computational Neuroscience Unit 
+University College London 
+London, United Kingdom WCIN 3AR 
+(hinton, zoubin) gatsby. ucl. ac. uk 
+Yee Whye Teh 
+Department of Computer Science 
+University of Toronto 
+Toronto, Ontario, Canada M5S 3G4 
+ywteh cs. utoronto. ca 
+Abstract 
+We describe a class of probabilistic models that we call credibility 
+networks. Using parse trees as internal representations of images, 
+credibility networks are able to perform segmentation and recog- 
+nition simultaneously, removing the need for ad hoc segmentation 
+heuristics. Promising results in the problem of segmenting hand- 
+written digits were obtained. 
+I Introduction 
+The task of recognition has been the main focus of attention of statistical pattern 
+recognition for the past 40 years. The paradigm problem is to classify an object from 
+a vector of features extracted from the image. With the advent of backpropagation 
+[1], the choice of features and the choice of weights to put on these features became 
+part of a single, overall optimization and impressive performance was obtained for 
+restricted but important tasks such as handwritten character identification [2]. 
+A significant weakness of many current recognition systems is their reliance on a 
+separate preprocessing stage that segments one object out of a scene and approx- 
+imately normalizes it. Systems in which segmentation precedes recognition suffer 
+from the fact that the segmenter does not know the shape of the object it is seg- 
+menting so it cannot use shape information to help it. Also, by segmenting an 
+image, we remove the object to be recognized from the context in which it arises. 
+Although this helps in removing the clutter present in the rest of the image, it 
+might also reduce the ability to recognize an object correctly because the context 
+in which an object arises gives a great deal of information about the nature of the 
+object. Finally, each object can be described in terms of its parts, which can also 
+be viewed as objects in their own right. This raises the question of how fine-grained 
+the segmentations should be. In the words of David Marr: Is a nose an object? 
+Is a head one? ... What about a man on a horseback? [3]. 
+464 G. E. Hinton, Z. Ghahramani and Y. W. Teh 
+The successes of structural linguistics inspired an alternative approach to pattern 
+recognition in which the paradigm problem was to parse an image using a hierarchi- 
+cal grammar of scenes and objects. Within linguistics, the structural approach was 
+seen as an advance over earlier statistical approaches and for many years linguist- 
+s eschewed probabilities, even though it had been known since the 1970's that a 
+version of the EM algorithm could be used to fit stochastic context free grammars. 
+Structural pattern recognition inherited the linguists aversion to probabilities and 
+as a result it never worked very well for real data. With the advent of graphical 
+models it has become clear that structure and probabilities can coexist. Moreover, 
+the explaining away phenomenon that is central to inference in directed acyclic 
+graphical models is exactly what is needed for performing inferences about possible 
+segmentations of an image. 
+In this paper we describe an image interpretation system which combines segmenta- 
+tion and recognition into the same inference process. The central idea is the use of 
+parse trees of images. Graphical models called credibility networks which describe 
+the joint distribution over the latent variables and over the possible parse trees 
+are used. In section 2 we describe some current statistical models of image inter- 
+pretation. In section 3 we develop credibility networks and in section 4 we derive 
+useful learning and inference rules for binary credibility networks. In section 5 we 
+demonstrate that binary credibility networks are useful in solving the problem of 
+classifying and segmenting binary handwritten digits. Finally in section 6 we end 
+with a discussion and directions for future research. 
+2 Related work 
+Neal [4] introduced generative models composed of multiple layers of stochastic l- 
+ogistic units connected in a directed acyclic graph. In general, as each unit has 
+multiple parents, it is intractable to compute the posterior distribution over hidden 
+variables when certain variables are observed. However, Neal showed that Gibbs 
+sampling can be used effectively for inference [4]. Efficient methods of approximat- 
+ing the posterior distribution were introduced later [5, 6, 7] and these approaches 
+were shown to yield good density models for binary images of handwritten digits 
+[8]. The problem with these models which make them inappropriate for modeling 
+images is that they fail to respect the 'single-parent' constraint: in the correct 
+interpretation of an image of opaque objects each object-part belongs to at most 
+one object - images need parse trees, not parse DAGs. 
+Multiscale models [9] are interesting generative models for images that use a fixed 
+tree structure. Nodes high up in the tree control large blocks of the image while 
+bottom level leaves correspond to individual pixels. Because a tree structure is used, 
+it is easy to compute the exact posterior distribution over the latent (non-terminal) 
+nodes given an image. As a result, the approach has worked much better than 
+Markov random fields which generally involve an intractable partition function. A 
+disadvantage is that there are serious block boundary artifacts, though overlapping 
+trees can be used to smooth the transition from one block to another [10]. A more 
+serious disadvantage is that the tree cannot possibly correspond to a parse tree 
+because it is the same for every image. 
+Zemel, Mozer and Hinton [11] proposed a neural network model in which the ac- 
+tivities of neurons are used to represent the instantiation parameters of objects or 
+their parts, i.e. the viewpoint-dependent coordinate transformation between an ob- 
+ject's intrinsic coordinate system and the image coordinate system. The weights on 
+connections are then used to represent the viewpoint-invariant relationship between 
+the instantiation parameters of a whole, rigid object and the instantiation parame- 
+Learning to Parse Images 465 
+ters of its parts. This model captures viewpoint invariance nicely and corresponds 
+to the way viewpoint effects are handled in computer graphics, but there was no 
+good inference procedure for hierarchical models and no systematic way of sharing 
+modules that recognize parts of objects among multiple competing object models. 
+Simard et al [12] noted that small changes in object instantiati0n parameters result 
+in approximately linear changes in (real-valued) pixel intensities. These can be 
+captured successfully by linear models. To model larger changes, many locally linear 
+models can be pieced together. Hinton, Dayan and Revow [13] proposed a mixture 
+of factor analyzers for this. Tipping and Bishop have recently shown how to make 
+this approach much more computationally efficient [14]. To make the approach 
+really efficient, however, it is necessary to have multiple levels of factor analyzers 
+and to allow an analyzer at one level to be shared by several competing analyzers 
+at the next level up. Deciding which subset of the analyzers at one level should be 
+controlled by one analyzer at the level above is equivalent to image segmentation or 
+the construction of part of a parse tree and the literature on linear models contains 
+no proposals on how to achieve this. 
+3 A new approach to image interpretation 
+We developed a class of graphical models called credibility networks in which the 
+possible interpretations of an image are parse trees, with nodes representing object- 
+parts and containing latent variables. Given a DAG, the possible parse trees of an 
+image are constrained to be individual or collections of trees where each unit satisfies 
+the single-parent constraint, with the leaves being the pixels of an image. Credibility 
+networks describe a joint distribution over the latent variables and possible tree 
+structures. The EM algorithm [15] can be used to fit credibility networks to data. 
+Let i  I be a node in the graph. There are three random variables associated with 
+i. The first is a multinomial variate hi = (ij)jpa(i) which describes the parent of 
+i from among the potential parents pa(i): 
+ij={ if parent of i is j, (1) 
+if parent of i is not j. 
+The second is a binary variate si which determines whether the object i 1 is present 
+(si = 1) or not (si = 0). The third is the latent variables xi that describe the 
+pose and deformation of the object. Let A = {)i: i  I),S = (si: i  I) and 
+X = :i e I). 
+Each connection j - i has three parameters also. The first, cij is an unnormalized 
+prior probability that j is i's parent given that object j is present. The actual prior 
+probability is 
+cijsj (2) 
+7riJ ---- Ekpa(i) �ikSk 
+We assume there is always a unit I  pa(i) such that s - 1. This acts as a default 
+parent when no other potential parent is present and makes sure the denominator in 
+(2) is never 0. The second parameter, Pij, is the conditional probability that object 
+i is present given that j is i's parent (Aij -- 1). The third parameter tij characterizes 
+the distribution of xi given Aij - I and xj. Let 0 = (cij,pij, tij : i  �,j  pa(i)). 
+Using Bayes' rule the joint distribution over A, S and X given 0 is p(A, S, XI ) - 
+p(A, SIO)p(XIA , S,O). Note that A and S together define a parse tree for the im- 
+age. Given the parse tree the distribution over latent variables p(XIA , $, ) can be 
+Technically this should be the object represented by node i. 
+466 G. E. Hinton, Z. Ghahrarnani and Y. 144. Teh 
+efficiently inferred from the image. The actual form of p(XIA , S, 19) is unimportant. 
+The joint distribution over A and $ is 
+P(A'SIO) = rI II (rijPiSJ (1 -PiJ)l-*') 
+iI 

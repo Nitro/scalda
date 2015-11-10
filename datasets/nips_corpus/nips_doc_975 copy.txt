@@ -1,0 +1,165 @@
+Efficient Methods for Dealing with 
+Missing Data in Supervised Learning 
+Volker Tresp* 
+Siemens AG 
+Central Research 
+Otto-Hahn-Ring 6 
+81730 Miinchen 
+Germany 
+Ralph Neuneier 
+Siemens AG 
+Central Research 
+Otto-Hahn-Ring 6 
+81730 Miinchen 
+Germany 
+Subutal Ahmad 
+Interval Research Corporation 
+1801-C Page Mill Rd. 
+Palo Alto, CA 94304 
+Abstract 
+We present efficient algorithms for dealing with the problem of mis- 
+sing inputs (incomplete feature vectors) during training and recall. 
+Our approach is based on the approximation of the input data dis- 
+tribution using Parzen windows. For recall, we obtain closed form 
+solutions for arbitrary feedforward networks. For training, we show 
+how the backpropagation step for an incomplete pattern can be 
+approximated by a weighted averaged backpropagation step. The 
+complexity of the solutions for training and recall is independent 
+of the number of missing features. We verify our theoretical results 
+using one classification and one regression problem. 
+I Introduction 
+The problem of missing data (incomplete feature vectors) is of great practical and 
+theoretical interest. In many applications it is important to know how to react if the 
+available information is incomplete, if sensors fail or if sources of information become 
+At the time of the research for this paper, a visiting researcher at the Center for 
+Biological and Computational Learning, MIT. E-maih Volker. Trespzfe.siemens.de 
+690 Volker Tresp, Ralph Neuneier, Subutai Ahmad 
+unavailable. As an example, when a sensor fails in a production process, it might 
+not be necessary to stop everything if sufficient information is implicitly contained 
+in the remaining sensor data. Furthermore, in economic forecasting, one might want 
+to continue to use a predictor even when an input variable becomes meaningless (for 
+example, due to political changes in a country). As we have elaborated in earlier 
+papers, heuristics such as the substitution of the mean for an unknown feature can 
+lead to solutions that are far from optimal (Ahmad and Tresp, 1993, Tresp, Ahmad, 
+and Neuneier, 1994). Biological systems must deal continuously with the problem 
+of unknown uncertain features and they are certainly extremely good at it. From 
+a biological point of view it is therefore interesting which solutions to this problem 
+can be derived from theory and if these solutions are in any way related to the way 
+that biology deals with this problem (compare Brunelli and Poggio, 1991). Finally, 
+having efficient methods for dealing with missing features allows a novel pruning 
+strategy: if the quality of the prediction is not affected if an input is pruned, we 
+can remove it and use our solutions for prediction with missing inputs or retrain 
+the model without that input (Tresp, Hollatz and Ahmad, 1995). 
+In Ahmad and Tresp (1993) and in Tresp, Ahmad and Neuneier (1994) equations for 
+training and recall were derived using a probabilistic setting (compare also Buntine 
+and Weigend, 1991, Ghahramani and Jordan, 1994). For general feedforward neural 
+networks the solution was in the form of an integral which has to be approxima- 
+ted using numerical integration techniques. The computational complexity of these 
+solutions grows exponentially with the number of missing features. In these two 
+publications, we could only obtain efficient algorithms for networks of normalized 
+Gaussian basis functions. It is of great practical interest to find efficient ways of 
+dealing with missing inputs for general feedforward neural networks which are more 
+commonly used in applications. In this paper we describe an efficient approximation 
+for the problem of missing information that is applicable to a large class of learning 
+algorithms, including feedforward networks. The main results are Equation 2 (re- 
+call) and Equation 3 (training). One major advantage of the proposed solution is 
+that the complexity does not increase with an increasing number of missing inputs. 
+The solutions can easily be generalized to the problem of uncertain (noisy) inputs. 
+2 Missing Information During Recall 
+2.1 Theory 
+We assume that a neural network NN(x) has been trained to predict E(ylx), the 
+expectation of y   given x  Rz>. During recall we would like to know the 
+network's prediction based on an incomplete input vector x = (x c, x u) where x c 
+denotes the known inputs and x u the unknown inputs. The optimal prediction 
+given the known features can be written as (Ahmad and Tresp, 1993) 
+/ 1/ 
+E(ylx ) -- E(ylx , x)P(x'lx ) dx , p(x ) NN(x , x)P(x , x) dx. 
+Efficient Methods for Dealing with Missing Data in Supervised Learning 691 
+I 
+Figure 1' The circles indicate 10 Gaussians approximating the input density distri- 
+bution. z e = z indicates the known input, z2 = z u is unknown. 
+Similarly, for a network trained to estimate class probabilities, NNi(z)  
+P(classilx), simply substitute P(classilx e) for E(ylx c) and NNi(zc, x u) for 
+NN(x e, x u) in the last equation. 
+The integrals in the last equations can be problematic. In the worst case they have 
+to be approximated numerically (Tresp, Ahmad and Neuneier, 1994) which is costly, 
+since the computation is exponential in the number of missing inputs. For networks 
+of normalized Gaussians, there exist closed form solutions to the integrals (Ahmad 
+and Tresp, 1993). The following section shows how to efficiently approximate the 
+integral for a large class of algorithms. 
+2.2 An Efficient Approximation 
+Parzen windows are commonly used to approximate densities. 
+data {(x*,y*)lk = 1,..., N}, we can approximate 
+Given N training 
+I N 
+(1) 
+where 
+= 
+I exp(_ ii x _ }11 
+(2a'o-)/ 
+is a multidimensional properly normalized Gaussian centered at data x  with va- 
+riance tr 2. It has been shown (Duda and Hart (1973)) that Parzen windows appro- 
+ximate densities for N -- oo arbitrarily well, if a is appropriately scaled. 
+692 Volker Tresp, Ralph Neuneier, Subutai Ahrnad 
+Using Parzen windows we may write 
+N 
+E(Yl xc) n , 
+Y}= G(xc;x*'}, a) [ NN(xC, x u) G(xC, xu;x  a) dx ] 
+where we have used the fact that 
+and where G(x; x ,, a) is a Gaussian projected onto the known input dimensions 
+(by simply leaving out the unknown dimensions in the exponent and in the norma- 
+lization, see Ahmad and Tresp, 1993). x c,} are the components of the training data 
+corresponding to the known input (compare Figure 1). 
+Now, if we assume that the network prediction is approximately constant over the 
+width of the Gaussians, a, we can approximate 
+where NN(x e, x u,}) is the network prediction which we obtain if we substituted the 
+corresponding components of the training data for the unknown inputs. 
+With this approximation, 
+E(ylxc) = (2) 
+N 
+o � ) 
+Interestingly, we have obtained a network of normalized Gaussians which are 
+centered at the known components of the data points. The output weights 
+NN(x e, x u,}) consist of the neural network predictions where for the unknown input 
+the corresponding components of the training data points have been substituted. 
+Note, that we have obtained an approximation which has the same structure as the 
+solution for normalized Gaussian basis functions (Ahmad and Tresp, 1994). 
+In many applications it might be easy to select a reasonable value for r using prior 
+knowledge but there are also two simple ways to obtain a good estimate for a using 
+leave-one-out methods. The first method consists of removing the k -th pattern 
+from the training data and calculating 5(x})  N- N a). Then 
+G(x; 
+select the a for which the log likelihood '} log 5(x}) is maximum. The second 
+method consists of treating an input of the k- th training pattern as missing and 
+then testing how well our algorithm (Equation 2) can predict the target. Select the 
+a which gives the best performance. In this way it would even be possible to select 
+input-dimension-specific widths ai leading to elliptical, axis-parallel Gaussians 
+(Ahmad and Tresp, 1993). 
+Efficient Methods for Dealing with Missing Data in Supervised Learning 693 
+Note that the complexity of the solution is independent of the number of missing 
+inputs! In contrast, the complexity of the solution for feedforward networks sugge- 
+sted in Tresp, Ahmad and Neuneier (1994) grows exponentially with the number of 
+missing inputs. Although similar in character to the solution for normalized RBFs, 
+here we have no restrictions on the network architecture which allows us to choose 
+the network most appropriate for the application. 
+If the amount of training data is large, one can use the following approximations: 
+Select only the K nearest data points. The distance is determined based 
+on the known inputs. K can probably be reasonably small (< 10). In the 
+extreme case, K = 1 and we obtain a nearest-neighbor solution. Efficient 
+tree-based algorithms exist for computing the K-nearest neighbors. 
+Use Gaussian mixtures instead of Parzen windows to estimate the input 
+data distribution. Use the centers and variances of the components in 
+Equation 2. 
+Use a clustering algorithm and use the cluster centers instead of the data 
+points in Equation 2. 
+Note that the solution which substitutes the components of the training data closest 
+to the input seems biologically plausible. 
+2.3 Experimental Results 
+We tested our algorithm using the same data as in Ahmad and Tresp, 1993. The 
+task was to recognize a hand gesture based on its 2D projection. As input, the 
+classifier is given the 2D polar coordinates of the five finger tip positions relative to 
+the 2D center of mass of the hand (the input space is therefore 10-D). A multi-layer 
+perceptron was trained on 4368 examples (624 poses for each gesture) and tested on 
+a similar independent test set. The inputs were normalized to a variance of one and 
+tr was set to 0.1. (For a complete description of the task see (Ahmad and Tresp, 
+1993).) As in (Ahmad & Tresp, 1993) we defined a correct classification as on

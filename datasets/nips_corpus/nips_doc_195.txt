@@ -1,0 +1,177 @@
+168 Lee and Lippmann 
+Practical Characteristics of Neural Network 
+and Conventional Pattern Classifiers on 
+Artificial and Speech Problems* 
+Yuchun Lee 
+Digital Equipment Corp. 
+40 Old Bolton Road, 
+OGO1-2Ull 
+Stow, MA 01775-1215 
+Richard P. Lippmann 
+Lincoln Laboratory, MIT 
+Room B-349 
+Lexington, MA 02173-9108 
+ABSTRACT 
+Eight neural net and conventional pattern classifiers (Bayesian- 
+unimodal Gaussian, k-nearest neighbor, standard back-propagation, 
+adaptive-stepsize back-propagation, hypersphere, feature-map, learn- 
+ing vector quantizer, and binary decision tree) were implemented 
+on a serial computer and compared using two speech recognition 
+and two artificial tasks. Error rates were statistically equivalent on 
+almost all tasks, but classifiers differed by orders of magnitude in 
+memory requirements, training time, classification time, and ease 
+of adaptivity. Nearest-neighbor classifiers trained rapidly but re- 
+quired the most memory. Tree classifiers provided rapid classifica- 
+tion but were complex to adapt. Back-propagation classifiers typ- 
+ically required long training times and had intermediate memory 
+requirements. These results suggest that classifier selection should 
+often depend more heavily on practical considerations concerning 
+memory and computation resources, and restrictions on training 
+and classification times than on error rate. 
+*This work was sponsored by the Department of the Air Force and the Air Force Office of 
+Scientific Research. 
+Practical Characteristics of Neural Network 169 
+I Introduction 
+A shortcoming of much recent neural network pattern classification research has 
+been an overemphasis on back-propagation classifiers and a focus on classification 
+error rate as the main measure of performance. This research often ignores the many 
+alternative classifiers that have been developed (see e.g. [10]) and the practical 
+tradeoffs these classifiers provide in training time, memory requirements, classifica- 
+tion time, complexity, and adaptivity. The purpose of this research was to explore 
+these tradeoffs and gain experience with many different classifiers. Eight neural net 
+and conventional pattern classifiers were used. These included Bayesian-unimodal 
+Gaussian, k-nearest neighbor (kNN), standard back-propagation, adaptive-stepsize 
+back-propagation,.hypersphere, feature-map (rM), learning vector quantizer (LVQ), 
+and binary decision tree classifiers. 
+BULLSEYE 
+Dimensionality: 
+Testing Set 
+Training Set 
+Classes: 2 
+2 
+Size: 500 
+Size: 500 
+DIGIT 
+Dimensionality: 22 
+Training Set Size: 70 
+Testing Set Size: 112 
+16 Training Sets 
+16 Testing Sets 
+Classes: 7 Digits 
+Talker Dependent 
+Cep st ra 
+DISJOINT 
+B 
+Dimensionality: 2 
+Testing Set Size: 500 
+Training Set Size: 500 
+Classes: 2 
+VOWEL 
+Dimension: 2 Formants 
+Training Set Size: 338 
+Testing Set Size: 330 
+Classes: 10 Vowels 
+Talker Independent 
+Figure 1: Four problems used to test classifiers. 
+Classifiers were implemented on a serial computer and tested using the four prob- 
+lems shown in Fig. 1. The upper two artificial problems (Bullseye and Disjoint) 
+require simple two-dimensional convex or disjoint decision regions for minimum er- 
+ror classification. The lower digit recognition task (7 digits, 22 cepstral parameters, 
+170 Lee and Lippmann 
+16 talkers, 70 training and 112 testing patterns per talker) and vowel recognition 
+task (10 vowels, 2 formant parameters, 67 talkers, 338 training and 330 testing pat- 
+terns) use real speech data and require more complex decision regions. These tasks 
+are described in [6, 11] and details of experiments are available in [9]. 
+2 Training and Classification Parameter Selection 
+Initial experiments were performed to select sizes of classifiers that provided good 
+performance with limited training data and also to select high-performing versions 
+of each type of classifier. Experiments determined the number of nodes and hidden 
+layers in back-propagation classifiers, pruning techniques to use with tree and hyper- 
+sphere classifiers, and numbers of exemplars or kernel nodes to use with feature-map 
+and LVQ classifiers. 
+2.1 Back-Propagation Classifiers 
+In standard back-propagation, weights typically are updated only after each trial 
+or cycle. A trial is defined as a single training pattern presentation and a cycle is 
+defined as a sequence of trials which sample all patterns in the training set. In group 
+updating, weights are updated every T trials while in trial-by-trial training, weights 
+are updated every trial. Furthermore, in trial-by-trial updating, training patterns 
+can be presented sequentially where a pattern is guaranteed to be presented every 
+T trials, or they can be presented randomly where patterns are randomly selected 
+from the training set. Initial experiments demonstrated that random trial-by-trial 
+training provided the best convergence rate and error reduction during training. It 
+was thus used whenever possible with all back-propagation classifiers. 
+All back-propagation classifiers used a single hidden layer and an output layer with 
+as many nodes as classes. The classification decision corresponded to the class of 
+the node in the output layer with the highest output value. During training, the 
+desired output pattern, D, was a vector with all elements set to 0 except for the 
+element corresponding to the correct class of the input pattern. This element of 
+D was set to 1. The mean-square difference between the actual output and this 
+desired output error is minimized when the output of each node is exactly the Bayes 
+a posterJori probability for each correct class [1, 10]. Back-propagation with this 
+1 of m desired output is thus well justified theoretically because it attempts to 
+estimate minimum-error Bayes probability functions. The number of hidden nodes 
+used in each back-propagation classifier was determined experimentally as described 
+in [6, 7, 9, 11]. 
+Three improved back-propagation classifiers with the potential of reduced training 
+times where studied. The first, the adaptive-stepsize-classifier, has a global stepsize 
+that is adjusted after every training cycle as described in [4]. The second, the 
+multiple-adaptive-stepsize classifier, has multiple stepsizes (one for each weight) 
+which are adjusted after every training cycle as described in [8]. The third classifier 
+uses the conjugate gradient method [9, 12] to minimize the output mean-square 
+error. 
+Practical Characteristics of Neural Network 171 
+The goal of the three improved versions of back-propagation was to shorten the of- 
+ten lengthy training time observed with standard back-propagation. These improve- 
+ments relied on fundamental assumptions about the error surfaces. However, only 
+the multiple-adaptive-stepsize algorithm was used for the final classifier comparison 
+due to the poor performance of the other two algorithms. The adaptive-stepsize 
+classifier often could not achieve adequately low error rates because the global step- 
+size (r/) frequently converged too quickly to zero during training. The multiple- 
+adaptive-stepsize classifier did not train faster than a standard back-propagation 
+classifier with carefully selected stepsize value. Nevertheless, it eliminated the need 
+for pre-selecting the stepsize parameter. The conjugate gradient classifier worked 
+well on simple problems but almost always rapidly converged to a local minimum 
+which provided high error rates on the more complex speech problems. 
+4000 
+3000 
+2000 
+F2(Hz) 
+lOOO 
+500 
+(A) HYPERSPHERE (B) BINARY DECISION TREE 
+I I 
+x x x 
+0 500 1000 1400 0 500 1000 1400 
+FI(Hz) FI(Hz) 
+Figure 2: Decision regions formed by the hypersphere classifier (A) and by the 
+binary decision tree classifier (B) on the test set for the vowel problem. Inputs 
+consist of the first two formants for ten vowels in the words A who'd, � hawed, + 
+hod, O hud, x had, > heed, A hid, [] head, V heard, and < hood as described in 
+[, ]. 
+2.2 Hypersphere Classifier 
+Hypersphere classifiers build decision regions from nodes that form separate hyper- 
+sphere decision regions. Many different types of hypersphere classifiers have been 
+developed [2, 13]. Experiments discussed in [9], led to the selection of a specific ver- 
+sion of hypersphere classifier with pruning. Each hypersphere can only shrink in 
+size, centers are not repositioned, an ambiguous response (positive outputs from hy- 
+perspheres corresponding to different classes) is mediated using a nearest-neighbor 
+172 Lee and Lippmann 
+rule, and hyperspheres that do not contribute to the classification performance are 
+pruned from the classifier for proper fitting of the data and to reduce memory 
+usage. Decision regions formed by a hypersphere classifier for the vowel classifica- 
+tion problem are shown in the left side of Fig. 2. Separate regions in this figure 
+correspond to different vowels. Decision region boundaries contain arcs which are 
+segments of hyperspheres (circles in two dimensions) and linear segments caused by 
+the application of the nearest neighbor rule for ambiguous responses. 
+2.3 Binary Decision Tree Classifier 
+Binary decision tree classifiers from [3] were used in all experiments. Each node in a 
+tree has only two immediate offspring and the splitting decision is based on only one 
+of the input dimensions. Decision boundaries are thus overlapping hyper-recangles 
+with sides parallel to the axes of the input space and decision regions become more 
+complex as more nodes are added to the tree. Decision trees for each problem were 
+grown until they classified all the training data exactly and then pruned back using 
+the test data to determine when to stop pruning. A complete description of the 
+decision tree classifier used is provided in [9] and decision regions formed by this 
+classifier for the vowel problem are shown in the right side of Fig. 2. 
+2.4 Other Classifiers 
+The remaining four classifiers were tuned by selecting coarse sizing param

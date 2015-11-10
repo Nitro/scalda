@@ -1,0 +1,151 @@
+Automated Aircraft Recovery 
+via Reinforcement Learning: 
+Initial Experiments 
+Jeffrey F. Monaco 
+Barron Associates, Inc. 
+Jordan Building 
+1160 Pepsi Place, Suite 300 
+Charlottesville VA 22901 
+monaco @ bainet.com 
+David G. Ward 
+Barron Associates, Inc. 
+Jordan Building 
+1160 Pepsi Place, Suite 300 
+Charlottesville VA 22901 
+ward@bainet.com 
+Andrew G. Barto 
+Department of Computer Science 
+University of Massachusetts 
+Amherst MA 01003 
+barto@cs.umass.edu 
+Abstract 
+Initial experiments described here were directed toward using reinforce- 
+ment learning (RL) to develop an automated recovery system (ARS) for 
+high-agility aircraft. An ARS is an outer-loop flight-control system de- 
+signed to bring an aircraft from a range of out-of-control states to straight- 
+and-level flight in minimum time while satisfying physical and phys- 
+iological constraints. Here we report on results for a simple version 
+of the problem involving only single-axis (pitch) simulated recoveries. 
+Through simulated control experience using a medium-fidelity aircraft 
+simulation, the RL system approximates an optimal policy for pitch-stick 
+inputs to produce minimum-time transitions to straight-and-level flight in 
+unconstrained cases while avoiding ground-strike. The RL system was 
+also able to adhere to a pilot-station acceleration constraint while execut- 
+ing simulated recoveries. 
+Automated Aircraft Recovery via Reinforcement Learning 1023 
+1 INTRODUCTION 
+An emerging use of reinforcement learning (RL) is to approximate optimal policies for 
+large-scale control problems through extensive simulated control experience. Described 
+here are initial experiments directed toward the development of an automated recovery sys- 
+tem (ARS) for high-agility aircraft. An ARS is an outer-loop flight control system designed 
+to bring the aircraft from a range of initial states to straight, level, and non-inverted flight in 
+minimum time while satisfying constraints such as maintaining altitude and accelerations 
+within acceptable limits. Here we describe the problem and present initial results involving 
+only single-axis (pitch) recoveries. Through extensive simulated control experience using 
+a medium-fidelity simulation of an F-16, the RL system approximated an optimal policy 
+for longitudinal-stick inputs to produce near-minimum-time transitions to straight and level 
+flight in unconstrained cases, as well as while meeting a pilot-station acceleration constraint. 
+2 AIRCRAFT MODEL 
+The aircraft was modeled as a dynamical system with state vector x = {q, o, p, r,/3, l/t}, 
+where q -- body-axes pitch rate, o -- angle of attack, p = body-axes roll rate, r = 
+body-axes yaw rate,/3 = angle of sideslip, Vt -- total airspeed, and control vector 6 = 
+{6se, 6ae, 6af, 6tad} of effector and pseudo-effector displacements. The controls are de- 
+fined as: 6s - symmetric elevon, 6a = asymmetric elevon, 6af = asymmetric flap, and 
+6rud = rudder. (A pseudo-effector is a mathematically convenient combination of real ef- 
+fectors that, e.g., contributes to motion in a limited number of axes.) The following addi- 
+tional descriptive variables were used in the RL problem formulation: h -- altitude, ] = 
+vertical component of velocity, 13 = pitch attitude, Nz - pilot-station normal acceleration. 
+For the initial pitch-axis experiment described here, five discrete actions were available 
+to the learning agent in each state; these were longitudinal-stick commands selected from 
+{-6, --3, 0, +3, +6} Ibf. The command chosen by the learning agent was converted into 
+a desired normal-acceleration command through the standard F-16 longitudinal-stick com- 
+mand gradient with software breakout. This gradient maps pounds-of-force inputs into de- 
+sired acceleration responses. We then produce an approximate relationship between normal 
+acceleration and body-axes pitch rate to yield a pitch-rate flying-qualities model. Given this 
+model, an inner-loop linear-quadratic (LQ) tracking control algorithm determined the actu- 
+ator commands to result in optimal model-following of the desired pitch-rate response. 
+The aircraft model consisted of complete translational and rotational dynamics, including 
+nonlinear terms owing to inertial cross-coupling and orientation-dependent gravitational ef- 
+fects. These were obtained from a modified linear F-16 model with dynamics of the form 
+k=Ax + B6 + b +  
+where A and B were the F-16 aero-inertial parameters (stability derivatives) and effector 
+sensitivities (control derivatives). These stability and control derivatives and the bias vec- 
+tor, b, were obtained from linearizations of a high-fidelity nonlinear, six-degree-of-freedom 
+model. Nonlinearities owing to inertial cross-coupling and orientation-dependent gravita- 
+tional effects were accounted for through the term , which depended nonlinearly on the 
+state. Nonlinear actuator dynamics were modeled via the incorporation of F- 16 effector-rate 
+and effector-position limits. See Ward et al. (1996) for additional details. 
+3 PROBLEM FORMULATION 
+The RL problem was to approximate a minimum-time control policy capable of bringing the 
+aircraft from a range of initial states to straight, level, and non-inverted flight, while satis- 
+fying given constraints, e.g., maintaining the normal acceleration at the pilot station within 
+1024 J. E Monaco, D. G. Ward and A. G. Barto 
+an acceptable range. For the single-axis (pitch-axis) flight control problem considered here, 
+recovered flight was defined by: 
+q-- -- &-- h--  -- 0. (1) 
+Successful recovery was achieved when all conditions in Eq. 1 were satisfied simultane- 
+ously within pre-specified tolerances. 
+Because we wished to distinguish between recovery supplied by the LQ tracker and that 
+learned by the RL system, special attention was given to formulating a meaningful test to 
+avoid falsely attributing successes to the RL system. For example, if initial conditions were 
+specified as off-trim perturbations in body-axes pitch rate, pitch acceleration, and true air- 
+speed, the RL system may not have been required because the LQ controller would provide 
+all the necessary recovery, i.e., zero longitudinal-stick input would result in a commanded 
+body-axes pitch rate of zero deg./sec. Because this controller is designed to be highly re- 
+sponsive, its tracking and integral-error penalties usually ensure that the aircraft responses 
+attain the desired state in a relatively short time. The problem was therefore formulated to 
+demand recovery from aircraft orientations where the RL system was primarily responsible 
+for recovery, and the goal state was not readily achieved via the stabilizing action of the LQ 
+control law. 
+A pitch-axis recovery problem of interest is one in which initial pitch attitude, t9, is selected 
+to equal Otrira q-at({0,.i., 0,.. ), where Otrira = Otrira (by definition), Lf is a uniformly 
+distributed random number, and 19oa, and 19o, define the boundaries of the training re- 
+gion, and other variables are set so that when the aircraft is parallel to the earth ({3o = 0), 
+it is pancaking toward the ground (with positive trim angle of attack). Other initial con- 
+ditions correspond to purely-translational climb or descent of the aircraft. For initial condi- 
+tions where t9o < Ottrira, the flight vehicle will descend, and in the absence of any corrective 
+longitudinal-stick force, strike the ground or water. Because it imposes no constraints on al- 
+titude or pitch-angle variations, the stabilizing response of the LQ controller is inadequate 
+for providing the necessary recovery. 
+4 REINFORCEME LEARNING ALGORITHM 
+Several candidate RL algorithms were evaluated for the ARS. Initial efforts focused primar- 
+ily on (1) Q-Learning, (2) alternative means for approximating the action-value function (Q 
+function), and (3) use of discrete versus continuous-action controls. During subsequent in- 
+vestigations, an extension of Q-Learning called Residual Advantage Learning (Baird, 1995; 
+Harmon & Baird, 1996) was implemented and successfully applied to the pitch-axis ARS 
+problem. As with action-values in Q-Learning, the advantage function, .A(x, u), may be 
+represented by a function approximation system of the form 
+A(x, u) = �(x, u) (2) 
+where b(x, u) is a vector of relevant features and 0 are the corresponding weights. Here, the 
+advantage function is linear in the weights, 0, and these weights are the modifiable, learned 
+parameters. 
+For advantage functions of the form in Eq. 2, the update rule is: 
+0/+ 
+1 
+Ok -a (r +?xtA(y,b*)) KAt 
++ I 
+KAt)A(x,a*) - 
+K-/xt 4,(x,a*) - 4,(x,a) , 
+where a* = argmina.A(x, a) and b* = argminb.A(y, b), At is the system rate (0.02 sec. 
+in the ARS), 7 at is the discount factor, and K is an fixed scale factor. In the above notation, 
+Automated Aircraft Recovery via Reinforcement Learning 1025 
+y is the resultant state, i.e., the execution of action a results in a transition from state x to 
+its successor y. 
+The Residual Advantage Learning update collapses to the Q-Learning update for the case 
+(I) = 0, K = -- The parameter (I) is a scalar that controls the trade-off between residual- 
+gradient descent when (I) -- 1, and a faster, direct algorithm when (I) = 0. Harmon & Baird 
+(1996) address the choice of (I), suggesting the following computation of (I) at each time step: 
+where we and wr are traces (one for each 0 of the function approximation system) associ- 
+ated with the direct and residual gradient algorithms, respectively, and It is a small, positive 
+constant that dictates how rapidly the system forgets. The traces are updated during each 
+cycle as follows 
+1 
+-- (1 - kt)we - la (r + 7zX.A(y,b*)) KAt 
+Wd 
+Wrg 
+- - - ))- + (1 t)4(x,a*) - .A(x, a) 
+[ O.A b. 1 10 O ] 
+* 7at- (y, )- + (1 ) a*)- a) 
+KAt A(x, -A(x, . 
+Advantage Learning updates of the weights, including the calculation of an adaptive (I) as 
+discussed above, were implemented and interfaced with the ai

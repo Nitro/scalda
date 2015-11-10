@@ -1,0 +1,162 @@
+Discriminant Adaptive Nearest Neighbor 
+Classification and Regression 
+Trevor Hastie 
+Department of Statistics 
+Sequoia Hall 
+Stanford University 
+California 94305 
+trevor@playfair.stanford.edu 
+Robert Tibshirani 
+Department of Statistics 
+University of Toronto 
+tibs@utst at.toronto.edu 
+Abstract 
+Nearest neighbor classification expects the class conditional prob- 
+abilities to be locally constant, and suffers from bias in high di- 
+mensions We propose a locally adaptive form of nearest neighbor 
+classification to try to finesse this curse of dimensionality. We use 
+a local linear discriminant analysis to estimate an effective met- 
+ric for computing neighborhoods. We determine the local decision 
+boundaries from centroid information, and then shrink neighbor- 
+hoods in directions orthogonal to these local decision boundaries, 
+and elongate them parallel to the boundaries. Thereafter, any 
+neighborhood-based classifier can be employed, using the modified 
+neighborhoods. We also propose a method for global dimension 
+reduction, that combines local dimension information. We indicate 
+how these techniques can be extended to the regression problem. 
+1 Introduction 
+We consider a discrimination problem with J classes and N training observations. 
+The training observations consist of predictor measurements x = (x, x2,...xp) on 
+p predictors and the known class memberships. Our goal is to predict the class 
+membership of an observation with predictor vector x0 
+Nearest neighbor classification is a simple and appealing approach to this problem. 
+We find the set of K nearest neighbors in the training set to x0 and then classify 
+x0 as the most frequent class among the K neighbors. 
+Cover  Hart (1967) show that the one nearest neighbour rule has asymptotic 
+error rate at most twice the Bayes rate. However in finite samples the curse of 
+410 T. HASTIE, R. TIBSHIRANI 
+dimensionality can severely hurt the nearest neighbor rule. The relative radius of 
+the nearest-neighbor sphere grows like r /p where p is the dimension and r the 
+radius for p - 1, resulting in severe bias at the target point x. Figure 1 (left panel) 
+illustrates the situation for a simple example. Nearest neighbor techniques are 
+2 .11ql, 1 1 ,,11  
+1 t221 111 2 2L-11 11 1 
+11111 2 2 2 2. 2 * 11t111 
+I - 1 2 I ; _  22'11111111 
+I I 
+2 
+Figure 1: In the left panel, the vertical strip denotes the NN region using only horizontal 
+coordinate to find the nearest neighbor for the target point (solid dot). The sphere shows 
+the NN region using both coordinates, and we see in this case it has extended into the 
+class I region (and found the wrong class in this instance). The middle panel shows 
+a spherical neighborhood containing 25 points, for a two class problem with a circular 
+decision boundary. The right panel shows the ellipsoidal neighborhood found by the DAIN 
+procedure, also containing 25 points. The latter is elongated in a direction parallel to the 
+true decision boundary (locally constant posterior probabilities), and flattened orthogonal 
+to it. 
+based on the assumption that locally the class posterior probabilities are constant. 
+While that is clearly true in the vertical strip using only the vertical coordinate, 
+using both this is no longer true. Figure 1 (middle and right panels) shows how we 
+locally adapt the metric to overcome this problem, in a situation where the decision 
+boundary is locally linear. 
+2 Discriminant adaptive nearest neighbors 
+Consider first a standard linear discriminant (LDA) classification procedure with 
+K classes. Let B and W denote the between and within sum of squares matrices. 
+In LDA the data are first sphered with respect to W, then the target point is 
+classified to the class of the closest centroid (with a correction for the class prior 
+membership probabilities). Since only relative distances are relevant, any distances 
+in the complement of the subspace spanned by the sphered centroids can be ignored. 
+This complement corresponds to the null space of B. 
+We propose to estimate B and W locally, and use them to form a local metric that 
+approximately behaves like the LDA metric. One such candidate is 
+E = W-BW - 
+= W-/2(W-/2BW- V)W-/ 
+= W-/2B*W -/. (1) 
+where B* is the between sum-of-squares in the sphered space. Consider the action 
+of  as a metric for computing distances 
+(x- x0)(x- x0)' () 
+Discriminant Adaptive Nearest Neighbor Classification and Regression 411 
+it first spheres the space using W; 
+components of distance in the null space of B* are ignored; 
+other components are weighted according to the eigenvalues of B* when 
+there are more than 2 classes -- directions in which the centroids are more 
+spread out are weighted more than those in which they are close 
+Thus this metric would result ia neighborhoods similar to the narrow strip in fig- 
+ure l(left figure)' infinitely long in the null space of B, and then deformed appro- 
+priately in the centroid subspace according to how they are placed. It is dangerous 
+to allow neighborhoods to extend infinitely in any direction, so we need to limit this 
+stretching. Our proposal is 
+ -- W-1/2[W-1/2BW-1/2 + �I]W -1/2 
+= 
+where � is some small tuning parameter to be determined. The metric shrinks 
+the neighborhood in directions in which the local class centroids differ, with the 
+intention of ending up with a neighborhood in which the class centroids coincide 
+(and hence nearest neighbor classification is appropriate). Given E we use perform 
+K-nearest neighbor classification using the metric (2). 
+There are several details that we briefly describe here and in more detail in Hastie 
+& Tibshirani (1994): 
+B is defined to be the covariance of the class centroids, and W the pooled 
+estimate of the common class covariance matrix. We estimate these locally 
+using a spherical, compactly supported kernel (Cleveland 1979), where the 
+bandwidth is determined by the distance of the KM nearest neighbor. 
+KM above has to be supplied, as does the softening parameter . We some- 
+what arbitrarily use KM = max(N/5, 50); so we use many more neighbors 
+(50 or more) to determine the metric, and then typically K = 1,..., 5 
+nearest neighbors in this metric to classify. We have found that the metric 
+is relatively insensitive to different values of 0 <  < 5, and typically use 
+Typically the data do not support the local calculation of W (p(p + 1)/2 
+entries), and it can be argued that this is not necessary. We mostly resort 
+to using the diagonal of W instead, or else use a global estimate. 
+Sections 4 and 5 illustrate the effectiveness of this approach on some simulated and 
+real examples. 
+3 
+Dimension Reduction using Local Discriminant 
+Information 
+The technique described above is entirely memory based, in that we locally adapt 
+a neighborhood about a query point at the time of classification. Here we describe a 
+method for performing a global dimension reduction, by pooling the local dimension 
+information over all points in the training set. In a nutshell we consider subspaces 
+corresponding to eigenvectors of the average local between sum-of-squares matrices. 
+Consider first how linear discriminant analysis (LDA) works. After sphering the 
+data, it concentrates in the space spanned by the class centroids ij or a reduced 
+rank space that lies close to these centroids. If i denote the overall centroid, this 
+412 T. HASTIE, R. TIBSHIRANI 
+subspace is exactly a principal component hyperplane for the data points ij - i, 
+weighted by the class proportions, and is given by the eigen-decomposition of the 
+between covariance B. 
+Our idea to compute the deviations :j --: locally in a neighborhood around each of 
+the N training points, and then do an overall principal components analysis for the 
+N x J deviations. This amounts to an eigen-decomposition of the average between 
+sum of squares matrix =l B(i)/N. 
+LDA and Local Subspaces -- K = 25 
+� , . 
+Local Between Directions 
+4D Sphere wth 6 nose Variables 
+2 4 
+6 8 10 
+Order 
+Figure 2: [Left Panel] Two dimensional gaussian data with two classes and correlation 
+0.65. The solid lines are the LDA decision boundary and its equivalent subspace for classi- 
+fication, computed using both the between and (crucially) the within class covariance. The 
+dashed lines were produced by the local procedure described in this section, without knowl- 
+edge of the overall within covariance matrix. [Middle panel] Each line segment represents 
+the local between information centered at that point. [Right panel] The eigenvalues of the 
+average between matrix for the JD sphere in 10D problem. Using these first four dimen- 
+sions followed by our D,lqlq nearest neighbor routine, we get better performance than 5NN 
+in the real D subspace. 
+Figure 2 (left two panels) demonstrates by a simple illustrative example that our 
+subspace procedure can recover the correct LDA direction without making use of 
+the within covariance matrix. Figure 2 (right panel) represents a two class problem 
+with a 4-dimensional spherical decision boundary. The data for the two classes lie 
+in concentric spheres in 4D, the one class lying inside the other with some overlap (a 
+4D version of the same 2D situation in figure 1.) In addition the are an extra 6 noise 
+dimensions, and for future reference we denote such a model as the 4D spheres in 
+10D problem. The decision boundary is a 4 dimensional sphere, although locally 
+linear. The eigenvalues show a distinct change after 4 (the correct dimension), and 
+using our D/NN classifier in these four dimensions actually beats ordinary 5NN in 
+the known 4D discriminant subspace. 
+4 Examples 
+Figure 3 smmarizes the results of a number of simulated examples designed to test 
+our procedures in both favorable and unfavorable situations. In all the situations 
+D/N outperforms 5-NN. In the cases where 5NN is provided with the known lower- 
+dimensional discriminant subspace, our subspace technique subI)

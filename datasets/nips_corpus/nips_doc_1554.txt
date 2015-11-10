@@ -1,0 +1,150 @@
+A High Performance k-NN Classifier Using a 
+Binary Correlation Matrix Memory 
+Ping Zhou Jim Austin John Kennedy 
+zhoup@cs.york.ac.uk austin@cs.york.ac.uk johnk@cs.york.ac.uk 
+Advanced Computer Architecture Group 
+Department of Computer Science 
+University of York, York YO10 5DD, UK 
+Abstract 
+This paper presents a novel and fast k-NN classifier that is based on a 
+binary CMM (Correlation Matrix Memory) neural network. A robust 
+encoding method is developed to meet CMM input requirements. A 
+hardware implementation of the CMM is described, which gives over 200 
+times the speed of a current mid-range workstation, and is scaleable to 
+very large problems. When tested on several benchmarks and compared 
+with a simple k-NN method, the CMM classifier gave less than 1% lower 
+/tccuracy and over 4 and 12 times speed-up in software and hardware 
+respectively. 
+1 INTRODUCTION 
+Pattern classification is one of most fundamental and important tasks, and a k-NN rule is 
+applicable to a wide range of classification problems. As this method is too slow for many 
+applications with large amounts of data, a great deal of effort has been put into speeding it 
+up via complex pre-processing of training data, such as reducing training data (Dasarathy 
+1994) and improving computational efficiency (Grother & Candela 1997). This work 
+investigates a novel k-NN classification method that uses a binary correlation matrix 
+memory (CMM) neural network as a pattern store and match engine. Whereas most neural 
+networks need a long iterative training time, a CMM is simple and quick to train. It 
+requires only one-shot storage mechanism and simple binary operations (Willshaw & 
+Buneman 1969), and it has highly flexible and fast pattern search ability. Therefore, the 
+combination of CMM and k-NN techniques is likely to result in a generic and fast 
+classifier. For most classification problems, patterns are in the form of multi-dimensional 
+real numbers, and appropriate quantisation and encoding are needed to convert them into 
+binary inputs to a CMM. A robust quantisation and encoding method is developed to meet 
+requirements for CMM input codes, and to overcome the common problem of identical 
+data points in many applications, e.g. background of images or normal features in a 
+diagnostic problem. 
+Many research projects have applied the CMM successfully to commercial problems, e.g. 
+symbolic reasoning in the AURA (Advanced Uncertain Reasoning Architecture) approach 
+714 P. Zhou, J. Austin and J. Kennedy 
+(Austin 1996), chemical structure matching and post code matching. The execution of the 
+CMM has been identified as the bottleneck. Motivated by the needs of these applications 
+for a further high speed processing, the CMM has been implemented in dedicated 
+hardware, i.e. the PRESENCE architecture. The primary aim is to improve the execution 
+speed over conventional workstations in a cost-effective way. 
+The following sections discuss the CMM for pattern classification, describe the 
+PRESENCE architecture (the hardware implementation of CMM), and present 
+experimental results on several benchmarks. 
+Training patterns 
+stored in CMM 
+Patterns pre- 
+selected by CMM 
+k-NN patterns 
+� 
+� k-NN 
+� CMM 
+module 
+classification 
+Figure 1: Architecture of the binary CMM k-NN classifier 
+2.1 PATTERN MATCH AND CLASSIFICATION WITH CMM 
+A correlation matrix memory is basically a single layer network with binary weights M. In 
+the training process a unique binary vector or separator s, is generated to label an unseen 
+input binary vector p,; the CMM learns their association by performing the following 
+logical ORing operation: 
+M = V s,rt'i (1) 
+i 
+In a recall process, for a given test input vector p., the CMM performs: 
+v  Pk sr p, (2) 
+followed by thresholding vk and recovering individual separators. For speed, it is 
+appropriate to use a fixed thresholding method and the threshold is set to a level 
+proportional to the number of '1' bits in the input pattern to allow an exact or partial 
+match. To understand the recall properties of the CMM, consider the case where a known 
+pattern Pk is represented, then Equation 2 can be written as the following when two 
+different patterns are orthogonal to each other: 
+T T 
+V k = $k llkll k q- V $iTllik T = nps[ (3) 
+i,k 
+where n, isascalar, i.e. the number of 'l' bits in pk,and ,,,[=0 for i:k. Hence a 
+perfect recall of s. can be obtained by thresholding v at the level np. In practice 
+'partially orthogonal' codes may be used to increase the storage capacity of the CMM and 
+the recall noise can be removed via appropriately thresholding v. (as 1,1[ < np for i : k ) 
+RNNs Can Learn Symbol-Sensitive Counting 715 
+and post-processing (e.g. applying k-NN rule). Sparse codes are usually used, i.e. only a 
+few bits in s and p, being set to '1', as this maximises the number of codes and 
+minimises the computation time (Turner & Austin 1997). These requirements for input 
+codes are often met by an encoder as detailed below. 
+The CMM exhibits an interesting 'partial match' property when the data dimensionality d 
+is larger than one and input vector Pi consists of d concatenated components. If two 
+different patterns have some common components, v. also contains separators for 
+partially matched patterns, which can be obtained at lower threshold levels. This partial or 
+near match property is useful for pattern classification as it allows the retrieval of stored 
+patterns that are close to the test pattern in Hamming distance. 
+From those training patterns matched by the CMM engine, a test pattern is classified using 
+the k-NN rule. Distances are computed in the original input space to minimise the 
+information loss due to quantisation and noise in the above match process. As the number 
+of matches returned by the CMM is much smaller than the number of training data, the 
+distance computation and comparison are dramatically reduced compared with the simple 
+k-NN method. Therefore, the speed of the classifier benefits from fast training and 
+matching of the CMM, and the accuracy gains from the application of the k-NN rule for 
+reducing information loss and noise in the encoding and match processes. 
+2.2 ROBUST UNIFORM ENCODING 
+Figure 2 shows three stages of the encoding process. d-dimensional real numbers, x i , are 
+quantised as yi; sparse and orthogonal binary vectors, c i , are generated and concatenated 
+to form a CMM input vector. 
+Yl c 
+' C2 ] ]  ClC*'Cd 
+� 5'2 - 
+Yd qt 
+Figure 2: Quantisation, code generation and concatenation 
+CMM input codes should be distributed as uniformly as possible in order to avoid some 
+parts of the CMM being used heavily while others are rarely used. The code uniformity is 
+met at the quantisation stage. For a given set of N training samples in some dimension (or 
+axis), it is required to divide the axis into N, small intervals, called bins, such that they 
+contain uniform numbers of data points. As the data often have a non-uniform distribution, 
+the sizes of these bins should be different. It is also quite common for real world problems 
+that many data points are identical. For instance, there are 11%-99.9% identical data in 
+benchmarks used in this work. Our robust quantisation method described below is 
+designed to cope with the above problems and to achieve a maximal uniformity. 
+In our method data points are first sorted in ascending order, N, identical points are then 
+identified, and the number of non-identical data points in each bin is estimated as 
+Np ={N-N,)/N,. Bin boundaries or partitions are determined as follows. The right 
+boundary of a bin is initially set to the next N, -th data point in the ordered data sequence; 
+the number of identical points on both sides of the boundary is identified; these are either 
+included in the current or next bin. If the number of non-identical data points in the last 
+bin is N, and N, _> (N, + N), N, may be increased by (N,- N,,)/N and the above partition 
+process may be repeated to increase the uniformity. Boundaries of bins obtained become 
+parameters of the encoder in Figure 2. In general it is appropriate to choose N such that 
+each bin contains a number of samples, which is larger than k nearest neighbouts for the 
+optimal classification. 
+716 P. Zhou, J. Austin and J. Kennedy 
+3 THE PRESENCE ARCHITECTURE 
+The pattern match and store engine of the CMM k-NN classifier has been implemented 
+using a novel hardware based CMM architecture, i.e. the PRESENCE. 
+3.1 ARCHITECTURE DESIGN 
+Important design decisions include the use of cheap memory, and not embedding both the 
+weight storage and the training and testing in hardware (VLSI). This arises because the 
+applications commonly use CMMs with over 100Mb of weight memory, which would be 
+difficult and expensive to implement in custom silicon. VME and PCI are chosen to host 
+on industry standard buses and to allow widespread application. 
+The PRESENCE architecture implements the control logic and accumulators, i.e. the core 
+of the CMM. As shown in Figure 3a binary input selects rows from the CMM that are 
+added, thresholded using L-max (Austin & Stonham 1987) or fixed global thresholding, 
+and then returned to the host for further processing. The PRESENCE architecture shown 
+in Figure 3b consists of a bus interface, a buffer memory which allows interleaving of 
+memory transfer and operation of the PRESENCE system, a SATCON and SATSUM 
+combination that accumulates and thresholds the weights. The data bus connects to a pair 
+of memory spaces, each of which contains a control block, an input block and an output 
+block. Thus the PRESENCE card is a memory mapping device, that uses interrupts to 
+confirm the completion of each operation. For efficiency, two memory input/output areas 
+are provided to be acted on from the external bus and used by the card. The control 
+memory input block feeds to the control unit, which is a FPGA device. The input data are 
+fed to the weights

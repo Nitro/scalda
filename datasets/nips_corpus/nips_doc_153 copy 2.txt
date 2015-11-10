@@ -1,0 +1,179 @@
+519 
+A BACK-PROPAGATION ALGORrFHM 
+WITH OFFIMAL USE OF HIDDEN UNITS 
+Yves Chauvin 
+Thomson-CSF, Inc 
+(and Psychology Department, Stanford University) 
+630, Hansen Way (Suite 250) 
+Palo Alto, CA 94306 
+ABSTRACT 
+This paper presents a variation of the back-propagation algo- 
+rithm that makes optimal use of a network hidden units by de- 
+creasing an nergy term written as a function of the squared 
+activations of these hidden units. The algorithm can automati- 
+cally find optimal or nearly optimal architectures necessary to 
+solve known Boolean functions, facfiitate the interpretation of 
+the activation of the remaining hidden units and automatically 
+estimate the complexity of architectures appropriate for phonetic 
+labeling problems. The general principle of the algorithm can 
+also be adapted to different tasks: for example, it can be used to 
+eliminate the [0, 0] local minimum of the [-1, +1] logistic acti- 
+vation function while preserving a much faster convergence and 
+forcing binary activations over the set of hidden units. 
+PRINCIPLE 
+This paper describes an algorithm which makes optimal use of the hidden units in 
+a network using the standard back-propagation algorithm (Rumelhart, Hinton & 
+Williams, 1986). Optimality is defined as the minimization of a function of the 
+energy spent by the hidden units throughtout the network, independently of 
+the chosen architecture, and where the energy is written as a function of the 
+squared activations of the hidden units. 
+The standard back-propagation algorithm is a gradient descent algorithm on the 
+following cost function: 
+P O 
+c -- 
+j i 
+where d is the desired output of an output unit, o the actual output, and where 
+the sum is taken over the set of output units 0 for the set of training patterns P. 
+520 Chauvin 
+The following algorithm implements a gradient descent on the following cost func- 
+tion: 
+P 0 P H 
+C= !er Z Z (dij-oij) 2 + !en Z Z e(oj) [21 
+j i j i 
+where e is a positive monotonic function and where the sum of the second term is 
+now taken over a set or subset of the hidden units H. The first term of this cost 
+function will be called the error term, the second, the energy term. 
+In principle, the theoretical minimum of this function is found when the desired 
+activations are equal to the actual activations for all output units and all presented 
+patterns and when the hidden units do not spend any energy. In practical 
+cases, such a minimum cannot be reached and the hidden units have to spend 
+some energy to solve a given problem. The quantity of energy will be in part 
+determined by the relative importance given to the error and energy terms during 
+gradient descent. In principle, if a hidden unit has a constant activation whatever 
+the pattern presented to the network, it contributes to the energy term only and 
+will be suppressed by the algorithm. The precise energy distribution among the 
+hidden units will depend on the actual energy function e. 
+ANAI.YSIS 
+ALGORITHM IMPLEMENTATION 
+We can write the total cost function that the algorithm tries to minimize as a 
+weighted sum of an error and energy term: 
+C = laerEer + laenEen 
+[3] 
+The first term is the error term used with the standard back-propagation algo- 
+rithm in Rumelhart et al. If we have h hidden layers, we can write the total 
+energy term as a sum of all the energy terms corresponding to each hidden layer: 
+h H 
+[4] 
+To decrease the energy of the uppermost hidden layer Hh, we can compute the 
+derivative of the energy function with respect to the weights. This derivative will 
+be null for any weight above the considered hidden layer. For any weight just 
+below the considered hidden layer, we have (using Rumelhart et al. notation): 
+A Back-Propagation Algorithm 521 
+OEen OEen Oneti Oneti 
+[51 
+Oe(o) Oe(ot 2.) 0o OOi .. 2e'oif i(neti) [6] 
+where the derivative of e is taken with respect to the energy of the unit i and 
+where f corresponds to the logistic function. For any hidden layer below the 
+considered layer h, the chain rule yields: 
+J 
+This is just. standard back-propagation with a different back-propagated term. If 
+we minimize both the error at the output layer and the energy of the hidden layer 
+h, we can compute the complete weight change for any connection below layer h: 
+= - t en = - tOlOtert[ r +/ttent[ n) = - tOlt c 
+Awtl a/tter rO1 - al ten t O1 
+[8] 
+where 6c is now the delta accumulated for error and energy that we can write as 
+a function of the deltas of the upper layer: 
+t}Ic = f'l(nett) Z Oterr + lten{}[n)wil = f'l(rleti) Z }?wit 
+i i 
+This means that instead of propagating the delta for both energy and error, we 
+can compute an accumulated delta for hidden layer h and propagate it back 
+throughout the network. If we minimize the energy of the layers h and h-I, the 
+new accumulated delta will equal the previously accumulated delta added to a 
+new delta energy on layer h-1. The procedure can be repeated throughout the 
+complete network. In short, the back-propagated error signal used to change the 
+weights of each layer is simply equal to the back-propagated signal used in the 
+previous layer augmented with the delta energy of the current hidden layer. (The 
+algorithm is local and easy to implement). 
+ENERGY FUNCTION 
+The algorithm is sensitive to the energy function e being minimized. The func- 
+tions used in the simulations described below have the following derivative with 
+522 Chauvin 
+respect to the squared activations/energy (only this derivative is necessary to im- 
+plement the algorithm, see Equation [6]): 
+e' Oe(�Z) 
+= = . [10] 
+where n is an integer that determines the precise shape of the energy function 
+(see Table 1) and modulates the behavior of the algorithm in the following way. 
+For n = O, e is a linear function of the energy: high and low energy units are 
+equally penalized. For n = 1, e is a logarithmic function and low energy units 
+become more penalized than high energy units, in proportion to the linear 
+case. For n = 2, the energy penalty may reach an asymptote as the energy in- 
+creases: high energy units are not penalized more than middle energy units. 
+In the simulations, as expected, it appears that higher values of n tend to suppress 
+low energy units. (For n > 2, the behavior of the algorithm was not signifi- 
+cantly different from n = 2, for the tests described below). 
+TABLE 1: Energy Functions. 
+I 'l 
+1 I 2 I n>2 
+I 0 2 I 
+Log (1 + 0 2) I I 9 
+I 1 +0 2 I ' 
+I I 
+BOOLEAN EXAMPLES 
+The algorithm was tested with a set of Boolean problems. In typical tasks, the 
+energy of the network significantly decreases during early learning. Later on, the 
+network finds a better minimum of the total cost function by decreasing the error 
+and by spending energy to solve the problem. Figure 1 shows energy and error 
+in function of the number of learning cycles during a typical task (XOR) for 4 
+different runs. For a broad range of the energy learning rate, the algorithm is 
+quite stable and finds the solution to the given problem. This nice behavior is 
+also quite independent of the variations of the onset of energy minimization. 
+EXCLUSIVE OR AND PARITY 
+The algorithm was tested with EXOR for various network archkectures. Figure 2 
+shows an example of the activation of the hidden units after learning. The algo- 
+rithm finds a minimal solution (2 hidden units, minimum logic) to solve the 
+XOR problem when the energy is being minimized. This minimal solution is 
+actually found whatever the starting number of hidden units. If several layers are 
+used, the algorithm finds an optimal or nearly-optimal size for each layer. 
+A Back-Propagation Algorithm 523 
+I I I , 
+0.12 
+Figure 1. Energy and error curves as a function of the number of pattern 
+presentations for different values of the energy rate (0, .1, .2, .4). Each 
+energy curve (e label) is associated with an error curve (+ label). 
+During learning, the units spend some energy to solve the given task. 
+With parity 3, for a [-1, +1] activation range of the sigmoid function, the algo- 
+rithm does not find the 2 hidden units optimal solution but has no problem find- 
+ing a 3 hidden units solution, independently of the starting architecture. 
+SYMMETRY 
+The algorithm was tested with the symmetry problem, described in Rumelhart et 
+al. The minimal solution for this task uses 2 hidden units. The simplest form of 
+the algorithm does not actually find this minimal solution because some weights 
+from the hidden units to the output unit can actually grow enough to compensate 
+the low activations of the hidden units. However, a simple weight decay can 
+prevent these weights from growing too much and allows the network to find the 
+minimal solution. In this case, the total cost function being minimized simply 
+becomes: 
+524 Chauvin 
+o 
+Ixem 2 
+__l 
+o ern20  0 pern21  0 pern20  0 pern21 . 
+Figure 2. Hidden unit activations of a 4 hidden unit network over the 4 
+EXOR patterns when (left) standard back-propagation and (right) energy 
+minimization are being used during learning. The network is reduced to 
+minimal size (2 hidden units) when the. energy is being minimized. 
+P 0 P H W 
+C = ]lZer Z Z (dij - oij) 2 + lien Z Z e(oj) + llZw Z wj. [11] 
+j i j i ij 
+PHONETIC LABELING 
+The algorithm was tested with a phonetic labeling task. The input patterns con- 
+sisted of spectrograms (single speaker, 10x3.2ms spaced time frames, centered, 
+16 frequencies)corresponding to 9 syllables [ba], [da], [ga], [bi], [di], [gi], and 
+[bu], [du], [gu]. The task of the network was to classify these spectrograms (7 
+tokens per syllable) into three categories corresponding to the three consonants 
+lb], [g], and [g]. Starting with 12 hidden units, the algorithm reduced the net- 
+work to 3 hidden units. (A hidden unit is considered unused when its activation 
+over the entire range of patterns contributes very little to the activations of the 
+output units). With standard back

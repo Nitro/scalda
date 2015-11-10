@@ -1,0 +1,156 @@
+Recovering Perspective Pose with a Dual 
+Step EM Algorithm 
+Andrew D.J. Cross and Edwin R. Hancock, 
+Department of Computer Science, 
+University of York, 
+York, Y01 5DD, UK. 
+Abstract 
+This paper describes a new approach to extracting 3D perspective 
+structure from 2D point-sets. The novel feature is to unify the 
+tasks of estimating transformation geometry and identifying point- 
+correspondence matches. Unification is realised by constructing a 
+mixture model over the bi-partite graph representing the correspon- 
+dence match and by effecting optimisation using the EM algorithm. 
+According to our EM framework the probabilities of structural cor- 
+respondence gate contributions to the expected likelihood function 
+used to estimate maximum likelihood perspective pose parameters. 
+This provides a means of rejecting structural outliers. 
+I Introduction 
+The estimation of transformational geometry is key to many problems of computer 
+vision and robotics [10]. Broadly speaking the aim is to recover a matrix representa- 
+tion of the transformation between image and world co-ordinate systems. In order 
+to estimate the matrix requires a set of correspondence matches between features 
+in the two co-ordinate systems [11]. Posed in this way there is a basic chicken- 
+and-egg problem. Before good correspondences can be estimated, there need to be 
+reasonable bounds on the transformational geometry. Yet this geometry is, after 
+all, the ultimate goal of computation. This problem is usually overcome by invoking 
+constraints to bootstrap the estimation of feasible correspondence matches [5, 8]. 
+One of the most popular ideas is to use the epipolar constraint to prune the space of 
+potential correspondences [5]. One of the drawbacks of this pruning strategy is that 
+residual outliers may lead to ill-conditioned or singular parameter matrices [11]. 
+Recovering Perspective Pose with a Dual Step EM Algorithm 781 
+The aim in this paper is to pose the two problems of estimating transformation 
+geometry and locating correspondence matches using an architecture that is rem- 
+iniscent of the hierarchical mixture of experts algorithm [6]. Specifically, we use 
+a bi-partite graph to represent the current configuration of correspondence match. 
+This graphical structure provides an architecture that can be used to gate con- 
+tributions to the likelihood function for the geometric parameters using structural 
+constraints. Correspondence matches and transformation parameters are estimated 
+by applying the EM algorithm to the gated likelihood function. In this way we 
+arrive at dual maximisation steps. Maximum likelihood parameters are found by 
+miniraising the structurally gated squared residuals between features in the two 
+images being matched. Correspondence matches are updated so as to maximise the 
+a posterJori probability of the observed structural configuration on the bi-partite 
+association graph. 
+We provide a practical illustration in the domain of computer vision which is aimed 
+at matching images of floppy discs under severe perspective foreshortening. How- 
+ever, it is important to stress that the idea of using a graphical model to provide 
+structural constraints on parameter estimation is a task of generic importance. Al- 
+though the EM algorithm has been used to extract arlne and Euclidean parameters 
+from point-sets [4] or line-sets [9], there has been no attempt to impose structural 
+constraints of the correspondence matches. Viewed from the perspective of graph- 
+ical template matching [1, 7] our EM algorithm allows an explicit deformational 
+model to be imposed on a set of feature points. Since the method delivers statisti- 
+cal estimates for both the transformation parameters and their associated covariance 
+matrix it offers significant advantages in terms of its adaptive capabilities. 
+2 Perspective Geometry 
+Our basic aim is to recover the perspective transformation parameters which bring 
+a set of model or fiducial points into correspondence with their counterparts in a 
+set of image data. Each point in the image data is represented by an augmented 
+vector of co-ordinates _w i = (xi, yi, 1) T where i is the point index. The available set 
+of image points is denoted by w = (_wi,Vi C Z)) where Z) is the point index-set. 
+The fiducial points constituting the model are similarly represented by the set of 
+augmented co-ordinate vectors z = (z_j,Vj  .A/t). Here ,k4 is the index-set for the 
+model feature-points and the z_j represent the corresponding image co-ordinates. 
+Perspective geometry is distinguished from the simpler Euclidean (translation, ro- 
+tation and scaling) and arline (the addition of shear) cases by the presence of signifi- 
+cant foreshortening. We represent the perspective transformation by the parameter 
+matrix 
+1,1 1,2 1,3 
+(,) (,) (,) (,) 
+ W2,1 2,2 2,3 
+() (,) (,) 
+3,1 3,2 3,3 
+Using homogeneous co-ordinates, the transformation between model and data is 
+z() (n) (n) 
+J - (z..-'r)-(n)zJ ' where (n) 1) T is a column-vector formed 
+' 3,1 , '3,2, 
+--$ 
+from the elements in bottom row of the transformation matrix. 
+782 A. D. J. Cross and E. R. Hancock 
+3 Relational Constraints 
+One of our goals in this paper is to exploit structural constraints to improve the 
+recovery of perspective parameters from sets of feature points. We abstract the 
+process as bi-partite graph matching. Because of its well documented robustness to 
+noise and change of viewpoint, we adopt the Delaunay triangulation as our basic 
+representation of image structure [3]. We establish Delaunay triangulations on the 
+data and the model, by seeding Voronoi tessellations from the feature-points. 
+Tlie process of Delaunay triangulation generates relational graphs from the two 
+sets of point-features. More formally, the point-sets are the nodes of a data graph 
+GD -- {Z),ED} and a model graph GM -- {.A//,EM}. Here ED C-- Z) x Z) and 
+EM C- M x  are the edge-sets of the data and model graphs. Key to our matching 
+process is the idea of using the edge-structure of Delaunay graphs to constrain the 
+correspondence matches between the two point-sets. This correspondence matching 
+is denoted by the function f � AA -4 D from the nodes of the data-graph to those 
+of the model graph. According to this notation the statement f()(i) = j indicates 
+that there is a match between the node i C D of the model-graph to the node j 
+of the model graph at iteration n of the algorithm. We use the binary indicator 
+s(n) { 1 if f(n)(i) = j (2) 
+i,j = 0 otherwise 
+to represent the configuration of correspondence matches. 
+We exploit the structure of the Delaunay graphs to compute the consistency of 
+match using the Bayesian framework for relational graph-matching recently reported 
+by Wilson and Hancock [12]. Suffice to say that consistency of a configuration of 
+matches residing on the neighbourhood Ri = itA {k; (i, k)  ED} of the node 
+i in the data-graph and its counterpart Sj = j U {1; (j, l)  Era} for the node 
+j in the model-graph is gauged by Hamming distance. The Hamming distance 
+H(i, j) counts the number of matches on the data-graph neighbourhood Ri that 
+are inconsistently matched onto the model-graph neighbourhood S. According to 
+Wilson and Hancock [12] the structural probability for the correspondence match 
+f(i) = j at iteration n of the algorithm is given by 
+exp -/3H(i,j)] 
+f,?) = (3) 
+] 
+s exp -/H(i,j) 
+In the above expression, the Hamming distance is given by H(i,j) = 
+Y](k,t)an,.s (1 () where the symbol � denotes the composition of the data-graph 
+-- k.l } 
+relation Ri and the model-graph relation S. The exponential constant/ = In 
+P 
+is related to the uniform probabihty of structural matching errors P. This proba- 
+bility is set to reflect the overlap of the two point-sets. In the work reported here 
+we set P =   - vl 
+4 The EM Algorithm 
+Our aim is to extract perspective pose parameters and correspondences matches 
+from the two point-sets using the EM algorithm. According to the original work 
+Recovering Perspective Pose with a Dual Step EM Algorithrn 783 
+of Dempster, Laird and Rubin [2] the expected likelihood function is computed 
+by weighting the current log-probability density by the a posterJori measurement 
+probabilities computed from the preceding maximum likelihood parameters. Jordan 
+and Jacobs [6] augment the process with a graphical model which effectively gates 
+contributions to the expected log-likelihood function. Here we provide a variant of 
+this idea in which the bi-partite graph representing the correspondences matches 
+gate the log-likelihood function for the perspective pose parameters. 
+4.1 Mixture Model 
+Our basic aim is to jointly maximize the data-likelihood p(wlz , f, ) over the space 
+of correspondence matches f and the matrix of perspective parameters . To 
+commence our development, we assume observational independence and factorise 
+the conditional measurement density over the set of data-items 
+P(WlZ' f' ) - H P(W-ilz' f' ) (4) 
+In order to apply the apparatus of the EM algorithm to maximising p(w]z, f, 
+with respect to f and , we must establish a mixture model over the space of 
+correspondence matches. Accordingly, we apply Bayes theorem to expand over the 
+space of match indicator variables. In other words, 
+P(W-i[z'f')- E P(W-i'si,j Iz'f') (5) 
+s,f 
+In order to develop a tractable likelihood function, we apply the chain rule of condi- 
+tional probability. In addition, we use the indicator variables to control the switch- 
+ing of the conditional measurement densities via exponentiation. In other words we 
+assume p(w_ ilsi,j, zj, 
+With this simplification,the mixture model for the correspondence matching process 
+leads to the following expression for the expected likelihood function 
+Q(f(n+l),(n+)lf(n ) (n))_ E E P(si'jlw'z'f(n) (n))s(n)lnp(w-ilzJ (n+)) 
+' ' i,j ' 
+(6) 
+To further simplify matters we make a mean-field approximation and replace 
+E

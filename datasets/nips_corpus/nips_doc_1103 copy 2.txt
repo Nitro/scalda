@@ -1,0 +1,147 @@
+Stable Dynamic Parameter Adaptation 
+Stefan M. Riiger 
+Fachbereich Informatik, Technische Universit/it Berlin 
+Sekr. FR 5-9, Franklinstr. 28/29 
+10 587 Berlin, Germany 
+async�cs.tu-berlin.de 
+Abstract 
+A stability criterion for dynamic parameter adaptation is given. In 
+the case of the learning rate of backpropagation, a class of stable 
+algorithms is presented and studied, including a convergence proof. 
+1 INTRODUCTION 
+All but a few learning algorithms employ one or more parameters that control the 
+quality of learning. Backpropagation has its learning rate and momentum param- 
+eter; Boltzmann learning uses a simulated annealing schedule; Kohonen learning 
+a learning rate and a decay parameter; genetic algorithms probabilities, etc. The 
+investigator always has to set the parameters to specific values when trying to solve 
+a certain problem. Traditionally, the metaproblem of adjusting the parameters is 
+solved by relying on a set of well-tested values of other problems or an intensive 
+search for good parameter regions by restarting the experiment with different val- 
+ues. In this situation, a great deal of expertise and/or time for experiment design 
+is required (as well as a huge amount of computing time). 
+1.1 DYNAMIC PARAMETER ADAPTATION 
+In order to achieve dynamic parameter adaptation, it is necessary to modify the 
+learning algorithm under consideration: evaluate the performance of the parameters 
+in use from time to time, compare them with the performance of nearby values, and 
+(if necessary) change the parameter setting on the fly. This requires that there 
+exist a measure of the quality of a parameter setting, called performance, with the 
+following properties: the performance depends continuously on the parameter set 
+under consideration, and it is possible to evaluate the performance locally, i.e., at 
+a certain point within an inner loop of the algorithm (as opposed to once only at 
+the end of the algorithm). This is what dynamic parameter adaptation is all about. 
+2 2 6 s.M. ROGER 
+Dynamic parameter adaptation has several virtues. It is automatic; and there is no 
+need for an extra schedule to find what parameters suit the problem best. When 
+the notion of what the good values of a parameter set are changes during learning, 
+dynamic parameter adaptation keeps track of these changes. 
+1.2 EXAMPLE: LEARNING RATE OF BACKPROPAGATION 
+Backpropagation is an algorithm that implements gradient descent in an error 
+function E: 11{ n - 11{. Given w �  11{  and a fixed  > 0, the iteration rule is 
+w t+l - w t - TVE(wt). The learning rate  is a local parameter in the sense that 
+at different stages of the algorithm different learning rates would be optimal. This 
+property and the following theorem make  especially interesting. 
+Trade-off theorem for backpropagation. Let E: 11{  - 11{ be the error function of 
+a neural net with a regular minimum at w*  lit n, i.e., E is expansible into a 
+Taylor series about w* with vanishing gradient VE(w*) and positive definite Hessian 
+matrix H(w*). Let A denote the largest eigenvalue of H(w*). Then, in general, 
+backpropagation with a fixed learning rate )  2/ cannot converge to w*. 
+Proof. Let U be an orthogonal matrix that diagonalizes H(w*), i.e., D := 
+UTH(w*)U is diagonal. Using the coordinate transformation x = UT(w - w*) 
+and Taylor expansion, E(w) - E(w*) can be approximated by F(x) := xTDx/2. 
+Since gradient descent does not refer to the coordinate system, the asymptotic be- 
+havior of backpropagation for E near w* is the same as for F near 0. In the latter 
+t = x(1- Dii7) t at time 
+case, backpropagation calculates the weight components x i 
+step t. The diagonal elements Dii are the eigenvalues of H(w*); convergence for all 
+geometric sequences t  xti thus requires  < 2/;k. 1 
+The trade-off theorem states that, given , a large class of minima cannot be found, 
+namely, those whose largest eigenvalue of the corresponding Hessian matrix is larger 
+than 2/. Fewer minima might be overlooked by using a smaller , but then the 
+algorithm becomes intolerably slow. Dynamic learning-rate adaptation is urgently 
+needed for backpropagation! 
+2 STABLE DYNAMIC PARAMETER ADAPTATION 
+Transforming the equation for gradient descent, W t+l = W t -- ]VE(wt), into a 
+differential equation, one arrives at Owt/Ot = -TVE(wt). Gradient descent with 
+constant step size  can then be viewed as Euler's method for solving the differential 
+equation. One serious drawback of Euler's method is that it is unstable: each finite 
+step leaves the trajectory of a solution without trying to get back to it. Virtually 
+any other differential-equation solver surpasses Euler's method, and there are even 
+some featuring dynamic parameter adaptation [5]. 
+However, in the context of function minimization, this notion of stability (do not 
+drift away too far from a trajectory) would appear to be too strong. Indeed, 
+differential-equation solvers put much effort into a good estimation of points that 
+are as close as possible to the trajectory under consideration. What is really needed 
+for minimization is asymptotic stability: ensuring that the performance of the pa- 
+rameter set does not decrease at the end of learning. This weaker stability criterion 
+allows for greedy steps in the initial phase of learning. 
+There are several successful examples of dynamic learning-rate adaptation for back- 
+propagation: Newton and quasi-Newton methods [2] as an adaptive -tensor; indi- 
+vidual learning rates for the weights [3, 8]; conjugate gradient as a one-dimensional 
+-estimation [4]; or straightforward -adaptation [1, 7]. 
+Stable Dynamic Parameter Adaptation 22 7 
+A particularly good example of dynamic parameter adaptation was proposed by 
+Salomon [6, 7]: let ( > 1; at every step t of the backpropagation algorithm test two 
+values for /, a somewhat smaller one, lt/(, and a somewhat larger one, h(; use as 
+h+x the value with the better performance, i.e., the smaller error: 
+if E(w  - q/( . VE(w)) _< E(w  - q( . VE(w)) 
+otherwise 
+The setting of the new parameter ( proves to be uncritical (all values work, especially 
+sensible ones being those between 1.2 and 2.1). This method outperforms many 
+other gradient-based algorithms, but it is nonetheless unstable. 
+a) 
+b) 
+Figure 1: Unstable Parameter Adaptation 
+The problem arises from a rapidly changing length and direction of the gradient, 
+which can result in a huge leap away from a minimum, although the latter may have 
+been almost reached. Figure la shows the niveau lines of a simple quadratic error 
+function E: l 2 - l along with the weight vectors w �, wX,... (bold dots) resulting 
+from the above algorithm. This effect was probably the reason why Salomon sug- 
+gested using the normalized gradient instead of the gradient, thus getting rid of the 
+changes in the length of the gradient. Although this works much better, Figure lb 
+shows the instability of this algorithm due to the change in the gradient's direction. 
+There is enough evidence that these algorithms converge for a purely quadratic 
+error function [6, 7]. Why bother with stability? One would like to prove that an 
+algorithm asymptotically finds the minimum, rather than occasionally leaping far 
+away from it and thus leaving the region where the quadratic Hessian term of a 
+globally nonquadratic error function dominates. 
+3 A CLASS OF STABLE ALGORITHMS 
+In this section, a class of algorithms is derived from the above ones by adding 
+stability. This class provides not only a proof of asymptotic convergence, but also 
+a significant improvement in speed. 
+Let E: lI n - IR be an error function of a neural net with random weight vector 
+w � ElI n. Let(> 1,o 0, O<c_< 1, andO<a_< l_<b. At stept of the algo- 
+rithm, choose a vector gt restricted only by the conditions gtX7E(wt)/lgtl[VEwt I >- c 
+and that it either holds for all t that 1/gtl  [a,b] or that it holds for all t that 
+IVE(wt)l/Igtl  [a,b], i.e., the vectors g have a minimal positive projection onto 
+the gradient and either have a uniformly bounded length or are uniformly bounded 
+by the length of the gradient. Note that this is always possible by choosing gt as the 
+gradient or the normalized gradient. 
+Let e: l  E( wt - lg t) denote a one-dimensional error function given by E, w t and 
+gr. Repeat (until the gradient vanishes or an upper limit of t or a lower limit Emin 
+228 S.M. ROGER 
+of E is reached) the iteration w t+ = w t -rit+lg t with 
+t+l '-- 
+e(ri�) - e(0) if e(0) < 
+1+ 
+rit(gtVE(w t) (1) 
+if e(rid�) < e(ri�) < e(0) 
+otherwise. 
+The first case for rit-]-i is a stabilizing term ri*, which definitely decreases the error 
+when the error surface is quadratic, i.e., near a minimum. ri* is put into effect 
+when the error e(rit), which would occur in the next step if rit+l = rit was chosen, 
+exceeds the error e(0) produced by the present weight vector w t. By construction, 
+ri* results in a value less than rit/2 if e(rit) > e(0); hence, given  < 2, the learning 
+rate is decreased as expected, no matter what E looks like. Typically, (if the values 
+for ( are not extremely high) the other two cases apply, where rit( and rit/( compete 
+for a lower error. 
+Note that, instead of gradient descent, this class of algorithms proposes a ,,gt de- 
+scent, and the vectors gt may differ from the gradient. A particular algorithm is 
+given by a specification of how to choose gr. 
+4 PROOF OF ASYMPTOTIC CONVERGENCE 
+Asymptotic convergence. Let E: w  2in__1 iw /2 with Ai > O. For all  > 1, 
+0 < c _ 1, 0 < a _ I _ b, rio > O, and w � 6 ll n, every algorithm from Section 3 
+produces a sequence t  w t that converges to the minimum 0 of E with an at least 
+exponential decay of t  E(wt). 
+Proof. This statement follows if a constant q < I exists with E(w t+x) _ qE(w t) for 
+all t. Then, limt- w t = 0, since w  vIE(w) is a norm in ll n . 
+Fix a w t, pit, and a gt according to the premise. Since E is a p

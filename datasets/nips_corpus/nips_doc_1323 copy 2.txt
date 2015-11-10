@@ -1,0 +1,175 @@
+The Observer-Observation Dilemma 
+in Neuro-Forecasting 
+Hans Georg Zimmermann 
+Siemens AG 
+Corporate Technology 
+D-81730 M'anchen, Germany 
+Georg.Zimmermannmchp.siemens. de 
+Ralph Neuneier 
+Siemens AG 
+Corporate Technology 
+D-81730 Miinchen, Germany 
+Ralp h.Neuneiermchp. siemens. de 
+Abstract 
+We explain how the training data can be separated into clean informa- 
+tion and unexplainable noise. Analogous to the data, the neural network 
+is separated into a time invariant structure used for forecasting, and a 
+noisy part. We propose a unified theory connecting the optimization al- 
+gorithms for cleaning and learning together with algorithms that control 
+the data noise and the parameter noise. The combined algorithm allows 
+a data-driven local control of the liability of the network parameters and 
+therefore an improvement in generalization. The approach is proven to 
+be very useful at the task of forecasting the German bond market. 
+1 Introduction: The Observer-Observation Dilemma 
+Human beings believe that they are able to solve a psychological version of the Observer- 
+Observation Dilemma. On the one hand, they use their observations to constitute an under- 
+standing of the laws of the world, on the other hand, they use this understanding to evaluate 
+the correctness of the incoming pieces of information. Of course, as everybody knows, 
+human beings are not free from making mistakes in this psychological dilemma. We en- 
+counter a similar situation when we try to build a mathematical model using data. Learning 
+relationships from the data is only one part of the model building process. Overrating this 
+part often leads to the phenomenon of overfitting in many applications (especially in eco- 
+nomic forecasting). In practice, evaluation of the data is often done by external knowledge, 
+i.e. by optimizing the model under constraints of smoothness and regularization [7]. If we 
+assume, that our model summerizes the best knowledge of the system to be identified, why 
+should we not use the model itself to evaluate the correctness of the data? One approach to 
+do this is called Cleaming [11]. In this paper, we present a unified approach of the interac- 
+tion between the data and a neural network (see also [8]). It includes a new symmetric view 
+on the optimization algorithms, here learning and cleaning, and their control by parameter 
+and data noise. 
+The Observer-Observation Dilemma in Neuro-Forecasting 993 
+2 Learning 
+2.1 Learning reviewed 
+We are especially interested in using the output of a neural network y(z, w), given the 
+input pattern, z, and the weight vector, w, as a forecast of financial time series. In the 
+context of neural networks learning normally means the minimization of an error function 
+E by changing the weight vector w in order to achieve good generalization performance. 
+Typical error functions can be written as a sum of individual terms over all T training 
+patterns, E  T 
+: Y't= Et. For example, the maximum-likelihood principle leads to 
+= (y(x, w)- y)2 (l) 
+with y{ as the given target pattern. If the error function is a nonlinear function of the pa- 
+rmeters, learning has to be done iteratively by a search through the weight space, changing 
+the weights from step ,- to ,- + 1 according to: 
+W(r+l) __ W (r) q- AW (r). 
+(2) 
+There are several algorithms for choosing the weight increment Aw (), the most easiest 
+being gradient descent. After each presentation of an input pattern, the gradient gt := 
+VEt Iw of the error function with respect to the weights is computed. In the batch version 
+of gradient descent the increments are based on all training patterns 
+T 
+Aw() = -g = - E gt, 
+t----1 
+(3) 
+whereas the pattern-by-pattern version changes the weights after each presentation of a 
+pattern 2: t (often randomly chosen from the training set): 
+Aw (r) : -rlgt. (4) 
+The learning rate r/is typically held constant or follows an annealing procedure during 
+training to assure convergence. Our experiments have shown that small batches are most 
+useful, especially in combination with Vario-Eta, a stochastic approximation of a Quasi- 
+Newton method [3]: 
+N 
+Aw( ) = _ r/ 1 
+4 E(gt g)2 '  gt, (5) 
+-- t----! 
+with and N < 20. Learning pattern-by-pattern or with small batches can be viewed as a 
+stochastic search process because we can write the weight increments as: 
+= gt -- g � 
+AW (r) --r]g q-  t=l 
+(6) 
+These increments consist of the terms g with a drift to a local minimum and of noise terms 
+I EtN= gt #) disturbingthisdrift. 
+(7  - 
+2.2 Parameter Noise as an Implicit Penalty Function 
+Consider the Taylor expansion of E(w) around some point w in the weight space 
+1 
+E(w + Aw) = E(w) + VE Aw + AwHAw 
+(7) 
+994 H. G. Zimmermann and R. Neuneier 
+with H as the Hessian of the error function. Assume a given sequence of T disturbance 
+vectors Awt, whose elements Awt (i) are identically, independently distributed (i.i.d.) with 
+zero mean and variance (row-)vector var( Awi ) to approximate the expectation ( E (w)) by 
+1 1 
+7 + Xwt) : + 
+t 
+(8) 
+with Hii as the diagonal elements of H. In eq. 8, noise on the weights acts implicitly as a 
+penalty term to the error function given by the second derivatives Hii. The noise variances 
+var(Aw(i)) operate as penalty parameters. As a result of this flat minima solutions which 
+may be important for achieving good generalization performance are favored [5]. 
+Learning pattern-by-pattern introduces such noise in the training procedure i.e., Awt --- 
+-r/� gr. Close to convergence, we can assume that gt is i.i.d. with zero mean and variance 
+vector var(g,) so that the expected value can be approximated by 
+r/2 oq2E 
++ 5- var(g,) 
+i 
+(9) 
+This type of learning introduces to a local penalty parameter var(Aw(i)), characterizing 
+the stability of the weights w = [wi]i=l,...,t,. 
+The noise effects due to Vario-Eta learning Awt(i) = - ' 
+ � gti leads to 
+r/2 
+(lO) 
+By canceling the term var(g,) in eq. 9, Vario-Eta achieves a simplified uniform penalty 
+parameter, which depends only on the learning rate r/. Whereas pattern-by-pattern learning 
+is a slow algorithm with a locally adjusted penalty control, Vario-Eta is fast only at the cost 
+of a simplified uniform penalty term. We summarize this section by giving some advice on 
+how to learn to flat minima solutions: 
+� Train the network to a minimal training error solution with Vario-Eta, which is a 
+stochastic approximation of a Newton method and therefore very fast. 
+� Add a final phase of pattern-by-pattern learning with uniform learning rate to fine 
+tune the local curvature structure by the local penalty parameters (eq. 9). 
+� Use a learning rate r/as high as possible to keep the penalty effective. The training 
+error may vary a bit, but the inclusion of the implicit penalty is more important. 
+3 Cleaning 
+3.1 Cleaning reviewed 
+When training neural networks, one typically assumes that the data is noise-free and one 
+forces the network to fit the data exactly. Even the control procedures to minimize over- 
+fitting effects (i.e., pruning) consider the inputs as exact values. However, this assumption 
+is often violated, especially in the field of financial analysis, and we are taught by the 
+phenomenon of overfitting not to follow the data exactly. Cleaming, as a combination of 
+cleaning and learning, has been introduced in the paper of [11]. The motivation was to 
+minimize overfitting effects by considering the input data as corrupted by noise whose dis- 
+tribution has also to be learned. The Cleaning error function for the pattern t is given by 
+the sum of two terms 
+1 d 2 
+E ':v =  [(/t- /t ) q- (2:t- xt d) -- E q- E (11) 
+The Observer-Observation Dilemma in Neuro-Forecasting 995 
+with z d 
+t, /t as the observed data point. In the pattern-by-pattern learning, the network 
+output y(zt, w) determines the adaptation as usual, 
+OEY 
+w (+) = w () - rlow( ) . (12) 
+We have also to memorize correction vectors zr t for all input data of the training set to 
+present the cleaned input zt to the network, 
+rt = ;rtd -' t (13) 
+The update rule for the corrections, initialized with Ax? ) = 0 can be described as 
+Az? +') -- (1 - r/)Az? ) - r/(yt -- ta) �-y- (14) 
+-- 
+All the necessary quantities, i.e. (t - ta) 
+os are computed by typical back- 
+propagation algorithms, anyway. We experienced, that the algorithms work well, if the 
+same learning rate r/is used for both, the weight and cleaning updates. For regression, 
+cleaning forces the acceptance of a small error in z, which can in turn decrease the error in 
+ dramatically, especially in the case of outliers. Successful applications of Cleaning are 
+reported in [11 ] and [9]. 
+Although the network may learn an optimal model for the cleaned input data, there is 
+no easy way to work with cleaned data on the test set. As a consequence, the model is 
+evaluated on a test set with a different noise characteristic compared to the training set. We 
+will later propose a combination of learning with noise and cleaning to work around this 
+serious disadvantage. 
+3.2 Data Noise reviewed 
+Artificial noise on the input data is often used during training because it creates an infinite 
+number of training examples and expands the data to empty parts of the input space. As 
+a result, the tendency of learning by heart may be limited because smoother regression 
+functions are produced. 
+Now, we are considering again the Taylor expansion, this time applied to E(z) around 
+some point z in the input space. The expected value {E(z)} is approximated by 
+1 1 
+7 + = + o--: var((j))Hjj, (15) 
+t j 
+with Hjj as the diagonal elements of the Hessian H, of the error function with respect to 
+the inputs x. Again, in eq. 15, noise on the inputs acts implicitly as a penalty term to the 
+error function with the noise variances var(Dr (j)) operating as penalty parameters. Noise 
+on the input improve generalization behavior by favoring smooth models [ 1 ]. 
+The noise levels can be set to 

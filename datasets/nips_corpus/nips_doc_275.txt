@@ -1,0 +1,139 @@
+186 Bourlard and Morgan 
+A Continuous Speech Recognition System 
+Embedding MLP into HMM 
+Herv6 Bourlard 
+Philips Research Laboratory 
+Av. van Becelaere 2, Box 8 
+B-1170 Brussels, Belgium 
+Nelson Morgan 
+Intl. Comp. Sc. Institute 
+1947 Center Street, Suite 600 
+Berkeley, CA 94704, USA 
+ABSTRACT 
+We are developing a phoneme based, speaker-dependent continuous 
+speech recognition system embedding a Multilayer Perceptton (MLP) 
+(i.e., a feedforward Artificial Neural Network), into a Hidden Markov 
+Model (HMM) approach. In [Bourlard & Wellekens], it was shown that 
+MLPs were approximating Maximum a Posteriori (MAP) probabilities 
+and could thus be embedded as an emission probability estimator in 
+HMMs. By using contextual information from a sliding window on the 
+input frames, we have been able to improve frame or phoneme clas- 
+siftcation performance over the corresponding performance for simple 
+Maximum Likelihood (ML) or even MAP probabilities that are esti- 
+mated without the benefit of context. However, recognition of words in 
+continuous speech was not so simply improved by the use of an MLP, 
+and several modifications of the original scheme were necessary for 
+getting acceptable performance. It is shown here that word recognition 
+performance for a simple discrete density HMM system appears to be 
+somewhat better when MLP methods are used to estimate the emission 
+probabilities. 
+1 INTRODUCTION 
+We have performed a number of experiments with a 1000-word vocabulary continu- 
+ous speech recognition task. Our frame classification results [Bourlard et al., 1989] 
+A Continuous Speech Recognition System Embedding MLP into HMM 187 
+are consistent with other research showing the capabilities of MLPs trained with back- 
+propagation-styled learning schemes for the recognition of voiced-unvoiced speech seg- 
+ments [Gevins & Morgan, 1984], isolated phoneroes [Watrous & Shastri, 1987; Waibel 
+et al., 1988; Makino et al., 1983], or of isolated words [Peeling & Moore, 1988]. These 
+results indicate that neural network approaches can, for some problems, perform pattern 
+classification at least as well as traditional HMM approaches. However, this is not par- 
+ticularly mysterious. When traditional statistical assumptions (distribution, independence 
+of multiple features, etc.) are not valid, systems which do not rely on these assumptions 
+can work better (as discussed in [Niles et al., 1989]). Furthermore, networks provide 
+an easy way to incorporate multiple sources of evidence (multiple features, contextual 
+windows, etc.) without restrictive assumptions. 
+However, it is not so easy to improve the recognition of words in continuous speech by 
+the use of an MLP. For instance, while it has been shown that the outputs of a feedforward 
+network can be used as emission probabilities in an HMM [Bourlard et al., 1989], the 
+corresponding word recognition performance can be very poor. This is true even when 
+the same network demonstrates extremely good performance at the frame or phoneme 
+levels. We have developed a hybrid MLP-HMM algorithm which (for a preliminary 
+experiment) appears to exceed performance of the same HMM system using stand_ard 
+statistical approaches to estimate the emission probabilities. This was only possible after 
+the original algorithm was modified in ways that did not necessarily maximize the frame 
+recognition performance for the training set. We will describe these modifications below, 
+along with experimental results. 
+2 METHODS 
+As shown by both theoretical [Bourlard & Wellekens, 1989] and experimental [Bourlard 
+& Morgan, 1989] results, MLP output values may be considered to be good estimates of 
+MAP probabilities for pattern classification. Either these, or some other related quantity 
+(such as the output normalized by the prior probability of the corresponding class) may be 
+used in a Viterbi search to determine the best time-warped succession of states (speech 
+sounds) to explain the observed speech measurements. This hybrid approach (MLP 
+to estimate probabilities, HMM to incorporate them to recognize continuous speech as 
+a succession of words) has the potential of exploiting the interpolating capabilities of 
+MLPs while using a Dynamic Time Warping (DTW) procedure to capture the dynamics 
+of speech. 
+However, to achieve good performance at the word level, the following modifications of 
+this basic scheme were necessary: 
+MLP training methods - a new cross-validation [Stones, 1977] training algorithm 
+was designed in which the stopping criterion was based on performance for an 
+independent validation set [Morgan & Bourlard, 1990]. In other words, training 
+was stopped when performance on a second set of data began going down, and not 
+when mining error leveled off. This greatly improved generalization, which could 
+be further tested on a third independent validation set. 
+188 Bourlard and Morgan 
+probability estimation from the MLP outputs - In the original scheme [Bourlard 
+& Wellekens, 1989], MLP outputs were used as MAP probabilities for the HMM 
+directly. While this helped frame performance, it hurt word performance. This 
+may have been due at least partly to a mismatch between the relative frequency 
+of phonemes in the training sets and test (word recognition) sets. Division by 
+the prior class probabilities as estimated from the training set removed this effect 
+of the priors on the DTW. This led to a small decrease in frame classification 
+performance, but a large (sometimes 10 - 20%) improvement in word recognition 
+rates (see Table I and accompanying description). 
+word transition costs for the underlying HMM - word transition penalties had to be 
+increased for larger contextual windows to avoid a large number of insertions; see 
+Section 4. This is shown to be equivalent to keeping the same word transition cost 
+but scaling the log probabilities down by a number which reflected the dependence 
+of neighboring frames. A reasonable value for this can be determined from recog- 
+nition on a small number of sentences (e.g., 50), choosing a value which results in 
+insertions at most equal to the number of deletions. 
+segmentation of training data - much as with HMM systems, an iterative procedure 
+was required to time align the training labels in a manner that was statistically 
+consistent with the recognition methods used. In our most recent experiments, we 
+segmented the data using an iterative Viterbi alignment starting from a segmentation 
+based on average phoneme durations, and terminated at the segmentation which 
+led to the best performance on an independent test set. For one of our speakers, 
+we had available a more accurate frame labeling (produced by an automatic but 
+more complex procedure [Aubert, 1987]) to use as a start point for the iteration, 
+which led to even better performance. 
+3 EXPERIMENTAL APPROACH 
+We have been using a speaker-dependent German database (available from our collabora- 
+tion with Philips) called SPICOS [Ney & Noll, 1988]. The speech had been sampled at a 
+rate of 16 kHz, and 30 points of smoothed, mel-scaled logarithmic spectra (over bands 
+from 200 to 6400 Hz) were calculated every 10-ms from a 512-point FFT over a 25-ms 
+window. For our experiments, the mel spectrum and the energy were vector-quantized 
+to pointers into a single speaker-dependent table of prototypes. 
+Two independent sets of vocabularies for training and test are used. The training data- 
+set consists of two sessions of 100 German sentences per speaker. These sentences 
+are representative of the phoneme distribution in the German language and include 2430 
+phonemes in each session. The two sessions of 100 sentences are phonetically segmented 
+on the basis of 50 phonemes, using a fully automated procedure [Aubert, 1987]. The 
+test set consists of one session of 200 sentences per speaker. The recognition vocabulary 
+contains 918 words (including the silence word) and the overlap between training and 
+recognition is 51 words. Most of the latter are articles, prepositions and other structural 
+words. Thus, the training and test are essentially vocabulary-independent. Initial tests 
+A Continuous Speech Recognition System Embedding MLP into HMM 189 
+used sentences from a single male speaker. The final algorithms were tested on an 
+additional male and female speaker. 
+The acoustic vectors were coded on the basis of 132 prototype vectors by a simple binary 
+representation with only one bit 'on'. Multiple frames were used as input to provide 
+context to the network. In the experiments reported here, the context was 9 frames, while 
+the size of the output layer was kept fixed at 50 units, corresponding to the 50 phonemes 
+to be recognized. The input field contained 9 x 132 = 1188 units, and the total number of 
+possible inputs was thus equal to 1329. There were 26767 training patterns (from the first 
+training session of 100 sentences) and 26702 independent test patterns (from the second 
+training session of 100 sentences). Of course, this represented only a very small fraction 
+of the possible inputs, and generalization was thus potentially difficult. Training was done 
+by the classical error-back propagation algorithm, starting by minimizing an entropy 
+criterion, and then the standard least-mean-square error criterion. In each iteration, the 
+complete training set was presented, and the parameters were updated after each training 
+pattern. To avoid overtraining of the MLP, improvement on a cross-validation set was 
+checked after each iteration and if classification was decreasing, the adaptation parameter 
+of the gradient procedure was reduced, otherwise it was kept constant. Later on this 
+approach was systematized by splitting the data in three parts: one for training, one for 
+cross-validation and a third one absolutely independent of the training procedure for the 
+actual validation. No significant difference was observed between classification rates for 
+the last two data sets. 
+I

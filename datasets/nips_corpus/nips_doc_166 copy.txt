@@ -1,0 +1,151 @@
+323 
+NEURAL NETWORK RECOGNIZER FOR 
+HAND-WRITTEN ZIP CODE DIGITS 
+J. S. Denker, W. R. Gardner, H. P. Graf, D. Henderson, R. E. Howard, 
+W. Hubbard, L. D. Jackel, H. S. Baird, and I. Guyon 
+AT&T Bell Laboratories 
+Holmdel, New Jersey 07733 
+ABSTRACT 
+This paper describes the construction of a system that recognizes hand-printed 
+digits, using a combination of classical techniques and neural-net methods. The 
+system has been trained and tested on real-world data, derived from zipcodes seen 
+on actual U.S. Mail. The system rejects a small percentage of the examples as 
+unclassifiable, and achieves a very low error rate on the remaining examples. The 
+system compares favorably with other state-of-the art recognizers. While some of 
+the methods are specific to this task, it is hoped that many of the techniques will 
+be applicable to a wide range of recognition tasks. 
+MOTIVATION 
+The problem of recognizing hand-written digits is of enormous practical and theo- 
+retical interest [Kahan, Pavlidis, and Baird 1987; Watanabe 1985; Pavlidis 1982]. 
+This project has forced us to formulate and deal with a number of questions rang- 
+ing from the basic psychophysics of human perception to analog integrated circuit 
+design. 
+This is a topic where neural net techniques are expected to be relevant, since 
+the task requires closely mimicking human performance, requires massively parallel 
+processing, involves confident conclusions based on low precision data, and requires 
+learning from examples. It is also a task that can benefit from the high throughput 
+potential of neural network hardware. 
+Many different techniques were needed. This motivated us to compare various clas- 
+sical techniques as well as modern neural-net techniques. This provided valuable 
+information about the strengths, weaknesses, and range of applicability of the nu- 
+merous methods. 
+The overall task is extremely complex, so we have broken it down into a great 
+number of simpler steps. Broadly speaking, the recognizer is divided into the pre- 
+processor and the classifier. The two main ideas behind the preprocessor are (1) to 
+remove meaningless variations (i.e. noise) and (2) to capture meaningful variations 
+(i.e. salient features). 
+Most of the results reported in this paper are based on a collection of digits taken 
+from hand-written Zip Codes that appeared on real U.S. Mail passing through the 
+324 Denker, et al 
+Figure 1: Typical Data 
+Buffalo, N.Y. poet office. Details will be discussed elsewhere [Denker et al., 1989]. 
+Examples of such images are shown in figure 1. The digits were written by many 
+different people, using a great variety of writing styles and instruments, with widely 
+varying levels of care. 
+Important parts of the task can be handled nicely by our lab's custom analog 
+neural network VLSI chip [Graf et al., 1987; Graf  deVegvar, 1987], allowing us 
+to perform the necessary computations in a reasonable time. Also, since the chip 
+was not designed with image processing in mind, this provided a good test of the 
+chips' versatility. 
+THE PREPROCESSOR 
+Acquisition 
+The first step is to create a digital version of the image. One must find where on 
+the envelope the zipcode is, which is a hard task in itself [Wang and Srihari 1988]. 
+One must also separate each digit from its neighbors. This would be a relatively 
+simple task if we could assume that a character is contiguous and is disconnected 
+from its neighbors, but neither of these assumptions holds in practice. It is also 
+common to find that there are meaningless stray marks in the image. 
+Acquisition, binarization, location, and preliminary segmentation were performed 
+by Postal Service contractors. In some images there were extraneous marks, so we 
+developed some simple heuristics to remove them while preserving, in most cases, 
+all segments of a split character. 
+Scaling and Deskewlng 
+At this point, the size of the image is typically 40 x 60 pixels, although the scaling 
+routine can accept images that are arbitrarily large, or as small as 5 x 13 pixels. A 
+translation and scale factor are then applied to make the image fit in a rectangle 
+Neural Network Recognizer for Hand-Written Zip Code Digits 325 
+20 x 32 pixels. The character is centered in the rectangle, and just touches either 
+the horizontal or vertical edges, whichever way fits. It is clear that any extraneous 
+marks must be removed before this step, lest the good part of the image be radically 
+compressed in order to make room for some wild mark. The scaling routine changes 
+the horizontal and vertical size of the image by the same factor, so the aspect ratio 
+of the character is preserved. 
+As shown in figure 1, images can differ greatly in the amount of skew, yet be 
+considered the same digit. This is an extremely significant noise source. To remove 
+this noise, we use the methods of [Casey 1970]; see also [Naylor 1971]. That is, we 
+calculate the XY and YY moments of the image, and apply a linear transformation 
+that drives the XY moment to zero. The transformation is a pure shear, not a 
+rotation, because we find that rotation is much less common than skew. 
+The operations of scaling and deskewing are performed in a single step. This yields 
+a speed advantage, and, more importantly, eliminates the quantization noise that 
+would be introduced by storing the intermediate images as pixel maps, were the 
+calculation carried out in separate steps. 
+Skeletonization 
+For the task of digit recognition, the width of the pen used to make the characters is 
+completely meaningless, and is highly variable. It is important to remove this noise 
+source. By deleting pixels at the boundaries of thick strokes. After a few iterations 
+of this process, each stroke will be as thin as possible. The idea is to remove as 
+many pixels as possible without breaking the connectivity. Connectivity is based 
+on the 8 nearest neighbors. 
+This can be formulated as a pattern matching problem -- we search the image 
+looking for situations in which a pixel should be deleted. The decisions can be 
+expressed as a convolution, using a rather small kernel, since the identical decision 
+process is repeated for each location in the image, and the decision depends on the 
+configuration of the pixel's nearest and next-nearest neighbors. 
+Figure 2 shows an example of a character before (e) and after (f) skeletonization. 
+It also shows some of the templates we use for skeletonization, together with an 
+indication of where (in the given image) that template was active. To visualize the 
+convolution process, imagine taking a template, laying it over the image in each 
+possible place, and asking if the template is active in that place. (The template 
+is the convolution kernel; we use the two terms practically interchangeably.) The 
+portrayal of the template uses the following code: Black indicates that if the cor- 
+responding pixel in the image is ON, it will contribute +1 to the activity level of 
+this template. Similarly, gray indicates that the corresponding pixel, if ON, will 
+contribute -5, reducing the activity of this template. The rest of the pixels don't 
+matter. If the net activity level exceeds a predetermined threshold, the template 
+is considered active at this location. The outputs of all the skeletonizer templates 
+326 Denker, et al 
+b) 
+c) 
+d) 
+�) 
+Figure 2: Skeletonization 
+are combined in a giant logical OR, that is, whenever any template is active, we 
+conclude that the pixel presently under the center of the template should be deleted. 
+The skeletonization computation involves six nested loops: 
+for each iteration I 
+for all X in the image (horizontal coordinate) 
+for all Y in the image (vertical coordinate) 
+for all T in the set of template shapes 
+for all P in the template (horizontal) 
+for all Q in the template (vertical) 
+compare image element(X +P, Y+Q) 
+with template(T) element(P, Q) 
+The inner three loops (the loops over T, P, and Q) are performed in parallel, in 
+a single cycle of our special-purpose chip. The outer three loops (I, X, and Y) 
+are performed serially, calling the chip repeatedly. The X and Y loops could be 
+performed in parallel with no change in the algorithms. The additional parallelism 
+would require a proportionate increase in hardware. 
+Neural Network Recognizer for Hand-Written Zip Code Digits 327 
+The purpose of template a is to detect pixels at the top edge of a thick horizontal 
+line. The three should be OFF (light grey shade in figure 2) template elements 
+enforce the requirement that this should be a boundary, while the three should be 
+ON (solid black shade in figure 2) template elements enforce the requirement that 
+the line be at least two pixels wide. 
+Template b is analogous to template a, but rotated 90 degrees. Its purpose is to 
+detect pixels at the left edge of a thick vertical line. 
+Template c is similar to, but not exactly the same as, template a rotated 180 degrees. 
+The distinction is necessary because all templates are applied in parallel. A stroke 
+that is only two pixels thick .must not be attacked from both sides at once, lest it be 
+removed entirely, changing the connectivity of the image. Previous convolutional 
+line-thinning schemes [Naccache 1984] used templates of size 3 x 3, and therefore 
+had to use several serial sub-stages. For parallel operation at least 3 x 4 kernels are 
+needed, and 5 x 5 templates are convenient, powerful, and flexible. 
+Feature Maps 
+Having removed the main sources of meaningless variation, we turn to the task of 
+extracting the meaningful information. It is known from biological studies [Hubel 
+and Wiesel 1962] that the human vision system is sensitive to certain features that 
+occur in images, particularly lines and the ends of lines. We therefore designed 
+detectors for such features. Previous artificial recognizers [Watanabe 1985] have 
+used similar feature extractors. 
+Once again we use a convolutional method for locating the features of interest -

@@ -1,0 +1,141 @@
+Instance-Based State Identification for 
+Reinforcement Learning 
+R. Andrew McCallum 
+Department of Computer Science 
+University of Rochester 
+Rochester, NY 1462%0226 
+mccallumcs. rochester. edu 
+Abstract 
+This paper presents instance-based state identification, an approach 
+to reinforcement learning and hidden state that builds disambiguat- 
+ing amounts of short-term memory on-line, and also learns with an 
+order of magnitude fewer training steps than several previous ap- 
+proaches. Inspired by a key similarity between learning with hidden 
+state and learning in continuous geometrical spaces, this approach 
+uses instance-based (or memory-based) learning, a method that 
+has worked well in continuous spaces. 
+I BACKGROUND AND RELATED WORK 
+When a robot's next course of action depends on information that is hidden from 
+the sensors because of problems such as occlusion, restricted range, bounded field 
+of view and limited attention, the robot suffers from hidden state. More formally, 
+we say a reinforcement learning agent suffers from the hidden state problem if the 
+agent's state representation is non-Markovian with respect to actions and utility. 
+The hidden state problem arises as a case of perceptual aliasing: the mapping be- 
+tween states of the world and sensations of the agent is not one-to-one [Whitehead, 
+1992]. If the agent's perceptual system produces the same outputs for two world 
+states in which different actions are required, and if the agent's state representation 
+consists only of its percepts, then the agent will fail to choose correct actions. Note 
+that even if an agent's state representation includes some internal state beyond its 
+378 R. Andrew McCaHum 
+immediate percepts, the agent can still suffer from hidden state if it does not keep 
+enough internal state to uncover the non-Markovian-ness of its environment. 
+One solution to the hidden state problem is simply to avoid passing through the 
+aliased states. This is the approach taken in Whitehead's Lion algorithm [White- 
+head, 1992]. Whenever the agent finds a state that delivers inconsistent reward, it 
+sets that state's utility so low that the policy will never visit it again. The success 
+of this algorithm depends on a deterministic world and on the existence of a path 
+to the goal that consists of only unaliased states. 
+Other solutions do not avoid aliased states, but do as best they can given a non- 
+Markovian state representation [Littman, 1994; Singh et al., 1994; Jaakkola et al., 
+1995]. They involve either learning deterministic policies that execute incorrect 
+actions in some aliased states, or learning stochastic policies with action choice 
+probabilities matching the proportions of the different underlying aliased world 
+states. These approaches do not depend on a path of unaliased states, but they 
+have other limitations: when faced with many aliased states, a stochastic policy 
+degenerates into random walk; when faced with potentially harmful results from 
+incorrect actions, deterministically incorrect or probabilistically incorrect action 
+choice may prove too dangerous; and when faced with performance-critical tasks, 
+inefficiency that is proportional to the amount of aliasing may be unacceptable. 
+The most robust solution to the hidden state problem is to augment the agent's 
+state representation on-line so as to disambiguate the aliased states. State identi- 
+fication techniques uncover the hidden state information--that is, they make the 
+agent's internal state space MarkovJan. This transformation from an imperfect state 
+information model to a perfect state information model has been formalized in the 
+decision and control literature, and involves adding previous percepts and actions to 
+the definition of agent internal state [Bertsekas and Shreve, 1978]. By augmenting 
+the agent's perception with history information short-term memory of past per- 
+cepts, actions and rewards--the agent can distinguish perceptually aliased states, 
+and can then reliably choose correct actions from them. 
+Predefined, fixed memory representations such as order n Markov models (also 
+known as constant-sized perception windows, linear traces or tapped-delay lines) 
+are often undesirable. When the length of the window is more than needed, they 
+exponentially increase the number of internal states for which a policy must be 
+stored and learned; when the length of the memory is less than needed, the agent 
+reverts to the disadvantages of undistinguished hidden state. Even if the agent de- 
+signer understands the task well enough to know its maximal memory requirements, 
+the agent is at a disadvantage with constant-sized windows because, for most tasks, 
+different amounts of memory are needed at different steps of the task. 
+The on-line memory creation approach has been adopted in several reinforcement 
+learning algorithms. The Perceptual Distinctions Approach [Chrisman, 1992] and 
+Utile Distinction Memory [McCallum, 1993] are both based on splitting states of a 
+finite state machine by doing off-line analysis of statistics gathered over many steps. 
+Recurrent-Q [Lin, 1993] is based on training recurrent neural networks. Indexed 
+Memory [Teller, 1994] uses genetic programming to evolve agents that use load and 
+store instructions on a register bank. A chief disadvantage of all these techniques 
+is that they require a very large number of steps for training. 
+Instance-Based State Identification for Reinforcement Learning 379 
+2 INSTANCE-BASED STATE IDENTIFICATION 
+This paper advocates an alternate solution to the hidden state problem we term 
+instance-based state identification. The approach was inspired by the successes of 
+instance-based (also called memory-based) methods for learning in continuous 
+perception spaces, (i.e. [Atkeson, 1992; Moore, 1992]). 
+The application of instance-based learning to short-term memory for hidden state is 
+driven by the important insight that learning in continuous spaces and learning with 
+hidden state have a crucial feature in common: they both begin learning without 
+knowing the final granularity of the agent's state space. The former learns which 
+regions of continuous input space can be represented uniformly and which areas 
+must be finely divided among many states. The later learns which percepts can 
+be represented uniformly because they uniquely identify a course of action with- 
+out the need for memory, and which percepts must be divided among many states 
+each with their own detailed history to distinguish them from other perceptually 
+aliased world states. The first approach works with a continuous geometrical input 
+space, the second works with a percept-action-reward sequence space, (or his- 
+tory space). Large continuous regions correspond to less-specified, small memories; 
+small continuous regions correspond to more-specified, large memories. 
+Furthermore, learning in continuous spaces and sequence spaces both have a lot to 
+gain from instance-based methods. In situations where the state space granularity 
+is unknown, it is especially useful to memorize the raw previous experiences. If 
+the agent tries to fit experience to its current, flawed state space granularity, it is 
+bound to lose information by attributing experience to the wrong states. Experi- 
+ence attributed to the wrong state turns to garbage and is wasted. When faced 
+with an evolving state space, keeping raw previous experience is the path of least 
+commitment, and thus the most cautious about losing information. 
+3 NEAREST SEQUENCE MEMORY 
+There are many possible instance-based techniques to choose from, but we wanted 
+to keep the first application simple. With that in mind, this initial algorithm is 
+based on k-nearest neighbor. We call it Nearest Sequence Memory, (NSM). It bears 
+emphasizing that this algorithm is the most straightforward, simple, almost naive 
+combination of instance-based methods and history sequences that one could think 
+of; there are still more sophisticated instance-based methods to try. The surprising 
+result is that such a simple technique works as well as it does. 
+Any application of k-nearest neighbor consists of three parts: 1) recording each 
+experience, 2) using some distance metric to find neighbors of the current query 
+point, and 3) extracting output values from those neighbors. We apply these three 
+parts to action-percept-reward sequences and reinforcement learning by Q-learning 
+[Watkins, 1989] as follows: 
+For each step the agent makes in the world, it records the action, percept 
+and reward by adding a new state to a single, long chain of states. Thus, 
+each state in the chain contains a snapshot of immediate experience; and 
+all the experiences are laid out in a time-connected history chain. 
+380 R. Andrew McCallum 
+Learning in a Geometric Space 
+k-nearest neighbor, k = 3 
+Learning in a Sequence Space 
+match length 
+k-nearest neighbor, k = 3  
+0 0 0 1 4 0 0 1 3 0 1 2 0 1 3 0 1  
+action, percept, reward 
+Figure 1: A continuous space compared with a sequence space. In ech case, the 
+query point is indicated with a gray cross, and the three nearest neighbors are 
+indicated with gray shadows. In a geometric space, the neighborhood metric is 
+defined by Euclidean distance. In a sequence space, the neighborhood metric is 
+determined by sequence match length--the number of preceding states that match 
+the states preceding the query point. 
+2. When the agent is about to choose an action, it finds states considered to 
+be similar by looking in its state chain for states with histories similar to 
+the current situation. The longer a state's string of previous experiences 
+matches the agent's most recent experiences, the more likely the state rep- 
+resents where the agent is now. 
+3. Using the states, the agent obtains Q-values by averaging together the 
+expected future reward values associated with the k nearest states for each 
+action. The agent then chooses the action with the highe

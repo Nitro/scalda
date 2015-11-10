@@ -1,0 +1,150 @@
+Temporal Difference Learning of 
+Position Evaluation in the Game of Go 
+Nicol N. Schraudolph Peter Dayan Terrence J. Sejnowski 
+schraudosalk. edu dayansalk. edu t errysalk. edu 
+Computational Neurobiology Laboratory 
+The Salk Institute for Biological Studies 
+San Diego, CA 92186-5800 
+Abstract 
+The game of Go has a high branching factor that defeats the tree 
+search approach used in computer chess, and long-range spa- 
+tiotemporal interactions that make position evaluation extremely 
+difficult. Development of conventional Go programs is hampered 
+by their knowledge-intensive nature. We demonstrate a viable 
+alternative by training networks to evaluate Go positions via tem- 
+poral difference (TD) learning. 
+Our approach is based on network architectures that reflect the 
+spatial organization of both input and reinforcement signals on 
+the Go board, and training protocols that provide exposure to 
+competent (though unlabelled) play. These techniques yield far 
+better performance than undifferentiated networks trained by self- 
+play alone. A network with less than 500 weights learned within 
+3,000 games of 9x9 Go a position evaluation function that enables 
+a primitive one-ply search to defeat a commercial Go program at 
+a low playing level. 
+1 INTRODUCTION 
+Go was developed three to four millenia ago in China; it is the oldest and one of the 
+most popular board games in the world. Like chess, it is a deterministic, perfect 
+information, zero-sum game of strategy between two players. They alternate in 
+817 
+818 Schraudolph, Dayan, and Sejnowski 
+placing black and white stones on the intersections of a 19x19 grid (smaller for 
+beginners) with the objective of surrounding more board area (territory) with their 
+stones than the opponent. Adjacent stones of the same color form groups; an empty 
+intersection adjacent to a group is called a liberty of that group. A group is captured 
+and removed from the board when its last liberty is occupied by the opponent. To 
+prevent loops, it is illegal to make a move which recreates a prior board position. A 
+player may pass at any time; the game ends when both players pass in succession. 
+Unlike most other games of strateg35 Go has remained an elusive skill for computers 
+to acquire -- indeed it has been recognized as a grand challenge of Artificial 
+Intelligence (Rivest, 1993). The game tree search approach used extensively in 
+computer chess is infeasible: the game tree of Go has an average branching factor 
+of around 200, but even beginners may routinely look ahead up to 60 plies in 
+some situations. Humans appear to rely mostly on static evaluation of board 
+positions, aided by highly selective yet deep local lookahead. Conventional Go 
+programs are carefully (and protractedly) tuned expert systems (Fotland, 1993). 
+They are fundamentally limited by their need for human assistance in compiling 
+and integrating domain knowledge, and still play barely above the level of a 
+human beginner -- a machine learning approach may thus offer considerable 
+advantages. (Bragmann, 1993) has shown that a knowledge-free optimization 
+approach to Go can work in principle: he obtained respectable (though inefficient) 
+play by selecting moves through simulated annealing (Kirkpatrick et al., 1983) over 
+possible continuations of the game. 
+The pattern recognition component inherent in Go is amenable to connectionist 
+methods. Supervised backpropagation networks have been applied to the game 
+(Stoutamire, 1991; Enderton, 1991) but face a bottleneck in the scarcity of hand- 
+labelled training data. We propose an alternative approach based on the TD(,X) 
+predictive learning algorithm (Sutton, 1984; Sutton, 1988; Barto et al., 1983), which 
+has been successfully applied to the game of backgammon by (Tesauro, 1992). 
+His TD-Gammon program uses a backpropagation network to map preselected 
+features of the board position to an output reflecting the probability that the player 
+to move would win. It was trained by TD(0) while playing only itself, yet learned 
+an evaluation function that coupled with a full two-ply lookahead to pick the 
+estimated best move -- made it competitive with the best human players in the 
+world (Robertie, 1992; Tesauro, 1994). 
+In an early experiment we investigated a straightforward adaptation of Tesauro's 
+approach to the Go domain. We trained a fully connected 82-40-1 backpropagation 
+network by randomized  self-play on a 9x9 Go board (a standard didactic size for 
+humans). The output learned to predict the margin of victory or defeat for black. 
+This undifferentiated network did learn to squeak past Wally, a weak public domain 
+program (Newman, 1988), but it took 659,000 games of training to do so. We have 
+found that the efficiency of learning can be vastly improved through appropriately 
+structured network architectures and training strategies, and these are the focus of 
+the next two sections. 
+ Unlike backgammon, Go is a deterministic game, so we had to generate moves stochas- 
+tically to ensure sufficient exploration of the state space. This was done by Gibbs sam- 
+pling (Geman and Geman, 1984) over values obtained from single-ply search, annealing the 
+temperature parameter from random towards best-predicted play. 
+Temporal Difference Learning of Position Evaluation in the Game of Go 819 
+. evaluation 
+reinforcement map -- 
+symmetry 
+g rou ps 
+processed 
+featu res 
+constraint satisfaction )  
+f raw feature maps 
+.'1 
+ Go board 
+connectivity map 
+symmetry 
+groups   ''' 
+Figure 1' A modular network architecture that takes advantage of board symme- 
+tries, translation invariance and localized reinforcement to evaluate Go positions. 
+Also shown is the planned connectivity prediction mechanism (see Discussion). 
+2 NETWORK ARCHITECTURE 
+One of the particular advantages of Go for predictive learning is that there is much 
+richer information available at the end of the game than just who won. Unlike 
+chess, checkers or backgammon, in which pieces are taken away from the board 
+until there are few or none left, Go stones generally remain where they are placed. 
+This makes the final state of the board richly informative with respect to the course 
+of play; indeed the game is scored by summing contributions from each point on 
+the board. We make this spatial credit assignment accessible to the network by 
+having it predict the fate of every point on the board rather than just the overall 
+score, and evaluate whole positions accordingly. This bears some similarity with 
+the Successor Representation (Dayan, 1993) which also integrates over vector rather 
+than scalar destinies. ' 
+Given the knowledge-based approach of existing Go programs, there is an embar- 
+rassment of input features that one might adopt for Go: Wally already uses about 
+30 of them, stronger programs disproportionately more. In order to demonstrate 
+reinforcement learning as a viable alternative to the conventional approach, how- 
+ever, we require our networks to learn whatever set of features they might need. 
+The complexity of this task can be significantly reduced by exploiting a number 
+2 Sharing information within the network across multiple outputs restricts us to ,X = 0 
+for efficient implementation of TD(,X). Note that although (Tesauro, 1992) did not have this 
+constraint, he nevertheless found ,X = 0 to be optimal. 
+820 Schraudolph, Dayan, and Sejnowski 
+of constraints that hold a priori in this domain. Specificall) patterns of Go stones 
+retain their properties under color reversal, reflection and rotation of the board, 
+and -- modulo the considerable influence of the board edges -- translation. Each 
+of these invariances is reflected in our network architecture: 
+Color reversal invariance implies that changing the color of every stone in a Go 
+position, and the player whose turn it is to move, yields an equivalent position from 
+the other player's perspective. We build this constraint directly into our networks 
+by using antisymmetric input values (+1 for black, -1 for white) and squashing 
+functions throughout, and negating the bias input when it is white's turn to move. 
+Go positions are also invariant with respect to the eightfold (reflection x rotation) 
+symmetry of the square. We provided mechanisms for constraining the network 
+to obey this invariance by appropriate weight sharing and summing of derivatives 
+(Le Cun et al., 1989). Although this is clearly beneficial during the evaluation of 
+the network against its opponents, it appears to impede the course of learning? 
+To account for translation invariance we use convolution with a weight kernel 
+rather than multiplication by a weight matrix as the basic mapping operation in 
+our network, whose layers are thus feature maps produced by scanning a fixed 
+receptive field across the input. One particular advantage of this technique is the 
+easy transfer of learned weight kernels to different Go board sizes. 
+It must be noted, however, that Go is not translation-invariant: the edge of the board 
+not only affects local play but modulates other aspects of the game, and indeed 
+forms the basis of opening strategy. We currently account for this by allowing each 
+node in our network to have its own bias weight, giving it one degree of freedom 
+from its neighbors. This enables the network to encode absolute position at a 
+modest increse in the number of adjustable parameters. Furthermore, we provide 
+additional redundancy around the board edges by selective use of convolution 
+kernels twice as wide as the input. 
+Figure 1 illustrates the modular architecture suggested by these deliberations. In 
+the experiments described below we implement all the features shown except for 
+the connectivity map and lateral constraint satisfaction, which are the subject of 
+future work. 
+3 TRAINING STRATEGIES 
+Temporal difference learning teaches the network to predict the consequences of 
+following particular strategies on the basis of the play they pr

@@ -1,0 +1,163 @@
+Hippocampal Model of Rat Spatial Abilities 
+Using Temporal Difference Learning 
+David J Foster* 
+Centre for Neuroscience 
+Edinburgh University 
+Richard GM Morris 
+Centre for Neuroscience 
+Edinburgh University 
+Peter Dayan 
+E25-210, MIT 
+Cambridge, MA 02139 
+Abstract 
+We provide a model of the standard watermaze task, and of a more 
+challenging task involving novel platform locations, in which rats 
+exhibit one-trial learning after a few days of training. The model 
+uses hippocampal place cells to support reinforcement learning, 
+and also, in an integrated manner, to build and use allocentric 
+coordinates. 
+1 INTRODUCTION 
+Whilst it has long been known both that the hippocampus of the rat is needed for 
+normal performance on spatial tasks la' 11 and that certain cells in the hippocampus 
+exhibit place-related firing, 2 it has not been clear how place cells are actually used 
+for navigation. One of the principal conceptual problems has been understanding 
+how the hippocampus could specify or learn paths to goals when spatially tuned 
+cells in the hippocampus respond only on the basis of the rat's current location. 
+This work uses recent ideas from reinforcement learning to solve this problem in 
+the context of two rodent spatial learning results. 
+Reference memory in the watermaze 11 (RMW) has been a key task demonstrating 
+the importance of the hippocampus for spatial learning. On each trial, the rat is 
+placed in a circular pool of cloudy water, the only escape from which is a platform 
+which is hidden (below the water surface) but which remains in a constant position. 
+A random choice of starting position is used for each trial. Rats take asymptotically 
+short paths after approximately 10 trials (see figure 1 a). Delayed match-to-place 
+(DMP) learning is a refined version in which the platform's location is changed on 
+each day. Figure lb shows escape latencies for rats given four trials per day for nine 
+days, with the platform in a novel position on each day. On early days, acquisition 
+*Crichton Street, Edinburgh EH8 9LE, United Kingdom. Funded by Edin. Univ. 
+Holdsworth Scholarship, the McDonnell-Pew foundation and NSF grant IBN-9634339. 
+Email: djfcfn.ed.ac.uk 
+146 D. J. Foster, R. G. M. Morris and P Dayan 
+a 
+ 30 
+2O 
+o  
+0 la'y'l' Day2 
+Figure 1: a) Latencies for rats on the reference memory in the watermaze (RMW) 
+task (N=8). b) Latencies for rats on the Delayed Match-to-Place (DMP) task (N=62). 
+is gradual but on later days, rats show one-trial learning, that is, near asymptotic 
+performance on the second trial to a novel platform position. 
+The RMW task has been extensively modelled. 6, 4, 5, 20 By contrast, the DMP task 
+is new and computationally more challenging. It is solved here by integrating a 
+standard actor-critic reinforcement learning system 2, 7 which guarantees that the 
+rat will be competent to perform well in arbitrary mazes, with a system that learns 
+spatial coordinates in the maze. Temporal difference learning 17 (TD) is used for actor, 
+critic and coordinate learning. TD learning is attractive because of its generality for 
+arbitrary Markov decision problems and the fact that reward systems in vertebrates 
+appear to instantiate it. TM 
+2 THE MODEL 
+The model comprises two distinct networks (figure 2): the actor-critic network and 
+a coordinate learning network. The contribution of the hippocampus, for both 
+networks, is to provide a state-space representation in the form of place cell basis 
+functions. Note that only the activities of place cells are required, by contrast with 
+decoding schemes which require detailed information about each place cell. 4 
+COORDINATE SYSTEM 
+ACyOsR'CCMTIC f'  Remembered 
+(' ,J  ! Goal coordinates 
+  VECTOR COMPUTATION, 
+A I ///// Coordinate 
+e.rnon 
+Figure 2: Model diagram showing the interaction between actor-critic and coordi- 
+nate system components. 
+Hippocarnpat Model of Rat Spatial Abilities Using TD Learning 147 
+2.1 Actor-Critic Learning 
+Place cells are modelled as being tuned to location. At position p, place cell 
+i has an output given by fi(p) = exp{-JJp - si[[2/2a2), where si is the place 
+field centre, and cr = 0.1 for all place fields. The critic learns a value function 
+I?(p) = -]i wifi(p) which comes to represent the distance of p from the goal, using 
+the TD rule Aw oc 6 t fi(pt), where 
+6 = r(pt,pt+) + 7(pt+) _ (pt) 
+O) 
+is the TD error, pt is position at time t, and the reward r(p t , pt+l) is 1 for any 
+move onto the platform, and 0 otherwise. In a slight alteration of the original rule, 
+the value V(p) is set to zero when p is at the goal, thus ensuring that the total 
+future rewards for moving onto the goal will be exactly 1. Such a modification 
+improves stability in the case of TD learning with overlapping basis functions. 
+The discount factor, 7, was set to 0.99. Simultaneously the rat refines a policy, 
+which is represented by eight action cells. Each action cell (aj in figure 2) receives 
+a parameterised input at any position p: aj (p) = Y]i qjifi(p). An action is chosen 
+stochastically with probabilities given by P(aj) = exp{2aj}/Y']k exp{2ak }. Action 
+weights are reinforced according to: 2 
+Aq., oc 6tfi(pt)gj(O t) 
+(2) 
+where gj (0 t) is a gaussian function of the difference between the head direction 
+0 t at time t and the preferred direction of the jth action cell. Figure 3 shows the 
+development of a policy over a few trials. 
+V(p) Trial 1 Trial 13 
+0.5 
+V(p) , Trial 5 V(p), 
+0.Sj . 0.51 
+0.5 0,5 
+0  0.5 0  0 
+0.5 
+-0.5 5 .5 . 
+-0.5 -0.5 
+Figure 3: The RMW task: the value function gradually disseminates information 
+about reward proximity to all regions of the environment. Policies and paths are 
+also shown. 
+There is no analytical guarantee for the convergence of TD learning with policy 
+adaptation. However our simulations show that the algorithm always converges 
+for the RMW task. In a simulated arena of diameter lm and with swimming speeds 
+of 20cm/s, the simulation matched the performance of the real rats very closely (see 
+figure 5). This demonstrates that TD-based reinforcement learning is adequately 
+fast to account for the learning performance of real animals. 
+148 D. Z Foster, R. G. M. Morris and P. Dayan 
+2.2 Coordinate Learning 
+Although the learning of a value function and policy is appropriate for finding 
+a fixed platform, the actor-critic model does not allow the transfer of knowledge 
+from the task defined by one goal position to that defined by any other; thus it 
+could not generate the sort of one-trial learning that is shown by rats on the DMP 
+task (see figure lb). This requires acquisition of some goal-independent knowledge 
+about space. A natural mechanism for this is the path integration or self-motion 
+system?O, l0 However, path integration presents two problems. First, since the rat 
+is put into the maze in a different position for each trial, how can it learn consistent 
+coordinates across the whole maze? Second, how can a general, powerful, but slow, 
+behavioral learning mechanism such as TD be integrated with a specific, limited, 
+but fast learning mechanism involving spatial coordinates? 
+Since TD critic leaming is based on enforcing consistency in estimates of future 
+reward, we can also use it to learn spatially consistent coordinates on the basis 
+of samples of self-motion. It is assumed that the rat has an allocentric frame of 
+reference. 8 The model learns parameterised estimates of the a: and t coordinates 
+of all positions p: a:(p) = -i wfi(P) and /(p) = -i wfi(p). Importantly, while 
+place cells were again critical in supporting spatial representation, they do not embody 
+a map of space. The coordinate functions, like the value function previously, have to 
+be learned. 
+As the simulated rat moves around, the coordinate weights {w[} are adjusted 
+according to: t 
+Awl cr (A: t + -(pt+l)_ -(pt)) E ,t-kfi(pk) (3) 
+k=l 
+where At is the self-motion estimate in the z direction. A similar update is applied 
+to {w}. In this case, the full TD(,X) algorithm was used (with ,X = 0.9); however 
+TD(0) could also have been used, taking slightly longer. Figure 4a shows the z and 
+y coordinates at early and late phases of learning. It is apparent that they rapidly 
+become quite accurate - this is an extremely easy task in an open field maze. 
+An important issue in the learning of coordinates is drift, since the coordinate 
+system receives no direct information about the location of the origin. It tums out 
+that the three controlling factors over the implicit origin are: the boundary of the 
+arena, the prior setting of the coordinate weights (in this case all were zero) and 
+the position and prior value of any absorbing area (in this case the platform). If the 
+coordinate system as a whole were to drift once coordinates have been established, 
+this would invalidate coordinates that have been remembered by the rat over long 
+periods. However, since the expected value of the prediction error at time steps 
+should be zero for any self-consistent coordinate mapping, such a mapping should 
+remain stable. This is demonstrated for a single rim: figure 4b shows the mean 
+value of coordinates z evolving over trials, with little drift after the first few trials. 
+We modeled the coordinate system as influencing the choice of swimming direction 
+in the manner of an abstract action. is The (internally specified) coordinates of the 
+most recent goal position are stored in short term memory and used, along with the 
+current coordinates, to calculate a vector heading. This vector heading is thrown 
+into the stochastic competition with the other possible actions, governed by a 
+single weight which changes in a similar manner to the other action weights (as in 
+equation 2, see also fig 4d), depending on the TD error, and on the angular proximity 
+of the current head direction to the coordinate direction. Thus, whether the the 
+coordinate-based direction is likely to be 

@@ -1,0 +1,150 @@
+A Comparison of Dynamic Reposing and 
+Tangent Distance for Drug Activity 
+Prediction 
+Thomas CI. Dietterich 
+Arris Pharmaceutical Corporation and Oregon State University 
+Corvallis, OR 97331-3202 
+Ajay N. Jain 
+Arris Pharmaceutical Corporation 
+385 Oyster Point Blvd., Suite 3 
+South San Francisco, CA 94080 
+Richard H. Lathrop and Tomas Lozano-Perez 
+Arris Pharmaceutical Corporation and MIT Artificial Intelligence Laboratory 
+545 Technology Square 
+Cambridge, MA 02139 
+Abstract 
+In drug activity prediction (as in handwritten character recogni- 
+tion), the features extracted to describe a training example depend 
+on the pose (location, orientation, etc.) of the example. In hand- 
+written character recognition, one of the best techniques for ad- 
+dressing this problem is the tangent distance method of Simard, 
+LeCun and Denker (1993). Jain, et al. (1993a; 1993b) introduce a 
+new technique--dynamic reposing--that also addresses this prob- 
+lem. Dynamic reposing iteratively learns a neural network and then 
+reposes the examples in an effort to maximize the predicted out- 
+put values. New models are trained and new poses computed until 
+models and poses converge. This paper compares dynamic reposing 
+to the tangent distance method on the task of predicting the bio- 
+logical activity of musk compounds. In a 20-fold cross-validation, 
+216 
+A Comparison of Dynamic Reposing and Tangent Distance for Drug Activity Prediction 217 
+dynamic reposing attains 91% correct compared to 79% for the 
+tangent distance method, 75% for a neural network with standard 
+poses, and 75% for the nearest neighbor method. 
+1 INTRODUCTION 
+The task of drug activity prediction is to predict the activity of proposed drug 
+compounds by learning from the observed activity of previously-synthesized drug 
+compounds. Accurate drug activity prediction can save substantial time and money 
+by focusing the efforts of chemists and biologists on the synthesis and testing of 
+compounds whose predicted activity is high. If the requirements for highly active 
+binding can be displayed in three dimensions, chemists can work from such displays 
+to design new compounds having high predicted activity. 
+Drug molecules usually act by binding to localized sites on large receptor molecules 
+or large enyzme molecules. One reasonable way to represent drug molecules is 
+to capture the location of their surface in the (fixed) frame of reference of the 
+(hypothesized) binding site. By learning constraints on the allowed location of 
+the molecular surface (and important charged regions on the surface), a learning 
+algorithm can form a model of the binding site that can yield accurate predictions 
+and support drug design. 
+The training data for drug activity prediction consists of molecules (described by 
+their structures, i.e., bond graphs) and measured binding activities. There are two 
+complications that make it difficult to learn binding site models from such data. 
+First, the bond graph does not uniquely determine the shape of the molecule. The 
+bond graph can be viewed as specifying a (possibly cyclic) kinematic chain which 
+may have several internal degrees of freedom (i.e., rotatable bonds). The confor- 
+mations that the graph can adopt, when it is embedded in 3-space, can be assigned 
+energies that depend on such intramolecular interactions as the Coulomb attraction, 
+the van der Waal's force, internal hydrogen bonds, and hydrophobic interactions. 
+Algorithms exist for searching through the space of conformations to find local 
+minima having low energy (these are called conformers). Even relatively rigid 
+molecules may have tens or even hundreds of low energy conformers. The training 
+data does not indicate which of these conformers is the bioactive one--that is, 
+the conformer that binds to the binding site and produces the observed binding 
+activity. 
+Second, even if the bioactive conformer were known, the features describing the 
+molecular surface--because they are measured in the frame of reference of the bind- 
+ing site--change as the molecule rotates and translates (rigidly) in space. 
+Hence, if we consider feature space, each training example (bond graph) induces a 
+family of 6-dimensional manifolds. Each manifold corresponds to one conformer as 
+it rotates and translates (6 degrees of freedom) in space. For a classification task, 
+a positive decision region for active molecules would be a region that intersects 
+at least one manifold of each active molecule and no manifolds of any inactive 
+molecules. Finding such a decision region is quite difficult, because the manifolds 
+are difficult to compute. 
+218 Dietterich, Jain, Lathrop, and Lozano-Perez 
+A similar feature manifold problem arises in handwritten character recognition. 
+There, the training examples are labelled handwritten digits, the features are ex- 
+tracted by taking a digitized gray-scale picture, and the feature values depend on 
+the rotation, translation, and zoom of the camera with respect to the character. 
+We can formalize this situation as follows. Let xi, i -- 1,..., N be training exam- 
+ples (i.e., bond graphs or physical handwritten digits), and let f(:ri) be the label 
+associated with :ri (i.e., the measured activity of the molecule or the identity of the 
+handwritten digit). Suppose we extract n real-valued features V(zi) to describe ob- 
+ject :ri and then employ, for example, a multilayer sigmoid network to approximate 
+f(:r) by ](x) = g(V(x)). This is the ordinary supervised learning task. 
+However, the feature manifold problem arises when the extracted features depend 
+on the pose of the example. We will define the pose to be a vector p of parameters 
+that describe, for example, the rotation, translation, and conformation of a molecule 
+or the rotation, translation, scale, and line thickness of a handwritten digit. In this 
+case, the feature vector V(x,p) depends on both the example and the pose. 
+Within the handwritten character recognition community, several techniques have 
+been developed for dealing with the feature manifold problem. Three existing ap- 
+proaches are standardized poses, the tangent-prop method, and the tangent-distance 
+method. Jain et al. (1993a, 1993b) describe a new method--dynamic reposing-- 
+that applies supervised learning simultaneously to discover the best pose p? of 
+each training example a:i and also to learn an approximation to the unknown func- 
+tion f(:r) as ](:ri) = g(V(:ri,p?)). In this paper, we briefly review each of these 
+methods and then compare the performance of standardized poses, tangent dis- 
+tance, and dynamic reposing to the problem of predicting the activity of musk 
+molecules. 
+2 
+FOUR APPROACHES TO THE FEATURE 
+MANIFOLD PROBLEM 
+2.1 STANDARDIZED POSES 
+The simplest approach is to select only one of the feature vectors V(:ri,pi) for each 
+example by constructing a function, Pi = ,S'(:ri), that computes a standard pose 
+for each object. Once Pi is chosen for each example, we have the usual super- 
+vised learning task--each training example has a unique feature vector, and we can 
+approximate f by ](:r)= g(V(x,,S'(:r))). 
+The difficulty is that S can be very hard to design. In optical character recognition, 
+S typically works by computing some pose-invariant properties (e.g., principal axes 
+of a circumscribing ellipse) of xi and then choosing pi to translate, rotate, and scale 
+:ri to give these properties standard values. Errors committed by OCR algorithms 
+can often be traced to errors in the S function, so that characters are incorrectly 
+positioned for recognition. 
+In drug activity prediction, the standardizing function S must guess which con- 
+former is the bioactive conformer. This is exceedingly difficult to do without addi- 
+tional information (e.g., 3-D atom coordinates of the molecule bound in the binding 
+A Comparison of Dynamic Reposing and Tangent Distance for Drug Activity Prediction 219 
+site as determined by x-ray crystallography). In addition, $ must determine the 
+orientation of the bioactive conformers within the binding site. This is also quite 
+difficult--the bioactive conformers must be mutually aligned so that shared poten- 
+tial chemical interactions (e.g., hydrogen bond donors) are superimposed. 
+2.2 TANGENT PROPAGATION 
+The tangent-prop approach (Simard, Victorri, LeCun, & Denker, 1992) also em- 
+ploys a standardizing function $, but it augments the learning procedure with the 
+constraint that the output of the learned function g(V(x,p)) should be invariant 
+with respect to slight changes in the poses of the examples: 
+Ilvr g(V(x,p))I:s<.ll = 0, 
+where [l' 11 indicates Euclidean norm. This constraint is incorporated by using the 
+left-hand-side as a regularizer during backpropagation training. 
+Tangent-prop can be viewed as a way of focusing the learning algorithm on those 
+input features and hidden-unit features that are invariant with respect to slight 
+changes in pose. Without the tangent-prop constraint, the learning algorithm 
+may identify features that accidentally discriminate between classes. However, 
+tangent-prop still assumes that the standard poses are correct. This is not a safe 
+assumption in drug activity prediction. 
+2.3 TANGENT DISTANCE 
+The tangent-distance approach (Simard, LeCun & Denker, 1993) is a variant of the 
+nearest-neighbor algorithm that addresses the feature manifold problem. Ideally, 
+the best distance metric to employ for the nearest-neighbor algorithm with feature 
+manifolds is to compute the manifold distance--the point of nearest approach 
+between two manifolds: 
+manifold-dist (x, x2) = min IIV(x,px) - v(2,p2)ll. 
+P 
+This is very expensive to compute, however, because the manifolds can have highly 
+nonlinear shapes in feature space, so the manifold distance can have many local 
+minima. 
+The tangent distance is an approximation to the manifold distance. It is computed 
+by approximating the manifold by a tangent plane in the vicinity of the standard 
+poses.

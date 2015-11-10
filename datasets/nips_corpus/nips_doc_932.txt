@@ -1,0 +1,176 @@
+Neural Network Ensembles, Cross 
+Validation, and Active Learning 
+Anders Krogh* 
+Nordita 
+Blegdamsvej 17 
+2100 Copenhagen, Denmark 
+Jesper Vedelsby 
+Electronics Institute, Building 349 
+Technical University of Denmark 
+2800 Lyngby, Denmark 
+Abstract 
+Learning of continuous valued functions using neural network en- 
+sembles (committees) can give improved accuracy, reliable estima- 
+tion of the generalization error, and active learning. The ambiguity 
+is defined as the variation of the output of ensemble members aver- 
+aged over unlabeled data, so it quantifies the disagreement among 
+the networks. It is discussed how to use the ambiguity in combina- 
+tion with cross-validation to give a reliable estimate of the ensemble 
+generalization error, and how this type of ensemble cross-validation 
+can sometimes improve performance. It is shown how to estimate 
+the optimal weights of the ensemble members using unlabeled data. 
+By a generalization of query by committee, it is finally shown how 
+the ambiguity can be used to select new training data to be labeled 
+in an active learning scheme. 
+1 INTRODUCTION 
+It is well known that a combination of many different predictors can improve predic- 
+tions. In the neural networks community ensembles of neural networks has been 
+investigated by several authors, see for instance [1, 2, 3]. Most often the networks 
+in the ensemble are trained individually and then their predictions are combined. 
+This combination is usually done by majority (in classification) or by simple aver- 
+aging (in regression), but one can also use a weighted combination of the networks. 
+*Author to whom correspondence should be addressed. Email: kroghnordita.dk 
+232 Anders Krogh, Jesper Vedelsby 
+At the workshop after the last NIPS conference (December, 1993) an entire session 
+was devoted to ensembles of neural networks (Putting it all together, chaired by 
+Michael Peptone). Many interesting papers were given, and it showed that this area 
+is getting a lot of attention. 
+A combination of the output of several networks (or other predictors) is only useful 
+if they disagree on some inputs. Clearly, there is no more information to be gained 
+from a million identical networks than there is from just one of them (see also 
+[2]). By quantifying the disagreement in the ensemble it turns out to be possible 
+to state this insight rigorously for an ensemble used for approximation of real- 
+valued functions (regression). The simple and beautiful expression that relates the 
+disagreement (called the ensemble ambiguity) and the generalization error is the 
+basis for this paper, so we will derive it with no further delay. 
+2 THE BIAS-VARIANCE TRADEOFF 
+Assume the task is to learn a function f from R N to R for which you have a sample 
+of p examples, (x,y), where y = f(x ) and t = 1,...,p. These examples 
+are assumed to be drawn randomly from the distribution p(x). Anything in the 
+following is easy to generalize to several output variables. 
+The ensemble consists of N networks and the output of network c on input x is 
+called V(x). A weighted ensemble average is denoted by a bar, like 
+V(x)-wV(x). (1) 
+This is the final output of the ensemble. We think of the weight w as our belief in 
+network a and therefore constrain the weights to be positive and sum to one. The 
+constraint on the sum is crucial for some of the following results. 
+The ambiguity on input x of a single member of the ensemble is defined as a(x) -- 
+(V'(x)- V(x)) 2. The ensemble ambiguity on input x is 
+(x) -- E waaa(x) = E wa(Va(x) -- V(X)) 2' (2) 
+It is simply the variance of the weighted ensemble around the weighed mean, and 
+it measures the disagreement among the networks on input x. The quadratic error 
+of network c and of the ensemble are 
+= 2 (3) 
+e(z) = (fix) - (z)) 2 (4) 
+respectively. Adding and subtracting fix) in (2) yields 
+= F. - 
+(after a little algebra using that the weights sum to one). 
+average of the individual errors (x)- ' we(x) this becomes 
+Calling the weighted 
+= V(x) -- (6) 
+Neural Network Ensembles, Cross Validation, and Active Learning 233 
+All these formulas can be averaged over the input distribution. Averages over the 
+input distribution will be denoted by capital letter, so 
+E  = fdxp(x)e(x) 
+A  : fdxp(x)aa(x) 
+E = fdxp(x)e(x). 
+(7) 
+(8) 
+(9) 
+The first two of these are the generalization error and the ambiguity respectively 
+for network c, and E is the generalization error for the ensemble. From (6) we then 
+find for the ensemble generalization error 
+E=E-A. (10) 
+The first term on the right is the weighted average of the generalization errors of 
+the individual networks (E = y' wE), and the second is the weighted average 
+of the ambiguities (A =  wA), which we refer to as the ensemble ambiguity. 
+The beauty of this equation is that it separates the generalization error into a term 
+that depends on the generalization errors of the individual networks and another 
+term that contain all correlations between the networks. Furthermore, the corre- 
+lation term A can be estimated entirely from unlabeled data, i.e., no knowledge is 
+required of the real function to be approximated. The term unlabeled example is 
+borrowed from classification problems, and in this context it means an input x for 
+which the value of the target function f(x) is unknown. 
+Equation (10) expresses the tradeoff between bias and variance in the ensemble, 
+but in a different way than the the common bias-variance relation [4] in which the 
+averages are over possible training sets instead of ensemble averages. If the ensemble 
+is strongly biased the ambiguity will be small, because the networks implement very 
+similar functions and thus agree on inputs even outside the training set. Therefore 
+the generalization error will be essentially equal to the weighted average of the 
+generalization errors of the individual networks. If, on the other hand, there is a 
+large variance, the ambiguity is high and in this case the generalization error will 
+be smaller than the average generalization error. See also [5]. 
+From this equation one can immediately see that the generalization error of the 
+ensemble is always smaller than the (weighted) average of the ensemble errors, 
+E < E. In particular for uniform weights: 
+i E 
+E <_   (11) 
+which has been noted by several authors, see e.g. [3]. 
+3 THE CROSS-VALIDATION ENSEMBLE 
+From (10) it is obvious that increasing the ambiguity (while not increasing individual 
+generalization errors) will improve the overall generalization. We want the networks 
+to disagree! How can we increase the ambiguity of the ensemble? One way is to 
+use different types of approximators like a mixture of neural networks of different 
+topologies or a mixture of completely different types of approximators. Another 
+234 Anders Krogh, Jesper Vedelsby 
+Oo 
+-1. 
+I I I 
+.* ,,-,.,,. ......  %, ,...' . ...,. ,'%. 
+I I I 
+-4 -2 0 2 4 
+x 
+Figure 1: An ensemble of five networks were trained to approximate the square 
+wave target function f(x). The final ensemble output (solid smooth curve) and 
+the outputs of the individual networks (dotted curves) are shown. Also the square 
+root of the ambiguity is shown (dash-dot line). For training 200 random examples 
+were used, but each network had a cross-validation set of size 40, so they were each 
+trained on 160 examples. 
+obvious way is to train the networks on different training sets. Furthermore, to be 
+able to estimate the first term in (10) it would be desirable to have some kind of 
+cross-validation. This suggests the following strategy. 
+Chose a number K _ p. For each network in the ensemble hold out K examples for 
+testing, where the N test sets should have minimal overlap, i.e., the N training sets 
+should be as different as possible. If, for instance, K _ pin it is possible to choose 
+the K test sets with no overlap. This enables us to estimate the generalization error 
+E a of the individual members of the ensemble, and at the same time make sure 
+that the ambiguity increases. When holding out examples the generalization errors 
+for the individual members of the ensemble, E , will increase, but the conjecture 
+is that for a good choice of the size of the ensemble (N) and the test set size 
+(K), the ambiguity will increase more and thus one will get a decrease in overall 
+generalization error. 
+This conjecture has been tested experimentally on a simple square wave function 
+of one variable shown in Figure 1. Five identical feed-forward networks with one 
+hidden layer of 20 units were trained independently by back-propagation using 200 
+random examples. For each network a cross-validation set of K examples was held 
+out for testing as described above. The true generalization and the ambiguity were 
+estimated from a set of 1000 random inputs. The weights were uniform, w  = 1/5 
+(non-uniform weights are addressed later). 
+In Figure 2 average results over 12 independent runs are shown for some values of 
+Neural Network Ensembles, Cross Validation, and Active Learning 235 
+Figure 2: The solid line shows the gen- 
+eralization error for uniform weights as 
+a function of K, where K is the size 
+of the cross-validation sets. The dotted 
+line is the error estimated from equa- 
+tion (10). The dashed line is for the 
+optimal weights estimated by the use of 
+the generalization errors for the individ- 
+ual networks estimated from the cross- 
+validation sets as described in the text. 
+The bottom solid line is the generaliza- 
+tion error one would obtain if the indi- 
+vidual generalization errors were known 
+exactly (the best possible weights). 
+0.08 
+0.06 
+0.04 
+0.02 
+, , , [ 
+I I I 
+0 20 40 60 80 
+Size of cv set 
+K (top solid line). First, one should note that the generalization error is the same 
+for a cross-validation set of size 40 as for size 0, although not lower, so it supports 
+the conjecture in a weaker form. However, we have done many experiments, and 
+depen

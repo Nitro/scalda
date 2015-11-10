@@ -1,0 +1,158 @@
+REMAP: Recursive Estimation and 
+Maximization of A Posteriori 
+Probabilities- Application to 
+Transition-Based Connectionist Speech 
+Recognition 
+Yochai Konig, Herv Bourlard and Nelson Morgan 
+konig,bourlard,morgan)@icsi.berkeley.edu 
+International Computer Science Institute 
+1947 Center Street Berkeley, CA 94704, USA. 
+Abstract 
+In this paper, we introduce REMAP, an approach for the training 
+and estimation of posterior probabilities using a recursive algorithm 
+that is reminiscent of the EM-based Forward-Backward (Liporace 
+1982) algorithm for the estimation of sequence likelihoods. Al- 
+though very general, the method is developed in the context of a 
+statistical model for transition-based speech recognition using Ar- 
+tificial Neural Networks (ANN) to generate probabilities for Hid- 
+den Markov Models (HMMs). In the new approach, we use local 
+conditional posterior probabilities of transitions to estimate global 
+posterior probabilities of word sequences. Although we still use 
+ANNs to estimate posterior probabilities, the network is trained 
+with targets that are themselves estimates of local posterior proba- 
+bilities. An initial experimental result shows a significant decrease 
+in error-rate in comparison to a baseline system. 
+I INTRODUCTION 
+The ultimate goal in speech recognition is to determine the sequence of words that 
+has been uttered. Classical pattern recognition theory shows that the best possi- 
+ble system (in the sense of minimum probability of error) is the one that chooses 
+the word sequence with the maximum a posteriori probability (conditioned on the 
+*Also a/tiliated with with Facult Polytechnique de Mons, Mons, Belgium 
+REMAP: Recursive Estimation and Maximization of A Posteriori Probabilities 389 
+evidence). If word sequence i is represented by the statistical model Mi, and the 
+evidence (which, for the application reported here, is acoustical) is represented by 
+a sequence X - {xx,..., x,..., XN}, then we wish to choose the sequence that 
+corresponds to the largest P(MiIX). In (Bourlard & Morgan 1994), summarizing 
+earlier work (such as (Boarlard & Wellekens 1989)), we showed that it was possi- 
+ble to compute the global a posteriori probability P(MIX ) of a discriminant form 
+of Hidden Markov Model (Discriminant HMM), M, given a sequence of acoustic 
+vectors X. In Discriminant HMMs, the global a posteriori probability P(MIX ) is 
+computed as follows: if F represents all legal paths (state sequences qx, q2,..., qN) 
+in Mi, N being the length of the sequence, then 
+P(MiIX) = E P(Mi, q, q2, . . . , qvlX) 
+F 
+in which q, represents the specific state hypothesized at time n, from the set Q = 
+{qX,..., qt, qa,..., qK} of all possible HMM states making up all possible models 
+Mi. We can further decompose this into: 
+P(Mi, qx, q2, . . . , qNI X) = P(q, q2, . . . , qNIX)P(Milqx, qe, . . . , qN, X) 
+Under the assumptions stated in (Boutlard & Morgan 1994) we can compute 
+N 
+P(qx'q'''qNIX) = 1-[ p(q]q,-x,x,) 
+The Discriminant HMM is thus described in terms of conditional transition proba- 
+bilities p(ql  x,), in which t 
+q,_ , q, stands for the specific state qt of Q hypothesized 
+at time n and can be schematically represented as in Figure 1. 
+P(/k/I/k/, x) P(/ae./I/ae./, x) P(/t/I/t/, x) 
+P(/ae./I/k/, x) P(/t/I/ae./, x) 
+Figure 1: An example Discriminant HMM for the word cat. The variable x refers 
+to a specific acoustic observation x, at time n. 
+Finally, given a state sequence we assume the following approximation: 
+P(Milqi,q2, ...,qN, X)  P(Milqx,q2,...,qN) 
+We can estimate the right side of this last equation from a phonological model (in 
+the case that a given state sequence can belong to two different models). All the 
+required (local) conditional transition probabilities p(qtlq}_x, x,) can be estimated 
+by the Multi-Layer Perceptron (MLP) shown in Figure 2. 
+Recent work at ICSI has provided us with further insight into the discriminant 
+HMM, particularly in light of recent work on transition-based models (Konig & 
+Morgan 1994; Morgan et al. 1994). This new perspective has motivated us to further 
+develop the original Discriminant HMM theory. The new approach uses posterior 
+probabilities at both local and global levels and is more discriminant in nature. 
+In this paper, we introduce the Recursive Estimation-Maximization of A posteriori 
+390 Y. KONIG, H. BOURLARD, N. MORGAN 
+P(Current_state I Acoustics, Previous_state) 
+0.1..0 
+Previous Acoustics 
+State 
+Figure 2: An MLP that estimates local conditional transition probabilities. 
+Probabilities (REMAP) training algorithm for hybrid HMM/MLP systems. The 
+proposed algorithm models a probability distribution over all possible transitions 
+(from all possible states and for all possible time frames n) rather than picking a 
+single time point as a transition target. Furthermore, the algorithm incrementally 
+increases the posterior probability of the correct model, while reducing the posterior 
+probabilities of all other models. Thus, it brings the overall system closer to the 
+optimal Bayes classifier. 
+A wide range of discriminant approaches to speech recognition have been studied 
+by researchers (Katagiri et al. 1991; Bengio et al. 1992; Bourlard et al. 1994). A 
+significant difficulty that has remained in applying these approaches to continuous 
+speech recognition has been the requirement to run computationally intensive algo- 
+rithms on all of the rival sentences. Since this is not generally feasible, compromises 
+must always be made in practice. For instance, estimates for all rival sentences can 
+be derived from a list of the N-best utterance hypotheses, or by using a fully 
+connected word model composed of all phonemes. 
+2 REMAP TRAINING OF THE DISCRIMINANT HMM 
+2.1 MOTIVATIONS 
+The discriminant HMM/MLP theory as described above uses transition-based prob- 
+abilities as the key building block for acoustic recognition. However, it is well known 
+that estimating transitions accurately is a difficult problem (Glass 1988). Due to 
+the inertia of the articulators, the boundaries between phones are blurred and over- 
+lapped in continuous speech. In our previous hybrid HMM/MLP system, targets 
+were typically obtained by using a standard forced Viterbi alignment (segmenta- 
+tion). For a transition-based system as defined above, this procedure would thus 
+yield rigid transition targets, which is not realistic. 
+Another problem related to the Viterbi-based training of the MLP presented in 
+Figure 2 and used in Discriminant HMMs, is the lack of coverage of the input space 
+during training. Indeed, during training (based on hard transitions), the MLP only 
+processes inputs consisting of correct pairs of acoustic vectors and correct previous 
+state, while in recognition the net should generalize to all possible combinations of 
+REMAP: Recursive Estimation and Maximization of A Posteriori Probabilities 391 
+acoustic vectors and previous states, since all possible models and transitions will be 
+hypothesized for each acoustic input. For example, some hypothesized inputs may 
+correspond to an impossible condition that has thus never been observed, such as 
+the acoustics of the temporal center of a vowel in combination with a previous state 
+that corresponds to a plosive. It is unfortunately possible that the interpolative 
+capabilities of the network may not be sufficient to give these impossible pairs a 
+sufficiently low probability during recognition. 
+One possible solution to these problems is to use a full MAP algorithm to find tran- 
+sition probabilities at each frame for all possible transitions by a forward-backward- 
+like algorithm (Liporace 1982), taking all possible paths into account. 
+2.2 PROBLEM FORMULATION 
+As described above, global maximum a posteriori training of HMMs should find the 
+optimal parameter set O maximizing 
+1-I P(MjIXj, e) (1) 
+j-'l 
+in which Mj represents the Markov model associated with each training utterance 
+Xj, with j = 1,..., J. 
+Although in principle we could use a generalized back-propagation-like gradient 
+procedure in O to maximize (1) (Bengio et al. 1992), an EM-like algorithm should 
+have better convergence properties, and could preserve the statistical interpreta- 
+tion of the ANN outputs� In this case, training of the discriminant HMM by a 
+global MAP criterion requires a solution to the following problem: given a trained 
+MLP at iteration t providing a parameter set O t and, consequently, estimates of 
+P(qlx,  or), how can we determine new MLP targets that: 
+qn-1, 
+1 will be smooth estimates of conditional transition probabilities  t 
+� qn-1 -- qn, 
+Vk,� e [1,K] and �n e [1, N], 
+2. when training the MLP for iteration t+l, will lead to new estimates of (t+x 
+and P(qlx,,  
+q,_x, O +1) that are guaranteed to incrementally increase the 
+global posterior probability P(Mi[X, ()? 
+In (Bourlard et al. 1994), we prove that a re-estimate of MLP targets that guarantee 
+convergence to a local maximum of (1) is given by1: 
+P*(qlx,  M) P(qlX,  
+q-x, = q-x, 0, M) 
+(2) 
+where we have estimated the left-hand side using a mapping from the previous 
+state and the local acoustic data to the current state, thus making the estimator 
+realizable by an MLP with a local acoustic window? Thus, we will want to estimate 
+ In most of the following, we consider only one particular training sequence X associated 
+with one particular model M. It is, however, easy to see that all of our conclusions remain 
+valid for the case of several training sequences Xj, j -- 1,..., J. A simple way to look 
+at the problem is to consider all training sequences as a single training sequence obtained 
+by concatenating all the X3's with boundary conditions at every possible beginning and 
+ending point. 
+2Note that, as done in our previous hybrid HMM/MLP systems, all conditional on xn 
+X + {X,-c,....,x,,...,x,+} to take some acoustic context into 
+can be replaced by ,-c -- 
+account. 
+392 Y. KONIG, H

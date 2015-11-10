@@ -1,0 +1,155 @@
+Using Helmholtz Machines to analyze 
+multi-channel neuronal recordings 
+Virginia R. de Sa 
+desa@phy. ucsf. edu 
+R. Christopher deCharms 
+decharms@phy. ucsf. edu 
+Michael M. Merzenich 
+merz@phy. ucsf. edu 
+Sloan Center for Theoretical Neurobiology and 
+W. M. Keck Center for Integrative Neuroscience 
+University of California, San Francisco CA 94143 
+Abstract 
+One of the current challenges to understanding neural information 
+processing in biological systems is to decipher the code carried 
+by large populations of neurons acting in parallel. We present an 
+algorithm for automated discovery of stochastic firing patterns in 
+large ensembles of neurons. The algorithm, from the Helmholtz 
+Machine family, attempts to predict the observed spike patterns in 
+the data. The model consists of an observable layer which is directly 
+activated by the input spike patterns, and hidden units that are ac- 
+tivated through ascending connections from the input layer. The 
+hidden unit activity can be propagated down to the observable layer 
+to create a prediction of the data pattern that produced it. Hidden 
+units are added incrementally and their weights are adjusted to im- 
+prove the fit between the predictions and data, that is, to increase a 
+bound on the probability of the data given the model. This greedy 
+strategy is not globally optimal but is computationally tractable for 
+large populations of neurons. We show benchmark data on artifi- 
+cially constructed spike trains and promising early results on neuro- 
+physiological data collected from our chronic multi-electrode cortical 
+implant. 
+I Introduction 
+Understanding neural processing will ultimately require observing the response 
+patterns and interactions of large populations of neurons. While many studies 
+have demonstrated that neurons can show significant pairwise interactions, and 
+that these pairwise interactions can code stimulus information [Gray et al., 1989, 
+Meister et al., 1995, deCharms and Merzenich, 1996, Vaadia et al., 1995], there is 
+currently little understanding of how large ensembles of neurons might function to- 
+gether to represent stimuli. This situation has arisen partly out of the historical 
+132 V. R. d. $a, R. C. deCharms and M. M. Merzenich 
+difficulty of recording from large numbers of neurons simultaneously. Now that this 
+is becoming technically feasible, the remaining analytical challenge is to understand 
+how to decipher the information carried in distributed neuronal responses. 
+Extracting information from the firing patterns in large neuronal populations is dif- 
+ficult largely due to the combinatorial complexity of the problem, and the uncer- 
+tainty about how information may be encoded. There have been several attempts 
+to look for higher order correlations [Martignon et al., 1997] or decipher the activity 
+from multiple neurons, but existing methods are limited in the type of patterns they 
+can extract assuming absolute reliability of spikes within temporal patterns of small 
+numbers of neurons [Abeles, 1982, Abeles and Gerstein, 1988, Abeles et al., 1993, 
+Schnitzer and Meister, ] or considering only rate codes [Gat and Tishby, 1993, 
+Abeles et al., 1995]. Given the large numbers of neurons involved in coding sensory 
+events and the high variability of cortical action potentials, we suspect that mean- 
+ingful ensemble coding events may be statistically similar from instance to instance 
+while not being identical. Searching for these type of stochastic patterns is a more 
+challenging task. 
+One way to extract the structure in a pattern dataset is to construct a generative 
+model that produces representative data from hidden stochastic variables. Helmholtz 
+machines [Hinton et al., 1995, Dayan et al., 1995] efficiently [Frey et al., 1996] pro- 
+duce generative models of datasets by maximizing a lower bound on the log likelihood 
+of the data. Cascaded Redundancy Reduction [de Sa and Hinton, 1998] is a partic- 
+ularly simple form of Helmholtz machine in which hidden units are incrementally 
+added. As each unit is added, it greedily attempts to best model the data using all 
+the previous units. In this paper we describe how to apply the Cascaded Redun- 
+dancy Reduction algorithm to the problem of finding patterns in neuronal ensemble 
+data, test the performance of this method on artificial data, and apply the method 
+to example neuronal spike trains. 
+1.1 Cascaded Redundancy Reduction 
+The simplest form of generative model is to model each observed (or input) unit as 
+a stochastic binary random variable with generative bias bi. This generative input is 
+passed through a transfer function to give a probability of firing. 
+1 
+pi = a(bi) = 1 + e -b, (1) 
+While this can model the individual firing rates of binary units, it cannot account 
+for correlations in firing between units. Correlations can be modeled by introducing 
+hidden units with generative weights to the correlated observed units. By cascading 
+hidden units as in Figure 1, we can represent higher order correlations. Lower units 
+sum up their total generative input from higher units and their generative bias. 
+xi = bi + Z sjgj,i Pi - a(xi) (2) 
+j>i 
+Finding the optimal generative weights (gj,i, bi) for a given dataset involves ma in- 
+tractable search through an exponential number of possible states of the hidden units. 
+Helmholtz machines approximate this problem by using forward recognition connec- 
+tions to compute an approximate distribution over hidden states for each data pat- 
+tern. Cascaded Redundancy Reduction takes this approximation one step further by 
+approximating the distribution by a single state. This makes the search for recogni- 
+tion and generative weights much simpler. Given a data vector, d, considering the 
+state produced by the recognition connections as s a gives a lower bound on the log 
+Using Helmholtz Machines to Analyze Multi-channel Neuronal Recordings 133 
+- ->' generative connections 
+> recognition connections 
+I 
+I 
+I 
+I 
+eee 
+Figure 1: The Cascaded Redundancy Reduction Network. Hidden units are added 
+incrementally to help better model the data. 
+likelihood of the data. Units are added incrementally with the goal of maximizing 
+this lower bound, C, 
+d log a( X/ ) +(1 -- S/ ) log( 1 --a(X))] 
+C = .[(s log a(bk)+(1-s)log(l- a(bk)) +  s i 
+d i 
+(3) 
+Before a unit is added it is considered as a temporary addition. Once its weights 
+have been learned, it is added to the permanent network only if adding it reduces 
+the cost on an independent validation set from the same data distribution. This is 
+to prevent overtraining. While a unit is considered for addition, all weights other 
+than those to and from the new unit and the generative bias weights are fixed. The 
+learning of the weights to and from the new unit is then a fairly simple optimization 
+problem involving treating the unit as stochastic, mad performing gradient descent 
+on the resulting modified lower bound. 
+2 Method 
+This generic pattern finding algorithm can be applied to multi-unit spike trains by 
+treating time as another spatial dimension as is often done for time series data. The 
+spikes are binned on the order of a few to tens of milliseconds and the algorithm looks 
+for patterns in finite time length windows by sliding a window centered on each spike 
+from a chosen trigger channel. An example extracted window using channel 4 as the 
+trigger channel is shown in Figure 2. 
+Because the number of spikes can be larger than one, the observed units (bins) are 
+modeled as discrete Poisson rmadom variables rather than binary random variables 
+(the hidden units are still kept as binary units). To reflect the constraint that the 
+expected number of spikes cannot be negative but may be larger than one, the transfer 
+function for these observed bins was chosen to be exponential. Thus if xi is the 
+total summed generative input, ;i, the expected mean number of spikes in bin i, is 
+calculated as e  and the probability of finding s spikes in that bin is given by 
+e-A)s e-eiexs 
+= (4) 
+Pi = S! S! 
+134 V. R. d. $a, R. C. deCharms and M. M. Merzenich 
+Figure 2: The input patterns for the algorithm are windows from the full spario- 
+temporal firing patterns. The full dataset is windows centered about every spike in 
+the trigger channel. 
+The terms in the lower bound objective function due to the observed bins are modified 
+accordingly. 
+3 Experimental Results 
+Before applying the algorithm to real neural spike trains we have characterized its 
+properties under controlled conditions. We constructed sample data containing two 
+random patterns across 10 units spanning 100 msec. The patterns were stochastic 
+such that each neuron had a probability of firing in each time bin of the pattern. 
+Sample patterns were drawn from the stochastic pattern templates and embedded in 
+other noise spikes. The sample pattern templates are shown in the first column 
+of Figure 3. 300 seconds of independent training, validation and test data were 
+generated. All results are reported on the test data. 
+After training the network, performance was assessed by stepping through the test 
+data and observing the pattern of activation across the hidden units obtained from 
+propagating activity through the forward (recognition) connections and their corre- 
+sponding generafive pattern Ai) obtained from the generative connections from the 
+binary hidden unit pattern. Typically, many of the theoretically possible 2 n hidden 
+unit patterns do not occur. Of the ones that do, several may code for the noise back- 
+ground. A crucial issue for interpreting patterns in real neural data is to discover 
+which of the hidden unit activity patterns correspond to actual meaningful patterns. 
+We use a measure that calculates the quality of the match of the observed pattern 
+and the generative pattern it invokes. As the algorithm was not trained on the test 
+data, close matches between the generative pattern and the observed patter

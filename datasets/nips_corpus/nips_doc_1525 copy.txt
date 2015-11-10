@@ -1,0 +1,126 @@
+Robust, Efficient, Globally-Optimized 
+Reinforcement Learning with the 
+Parti-Game Algorithm 
+Mohammad A. AI-Ansari and Ronald J. Williams 
+College of Computer Science, 161 CN 
+Northeastern University 
+Boston, MA 02115 
+alansar@ccs.neu.edu, rjw@ccs.neu.edu 
+Abstract 
+Patti-game (Moore 1994a; Moore 1994b; Moore and Atkeson 1995) is a 
+reinforcement learning (RL) algorithm that has a lot of promise in over- 
+coming the curse of dimensionality that can plague RL algorithms when 
+applied to high-dimensional problems. In this paper we introduce mod- 
+ifications to the algorithm that further improve its performance and ro- 
+bustness. In addition, while patti-game solutions can be improved locally 
+by standard local path-improvement techniques, we introduce an add-on 
+algorithm in the same spirit as parti-game that instead tries to improve 
+solutions in a non-local manner. 
+1 INTRODUCTION 
+Parti-game operates on goal problems by dynamically partitioning the space into hyper- 
+rectangular cells of varying sizes, represented using a k-d tree data structure. It assumes 
+the existence of a pre-specified local controller that can be commanded to proceed from the 
+current state to a given state. The algorithm uses a game-theoretic approach to assign costs 
+to cells based on past experiences using a minimax algorithm. A cell's cost can be either 
+a finite positive integer or infinity. The former represents the number of cells that have to 
+be traveled through to get to the goal cell and the latter represents the belief that there is 
+no reliable way of getting from that cell to the goal. Cells with a cost of infinity are called 
+losing cells while others are called winning ones. 
+The algorithm starts out with one cell representing the entire space and another, contained 
+within it, representing the goal region. In a typical step, the local controller is commanded 
+to proceed to the center of the most promising neighboring cell. Upon entering a neighbor- 
+ing cell (whether the one aimed at or not), or upon failing to leave the current cell within 
+962 M. A. Al-Ansari and R. J. Williams 
+Figure 1: In these mazes, the agent is required to start from the point marked Start and reach the square goal cell. 
+a timeout period, the result of this attempt is added to the database of experiences the al- 
+gorithm has collected, cell costs are recomputed based on the updated database, and the 
+process repeats. The costs are computed using a Dijkstra-like, one-pass minimax version 
+of dynamic programming. The algorithm terminates upon entering the goal cell. 
+If at any point the algorithm determines that it can not proceed because the agent is in 
+a losing cell, each cell lying on the boundary between losing and winning cells is split 
+across the dimension in which it is largest and all experiences involving cells that are split 
+are discarded. Since parti-game assumes, in the absence of evidence to the contrary, that 
+from any given cell every neighboring cell is reachable, discarding experiences in this way 
+encourages exploration of the newly created cells. 
+2 PARTITIONING ONLY LOSING CELLS 
+The win-lose boundary mentioned above represents a barrier the algorithm perceives that 
+is preventing the agent from reaching the goal. The reason behind partitioning cells along 
+this boundary is to increase the resolution along these areas that are crucial to reaching the 
+goal and thus creating more regions along this boundary for the agent to try to get through. 
+By partitioning on both sides of the boundary, parti-game guarantees that neighboring cells 
+along the boundary remain close in size. Along with the strategy of aiming towards cen- 
+ters of neighboring cells, this produces pairings of winner-loser cells that form proposed 
+corridors for the agent to try to go through to penetrate the barrier it perceives. 
+In this section we investigate doing away with partitioning on the winning side, and only 
+partition losing cells. Because partitioning can only be triggered with the agent on the 
+losing side of the win-lose boundary, partitioning only losing cells would still give the 
+agent the same kind of access to the boundary through the newly formed cells. However, 
+this would result in a size disparity between winner- and loser-side cells and, thus, would 
+not produce the winner side of the pairings mentioned above. To produce a similar effect to 
+the pairings of parti-game, we change the aiming strategy of the algorithm. Under the new 
+strategy, when the agent decides to go from the cell it currently occupies to a neighboring 
+one, it aims towards the center point of the common surface between the two cells. While 
+this does not reproduce the same line of motion of the original aiming strategy exactly, it 
+achieves a very similar objective. 
+Parti-game's success in high-dimensional problems stems from its variable resolution strat- 
+egy, which partitions finely only in regions where it is needed. By limiting partitioning to 
+losing cells only, we hope to increase the resolution in even fewer parts of the state space 
+and thereby make the algorithm even more efficient. 
+To compare the performance of parti-game to the modified algorithm, we applied both al- 
+gorithms to the set of continuous mazes shown in Figure 1. For all maze problems we used 
+a simple local controller that can move directly toward the specified target state. We also 
+Robust, Efficient Reinforcement Learning with the Parti-Game Algorithm 963 
+1 
+Start 
+Goal 
+Figure 2: An ice puck on a hill. The puck can thrust horizontally to the left and to the right with a maximum force of I Newton. 
+The state space is two-dimensional consisting of the horizontal position and velocity. The agent starts at the position marked Start 
+at velocity zero and its goal is to reach the position marked Goal at velocity zero. Maximum thrust is not adequate to get the puck 
+up the ramp so it has to learn to move to the left first to build up momentum. 
+Figure 3: A nine degree of freedom, snake-like arm that moves in a plane and is fixed at one tip, as depicted in Figure 3. The 
+objective is to move the arm from the start configuration to the goal one, which requires curling and uncurling to avoid the barrier 
+and the wall. 
+applied both algorithms to the non-linear dynamics problem of the ice puck on a hill, de- 
+picted in Figure 2, which has been studied extensively in reinforcement learning literature. 
+We used a local controller very similar to the one described in Moore and Atkeson (1995). 
+Finally, we applied the algorithm to the nine-degree of freedom planar robot introduced in 
+Moore and Atkeson (1995) and shown in Figure 3 and we used the same local controller 
+described there. Additional results on the Acrobot problem (Sutton and Barto 1998) were 
+not included here for space limitations but can be found in A1-Ansari and Williams (1998). 
+We applied both algorithms to each of these problems, in each case performing as many 
+trials as was needed for the solution to stabilize. The agent was placed back in the start 
+state at the end of each trial. In the puck problem, the agent was also reset to the start 
+state whenever it hit either of the barriers at the bottom and top of the slope. The results are 
+shown in Table 1. The table compares the number of trials needed, the number of partitions, 
+total number of steps taken in the world, and the length of the final trajectory. 
+The table shows that the new algorithm indeed resulted in fewer total partitions in all prob- 
+(a) Co) (c) 
+Figure 4: The final trial of applying the various algorithms to the maze in Figure l(a). (a) patti-game, (b) patti-game with 
+partitioning only losing cells and (c) pard-game with partitioning only the largest losing cells. 
+964 M. A. Al-Ansari and R. J. Williams 
+Figure 5: Patti-game needed 1194 partitions to reach the goal in the maze of Figure l(d). 
+lems. It also improved in all problems in the number of trials required to stabilization. It 
+improved in all but one problem (maze d) in the length of the final trajectory, however the 
+difference in length is very small. Finally, it resulted in fewer total steps taken in three of 
+the six problems, but the total steps taken increased in the remaining three. 
+To see the effect of the modification in detail, we show the result of applying patti-game and 
+the modified algorithm on the maze of Figure l(a) in Figures 4(a) and 4(b), respectively. 
+We can see how areas with higher resolution are more localized in Figure 4(b). 
+3 BALANCED PARTITIONING 
+Upon close observation of Figure 4(a), we see that patti-game partitions very finely along 
+the right wall of the maze. This behavior is even more clearly seen in parti-game's solution 
+to the maze in Figure l(d), which is a simple maze with a single barrier between the start 
+state and the goal. As we see in Table 1, parti-game has a very hard time reaching the goal 
+in this maze. Figure 5 shows the 1194 partitions that parti-game generated in trying to reach 
+the goal. We can see that partitioning along the barrier is very uneven, being extremely fine 
+near the goal and growing coarser as the distance from the goal increases. Putting higher 
+focus on places where the highest gain could be attained if a hole is found can be a desirable 
+feature, but what happens in cases like this one is obviously excessive. 
+One of the factors contributing to this problem of continuing to search at ever-higher reso- 
+lutions in the part of the barrier nearest the goal is that any version of parti-game searches 
+for solutions using an implicit trade-off between the shortness of a potential solution path 
+and the resolution required to find this path. Only when the resolution becomes so fine 
+that the number of cells through which the agent would have to pass in this potential short- 
+cut exceeds the number of cells to be traversed when traveling around the barrier is the 
+algorithm forced to look elsewhere for the actual opening. 
+A con

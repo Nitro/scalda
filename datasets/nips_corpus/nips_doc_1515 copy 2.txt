@@ -1,0 +1,158 @@
+A Polygonal Line Algorithm for Constructing 
+Principal Curves 
+BalLs Kggl, Adam Krzyak 
+Dept. of Computer Science 
+Concordia University 
+1450 de Maisonneuve Blvd. W. 
+Montreal, Canada H3G 1M8 
+kegl@ cs.concordia.ca 
+krzyzak@cs.concordia.ca 
+Tams Linder 
+Dept. of Mathematics 
+and Statistics 
+Queen's University 
+Kingston, Ontario 
+Canada K7L 3N6 
+linder@ mast.queensu.ca 
+Kenneth Zeger 
+Dept. of Electrical and 
+Computer Engineering 
+University of California 
+San Diego, La Jolla 
+CA 92093-0407 
+zegerucsd.edu 
+Abstract 
+Principal curves have been defined as self consistent smooth curves 
+which pass through the middle of a d-dimensional probability distri- 
+bution or data cloud. Recently, we [ 1] have offered a new approach by 
+defining principal curves as continuous curves of a given length which 
+minimize the expected squared distance between the curve and points of 
+the space randomly chosen according to a given distribution. The new 
+definition made it possible to carry out a theoretical analysis of learning 
+principal curves from training data. In this paper we propose a practical 
+construction based on the new definition. Simulation results demonstrate 
+that the new algorithm compares favorably with previous methods both 
+in terms of performance and computational complexity. 
+1 Introduction 
+Hastie [2] and Hastie and Stuetzle [3] (hereafter HS) generalized the self consistency prop- 
+erty of principal components and introduced the notion of principal curves. Consider a 
+d-dimensional random vector X = (X(),... ,X (a)) with finite second moments, and let 
+f(t) = (f (t),... ,fa(t)) be a smooth curve in fff parameterized by t  if,. For any x  fff 
+let tf(x) denote the parameter value t for which the distance between x and f(t) is mini- 
+mized. By the HS definition, f(t) is a principal curve if it does not intersect itself and is 
+self consistent, that is, f(t) = E(Xltr(X) - t). Intuitively speaking, self-consistency means 
+that each point of f is the average (under the distribution of X) of points that project there. 
+Based on their defining property HS developed an algorithm for constructing principal 
+curves for distributions or data sets, and described an application in the Stanford Linear 
+Collider Project [3]. 
+502 B. KgL A. Krzy:ak, T. Linder and K. Zeger 
+Principal curves have been applied by Banfield and Raftery [4] to identify the outlines of 
+ice floes in satellite images. Their method of clustering about principal curves led to a fully 
+automatic method for identifying ice floes and their outlines. On the theoretical side, Tib- 
+shirani [5] introduced a semiparametric model for principal curves and proposed a method 
+for estimating principal curves using the EM algorithm. Recently, Delicado [6] proposed 
+yet another definition based on a property of the first principal components of multivari- 
+ate normal distributions. Close connections between principal curves and Kohonen's self- 
+organizing maps were pointed out by Mulier and Cherkassky [7]. Self-organizing maps 
+were also used by Der et al. [8] for constructing principal curves. 
+There is an unsatisfactory aspect of the definition of principal curves in the original HS 
+paper as well as in subsequent works. Although principal curves have been defined to be 
+nonparametric, their existence for a given distribution or probability density is an open 
+question, except for very special cases such as elliptical distributions. This also makes it 
+difficult to theoretically analyze any learning schemes for principal curves. 
+Recently, we [1] have proposed a new definition of principal curves which resolves this 
+problem. In the new definition, a curve f* is called a principal curve of length L for X if f* 
+minimizes A(f) = E [inft IIX- f(t)[I 2] - EIIX- f(tf(x))112, the expected squared distance 
+between X and the curve, over all curves of length less than or equal to L. It was proved in 
+[1] that for any X with finite second moments there always exists a principal curve in the 
+new sense. 
+A theoretical algorithm has also been developed to estimate principal curves based on a 
+common model in statistical learning theory (e.g. see [9]). Suppose that the distribution of 
+X is concentrated on a closed and bounded convex set K C R a, and we are given n training 
+points X1,..., Xn drawn independently from the distribution of X. Let $ denote the family 
+of curves taking values in K and having length not greater than L. For k _> 1 let $k be the 
+set of polygonal (piecewise linear) curves in K which have k segments and whose lengths 
+do not exceed L. Let 
+A(x,f) = miniIx - f(t)J[ 2 (1) 
+t 
+denote the squared distance between x and f. For any f E $ the empirical squared er- 
+1 
+ror of f on the training data is the sample average An(f) =  7'.?=1A(Xi,f). Let the 
+theoretical algorithm choose an fk,n E $ which minimizes the empirical error, i.e, let 
+f,n = argminf& An(f). It was shown in [1] that if k is chosen to be proportional to n 1/3, 
+then the expected squared loss of the empirically optimal polygonal curve with k segments 
+and length at most L converges, as n --> o, to the squared loss of the principal curve of 
+length L at a rate A(f,n) - A(f*) = O(n-1/3). 
+Although amenable to theoretical analysis, the algorithm in [ 1 ] is computationally burden- 
+some for implementation. In this paper we develop a suboptimal algorithm for learning 
+principal curves. This practical algorithm produces polygonal curve approximations to the 
+principal curve just as the theoretical method does, but global optimization is replaced by 
+a less complex iterative descent method. We give simulation results and compare our algo- 
+rithm with previous work. In general, on examples considered by HS the performance of 
+the new algorithm is comparable with the HS algorithm, while it proves to be more robust 
+to changes in the data generating model. 
+2 A Polygonal Line Algorithm 
+Given a set of data points Xn = {xl,..., xn} C Ra, the task of finding the polygonal curve 
+with k segments and length L which minimizes 1 n A(xi, f) is computationally difficult. 
+We propose a suboptimal method with reasonable complexity. The basic idea is to start 
+with a straight line segment fl,n (k = 1) and in each iteration of the algorithm to increase 
+Polygonal Line Algorithm for Constructing Principal Curves 503 
+the number of segments by one by adding a new vertex to the polygonal curve fk,n produced 
+by the previous iteration. After adding a new vertex, the positions of all vertices are updated 
+in an inner loop. 
+(a) (b) (c) 
+Figure 1: The curves fk,n produced by the polygonal line algorithm for n = 100 data points. 
+The data was generated by adding independent Gaussian errors to both coordinates of a 
+point chosen randomly on a half circle. (a) fl,n, (b) f2,n, (c) f4,n, (d) fll,n (the output of the 
+algorithm). 
+START 
+aza�n 
+Add new vertex 
+END 
+Figure 2: The flow chart of the polygonal line algorithm. 
+The inner loop consists of a projection step and an optimization step. In the projection 
+step the data points are partitioned into Voronoi regions according to which segment or 
+vertex they project. In the optimization step the new position of each vertex is determined 
+by minimizing an average squared distance criterion penalized by a measure of the local 
+curvature. These two steps are iterated until convergence is achieved and fk,n is produced. 
+Then a new vertex is added. 
+The algorithm stops when k exceeds a threshold c(n, A). This stopping criterion is based 
+on a heuristic complexity measure, determined by the number segments k, the number of 
+data points n, and the average squared distance An(fk,,). 
+THE INITIALIZATION STEP. To obtain fl,n, take the shortest segment of the first principal 
+component line which contains all of the projected data points. 
+THE PROJECTION STEP. Let f denote a polygonal curve with vertices Vl,... ,v&+l and 
+closed line segments sl,..., s&, such that si connects vertices vi and vi+l. In this step the 
+data set X is partitioned into (at most) 2k+ 1 disjoint sets V1,... ,V&+i and &,... ,S, 
+the Voronoi regions of the vertices and segments of f, in the following manner. For any 
+x E R a let A(x, si) be the squared distance from x to si (see definition (1)), and let A(x, vi) = 
+IIx- vii[ 2. Then let 
+Vi= {xE X :A(x, vi) =A(x,f), A(x, vi)< A(X, Vm),m= 1,...,i- 1}. 
++1 Vi, the Si sets are defined by 
+Upon setting V -- Wi=l 
+Si = {x 6 X: x � V, A(x, si) = A(x,f), A(x, si) < A(X, Sm),m = 1,... ,i- 1 }. 
+The resulting partition is illustrated in Figure 3. 
+504 B. Kgl, A. Krzydak, T. Linder and K. Zeger 
+Figure 3: The Voronoi partition induced by the vertices and segments of f 
+THE VERTEX OPTIMIZATION STEP. In this step we iterate over the vertices, and relocate 
+each vertex while all the others are kept fixed. For each vertex, we minimize An(Vi) q- 
+)pP(vi), a local average squared distance criterion penalized by a measure of the local 
+curvature by using a gradient (steepest descent) method. 
+The local measure of the average squared distance is calculated from the data points which 
+project to vi or to the line segment(s) starting at vi (see Projection Step). Accordingly, 
+let o+(vi) = xsiA(x,$i), (J-(v/) '- xSi-1 A(x,$i-1), and v(vi) = xviA(x, vi). Now 
+define the local average squared distance as a function of vi by 
+�(Vi) q- IJ+(Vi) if i -- 1 
+IFil q- Is/I 
+An(v/) = 
++ v(vi) + 
+I&-ll q- Ivil q- Is, I 
+if 1 < i< k+ 1 (2) 
+O_ (Vi) q- �(Vl) if i = k + 1. 
+I&-11 q- IFil 
+In the theoretical algorithm the average squared distance An(x, f) is minimized subject to 
+the constraint that f is a polygonal curve with k segments and length not exceeding L. One 
+could use a Lagrangian formulation and attempt to find a new position for v/(while all 
+other vertices are fixed) such that the penalized squared error An(f) + .l(f)2 is minimum. 
+However, we have observed that this approach is very sensitive to the choice of ., and 
+reproduces the estim

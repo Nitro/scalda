@@ -1,0 +1,156 @@
+Handwritten Word Recognition using Contextual 
+Hybrid Radial Basis Function Network/Hidden 
+Markov Models 
+Bernard Lemari( 
+La Poste/SRTP 
+10, Rue de l'ile-Mabon 
+F-44063 Nantes Cedex France 
+lemarieSsrtp. srt-poste. fr 
+Michel Gi!!oux 
+La Poste/SRTP 
+10, Rue de l'ile-Mabon 
+F-44063 Nantes Cedex France 
+illouxsrtp. srt-poste. fr 
+Manuel Leroux 
+La Poste/SRTP 
+10, Rue de l'ile-Mabon 
+F-44063 Nantes Cedex France 
+lerouxsrtp. srt-poste. fr 
+Abstract 
+A hybrid and contextual radial basis function network/hidden Markov 
+model off-line handwritten word recognition system is presented. The 
+task assigned to the radial basis function networks is the estimation of 
+emission probabilities associated to Markov states. The model is contex- 
+tual because the estimation of emission probabilities takes into account 
+the left context of the current image segment as represented by its pred- 
+ecessor in the sequence. The new system does not outperform the previ- 
+ous system without context but acts differently. 
+1 INTRODUCTION 
+Hidden Markov models (HMMs) are now commonly used in off-line recognition of 
+handwritten words (Chen et al., 1994) (Gilloux et al., 1993) (Gilloux et al. 1995a). In some 
+of these approaches (Gilloux et al. 1993), word images are transformed into sequences of 
+image segments through some explicit segmentation procedure. These segments are passed 
+on to a module which is in charge of estimating the probability for each segment to appear 
+when the corresponding hidden state is some state s (state emission probabilities). Model 
+probabilities are generally optimized for the Maximum Likelihood Estimation (MLE) cri- 
+terion. 
+MLE training is known to be sub-optimal with respect to discrimination ability when the 
+underlying model is not the true model for the data. Moreover, estimating the emission 
+probabilities in regions where examples are sparse is difficult and estimations may not be 
+accurate. To reduce the risk of over training, images segments consisting of bitmaps are of- 
+ten replaced by feature vector of reasonable length (Chen et al., 1994) or even discrete sym- 
+bols (Gilloux et al., 1993). 
+Handwritten Word Recognition Using HMM/RBF Networks 765 
+In a previous paper (Gilloux et al., 1995b) we described a hybrid HMM/radial basis 
+function system in which emission probabilities are computed from full-fledged bitmaps 
+though the use of a radial basis function (RBF) neural network. This system demonstrated 
+better recognition rates than a previous one based on symbolic features (Gilloux et al., 
+1995b). Yet, many misclassification examples showed that some of the simplifying as- 
+sumptions made in HMMs were responsible for a significant part of these errors. In partic- 
+ular, we observed that considering each segment independently from its neighbours would 
+hurt the accuracy of the model. For example, figure 1 shows examples of letter a when it is 
+segmented in two parts. The two parts are obviously correlated. 
+Figure 1: Examples of segmented a. 
+We propose a new variant of the hybrid HMM/RBF model in which emission probabil- 
+ities are estimated by taking into account the context of the current segment. The context 
+will be represented by the preceding image segment in the sequence. 
+The RBF model was chosen because it was proven to be an efficient model for recog- 
+nizing isolated digits or letters (Poggio & Girosi, 1990) (Lemari6, 1993). Interestingly 
+enough, RBFs bear close relationships with gaussian mixtures often used to model emis- 
+sion probabilities in markovian contexts. Their advantage lies in the fact that they do not 
+directly estimate emission probabilities and thus are less prone to errors in this estimation 
+in sparse regions. They are also trained through the Mean Square Error (MSE) criterion 
+which makes them more discriminant. 
+The idea of using a neural net and in particular a RBF in conjunction with a HMM is not 
+new. In (Singer & Lippman, 1992) it was applied to a speech recognition task. The use of 
+context to improve emission probabilities was proposed in (Bourlard & Morgan, 1993) 
+with the use of a discrete set of context events. Several neural networks are there used to 
+estimate various relations between states, context events and current segment. Our point is 
+to propose a different method without discrete context based on a adapted decomposition 
+of the HMM likelihood estimation.This model is next applied to off-line handwritten word 
+recognition. 
+The organization of this paper is as follows. Section 1 is an overview of the architecture 
+of our HMM. Section 2 describes the justification for using RBF outputs in a contextual 
+hidden Markov model. Section 3 describes the radial basis function network recognizer. 
+Section 4 reports on an experiment in which the contextual model is applied to the recog- 
+nition of handwritten words found on french bank or postal cheques. 
+2 OVERVIEW OF THE HIDDEN MARKOV MODEL 
+In an HMM model (Bahl et al., 1983), the recognition scores associated to words w are 
+likelihoods 
+L(Wlil...in) = P(il...in[W) Xp(TM) 
+in which the first term in the product encodes the probability with which the model of each 
+word w generates some image (some sequence of image segments) il...i n. In the HMM par- 
+adigm, this term is decomposed into a sum on all paths (i.e. sequence of hidden states) of 
+products of the probability of the hidden path by the probability that the path generated the 
+image sequence: 
+P(il'inlW) =  P(il'inlSl'Sn) xp(s 1...sn) 
+path = {s l...sn} 
+766 B. LEMARIi, M. GILLOUX, M. LEROUX 
+It is often assumed that only one path contributes significantly to this term so that 
+P(il...i I w) - P(il...i I Sl...Sn) xp(sl...Sn) 
+n n 
+In HMMs, each sequence element is assumed to depend only on its corresponding state: 
+n 
+p(i 1 .i Is = rip � i 
+n l'Sn ) (tj sj) 
+j=l 
+Moreover, first-order Markov models assume that paths are generated by a first-order 
+Markov chain so that 
+P(Sl'Sn) - rI p(sjlsj_l) 
+j=l 
+We have reported in previous papers (Gilloux et al., 1993) (Gilloux et al., 1995a) on sev- 
+eral handwriting recognition systems based on this assumption.The hidden Markov model 
+architecture used in all systems has been extensively presented in (Gilloux et al., 1995a). 
+In that model, word letters are associated to three-states models which are designed to ac- 
+count for the situations where a letter is realized as 0, 1 or 2 segments. Word models are the 
+result of assembling the corresponding letter models. This architecture is depicted on figure 
+2. We used here transition emission rather than state emission. However, this does not 
+e e, 0.05 e e, 0.05 e 
+l a v a l 
+Figure 2: Outline of the model for lavar'. 
+change the previous formulas if we replace states by transitions, i.e. pairs of states. 
+One of these systems was an hybrid RBF/HMM model in which a radial basis function 
+network was used to estimate emission probabilities p (/j I s :) . The RBF outputs are intro- 
+...i JI s 
+duced by applying Bayes rule in the expression ofp (il n 1' Sn): 
+n p (sj I/j) xp (/j) 
+P(il'in I Sl'Sn) = rI 
+j= 1 p ( Sj) 
+Since the product of a priori image segments probabilities p (/j) does not depend on the 
+word hypothesis w, we may write: 
+P(iI i Is 1...sn) o rI tj) 
+'n 
+j=l p 
+In the above formula, terms of form p (s. I x. , ) are transition probabilities which may 
+be estimated through the Baum-Welch re-stinton algorithm. Terms of form p (s;) are 
+a priori probabilities of states. Note that for Bayes rule to apply, these probabilitie have 
+and only have to be estimated consistently with terms of form p (sj I/j) since p (/j I sj) 
+is independent of the statistical distribution of states. 
+It has been proven elsewhere (Richard & Lippman, 1992) that systems trained through 
+the MSE criterion tend to approximate Bayes probabilities in the sense that Bayes proba- 
+Handwritten Word Recognition Using HMM/RBF Networks 767 
+bilities are optimal for the MSE criterion. In practice, the way in which a given system 
+comes close to Bayes optimum is not easily predictable due to various biases of the trained 
+system (initial parameters, local optimum, architecture of the net, etc.). Thus real output 
+scores are generally not equal to Bayes probabilities. However, there exist different proce- 
+dures which act as a post-processor for outputs of a system trained with the MSE and make 
+them closer to Bayes probabilities (Singer & Lippman, 1992). Provided that such a post- 
+processor is used, we will assume that terms p (s. I i .) are well estimated by the post-proc- 
+essed outputs of the recognition system. Then, trmJs p (s .) are just the a priori probabili- 
+ties of states on the set used to train the system or post-prJ0cess the system outputs. 
+This hybrid handwritten word recognition system demonstrated better performances 
+than previous systems in which word images were represented through sequences of sym- 
+bolic features instead of full-fledged bitmaps (Gilloux et al., 1995b). However, some rec- 
+ognition errors remained, many of which could be explained by the simplifying assump- 
+tions made in the model. In particular, the fact that emission probabilities depend only on 
+the state corresponding to the current bitmap appeared to be a poor choice. For example, 
+on figure 3 the third and fourth segment are classified as two halves of the letter i. For letters 
+� i,! [,i,l,l,l,t,[,i,l,l,l,i, ,l.l,t,i,l.i, ,t,I. ,i,i,t,1,1,1,1 l,l* '1:1' 
+........... i . .l..I .......... I ...... 
+t.l.bl,l.l.l.l.l.l,l.l.I I.I.1,I..I.1.1.1.1,I.I.I.1.[I.1,I, .I.l.!.l.l,l..lq.l.t.1 
+lh. .:ilililii 
+Figure 3: An image of trente classified as mille. 
+segmented in two parts, the second half is naturally correlated to the first (see figure 1). Yet, 
+our Markov model architecture is designed so that both halves are assumed uncorrelated. 
+This has two effects. Two consecutive bitmaps which cannot be the two parts of a unique 
+letter are sometimes recognized as such like

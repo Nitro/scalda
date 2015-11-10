@@ -1,0 +1,162 @@
+Reinforcement Learning Applied to 
+Linear Quadratic Regulation 
+Steven J. Bradtke 
+Computer Science Department 
+University of Massachusetts 
+Amherst, MA 01003 
+bradtke@cs.umass.edu 
+Abstract 
+Recent research on reinforcement learning has focused on algo- 
+rithms based on the principles of Dynamic Programming (DP). 
+One of the most promising areas of application for these algo- 
+rithms is the control of dynamical systems, and some impressive 
+results have been achieved. However, there are significant gaps 
+between practice and theory. In particular, there are no conver- 
+gence proofs for problems with continuous state and action spaces, 
+or for systems involving non-linear function approximators (such 
+as multilayer percepttons). This paper presents research applying 
+DP-based reinforcement learning theory to Linear Quadratic Reg- 
+ulation (LQR), an important class of control problems involving 
+continuous state and action spaces and requiring a simple type of 
+non-linear function approximator. We describe an algorithm based 
+on Q-learning that is proven to converge to the optimal controller 
+for a large class of LQR problems. We also describe a slightly 
+different algorithm that is only locally convergent to the optimal 
+Q-function, demonstrating one of the possible pitfalls of using a 
+non-linear function approximator with DP-based learning. 
+1 INTRODUCTION 
+Recent research on reinforcement learning has focused on algorithms based on the 
+principles of Dynamic Programming. Some of the DP-based reinforcement ]earning 
+295 
+296 Bradtke 
+algorithms that have been described are Sutton's Temporal Differences methods 
+(Sutton, 1988), Watkins' Q-learning (Watkins, 1989), and Werbos' Heuristic Dy- 
+namic Programming (Werbos, 1987). However, there are few convergence results 
+for DP-based reinforcement learning algorithms, and these are limited to discrete 
+time, finite-state systems, with either lookup-tables or linear function approxima- 
+tots. Watkins and Dayan (1992) show that the Q-learning algorithm converges, 
+under appropriate conditions, to the optimal Q-function for finite-state Markovian 
+decision tasks, where the Q-function is represented by a lookup-table. Sutton (1988) 
+and Dayan (1992) show that the linear TD() learning rule, when applied to Marko- 
+vjan decision tasks where the states are representated by a linearly independent set 
+of feature vectors, converges in the mean to Vu, the value function for a given con- 
+trol policy U. Dayan (1992) also shows that linear TD(;) with linearly dependent 
+state representations converges, but not to Vu, the function that the algorithm is 
+supposed to learn. 
+Despite the paucity of theoretical results, applications have shown promise. For 
+example, Tesauro (1992) describes a system using TD(SX) that learns to play cham- 
+pionship level backgammon entirely through self-play . It uses a multilayer per- 
+ceptron (MLP) trained using backpropagation as a function approximator. Sofge 
+and White (1990) describe a system that learns to improve process control with 
+continuous state and action spaces. Neither of these applications, nor many similar 
+applications that have been described, meet the convergence requirements of the 
+existing theory. Yet they produce good results experimentally. We need to extend 
+the theory of DP-based reinforcement learning to domains with continuous state 
+and action spaces, and to algorithms that use non-linear function approximators. 
+Linear Quadratic Regulation (e.g., Bertsekas, 1987) is a good candidate as a first 
+attempt in extending the theory of DP-based reinforcement learning in this man- 
+ner. LQR is an important class of control problems and has a well-developed theory. 
+LQR problems involve continuous state and action spaces, and value functions can 
+be exactly represented by quadratic functions. The following sections review the 
+basics of LQR theory that will be needed in this paper, describe Q-functions for 
+LQR, describe the Q-learning algorithm used in this paper, and describe an algo- 
+rithm based on Q-learning that is proven to converge to the optimal controller for a 
+large class of LQR problems. We also describe a slightly different algorithm that is 
+only locally convergent to the optimal Q-function, demonstrating one of the possible 
+pitfalls of using a non-linear function approximator with DP-based learning. 
+2 LINEAR QUADRATIC REGULATION 
+Consider the deterministic, linear, time-invariant, discrete time dynamical system 
+given by 
+= Azt + But 
+t -- U at , 
+where A, B, and U are matrices of dimensions n x n, n x m, and m x n respectively. 
+st is the state of the system at time t, and ut is the control input to the system at 
+Backgammon can be viewed as a Markovjan decision task. 
+Reinforcement Learning Applied to Linear Quadratic Regulation 297 
+time t. U is a linear feedback controller. The cost at every time step is a quadratic 
+function of the state and the control signal: 
+where E and F are symmetric, positive definite matrices of dimensions n x n and 
+m x m respectively, and z' denotes z transpose. 
+The value Vv(zt) of a state zt under a given control policy U is defined as the 
+discounted sum of all costs that will be incurred by using U for all times from 
+t onward, i.e., V,(z,) = Z0-?r+,, where 0 <_ , _< I is the discount factor. 
+Linear-quadratic control theory (e.g., Bertsekas, 1987) tells us that lo is a quadratic 
+function of the states and can be expressed as Vv(zt) = ' 
+ztKvzt, where Kv is the 
+n x n cost raatriz for policy U. The optimal control policy, U , is that policy for 
+which the value of every state is minimized. We denote the cost matrix for the 
+optimal policy by K . 
+3 Q-FUNCTIONS FOR LQR 
+Watkins (1989) defined the Q-function for a given control policy U as Qv(z, u) = 
+r(a, u)+ 7Vv(f(z, u)). This can be expressed for an LQR problem as 
+qu(, ) 
+= r(, ) + vu(f(, )) 
+= ' + u' + (A + )'Ku(A + ) 
+= [,], [  + 'K. A'K. ] 
+7B'KvA F + 7B'KvB [z, 
+where [a, u] is the column vector concatenation of the column vectors a and u. 
+Define the parameter matrix Hv as 
+Hu = [ E +'yA'KuA 
+'� B' Ku A 
+F + 7B'KvB = H21 H22 ' 
+Hv is a symmetric positive definite matrix of dimensions (n + m) x (n + m). 
+(1) 
+(2) 
+4 Q-LEARNING FOR LQR 
+The convergence results for Q-learning (Watkins & Dayan, 1992) assume a dis- 
+crete time, finite-state system, and require the use of lookup-tables to represent 
+the Q-function. This is not suitable for the LQR domain, where the states and 
+actions are vectors of real numbers. Following the work of others, we will use a 
+parameterized representation of the Q-function and adjust the parameters through 
+a learning process. For example, Jordan and Jacobs (1990) and Lin (1992) use 
+MLPs trained using backpropagation to approximate the Q-function. Notice that 
+the function Qv is a quadratic function of its arguments, the state and control ac- 
+tion, but it is a linear function of the quadratic combinations from the vector [a, u]. 
+For example, if a = [a,a2], and u = [u], then Qv(x, u) is a linear function of 
+298 Bradtke 
+the vector [z,z, u,zz,,zu,z,u]. This fact allows us to use linear Recursive 
+Least Squares (RLS) to implement Q-learning in the LQR domain. 
+There are two forms of Q-learning. The first is the rule Watkins described in his 
+thesis (Watkins, 1989) . Watkins called this rule Q-learning, but we will refer to it 
+as optimizing Q-learning because it attempts to learn the Q-function of the optimal 
+policy directly. The optimizing Q-learning rule may be written as 
+Q+x(,, u,) = Q(,, u) + o [r(a:, u,) + 7min Q,(,+x,a) - Q,(, u,)], (3) 
+where Qt is the t th approximation to Q. The second form of Q-learning attempts 
+to learn Qv, the Q-function for some designated policy, U. U may or may not be 
+the policy that is actually followed during training. This policy-based Q-learning 
+rule may be written as 
+Qt+x(a:t, ut) = Qt(a:t, ut) + o [r(a:t, ut) + 7Qt (:rt+x, Ua:t+.) - Qt(a:t, ut)] , (4) 
+where Qt is the l 'h approximation to Qv. Bradtke, Ydstie, and Barto (paper in 
+preparation) show that a linear RLS implementation of the policy-based Q-learning 
+rule will converge to Qv for LQR problems. 
+5 POLICY IMPROVEMENT FOR LQR 
+Given a policy Uk, how can we find an improved policy, Uk+? Following Howard 
+(1960) , define U+ as 
+U+ = argmin [r(, u) + 7Vvk (f(a:, u))]. 
+But equation (1) tells us that this can be rewritten as 
+Ut+a: = argmin Quk (a:, 
+We can find the minimizing u by taking the partial derivative of QuA(a:, u) with 
+respect to u, setting that to zero, and solving for u. This yields 
+u = -7 (F + 7B'KuB) - B'KuAz. 
+Ui+ 
+Using (2), U+x can be written as 
+Therefore we can use the 
+policy. 
+Uk+ = -H H4. 
+definition of the Q-function to compute an improved 
+6 POLICY ITERATION FOR LQR 
+The RLS implementation of policy-based Q-learning (Section 4) and the policy 
+improvement process based on Q-functions (Section 5) are the key elements of the 
+policy iteration algorithm described in Figure 1. Theorem 1, proven in (Bradtke, 
+Reinforcement Learning Applied to Linear Quadratic Regulation 299 
+Ydstie, & Barto, in preparation), shows that the sequence of policies generated by 
+this algorithm converges to the optimal policy. Standard policy iteration algorithms, 
+such as those described by Howard (1960) for discrete time, finite state MarkovJan 
+decision tasks, or by Bertsekas (1987) and Kleinman (1968) for LQR problems, 
+require exact knowledge of the system model. Our algorithm requires no system 
+model. It only requires a suitably accurate estimate of Hvk. 
+Theorem X: If (1) {A,B) is controllable, (2) Uo is stabilizing, and (3) the control 
+signal, which at time step t and policy iteration step k is U-zt plus some ':exploration 
+factor, is strongly persistently exciting, then there exists a number N such that 
+the sequence of policies generated by the policy iteration algorithm described in 
+Figure I will conv

@@ -1,0 +1,144 @@
+An Environment Model for Nonstationary 
+Reinforcement Learning 
+Samuel P.M. Choi Dit-Yan Yeung Nevin L. Zhang 
+pmchoics. ust. hk dyyeung cs. ust. hk lzhang cs. ust. hk 
+Department of Computer Science, Hong Kong University of Science and Technology 
+Clear Water Bay, Kowloon, Hong Kong 
+Abstract 
+Reinforcement learning in nonstationary environments is generally 
+regarded as an important and yet difficult problem. This paper 
+partially addresses the problem by formalizing a subclass of nonsta- 
+tionary environments. The environment model, called hidden-mode 
+Markov decision process (HM-MDP), assumes that environmental 
+changes are always confined to a small number of hidden modes. 
+A mode basically indexes a Markov decision process (MDP) and 
+evolves with time according to a Markov chain. While HM-MDP 
+is a special case of partially observable Markov decision processes 
+(POMDP), modeling an HM-MDP environment via the more gen- 
+eral POMDP model unnecessarily increases the problem complex- 
+ity. A variant of the Baum-Welch algorithm is developed for model 
+learning requiring less data and time. 
+I Introduction 
+Reinforcement Learning (RL) [7] is a learning paradigm based upon the framework 
+of Markov decision process (MDP). Traditional RL research assumes that environ- 
+ment dynamics (i.e., MDP parameters) are always fixed (i.e., stationary). This 
+assumption, however, is not realistic in many real-world applications. In elevator 
+control [3], for instance, the passenger arrival and departure rates can vary signifi- 
+canfly over one day, and should not be modeled by a fixed MDP. 
+Nonetheless, RL in nonstationary environments is regarded as a difficult problem. 
+In fact, it is an impossible task if there is no regularity in the ways environment 
+dynamics change. Hence, some degree of regularity must be assumed. Typically, 
+nonstationary environments are presummed to change slowly enough such that on- 
+line RL algorithms can be employed to keep track the changes. The online approach 
+is memoryless in the sense that even if the environment ever revert to the previously 
+learned dynamics, learning must still need to be started all over again. 
+988 S. P M. Choi, D.-Y. Yeung and N. L. Zhang 
+1.1 Our Proposed Model 
+This paper proposes a formal model [1] for the nonstationary environments that 
+repeats their dynamics in certain ways. Our model is inspired by the observations 
+from the real-world nonstationary tasks with the following properties: 
+Property 1. Environmental changes are confined to a small number of modes, 
+which are stationary environments with distinct dynamics. The environment is in 
+exactly one of these modes at any given time. This concept of modes seems to be 
+applicable to many real-world tasks. In an elevator control problem, for example, 
+the system might operate in a morning-rush-hour mode, an evening-rush-hour mode 
+and a non-rush-hour mode. One can also imagine similar modes for other control 
+tasks, such as traffic control and dynamic channel allocation [6]. 
+Property 2. Unlike states, modes cannot be directly observed; the current mode 
+can only be estimated according to the past state transitions. It is analogous to the 
+elevator control example in that the passenger arrival rate and pattern can only be 
+inferred through the occurrence of pick-up and drop-off requests. 
+Property 3. Mode transitions are stochastic events and are independent of the 
+control system's responses. In the elevator control problem, for instance, the events 
+that change the current mode of the environment could be an emergency meeting 
+in the administrative office, or a tea break for the staff on the 10th floor. Obviously, 
+the elevator's response has no control over the occurrence of these events. 
+Property 4. Mode transitions are relatively infrequent. In other words, a mode 
+is more likely to retain for some time before switching to another one. If we consider 
+the emergency meeting example, employees on different floors take time to arrive at 
+the administrative office, and thus would generate a similar traffic pattern (drop-off 
+requests on the same floor) for some period of time. 
+Property 5. The number of states is often substantially larger than the number 
+of modes. This is a common property for many real-world applications. In the 
+elevator example, the state space comprises all possible combinations of elevator 
+positions, pick-up and drop-off requests, and certainly would be huge. On the other 
+hand, the mode space could be small. For instance, an elevator control system can 
+simply have the three modes as described above to approximate the reality. 
+Based on these properties, an environment model is proposed by introducing a 
+mode variable to capture environmental changes. Each mode specifies an MDP 
+and hence completely determines the current state transition function and reward 
+function (property 1). A mode, however, is not directly observable (property 2), 
+and evolves with time according to a Markov process (property 3). The model 
+is therefore called hidden-mode model. Note that our model does not impose any 
+constraint to satisfy properties 4 and 5. In other words, the hidden-mode model 
+can work for environments without these two properties. Nevertheless, as will be 
+shown later, these properties can improve learning in practice. 
+1.2 Related Work 
+Our hidden-mode model is related to a nonstationary model proposed by Dayan and 
+Sejnowski [4]. Although our model is more restrictive in terms of representational 
+power, it involves much fewer parameters and is thus easier to learn. Besides, other 
+than the number of possible modes, we do not assume any other knowledge about 
+An Environment Model for Nonstationary Reinforcement Learning 989 
+the way environment dynamics change. Dayan and Sejnowski, on the other hand, 
+assume that one knows precisely how the environment dynamics change. 
+The hidden-mode model can also be viewed as a special case of the hidden-state 
+model, or partially observable Markov decision process (POMDP). As will be shown 
+later, a hidden-mode model can always be represented by a hidden-state model 
+through state augmentation. Nevertheless, modeling a hidden-mode environment 
+via a hidden-state model will unnecessarily increase the problem complexity. In this 
+paper, the conversion from the former to the latter is also briefly discussed. 
+1.3 Our Focus 
+There are two approaches for RL. Model-based RL first acquires an environment 
+model and then, from which, an optimal policy is derived. Model-free RL, on the 
+contrary, learns an optimal policy directly through its interaction with the envi- 
+ronment. This paper is concerned with the first part of the model-based approach, 
+i.e., how a hidden-mode model can be learned from experience. We will address the 
+policy learning problem in a separate paper. 
+2 Hidden-Mode Markov Decision Processes 
+This section presents our hidden-mode model. Basically, a hidden-mode model is 
+defined as a finite set of MDPs that share the same state space and action space, with 
+possibly different transition functions and reward functions. The MDPs correspond 
+to different modes in which a system operates. States are completely observable 
+and their transitions are governed by an MDP. In contrast, modes are not directly 
+observable and their transitions are controlled by a Markov chain. We refer to such 
+a process as a hidden-mode Markov decision process (HM-MDP). An example of 
+HM-MDP is shown in Figure l(a). 
+� � Time 
+, ,es Mode 
+Q'fft ff? Actloll 
+....... State 
+(a) A 3-mode, 4-state, 
+1-action HM-MDP 
+(b) The evolution of an HM-MDP. The arcs indicate 
+dependencies between the variables 
+Figure 1: An HM-MDP 
+Formally, an HM-MDP is an 8-tuple (Q, S, A, X, Y, R, H, �2), where Q, S and A 
+represent the sets of modes, states and actions respectively; the mode transition 
+function X maps mode m to n with a fixed probability Zm,; the state transition 
+function Y defines transition probability, ym(S, a, s), from state s to s  given mode 
+m and action a; the stochastic reward function R returns rewards with mean value 
+rm(s,a); II and  denote the prior probabilities of the modes and of the states 
+respectively. The evolution of modes and states over time is depicted in Figure 1 (b). 
+990 S. P M. Choi, D.-Y. Yeung and N. L. Zhang 
+HM-MDP is a subclass of POMDP. In other words, the former can be reformulated 
+as a special case of the latter. Specifically, one may take an ordered pair of any 
+mode and observable state in the HM-MDP as a hidden state in the POMDP, and 
+any observable state of the former as an observation of the latter. Suppose the 
+observable states s and s  are in modes rn and n respectively. These two HM- 
+MDP states together with their corresponding modes form two hidden states (ra, s) 
+and (n, s ) for its POMDP counterpart. The transition probability from (ra, s) to 
+(n, s ) is then simply the mode transition probability Xm, multiplied by the state 
+transition probability ym(s,a, s). For an M-mode, N-state, K-action HM-MDP, 
+the equivalent POMDP thus has N observations and MN hidden states. Since 
+most state transition probabilities are collapsed into mode transition probabilities 
+through parameter sharing, the number of parameters in an HM-MDP (N2MK + 
+M 2) is much less than that of its corresponding POMDP (M2N2K). 
+3 Learning a Hidden-Mode Model 
+There are now two ways to learn a hidden-mode model. One may learn either an 
+HM-MDP, or an equivalent POMDP instead. POMDP models can be learned via 
+a variant of the Baum-Welch algorithm [2]. This POMDP Baum-Welch algorithm 
+requires O(MNT) time and O(M2N2K) storage for learning an M-mode, N- 
+state, K-action HM-MDP, given T data items. 
+A similar idea can be applied to the learning of an HM-MDP. Intuitively, one 
+can estimate the model parameters based on the expected counts of the mode 
+transitions, computed by a set of auxiliary variables. The major difference from the

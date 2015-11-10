@@ -1,0 +1,154 @@
+Encoding Labeled Graphs by Labeling 
+RAAM 
+Alessandro Sperduti* 
+Department of Computer Science 
+Pisa University 
+Corso Italia 40, 56125 Pisa, Italy 
+Abstract 
+In this paper we propose an extension to the RAAM by Pollack. 
+This extension, the Labeling RAAM (LRAAM), can encode la- 
+beled graphs with cycles by representing pointers explicitly. Data 
+encoded in an LRAAM can be accessed by pointer as well as by 
+content. Direct access by content can be achieved by transform- 
+ing the encoder network of the LRAAM into an analog Hopfield 
+network with hidden units. Different access procedures can be 
+defined depending on the access key. Sufficient conditions on the 
+asymptotical stability of the associated Hopfield network are briefly 
+introduced. 
+1 INTRODUCTION 
+In the last few years, several researchers have tried to demonstrate how symbolic 
+structures such as lists, trees, and stacks can be represented and manipulated in a 
+connectionist system, while still preserving all the computational characteristics of 
+connectionism (and extending them to the symbolic representations) (Hinton, 1990; 
+Plate, 1991; Pollack, 1990; Smolensky, 1990; Touretzky, 1990). The goal is to high- 
+light the potential of the connectionist approach in handling domains of structured 
+tasks. The common background of their ideas is an attempt to achieve distal access 
+and consequently compositionality. The RAAM model, proposed by Pollack (Pol- 
+lack, 1990), is one example of how a neural network can discover compact recursive 
+*Work partially done while at the International Computer Science Institute, Berkeley. 
+1125 
+1126 Sperduti 
+Output Layer 
+Hidden Layer 
+Input Layer 
+Label P 1 P 2 P n 
+Decoder 
+Encoder 
+Figure 1: The network for a general LRAAM. The first layer of the network imple- 
+ments an encoder; the second layer, the corresponding decoder. 
+distributed representations of trees with a fixed branching factor. 
+This paper presents an extension of the RAAM, the Labeling RAAM (LRAAM). 
+An LRAAM allows one to store a label for each component of the structure to be 
+represented, so as to generate reduced representations of labeled graphs. Moreover, 
+data encoded in an LRAAM can be accessed not only by pointer but also by content. 
+In Section 2 we present the network and we discuss some technical aspects of the 
+model. The possibility to access data by content is presented in Section 3. Some 
+stability results are introduced in Section 4, and the paper is closed by discussion 
+and conclusions in Section 5. 
+2 THE NETWORK 
+The general structure of the network for an LRAAM is shown in Figure 1. The 
+network is trained by backpropagation to learn the identity function. The idea is to 
+obtain a compressed representation (hidden layer activation) of a node of a labeled 
+graph by allocating a part of the input (output) of the network to represent the 
+label (Nt units) and the remaining part to represent one or more pointers. This 
+representation is then used as pointer to the node. To allow the recursive use of these 
+compressed representations, the part of the input (output) layer which represents 
+a pointer must be of the same dimension as the hidden layer (NH units). Thus, a 
+general LRAAM is implemented by a N - NH - N feed-forward network, where 
+N = Nt + nNH, and n is the number of pointer fields. 
+Labeled graphs can be easily encoded using an LRAAM. Each node of the graph 
+only needs to be represented as a record, with one field for the label and one 
+field for each pointer to a connected node. The pointers only need to be logical 
+pointers, since their actual values will be the patterns of hidden activation of the 
+network. At the beginning of learning, their values are set at random. A graph is 
+represented by a list of these records, and this list constitutes the initial training set 
+for the LRAAM. During training the representations of the pointers are consistently 
+updated according to the hidden activations. Consequently, the training set is 
+dynamic. For example, the network for the graph shown in Figure 2 can be trained 
+as follows: 
+Encoding Labeled Graphs by Labeling RAAM 1127 
+input hidden output 
+(Lx d2 d4 ds) --* d'  
+(L2 d3 d4 nil)  d2  
+(L3 dc nil nil)  d3  
+(L d dn3 nil)  d4  
+(Ls d d nil)  ds  
+(L nil nil nil)  d  
+I! 
+(L nil nil nil) 
+where Li and dni are respectively the label and the pointer (reduced descriptor to 
+the i-th node. For the sake of simplicity, the void pointer is represented by a single 
+symbol, nil, but each instance of it must be considered as being different. This 
+statement will be made clear in the next section. 
+Once the training is complete, the patterns of activation representing pointers can be 
+used to retrieve information. Thus, for example, if the activity of the hidden units of 
+the network is clamped to d, the output of the network becomes (L ,d2,dn4 ,dns), 
+enabling further retrieval of information by decoding d2, or dn4, or dns, and so on. 
+Note that more labeled graphs can be encoded in the same LRAAM. 
+2.1 THE VOID POINTER PROBLEM 
+In the RAAM model there is a termination problem in the decoding of a compressed 
+representation: due to approximation errors introduced during decoding, it is not 
+clear when a decoded pattern is a terminal or a nonterminal. One solution is to test 
+for binary-ness, which consists in checking whether all the values of a pattern are 
+above I - r or below r, r > 0, r << 1. However, a nonterminal may also pass the 
+test for binary-ness. 
+One advantage of LRAAM over RAAM is the possibility to solve the problem by 
+allocating one bit of the label for each pointer to represent if the pointer is void or 
+not. This works better than fixing a particular pattern for the void pointer, such 
+as a pattern with all the bits to I or 0 or -1 (if symmetrical sigmoids are used). 
+Simulations performed with symmetrical sigmoids showed that the configurations 
+with all bits equal to I or -1 were also used by non void pointers, whereas the 
+configuration with all bits set to zero considerably reduced the rate of convergence. 
+Using a part of the label to solve the problem is particularly efficient, since the 
+pointer fields are free to take on any configuration when they are void, and this 
+increases the freedom of the system. To facilitate learning, the output activation 
+of the void pointers in one epoch is used as an input activation in the next epoch. 
+Experimentation showed fast convergence to different fixed points for different void 
+Figure 2: An example of a labeled graph. 
+1128 Sperduti 
+pointers. For this reason, we claimed that each occurrence of the void pointer is 
+different, and that the nil symbol can be considered as a don't care symbol. 
+2.2 REPRESENTATION OF THE TRAINING SET 
+An important question about the way a graph is represented in the training set 
+is which aspects of the representation itself can make the encoding task harder 
+or easier. In (Sperduti, 1993a) we made a theoretical analysis on the constraints 
+imposed by the representation on the set of weights of the LRAAM, under the 
+hypotheses of perfect learning (zero total error after learning) and linear output 
+units. Our findings were: 
+i) pointers to nodes belonging to the same cycle of length k and represented in 
+the same pointer field p, must be eigenvectors of the matrix (W �)k, where 
+W (p) is the connection matrix between the hidden layer and the output 
+units representing the pointer field p; 
+confluent pointers, i.e., pointers to the same node represented in the same 
+pointer field p (of different nodes), contribute to reducing the rank of the 
+matrix W �, the actual rank is however dependent on the constraints im- 
+posed by the label field and the other pointer fields. 
+We have observed that different representations of the same structure can lead to 
+very different learning performances. However, representations with roughly the 
+same number of non void pointers for each pointer field, with cycles represented in 
+different pointer fields and with confluent pointers seem to be more effective. 
+3 ACCESS BY CONTENT 
+Retrieval of coded information is performed in RAAM through the pointers. All the 
+terminals and nonterminals can be retrieved recursively by the pointers to the whole 
+tree encoded in a RAAM. If direct access to a component of the tree is required, 
+the pointer to the component must be stored and used on demand. 
+Data encoded in an LRAAM can also be accessed directly by content. In fact, an 
+LRAAM network can be transformed into an analog Hopfield network with one 
+hidden layer and asymmetric connection matrix by feeding back its output into its 
+input units.  Because each pattern is structured in different fields, different access 
+1Experimental results have shown that there is a high correlation between elements of 
+W � (the set of weights from the input to the hidden layer) and the corresponding elements 
+in W (�)T (the set of weights from the hidden to the output layer). This is particularly true 
+for weights corresponding to units of the label field. Such result is not a total surprise, 
+since in the case of a static training set, the error function of a linear encoder network has 
+been proven to have a unique global minimum corresponding to the projection onto the 
+subspace generated by the first principal vectors of a covariance matrix associated with the 
+training set (Baldi &: Hornik, 1989). This implies that the weights matrices are transposes 
+of each other unless there is an invertible transformation between them (see also (Bourlard 
+&: Kamp, 1988)). 
+Encoding Labeled Graphs by Labeling RAAM 1129 
+Figure 3: The labeled graph encoded in a 16-3-16 LRAAM (5450 epochs), and the 
+labeled tree encoded in a 18-6-18 LRAAM (1719 epochs). 
+procedures can be defined on the Hopfield network according to the type of access 
+key. An access procedure is defined by: 
+1. choosing one or more fields in the input layer according to th

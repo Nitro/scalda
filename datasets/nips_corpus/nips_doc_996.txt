@@ -1,0 +1,164 @@
+Unsupervised Pixel-prediction 
+William R. Softky 
+Math Research Branch 
+NIDDK, NIH 
+9190 Wisconsin Ave 350 
+Bethesda, MD 20814 
+bill@homer.niddk.nih.gov 
+Abstract 
+When a sensory system constructs a model of the environment 
+from its input, it might need to verify the model's accuracy. One 
+method of verification is multivariate time-series prediction: a good 
+model could predict the near-future activity of its inputs, much 
+as a good scientific theory predicts future data. Such a predict- 
+ing model would require copious top-down connections to compare 
+the predictions with the input. That feedback could improve the 
+model's performance in two ways: by biasing internal activity to- 
+ward expected patterns, and by generating specific error signals if 
+the predictions fail. A proof-of-concept model--an event-driven, 
+computationally efficient layered network, incorporating cortical 
+features like all-excitatory synapses and local inhibition--was con- 
+structed to make near-future predictions of a simple, moving stim- 
+ulus. After unsupervised learning, the network contained units not 
+only tuned to obvious features of the stimulus like contour orienta- 
+tion and motion, but also to contour discontinuity (end-stopping) 
+and illusory contours. 
+1 Introduction 
+Somehow, brains make very accurate models of the outside world from their raw 
+sensory input. How might brains check and improve those models? What signal is 
+there to verify a model of the world? 
+The scientific method faces a similar problem: how to verify theories. In science, 
+theories are verified by predicting future data, using the implicit assumption that 
+810 W.R. SOFTKY 
+good predictions can only result from good models. By analogy, it is possible that 
+brains predict their afferent input (e.g. at the thalamus), and that making such 
+predictions and using them as feedback is a unifying design principle of cortex. 
+The proof-of-concept model presented here uses unsupervised Hebbian learning to 
+predict, pixel-wise, the location of a moving pattern slightly in the future. 
+Why try prediction? 
+� Predicting future data usually requires a good generafive model. For instance: to 
+predict the brightness of individual TV pixels even a fraction of a second in advance, 
+one would need models of contours, objects, motion, occlusion, shadow, etc. 
+� A successful prediction can help filter out input noise, like a Kalman filter. 
+� A failed prediction provides a specific, high-dimensional error signal. 
+� Prediction is not only possible in cortex--which has massive feedback 
+connections--but necessary as well, because those feedback fibers, their target den- 
+drites, and synaptic integration impose inevitable delays. So for a feedback signal 
+to arrive at the cell body on time, it would need to have been generated tens of 
+milliseconds earlier, as a prediction of imminent activity. 
+� In this model, prediction means producing spikes in advance which will correlate 
+with subsequent input spikes. Specifically, the network's goal is to produce at each 
+grid point a train of spikes at times Pj which predicts the input train In, in the 
+sense of maximizing their normalized cross-correlation. The objective function L 
+(likeness) can be expressed in terms of a smoothing bump function B(t,ty) 
+(of spikes at times tz and ty and a correlation function C(trainl, train2, At): 
+= 
+C ( P,L XT) = 
++ 
+j 
+c(P, L xr) 
+v/C(P, P, O)C(I, I, O) 
+� In order to avoid a trivial but useless prediction (the weather tomorrow will be 
+just like today'), one must ensure that a unit cannot usually predict its own firing 
+(for example, pick At m r greater than the autocorrelation time of a spike train). 
+2 Model 
+The input to the network is a 16 x 16 array of spike trains, with toroidal array 
+boundary conditions. The spikes are driven by a stimulus bar of excitation one 
+unit wide and seven units long, which moves smoothly perpendicular to its orien- 
+tation behind the array (in a broad circle, so that all orientations and directions 
+are represented; Fig. 1A). The stimulus point transiently generates spikes at each 
+grid point there according to a Poisson process: the whole array of spikes can be 
+visualized as a twinkling, moving contour. 
+Unsupervised Pixel-prediction 811 
+A 
+stimulus- 
+a local 
+WTA -lll tuning 
+helper . 
+binding 
+delay 
+, , , tuned, precise, predictive 
+inputs feedback 
+Figure 1: A network predicts dynamic patterns. A A moving pattern on 
+a grid of spiking pixels describes a slow circle, and drives activity in a network 
+above. B The three-layer network learns to predict that activity just before it 
+occurs. Forward connections, evolving by Hebbian rules, produce top-level units 
+with coarse receptive fields and fine stimulus-tuning (e.g. contour orientation and 
+motion). Each spike from a top unit is bound (by coincidence detection) with 
+the particular spike which triggered it, to produce feedback which is both stimulus- 
+tuned and spatially specific. A Hebb rule determines how the delayed, predictive 
+feedback will drive middle-layer units and be compared to input-layer units. Because 
+all connections are excitatory, winner-take-all inhibition within local groups of units 
+prevents runaway excitation. 
+2.1 Network Structure 
+The network has three layers. The bottom layer contains the spiking pixels, and 
+the surprise units described below. The middle layer, having the same spatial 
+resolution as the input, has four coarsely-tuned units per input pixel. And the 
+top layer contains the most finely-tuned units, spaced at half the spatial resolution 
+(at every fourth gridpoint, i.e. with coarser spatial resolution and larger receptive 
+fields). The signal flow is hi-directional [10, 7], with both forward and feedback 
+synaptic connections. All connections between units are excitatory, and excitation 
+is kept in check by local winner-take-all inhibition (WTA). For example, a given 
+input spike can only trigger one spike out of the 16 units directly above it in the 
+top layer (Fig. lB). 
+Unsupervised learning occurs through two local Hebb-like rules. Forward connec- 
+tions evolve to make nearby (competing) units strongly anticorrelated--for instance, 
+units typically become tuned to different contour orientations and directions of 
+motion--while feedback connections evolve to maximally correlate delayed feedback 
+signals with their targets. 
+2.2 Binary multiplication in single units 
+While some neural models implement multiplication as a nonlinear function of the 
+sum of the inputs, the spiking model used here implements multiplication as a 
+binary operation on two distinct classes of synapses. 
+812 W.R. SOFTKY 
+�oln�, 
+helper inh trigger detector delay 
+heperl II I 
+trigger [ I -- 
+prediction 
+of x 
+unpdicted input unfulfilled 
+input prediction 
+stimulus 
+Figure 2: Multiplicative synapses and surprise detection. A A spiking unit 
+multiplies two types of synaptic inputs: the helper type increments an internal 
+bias without triggering a spike, and the trigger type can trigger a spike (*), 
+without incrementing, but only if the bias is above a threshold. Spike propagation 
+may be discretely delayed, and coincidences of two units fired by the same input 
+spike can be detected. B Once the network has generated a (delayed) prediction of 
+a given pixel's activity, the match of prediction and reality can be tested by speciM- 
+purpose units: one type which detects unpredicted input, the other which detects 
+unfulfilled predictions. The firing of either type can drive the network's learning 
+rules, so units above can become tuned to consistent patters of failed predictions, 
+as occur at discontinuities and illusory contours. 
+A helper synapse, when activated by a presynaptic spike, will increment or decre- 
+ment the postsynaptic voltage without ever initiating a spike. A trigger synapse, on 
+the other hand, can initiate a spike (if the voltage is above the threshold determined 
+by its WTA neighbors), but cannot adjust the voltage (Fig. 2A; the helper type is 
+loosely based on the weak, slow NMDA synapses on cortical apical dendrites, while 
+triggers are based on strong, brief AMPA synapses on basal dendrites.) Thus, a 
+unit can only fire when both synaptic types are active, so the output firing rate 
+approximates the product of the rates of helpers and triggers. Each unit has two 
+characteristic timescales: a slower voltage decay time, and the essentially instanta- 
+neous time necessary to trigger and propagate a spike. 
+This scheme has two advantages. One is that a single cell can implement a relatively 
+pure multiplication of distinct inputs, as required for computations like motion- 
+detection. The other advantage is that feedback signals, restricted to only helper 
+synapses, cannot by themselves drive a cell, so closed positive-feedback loops cannot 
+latch the network into a fixed state, independent of the input. Therefore, all 
+trigger synapses in this network are forward, while all delayed, lateral, and feedback 
+connections are of the helper type. 
+2.3 Feedback 
+There are two issues in feedback: How to construct tuned, specific feedback, and 
+what to do with the feedback where it arrives. 
+Unsupervised Pixel-prediction 813 
+An accurate prediction requires information about the input: both about its exact 
+present state, and about its history over nearby space and recent time. In this model, 
+those signals are distinct: spatial and temporal specificity is given by each input 
+spike, and the spario-temporal history is given by the stimulus-tuned responses of 
+the slow, coarse-grained units in the top layer. Spatially-precise feedback requires 
+recombining those signals. (Feedback from V1 cortical Layer VI to thalamus has 
+recently been shown to fit these criteria, being both spatially refined and direction- 
+selective; [3] Grieve & Sillito, 1995). 
+In this network, each feedback signal results from the AND of spikes from a input- 
+l

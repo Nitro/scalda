@@ -1,0 +1,148 @@
+Viewing Classifier Systems 
+as Model Free Learning in POMDPs 
+Akira Hayashi and Nobuo Suematsu 
+Faculty of Information Sciences 
+Hiroshima City University 
+3-4-10zuka-higashi, Asaminami-ku, Hiroshima, 731-3194 Japan 
+{ akira,suematsu }@im.hiroshima-cu.ac.jp 
+Abstract 
+Classifier systems are now viewed disappointing because of their prob- 
+lems such as the rule strength vs rule set performance problem and the 
+credit assignment problem. In order to solve the problems, we have de- 
+veloped a hybrid classifier system: GLS (Generalization Learning Sys- 
+tem). In designing GLS, we view CSs as model free learning in POMDPs 
+and take a hybrid approach to finding the best generalization, given the 
+total number of rules. GLS uses the policy improvement procedure by 
+Jaakkola et al. for an locally optimal stochastic policy when a set of 
+rule conditions is given. GLS uses GA to search for the best set of rule 
+conditions. 
+1 INTRODUCTION 
+Classifier systems (CSs) (Holland 1986) have been among the most used in reinforcement 
+learning. Some of the advantages of CSs are (1) they have a built-in feature (the use of 
+don't care symbols #) for input generalization, and (2) the complexity of policies can 
+be controlled by restricting the number of rules. In spite of these attractive features, CSs 
+are now viewed somewhat disappointing because of their problems (Wilson and Goldberg 
+1989; Westerdale 1997). Among them are the rule strength vs rule set performance prob- 
+lem, the definition of the rule strength parameter, and the credit assignment (BBA vs PSP) 
+problem. 
+In order to solve the problems, we have developed a hybrid classifier system: GLS (Gener- 
+alization Leaming System). GLS is based on the recent progress of RL research in partially 
+observable Markov decision processes (POMDPs). In POMDPs, the environments are re- 
+ally Markovian, but the agent cannot identify the state from the current observation. It may 
+be due to noisy sensing or perceptual aliasing. Perceptual aliasing occurs when the sensor 
+returns the same observation in multiple states. Note that even for a completely observable 
+990 .4. Hayashi and N. Suematsu 
+MDP, the use of don't care symbols for input generalization will make the process as if it 
+were partially observable. 
+In designing GLS, we view CSs as RL in POMDPs and take a hybrid approach to finding 
+the best generalization, given the total number of rules. GLS uses the policy improvement 
+procedure in Jaakkola et al. (1994) for an locally optimal stochastic policy when a set of 
+rule conditions is given. GLS uses GA to search for the best set of rule conditions. 
+The paper is organized as follows. Since CS problems are easier to understand from GLS 
+perspective, we introduce Jaakkola et al. (1994), propose GLS, and then discuss CS prob- 
+lems. 
+2 LEARNING IN POMDPS 
+Jaakkola et al. (1994) consider POMDPs with perceptual aliasing and memoryless stochas- 
+tic policies. Following the authors, let us call the observations messages. Therefore, a 
+policy is a mapping from messages to probability distributions (PDs) over the actions. 
+Given a policy r, the value of a state s, V':(s), is defined for POMDPs just as for MDPs. 
+Then, the value of a message m under policy r, V': (m), can be defined as follows: 
+= (1) 
+where P=(slm) is the probability that the state is s when the message is m under the policy 
+71'. 
+Then, the following holds. 
+N 
+V':(s) = lim EE{n(st'at)--l sx = s) (2) 
+t=l 
+v(m) = E{v(s) ls (3) 
+where st and at refer to the state and the action taken at the t th step respectively, l(st, at) 
+is the immediate reward at the t th step,  is the (unknown) gain (i.e. the average reward 
+per step). s --> m refers to all the instances where rn, is observed in s and E{. I s --> m} is 
+a Monte-Carlo expectation. 
+In order to compute E{V(s) I s --> m}, Jaakkola et al. showed a Monte-Carlo procedure: 
+1 
+Vtrr(m) = .{ Rt +Fx,xRt+! + I1,2/t+2 +''' + Il,t-ttt 
+'JF /!t 2 +I2,1Rt:+l -Jr I2,2/t:+2 -Jr ''' -Jr I2,t-t21t 
+(4) 
++ Rtk +I/�,Rtk+l + ' + 
+where tk denotes. the time step corresponding to the k th occurrence of the message m, 
+Rt = t(st, a) - R for every t, I'k,T indicates the discounting at the T th step in the 
+sequence. By estimating R and by suitably setting I',T, Vt'(m) converges to 
+Q':(m, a), Q-value of the message m for the action a under the policy r, is also defined 
+and computed in the same way. 
+Jaakkola et al. have developed a policy improvement method: 
+Step 1 Evaluate the current policy r by computing V=(m) and Q=(m, a) for each m and 
+6. 
+Iqewing Classifier Systems as Model Free Learning in POMDPs 991 
+Step 2 Test for any m whether maxa Q'*(m, a) > V(ra) holds. If not, then return r. 
+Step 3 For each m and a, define r x (a]m) as follows: 
+rX(alrn) = 1.0 when a = ar#rnaxaQ'(rn, a), rX(a[m) = 0.0 otherwise. 
+Then, define r  as r(alm) = (1 - e)r(alm) + erX (aim) 
+Step 4 Set the new policy as r = r , and goto Stepl. 
+3 GLS 
+Each rule in GLS consists of a condition part, an action part, and an evaluation 
+part: Rule = (Condition, Action, Evaluation). The condition part is a string c 
+over the alphabet {0, 1, }, and is compared with a binary sensor message. :/p is a 
+don't care symbol, and matches 0 and 1. When the condition c matches the mes- 
+sage, the action is randomly selected using the PD in the action part: Action = 
+(p(axlc),p(a2]c),... ,p(alAl[C)), Ell p(ajlc ) = 1.0 where IAI is the total number of ac- 
+tions. The evaluation part records the value of the condition V(c) and the Q-values of the 
+condition action pairs Q(c,a): Evaluation = (V(c), Q(c, ax), Q(c, a2), . . . , Q(c, alAi) ). 
+Each rule set consists of N rules, {Rulex, Rule2,..., Rule2v}. N, the total number of 
+rules in a rule set, is a design parameter to control the complexity of policies. All the rules 
+except the last one are called standard rules. The last rule Rule� is a special rule which is 
+called the default rule. The condition part of the default rule is a string of 's and matches 
+any message. 
+Leaming in GLS proceeds as follows: (1)Initialization: randomly generate an initial pop- 
+ulation of M rule sets, (2)Policy Evaluation and Improvement: for each rule set, repeat a 
+policy evaluation and improvement cycle for a suboptimal policy, then, record the gain of 
+the policy for each rule set, (3)Genetic Algorithm: use the gain of each rule set as its fit- 
+ness measure and produce a new generation of rule sets, (4) Repeat: repeat from the policy 
+evaluation and improvement step with the new generation of rule sets. 
+In (2)Policy Evaluation and Improvement, GLS repeats the following cycle for each rule 
+set. 
+Step 1 Set e sufficientiy small. Set t * sufficientiy large. 
+Step 2 Repeat for 1 < t < t x. 
+1. Make an observation of the environment and receive a message mt from the 
+sensor. 
+2. From all the rules whose condition matches the message mr, find the rule 
+whose condition is the most specific . Let us call the rule the active rule. 
+3. Select the next action at randomly according to the PD in the action part of 
+the active rule, execute the action, and receive the reward R(st, at) from the 
+environment. (The state st is not observable.) 
+4. Update the current estimate of the gain R from its previous estimate and 
+t( st, at ). Let tt = t( st, at) - t. For each rule, consider its condition ci 
+as (a generalization of) a message, and update its evaluation part V(ci) and 
+Q(cl, a)(a  A) using Eq.(4). 
+Step 3 Check whether the following holds. If not, exit. 
+3i(1 _< i _< N), ma.xaQ(Ci, a) > V(ci) 
+Step 4 Improve the current policy according to the method in the previous section, and 
+update the action part of the corresponding rules and goto Step 2. 
+1The most specific rule has the least number of #'s. This is intended only for saving the number 
+of rules. 
+992 A. Hayashi and N. Suematsu 
+GLS extracts the condition parts of all the rules in a rule set and concatenates them to 
+form a string. The string will be an individual to be manipulated by the genetic algorithm 
+(GA). The genetic algorithm used in GLS is a fairly standard one. GLS combines the SGA 
+(the simple genetic algorithm) (Goldberg 1989) with the elitist keeping strategy. The SGA 
+is composed of three genetic operators: selection, crossover, and mutation. The fitness 
+proportional selection and the single-point crossover are used. The three operators are 
+applied to an entire population at each generation. Since the original SGA does not consider 
+:/p's in the rule conditions, we modified SGA as follows. When GLS randomly generates 
+an initial population of rule sets, it generates :/p at each allele position in rule conditions 
+according to the probability P#. 
+4 CS PROBLEMS AND GLS 
+In the history of classifier systems, there were two quite different approaches: the Michigan 
+approach (Holland and Reitman 1978), and the Pittsburgh (Pitt) approach (DeJong 1988). 
+In the Michigan approach, each rule is considered as an individual and the rule set as the 
+population in GA. Each rule has its strength parameter, which is based on its future payoff 
+and is used as the fitness measure in GA. These aspects of the approach cause many prob- 
+lems. One is the rule strength vs rule set performance problem. Can we collect only strong 
+rules and get the best rule set performance? Not necessarily. A strong rule may cooperate 
+with weak rules to increase its payoff. Then, how can we define and compute the strength 
+parameter for the best rule set performance? In spite of its problems, this approach is now 
+so much more popular than the other, that when people simply say classifier systems, they 
+refer to Michigan type classifier systems. In the Pitt approach, the problems of the Michi- 
+gan approach are avoided by requiring GA to evaluate a whole rule set. In the approach, a 
+rule set is considered as an individual and multiple rule sets are kept as the population. The 
+problem of the Pitt approa

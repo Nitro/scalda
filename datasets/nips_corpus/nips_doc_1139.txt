@@ -1,0 +1,150 @@
+Why did TD-Gammon Work? 
+Jordan B. Pollack & Alan D. Blair 
+Computer Science Department 
+Brandeis University 
+Waltham, MA 02254 
+{ pollack,blair } @ cs.brandeis.edu 
+Abstract 
+Although TD-Gammon is one of the major successes in machine learn- 
+ing, it has not led to similar impressive breakthroughs in temporal dif- 
+ference learning for other applications or even other games. We were 
+able to replicate some of the success of TD-Gammon, developing a 
+competitive evaluation function on a 4000 parameter feed-forward neu- 
+ral network, without using back-propagation, reinforcement or temporal 
+difference learning methods. Instead we apply simple hill-climbing in a 
+relative fitness environment. These results and further analysis suggest 
+that the surprising success of Tesauro's program had more to do with the 
+co-evolutionary structure of the learning task and the dynamics of the 
+backgammon game itself. 
+1 INTRODUCTION 
+It took great chutzpah for Gerald Tesauro to start wasting computer cycles on temporal 
+difference learning in the game of Backgammon (Tesauro, 1992). Letting a machine learn- 
+ing program play itself in the hopes of becoming an expert, indeed! After all, the dream of 
+computers mastering a domain by self-play or introspection had been around since the 
+early days of AI, forming part of Samuel's checker player (Samuel, 1959) and used in 
+Donald Michie's MENACE tic-tac-toe learner (Michie, 1961). However such self-condi- 
+tioning systems, with weak or non-existent internal representations, had generally been 
+fraught with problems of scale and abandoned by the field of AI. Moreover, self-playing 
+learners usually develop eccentric and brittle strategies which allow them to draw each 
+other, yet play poorly against humans and other programs. 
+Yet Tesauro's 1992 result showed that this self-play approach could be powerful, and after 
+some refinement and millions of iterations of self-play, his TD-Gammon program has 
+become one of the best backgammon players in the world (Tesauro, 1995). His derived 
+weights are viewed by his corporation as significant enough intellectual property to keep 
+as a trade secret, except to leverage sales of their minority operating system (International 
+Business Machines, 1995). Others have replicated this TD result both for research pur- 
+poses (Boyan, 1992) and commercial purposes. 
+Why did TD-Gammon Work? 11 
+With respect to the goal of a self-organizing learning machine which starts from a minimal 
+specification and rises to great sophistication, TD-Gammon stands alone. How is its suc- 
+cess to be understood, explained, and replicated in other domains? Is TD-Gammon unbri- 
+dled good news about the reinforcement learning method? 
+Our hypothesis is that the success of TD-gammon is not due to the back-propagation, rein- 
+forcement, or temporal-difference technologies, but to an inherent bias from the dynamics 
+of the game of backgammon, and the co-evolutionary setup of the training, by which the 
+task dynamically changes as the learning progresses. We test this hypothesis by using a 
+much simpler co-evolutionary learning method for backgammon - namely hill-climbing. 
+2 SETUP 
+We use a standard feedforward neural network with two layers and the sigmoid function, 
+set up in the same fashion as Tesauro with 4 units to represent the number of each player's 
+pieces on each of the 24 points, plus 2 units each to indicate how many are on the bar and 
+off the board. In addition, we added one more unit which reports whether or not the game 
+has reached the endgame or race situation, making a total of 197 input units. These are 
+fully connected to 20 hidden units, which are then connected to one output unit that judges 
+the position. Including bias on the hidden units, this makes a total of 3980 weights. The 
+game is played by generating all legal moves, converting them into the proper network 
+input, and picking the position judged as best by the network. We started with all weights 
+set to zero. 
+Our initial algorithm was hillclimbing: 
+1. add gaussian noise to the weights 
+2. play the network against the mutant for a number of games 
+3. if the mutant wins more than half the games, select it for the next generation. 
+The noise was set so each step would have a 0.05 RMS distance (which is the euclidean 
+distance divided by 3 ). 
+Surprisingly, this worked reasonably well! The networks so evolved improved rapidly at 
+first, but then sank into mediocrity. The problem we perceived is that comparing two close 
+backgammon players is like tossing a biased coin repeatedly: it may take dozens or even 
+hundreds of games to find out for sure which of them is better. Replacing a well-tested 
+champion is dangerous without enough information to prove the challenger is really a bet- 
+ter player and not just a lucky novice. Rather than burden the system with so much com- 
+putation, we instead introduced the following modifications to the algorithm to avoid this 
+Buster Douglas Effect: 
+Firstly, the games are played in pairs, with the order of play reversed and the same random 
+seed used to generate the dice rolls for both games. This washes out some of the unfair- 
+ness due to the dice rolls when the two networks are very close - in particular, if they were 
+identical, the result would always be one win each. Secondly, when the challenger wins 
+the contest, rather than just replacing the champion by the challenger, we instead make 
+only a small adjustment in that direction: 
+champion := 0.95*champion + 0.05*challenger 
+This idea, similar to the inertia term in back-propagation, was introduced on the 
+assumption that small changes in weights would lead to small changes in decision-making 
+by the evaluation function. So, by preserving most of the current champion's decisions, 
+we would be less likely to have a catastrophic replacement of the champion by a lucky 
+novice challenger. 
+In the initial stages of evolution, two pairs of parallel games were played and the chal- 
+lenger was required to win 3 out of 4 of these games. 
+12 J. B. Pollack and A. D. Blair 
+lOO 
+� � 
+.;. ';.. . .. .. 
+� : :'i :.... ....... ,.'';_;t 
+ 50 
+25 
+Gnrion 
+00 5 10 15 20 5 30 35 
+Fisurc ]. PcrccntaSc of losses of our first 35,000 8cncration placrs 
+aSnst PEVAL. Each match consisted 
+Figure 1 shows the first 35,000 players rated against PUBEVAL, a strong public-domain 
+player trained by Tesauro using human expert preferences. There are three things to note: 
+(1) the percentage of losses against PUBEVAL falls from 100% to about 67% by 20,000 
+generations, (2) the frequency of successful challengers increases over time as the player 
+improves, and (3) there are epochs (e.g. starting at 20,000) where the performance against 
+PUBEVAL begins to falter. The first fact shows that our simple self-playing hill-climber is 
+capable of learning. The second fact is quite counter-intuitive - we expected that as the 
+player improved, it would be harder to challenge it! This is true with respect to a uniform 
+sampling of the 4000 dimensional weight space, but not true for a sampling in the neigh- 
+borhood of a given player: once the player is in a good part of weight space, small changes 
+in weights can lead to mostly similar strategies, ones which make mostly the same moves 
+in the same situations. However, because of the few games we were using to determine 
+relative fitness, this increased frequency of change allows the system to drift, which may 
+account for the subsequent degrading of performance. 
+To counteract the drift, we decided to change the rules of engagement as the evolution pro- 
+ceeds according to the following annealing schedule: after 10,000 generations, the num- 
+ber of games that the challenger is required to win was increased from 3 out of 4 to 5 out 
+of 6; after 70,000 generations, it was further increased to 7 out of 8. The numbers 10,000 
+and 70,000 were chosen on an ad hoc basis from observing the frequency of successful 
+challenges. 
+After 100,000 games, we have developed a surprisingly strong player, capable of winning 
+40% of the games against PUBEVAL. The networks were sampled every 100 generations 
+in order to test their performance. Networks at generation 1,000, 10,000 and 100,000 were 
+extracted and used as benchmarks. Figure 2 shows the percentage of losses of the sampled 
+players against the three benchmark networks. Note that the three curves cross the 50% 
+line at l, 10, and 100, respectively and show a general improvement over time. 
+The end-game of backgammon, called the bear-off, can be used as another yardstick of 
+the progress of learning. The bear-off occurs when all of a player's pieces are in the 
+player's home, or first 6 points, and then the dice rolls can be used to remove pieces.We 
+set up a racing board with two pieces on each player's 1 through 7 point and one piece on 
+the 8 point, and played a player against itself 200 games, averaging the number of rolls. 
+We found a monotonic improvement, from 22 to less then 19 rolls, over the 100k genera- 
+tions. PUBEVAL scored 16.6 on this task. 
+Why did TD-Gammon Work? 13 
+lOO 
+75 
+50 
+25 
+o 
+o 
+20 40 60 80 1 O0 
+Generation (x 10 3) 
+Figure 2. Percentage of losses against benchmark networks at 
+generation 1,000 [lower], 10,000 [middle] and 100,000 [upper]. 
+3 DISCUSSION 
+3.1 Machine Learning and Evolution 
+We believe that our evidence of success in learning backgammon using simple hillclimb- 
+ing indicates that the reinforcement and temporal difference methodology used by Tesauro 
+in TD-gammon was non-essential for its success. Rather, the success came from the setup 
+of co-evolutionary self-play biased by the dynamics of backgammon. Our result is thus 
+similar to the bias found by Mitchell, Crutchfield & Graber in Packard's evolution of cel- 
+lular automata to the edge of chaos(Packard, 1988, Mitchell et al., 1993). 
+TD-Gammon is a major milestone for a kind of evolutionary machine learning in which 
+the i

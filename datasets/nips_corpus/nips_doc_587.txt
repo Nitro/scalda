@@ -1,0 +1,145 @@
+Non-Linear Dimensionality Reduction 
+David DeMers* & Garrison Cottreli t 
+Dept. of Computer Science & Engr., 0114 
+Institute for Neural Computation 
+University of California, San Diego 
+9500 Gilman Dr. 
+La Jolla, CA, 92093-0114 
+Abstract 
+A method for creating a non-linear encoder-decoder for multidimensional data 
+with compact representations is presented. The commonly used technique of 
+autoassociation is extended to allow non-linear representations, and an objec- 
+tive function which penalizes activations of individual hidden units is shown 
+to result in minimum dimensional encodings with respect to allowable error in 
+reconstruction. 
+I INTRODUCTION 
+Reducing dimensionality of data with minimal information loss is important for feature 
+extraction, compact coding and computational efficiency. The data can be tranformed 
+into good representations for further processing, constraints among feature variables 
+may be identified, and redundancy eliminated. Many algorithms are exponential in the 
+dimensionality of the input, thus even reduction by a single dimension may provide valuable 
+computational savings. 
+Autoassociating feedforward networks with one hidden layer have been shown to extract 
+the principal components of the data (Baldi & Hornik, 1988). Such networks have been 
+used to extract features and develop compact encodings of the data (Cottrell, Munro & 
+Zipser, 1989). Principal Components Analysis projects the data into a linear subspace 
+*email: demers@cs.ucsd.edu 
+t email: gary@cs.ucsd.edu 
+580 
+Non-Linear Dimensionality Reduction 581 
+Non-Linear 
+Principal Components Net 
+Auto-asoclator 
+oooo 
+Output 
+0 0 0 Deooding layer 
+0 0 0 Hidden Iyer 
+q lxttlenek 
+0 0 0 Encoding Irayet 
+ooo 
+Input 
+Figure l: A network capable of non-linear lower dimensional representations of data. 
+with minimum information loss, by multiplying the data by the eigenvectors of the sample 
+covariance matrix. By examining the magnitude of the corresponding eigenvalues one can 
+estimate the minimum dimensionality of the space into which the data may be projected 
+and estimate the loss. However, if the data lie on a non-linear submanifold of the feature 
+space, then Principal Components will overestimate the dimensionality. For example, the 
+covariance matrix of data sampled from a helix in R 3 will have full-rank and thus three 
+principal components. However, the helix is a one-dimensional manifold and can be 
+(smoothly) parametefized with a single number. 
+The addition of hidden layers between the inputs and the representation layer, and between 
+the representation layer and the outputs provides a network which is capable of learning 
+non-linear representations (Kramer, 1991; Oja, 1991; Usui, Nakauchi & Nakano, 1991). 
+Such networks can perform the non-linear analogue to Principal Components Analysis, 
+and extract principal manifolds. Figure 1 shows the basic structure of such a network. 
+However, the dimensionality of the representation layer is problematic. Ideally, the dimen- 
+sionality of the encoding (and hence the number of representation units needed) would be 
+determined from the data. 
+We propose a pruning method for determining the dimensionality of the representation. A 
+greedy algorithm which successively eliminates representation units by penalizing variances 
+results in encodings of minimal dimensionality with respect to the allowable reconstruction 
+error. The algorithm therefore performs non-linear dimensionality reduction (NLDR). 
+582 DeMers and Cottrell 
+2 DIMENSIONALITY ESTIMATION BY REGULARIZATION 
+The a priori assignment of the number of units for the representation layer is problematic. 
+In order to achieve maximum data compression, this number should be as small as possible; 
+however, one also wants to preserve the information in the data and thus encode the data with 
+minimum error. If the intrinsic dimensionality is not known ahead of time (as is typical), 
+some method to estimate the dimensionality is desired. Minimization of the variance of a 
+representation unit will essentially squeeze the variance of the data into the other hidden 
+units. Repeated minimization results in ie. cremsingly lower-dimensional representation. 
+More formally, let the dimensionality of the raw data be n. We wish to find F and 
+its approximate inverse such that it '  Rp iv-__ it, where p < n. Let y denote the p- 
+dimensional vector whose elements are the p univalued functions fi which make up F. If one 
+of the component functions fi is always constant, it is not contributing to the autoassociation 
+and can be eliminated, yielding a function ? with p - 1 components. A constant value for 
+fi means that the variance of fi over the data is zero. We add a regularization term to the 
+objective function penalizing the variance of one of the representation units. If the variance 
+can be driven to near zero while simultaneously achieving a target error in the primary task 
+of autoassociation, then the unit being penalized can be pruned. 
+Let Hp -- Ap (Y.?=  (hp (net 5 ) - E (hv (net 5 )))2) where net5 is the net input to the unit given 
+the jth training pattern, hv (net5) is the activation of the pth hidden unit in the representation 
+layer (the one being penalized) and E is the expectation operator. For notational clarity, 
+the superscripts will be suppressed hereafter. E(hi(zj)) can be estimated as , the mean 
+activation of hv over all patterns in the training data. 
+Owpt 
+0tt v Onet v = 2v(h v - hv)h,o t 
+0nets, Ow,t 
+where h is the derivative of the activation function of unit h v with respect to its input, and 
+ot is the output of the/th unit in the preceding layer. Let 6 v = 2vh(h p - hv). We simply 
+add 6 v to the delta of h v due to backpropagation from the output layer. 
+We first train a multi-layer  network to learn the identity map. When error is below a user- 
+specified threshold, Ai is increased for the unit with lowest variance. If network weights can 
+be found 2 such that the variance can be reduced below a small threshold while the remaining 
+units are able to encode the data, the hidden unit in question is no longer contributing to the 
+autoencoding, and its connections are excised from the network. The process is repeated 
+until the variance of the unit in question cannot be reduced while maintaining low erron 
+There is no reason to suppose that the encoding and decoding layers must be of the same size. 
+In fact, it may be that two encoding or decoding layers will provide superior performance. For the 
+helix example, the decoder had two hidden layers and linear connections from the representation to 
+the output, while the encoder had a single layer. Kramer (1991) uses information theoretic measures 
+for choosing the size of the encoding and decoding layers; however, only a fixed representation layer 
+and equal encoding and decoding layers are used. 
+2Unbounded weights will allow the same amount of information to pass through the layer with 
+arbitrarily small variance and using arbitrarily large weights. Therefore the weights in the network 
+must be bounded. Weight vectors with magnitudes larger than 10 are renormalized after each epoch. 
+Non-Linear Dimensionality Reduction 583 
+Figure 2: The original 3-D helix data plus reconstruction from a single parameter encoding. 
+3 RESULTS 
+We applied this method to several problems: 
+1. a closed 1-D manifold in R 3. 
+2. a 1-D helix in R . 
+3. Time series data generated from the Mackey-Glass delay-differential equation. 
+4. 160 64 by 64 pixel, 8-bit grayscale face images. 
+A number of parameter values must be chosen; error threshold, maximum magnitude of 
+weights, value of Ai when increased, and when to give up training. For these experiments, 
+they were chosen by hand; however, reasonable values can be selected such that the method 
+can be automated. 
+3.1 Static Mappings: Circle and Helix 
+The first problem is interesting because it is known that there is no diffex)morphism from 
+the circle to the unit interval. Thus (smooth) single parameter encodings cannot cover the 
+entire circle, though the region of the circle left unparameterized can be made arbitrarily 
+small. Depending on initial conditions, our technique found one of three different solutions. 
+Some simulations resulted in a two-dimensional representation with the encodings lying 
+on a circle in R 2. This is a failure to reduce the dimensionality. The other solutions were 
+both 1-D representations; one wrapping the unit interval around the circle, the other 
+splitting the interval into two pieces. The initial architecture consisted of a single 8-unit 
+encoding layer and two 8-unit decoding layers. r/was set to 0.01, AA to 0.1, and the error 
+threshold, e, to 0.001. 
+The helix problem is interesting because the data appears to be three-dimensional to PCA. 
+NLDR consistently finds an invertible one-dimensional representation of the data. Figure 2 
+584 DeMers and Cottrell 
+400 
+Figure 3: Data from the Mackey-Glass delay-differential equation with 7- = 17, correlation 
+dimension 2.1, and the reconstructed signal encoded in two and three dimensions. 
+shows the original data, along with the network's output when the representation layer was 
+stimulated with activation ranging from 0.1 to 0.9. The training data were mapped into the 
+interval 0.213 - 0.778 using a single (sigmoi_al) representation unit. The initial architecture 
+consisted of a single 10-unit encoding layer and two 10-unit decoding layers. /was set to 
+0.01, A to 0.1, and the error threshold, e, to 0.001. 
+3.2 NLDR Applied to Time Series 
+The Mackey-Glass problem consists of estimation of the intrinsic dimensionality of a 
+scalar signal. Classically, such time series data is embedded in a space of high enough 
+dimension such that one expects the geometric invariants to be preserved. However, this 
+may significantly overestimate the number of variables needed to describe the data. Two 
+different series were examined; pa

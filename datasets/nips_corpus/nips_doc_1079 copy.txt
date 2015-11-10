@@ -1,0 +1,188 @@
+Bayesian Methods for Mixtures of Experts 
+Steve Waterhouse 
+Cambridge University 
+Engineering Department 
+Cambridge CB2 1PZ 
+England 
+Tel: [+44] 1223 332754 
+srw1001@eng.cam.ac.uk 
+David MacKay 
+Cavendish Laboratory 
+Madingley Rd. 
+Cambridge CB3 0HE 
+England 
+Tel: [+44] 1223 337238 
+m ackay@mr ao.cam. ac.uk 
+Tony Robinson 
+Cambridge University 
+Engineering Department 
+Cambridge CB2 1PZ 
+England. 
+Tel: [+44] 1223 332815 
+ajr@eng.cam.ac.uk 
+ABSTRACT 
+We present a Bayesian framework for inferring the parameters of 
+a mixture of experts model based on ensemble learning by varia- 
+tional free energy minimisation. The Bayesian approach avoids the 
+over-fitting and noise level under-estimation problems of traditional 
+maximum likelihood inference. We demonstrate these methods on 
+artificial problems and sunspot time series prediction. 
+INTRODUCTION 
+The task of estimating the parameters of adaptive models such as artificial neural 
+networks using Maximum Likelihood (ML) is well documented eg. Geman, Bienen- 
+stock & Doursat (1992). ML estimates typically lead to models with high variance, 
+a process known as over-fitting. ML also yields over-confident predictions; in 
+regression problems for example, ML underestimates the noise level. This problem 
+is particularly dominant in models where the ratio of the number of data points in 
+the training set to the number of parameters in the model is low. In this paper we 
+consider inference of the parameters of the hierarchical mixture of experts (HME) 
+architecture (Jordan & Jacobs 1994). This model consists of a series of experts, 
+each modelling different processes assumed to be underlying causes of the data. 
+Since each expert may focus on a different subset of the data which may be ar- 
+bitrarily small, the possibility of over-fitting of each process is increased. We use 
+Bayesian methods (MacKay 1992a) to avoid over-fitting by specifying prior belief 
+in various aspects of the model and marginalising over parameter uncertainty. 
+The use of regularisation or weight decay corresponds to the prior assumption 
+that the model should have smooth outputs. This is equivalent to a prior P(Ola ) on 
+the parameters 0 of the model, where a are the hyperparameters of the prior. Given 
+a set of priors we may specify a posterior distribution of the parameters given data 
+D, 
+P(OID, a, 2/) oc 
+(1) 
+where the variable 2/encompasses the assumptions of model architecture, type of 
+regularisation used and assumed noise model. Maximising the posterior gives us 
+the most probable parameters Oa4e. We may then set the hyperparameters either 
+by cross-validation, or by finding the maximum of the posterior distribution of the 
+352 S. WATERHOUSE, D. MACKAY, T. ROBINSON 
+hyperparameters P(aID), also known as the evidence (Gull 1989). In this paper 
+we describe a method, motivated by the Expectation Maximisation (EM) algorithm 
+of Dempster, Laird & Rubin (1977) and the principle of ensemble learning by vari- 
+ational free energy minimisation (Hinton & van Camp 1993, Neal & Hinton 1993) 
+which achieves simultaneous optimisation of the parameters and hyperparameters 
+of the HME. We then demonstrate this algorithm on two simulated examples and a 
+time series prediction task. In each task the use of the Bayesian methods prevents 
+over-fitting of the data and gives better prediction performance. Before we describe 
+this algorithm, we will specify the model and its associated priors. 
+MIXTURES OF EXPERTS 
+The mixture of experts architecture (Jordan & Jacobs 1994) consists of a set of 
+experts which perform local function approximation. The expert outputs are 
+combined by a gate to form the overall output. In the hierarchical case, the 
+experts are themselves mixtures of further experts, thus extending the network in 
+a tree structured fashion. The model is a generative one in which we assume that 
+data are generated in the domain by a series of J independent processes which 
+are selected in a stochastic manner. We specify a set of indicator variables Z = 
+{() N}, where z ) is 1 if the output y() was generated 
+zj 'j=l ... J,n = 1 ... 
+by expert j and zero otherwise. Consider the case of regression over a data set 
+D = {a � e k, y()  p, n = 1 ... N} with p = 1. We specify that the conditional 
+probability of the scalar output y() given the input vector a � at exemplar (n) is 
+J 
+P(.y(n)lze(n), O) = E P(ZJ n)lze(n)' wj, pj), (2) 
+j=l 
+where {j  k} is the set of gate parameters, and {(%  ),/3j} the set of expert 
+parameters. In this case, P(y()la� ), %,/3j) is a Gaussian: 
+1 
+q0))=P(y()lm(),wj, fl/)= -i exp- , (3) 
+(n) 
+where 1//3 is the variance of expert j, and y1 = fi(m(), wi) is the output of expert 
+j, giving a probabilistic mixture model. In this paper we restrict the expert output 
+to be a linear function of the input, fi(m �, %) = wm �. We model the action of 
+selecting process j with the gate, the outputs of which are given by the softmax 
+function of the inner products of the input vector 2 and the gate parameter vectors. 
+The conditional probability of selecting expert j given input m � is thus: 
+gJ) -' ()- 1 la?, j) = exp(a())//i= 
+-- ltzj - exp(/rm �) 
+(4) 
+A straightforward extension of this model also gives us the conditional probability 
+hJ ) of expert j having been selected given input a � and output y(), 
+-- _(n) a.(n) 
+h! '� -- P(zJ '0: l ly �, a� '0, O) S qoi 
+'v 
+(5) 
+Although fii is a parameter of expert j, in common with MacKay (1992a) we consider 
+it as a hyperparameter on the Gaussian noise prior. 
+2In all notation, we assume that the input vector is augmented by a constant term, 
+which avoids the need to specify a bias term in the parameter vectors. 
+Bayesian Methods for Mixtures of Experts 353 
+PRIORS 
+We assume a separable prior on the parameters 0 of the model: 
+P(ola) = H P(JI)P(wjI�9) 
+j=l 
+where {ay} and {It} are the hyperparameters for the parameter vectors of the experts 
+and the gate respectively. We assume Gaussian priors on the parameters of the 
+experts {%} and the gate {j}, for example: 
+k 
+ cj T 
+P(wjlaj):( ) exp (--wj wj) 
+(7) 
+For simplicity of notation, we shall refer to the set of all smoothness hyperparame- 
+ters as a= {It, a} and the set of all noise level hyperparameters as iS = 
+Finally, we assume Gamma priors on the hyperparameters {It, a, iS�} of the priors, 
+for example: 
+P(logiSjlp0, v0) - F(pO) \ vo / exp(-iSi / vo), (8) 
+where vg,po are the hyper-hyperparameters which specify the range in which we 
+expect the noise levels iSj to lie. 
+INFERRING PARAMETERS USING ENSEMBLE LEARNING 
+The EM algorithm was used by Jordan & Jacobs (1994) to train the HME in a 
+maximum likelihood framework. In the EM algorithm we specify a complete data set 
+{D, Z} which includes the observed dataD and the set of indicator variables Z. Given 
+0 (m-O, the E step of the EM algorithm computes a distribution P(ZID, 0 (m-l)) over 
+Z. The M step then maximises the expected value of the complete data likelihood 
+P(D, ZIO ) over this distribution. In the case of the HME, the indicator variables 
+$$_(n)lJ 1N specify which expert was responsible for generating the data at 
+Z = tt4j .fj:l.fn:l 
+each time. 
+We now outline an algorithm for the simultaneous optimisation of the parameters 
+0 and hyperparameters a and iS, using the framework of ensemble learning by 
+variational free energy minimisation (Hinton & van Camp 1993). Rather than 
+optimising a point estimate of O, a and iS, we optimise a distribution over these 
+parameters. This builds on Neal & Hinton's (1993) description of the EM algorithm 
+in terms of variational free energy minimisation. 
+We first specify an approximating ensemble Q(w, , a, iS, Z) which we optimise so that 
+it approximates the posterior distribution P(w, , a, iS, ZID, ) well. The objective 
+function chosen to measure the quality of the approximation is the variational free 
+energy, 
+f Q(w,/,a, iS, Z) 
+F(Q) = dw d/ dadiSdZQ(w,/,a, iS, Z)log P(w,/,a, iS, Z, DlY-D' (9) 
+where the joint probability of parameters {w, }, hyperparameters, {a, iS}, missing 
+data Z and observed data D is given by, 
+354 S. WATERHOUSE, D. MACKAY, T. ROBINSON 
+P(w, , a, ll, Z, DlY-[) = 
+J N (n) 
+POt) I-[ P(jIIt)P(�9)P(wjI�9)P([3IPj, ) ]-I (P(z) n) = iI re(n), j)P(Y(n)l(n), wj, )) z; (JO) 
+j=l n=l 
+The free energy can be viewed as the sum of the negative log evidence - log P(D]Y() 
+and the Kullback-Leibler divergence between Q and P(w, lg, a, f I, ZID, Y(). F is 
+bounded below by - logP(DlYO, with equality when Q = P(w, 
+We constrain the approximating ensemble Q to be separable in the form 
+Q(w, , a, 15, Z) = Q(w)Q(lg)Q(a)Q(II)Q(Z). We find the optimal separable distribu- 
+tion Q by considering separately the optimisation of F over each separate ensemble 
+component Q(.) with all other components fixed. 
+Optimising Qw(w) and Q(). 
+As a functional of Qw(w), F is 
+J r  ..(n)J r.,(n) 
+yj I log Qw(w) 
+F: dwQw(w) -w/w/+ nd__14j 2ky -- + 
++ const (11) 
+where for any variable a, a denotes f da Q(a) a. Noting that the w dependent terms 
+are the log of a posterior distribution and that a divergence f Q log(Q/P) is minimised 
+by setting Q = P, we can write down the distribution Qw(w) that minimises this 
+expression. For given data and Q, Q, Qz, Q, the optimising distribution Q?t(w) is 
+Q?'(w): II op, ( 
+Qwj (wj) = II exp - 
+J J 
+const (12) 
+This is a set of J Gaussian distributions with means {�}, which can be found 
+exactly by quadratic optimisation. We denote the variance covariance matrices of 
+Qopt / x 
+wj twj) by {Zwj}. The analogous expression for the gates Qpt() is obtained in a 
+similar fashion and is given by 
+: Q (Y): H exp -''.y .y + n2  y logg n) 
+J Y 
+(13) 
+opt 
+We approximate each Q{j (y) by a Gaussian distribution fitted at its maximum 
+ = j with variance covariance matrix Z. 
+Optimising Q(Z) 
+By a similar procedure, the optimal distribution QPt(z) is given by 
+Q'Pt(Z)= nI][. {exp(

@@ -1,0 +1,143 @@
+Hidden Markov Model Induction by Bayesian 
+Model Merging 
+Andreas Stolcke*'** 
+*Computer Science Division 
+University of California 
+Berkeley, CA 94720 
+stolckeicsi. berkeley. edu 
+Stephen Omohundro** 
+**International Computer Science Institute 
+1947 Center Street, Suite 600 
+Berkeley, CA 94704 
+omicsi. berkeley. edu 
+Abstract 
+This paper describes a technique for learning both the number of states and the 
+topology of Hidden Markov Models from examples. The induction process starts 
+with the most specific model consistent with the training data and generalizes 
+by successively merging states. Both the choice of states to merge and the 
+stopping criterion are guided by the Bayesian posterior probability. We compare 
+our algorithm with the Baum-Welch method of estimating fixed-size models, and 
+find that it can induce minimal HMMs from data in cases where fixed estimation 
+does not converge or requires redundant parameters to converge. 
+1 INTRODUCTION AND OVERVIEW 
+Hidden Markov Models (HMMs) are a well-studied approach to the modelling of sequence 
+data. HMMs can be viewed as a stochastic generalization of finite-state automata, where 
+both the transitions between states and the generation of output symbols are governed by 
+probability distributions. HMMs have been important in speech recognition (Rabiner & 
+Juang, 1986), cryptography, and more recently in other areas such as protein classification 
+and alignment (Haussler, Krogh, Mian & Sj61ander, 1992; Baldi, Chauvin, Hunkapiller & 
+McClure, 1993). 
+Practitioners have typically chosen the HMM topology by hand, so that learning the HMM 
+from sample data means estimating only a fixed number of model parameters. The standard 
+approach is to find a maximum likelihood (ML) or maximum aposteriori probability (MAP) 
+estimate of the HMM parameters. The Baum-Welch algorithm uses dynamic programming 
+11 
+12 Stolcke and Omohundro 
+to approximate these estimates (Baum, Petrie, Soules & Weiss, 1970). 
+A more general problem is to additionally find the best HMM topology. This includes 
+both the number of states and the connectivity (the non-zero transitions and emissions). 
+One could exhaustively search the model space using the Baum-Welch algorithm on fully 
+connected models of varying sizes, picking the model size and topology with the highest 
+posterior probability. (Maximum likelihood estimation is not useful for this comparison 
+since larger models usually fit the data better.) This approach is very costly and Baum- 
+Welch may get stuck at sub-optimal local maxima. Our comparative results later in the 
+paper show that this often occurs in practice. The problem can be somewhat alleviated by 
+sampling from several initial conditions, but at a further increase in computational cost. 
+The HMM induction method proposed in this paper tackles the structure learning problem 
+in an incremental way. Rather than estimating a fixed-size model from scratch for various 
+sizes, the model size is adjusted as new evidence arrives. There are two opposing tendencies 
+in adjusting the model size and structure. Initially new data adds to the model size, because 
+the HMM has to be augmented to accommodate the new samples. If enough data of a similar 
+structure is available, however, the algorithm collapses the shared structure, decreasing the 
+model size. The merging of structure is also what drives generalization, i.e., creates HMMs 
+that generate data not seen during training. 
+Beyond being incremental, our algorithm is data-driven, in that the samples themselves 
+completely determine the initial model shape. Baum-Welch estimation, by comparison, 
+uses an initially random set of parameters for a given-sized HMM and iteratively updates 
+them until a point is found at which the sample likelihood is locally maximal. What seems 
+intuitively troublesome with this approach is that the initial model is completely uninformed 
+by the data. The sample data directs the model formation process only in an indirect manner 
+as the model approaches a meaningful shape. 
+2 HIDDEN MARKOV MODELS 
+For lack of space we cannot give a full introduction to HMMs here; see Rabiner & Juang 
+(1986) for details. Briefly, an HMM consists of states and transitions like a Markov chain. 
+In the discrete version considered here, it generates strings by performing random walks 
+between an initial and a final state, outputting symbols at every state in between. The 
+probability P(xlM) that a model M generates a string x is determined by the conditional 
+probabilities of making a transition from one state to another and the probability of emitting 
+each symbol from each state. Once these are given, the probability of a particular path 
+through the model generating the string can be computed as the product of all transition 
+and emission probabilities along the path. The probability of a string x is the sum of the 
+probabilities of all paths generating x. 
+For example, the model M3 in Figure 1 generates the strings ab, abab, ababab,... with 
+probabilities , ,  .... , respectively. 
+3 HMM INDUCTION BY STATE MERGING 
+3.1 MODEL MERGING 
+Omohundro (1992) has proposed an approach to statistical model inference in which initial 
+Hidden Markov Model Induction by Bayesian Model Merging 13 
+models simply replicate the data and generalize by similarity. As more data is received, 
+component models are fit from more complex model spaces. This allows the formation of 
+arbitrarily complex models without overfitting along the way. The elementary step used in 
+modifying the overall model is a merging of sub-models, collapsing the sample sets for the 
+corresponding sample regions. The search for sub-models to merge is guided by an attempt 
+to sacrifice as little of the sample likelihood as possible as a result of the merging process. 
+This search can be done very efficiently if (a) a greedy search strategy can be used, and (b) 
+likelihood computations can be done locally for each sub-model and don't require global 
+recomputation on each model update. 
+3.2 STATE MERGING IN HMMS 
+We have applied this general approach to the HMM learning task. We describe the algorithm 
+here mostly by presenting an example. The details are available in Stolcke & Omohundro 
+(1993). 
+To obtain an initial model from the data, we first construct an HMM which produces 
+exactly the input strings. The start state has as many outgoing transitions as there are 
+strings and each string is represented by a unique path with one state per sample symbol. 
+The probability of entering these paths from the start state is uniformly distributed. Within 
+each path there is a unique transition arc whose probability is 1. The emission probabilities 
+are I for each state to produce the corresponding symbol. 
+As an example, consider the regular language (ab) + and two samples drawn from it, the 
+strings ab and abab. The algorithm constructs the initial model Mo depicted in Figure 1. 
+This is the most specific model accounting for the observed data. It assigns each sample 
+a probability equal to its relative frequency, and is therefore a maximum likelihood model 
+for the data. 
+Learning from the sample data means generalizing from it. This implies trading off 
+model likelihood against some sort of bias towards 'simpler' models, expressed by a prior 
+probability distribution over HMMs. Bayesian analysis provides a formal basis for this 
+tradeoff. Bayes' rule tells us that the posterior model probability P(MIx) is proportional 
+to the product of the model prior P(M) and the likelihood of the data P(xlM). Smaller or 
+simpler models will have a higher prior and this can outweigh the drop in likelihood as long 
+as the generalization is conservative and keeps the model close to the data. The choice of 
+model priors is discussed in the next section. 
+The fundamental idea exploited here is that the initial model Mo can be gradually trans- 
+formed into the generating model by repeatedly merging states. The intuition for this 
+heuristic comes from the fact that if we take the paths that generate the samples in an actual 
+generating HMM M and 'unroll' them to make them completely disjoint, we obtain Mo. 
+The iterative merging process, then, is an attempt to undo the unrolling, tracing a search 
+through the model space back to the generating model. 
+Merging two states qi and q2 in this context means replacing qi and q2 by a new state r with 
+a transition distribution that is a weighted mixture of the transition probabilities of ql, q2, 
+and with a similar mixture distribution for the emissions. Transition probabilities into ql or 
+q2 are added up and redirected to r. The weights used in forming the mixture distributions 
+are the relative frequencies with which ql and q2 are visited in the current model. 
+Repeatedly performing such merging operations yields a sequence of models Mo, M, 
+14 Stolcke and Omohundro 
+Mi: 
+M2  
+M3  
+b 
+a b 
+log L(xlMo) = - 1.39 
+log L(xlMi) = log L(xlMo) 
+log L(xlM2 ) = - 1.91 
+log L(xiM3) = log L(xlM2) 
+Figure 1: Sequence of models obtained by merging samples {ab, abab}. All transitions without 
+special annotations have probability 1; Output symbols appear above their respective states and also 
+carry an implicit probability of 1. For each model the log likelihood is given. 
+M2 .... , along which we can search for the MAP model. To make the search for M efficient, 
+we use a greedy strategy: given Mi, choose a pair of states for merging that maximizes 
+P(Mi+I IX). 
+Continuing with the previous example, we find that states 1 and 3 in M0 can be merged 
+without penalizing the likelihood. This is because they have identical outputs and the loss 
+due to merging the outgoing transitions is compensated by the merging of the incoming 
+transitions. The .5/.5 split is simply transferred to outgoing transitions of the merged state. 
+The same situation obtains for states 2 and 4 once 1 and 3 are merged. From these two 
+first merges we get model Mi in Figure 1. By convention 

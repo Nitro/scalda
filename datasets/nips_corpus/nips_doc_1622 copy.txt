@@ -1,0 +1,163 @@
+Independent Factor Analysis with 
+Temporally Structured Sources 
+Hagai Attias 
+hagai@gatsby. ucl.ac.uk 
+Gatsby Unit, University College London 
+17 Queen Square 
+London WC1N 3AR, U.K. 
+Abstract 
+We present a new technique for time series analysis based on dy- 
+namic probabilistic networks. In this approach, the observed data 
+are modeled in terms of unobserved, mutually independent factors, 
+as in the recently introduced technique of Independent Factor Anal- 
+ysis (IFA). However, unlike in IFA, the factors are not i.i.d.; each 
+factor has its own temporal statistical characteristics. We derive a 
+family of EM algorithms that learn the structure of the underlying 
+factors and their relation to the data. These algorithms perform 
+source separation and noise reduction in an integrated manner, and 
+demonstrate superior performance compared to IFA. 
+I Introduction 
+The technique of independent factor analysis (IFA) introduced in [1] provides a 
+tool for modeling L-dim data in terms of L unobserved factors. These factors 
+are mutually independent and combine linearly with added noise to produce the 
+observed data. Mathematically, the model is defined by 
+yt - Hxt q- ut , 
+(1) 
+where xt is the vector of factor activities at time t, Yt is the data vector, H is the 
+L  x L mixing matrix, and ut is the noise. 
+The origins of IFA lie in applied statistics on the one hand and in signal processing 
+on the other hand. Its statistics ancestor is ordinary factor analysis (FA), which as- 
+sumes Gaussian factors. In contrast, IFA allows each factor to have its own arbitrary 
+distribution, modeled semi-parametrically by a 1-dim mixture of Gaussians (MOG). 
+The MOG parameters, as well as the mixing matrix and noise covariance matrix, 
+are learned from the observed data by an expectation-maximization (EM) algorithm 
+derived in [1]. The signal processing ancestor of IFA is the independent component 
+analysis (ICA) method for blind source separation [2]-[6]. In ICA, the factors are 
+termed sources, and the task of blind source separation is to recover them from the 
+observed data with no knowledge of the mixing process. The sources in ICA have 
+non-Gaussian distributions, but unlike in IFA these distributions are usually fixed 
+by prior knowledge or have quite limited adaptability. More significant restrictions 
+Dynamic Independent Factor Analysis 387 
+are that their number is set to the data dimensionality, i.e. L = L  ('square mix- 
+ing'), the mixing matrix is assumed invertible, and the data are assumed noise-free 
+(ut = 0). In contrast, IFA allows any L, L  (including more sources than sensors, 
+L > L'), as well as non-zero noise with unknown covariance. In addition, its use of 
+the flexible MOG model often proves crucial for achieving successful separation [1]. 
+Therefore, IFA generalizes and unifies FA and ICA. Once tle model has been 
+learned, it can be used for classification (fitting an IFA model for each class), com- 
+pleting missing data, and so on. In the context of blind separation, an optimal 
+reconstruction of the sources xt from data is obtained [1] using a MAP estimator. 
+However, IFA and its ancestors suffer from the following shortcoming: They are 
+oblivious to temporal information since they do not attempt to model the temporal 
+statistics of the data (but see [4] for square, noise-free mixing). In other words, the 
+model learned would not be affected by permuting the time indices of {yt }. This is 
+unfortunate since modeling the data as a time series would facilitate filtering and 
+forecasting, as well as more accurate classification. Moreover, for source separation 
+applications, learning temporal statistics would provide additional information on 
+the sources, leading to cleaner source reconstructions. 
+To see this, one may think of the problem of blind separation of noisy data in terms 
+of two components: source separation and noise reduction. A possible approach 
+might be the following two-stage procedure. First, perform noise reduction using, 
+e.g., Wiener filtering. Second, perform source separation on the cleaned data us- 
+ing, e.g., an ICA algorithm. Notice that this procedure directly exploits temporal 
+(second-order) statistics of the data in the first stage to achieve stronger noise re- 
+duction. An alternative approach would be to exploit the temporal structure of 
+the data indirectly, by using a temporal source model. In the resulting single-stage 
+algorithm, the operations of source separation and noise reduction are coupled. This 
+is the approach taken in the present paper. 
+In the following, we present a new approach to the independent factor problem 
+based on dynamic probabilistic networks. In order to capture temporal statistical 
+properties of the observed data, we describe each source by a hidden Markov model 
+(HMM). The resulting dynamic model describes a multivariate time series in terms 
+of several independent sources, each having its own temporal characteristics. Section 
+2 presents an EM learning algorithm for the zero-noise case, and section 3 presents 
+an algorithm for the case of isotropic noise. The case of non-isotropic noise turns out 
+to be computationally intractable; section 4 provides an approximate EM algorithm 
+based on a variational approach. 
+Notation: The multivariable Gaussian density is denoted by G(z, E) =l 2rY:, 1-1/2 
+exp(--zTE-z/2). We wo. rk with T-point time blocks denoted X:T = {xt}=l. The 
+ith coordinate of xt is xl. For a function f, (f(x:T)} denotes averaging over an 
+ensemble of x:- blocks. 
+2 Zero Noise 
+The MOG source model employed in IFA [1] has the advantages that (i) it is capable 
+of approximating arbitrary densities, and (ii) it can be learned efficiently from data 
+by EM. The Gaussians correspond to the hidden states of the sources, labeled by 
+s. Assume that at time t, source i is in state sl - s. Its signal xl is then generated 
+i In order 
+by sampling from a Gaussian distribution with mean uis and variance 's. 
+to capture temporal statistics of the data, we endow the sources with temporal 
+structure by introducing a transition matrix i between the states. Focusing on 
+388 H. Attias 
+a time block t - 1, ..., T, the resulting probabilistic model is defined by 
+i 
+p(s = s l i i p(s = s) = 7rs , 
+St-1 -- st) __ as's , 
+i = s) -- (x //s e) P(Yl:T) =l det G I T p(Xl:T) (2) 
+p(x l s t - , , , 
+where p(xi:r) is the joint density of all sources x i i = 1, L at all time points, and 
+the last equation follows from xt = Gyt with G = H - being the unmixing matrix. 
+As usual in the noise-free scenario (see [2]; section 7 of [1]), we are assuming that 
+the mixing matrix is square and invertible. 
+The graphical model for the observed density P(Y:T I w) defined by (2) is 
+i i i 
+parametrized by W = {Gij,l.t}, es,7rs,as, s}. This model describes each source as 
+a first-order HMM; it reduces to a time-independent model if i i Whereas 
+a$/$  7r$. 
+temporal structure can be described by other means, e.g. a moving-average [4] or 
+autoregressive [6] model, the HMM is advantageous since it models high-order tem- 
+poral statistics and facilitates EM learning. Omitting the derivation, maximization 
+with respect to Gij results in the incremental update rule 
+T 
+5G = G- -  �(xt)xtTG, (3) 
+where �(x) = Es 7[(s)(x ' ' 
+- s)/es, and the natural gradient [3] was used; e is an 
+appropriately chosen learning rate. For the source parameters we obtain the update 
+rules 
+u,; = E,,t(8)x ,= , 
+Et 7j(s) ' es Et 7(s) , as, s = Et ' (4) 
+i = ?(s.). We used the standard HMM 
+with the initial probabilities updated via 7r s 
+notation 7(s) = p(s = s I X:T), (s',s) -- p(s}_ = s',s = s I X:T). These 
+posterior densities are computed in the E-step for each source, which is given in 
+terms of the data via x = yj Gijyt j, using the forward-backward procedure [7]. 
+The algorithm (3-4) may be used in several possible generalized EM schemes. An 
+efficient one is given by the following two-phase procedure: (i) freeze the source 
+parameters and learn the separating matrix G using (3); (ii) freeze G and learn the 
+source parameters using (4), then go back to (i) and repeat. Notice that the rule (3) 
+is similar to a natural gradient version of Bell and Sejnowski's ICA rule [2]; in fact, 
+the two coincide for time-independent sources where ck(xi) - -01ogp(xi)/Oxi. We 
+also recognize (4) as the Baum-Welch method. Hence, in phase (i) our algorithm 
+separates the sources using a generalized ICA rule, whereas in phase (ii) it learns 
+an HMM for each source. 
+Remark. Often one would like to model a given L'-variable time series in terms 
+of a smaller number L < L' of factors. In the framework of our noise-free model 
+yt -- Hxt, this can be achieved by applying the above algorithm to the L largest 
+principal components of the data; notice that if the data were indeed generated by L 
+factors, the remaining L'-L principal components would vanish. Equivalently, one 
+may apply the algorithm to the data directly, using a non-square L x L' unmixing 
+matrix G. 
+Results. Figure 1 demonstrates the performance of the above method on a 4 x 4 
+mixture of speech signals, which were passed through a non-linear function to mod- 
+ify their distributions. This mixture is inseparable to ICA because the source model 
+used by the latter does not fit the actual source densities (see discussion in [1]). We 
+also applied our dynamic network to a mixture of speech signals whose distributions 
+Dynamic Independent Factor Analysis 389 
+0.8 
+0.7 
+0.8 
+, 0.5 
+0.4 
+0.3 
+0.2 
+0.1 
+0 
+--2 0 2 
+x 
+3 
+HMM--ICA ICA 
+4 --2 0 2 --2 0 2 
+Figure 1: Left: Two of the four source distributions. Middle: Outputs of the EM algo- 
+rithm (3-4) are nearly independent. Right: the outputs of ICA [2] are correlated. 
+were made Gaussian by an appropriate non-linear transformation. Since temporal 
+information is crucial for separation in this case (see [4],[6]), this mixture is in- 
+separable to ICA and IFA; however, th

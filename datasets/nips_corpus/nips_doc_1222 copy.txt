@@ -1,0 +1,154 @@
+Hidden Markov decision trees 
+Michael I. Jordan* Zoubin Ghahramani t, and Lawrence K. Saul* 
+j ordan, zoubin, lksaulpsyche. mi. edu 
+*Center for Biological and Computational Learning 
+Massachusetts Institute of Technology 
+Cambridge, MA USA 02139 
+t Department of Computer Science 
+University of Toronto 
+Toronto, ON Canada M5S 1A4 
+Abstract 
+We study a time series model that can be viewed as a decision 
+tree with Markov temporal structure. The model is intractable for 
+exact calculations, thus we utilize variational approximations. We 
+consider three different distributions for the approximation: one in 
+which the Markov calculations are performed exactly and the layers 
+of the decision tree are decoupled, one in which the decision tree 
+calculations are performed exactly and the time steps of the Markov 
+chain are decoupled, and one in which a Viterbi-like assumption is 
+made to pick out a single most likely state sequence. We present 
+simulation results for artificial data and the Bach chorales. 
+I Introduction 
+Decision trees are regression or classification models that are based on a nested 
+decomposition of the input space. An input vector x is classified recursively by a 
+set of decisions at the nonterminal nodes of a tree, resulting in the choice of a 
+terminal node at which an output y is generated. A statistical approach to decision 
+tree modeling was presented by Jordan and Jacobs (1994), where the decisions were 
+treated as hidden multinomial random variables and a likelihood was computed by 
+summing over these hidden variables. This approach, as well as earlier statistical 
+analyses of decision trees, was restricted to independently, identically distributed 
+data. The goal of the current paper is to remove this restriction; we describe a 
+generalization of the decision tree statistical model which is appropriate for time 
+series. 
+The basic idea is straightforward--we assume that each decision in the decision tree 
+is dependent on the decision taken at that node at the previous time step. Thus we 
+augment the decision tree model to include Markovian dynamics for the decisions. 
+502 M. I. Jordan, Z. Ghahramani and L. K. Saul 
+For simplicity we restrict ourselves to the case in which the decision variable at 
+a given nonterminal is dependent only on the same decision variable at the same 
+nonterminal at the previous time step. It is of interest, however, to consider more 
+complex models in which inter-nonterminal pathways allow for the possibility of 
+various kinds of synchronization. 
+Why should the decision tree model provide a useful starting point for time series 
+modeling? The key feature of decision trees is the nested decomposition. If we 
+view each nonterminal node as a basis function, with support given by the subset 
+of possible input vectors x that arrive at the node, then the support of each node 
+is the union of the support associated with its children. This is reminiscent of 
+wavelets, although without the strict condition of multiplicative scaling. Moreover, 
+the regions associated with the decision tree are polygons, which would seem to 
+provide a useful generalization of wavelet-like decompositions in the case of a high- 
+dimensional input space. 
+The architecture that we describe in the current paper is fully probabilistic. We 
+view the decisions in the decision tree as multinomial random variables, and we 
+are concerned with calculating the posterior probabilities of the time sequence of 
+hidden decisions given a time sequence of input and output vectors. Although 
+such calculations are tractable for decision trees and for hidden Markov models 
+separately, the calculation is intractable for our model. Thus we must make use 
+of approximations. We utilize the partially factorized variational approximations 
+described by Saul and Jordan (1996), which allow tractable substructures (e.g., the 
+decision tree and Markov chain substructures) to be handled via exact methods, 
+within an overall approximation that guarantees a lower bound on the log likelihood. 
+2 Architectures 
+2.1 Probabilistic decision trees 
+The hierarchical mixture of experts (HME) model (Jordan &; Jacobs, 1994) is a 
+decision tree in which the decisions are modeled probabilistically, as are the outputs. 
+The total probability of an output given an input is the sum over all paths in the 
+tree from the input to the output. The HME model is shown in the graphical 
+model formalism in Figure 2.1. Here a node represents a random variable, and the 
+links represent probabilistic dependencies. A conditional probability distribution is 
+associated with each node in the graph, where the conditioning variables are the 
+node's parents. 
+Let z , z 2, and z 3 denote the (multinomial) random variables corresponding to 
+the first, second and third levels of the decision tree.  We associate multinomial 
+probabilities P(zl[x,l), P(z2[x, zX,la), and P(z3[x, z1,za,13 ) with the decision 
+nodes, where /, Oa, and /3 are parameters (e.g., Jordan and Jacobs utilized soft- 
+max transformations of linear functions of x for these probabilities). The leaf prob- 
+abilities P(y[x, z 1, z a, z 3, 0) are arbitrary conditional probability models; e.g., lin- 
+ear/Gaussian models for regression problems. 
+The key calculation in the fitting of the HME model to data is the calculation of 
+the posterior probabilities of the hidden decisions given the clamped values of x 
+and y. This calculation is a recursion extending upward and downward in the tree, 
+in which the posterior probability at a given nonterminal is the sum of posterior 
+probabilities associated with its children. The recursion can be viewed as a special 
+Throughout the paper we restrict ourselves to three levels for simphcity of presentation. 
+Hidden Markov Decision Trees 503 
+Figure 1: The hierarchical mixture of 
+experts as a graphical model. The 
+E step of the learning algorithm for 
+liME's involves calculating the poste- 
+rior probabilities of the hidden (un- 
+shaded) variables given the observed 
+(shaded) variables. 
+Figure 2: An HMM as a graphical 
+model. The transition matrix appears 
+on the horizontal links and the output 
+probability distribution on the vertical 
+links. The E step of the learning algo- 
+rithm for HMM's involves calculating 
+the posterior probabilities of the hid- 
+den (unshaded) variables given the ob- 
+served (shaded) variables. 
+case of generic algorithms for calculating posterior probabilities on directed graphs 
+(see, e.g., Shachter, 1990). 
+2.2 Hidden Markov models 
+In the graphical model formalism a hidden Markov model (HMM; Pabiner, 1989) is 
+represented as a chain structure as shown in Figure 2.1. Each state node is a multi- 
+nomial random variable z. The links between the state nodes are parameterized by 
+the transition matrix a(z Iz_), assumed homogeneous in time. The links between 
+the state nodes z and output nodes � are parameterized by the output probability 
+distribution b(�lz ), which in the current paper we assume to be Gaussian with 
+(tied) covariance matrix E. 
+As in the lIME model, the key calculation in the fitting of the HMM to observed 
+data is the calculation of the posterior probabilities of the hidden state nodes given 
+the sequence of output vectors. This calculation--the E step of the Baum-Welch 
+algorithm--is a recursion which proceeds forward or backward in the chain. 
+2.3 Hidden Markov decision trees 
+We now marry the lIME and the HMM to produce the hidden Markov decision tree 
+(lIMDT) shown in Figure 3. This architecture can be viewed in one of two ways: 
+(a) as a time sequence of decision trees in which the decisions in a given decision 
+tree depend probabilistically on the decisions in the decision tree at the preceding 
+moment in time; (b) as an HMM in which the state variable at each moment in 
+time is factorized (cf. Ghahramani & Jordan, 1996) and the factors are coupled 
+vertically to form a decision tree structure. 
+Let the state of the Markov process defining the HMDT be given by the values of 
+hidden multinomial decisions z, z, and z, where the superscripts denote the level 
+of the decision tree (the vertical dimension) and the subscripts denote the time (the 
+horizontal dimension). Given our assumption that the state transition matrix has 
+only intra-level Markovian dependencies, we obtain the following expression for the 
+504 M. L Jordan, Z. Ghahramani and L. K. Saul 
+Figure 3: The HMDT model is an HME decision tree (in the vertical dimension) 
+with Markov time dependencies (in the horizontal dimension). 
+HMDT probability model: 
+P({z, z, z}, {yt}[{xt}) = 7rl(zlxl)7r2(z12[Xl,Z)7r3(z13[Xl,Z,z12 ) 
+T T 
+H al(ztl[xt'ztl 1)a2(zlxt z2 ztl)a3(zt3[xt'zt3-1'ztl'zt2) H b(ytlxt z,z,z) 
+- , t-l, , 
+t=2 t=l 
+Summing this probability over the hidden values z 1, z, and z 3 yields the HMDT 
+likelihood. 
+The HMDT is a 2-D lattice with inhomogeneous field terms (the observed data). 
+It is well-known that such lattice structures are intractable for exact probabilistic 
+calculations. Thus, although it is straightforward to write down the EM algorithm 
+for the HMDT and to write recursions for the calculations of posterior probabilities 
+in the E step, these calculations are likely to be too time-consuming for practical 
+use (for T time steps, K values per node and M levels, the algorithm scales as 
+O(KM+T)). Thus we turn to methods that allow us to approximate the posterior 
+probabilities of interest. 
+3 Algorithms 
+3.1 Partially factorized variational approximations 
+Completely factorized approximations to probability distributions on graphs can 
+often be obtained variationally as mean field theories in physics (Parisi, 1988). For 
+the HMDT in Figure 3, the completely factorized mean field approximation would 
+delink all of the nodes, replacing the interactions with constant fields acting at each 
+of the nodes. This approximation, although useful, neglects to take into account 
+the existence of efficien

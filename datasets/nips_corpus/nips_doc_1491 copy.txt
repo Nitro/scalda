@@ -1,0 +1,152 @@
+VLSI Implementation of Motion Centroid 
+Localization for Autonomous Navigation 
+Ralph Etienne-Cummings 
+Dept. of ECE, 
+Johns Hopkins University, 
+Baltimore, MD 
+Viktor Gruev 
+Dept. of ECE, 
+Johns Hopkins University, 
+Baltimore, MD 
+Mohammed Abdel Ghani 
+Dept. of EE, 
+S. Illinois University, 
+Carbondale, IL 
+Abstract 
+A circuit for fast, compact and low-power focal-plane motion centroid 
+localization is presented. This chip, which uses mixed signal CMOS 
+components to implement photodetection, edge detection, ON-set 
+detection and centroid localization, models the retina and superior 
+colliculus. The centroid localization circuit uses time-windowed 
+asynchronously triggered row and column address events and two 
+linear resistive grids to provide the analog coordinates of the motion 
+centroid. This VLSI chip is used to realize fast lightweight 
+autonavigating vehicles. The obstacle avoiding line-following 
+algorithm is discussed. 
+1 INTRODUCTION 
+Many neuromorphic chips which mimic the analog and parallel characteristics of visual, 
+auditory and cortical neural circuits have been designed [Mead, 1989; Koch, 1995]. 
+Recently researchers have started to combine digital circuits with neuromorphic aVLSI 
+systems [Boahen, 1996]. The persistent doctrine, however, has been that computation 
+should be performed in analog, and only communication should use digital circuits. We 
+have argued that hybrid computational systems are better equipped to handle the high 
+speed processing required for real-world problem solving, while maintaining 
+compatibility with the ubiquitous digital computer [Etienne, 1998]. As a further 
+illustration of this point of view, this paper presents a departure form traditional 
+approaches for focal plane centroid localization by offering a mixed signal solution that is 
+simultaneously high-speed, low power and compact. In addition, the chip is interfaced 
+with an 8-bit microcomputer to implement fast autonomous navigation. 
+Implementation of centroid localization has been either completely analog or completely 
+digital. The analog implementations, realized in the early 1990s, used focal plane current 
+mode circuits to find a global continuos time centroid of the pixels' intensities 
+[DeWeerth, 1992]. Due to their sub-threshold operation, these circuits are low power, 
+but slow. On the other hand, the digital solutions do not compute the centroid at the focal 
+686 R. Etienne-Cummings, V. Gruev and M. A. Ghani 
+plane. They use standard CCD cameras, A/D converters and DSP/CPU to compute the 
+intensity centroid [Mansfield, 1996]. These software approaches offer multiple centroid 
+localization with complex mathematical processing. However, they suffer from the usual 
+high power consumption and non-scalability of traditional digital visual processing 
+systems. Our approach is novel in many aspects. We benefit from the low power, 
+compactness and parallel organization of focal plane analog circuits and the speed, 
+robustness and standard architecture of asynchronous digital circuits. Furthermore, it 
+uses event triggered analog address read-out, which is ideal for the visual centroid 
+localization problem. Moreover, our chip responds to moving targets only by using the 
+ON-set of each pixel in the centroid computation. Lastly, our chip models the retina and 
+two dimensional saccade motor error maps of superior colliculus on a single chip 
+[Sparks, 1990]. Subsequently, this chip is interfaced with a gC for autonomous obstacle 
+avoidance during line-following navigation. The line-following task is similar to target 
+tracking using the saccadic system, except that the eye is fixed and the head (the 
+vehicle) moves to maintain fixation on the target. Control signals provided to the vehicle 
+based on decisions made by the gC are used for steering and accelerating/braking. Here 
+the computational flexibility and programmability of the gC allows rapid prototyping of 
+complex and robust algorithms. 
+2 CENTROID LOCALIZATION 
+The mathematical computation of the centroid of an object on the focal plane uses 
+intensity weighted average of the position of the pixels forming the object [DeWeerth, 
+1992]. Equation (1) shows this formulation. The implementation of this representation 
+N 
+Z I, Yi 
+N 
+.m i=1 
+N 
+t=l 
+and = i= (1) 
+can be quite involved since a product between the intensity and position is implied. To 
+eliminate this requirement, the intensity of the pixels can be normalized to a single value 
+within the object. This gives equation (2) since the intensity can be factored out of the 
+summations. Normalization of the intensity using a simple threshold is not advised since 
+N N 
+.= ' and = '= (2) 
+N N 
+Figure 1' Centroid computation 
+architecture. 
+Intensity Image 
+Edge Image 
+Centtold 
+V R V+ R V A R V. RV+ 4 
+X XpM X+ Xp 
+Edges from pixels 
+Figure 2: Centroid computation method. 
+the value of the threshold is dependent on the brightness of the image and number of 
+pixels forming the object may be altered by the thresholding process. To circumvent 
+these problems, we take the view that the centroid of the object is defined in relation to its 
+boundaries. This implies that edge detection (second order spatial derivative of intensity) 
+can be used to highlight the boundaries, and edge labeling (the zero-crossing of the 
+edges) can be used to normalize the magnitude of the edges. Subsequently, the centroid 
+VLSI Implementation of Motion Centroid Localization for Autonomous Navigation 687 
+of the zero-crossings is computed. Equation (2) is then realized by projecting the zero- 
+crossing image onto the x- and y-axis and performing two linear centroid determinations. 
+Figure (1) shows this process. 
+The determination of the centroid is computed using a resistance grid to associate the 
+position of a column (row) with a voltage. In figure 2, the positions are given by the 
+voltages V i. By activating the column (row) switch when a pixel of the edge image 
+appears in that column (row), the position voltage is connected to the output line through 
+the switch impedance, R s . As more switches are activated, the voltage on the output line 
+approximates equation (2). Clearly, since no buffers are used to isolate the position 
+voltages, as more switches are activated, the position voltages will also change. This 
+does not pose a problem since the switch resistors are design to be larger than the position 
+resistors (the switch currents are small compared to the grid current). Equation (3) gives 
+the error between the ideal centroid and the switch loaded centroid in the worst case 
+when R s = 0fl. In the equation, N is the number of nodes, M is the number of switches 
+set and x 1 and x M are the locations of the first and last set switches, respectively. This 
+error is improved as R s gets larger, and vanishes as N (M_<N) approaches infinity. The 
+terms x i represent an ascending ordered list of the activated switches; x 1 may correspond 
+to column five, for example. This circuit is compact since it uses only a simple linear 
+resistive grid and MOS switches. It is low power because the total grid resistance, N x R, 
+can be large. It can be fast when the parasitic capacitors are kept small. It provides an 
+analog position value, but it is triggered by fast digital signals that activate the switches. 
+= m,n x, - N + 1 + x - x, 
+error M(N + 1) 
+3 MODELING THE RETINA AND SUPERIOR COLLICULUS 
+3.1 System Overview 
+The centroid computation approach presented in section 2 is used to isolate the location 
+of moving targets on a 2D focal plane array. Consequently, a chip which realizes a 
+neuromorphic visual target acquisition system based on the saccadic generation 
+mechanism of primates can be implemented. The biological saccade generation process is 
+mediated by the superior colliculus, which contains a map of the visual field [Sparks, 
+1990]. In laboratory experiments, cellular recordings suggest that the superior colliculus 
+provides the spatial location of targets to be foveated. Clearly, a great deal of neural 
+circuitry exists between the superior colliculus and the eye muscle. Horiuchi has built an 
+analog system which replicates most of the neural circuits (including the motor system) 
+which are believed to form the saccadic system [Horiuchi, 1996]. Staying true to the 
+anatomy forced his implementation to be a complex multi-chip system with many control 
+parameters. On the other hand, our approach focuses on realizing a compact single chip 
+solution by only mimicking the behavior of the saccadic system, but not its structure. 
+3.2 Hardware Implementation 
+Our approach uses a combination of analog and digital circuits to implement the 
+functions of the retina and superior colliculus at the focal plane. We use simple digital 
+control ideas, such as pulse-width modulation and stepper motors, to position the eye. 
+The retina portion of this chip uses photodiodes, logarithmic compression, edge detection 
+and zero-crossing circuits. These circuits mimic the first three layers of cells in the retina 
+688 R. Etienne-Cummings, V. Gruev and M. A. Ghani 
+with mixed sub-threshold and strong inversion circuits. The edge detection circuit is 
+realized with an approximation of the Laplacian operator implemented using the 
+difference between a smooth (with a resistive grid) and unsmoothed version of the image 
+[Mead, 1989]. The high gain of the difference circuit creates a binary image of 
+approximate zero-crossings. After this point, the computation is performed using mixed 
+analog/digital circuits. The zero-crossings are fed to ON-set detectors (positive temporal 
+derivatives) which signal the location of moving or flashing targets. These circuits model 
+the behavior of some of the amacrine and ganglion cells of the primate retina [Barlow, 
+1982]. These first layers of processing constitute all the direct mimicry of the 
+biological models. Figure 3 shows the schematic of these early processing layers. 
+The ON-se

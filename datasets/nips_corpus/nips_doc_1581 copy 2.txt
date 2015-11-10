@@ -1,0 +1,152 @@
+Lazy Learning Meets 
+the Recursive Least Squares Algorithm 
+Mauro Birattari, Gianluca Bontempi, and Hugues Bersini 
+Iridia - Universit Libre de Bruxelles 
+Bruxelles, Belgium 
+{mbiro, gbonte, bersini) @ulb.ac.be 
+Abstract 
+Lazy learning is a memory-based technique that, once a query is re- 
+ceived, extracts a prediction interpolating locally the neighboring exam- 
+ples of the query which are considered relevant according to a distance 
+measure. In this paper we propose a data-driven method to select on a 
+query-by-query basis the optimal number of neighbors to be considered 
+for each prediction. As an efficient way to identify and validate local 
+models, the recursive least squares algorithm is introduced in the con- 
+text of local approximation and lazy learning. Furthermore, beside the 
+winner-takes-all strategy for model selection, a local combination of the 
+most promising models is explored. The method proposed is tested on 
+six different datasets and compared with a state-of-the-art approach. 
+1 Introduction 
+Lazy learning (Aha, 1997) postpones all the computation until an explicit request for a 
+prediction is received. The request is fulfilled interpolating locally the examples consid- 
+ered relevant according to a distance measure. Each prediction requires therefore a local 
+modeling procedure that can be seen as composed of a structural and of a parametric iden- 
+tification. The parametric identification consists in the optimization of the parameters of 
+the local approximator. On the other hand, structural identification involves, among other 
+things, the selection of a family of local approximators, the selection of a metric to evaluate 
+which examples are more relevant, and the selection of the bandwidth which indicates the 
+size of the region in which the data are correctly modeled by members of the chosen family 
+of approximators. For a comprehensive tutorial on local learning and for further references 
+see Atkeson et al. (1997). 
+As far as the problem of bandwidth selection is concerned, different approaches exist. The 
+choice of the bandwidth may be performed either based on some a priori assumption or 
+on the data themselves. A further sub-classification of data-driven approaches is of interest 
+376 M. Birattari, G. Bontempi and H. Bersini 
+here. On the one hand, a constant bandwidth may be used; in this case it is set by a global 
+optimization that minimizes an error criterion over the available dataset. On the other hand, 
+the bandwidth may be selected locally and tailored for each query point. 
+In the present work, we propose a method that belongs to the latter class of local data-driven 
+approaches. Assuming a given fixed metric and local linear approximators, the method we 
+introduce selects the bandwidth on a query-by-query basis by means of a local leave-one- 
+out cross-validation. The problem of bandwidth selection is reduced to the selection of the 
+number k of neighboring examples which are given a non-zero weight in the local modeling 
+procedure. Each time a prediction is required for a specific query point, a set of local 
+models is identified, each including a different number of neighbors. The generalization 
+ability of each model is then assessed through a local cross-validation procedure. Finally, 
+a prediction is obtained either combining or selecting the different models on the basis of 
+some statistic of their cross-validation errors. 
+The main reason to favor a query-by-query bandwidth selection is that it allows better 
+adaptation to the local characteristics of the problem at hand. Moreover, this approach is 
+able to handle directly the case in which the database is updated on-line (Bontempi et al., 
+1997). On the other hand, a globally optimized bandwidth approach would, in principle, 
+require the global optimization to be repeated each time the distribution of the examples 
+changes. 
+The major contribution of the paper consists in the adoption of the recursive least squares 
+algorithm in the context of lazy learning. This is an appealing and efficient solution to the 
+intrinsically incremental problem of identifying and validating a sequence of local linear 
+models centered in the query point, each including a growing number of neighbors. It is 
+worth noticing here that a leave-one-out cross-validation of each model considered does 
+not involve any significant computational overload, since it is obtained though the PRESS 
+statistic (Myers, 1990) which simply uses partial results returned by the recursive least 
+squares algorithm. Schaal and Atkeson (1998) used already the recursive least squares 
+algorithm for the incremental update of a set of local models. In the present paper, we 
+use for the first time this algorithm in a query-by-query perspective as an effective way to 
+explore the neighborhood of each query point. 
+As a second contribution, we propose a comparison, on a local scale, between a competitive 
+and a cooperative approach to model selection. On the problem of extracting a final pre- 
+diction from a set of alternatives, we compared a winner-takes-all strategy with a strategy 
+based on the combination ofestimators (Wolpert, 1992). 
+In Section 5 an experimental analysis of the recursive algorithm for local identification 
+and validation is presented. The algorithm proposed, used in conjunction with different 
+strategies for model selection or combination, is compared experimentally with Cubist, the 
+rule-based tool developed by Ross Quinlan for generating piecewise-linear models. 
+2 Local Weighted Regression 
+Given two variables x E R' and y E R, let us consider the mapping f: R' --+ R, known 
+only through a set of n examples {(xi, yi)}in__l obtained as follows: 
+Yi = f(xi) + i, 
+(1) 
+where Vi, i is a random variable such that E[i] = 0 and E[j] = O, Vj  i, and 
+such that E[?] = m(xi), Vm > 2, where ,(-) is the unknown mth moment of the 
+distribution of i and is defined as a function of xi. In particular for m = 2, the last of 
+the above mentioned properties implies that no assumption of global homoscedasticity is 
+made. 
+Lazy Learning Meets the Recursive Least Squares Algorithm 377 
+The problem of local regression can be stated as the problem of estimating the value that the 
+regression function f(x) = E[ylx] assumes for a specific query point x, using information 
+pertaining only to a neighborhood of x. 
+Given a query point xq, and under the hypothesis of a local homoscedasticity of si, the 
+parameter  of a local linear approximation of f(.) in a neighborhood of xq can be obtained 
+solving the local polynomial regression: 
+where, given a metric on the space m, d(xi, xq) is the distance from the query point to the 
+ith example, K(.) is a weight function, h is the bandwidth, and where a constant value 1 
+has been appended to each vector xi in order to consider a constant term in the regression. 
+In matrix notation, the solution of the above stated weighted least squares problem is given 
+by: 
+: (xtwtwx)-lxtWtWy: (ZtZ)-lZtv = PZ'v, (3) 
+I 
+where X is a matrix whose ith row is x i, y is a vector whose i th element is yi, W is 
+a diagonal matrix whose i th diagonal element is wii = v/K (d(xi, xq)/h), Z - WX, 
+v = Wy, and the matrix X/W/WX: ZtZ is assumed to be non-singular so that its 
+inverse P = (ZtZ) -1 is defined. 
+Once obtained the local linear polynomial approximation, a prediction of yq - f (xq), is 
+finally given by: 
+^ 
+:q = xtql. (4) 
+Moreover, exploiting the linearity of the local approximator, a leave-one-out cross- 
+validation estimation of the error variance E[(yq -- 0q) 2] can be obtained without any 
+significant overload. In fact, using the PRESS statistic (Myers, 1990), it is possible to 
+calculate the error e v = yj - xtj/_j, without explicitly identifying the parameters _j 
+from the examples available with the jth removed. The formulation of the PRESS statistic 
+for the case at hand is the following: 
+cv , ^ yj - x'jPZ'v yj - x'j/ (5) 
+ej =y-xf]_ = 1-z'jPzj - 1-hj ' 
+where ztj is the jth row of Z and therefore zj = wjjxj, and where hjj is the jth diagonal 
+element of the Hat matrix H = ZPZ t = Z(ZtZ) -1Z t. 
+3 Recursive Local Regression 
+In what follows, for the sake of simplicity, we will focus on linear approximator. An 
+extension to generic polynomial approximators of any degree is straightforward. We will 
+assume also that a metric on the space m is given. All the attention will be thus centered 
+on the problem of bandwidth selection. 
+If as a weight function K(.) the indicator function 
+K  = otherwise; 
+(6) 
+is adopted, the optimization of the parameter h can be conveniently reduced to the opti- 
+mization of the number k of neighbors to which a unitary weight is assigned in the local 
+378 M. Birattari, G. Bontempi and H. Bersini 
+regression evaluation. In other words, we reduce the problem of bandwidth selection to a 
+search in the space of h(k) = d(x(k), xq), where x(k) is the k th nearest neighbor of the 
+query point. 
+The main advantage deriving from the adoption of the weight function defined in Eq. 6, 
+is that, simply by updating the parameter/(k) of the model identified using the k nearest 
+neighbors, it is straightforward and inexpensive to obtain/(k + 1). In fact, performing a 
+step of the standard recursive least squares algorithm (Bierman, 1977), we have: 
+P(k + 1): P(k) - 
+vk + 
+e(/c + 
+3(k + 
+P(k)x(k + 1)x'(k + 1)P(k) 
+1 + x'(k + 1)P(k)x(k + 1) 
+1) = P(k + 1)x(k + 1) 
+1) = y(k + 1) - xt(k + 1)/(k) 
+1) -/(k) + /(k + 1)e(k + 1) 
+(7) 
+where P(k) - (ZtZ) - when h = h(k), and where x(k + 1) is the (k + 1) th nearest 
+neighbor of the query point. 
+Moreover, once the matrix P (k + 1) is available, the leave-one-out cross-validation errors 
+can be directly calculated without the need of any further model identification: 
+yj- x'fi(k + 1) 
+CV(k+ 1) = , 
+ej 1 - x'jP(k + 1)x 
+tj : d(xj,Xq) _ h(k q- 1). 
+(8) 
+It will be useful in the following to define for each value of k the [k x 1] vector eCV(k)

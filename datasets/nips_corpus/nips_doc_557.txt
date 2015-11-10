@@ -1,0 +1,152 @@
+Constant-Time Loading of Shallow 1-Dimensional 
+Networks 
+Stephen Judd 
+Siemens Corporate Research, 
+755 College Rd. E., 
+Princeton, NJ 08540 
+j u d d @learning. siemens. com 
+Abstract 
+The complexity of learning in shallow I-Dimensional neural networks has 
+been shown elsewhere to be linear in the size of the network. However, 
+when the network has a huge number of units (as cortex has) even linear 
+time might be unacceptable. Furthermore, the algorithm that was given to 
+achieve this time was based on a single serial processor and was biologically 
+implausible. 
+In this work we consider the more natural parallel model of processing 
+and demonstrate an expected-time complexity that is constant (i.e. in- 
+dependent of the size of the network). This holds even when inter-node 
+communication channels are short and local, thus adhering to more bio- 
+logical and VLSI constraints. 
+I Introduction 
+Shallow neural networks are defined in [Jud90]; the definition effectively limits the 
+depth of networks while allowing the width to grow arbitrarily, and it is used as a 
+model of neurological tissue like cortex where neurons are arranged in arrays tens 
+of millions of neurons wide but only tens of neurons deep. Figure I exemplifies 
+a family of networks which are not only shallow but l-dimensional as well--we 
+allow the network to be extended as far as one liked in width (i.e. to the right) by 
+repeating the design segments shown. The question we address is how learning time 
+scales with the width. In [Jud88], it was proved that the worst case time complexity 
+863 
+864 Judd 
+of training this family is linear in the width. But the proof involved an algorithm 
+that was biologically very implausible and it is this objection that will be somewhat 
+redressed in this paper. 
+The problem with the given algorithm is that it operates only a monolithic serial 
+computer; the single-CPU model of computing has no overt constraints on commu- 
+nication capacities and therefore is too liberal a model to be relevant to our neural 
+machinery. Furthermore, the algorithm reveals very little about how to do the 
+processing in a parallel and distributed fashion. In this paper we alter the model 
+of computing to attain a degree of biological plausibility. We allow a linear num- 
+ber processors and put explicit constraints on the time required to communicate 
+between processors. Both of these changes make the model much more biological 
+(and also closer to the connectionist style of processing). 
+This change alone, however, does not alter the time complexity--the worst case 
+training time is still linear. But when we change the complexity question being 
+asked, a different answer is obtained. We define a class of tasks (viz. training data) 
+that are drawn at random and then ask for the expected time to load these tasks, 
+rather than the worst-case time. This alteration makes the question much more 
+environmentally relevant. It also leads us into a different domain of algorithms and 
+yields fast loading times. 
+2 Shallow 1-D Loading 
+2.1 Loading 
+A family of the example shallow 1-dimensional architectures that we shall examine 
+is characterized solely by an integer, d, which defines the depth of each architecture 
+in the family. An example is shown in figure 1 for d = 3. The example also happens 
+to have a fixed fan-in of 2 and a very regular structure, but this is not essential. A 
+member of the family is specified by giving the width n, which we will take to be 
+the number of output nodes. 
+A task is a set of pairs of binary vectors, each specifying an stimulus to a net and 
+its desired response. A random task of size t is a set of t pairs of independently 
+drawn random strings; there is no guarantee it is a function. 
+Our primary question has to do with the following problem, which is parameterized 
+by some fixed depth d, and by a node function set (which is the collection of different 
+transfer functions that a node can be tuned to perform): 
+Shallow 1-D Loading: 
+Instance: An integer n, and a task. 
+Objective: Find a function (from the node function set) for each node in the 
+network in the shallow 1-D architecture defined by d and n such that the 
+resulting circuit maps all the stimuli in the task to their associated responses. 
+Constant-Time Loading of Shallow 1-Dimensional Networks 865 
+Figure 1: A Example Shallow I~D Architecture 
+2.2 Model of Computation 
+Our machine model for solving this question is the following: For an instance of 
+shallow 1-D loading of width n, we allow n processors. Each one has access to 
+a piece of the task, namely processor i has access to bits i through i + d of each 
+stimulus, and to bit i of each response. Each processor i has a communication link 
+only to its two neighbours, namely processors i- 1 and i + 1. (The first and n th 
+processors have only one neighbour.) It takes one time step to communicate a fixed 
+amount of data between neighbours. There is no charge for computation, but this is 
+not an unreasonable cheat because we can show that a matrix multiply is sufficient 
+for this problem, and the size of the matrix is a function only of d (which is fixed). 
+This definition accepts the usual connectionist ideal of having the processor closely 
+identified with the network nodes for which it is finding the weights, and data 
+available at the processor is restricted to the same local data that connectionist 
+machines have. 
+This sort of computation sets the stage for a complexity question, 
+2.3 Question and Approach 
+We wish to demonstrate that 
+Claim 1 This parallel machine solves shallow 1-D loading where each processor is 
+finished in constant expected time The constant is dependent on the depth of the 
+architecture and on the size of the task, but not on the width. The expectation is 
+over the tasks. 
+866 Judd 
+For simplicity we shall focus on one particular processor--the one at the leftmost 
+end--and we shall further restrict our attention to finding a node function for one 
+particular node. 
+To operate in parallel, it is necessary and sufficient for each processor to make its 
+local decisions in a safe manner--that is, it must make choices for its nodes in 
+such a way as to facilitate a global solution. Constant-time loading precludes being 
+able to see all the data; and if only local data is accessible to a processor, then 
+its plight is essentially to find an assignment that is compatible with all nonlocal 
+satisfying assignments. 
+Theorem 2 The expected communication complexity of finding a safenode func- 
+tion assignment for a particular node in a shallow 1-D architecture is a constant 
+dependent on d and t, but not on n. 
+If decisions about assignments to single nodes can be made easily and essentially 
+without having to communicate with most of the network, then the induced parti- 
+tioning of the problem admits of fast parallel computation. There are some com- 
+plications to the details because all these decisions must be made in a coordinated 
+fashion, but we omit these details here and claim they are secondary issues that do 
+not affect the gross complexity measurements. 
+The proof of the theorem comes in two pieces. First, we define a computational 
+problem called path finding and the graph-theoretic notion of domination which 
+is its fundamental core. Then we argue that the loading problem can be reduced 
+to path finding in constant parallel time and give an upper bound for determining 
+domination. 
+3 Path Finding 
+The following problem is parameterized by an integer K, which is fixed. 
+Path finding: 
+Instance: An integer n defining the number of parts in a partite graph, and a 
+series of K x K adjacency matrices, M1, M2,... M,_ 1. Mi indicates connections 
+between the K nodes of part i and the K nodes of part i q- 1. 
+Objective: Find a path of n nodes, one from each part of the n-partite graph. 
+Define Xh to be the binary matrix representing connectivity between the first part of 
+the graph and the ith part: X1 = M1 and Xh(j, k) - I iff3m such that Xh(j, m) = 1 
+and M(m,k) = 1. We say i includes j at h if every bit in the ith row of X is 1 
+whenever the corresponding bit in the jth row of Xh is 1. We say i dominates at 
+h or i is a dominator if for all rows j, i includes j at h. 
+Lemma 3 Before an algorithm can select a node i from the first part of the graph 
+to be on the path, it is necessary and sufficient for i to have been proven to be a 
+dominator at some h. [] 
+Constant-Time Loading of Shallow 1-Dimensional Networks 867 
+The minimum h required to prove domination stands as our measure of commu- 
+nication complexity. 
+Lemma 4 Shallow 1-D Loading can be reduced to path finding in constant parallel 
+time. 
+Proof: Each output node in a shallow architecture has a set of nodes leading into it 
+called a support cone (or receptive field), and the collection of functions assigned 
+to those nodes will determine whether or not the output bit is correct in each 
+response. Nodes A,B,C,D,E,G in Figure 1 are the support cone for the first output 
+node (node C), and D,E,F,G,H,J are the cone for the second. Construct each part 
+of the graph as a set of points each corresponding to an assignment over the whole 
+support cone that makes its output bit always correct. This can be done for each 
+cone itt parallel, and since the depth (and the fan-in) is fixed, the set of all possible 
+assignments for the support cone can be enumerated in constant time. Now insert 
+edges between adjacent parts wherever two points correspond to assignments that 
+are mutually compatible. (Note that since the support cones overlap one another, 
+we need to ensure that assignments are consistent with each other.) This also can 
+be done in constant parallel time. We call this construction a compatibility graph. 
+A solution to the loading problem corresponds exactly to a path in the compatibility 
+graph. t 
+A dominator in this path-finding graph is exactly what was meant above by a safe 
+assignment 

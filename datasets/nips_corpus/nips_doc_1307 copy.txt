@@ -1,0 +1,155 @@
+Shared Context Probabilistic Transducers 
+Yoshua Bengio* 
+Dept. IRO, 
+Universit de Montreal, 
+Montreal (QC), Canada, H3C 3J7 
+bengioyiro. umonreal. ca 
+Samy Bengio t 
+Microcell Labs, 
+1250, Ren Lvesque Ouest, 
+Montreal (QC), Canada, H3B 4W8 
+samy. bengiomicrocell. ca 
+Jean-Francois Isabelle t 
+Microcell Labs, 
+1250, Ren Lvesque Ouest, 
+Montreal (QC), Canada, H3B 4W8 
+j ean-francois. isabellemicrocell. ca 
+Yoram Singer 
+AT&T Laboratories, 
+Murray Hill, NJ 07733, USA, 
+s ingerresearch. art. com 
+Abstract 
+Recently, a model for supervised learning of probabilistic transduc- 
+ers represented by suffix trees was introduced. However, this algo- 
+rithm tends to build very large trees, requiring very large amounts 
+of computer memory. In this paper, we propose a new, more com- 
+pact, transducer model in which one shares the parameters of distri- 
+butions associated to contexts yielding similar conditional output 
+distributions. We illustrate the advantages of the proposed algo- 
+rithm with comparative experiments on inducing a noun phrase 
+recognizer. 
+I Introduction 
+Learning algorithms for sequential data modeling are important in many applica- 
+tions such as natural language processing and time-series analysis, in which one has 
+to learn a model from one or more sequences of training data. Many of these algo- 
+rithms can be cast as weighted transducers (Pereira, Riley and Sproat, 1994), which 
+associate input sequences to output sequences, with weights for each input/output 
+* Yoshua Bengio is also with AT&T Laboratories, Holmdel, NJ 07733, USA. 
+t This work was performed while Samy Bengio was at INRS-Tlcommtmication, Ile- 
+des-Soeurs, Quebec, Canada, H3E 1H6 
+t This work was performed while Jean-Francois Isabelle was at INRS-TIcom- 
+munication, Ile-des-Soeurs, Quebec, Canada, H3E 1H6 
+410 Y. Bengio, S. Bengio, J-E Isabelle and Y. Singer 
+sequence pair. When these weights are interpreted as probabilities, such models are 
+called probabilistic transducers. In particular, a probabilistic transducer can rep- 
+resent the conditional probability distribution of output sequences given an input 
+sequence. For example, algorithms for combining several transducers were found 
+useful in natural language and speech processing (Riley and Pereira, 1994). Very 
+often, weighted transducers use an intermediate variable that represents context, 
+such as the state variable of Hidden Markov Models (Baker, 1975; Jelinek, 1976). A 
+particular type of weighted transducer, called Input/Output Hidden Markov Model, 
+is one in which the input-to-context distribution and context-to-output distribution 
+are represented by flexible parameterized models (such as neural networks) (Bengio 
+and Frasconi, 1996). In this paper, we will study probabilistic transducers with a 
+deterministic input-to-state mapping (i.e., a function from the past input subse- 
+quence to the current value of the context variable). One such transducer is the one 
+which assigns a value of the context variable to every value of the past input sub- 
+sequence already seen in the data. This input-to-state mapping can be efficiently 
+represented by a tree. Such transducers are called suffix tree transducers (Singer, 
+1996). 
+A problem with suffix tree transducers is that they tend to yield very large trees 
+(whose size may grow as O(n 2) for a sequence of data of length n). For example, in 
+the application studied in this paper, one obtains trees requiring over a gigabyte of 
+memory. Heuristics may be used to limit the growth of the tree (e.g., by limiting 
+the maximum depth of the context, i.e., of the tree, and by limiting the maximum 
+number of contexts, i.e., nodes of the tree). In this paper, instead, we propose a 
+new model for a probabilistic transducer with deterministic input-to-state function 
+in which this function is compactly represented, by sharing parameters of contexts 
+which are associated to similar output distributions. Another way to look at the 
+proposed algorithm is that it searches for a clustering of the nodes of a suffix tree 
+transducer. The data structure that represents the contexts is not anymore a tree 
+but a single-root acyclic directed graph. 
+2 Background: Suffix Tree Probabilistic Transducers 
+The learning algorithm for suffix tree probabilistic transducers (Singer, 1996) con- 
+structs the model P(y[x) from discrete input sequences x - {xl,x2,...,xn} 
+to output sequences y - {yl, y2,..., Yn}, where xt are elements of a finite alphabet 
+Ein. This distribution is represented by a tree in which each internal node may have 
+a child for every element of 52,in, therefore associating a label  Ei to each arc. A 
+node at depth d is labeled with the sequence aa of labels on arcs from root to node, 
+corresponding to a particular input context, e.g., at some position n in the sequence 
+a context of length d is the value aa of the preceding subsequence xnn_a.l. Each 
+node at depth d is therefore associated with a model of the output distribution in 
+this context, P(yn]x_a+  = (a) (independent of n). 
+To obtain a local output probability for y, (i.e., given x), one follows the longest 
+possible path from the root to a node a depth d according to the labels xn, xn_, 
+� .. x,-a+. The local output probability at this node is used to model y,. Since 
+T 
+P(y[x) can always be written H,= P(Y,Ix), the overall input/output condi- 
+tional distribution can be decomposed, according to this model, as follows: 
+T 
+P(YT[xT)---- 1-I r(yn[x-a(zi)+), (1) 
+where d(x) is the depth of the node of the tree associated with the longest suffix 
+ax a -- xnn_a+ of x. Figure 1 gives a simple example of a suffix tree transducer. 
+Shared Context Probabilistic Transducers 411 
+Figure 1' Example o� suttix tree transducer (Singer, 1996). The input alphabet, 
+= (0,1} and the output alphabet, Eot = {a,b,c). For instance, P(a100110)= 
+P(al110) -- 0.5. 
+Proposed Model and Learning Algorithm 
+In the model proposed here, the input/output conditional distribution P(yTIxxT ) 
+is represented by a single-root acyclic directed graph. Each node of this graph is 
+associated with a set of contexts Cnoae = {ra'}, corresponding to all the paths i 
+(of various lengths di) from the root of the tree to this node. All these contexts are 
+associated with the same local output distribution P(y,, Ix[' has a suffix in C,oae). 
+Like in suffix tree transducers, each internal node may have a child for every element 
+of Ein. The arc is labeled with the corresponding element of Ei,,. Also like in suffix 
+tree transducers, to obtain P(y,lx), one follows the path from the root to the 
+deepest node called deepest(x) according to the labels x,, x,_l, etc... The local 
+output distribution at this node is used to predict y, or its probability. The overall 
+conditional distribution is therefore given by 
+T 
+P(YIX) = 1-[ P(Y'ldeepest(x[*)) (2) 
+where the set of contexts C&ep,t(r) associated to the deepest node deepest(x) 
+contains a suffix of x. The model can be used both to compute the conditional 
+probability of a given input/output sequence pair, or to guess an output sequence 
+given an input sequence. Note that the input variable can contain delayed values 
+of the output variable (as in Variable Length Markov Models). 
+3.1 Proposed Learning Algorithm 
+We present here a constructive learning algorithm for building the graph of the 
+model and specify which data points are used to update each local output model 
+(associated to nodes of the graph). The algorithm is on-line and operates accord- 
+ing to two regimes: (1) adding new nodes and simply updating the local output 
+distributions at existing nodes, and (2) merging parts of the graph which represent 
+similar distributions. If there are multiple sequences in the training data they are 
+concatenated in order to obtain a single input/output sequence pair. 
+(1) After every observation (Xn, y,,), the algorithm updates the output distributions 
+412 Y. Bengio, S. Bengio, J-E Isabelle and Y. Singer 
+of the nodes for which C,,oae(x D contains a suffix of z, possibly adding new nodes 
+(with labels Z_d. ) until z' C C, ode for some node. 
+(2) Every Tmerge observations, the algorithm attempts to merge sub-graphs which 
+are found similar enough, by comparing the N(N - 1)/2 pairs of sub-graphs rooted 
+at the N nodes that have seen at least rain,, observations. Merging two subgraphs 
+is equivalent to forcing them to share parameters (as well as reducing the size of 
+the representation of the distribution). A merge is performed between the graphs 
+rooted at nodes a and b if A(a, b) < mina and the merge succeeds. The details of 
+the similarity measure and merging algorithm are given in the next subsections. 
+3.2 Similarity Measure Between Rooted Subgraphs 
+In order to compare (asymmetrically) output distributions P(yla) and P(ylb) at 
+two nodes a and b, one can use the Kullback-Liebler divergence: 
+KL(a,b) = y. P(ylb) log P(Ylb) 
+uer. P(yla) (3) 
+However, we want to compare the whole acyclic graphs rooted at these 2 nodes. In 
+order to do so, let us define the following. Let s be a string of input labels, and b 
+a node. Define desc(b, s) as the most remote descendant of b obtained by following 
+from b the arcs whose labels correspond to the sequence s. Let descendents(a) be 
+the set of strings obtained by following the arcs starting from node a until reaching 
+the leaves which have a as an ancestor. Let P(sla) be the probability of following the 
+arcs according to string s, starting from node a. This distribution can be estimated 
+by counting the relative number of descendents through each of the children of each 
+node. 
+To compare the graphs rooted at two nodes a and b, we extend the KL divergence 
+by weighing each of the descendents of a, as follows: 
+WKL(a,b) =  P(sla)KL(desc(a,s),desc(b,s)) (4) 
+s ( descendents( a ) 
+Finally, to obtain a symmetric measure, we define 
+A(a, O) = WKL(a, O) + WKL(O, a) (5) 
+that is us

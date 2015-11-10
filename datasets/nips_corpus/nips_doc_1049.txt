@@ -1,0 +1,174 @@
+Learning Fine Motion by Markov 
+Mixtures of Experts 
+Marina Meil 
+Dept. of Elec. Eng. and Computer Sci. 
+Massachussetts Inst. of Technology 
+Cambridge, MA 02139 
+mmp@ai.mit.edu 
+Michael I. Jordan 
+Dept.of Brain and Cognitive Sciences 
+Massachussetts Inst. of Technology 
+Cambridge, MA 02139 
+jordan@psyche.mit.edu 
+Abstract 
+Compliant control is a standard method for performing fine manip- 
+ulation tasks, like grasping and assembly, but it requires estimation 
+of the state of contact (s.o.c.) between the robot arm and the ob- 
+jects involved. Here we present a method to learn a model of the 
+movement from measured data. The method requires little or no 
+prior knowledge and the resulting model explicitly estimates the 
+s.o.c. The current s.o.c. is viewed as the hidden state variable of 
+a discrete HMM. The control dependent transition probabilities 
+between states are modeled as parametrized functions of the mea- 
+surement. We show that their parameters can be estimated from 
+measurements at the same time as the parameters of the movement 
+in each s.o.c. The learning algorithm is a variant of the EM proce- 
+dure. The E step is computed exactly; solving the M step exactly 
+is not possible in general. Here, gradient ascent is used to produce 
+an increase in likelihood. 
+I INTRODUCTION 
+For a large class of robotics tasks, such as assembly tasks or manipulation of rel- 
+atively light-weight objects, under appropriate damping of the manipulator the 
+dynamics of the objects can be neglected. For these tasks the main difficulty is in 
+having the robot achieve its goal despite uncertainty in its position relative to the 
+surrounding objects. Uncertainty is due to inaccurate knowledge of the geometric 
+shapes and positions of the objects, of their physical properties (surface friction 
+coefficients), or to positioning errors in the manipulator. The standard solution 
+to this problem is coatrolled compliance first introduced in (Mason, 1981). Under 
+compliant motion, the task is performed in stages; in each stage the robot arm 
+1004 M. MEILA, M. I. JORDAN 
+maintains contact with a selected surface or feature of the environment; the stage 
+ends when contact with the feature corresponding to the next stage is made. 
+Decomposing the given task into subtasks and specifying each goal or subgoal in 
+terms of contact constraints has proven to be a particularly fertile idea, from which 
+a fair number of approaches have evolved. But each of them have to face and solve 
+the problem of estimating the state of contact (i.e. checking if the contact with 
+the correct surface is achieved), a direct consequence of dealing with noisy mea- 
+surements. Additionally, most approaches assttme prior geometrical and physical 
+knowledge of the environment. 
+In this paper we present a method to learn a model of the environment which will 
+serve to estimate the s.o.c. and to predict future positions from noisy measurements. 
+It associates to each state of contact the coresponding movement model (m.m.); that 
+is: a relationship between positions, nominal and actual velocities that holds over a 
+domain of the position-nominal velocity space. The current m.m. is viewed as the 
+hidden state variable of a discrete Hidden Markov Model (ItMM) with transition 
+probabilities that are parametrized functions of the measurement. We call this 
+model Markov Mixture of Experts (MME) and show how its parameters can be 
+estimated. In section 2 the problem is defined, section 3 introduces the learning 
+algorithm, section 4 presents a simulated example and 5 discusses other aspects 
+relevant to the implementation. 
+2 
+REACHABILITY GRAPHS AND MARKOV 
+MIXTURES OF EXPERTS 
+For any ensemble of objects, the space of all the relative degrees of freedom of the 
+objects in the ensemble is called the configuration space (C-space). Every possi- 
+ble configuration of the ensemble is represented by a unique point in the C-space 
+and movement in the real space maps into continuous trajectories in the C-space 
+(Lozano-Perez, 1983). The sets of points corresponding to each state of contact 
+create a partition over the C-space. Because trajectories are continuous, a point 
+can move from a s.o.c. only to a neighboring s.o.c. This can be depicted by a di- 
+rected graph with vertices representing states of contact and arcs for the possible 
+transitions between them, called the reachability graph. If no constraints on the 
+velocities are imposed, then in the reachability graph each s.o.c. is connected to all 
+its neighbouts. But if the range of velocities is restricted, the connectivity of the 
+graph decreases and the connections are generally non-symmetric. Figure I shows 
+an example of a C-space and its reachability graph for velocities with only positive 
+components. 
+Ideally, in the absence of noise, the states of contact can be perfectly observed 
+and every transition through the graph is thus deterministic. To deal with the 
+uncertainty in the measurements, we will attach probabilities to the arcs of the graph 
+in the following way: Let us denote by Qi the set of configurations corresponding 
+to s.o.c. i and let the movement of a point z with uniform nominal velocity v for a 
+time AT be given by z(t + AT) = f* (z, v, AT); both z and v are vectors of same 
+dimension as the C-space. Now, let z t, v t be the noisy measurements of the true 
+values x, v, x e Qj and P[x, vl xt, vt,j] the posterior distribution of (x, v) given the 
+measurements and the s.o.c. Then, the probability of transition to a state i from a 
+given state j in time T, can be expressed as: 
+P[ilxt, vt,j ] = / P[x, vlz',v',j]dzdv -- (1) 
+d {z,vlzQj,f*(z,v,Ts)Q, } 
+a m 
+Defining the transition probability matrix A = [ jilt,j_-1 and assuming measurement 
+Learning Fine Motion by Markov Mixtures of Experts 1005 
+(a) (b) 
+Figure 1: A configuration space (a) and its reachability graph (b). The nodes 
+represent movement models: C is the free space, A and B are surfaces with static 
+and dynamic friction, G represents jamming in the corner. The velocity V has 
+positive components. 
+noise P[x'lq = i, x  Qi] leads to an HMM with output x having a continuous 
+emission probability distribution and where the s.o.c. plays the role of a hidden 
+state variable. Our main goal ig to estimate this model from observed data. 
+To give a general statement of the problem we will assume that all the position, 
+velocity and force measurements are represented by the input vector u; the output 
+vector y of dimensionality ny contains the future position (which our model will 
+learn to predict). Observations are made at moments which are integer multiples 
+of T,, indexed by t = 0, 1, .., T. If T, is a constant sampling time the dependency of 
+the transition probability on T, can be ignored. For the purpose of the parameter 
+estimation, the possible dependence between u(t) and y(t + 1) will also be ignored, 
+but it should be considered when the trained model is used for prediction. 
+Throughout the following section we will also assume that the input-output de- 
+pendence is described by a Gaussian conditional density p(y(t)lu(t), q(t)-- k) with 
+mean f(u(t), Or) and variance E = r2I. This is equivalent to assuming that given 
+the s.o.c. all noise is additive Gaussian output noise, which is obviously an approx- 
+imation. But this approximation will allow us to derive certain quantities in closed 
+form in an effective way. 
+The function f(u, Or) is the m.m. associated with state of contact k (with 0r its 
+parameter vector) and q is the selector variable representing it. Sometimes we will 
+find it useful to partition the domain of a m.m. into subdomains and to represent 
+it by a different function (i.e. a different set of parameters 0r) on each of the 
+subdomains; then, the name movement model will be extended to them. 
+The evolution of q is controlled by a Markov chain which depends on u and of a set 
+of parameters W: 
+aij(u(t), W) = Pr[q(t + 1) = ilq(t ) = j, u(t)] t = O, 1,... 
+with 
+Eaij(u'W)=l Vu, W,j= 1,...,m. (2) 
+i 
+1006 M. MEILA, M. I. JORDAN 
+V1 
+y 
+m 
+Figure 2: The Markov Mixture of Experts architecture 
+Fig. 2 depicts this architecture. It can be easily seen that this model generalizes the 
+mixture of experts (ME) architecture (Jacobs, et al., 1991), to which it reduces in 
+the case where aij are independent of j (the columns of A are all equal). It becomes 
+the model of (Bengio and Frasconi, 1995) when A and f are neural networks. 
+3 AN EM ALGORITHM FOR MME 
+To estimate the values of the unknown parameters er e, Wr, 0r, k = 1,..., m given 
+the sequence of observations {(u(t), T 
+y(t))}t=o , T > 0 the Expectation Maximization 
+(EM) algorithm will be used. The states {q(t) T 
+}t=0 play the role of the unobserved 
+variables. More about EM can be found in (Dempster et al., 1977) while aspects 
+specific to this algorithm are in (Meila and Jordan, 1994). 
+The E step computes the probability of each state and of every transition to occur 
+at t E {0,..., T} given the observations and an initial parameter set. This can be 
+done efficiently by the forward-backward algorithm (Rabiner and Juang, 1986). 
+7r(t) - Pr[q(t)-- k I {(u(t) y(t)) W, 0, ere] (3) 
+ij(t) -- Pr[q(t) j, q(t + 1) i[ {(u(t), y(t) T 
+= = w, o, er2] 
+In the M step the new estimates of the parameters are found by maximizing the 
+average complete log-likelihood J, which in our case has the form 
+er2, w) 
+TI m 
+  ij(t)in aij(u(t), W) - 
+t=O i,j=l 
+T m 
+2er2   7r(t)lly(t ) - f(u(t) 0 )112 T + 1 
+' - 2 nyln(er2) + ct. (4) 
+t---O k=l 
+Since each parameter appears in only one term of J the maximization is equivalent 
+to: 
+T 
+O ew = argmin  7r(t)Ily(t) - flu(t), Or )112 (5) 
+O t--0 
+Learning Fine Motion by Markov Mixtures of Experts 1007 
+ly 2new __-- 
+T-1 
+= argmax E E ,j(t)in (a,j(u(t), W)) (6) 
+w 
+t=O ij 
+T m 
+1 
+n(T + 1) y] y] 7k(t)][y(t) - f(u(t),Ok)[] 2 (7) 
+t=O k=O 
+There is no general closed form solution to (5) and (6). Their difficulty depends on 
+the form of f an

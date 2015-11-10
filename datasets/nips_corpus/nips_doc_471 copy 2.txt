@@ -1,0 +1,195 @@
+Unsupervised Classifiers, Mutual Information 
+and 'Phantom Targets' 
+John S. Bridle 
+Anthony J.R. Heading 
+Defence Research Agency 
+St. Andrew's Road, Malvern 
+Worcs. WR14 3PS, U.K. 
+Abstract 
+David J.C. MacKay 
+California Institute of Technology 139-74 
+Pasadena CA 91125 U.S.A 
+We derive criteria for training adaptive classifier networks to perform unsu- 
+pervised data analysis. The first criterion turns a simple Gaussian classifier 
+into a simple Gaussian mixture analyser. The second criterion, which is 
+much more generally applicable, is based on mutual information. It simpli- 
+fies to an intuitively reasonable difference between two entropy functions, 
+one encouraging 'decisiveness,' the other 'fairness' to the alternative in- 
+terpretations of the input. This 'firm but fair' criterion can be applied 
+to any network that produces probability-type outputs, but it does not 
+necessarily lead to useful behavior. 
+I Unsupervised Classification 
+One of the main distinctions made in discussing neural network architectures, and 
+pattern analysis algorithms generally, is between supervised and unsupervised data 
+analysis. We should therefore be interested in any method of building bridges 
+between techniques in these two categories. For instance, it is possible to use an 
+unsupervised system such as a Boltzmann machine to learn the joint distribution of 
+inputs and a teacher's classification labels. The particular type of bridge we seek is a 
+method of taking a supervised pattern classifier and turning it into an unsupervised 
+data analyser. That is, we are interested in methods of bootstrapping classifiers. 
+Consider a classifier system. Its input is a vector x, and the output is a probability 
+vector y(x). (That is, the elements ofy are positive and sum to 1.) The elements of 
+y, (yi(x), i = 1... No) are to be taken as the probabilities that x should be assigned 
+to each of Nc classes. (Note that our definition of classifier does not include a 
+decision process.) 
+1096 
+Unsupervised Classifiers, Mutual Information and 'Phantom Targets' 1097 
+To enforce the conditions we require for the output values, we recommend using a 
+generalised logistic (normalised exponential, or SoftMax) output stage. We call the 
+unnormalised log probabilities of the classes ai, and the softmax performs: 
+yi=e''/Z with z=e a, (1) 
+i 
+Norlnally the parameters of such a system would be adjusted using a training set 
+comprising examples of inputs and corresponding classes, {(xi, ci)}. We assume that 
+the system includes means to convert derivatives of a training criterion with respect 
+to the outputs into a form suitable for adjusting the values of the parameters, for 
+instance by backpropagation. 
+Imagine however that we have unlabelled data, xm, m = 1... Nta, and wish to use 
+it to 'improve' the classifier. We could think of this as self-supervised learning, 
+to hone an already good system on lots of easily-obtained unlabelled real-world 
+data, or to adapt to a slowly changing environment, or as a way of turning a 
+classifier into some sort of cluster analyser. (Just what kind depends on details of 
+the classifier itself.) The ideal method would be theoretically well-founded, general- 
+purpose (independent of the details of the classifier), and computationally tractable. 
+One well known approach to unsupervised data analysis is to minimise a recon- 
+struction error: for linear projections and squared euclidean distance this leads to 
+principal components analysis, while reference-point based classifiers lead to vector 
+quantizer design methods, such as the LBG algorithm . Variants on VQ, such as 
+Kohonen's feature maps, can be motivated by requiring robustness to distortions 
+in the code space . Reconstruction error is only available as a training criterion if 
+reconstruction is defined: in general we are only given class label probabilities. 
+2 A Data Likelihood Criterion 
+For the special case of a Gaussian clustering of an unlabelled data set, it was demon- 
+strated in [1] that gradient ascent on the likelihood of the data has an appealing 
+interpretation in terms of backpropagation in an equivalent unit-Gaussian classifier 
+network: for each input x presented to the network, the output y is doubled to 
+give 'phantom targets' t = 2y; when the derivatives of the log likelihood criterion 
+J = -P, iti log yi relative to these targets are propagated back through the network, 
+it turns out that the resulting gradient is identical to the gradient of the likelihood 
+of the data given a Gaussian mixture model. 
+For the unit-Gaussian classifier, the activations ai in (1) are 
+= -Ix- wil (2) 
+, 
+so the outputs of the network are 
+yi =/'(class = i I x, w) (3) 
+where we assume the inputs are drawn from equi-probable unit-Gaussian distribu- 
+tions with the mean of the distribution of the ith class equal to wi. 
+This result was only derived in a limited context, and it was speculated that it might 
+be generalisable to arbitrary classification models. The above phautom target rule 
+1098 Bridle, Heading, and MacKay 
+has been re-derived for a larger class of networks [4], but the conditions for strict 
+applicability are quite severe. Briefly, there should be exponential density functions 
+for each class, and the normalizing factors for these densities should be independent 
+of the parameters. Thus Gaussians with fixed covariance matrices are acceptable, 
+but variable covariances are not, and neither are linear transformations preceeding 
+the Gaussians. 
+The next section introduces a new objective function which is independent of details 
+of the classifier. 
+3 Mutual Information Criterion 
+Intuitively, an unsupervised adaptive classifier is doing a plausible job if its outputs 
+usually give a fairly clear indication of the class of an input vector, and if there is 
+also an even distribution of input patterns between the classes. We could label these 
+desiderata 'decisive' and 'fair' respectively. Note that it is trivial to achieve either 
+of them alone. For a poorly regularised model it may also be trivial to achieve both. 
+There are several ways to proceed. We could devise ad-hoc measures corresponding 
+to our notions of decisiveness and fairness, or we could consider particular types 
+of classifier and their unsupervised equivalents, seeking a general way of turning 
+one into the other. Our approach is to return to the general idea that the class 
+predictions should retain as much information about the input values as possible. 
+We use a measure of the information about x which is conveyed by the output 
+distribution, i.e. the mutual information between the inputs and the outputs. We 
+interpret the outputs y as a probability distribution over a discrete random variable 
+c (the class label), thus y = p(clx). The mutual information between x and c is 
+Z(c;x) 
+= /J dcdxp(c,x)log p(c,x) 
+p(c)p(x) (4) 
+= /dxp(x)/dcp(clx)log p(clx---) (5) 
+p(c) 
+P(ClX) (6) 
+= ) 
+The elements of this expression are separately recognizable: 
+1 
+fdxp(x)(.) is equivalent to an average over a training set 
+p(c[x) is simply the network output yc; 
+fdc (.) is a sum over the class labels and corresponding network outputs. 
+Hence: 
+1 
+/;(c; x) = 
+Nc 
+-- - - yi log y/ 
+ts i=1 Yi 
+(7) 
+Unsupervised Classifiers, Mutual Information and 'Phantom Targets' 1099 
+Nc 1 N 
+- y. yi logy i q- --  -y, logy, (8) 
+i----1 ts i--1 
+7t(y) - 7-/(y) (9) 
+The objective function I is the difference between the entropy of the average of the 
+outputs. and the average of the entropy of the outputs, where both averages are 
+over the training set. 7-/(y) has its maximum value when the average activities of 
+the separate outputs are equal - this is 'fairness'. 7-/(y) has its minimum value when 
+one output is full on and the rest are off for every training case - this is 'firmness'. 
+We now evaluate 27 for the training set. and take the gradient of 27. 
+4 Gradient descent 
+To use this criterion with back-propagation network training, we need its derivatives 
+with respect to the network outputs. 
+027(c;x) 
+0 1 Nc 
+-- Oy, Nts E E Yi log Y---/ (10) 
+ts i--1 
+1 
+- Nt--- E [1 + log yi - 1 - log i] (1 1) 
+ts 
+_ I Yi 
+- 
+ts Yi 
+The resulting expression is quite simple, but note that the presence of a Fi term 
+means that two passes through the training set are required: the first to calculate the 
+average output node activations, and the second to back-propagate the derivatives. 
+5 Illustrations 
+Figures 1 shows 27 (divided by its maximum possible value, log Nc) for a run of a 
+particular unit-Gaussian classifier network. The 30 data points are drawn from a 
+2-d isotropic Gaussian. Figure 2 shows the fairness and firmness criteria separately. 
+(The upper curve is 'fairness' 7/(')/log N�, and the lower curve is 'firmness' (1 - 
+7/(y)/log N).) 
+The ten reference points had starting values drawn from the same distribution as the 
+data. Figure 3 shows their movement. during training. From initial positions within 
+the data cluster, they move outwards into a circle around the data. The resulting 
+classification regions are shown in Figure 4. (The grey level is proportional to the 
+value of the maximum response at each point, and since the outputs are positive 
+normalised this value drops to 0.5 or less at the decision boundaries.) We observe 
+that the space is being partitioned into regions with roughly equal numbers of 
+points. It might be surprising at first that the reference points do not end up near 
+1 100 Bridle, Heading, and MacKay 
+1.0 
+0.8 
+0.6 
+0.4 
+0.2 
+0.0 
+0 
+20 40 60 80 100 
+Itchration 
+1. The M.I. criterion 
+4 
+2 
+-2 
++ 
+-4 -2 0 2 4 
+1.0 
+0.8 
+0.6 
+0.4 
+0.2 
+0 20 40 60 80 
+Iteration 
+.00 
+2. Firm and Fair separately 
+4 
+2 
+-2 
+-2 0 2 4 
+3. Tracks of reference points 4. Decision Regions 
+Unsupervised Classifiers, Mutual Information and 'Phantom Targets' 1101 
+the data. However, it is only the transformatiol froin data x to outputs y that is 
+being trained, and the reference points are just

@@ -1,0 +1,137 @@
+Example Based Image Synthesis of Articulated 
+Figures 
+Trevor Darrell 
+Interval Research, 1801C Page Mill Road, Palo Alto CA 94304 
+trevor@interval.com, http://www.interval.com/-trevor/ 
+Abstract 
+We present a method for learning complex appearance mappings, such 
+as occur with images of articulated objects. Traditional interpolation 
+networks fail on this case since appearance is not necessarily a smooth 
+function nor a linear manifold for articulated objects. We define an ap- 
+pearance mapping from examples by constructing a set of independently 
+smooth interpolation networks; these networks can cover overlapping re- 
+gions of parameter space. A set growing procedure is used to find ex- 
+ample clusters which are well-approximated within their convex hull; 
+interpolation then proceeds only within these sets of examples. With this 
+method physically valid images are produced even in regions of param- 
+eter space where nearby examples have different appearances. We show 
+results generating both simulated and real arm images. 
+1 Introduction 
+Image-based view synthesis is ,an important application of learning networks, offering the 
+ability to render realistic images without requiring detailed models of object shape and 
+illumination effects. To date, much attention has been given to the problem of view synthe- 
+sis under varying camera pose or rigid object transformation. Several successful solutions 
+have been proposed in the computer graphics and vision literature, including view morph- 
+ing [12], plenoptic modeling/depth recovery [8], lightfields [7], and recent approaches 
+using the trifocal tensor for view extrapolation [13]. 
+For non-rigid view synthesis, networks for model-based interpolation and manifold learn- 
+ing have been used successfully in some cases [14, 2, 4, 11]. Techniques based on Radial 
+Basis Function (RBF) interpolation or on Principle Components Analysis (PCA), have been 
+able to interpolate face images under varying pose, expression and identity [ 1, 5, 6]. How- 
+Example-Based Image Synthesis of Articulated Figures 769 
+extends the notion of example clustering to the case of coupled shape and texture appear- 
+ance models. 
+Our basic method is to find sets of examples which can be well-approximated from their 
+convex hull in parameter space. We define a set growing criterion which enforces com- 
+pactness and the good-interpolation property. To add a new point to an example set, we 
+require both that the new point must be well approximated by the previous set alone and 
+that all interior points in the resulting set be well interpolated from the exterior examples. 
+We define exterior examples to be those on the convex hull of the set in parameter space. 
+Given a training subset s C 2 and new point p 
+E(s,p) = max(Ei(s U {p}),EE(s,p)), 
+with the interior and extrapolation error defined as 
+El(s) = max I[Yp' - ((s),Xp')ll , 
+p'G(s--7t(s)) 
+EE(s,p) = ][yp -- ((s),xp)l[ . 
+x (s) is the subset of s whose x vectors lie on the convex hull of all such vectors in s. To 
+add a new point, we require E < e, where e is a free parameter of the clustering method. 
+Given a seed example set, we look to nearest neighbors in appearance space to find the next 
+candidate to add. Unless we are willing to test the extrapolation error of the current model 
+to all points, we have to rely on precomputed non-vectorized appearance distance (e.g., 
+MSE between example images). If the examples are sparse in the appearance domain, this 
+may not lead to effective groupings. 
+If examples are provided in sequence and are based on observations from an object with 
+realistic dynamics, then we can find effective groupings even if observations are sparse in 
+appearance space. We make the assumption that along the trajectory of example observa- 
+tions over time, the underlying object is likely to remain smooth and locally span regions of 
+appearance which are possible to interpolate. We thus perform set growing along examples 
+on their input trajectory. Specifically, in the results reported below, we select K seed points 
+on the trajectory to form initial clusters. At each point p we find the set s which is the 
+smallest interval on the example trajectory which contains p, has a non-zero interior region 
+(s - x (s)), and for which E1 ($) < e. If such set exists, we continue to expand it, growing 
+the set along the example trajectory until the above set growing criterion is violated. Once 
+we can no longer grow any set, we test whether any set is a proper subset of another, and 
+delete it if so. We keep the remaining sets, and use them for interpolation as described 
+below. 
+4 Synthesis using example sets 
+We generate new views using sets of examples: interpolation is restricted to only occur 
+inside the convex hull of an example set found as above for which Ei(s) _< e. Given a new 
+parameter vector x, we test whether it is in the convex hull of parameters in any example 
+set. If the point does not lie in the convex hull of any example set, we find the nearest point 
+on the convex hull of one of the example sets, and use that instead. This prevents erroneous 
+extrapolation. 
+If a new parameter is in the convex hull of more than one example set, we first select the 
+set whose median example parameter is closest to the desired example parameter. Once a 
+set has been selected, we interpolate a new function value from examples using the RBF 
+method summarized above. To enforce temporal consistency of rendered images over time, 
+770 T. Darrell 
+(b) 
+(c) 
+Figure 2: (a) Images of a real arm (from a sequence of 33 images) with changing appear- 
+ance and elbow configuration. (b,c) Interpolated shape of arms tracked in previous figure. 
+(b) shows results using all examples in a single interpolation network; (c) shows results 
+using example sets algorithm. Open contours show arms example locations; filled con- 
+tour shows interpolation result. Near regions of appearance singularity in parameter space 
+the full network method generates physically-invalid arm shapes; the example sets method 
+produces realistic images. 
+The method presented below for grouping examples into locally valid spaces is generally 
+applicable to both the PCA and RBF-based view synthesis techniques. However our initial 
+implementation, and the results reported in this paper, have been with RBF-based models. 
+3 Finding consistent example sets 
+Given examples from a complicated (non-linear, non-smooth) appearance mapping, we find 
+local regions of appearance which are well-behaved as smooth, possibly linear, functions. 
+We wish to cluster our examples into sets which can be used for successful interpolation 
+using our local appearance model. 
+Conceptually, this problem is similar to that faced by Bregler and Omohundro [2], who 
+built image manifolds using a mixture of local PCA models. Their work was limited to 
+modeling shape (lip outlines); they used K-means clustering of image appearance to form 
+the initial groupings for PCA analysis. However this approach had no model of texture and 
+performed clustering using a mean-squared-error distance metric in simple appearance. 
+Simple appearance clustering drastically over-partitions the appearance space compared to 
+a model that jointly represent shape and texture. Examples which are distant in simple 
+appearance can often be close when considered in 'vectorized' representation. Our work 
+Example-Based Image Synthesis of Articulated Figures 771 
+(a) 
+(b) 
+(c) 
+Figure 1: Arm appearance interpolated from examples using approximation network. (a) 
+A 2DOF planar arm. Discontinuities in appearance due to workspace constraints make 
+this a difficult function to learn from examples; the first and last example are very close 
+in parameter space, but far in appearance space. (b) shows results using all examples 
+in a single network; (c) using the example sets algorithm described in text. Note poor 
+approximation on last two examples in (a); appearance discontinuities and extrapolation 
+cause problems for full network, but are handled well in examples sets method. 
+In PCA-based approaches, G projects a portion of u onto a optimal linear subspace found 
+from D, and F projects a portion of u onto a subspace found from T [6, 5]. For example 
+GD(U) = PS9u, where S9 is a diagonal boolean matrix which selects the texture param- 
+eters from u and P is a matrix containing the m-th largest principle components of D. 
+F warps the reconstructed texture according to the given shape: Fr(u, $) = [PStu] o $. 
+While interpolation is simple using a PCA approach, the parameters used in PCA models 
+often do not have any direct physical interpretation. For the task of view synthesis, an ad- 
+ditional mapping u - H(:r) is needed to map from task parameters to PCA input values; 
+a backpropogation neural net was used to perform this function for the task of eye gaze 
+analysis [ 10]. 
+Using the RBF-based approach [1], the application to view synthesis is straightforward. 
+Both G and F are networks which compute locally-weighted regression, and parameters 
+are used directly (u - :r). G computes an interpolated shape, and F warps and blends the 
+example texture images according to that shape: Go(x) = 5-,i cif(x -- xi), FT(X, $) = 
+[-4 di f (c - ci)] o s, where f is a radial basis function. The coefficients c and c' are derived 
+from D and T, respectively: C = DR +, where rij = f(ci -xj) and C is the matrix of row 
+vectors ci; similarly C  = Tit + [9]. We have found both vector norm and Gaussian basis 
+functions give good results when appearance data is from a smooth function; the results 
+below use f(r) = Ilrll. 
+772 T. Darrell 
+ever, these methods are limited in the types of object appearance they can accurately model. 
+PCA-based face analysis typically assumes images of face shape and texture fall in a linear 
+subspace; RBF approaches fare poorly when appearance is not a smooth function. 
+We want to extend non-rigid interpolation netwo

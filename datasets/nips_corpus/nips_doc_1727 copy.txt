@@ -1,0 +1,156 @@
+From Coexpression to Coregulation: An 
+Approach to Inferring Transcriptional 
+Regulation among Gene Classes from 
+Large-Scale Expression Data 
+Eric Mjolsness 
+Jet Propulsion Laboratory 
+California Institute of Technology 
+Pasadena CA 91109-8099 
+mjolsness @jp I. nasa. go v 
+Tobias Mann 
+Jet Propulsion Laboratory 
+California Institute of Technology 
+Pasadena CA 91109-8099 
+mannaig.jpl. nasa.gov 
+Rebecca Castafio 
+Jet Propulsion Laboratory 
+California Institute of Technology 
+Pasadena CA 91109-8099 
+beckyaig.jpl. nasa. gov 
+Barbara Wold 
+Division of Biology 
+California Institute of Technology 
+Pasadena CA 91125 
+woldb(its. caltech. edu 
+Abstract 
+We provide preliminary evidence that existing algorithms for 
+inferring small-scale gene regulation networks from gene 
+expression data can be adapted to large-scale gene expression data 
+coming from hybridization microarrays. The essential steps are (1) 
+clustering many genes by their expression time-course data into a 
+minimal set of clusters of co-expressed genes, (2) theoretically 
+modeling the various conditions under which the time-courses are 
+measured using a continious-time analog recurrent neural network 
+for the cluster mean time-courses, (3) fitting such a regulatory 
+model to the cluster mean time courses by simulated annealing 
+with weight decay, and (4) analysing several such fits for 
+commonalities in the circuit parameter sets including the 
+connection matrices. This procedure can be used to assess the 
+adequacy of existing and future gene expression time-course data 
+sets for determining transcriptional regulatory relationships such as 
+coregulation. 
+1 Introduction 
+In a cell, genes can be turned on or off to varying degrees by the protein 
+products of other genes. When a gene is on it is transcribed to produce messenger 
+RNA (mRNA) which can subsequently be translated into protein molecules. Some 
+of these proteins are transcription factors which bind to DNA at specific sites and 
+thereby affect which genes are transcribed and how often. This trancriptional 
+Inferring Transcriptional Regulation among Gene Classes 929 
+regulation feedback circuitry provides a fundamental mechanism for information 
+processing in the cell. It governs differentiation into diverse cell types and many 
+other basic biological processes. 
+Recently, several new technologies have been developed for measuring the 
+expression of genes as mRNA or protein product. Improvements in conventional 
+fluorescently labeled antibodies against proteins have been coupled with confocal 
+microscopy and image processing to partially automate the simultaneous 
+measurement of small numbers of proteins in large numbers of individual nuclei in 
+the fruit fly Drosophila melanogaster [1]. In a complementary way, the mRNA 
+levels of thousands of genes, each averaged over many cells, have been measured by 
+hybridization arrays for various species including the budding yeast Saccharomyces 
+cerevisiae [2]. 
+The high-spatial-resolution protein antibody data has been quantitatively modeled 
+by gene regulation network circuit models [3] which use continuous-time, analog, 
+recurrent neural networks (Hopfield networks without an objective function) to 
+model transcriptional regulation [4][5]. This approach requires some machine 
+learning technique to infer the circuit parameters from the data, and a particular 
+variant of simulated annealing has proven effective [6][7]. Methods in current 
+biological use for analysing mRNA hybridization data do not infer regulatory 
+relationships, but rather simply cluster together genes with similar patterns of 
+expression across time and experimental conditions [8][9]. In this paper, we explore 
+the extension of the gene circuit method to the mRNA hybridization data which has 
+much lower spatial resolution but can currently assay a thousand times more genes 
+than immunofluorescent image analysis. 
+The essential problem with using the gene circuit method, as employed for 
+immunoflourescence data, on hybridization data is that the number of connection 
+strength parameters grows between linearly and quadratically in the number of 
+genes (depending on sparsity assumptions) . This requires more data on each gene, 
+and even if that much data is available, simulated annealing for circuit inference 
+does not seem to scale well with the number of unknown parameters. Some form of 
+dimensionality reduction is called for. Fortunately dimensionality reduction is 
+available in the present practice of clustering the large-scale time course expression 
+data by genes, into gene clusters. In this way one can derive a small number of 
+cluster-mean time courses for aggregated genes, and then fit a gene regulation 
+circuit to these cluster mean time courses. We will discuss details of how this 
+analysis can be performed and then interpreted. A similar approach using somewhat 
+different algorithms for clustering and circuit inference has been taken by Hertz 
+[10]. 
+In the following, we will first summarize the data models and algorithms used, and 
+then report on preliminary experiments in applying those algorithms to gene 
+expression data for 2467 yeast genes [9][11]. Finally we will discuss prospects for 
+and limitations of the approach. 
+2 Data Models and Algorithms 
+The data model is as follows. We imagine that there is a small, hidden regulatory 
+network of aggregate genes which regulate one another by the analog neural 
+network dynamics [3] 
+z'i = g T'ivJ + h,. - ,ivi 
+930 E. Mjolsness, T. Mann, R. Castao and B. WoM 
+in which �i is the continuous-valued state variable for gene product i, r/ is the 
+matrix of positive, zero, or negative connections by which one transcription factor 
+can enhance or repress another, and gO is a nonlinear monotonic sigmoidal 
+activation function. When a particular matrix entry r is nonzero, there is a 
+regulatory connection from gene productj to gene i. The regulation is enhancing 
+if T is positive and repressing if it is negative. If r is zero there is no connection. 
+This network is run forwards from some initial condition and time-sampled to 
+generate a wild-type time course for the aggregate genes. In addition, various other 
+time courses can be generated under alternative experimental conditions by 
+manipulating the parameters. For example an entire aggregate gene (corresponding 
+to a cluster of real genes) could be removed from the circuit or otherwise modified 
+to represent mutants. External input conditions could be modeled as modifications 
+to h. Thus we get one or several time courses (trajectories) for the aggregate genes. 
+From such aggregate time courses, actual gene data is generated by addition of 
+Gaussian-distributed noise to the logarithms of the concentration variables. Each 
+time point in each cluster has its own scalar standard deviation parameter (and a 
+mean arising from the circuit dynamics). Optionally, each gene's expression data 
+may also be multiplied by a time-independent proportionality constant. 
+Regulatory aggregate genes 
+(large circles) and cluster 
+member genes (small 
+circles). 
+Given this data generation model and suitable gene expression data, the problem is 
+to infer gene cluster memberships and the circuit parameters for the aggregate 
+genes' regulatory relationships. Then, we would like to use the inferred cluster 
+memberships and regulatory circuitry to make testable biological predictions. 
+This data model departs from biological reality in many ways that could prove to be 
+important, both for inference and for prediction. Except for the Gaussian noise 
+model, each gene in a cluster is models as fully coregulated with every other one - 
+they are influenced in the same ways by the same regulatory connection strengths. 
+Also, the nonlinear circuit model must not only reflect transcriptional regulation, 
+but all other regulatory circuitry affecting measured gene expression such as kinase- 
+phosphatase networks. 
+Under this data model, one could formulate a joint Bayesian inference problem for 
+the clustering and circuit inference aspects of fitting the data. But given the highly 
+provisional nature of the model, we simply apply in sequence an existing mixture- 
+of-Gaussians clustering algorithm to preprocess the data and reduce its 
+dimensionality, and then an existing gene circuit inference algorithm. Presumably a 
+joint optimization algorithm could be obtained by iterating these steps. 
+2.1 Clustering 
+A widely used clustering algorithm for mixure model estimation is Expectation- 
+Maximization (EM)[12]. We use EM with a diagonal covariance in the Gaussian, so 
+that for each feature vector component a (a combination of experimental condition 
+Inferring Transcriptional Regulation among Gene Classes 931 
+and time point in a time course) and cluster Ot there is a standard deviation 
+parameter O',, a. In preprocessing, each concentration data point is divided by its 
+value at time zero and then a logarithm taken. The log ratios are clustered using 
+EM. Optionally, each gene's entire feature vector may be normalized to unit length 
+and the cluster centers likewise normalized during the iterative EM algorithm. 
+In order to choose the number of clusters, k, we use the cross-validation algorithm 
+described by Smyth [13]. This involves computing the likelihood of each optimized 
+fit on a test set and averaging over runs and over divisions of the data into training 
+and test sets. Then, we can examine the likelihood as a function of k in order to 
+choose k. Normally one would pick k so as to maximize cross-validated likelihood. 
+However, in the present application we also want to reward small values of k which 
+lead to smaller circuits for the circuit inference phase of the algorithm. The choice 
+of k will be discussed in the next section. 
+2.2 Circuit Inference 
+We use the Lam-Delosme variant of simulated annealing (SA) to derive connection 
+strengths T, time constants x, and decay rates ), as in previou

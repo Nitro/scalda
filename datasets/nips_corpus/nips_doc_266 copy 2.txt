@@ -1,0 +1,159 @@
+Training Stochastic Model Recognition Algorithms 211 
+Training Stochastic Model Recognition 
+Algorithms as Networks can lead to Maximum 
+Mutual Information Estimation of Parameters 
+John S. Bridle 
+Royal Signals and Radar Establishment 
+Great Malvern Worcs. 
+UK WR14 3PS 
+ABSTRACT 
+One of the attractions of neural network approaches to pattern 
+recognition is the use of a discrimination-based training method. 
+We show that once we have modified the output layer of a multi- 
+layer perceptron to provide mathematically correct probability dis- 
+tributions, and replaced the usual squared error criterion with a 
+probability-based score, the result is equivalent to Maximum Mu- 
+tual Information training, which has been used successfully to im- 
+prove the performance of hidden Markov models for speech recog- 
+nition. If the network is specially constructed to perform the recog- 
+nition computations of a given kind of stochastic model based clas- 
+sifier then we obtain a inethod for discrimination-based training of 
+the parameters of the models. Examples include an HMM-based 
+word discriminator, which we call an 'Alphanet'. 
+I INTRODUCTION 
+It has often been suggested that one of the attractions of an adaptive neural network 
+(NN) approach to pattern recognition is the availability of discrimination-based 
+training (e.g. in Multilayer Perceptrons (MLPs) using Back-Propagation). Among 
+the disadvantages of NN approaches are the lack of theory about what can be 
+computed with any particular structure, what can be learned, how to choose a 
+network architecture for a given task, and how to deal with data (such as speech) in 
+which an underlying sequential structure is of the essence. There have been attempts 
+to build internal dynamics into neural networks, using recurrent connections, so that 
+they might deal with sequences and temporal patterns [1, 2], but there is a lack of 
+relevant theory to inform the choice of network type. 
+Hidden Markov models (HMMs) are the basis of virtually all modern automatic 
+speech recognition systems. They can be seen as an extension of the parametric 
+statistical approach to pattern recognition, to deal (in a simple but principled way) 
+witl temporal patterning. Like most parametric models, HMMs are usually trained 
+using within-class maximum-likelihood (ML) methods, and an EM algorithm due to 
+Baum and Welch is particularly attractive (see for instance [3]). However, recently 
+212 Bridle 
+some success has been delnonstrated using discrimination-based training inethods, 
+such as the so-called Maximum Mutual Information criterion [4] and Corrective 
+Training[5]. 
+This paper addresses two important questions: 
+How can we design Neural Network architectures with at least the desirable 
+properties of methods based on stochastic models (such as hidden Markov 
+models)? 
+� What is the relationship between the inherently discriminative neural network 
+training and the analogous MMI training of stochastic models? 
+We address the first question in two steps. Firstly, to make sure that the outputs 
+of our network have the simple mathematical properties of conditional probability 
+distribntions over class labels we recommend a generalisation of the logistic nonlin- 
+earity; this enables us (but does not require us) to replace the usual squared error 
+criterion with a more appropriate one, based on relative entropy. Secondly, we 
+also have the option of designing networks which exactly implement the recognition 
+computations of a given stochastic model method. (The resulting 'network' may be 
+rather odd, and not very 'neural', but this is engineering, not biology.) As a con- 
+tribution to the investigation of the second question, we point out that optimising 
+the relative entropy criterion is exactly equivalent to performing Maximum Mutual 
+Information Estimation. 
+By way of illustration we describe three 'networks' which implement stochastic 
+model classifiers, and show how discrimination training can help. 
+2 
+TRAINABLE NETWORKS AS PARAMETERISED CON- 
+DITIONAL DISTRIBUTION FUNCTIONS 
+We consider a trainable network, when used for pattern classification, as a vector 
+function Q(, 8) from an input vector � to a set of indicators of class membership, 
+{Qj}, j = 1,...N. The parameters t modify the transfer function. In a multi- 
+layer perceptton, for instance, the parameters would be values of weights. Typically, 
+we have a training set of pairs (t,ct), t - 1,...T, of inputs and associated true 
+class labels, and we have to find a value for t which specialises the function so that 
+it is consistent with the training set. A common procedure is to minimise E(t), the 
+sum of the squares of the differences between the network outputs and true class 
+indicators, or targets: 'r N 
+t-1 j----1 
+where 6j, = I ifj = c, otherwise O. E and Q will be written vithout the/9 argument 
+where the meaning is clear, and we may drop the t subscript. 
+It is well known that the value of F(z) which miniraises the expected value of 
+(F() - y)2 is the expected value of y given z. The expected value of 6j,e, is 
+P(C = j IX--), the probability that the class associated with t is the jth class. 
+Training Stochastic Model Recognition Algorithms 213 
+From now on we shall assume that the desired output of a classifier network is this 
+conditional probability distribution over classes, given the input. 
+The outputs must satisfy certain simple constraints if they are to be interpretable as 
+a probability distribution. For any input, the outputs must all be positive and they 
+must sum to unity. The use of logistic nonlinearities at the outputs of the network 
+ensures positivity, and also ensures that each output is less than unity. These 
+constraints are appropriate for outputs that are to be interpreted as probabilities 
+of Boolean events, but are not sufficient for 1-from-N classifiers. 
+Given a set of unconstrained values, Vj(z), we can ensure both conditions by using 
+a Normalised Exponential transformation: 
+= eVk(') 
+k 
+This transformation can be considered a lnulti-input generalisation of the logistic, 
+operating on the whole output layer. It preserves the rank order of its input values, 
+and is a differentiable generalisation of the 'winner-take-all' operation of picking the 
+maximum value. For this reason we like to refer to it as softmax. Like the logistic, 
+it has a simple implementation in transistor circuits [6]. 
+If the network is such that we can be sure the values we have are all positive, it may 
+be more appropriate just to normalise them. In particular, if we can treat them as 
+likelihoods of the data given the possible classes, Lj()= P(X=a I C =j), then 
+normalisation produces the required conditional distribution (assuming equal prior 
+probabilities for the classes). 
+RELATIVE ENTROPY SCORING FOR CLASSIFIERS 
+In this section we introduce an information-theoretic criterion for training 1-from- 
+N classifier networks, to replace the squared error criterion, both for its intrinsic 
+interest and because of the link to discriminative training of stochastic models. 
+the class with highest likelihood. This is justified by 
+P(c I') = P( I c)P(c)/e('), 
+if we assume equal priors P(c) (this can be generalised) and see that the denoninator 
+P(') = E, P(' It)P(c) is the same for all classes. 
+It is also usual to train such classifiers by maximising the data likelihood given 
+the correct classes. Maximum Likelihood (ML) training is appropriate if we are 
+choosing from a family of pdfs which includes the correct one. In most real-life 
+applications of pattern classification we do not have knowledge of the form of the 
+data distributions, although we may have some useful ideas. In that case ML may 
+be a rather bad approach to pdf estimation for the purpose of pattern classification, 
+because what matters is the relative densities. 
+An alternative is to optimise a measure of success in pattern classification, and this 
+can make a big difference to performance, particularly when the assumptions about 
+the form of the class pdfs is badly wrong. 
+214 Bridle 
+To make the likelihoods produced by a SM classifier look like NN outputs we can 
+simply normalise them: 
+Then we can use Neural Network optimisation methods to adjust the parameters. 
+a sum, weighted by the joint probability, of the MI of the joint events 
+I(X,Y) =  P(X=,Y=y)log P(X=)P(Y=y) 
+(,) 
+For discrimination training of sets of stochastic models, Bahl et.al. suggest max- 
+imising the Mutual Information, I, between the training observations and the choice 
+of the correspondlug correct class. 
+t t 
+I x=.t)/'(x 
+P(C--ct)P(X =a) 
+P(C--ct IX = at) should be read as the probability that we choose the correct class 
+for the t th training example. If we are choosing classes according to the conditional 
+distribution computed using parameters 0 then P(C =ct [X = st) = Q,(,O), 
+and 
+l(X,C)= _log :: 
+If the second term involving the priors is fixed, we are left with maximising 
+_1ogQ,(,,O) = -J. 
+t 
+X V PytlogQy(e) where qt is the 
+The RE-based score we use is J  -t=t = , 
+probability of class j associated with input t in the training set. If as usual the 
+training set specifies only one true class, ce for each t then P,e = 6,, and 
+T 
+t=l 
+the sum of the logs of the outputs for the correct classes. 
+J can be derived bom the Relative Entropy of distribution Q with respect to the 
+true conditional distribution P, averaged over the input distribution: 
+fdP(X=)G(QIP), where G(QlP)=-P(cI)log P(cl) 
+� 
+information, cross entropy, asymmetric divergence, directed divergence, I-divergence, 
+and Kullback-Leibler number. RE scoring is the basis for the Boltzmann Machine 
+learning algorithm [7] and has also been proposed and used for adaptive networks 
+with continuous-valued outputs [8, 9, 10, 11], but usuMly in the form appropriate 
+to separate logistics and independent Boolean targets. An exception is [12]. 
+There is another way of thinking about th

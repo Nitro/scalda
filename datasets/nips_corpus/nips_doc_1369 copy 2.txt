@@ -1,0 +1,166 @@
+Use of a Multi-Layer Perceptron to 
+Predict Malignancy in Ovarian Tumors 
+Herman �errelst, 
+Yves Moreau and Joos Vandewalle 
+Dept. of Electrical Engineering 
+Katholieke Universiteit Leuven 
+Kard. Mercierlaan 94 
+B-3000 Leuven, Belgium 
+Dirk Timmerman 
+Dept. of Obst. and Gynaec. 
+University Hospitals Leuven 
+Herestraat 49 
+B-3000 Leuven, Belgium 
+Abstract 
+We discuss the development of a Multi-Layer Perceptron neural 
+network classifier for use in preoperative differentiation between 
+benign and malignemt ovarian tumors. As the Mean Squared clas- 
+siftcation Error is not sufficient to make correct and objective as- 
+sessments about the performance of the neural classifier, the con- 
+cepts of sensitivity and specificity are introduced and combined 
+in Receiver Operating Characteristic curves. Based on objective 
+observations such as sonomorphologic criteria, color Doppler imag- 
+ing and results from serum tumor markers, the neural network is 
+able to make reliable predictions with a discriminating performemce 
+comparable to that of experienced gynecologists. 
+i Introduction 
+A reliable test for preoperative discrimination between benign and malignant ovar- 
+ian tumors would be of considerable help to clinicians. It would assist them to select 
+patients for whom minimally invasive surgery or conservative management suffices 
+versus those for whom urgent referral to a gynecologic oncologist is needed. 
+We discuss the development of a neural network classifier/diagnostic tool. The neu- 
+ral network was trained by supervised learning, based on data from 191 thoroughly 
+examined patients presenting with ovarian tumors of which 140 were benign and 51 
+malignant. As inputs to the network we chose indicators that in recent studies have 
+proven their high predictive value [1, 2, 3]. Moreover, we gave preference to those 
+indicators that can be obtained in an objective way by any gynecologist. Some of 
+these indicators have already been used in attempts to make one single protocol or 
+decision algorithm [3, 4]. 
+Use of a MLP to Predict Malignancy in Ovarian Tumors 979 
+In order to make reliable assessments on the practical performance of the classifier, 
+it is necessary to work with other concepts than Mean Squared classification Error 
+(MSE), which is traditionally used as a measure of goodness in the training of a 
+neural network. We will introduce notions as specificity and sensitivity and combine 
+them into Receiver Operating Characteristic (ROC) curves. The use of ROC-curves 
+is motivated by the fact that they are independent of the relative proportion of the 
+various output classes in the sample population. This enables an objective validation 
+of the performance of the classifier. We will also show how, in the training of the 
+neural network, MSE optimization with gradient methods can be refined and/or 
+replaced with the help of ROC-curves and simulated annealing techniques. 
+The paper is organized as follows. In Section 2 we give a brief description of the 
+selected input features. In Section 3 we state some drawbacks to the MSE criterion 
+and introduce the concepts of sensitivity, specificity and ROC-curves. Section 4 
+then deals with the technicalities of training the neural network. In Section 5 we 
+show the results and compare them to human performance. 
+2 Data acquisition and feature selection 
+The data were derived from a study group of 191 consecutive patients who were 
+referred to a single institution (University Hospitals Leuven, Belgium) from August 
+1994 to August 1996. Table 1 lists the different indicators which were considered, 
+together with their mean value and standard deviations or together with the relative 
+presence in cases of benign and malignant tumors. 
+Table 1 Indicator Benign Malignant 
+Demographic Age 49.3 + 16.0 58.3 + 14.3 
+Postmenopausal 40% 70.6% 
+Serum marker CA 125 (log) 2.8 + 1.1 5.2 + 1.9 
+CDI Blood flow present 72.9% 100% 
+Morphologic Abdominal fluid 12.1% 52.9% 
+Bilateral mass 11.4% 35.3% 
+Uniloculax cyst 42.1% 5.9% 
+Multiloc/solid cyst 16.4% 49.0% 
+Smooth wall 58.6% 2.0% 
+Irregular wall 32.1% 76.5% 
+Papillations 7.9% 74.5% 
+Table 1: Demographic, serum marker, color Doppler imaging and morphologic indicators. 
+For the continuous valued features the mean and standard deviation for each class are 
+reported. For binary valued indicators, the last two columns give the presence of the 
+feature in both classes e.g. only 2% of malignant tumors had smooth walls. 
+First, all patients were scanned with ultrasonography to obtain detailed gray-scale 
+images of the tumors. Every tumor was extensively examined for its morphologic 
+characteristics. Table 1 lists the selected morphologic features: presence of ab- 
+dominal fluid collection, papillary structures (> 3mm), smooth internal walls, wall 
+irregularities, whether the cysts were unilocular, multilocular-solid and/or present 
+on both pelvic sides. All outcomes are binary valued: every observation relates to 
+the presence (1) or absence (0) of these characteristics. 
+Secondly, all tumors were entirely surveyed by color Doppler imaging to detect 
+presence or absence of blood flow within the septa, cyst walls, solid tumor areas or 
+ovarian tissue. The outcome is also binary valued (1/0). 
+980 H. Verrelst, Y. Moteau, J. Vandewalle and D. Timmerman 
+Thirdly, in 173 out of the total of 191 patients, serum CA 125 levels were measured, 
+using CA 125 II immunoradiometric assays (Centocor, Malvern, PA). The CA 125 
+antigen is a glycoprotein that is expressed by most epithelial ovarian cancers. The 
+numerical value gives the concentration in U/ml. Because almost all values were 
+situated in a small interval between 0 and 100, and because a small portion took 
+values up to 30,000, this variable was rescaled by taking its logarithm. 
+Since age and menopausal status of the patient are considered to be highly relevant, 
+these are also included. The menopausal score is -1 for premenopausal, +1 for 
+postmenopausal. A third class of patients were assigned a 0 value. These patients 
+had had an hysterectomy, so no menopausal status could be appointed to them. 
+It is beyond the scope of this paper to give a complete account of the meaning of 
+the different features that are used or the way in which the data were acquired. 
+We will limit ourselves to this short description and refer the reader to [2, 3] and 
+gynecological textbooks for a more detailed explanation. 
+3 Receiver Operating Characteristics 
+3.1 Drawbacks to Mean Squared classification Error 
+Let us assume that we use a one-hidden-layer feed-forward NN with m inputs x, 
+nn hidden neurons with the tanh(.) as activation function, and one output , 
+nh 
+Y() - E wj tanh(E vijx +/3j), (1) 
+j=l i----1 
+parameterized by the vector 0 consisting of the network's weights wj and vii and 
+bias terms j. The cost function is often chosen to be the squared difference between 
+the desired d and the actual response y, averaged over all N samples [12], 
+N 
+- 2. (2) 
+J(0) = 
+k----1 
+This type of cost function is continuous and differentiable, so it can be used in 
+gradient based optimization techniques such as steepest descent (back-propagation), 
+quasi-Newton or Levenberg-Marquardt methods [8, 9, 11, 12]. However there are 
+some drawbacks to the use of this type of cost function. 
+First of all, the MSE is heavily dependent on the relative proportion of 
+the different output classes in the training set. In our dichotomic case this 
+can easily be demonstrated by writing the cost function, with superscripts b and m 
+respectively meaning benign and malignant, as 
+Nb i N Nm 1 X -'N'*, {tlm 
+= fb + Nb + + 
+� � 
+X (1 
+If the relative proportion in the sample population is not representative for reality, 
+the A parameter should be adjusted accordingly. In practice this real proportion is 
+often not known accurately or one simply ignores the meaning of A and uses it as a 
+design parameter in order to bias the accuracy towards one of the output classes. 
+A second drawback of the MSE cost function is that it is not very in- 
+formative towards practical usage of the classification tool. A clinician is 
+not interested in the averaged deviation from desired numbers, but thinks in terms 
+of percentages found, missed or misclassified. In the next section we will introduce 
+the concepts of sensitivity and specificity to express these more practical measures. 
+Use of a MLP to Predict Malignancy in Ovarian Tumors 981 
+3.2 Sensitivity, specificity and ROC-curves 
+If we take the desired response to be 0 for benign and 1 for malignant cases, the 
+way to make clearcut (dichotomic) decisions is to compare the numerical outcome 
+of the neural network to a certain threshold value T between 0 and 1. When the 
+outcome is above the threshold T, the prediction is said to be positive. Otherwise the 
+prediction is said to be negative. With this convention, we say that the prediction 
+was 
+True Positive (TP) 
+True Negative (TN) 
+False Positive (FP) 
+False Negative (FN) 
+if the prediction was positive when the sample was malignant. 
+if the prediction was negative when the sample was benign. 
+if the prediction was positive when the sample was benign. 
+if the prediction was negative when the sample was malignant. 
+To every of the just defined terms TP, TN, FP and FN, a certain subregion of the 
+total sample space can be associated, as depicted in Figure 1. In the same sense, 
+we can associate to them a certain number counting the samples in each subregion. 
+'P the proportion of malignant cases that 
+We can then define sensitivity as TP+Fv, 
+Total population 
+ant  
+[ :FN.. __ ,, '-.. TN 
+',,, i... TP,,, FP.... 
+Figure 1' The concepts of true and false positive and negative illustrated. The dashed 
+area indicates the malignant cases in the total sample population. The positive prediction 
+of an imperfect classification (dotted area) does not fully coincide with this sub area. 
+TN the proportion of benign 
+are predicted to be malignant an

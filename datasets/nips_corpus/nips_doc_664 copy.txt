@@ -1,0 +1,160 @@
+A Method for Learning from Hints 
+Yaser S. Abu-Mostafa 
+Departments of Electrical Engineering, Computer Science, 
+and Computation and Neural Systems 
+California Institute of Technology 
+Pasadena, CA 91125 
+e-mail: yaser@caltcch.edu 
+Abstract 
+We address the problem of learning an unknown function by 
+putting together several pieces of information (hints) that we know 
+about the function. We introduce a method that generalizes learn- 
+ing from examples to learning from hints. A canonical representa- 
+tion of hints is defined and illustrated for new types of hints. All 
+the hints are represented to the learning process by examples, and 
+examples of the function are treated on equal footing with the rest 
+of the hints. During learning, examples from different hints are 
+selected for processing according to a given schedule. We present 
+two types of schedules; fixed schedules that specify the relative em- 
+phasis of each hint, and adaptive schedules that are based on how 
+well each hint has been learned so fr. Our learning method is 
+compatible with any descent technique that we may choose to use. 
+I INTRODUCTION 
+The use of hints is coming to the surface in a nuInber of research communities dealing 
+with learning and adaptive systems. In the learning-from-examples paradigm, one 
+often has access not only to examples of the function, but also to a number of 
+hints (prior knowledge, or side information) about the function. The most common 
+difficulty in taking advantage of these hints is that they are heterogeneous and 
+cannot be easily integrated into the learning process. This paper is written with the 
+specific goal of addressing this problem. The paper develops a systematic method 
+73 
+74 Abu-Mostafa 
+for incorporating different hints in the usual learning-from-examples process. 
+Without such a systematic method, one can still take advantage of certain types of 
+hints. For instance, one can implement an invariance hint by preprocessing the input 
+to achieve the invariance through normalization. Alternatively, one can structure 
+the learning model in a way that directly implements the invariance (Minsky and 
+Paperr, 1969). Whenever direct implementation is feasible, the full benefit of the 
+hint is realized. This paper does not attempt to offer a superior alternative to 
+direct implementation. However, when direct implementation is not an option, we 
+prescribe a systematic method for incorporating practically any hint in any descent 
+technique for learning. The goal is to automate the use of hints in learning to a 
+degree where we can effectively utilize a large number of different hints that may 
+be available in a practical situation. As the use of hints becomes routine, we are 
+encouraged to exploit even the simplest observations that we may have about the 
+function we are trying to learn. 
+The notion of hints is quite general and it is worthwhile to formalize what we mean 
+by a hint as far as our method is concerned. Let f be the function that we are 
+trying to learn. A hint is a property that f is known to have. Thus, all that is 
+needed to qualify as a hint is to have a litmus test that f passes and that can be 
+applied to different functions. Formally, a hint is a given subset of functions that 
+includes f. 
+We start by introducing the basic nomenclature and notation. The environment X 
+is the set on which the function f is defined. The points in the environment are 
+distributed according to some probability distribution P. f takes on values from 
+some set Y 
+f:X-Y 
+Often, Y is just (0, 1) or the interval [0, 1]. The learning process takes pieces of 
+information about (the otherwise unknown) f as input and produces a hypothesis g 
+g:X-Y 
+that attempts to approximate f. The degree to which a hypothesis g is considered 
+an approximation of f is measured by a distance or terror' 
+E(g,f) 
+The error E is based on the disagreement between g and f as seen through the eyes 
+of the probability distribution P. 
+Two popular forms of the error measure are 
+and 
+E = 
+where Pr[.] denotes the probability of an event, and �[.] denotes the expected wfiue 
+of a random variable. The underlying probability distribution is P. E will always 
+be a non-negative quantity, and we will take E(g, f) = 0 to mean that g and f 
+are identical for all intents and purposes. We will also assume that when the set 
+of hypotheses is parameterized by real-valued parameters (e.g., the weights in the 
+case of a neural network), E will be well-behaved as a function of the parameters 
+A Method for Learning from Hints 75 
+(in order to allow for derivative-based descent techniques). We make the same 
+assumptions about the error measures that will be introduced in section 2 for the 
+hints. 
+In this paper, the 'pieces of information' about f that are input to the learning 
+process are more general than in the learning-from-examples paradigm. In that 
+paradigm, a number of points x,..., ZN are picked from X (usually independently 
+according to the probability distribution P) and the values of f on these points are 
+provided. Thus, the input to the learning process is the set of examples 
+and these examples are used to guide the search for a good hypothesis. We will 
+consider the set of examples of f as only one of the available hints and denote it by 
+H0. The other hints H,...,HM will be additional known facts about f, such as 
+invariance properties for instance. 
+The paper is organized as follows. Section 2 develops a canonical way for represent- 
+ing different hints. This is the first step in dealing with any hint that we encounter 
+in a practical situation. Section 3 develops the basis for learning from hints and 
+describes our method, including specific learning schedules. 
+2 REPRESENTATION OF HINTS 
+As we discussed before, a hint H, is defined by a litmus test that f satisfies and 
+that can be applied to the set of hypotheses. This definition of Hra can be extended 
+to a definition of 'approximation of Hm' in several ways. For instance, g can be 
+considered to approximate Hra within e if there is a function h that strictly satisfies 
+Hm x for which E(g, h) _( e. In the context of learning, it is essential to have a 
+notion of approximation since exact learning is seldom achievable. Our definitions 
+for approximating different hints will be part of the scheme for representing those 
+hints. 
+The first step in representing H,n is to choose a way of generating 'examples' of the 
+hint. For illustration, suppose that Hra asserts that 
+f: [-1,+1] -, [-1,+1] 
+is an odd function. An example of Hm would have the form 
+= 
+for a particular z  [-1,-Pl]. To generate N examples of this hint, we generate 
+zx,.-. ,zN and assert for each z. that f(-z.) = -f(x.). Suppose that we are 
+in the middle of a learning process, and that the current hypothesis is g when the 
+example /(-z) -- -f(z) is presented. We wish to measure how much g disagrees 
+with this example. This leads to the second component of the representation, the 
+error measure era. For the oddness hint, em can be defined as 
+e,.,.-,. = (g(z) + g(-z)) 2 
+SO that �mm 0 reflects total agreement with the example (i.e., g(-z) - -g(x)). 
+Once the disagreement between g and an example of H,, has been quantified 
+76 Abu-Mostafa 
+through era, the disagreement between g and Hm as a whole is automatically quan- 
+tified through Em, where 
+-m - c ( em ) 
+The expected value is taken w.r.t. the probability rule for picking the examples. 
+Therefore, Em can be estimated by averaging em over a number of examples that 
+are independently picked. 
+The choice of representation of Hm is not unique, and Em will depend on the form 
+of examples, the probability rule for picking the examples, and the error measure 
+era. A minimum requirement on Em is that it should be zero when E = 0. Titis 
+requirement guarantees that a hypothesis for which E = 0 (perfect hypothesis) will 
+not be excluded by the condition Em= 0. 
+Let us illustrate how to represent different types of hints. Perhaps the most common 
+type of hint is the invariance hint. This hint asserts that f(x) = f(x') for certain 
+pairs x, x . For instance, f is shift-invariant is formalized by the pairs x, x  that 
+are shifted versions of each other. To represent the invariance hint, an invariant 
+pair (x, x ) is picked as an example. The error associated with this example is 
+em = (g(x) - g(:,))2 
+Another related type of hint is the monotonicity hint (or inequality hint). The 
+hint asserts for certain pairs x,x' that f(x) < f(x'). For instance, f is mono- 
+tonically nondecreasing in  is formalized by all pairs x,  such that  < . To 
+represent the monotonicity hint, an example (x, x) is picked, and the error associ- 
+ated with this example is given by 
+{ (g(:)- g(:')) if g(:) > g(:') 
+em= 0 if g(:)<_ g(:') 
+The third type of hint we discuss here is the approximation hint. The hint 
+asserts for certain points  6 X that f(x)  [a,b]. In other words, the value of f 
+at � is known only approximately. The error associated with an example � of the 
+approximation hint is 
+(g�) - 
+?�) 
+if g(z) < 
+if g(x)> b= 
+if g() 
+Another type of hints arises when the learning model allows non-binary values for 
+g where f itself is known to be binary. This gives rise to the binary hint. Let 
+_ C_ X be the set where f is known to be binary (for Boolean functions, , is the 
+set of binary input vectors). The binary hint is represented by examples of the form 
+� , where x  (. The error function associated with an example � (assuming 0/1 
+binary convention, and assuming g()  [0, 1]) is 
+em = g(:r)(1- g(:r)) 
+This choice of em forces it to be zero when g() is either 0 or 1, while it would be 
+positive if g() is between 0 and 1. 
+A Method for Learning from Hints 77 
+It is worth noting that the set of examples of f can be formally treated as a hint, 
+too. Given (x, f (rl) ), � � �, (r N, f (z N )), t he examples hint asserts that these are 
+the correct values of f

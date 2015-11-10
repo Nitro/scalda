@@ -1,0 +1,142 @@
+524 Fahlman and Lebiere 
+The Cascade-Correlation Learning Architecture 
+Scott E. Fahlman and Christian Lebiere 
+School of Computer Science 
+Carnegie-Mellon University 
+Pittsburgh, PA 15213 
+ABSTRACT 
+Cascade-Correlation is a new architecture and supervised learning algo- 
+rithm for artificial neural networks. Instead of just adjusting the weights 
+in a network of fixed topology, Cascade-Correlation begins with a min- 
+imal network, then automatically trains and adds new hidden units one 
+by one, creating a multi-layer structure. Once a new hidden unit has 
+been added to the network, its input-side weights are frozen. This unit 
+then becomes a permanent feature-detector in the network, available for 
+producing outputs or for creating other, more complex feature detec- 
+tors. The Cascade-Correlation architecture has several advantages over 
+existing algorithms: it learns very quickly, the network.determines its 
+own size and topology, it retains the structures it has built even if the 
+training set changes, and it requires no back-propagation of error signals 
+through the connections of the network. 
+1 DESCRIPTION OF CASCADE-CORRELATION 
+The most important problem preventing the widespread application of artificial neural 
+networks to real-world problems is the slowness of existing learning algorithms such as 
+back-propagation (or backprop). One factor contributing to that slowness is what we 
+call the moving target problem: because all of the weights in the network are changing 
+at once, each hidden units sees a constantly changing environment. Instead of moving 
+quickly to assume useful roles in the overall problem solution, the hidden units engage in 
+a complex dance with much wasted motion. The Cascade-Correlation learning algorithm 
+was developed in an attempt to solve that problem. In the problems we have examined, 
+it learns much faster than back-propagation and solves some other problems as well. 
+The Cascade-Correlation Learning Architecture 525 
+Outputs 
+o o 
+Hidden Unit 2 
+] ! 
+Hidd, 
+o 
+Inputs o 
+O 
++1 
+Figure 1: The Cascade architecture, after two hidden units have been added. The 
+vertical lines sum all incoming activation. Boxed connections are frozen, X connections 
+are trained repeatedly. 
+Cascade-Correlation combines two key ideas: The first is the cascade architecture, in 
+which hidden units are added to the network one at a time and do not change after they 
+have been added. The second is the learning algorithm, which creates and installs the 
+new hidden units. For each new hidden unit, we attempt to maximize the magnitude of 
+the correlation between the new unit's output and the residual error signal we are trying 
+to eliminate. 
+The cascade architecture is illustrated in Figure 1. It begins with some inputs and one or 
+more output units, but with no hidden units. The number of inputs and outputs is dictated 
+by the problem and by the I/O representation the experimenter has chosen. Every input 
+is connected to every output unit by a connection with an adjustable weight. There is 
+also a bias input, permanently set to +1. 
+The output units may just produce a linear sum of their weighted inputs, or they may 
+employ some non-linear activation function. In the experiments we have run so far, we 
+use a symmetric sigmoidal activation function (hyperbolic tangent) whose output range 
+is -1.0 to +1.0. For problems in which a precise analog output is desired, instead of a 
+binary classification, linear output units might be the best choice, but we have not yet 
+studied any problems of this kind. 
+We add hidden units to the network one by one. Each new hidden unit receives a 
+connection from each of the network's original inputs and also from every pre-existing 
+hidden unit. The hidden unit's input weights are frozen at the time the unit is added to 
+the net; only the output connections are trained repeatedly. Each new unit therefore adds 
+526 Fahlman and Lebiere 
+a new one-unit layer to the network, unless some of its incoming weights happen to be 
+zero. This leads to the creation of very powerful high-order feature detectors; it also may 
+lead to very deep networks and high fan-in to the hidden units. There are a number of 
+possible strategies for minimizing the network depth and fan-in as new units are added, 
+but we have not yet explored these strategies. 
+The learning algorithm begins with no hidden units. The direct input-output connections 
+are trained as well as possible over the entire training set. With no need to back-propagate 
+through hidden units, we can use the Widrow-Hoff or delta rule, the Perceptron learning 
+algorithm, or any of the other well-known learning algorithms for single-layer networks. 
+In our simulations, we use Fahlman's quickprop algorithm [Fahlman, 1988] to train the 
+output weights. With no hidden units, this acts essentially like the delta rule, except that 
+it converges much faster. 
+At some point, this training will approach an asymptote. When no significant error 
+reduction has occurred after a certain number of training cycles (controlled by a patience 
+parameter set by the operator), we run the network one last time over the entire training 
+set to measure the error. If we are satisfied with the network's performance, we stop; if 
+not, we attempt to reduce the residual errors further by adding a new hidden unit to the 
+network. The unit-creation algorithm is described below. The new unit is added to the 
+net, its input weights are frozen, and all the output weights are once again trained using 
+quickprop. This cycle repeats until the error is acceptably small (or until we give up). 
+To create a new hidden unit, we begin 
+connections from all of the network's 
+units. The output of this candidate unit 
+with a candidate unit that receives trainable input 
+external inputs and from all pre-existing hidden 
+is not yet connected to the active network. We run 
+a number of passes over the examples of the training set, adjusting the candidate unit's 
+input weights after each pass. The goal of this adjustment is to maximize S, the sum over 
+all output units o of the magnitude of the correlation (or, more precisely, the covariance) 
+between V, the candidate unit's value, and �o, the residual output error observed at unit 
+o. We define S as 
+where o is the network output at which the error is measured and p is the training pattern. 
+The quantities V and Eo are the values of V and Eo averaged over all patterns. 
+In order to maximize S, we must compute OS/OWl, the partial derivative of S with 
+respect to each of the candidate unit's incoming weights, wi. In a manner very similar 
+to the derivation of the back-propagation rule in [Rumelhart, 1986], we can expand and 
+differentiate the formula for S to get 
+po 
+where O'o is the sign of the correlation between the candidate's value and output o,ft  is 
+The Cascade-Correlation Learning Architecture 527 
+the derivative for pattern p of the candidate unit's activation function with respect to the 
+sum of its inputs, and I,, is the input the candidate unit receives from unit i for pattern 
+p. 
+After computing OS/Owi for each incoming connection, we can perform a gradient ascent 
+to maximize S. Once again we are training only a single layer of weights. Once again 
+we use the quickprop update rule for faster convergence. When S stops improving, we 
+install the new candidate as a unit in the active network, freeze its input weights, and 
+continue the cycle as described above. 
+Because of the absolute value in the formula for S, a candidate unit cares only about the 
+magnitude of its correlation with the error at a given output, and not about the sign of 
+the correlation. As a rule, if a hidden unit correlates positively with the error at a given 
+unit, it will develop a negative connection weight to that unit, attempting to cancel some 
+of the error; if the correlation is negative, the output weight will be positive. Since a 
+unit's weights to different outputs may be of mixed sign, a unit can sometimes serve two 
+purposes by developing a positive correlation with the error at one output and a negative 
+correlation with the error at another. 
+Instead of a single candidate unit, it is possible to use a pool of candidate units, each 
+with a different set of random initial weights. All receive the same input signals and see 
+the same residual error for each pattern and each output. Because they do not interact 
+with one another or affect the active network during Waining, all of these candidate units 
+can be trained in parallel; whenever we decide that no further progress is being made, 
+we install the candidate whose correlation score is the best. The use of this pool of 
+candidates is beneficial in two ways: it greatly reduces the chance that a useless unit will 
+be permanently installed because an individual candidate got stuck during training, and 
+(on a parallel machine) it can speed up the training bemuse many parts of weight-space 
+can be explored simultaneously. 
+The hidden and candidate units may all be of the same type, for example with a sigmoid 
+activation function. Alternatively, we might create a pool of candidate units with a 
+mixture of nonlinear activation functions--some sigmoid, some Gaussian, some with 
+radial activation functions, and so oneand let them compete to be chosen for addition 
+to the active network. To date, we have explored the all-sigmoid and all-Gaussian cases, 
+but we do not yet have extensive simulation data on networks with mixed unit-types. 
+One final note on the implementation of this algorithm: While the weights in the output 
+layer are being trained, the other weights in the active network are frozen. While the 
+candidate weights are being mined, none of the weights in the active network are changed. 
+In a machine with plenty of memory, it is possible to record the unit-values and the output 
+errors for an entire epoch, and then to use these cached values repeatedly during training, 

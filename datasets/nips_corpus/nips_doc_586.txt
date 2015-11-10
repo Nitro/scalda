@@ -1,0 +1,164 @@
+Automatic Learning Rate Maximization 
+by On-Line Estimation of the Hessian's 
+Eigenvectors 
+Yann LeCun,  Patrice Y. Simard,  and Barak Pearlmutter 2 
+AT&T Bell Laboratories 101 Crawfords Corner Rd, Holmdel, NJ 07733 
+2CS&E Dept. Oregon Grad. Inst., 19600 NW vonNeumann Dr, Beaverton, OR 97006 
+Abstract 
+We propose a very simple, and well principled way of computing 
+the .optimal step size in gradient descent algorithms. The on-line 
+vermon is very efficient computationally, and is applicable to large 
+backpropagation networks trained on large data sets. The main 
+ingredient is a technique for estimating the principal eigenvalue(s) 
+and eigenvector(s) of the objective function's second derivative ma- 
+trix (Hessian), which does not require to even calculate the Hes- 
+sian. Several other applications of this technique are proposed for 
+speeding up learning, or for eliminating useless parameters. 
+1 INTRODUCTION 
+Choosing the appropriate learning rate, or step size, in a gradient descent procedure 
+such as backpropagation, is simultaneously one of the most crucial and expert- 
+intensive part of neural-network learning. We propose a method for computing the 
+best step size which is both well-principled, simple, very cheap computationally, 
+and, most of all, applicable to on-line training with large networks and data sets. 
+Learning algorithms that use Gradient Descent minimize an objective function E 
+of the form 
+1 ' 
+E(W) --   EP(W) E p -- E(W, X p) (1) 
+p-O 
+where W is the vector of parameters (weights), P is the number of training patterns, 
+and X p is the p-th training example (including the desired output if necessary). Two 
+basic versions of gradient descent can be used to minimize E. In the first version, 
+156 
+Automatic Learning Rate Maximization by Estimation of Hessian's Eigenvectors 157 
+called the batch version, the exact gradient of E with respect to W is calculated, 
+and the weights are updated by iterating the procedure 
+w w- vz(w) 
+where r/ is the learning rate or step size, and VE(W) is the gradient of E with 
+respect to W. In the second version, called on-line, or Stochastic Gradient Descent, 
+the weights are updated after each pattern presentation 
+w w- 
+(3) 
+Before going any further, we should emphasize that our main interest is in training 
+large networks on large data sets. As many authors have shown, Stochastic Gradient 
+Descent (SGD) is much faster on large problems than the batch version. In fact, 
+on large problems, a carefully tuned SGD algorithm outperforms most accelerated 
+or second-order batch techniques, including Conjugate Gradient. Although there 
+have been attempts to stochasticize second-order algorithms (Becker and Le Cun, 
+1988) (Moller, 1992), most of the resulting procedures also rely on a global scaling 
+parameter similar to r/. Therefore, there is considerable interest in finding ways of 
+optimizing 
+2 
+COMPUTING THE OPTIMAL LEARNING RATE: 
+THE RECIPE 
+In a somewhat unconventional way, we first give our simple recipe for computing 
+the optimal learning rate r/. In the subsequent sections, we sketch the theory behind 
+the recipe. 
+Here is the proposed procedure for estimating the optimal learning rate in a back- 
+propagation network trained with Stochastic Gradient Descent. Equivalent proce- 
+dures for other adaptive machines are straightforward. In the following, the notation 
+A/'(V) designates the normalized vector VIIIVII. Let W be the N dimensional weight 
+vector, 
+1. pick a normalized, N dimensional vector � at random. Pick two small 
+positive constants a and ?, say a = 0.01 and ? = 0.01. 
+2. pick a training example (input and desired output) X p. Perform a regular 
+forward prop and a backward prop. Store the resulting gradient vector 
+o 
+= vEp(w). 
+add aA/'() to the current weight vector W, 
+perform a forward prop and a backward prop on the same pattern us- 
+ing the perturbed weight vector. Store the resulting gradient vector 
+G = VEP(W + oA/'(xI,)) 
+update vector  with the running average formula 
+�  (1 - 7) + a(a2 - a,). 
+restore the weight vector to its original value W. 
+loop to step 2 until I111 stabilizes. 
+set the learning rate r/to Ilmll 
+, and go on to a regular training session. 
+The constant a controls the size of the perturbation. A small a gives a better esti- 
+mate, but is more likely to cause numerical errors. 7 controls the tradeoff between 
+the convergence speed of � and the accuracy of the result. It is better to start with 
+158 LeCun, Simard, and Pearlmutter 
+E(W) W2 principal 
+eigenvector 
+w z 
+w 
+w1 
+(a) (b) 
+Figure 1' Gradient descent with optimal learning rate in (a) one dimension, and 
+(b) two dimensions (contour plot). 
+a relatively large ? (say 0.1) and progressively decrease it until the fluctuations on 
+t are less than say 10%. In our experience accurate estimates can be obtained 
+� between one hundred and a few hundred pattern presentations: for a large 
+problem, the cost is very small compared to a single learning epoch. 
+3 STEP SIZE, CURVATURE AND EIGENVALUES 
+The procedure described in the previous section makes IIll converge to the largest 
+positive eigenvalue of the second derivative matrix of the average objective function. 
+In this section we informally explain why the best learning rate is the inverse of this 
+eigenvalue. More detailed analysis of gradient descent procedures can be found in 
+Optimization, Statistical Estimation, or Adaptive Filtering textbooks (see for ex- 
+ample (Widrow and Stearns, 1985)). For didactical purposes, consider an objective 
+function of the form E(w) z) 2 + C where w is a scalar parameter (see 
+_- 
+fig l(a)). Assuming w is the current value of the parameter, what is the optimal 
+r/that takes us to the minimum in one step? It is easy to visualize that, as it has 
+been known since Newton, the optimal r/is the inverse of the second derivative of 
+E, i.e. 1/h. Any smaller or slightly larger value will yield slower convergence� A 
+value more then twice the optimal will cause divergence. 
+In multidimension, things are more complicated. If the objective function is 
+quadratic, the surfaces of equal cost are ellipsoids (or ellipses in 2D as shown on 
+figure l(b)). Intuitively, if the learning rate is set for optimal convergence along the 
+direction of largest second derivative, then it will be small enough to ensure (slow) 
+convergence along all the other directions. This corresponds to setting the learning 
+rate to the inverse of the second derivative in the direction in which it is the largest. 
+The largest learning rate that ensures convergence is twice that value. The actual 
+optimal r/is somewhere in between. Setting it to the inverse of the largest second 
+derivative is both safe, and close enough to the optimal. The second derivative 
+information is contained in the Hessian matrisc of E(W): the symmetric matrix H 
+whose (i,j) component is O:E(W)/OwiOwj. If the learning machine has N free 
+parameters (weights), H is an N by N matrix. The Hessian can be decomposed 
+(diagonalized) into a product of the form H = RAR T, where A is a diagonal matrix 
+whose diagonal terms (the eigenvalues of H) are the second derivatives of E(W) 
+Automatic Learning Rate Maximization by Estimation of Hessian's Eigenvectors 159 
+along the principal axes of the ellipsoids of equal cost, and R is a rotation matrix 
+which defines the directions of these principal axes. The direction of largest second 
+derivative is the principal eigenvector of H, and the largest second derivative is 
+the corresponding eigenvalue (the largest one). In short, it can be shown that the 
+optimal learning rate is the inverse of the largest eigenvalue of H: 
+1 
+riopt-- Amax (4) 
+4 
+COMPUTING THE HESSIAN'S LARGEST 
+EIGENVALUE WITHOUT COMPUTING THE 
+HESSIAN 
+This section derives the recipe given in section 2. Large learning machines, such as 
+backpropagation networks can have several thousand free parameters. Computing, 
+or even storing, the full Hessian matrix is often prohibitively expensive. So at first 
+glance, finding its largest eigenvalue in a reasonable time seems rather hopeless. 
+We are about to propose a shortcut based on three simple ideas: 1- the Taylor 
+expansion, 2- the power method, 3- the running average. The method described 
+here is general, and can be applied to any differentiable objective function that can 
+be written as an average over examples (e.g. RBFs, or other statistical estimation 
+techniques). 
+Taylor expansion: Although it is often unrealistic to compute the Hessian H, 
+there is a simple way to approximate the product of H by a vector of our choosing. 
+Let � be an N dimensional vector, and a a small real constant, the Taylor expansion 
+of the gradient of E(W) around W along the direction � gives us 
+/ = VE(W + a) - W(W) + 0( ) (5) 
+Assuming E is locally quadratic (i.e. ignoring the O(a a) term), the product of H by 
+any vector � can be estimated by subtracting the gradient of E at point (kV + a) 
+from the gradient at kV. This is an O(N) process, compared to the O(N ) direct 
+product. In the usual neural network context, this can be done with two forward 
+propagations and two backward propagations. More accurate methods which do 
+not use perturbations for computing H exist, but they are more complicated to 
+implement than this one. (Pearlmutter, 1993). 
+The power method: Let Amax be the largest eigenvalue  of H, and Vmax the 
+corresponding normalized eigenvector (or a vector in the eigenspace if Amax is de- 
+generate). If we pick a vector  (say, at random) which is non-orthogonal to Vmax, 
+then iterating the procedure 
+�  HA/'() (6) 
+will make A/'() converge to Vmx, and Ilmll converge to Imaxl. The procedure 
+is slow if good accuracy is required, but a good estimate of the eigenvalue can be 
+obtained with a very small number of iterations (typically about 10). The reason 
+for introducing equation (5), is now clear: we can use it to compute the right hand 
+side of (6), yielding 
+1 (vz (w 

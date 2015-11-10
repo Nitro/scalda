@@ -1,0 +1,139 @@
+A Unified Gradient-Descent/Clustering 
+Architecture for 
+Finite State Machine Induction 
+Sreerupa Das and Michael C. Mozer 
+Department of Computer Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+Abstract 
+Although recurrent neural nets have been moderately successful 
+in learning to emulate finite-state machines (FSMs), the continu- 
+ous internal state dynamics of a neural net are not well matched 
+to the discrete behavior of an FSM. We describe an architecture, 
+called )oLc, that allows discrete states to evolve in a net as learn- 
+ing progresses. OOLCr, consists of a standard recurrent neural net 
+trained by gradient descent and an adaptive clustering technique 
+that quantizes the state space. DOLCE is based on the assumption 
+that a finite set of discrete internal states is required for the task, 
+and that the actual network state belongs to this set but has been 
+corrupted by noise due to inaccuracy in the weights. DOLCe, learns 
+to recover the discrete state with maximum a posterJori probabil- 
+ity from the noisy state. Simulations show that oo,c, leads to a 
+significant improvement in generalization performance over earlier 
+neural net approaches to FSM induction. 
+1 INTRODUCTION 
+Researchers often try to understand--post hoc--representations that emerge in the 
+hidden layers of a neural net following training. Interpretation is difficult because 
+these representations are typically highly distributed and continuous. By contin- 
+uous, we mean that if one constructed a scatterplot over the hidden unit activity 
+space of patterns obtained in response to various inputs, examination at any scale 
+would reveal the patterns to be broadly distributed over the space. 
+Continuous representations aren't always appropriate. Many task domains seem to 
+require discrete representations--representations selected from a finite set of alter- 
+natives. If a neural net learned a discrete representation, the scatterplot over hidden 
+activity space would show points to be superimposed at fine scales of analysis. Some 
+19 
+20 Das and Mozer 
+examples of domains in which discrete representations might be desirable include: 
+finite-state machine emulation, data compression, language and higher cognition 
+(involving discrete symbol processing), and categorization in the context of decision 
+making. In such domains, standard neural net learning procedures, which have 
+a propensity to produce continuous representations, may not be appropriate. The 
+work we report here involves designing an inductive bias into the learning procedure 
+in order to encourage the formation of discrete internal representations. 
+In the recent years, various approaches have been explored for learning discrete 
+representations using neural networks (McMillan, Mozer, & Smolensky, 1992; Mozer 
+& Bachtach, 1990; Mozer & Das, 1993; Schiitze, 1993; Towell & Shavlik, 1992). 
+However, these approaches are domain specific, making strong assumptions about 
+the nature of the task. In our work, we describe a general methodology that makes 
+no assumption about the domain to which it is applied, beyond the fact that discrete 
+representations are desireable. 
+2 FINITE STATE MACHINE INDUCTION 
+We illustrate the methodology using the domain of finite-state machine (FSM) 
+induction. An FSM defines a class of symbol strings. For example, the class (10)* 
+consists of all strings with one or more repetitions of 10; 101010 is a positive example 
+of the class, 111 is a negative example. An FSM consists principally of a finite set 
+of states and a function that maps the current state and the current symbol of the 
+string into a new state. Gertain states of the FSM are designated acceptstates, 
+meaning that if the FSM ends up in these states, the string is a member of the 
+class. The induction problem is to infer an FSM that parsimoniously characterizes 
+the positive and negative exemplars, and hence characterizes the underlying class. 
+A generic recurrent net architecture that could be used for FSM emulation and 
+induction is shown on the left side of Figure 1. A string is presented to the input 
+layer of the net, one symbol at a time. Following the end of the string, the net 
+should output whether or not the string is a member of the class. The hidden unit 
+activity pattern at any point during presentation of a string corresponds to the 
+internal state of an FSM. 
+Such a net, trained by a gradient descent procedure, is able to learn to perform this 
+or related tasks (Elman, 1990; Giles et al., 1992; Pollack, 1991; Servan-Schreiber, 
+Cleeremans, & McClelland, 1991; Watrous & Kuhn, 1992). Although these models 
+have been relatively successful in learning to emulate FSMs, the continuous internal 
+state dynamics of a neural net are not well matched to the discrete behavior ofFSMs. 
+Roughly, regions of hidden unit activity space can be identified with states in an 
+FSM, but because the activities are continuous, one often observes the network 
+drifting from one state to another. This occurs especially with input strings longer 
+than those on which the network was trained. 
+To achieve more robust dynamics, one might consider quantizing the hidden state. 
+Two approaches to quantization have been explored previously. In the first, a net 
+is trained in the manner described above. After training, the hidden state space is 
+partitioned into disjoint regions and each hidden activity pattern is then discretized 
+by mapping it to the center of its corresponding region (Das & Das, 1991; Giles 
+A Unified Gradient-Descent/Clustering Architecture for Finite State Machine Induction 21 
+Figure 1: On the left is a generic recurrent architecture that could be used for FSM induc- 
+tion. Each box corresponds to a layer of units, and arrows depict complete connectivity 
+between layers. At each time step, a new symbol is presented on the input and the input 
+and hidden representations are integrated to form a new hidden representation. On the 
+right is the general architecture of x)o,cv,. 
+et al., 1992). In a second approach, quantization is enforced durin9 training by 
+mapping the the hidden state at each time step to the nearest corner of a [0, 1] ' 
+hypercube (Zeng, Goodman, & Smyth, 1993). 
+Each of these approaches has its limitations. In the first approach, because learning 
+does not consider the latter quantization, the hidden activity patterns that result 
+from learning may not lie in natural clusters. Consequently, the quantization step 
+may not group together activity patterns that correspond to the same state. In the 
+second approach, the quantization process causes the error surface to have discon- 
+tinuities and to be flat in local neighborhoods of the weight space. Hence, gradient 
+descent learning algorithms cannot be used; instead, even more heuristic approaches 
+are required. To overcome the limitations of these approaches, we have pursued an 
+approach in which quantization is an integral part of the learning process. 
+3 DOLCE 
+Our approach incorporates a clustering module into the recurrent net architecture, 
+as shown on the right side of Figure 1. The hidden layer activities are processed by 
+the clustering module before being passed on to other layers. The clustering module 
+maps regions in hidden state space to a single point in the same space, effectively 
+partitioning or clustering the hidden state space. Each cluster corresponds to a 
+discrete internal state. The clusters are adaptive and dynamic, changing over the 
+course of learning. We call this architecture DOLCE, for _ynamic on-line clustering 
+and state extraction. 
+The DOLCE architecture may be explored along two dimensions: (1) the clustering 
+algorithm used (e.g., a Gaussian mixture model, ISODATA, the Forgy algorithm, 
+vector quantization schemes), and (2) whether supervised or unsupervised training 
+is used to identify the clusters. In unsupervised mode, the performance error on 
+the FSM induction task has no effect on the operation of the clustering algorithm; 
+instead, an internal criterion characterizes goodness of clusters. In supervised mode, 
+the primary measure that affects the goodness of a cluster is the performance error. 
+Regardless of the training mode, all clustering algorithms incorporate a pressure to 
+22 Das and Mozer 
+Figure 2: Two dimensions of a typical state space. The true states needed to perform 
+the task are cx, c2, and cs, while the observed hidden states, assumed to be corrupted by 
+noise, are distributed about the cl. 
+produce a small number of clusters. Additionally, as we elaborate more specifically 
+below, the algorithms must allow for a soft or continuous clustering during training, 
+in order to be integrated into a gradient-based learning procedure. 
+We have explored two possibilities for the clustering module. The first involves 
+the use of Forgy's algorithm in an unsupervised mode. Forgy's (1965) algorithm 
+determines both the number of clusters and the partitioning of the space. The 
+second uses a Gaussian mixture model in a supervised mode, where the mixture 
+model parameters are adjusted so as to minimize the performance error. Both 
+approaches were successful, but as the latter approach obtained better results, we 
+describe it in the next section. 
+4 CLUSTERING USING A MIXTURE MODEL 
+Here we motivate the incorporation of a Gaussian mixture model into DOLCE, us- 
+ing an argument that gives the approach a solid theoretical foundation. Several 
+assumptions underly the approach. First, we assume that the task faced by DOLCE 
+is such that it requires a finite set of internal or true states, C = 
+This is simply the premise that motivates this line of work. Second, we assume 
+that any observed hidden state--i.e., a hidden activity pattern that results from 
+presentation of a symbol sequence--belongs to C but has been corrupted by noise 
+due to inaccuracy in the network weights. Third, we assume that this noise is Gaus- 
+sian and decreases as learning progresses (i.e., 

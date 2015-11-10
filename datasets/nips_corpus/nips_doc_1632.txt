@@ -1,0 +1,174 @@
+An Improved Decomposition Algorithm 
+for Regression Support Vector Machines 
+Pavel Laskov 
+Department of Computer and Information Sciences 
+University of Delaware 
+Newark, DE 19718 
+laskovasel. udel. edu 
+Abstract 
+A new decomposition algorithm for training regression Support 
+Vector Machines (SVM) is presented. The algorithm builds on 
+the basic principles of decomposition proposed by Osuna et. al., 
+and addresses the issue of optimal working set selection. The new 
+criteria for testing optimality of a working set are derived. Based 
+on these criteria, the principle of maximal inconsistency is pro- 
+posed to form (approximately) optimal working sets. Experimental 
+results show superior performance of the new algorithm in compar- 
+ison with traditional training of regression SVM without decompo- 
+sition. Similar results have been previously reported on decomposi- 
+tion algorithms for pattern recognition SVM. The new algorithm is 
+also applicable to advanced SVM formulations based on regression, 
+such as density estimation and integral equation SVM. 
+I Introduction 
+The increasing interest in applications of Support Vector Machines (SVM) to large- 
+scale problems ushers in new requirements for computational complexity of their 
+training algorithms. Requests have been recently made for algorithms capable of 
+handling problems containing 10 5 - 10 6 examples [1]. Training an SVM constitutes 
+a quadratic programming problem, and a typical SVM package uses an off-the-shelf 
+optimization software to obtain a solution to it. The number of variables in the 
+optimization problem is equal to the number of training data points (for the pattern 
+recognition SVM) or twice that number (for the regression SVM). The speed of 
+general-purpose optimization methods is insufficient for problems containling more 
+than a few thousand examples. This has motivated a quest for special-purpose 
+training algorithms to take advantage of the particular structure of SVM training 
+problems. 
+The main avenue of research in SVM training algorithms is decomposition. The key 
+idea of decomposition, due to Osuna et. al. [2], is to freeze all but a small number of 
+optimization variables, and to solve a sequence of small fixed-size problems. The set 
+of variables whose values are optimized at a current iteration is called the working 
+set. Complexity of re-optimizing the working set is assumed to be constant-time. 
+An Improved Decomposition Algorithm for Regression Support Vector Machines 485 
+In order for a decomposition algorithm to be successful, the working set must be 
+selected in a smart way. The fastest known decomposition algorithm is due to 
+Joachims [3]. It is based on Zoutendijk's method of feasible directions proposed in 
+the optimization community in the early 1960's. However Joachims' algorithm is 
+limited to pattern recognition SVM because it makes use of labels being 4-1. The 
+current article presents a similar algorithm for the regression SVM. 
+The new algorithm utilizes a slightly different background from optimization the- 
+ory. The Karush-Kuhn-Tucker Theorem is used to derive conditions for determining 
+whether or not a given working set is optimal. These conditions become the algo- 
+rithm's termination criteria, as an alternative to Osuna's criteria (also used by 
+Joachims without modification) which used conditions for individual points. The 
+advantage of the new conditions is that knowledge of the hyperplane's constant 
+factor b, which in some cases is difficult to compute, is not required. Further inves- 
+tigation of the new termination conditions allows to form the strategy for selecting 
+an optimal working set. The new algorithm is applicable to the pattern recognition 
+SVM, and is provably equivalent to Joachims' algorithm. One can also interpret 
+the new algorithm in the sense of the method of feasible directions. Experimental 
+results presented in the last section demonstrate superior performance of the new 
+method in comparison with traditional training of regression SVM. 
+2 General Principles of Regression SVM Decomposition 
+The original decomposition algorithm proposed for the pattern recognition SVM in 
+[2] has been extended to the regression SVM in [4]. For the sake of completeness 
+I will repeat the main steps of this extension with the aim of providing terse and 
+streamlined notation to lay the ground for working set selection. 
+Given the training data of size l, training of the regression SVM amounts to solving 
+the following quadratic programming problem in 21 variables: 
+Maximize W(&) = T&_ I&TD& 
+subject to: c T& = 0 (1) 
+&-C1 < 0 
+& > 0 
+where 
+c ' = -y el ' D= -K K ' c= -1 
+The basic idea of decomposition is to split the variable vector  into the working set 
+B of fixed size q and the non-working set N containing the rest of the variables. 
+The corresponding parts of vectors c and r will also bear subscripts N and B. The 
+matrix D is partitioned into DBB, DBN = DB and DvN. A further requirement 
+is that, for the i-th element of the training data, both ci and c i are either included 
+in or omitted from the working set. 1 The values of the variables in the non-working 
+set are frozen for the iteration, and optimization is only performed with respect to 
+the variables in the working set. 
+Optimization of the working set is also a quadratic program. This can be seen 
+by re-arranging the terms of the objective function and the equality constraint in 
+This rule facilitates formulation of sub-problems to be solved at each iteration. 
+486 P. Laskov 
+(1) and dropping the terms independent of &B from the objective. 
+quadratic program (sub-problem) is formulated as follows: 
+The resulting 
+I T 
+Maximize WB(&B) : ( -- &vDNB)&B -- &BDBB&B 
+subject to: c&B +c&N = 0 (2) 
+&s - C1 < 0 
+&  0 
+The basic decomposition algorithm chooses the first working set at random, and 
+proceeds iteratively by selecting sub-optimal working sets and re-optimizing them, 
+by solving quadratic program (2), until all subsets of size q are optimal. The precise 
+formulation of termination conditions will be developed in the following section. 
+3 Optimality of a Working Set 
+In order to maintain strict improvement of the objective function, the working 
+set must be sub-optimal before re-optimization. The classical Karush-Kuhn-Tucker 
+(KKT) conditions are necessary and sufficient for optimality of a quadratic program. 
+I will use these conditions applied to the standard form of a quadratic program, as 
+described in [5], p. 36. 
+The standard form of a quadratic program requires that all constraints are of equal- 
+ity type except for non-negativity constraints. To cast the reression SVM quadratic 
+program (1) into the standard form, the slack variables s ' - (s,... ,s2t) corre- 
+sponding to the box constraints, and the following matrices are introduced: 
+I = z= f= 
+E= 0 ' ' ' 
+(s) 
+where I is a vector of length l, C is a vector of length 21. The zero element in vector 
+z reflects the fact that a slack variable for the equality constraint must be zero. In 
+the matrix notation all constraints of problem (1) can be compactly expressed as: 
+Tz : f 
+z > 0 (4) 
+In this notation the Karush-Kuhn-Tucker Theorem can be stated as follows: 
+Theorem 1 (Karush-Kuhn-Tucker Theorem) The primal vector z solves the 
+quadratic problem (1) if and only if it satisfies () and there exists a dual vector 
+ur= (Ii r w r) = (Ii r (p �r)) sch that: 
+II = D&+Ew- _> 0 (5) 
+T _> 0 (6) 
+urz = 0 (7) 
+It follows from the Karush-Kuhn-Tucker Theorem that if for all u satisfying con- 
+ditions (6) - (7) the system of inequalities (5) is inconsistent then the solution of 
+problem (1) is not optimal. Since the objective function of sub-problem (2) was 
+obtained by merely re-arranging terms in the objective function of the initial prob- 
+lem (1), the same conditions guarantee that the sub-problem (2) is not optimal. 
+Thus, the main strategy for identifying sub-optimal working sets will be to enforce 
+inconsistency of the system (5) while satisfying conditions (6) - (7). 
+An Improved Decomposition Algorithm for Regression Support Vector Machines 487 
+Let us further analyze inequalities in (5). Each inequality has one of the following 
+forms: 
+where 
+ = -c+e+v+t _Y 0 (8) 
+7r = ci + e - vi - la _ 0 (9) 
+l 
+cfii = Yi - E(ctj -ctj)Kij 
+j=l 
+Consider the values cti can possible take: 
+ctl = 0. In this case si = C, and, by complementarity condition (7), vi = O. 
+Then inequality (8) becomes: 
+r  = - c  + e + t _ 0 = ta _ c i - e 
+2. cti = C. By complementarity condition (7), ri = 0. Then inequality (8) 
+becomes: 
+-c)i + e + tz + v = 0  tz _< c)i - e 
+3. 0 < cti < C. By complementarity condition (7), vi = 0, *ri = 0. 
+inequality (8) becomes: 
+Then 
+Similar reasoning for ct**. and inequality (9) yields the following results: 
+1. ct i = 0. Then 
+2. ct i = C. Then 
+3. 0<ct i <C. Then 
+tz = c)i +e 
+As one can see, the only free variable in system (5) is/. Each inequality restricts 
+/ to a certain interval on a real line. Such intervals will be denoted as la-sets in 
+the rest of the exposition. Any subset of inequalities in (5) is inconsistent if the 
+intersection of the corresponding/-sets is empty. This provides a lucid rule for 
+determining optimality of any working set: it is sub-optimal if the intersection of 
+/-sets of all its points is empty. A sub-optimal working set will also be denoted as 
+inconsistent. The following summarizes the rules for calculation of/-sets, taking 
+into account that for regression SVM cic i = 0: 
+.A/li -- 
+[i -- , i q- ], 
++ 
+ifcti=0, ct i =0 
+if0<cti<C, ct i =0 
+ifcti=C, ai-0 
+if cti = 0, 0 < ct i < C 
+ifcti=0, ct i =C 
+(lo) 
+488 P. Laskov 
+4 Maximal Inconsistency Algorithm 
+While inconsistency of the working set at each iteration guarantees convergence of 
+decomposition, the rate of convergence is quite slow if arbitrary inconsistent working 
+sets are chosen. A natural heuristic is to select maximally in

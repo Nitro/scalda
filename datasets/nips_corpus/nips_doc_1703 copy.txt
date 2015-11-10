@@ -1,0 +1,140 @@
+Policy Gradient Methods for 
+Reinforcement Learning with Function 
+Approximation 
+Richard S. Sutton, David McAllester, Satinder Singh, Yishay Mansour 
+AT&T Labs - Research, 180 Park Avenue, Florham Park, NJ 07932 
+Abstract 
+Function approximation is essential to reinforcement learning, but 
+the standard approach of approximating a value function and deter- 
+mining a policy from it has so far proven theoretically intractable. 
+In this paper we explore an alternative approach in which the policy 
+is explicitly represented by its own function approximator, indepen- 
+dent of the value function, and is updated according to the gradient 
+of expected reward with respect to the policy parameters. Williams's 
+REINFORCE method and actor-critic methods are examples of this 
+approach. Our main new result is to show that the gradient can 
+be written in a form suitable for estimation from experience aided 
+by an approximate action-value or advantage function. Using this 
+result, we prove for the first time that a version of policy iteration 
+with arbitrary differentiable function approximation is convergent to 
+a locally optimal policy. 
+Large applications of reinforcement learning (RL) require the use of generalizing func- 
+tion approximators such neural networks, decision-trees, or instance-based methods. 
+The dominant approach for the last decade has been the value-function approach, in 
+which all function approximation effort goes into estimating a value function, with 
+the action-selection policy represented implicitly as the greedy policy with respect 
+to the estimated values (e.g., as the policy that selects in each state the action with 
+highest estimated value). The value-function approach has worked well in many appli- 
+cations, but has several limitations. First, it is oriented toward finding deterministic 
+policies, whereas the optimal policy is often stochastic, selecting different actions with 
+specific probabilities (e.g., see Singh, Jaakkola, and Jordan, 1994). Second, an arbi- 
+trarily small change in the estimated value of an action can cause it to be, or not be, 
+selected. Such discontinuous changes have been identified as a key obstacle to estab- 
+lishing convergence assurances for algorithms following the value-function approach 
+(Bertsekas and Tsitsiklis, 1996). For example, Q-learning, Sarsa, and dynamic pro- 
+gramming methods have all been shown unable to converge to any policy for simple 
+MDPs and simple function approximators (Gordon, 1995, 1996; Baird, 1995; Tsit- 
+siklis and van Roy, 1996; Bertsekas and Tsitsiklis, 1996). This can occur even if the 
+best approximation is found at each step before changing the policy, and whether the 
+notion of best is in the mean-squared-error sense or the slightly different senses of 
+residual-gradient, temporal-difference, and dynamic-programming methods. 
+In this paper we explore an alternative approach to function approximation in RL. 
+1058 R. S. Sutton, D. McAllester, S. Singh and Y. Mansour 
+Rather than approximating a value function and using that to compute a determinis- 
+tic policy, we approximate a stochastic policy directly using an independent function 
+approximator with its own parameters. For example, the policy might be represented 
+by a neural network whose input is a representation of the state, whose output is 
+action selection probabilities, and whose weights are the policy parameters. Let 0 
+denote the vector of policy parameters and p the performance of the corresponding 
+policy (e.g., the average reward per step). Then, in the policy gradient approach, the 
+policy parameters are updated approximately proportional to the gradient: 
+Op 
+A  a, (1) 
+where a is a positive-definite step size. If the above can be achieved, then 0 can 
+usually be assured to converge to a locally optimal policy in the performance measure 
+p. Unlike the value-function approach, here small changes in 0 can cause only small 
+changes in the policy and in the state-visitation distribution. 
+In this paper we prove that an unbiased estimate of the gradient (1) can be obtained 
+from experience using an approximate value function satisfying certain properties. 
+Williams's (1988, 1992) REINFORCE algorithm also finds an unbiased estimate of 
+the gradient, but without the assistance of a learned value function. REINFORCE 
+learns much more slowly than RL methods using value functions and has received 
+relatively little attention. Learning a value function and using it to reduce'the variance 
+of the gradient estimate appears to be essential for rapid learning. Jaakkola, Singh 
+and Jordan (1995) proved a result very similar to ours for the special case of function 
+approximation corresponding to tabular POMDPs. Our result strengthens theirs and 
+generalizes it to arbitrary differentiable function approximators. Konda and Tsitsiklis 
+(in prep.) independently developed a very simialr result to ours. See also Baxter and 
+Bartlett (in prep.) and Marbach and Tsitsiklis (1998). 
+Our result also suggests a way of proving the convergence of a wide variety of algo- 
+rithms based on actor-critic or policy-iteration architectures (e.g., Barto, Sutton, 
+and Anderson, 1983; Sutton, 1984; Kimura and Kobayashi, 1998). In this paper we 
+take the first step in this direction by proving for the first time that a version of 
+policy iteration with general differentiable function approximation is convergent to 
+a locally optimal policy. Baird and Moore (1999) obtained a weaker but superfi- 
+cially similar result for their VAPS family of methods. Like policy-gradient methods, 
+VAPS includes separately parameterized policy and value functions updated by gra- 
+dient methods. However, VAPS methods do not climb the gradient of performance 
+(expected long-term reward), but of a measure combining performance and value- 
+function accuracy. As a result, VAPS does not converge to a locally optimal policy, 
+except in the case that no weight is put upon value-function accuracy, in which case 
+VAPS degenerates to REINFORCE. Similarly, Gordon's (1995) fitted value iteration 
+is also convergent and value-based, but does not find a locally optimal policy. 
+I Policy Gradient Theorem 
+We consider the standard reinforcement learning framework (see, e.g., Sutton and 
+Barto, 1998), in which a learning agent interacts with a Markov decision process 
+(MDP). The state, action, and reward at each time t 6 {0, 1, 2,...} are denoted st  
+$, at  .A, and rt   respectively. The environment's dynamics are characterized by 
+state transition probabilities, Pa s, = Pr {St+l = s' I st = s, at = a}, and expected re- 
+wards 7Z] = E {rt+l I st = s, at = a}, Vs, s   $, a  .A. The agent's decision making 
+procedure at each time is characterized by a policy, r(s, a, 0) = Pr {at = alst = s, 0}, 
+Vs  $, a  jI, where 0  t, for I << I$1, is a parameter vector. We assume that r 
+is diffentiable with respect to its parameter, i.e., that o exists. We also usually 
+write just r(s,a) for r(s,a,O). 
+Policy Gradient Methods for RL with Function Approximation 1059 
+With function approximation, two ways of formulating the agent's objective are use- 
+ful. One is the average reward formulation, in which policies are ranked according to 
+their long-term expected reward per step, p(r): 
+p(r) = lim 1-E{rl + r2 +... + rn [r} = Z d(s) Z r(s,a)7, 
+where d  (s) = limt_ Pr (st = s[so, r) is the stationary distribution of states under 
+r, which we assume exists and is independent of so for all policies. In the average 
+reward formulation, the value of a state-action pair given a policy is defined as 
+ao=a,r ), Vse$,aeA. 
+t----1 
+The second formulation we cover is that in which there is a designated start state 
+so, and we care only about the long-term reward obtained from it. We will give our 
+results only once, but they will apply to this formulation as well under the definitions 
+p(r) = E 7t-lrt SO,r and Qr(s,a) = E 7k-lrt+k st = s, at = a,r . 
+t=l Xk=l 
+where 7 6 [0, 1] is a discount rate (7 = I is allowed only in episodic tasks). In this 
+formulation, we define dr(s) as a discounted weighting of states encountered starting 
+at so and then following r: dr(s) = --o 7 tPr (st- S[So,'). 
+Our first result concerns the gradient of the performance metric with respect to the 
+policy parameter: 
+Theorem I (Policy Gradient). For any MDP, in either the average-reward or 
+start-state formulations, 
+Op Or( s, a) 
+oo = a's) oo (2) 
+Proof: See the appendix. 
+This way of expressing the gradient was first discussed for the average-reward formu- 
+lation by Marbach and Tsitsiklis (1998), based on a related expression in terms of the 
+state-value function due to Jaakkola, Singh, and Jordan (1995) and Cao and Chen 
+(1997). We extend their results to the start-state formulation and provide simpler 
+and more direct proofs. Williams's (1988, 1992) theory of REINFORCE algorithms 
+can also be viewed as implying (2). In any event, the key aspect of both expressions 
+for the gradient is that their are no terms of the form oa._s: the effect of policy 
+changes on the distribution of states does not appear. This is convenient for approxi- 
+mating the gradient by sampling. For example, if s was sampled from the distribution 
+�(8'a)O(s,a) would be an unbiased estimate of 
+obtained by following r, then -]-a oe ' 
+�-e Of course, Q (s, a) is also not normally known and must be estimated. One ap- 
+00' 
+proach is to use the actual returns, Rt oo oo 
+-- Ek=i l't+k -- p(w) (or Re = Ek=l vk-iwt+k 
+in the start-state formulation) as an approximation for each Qr(st, at). This leads to 
+Williams's episodic REINFORCE algorithm, A0t oc o(,,)Re  (the 1 
+corrects for the oversampling of actions preferred by r), which is known to follow  
+in expected value (Williams, 1988, 1992). 
+2 Policy Gradient with Approximation 
+Now consider the case in which Q is approximated by a learned function approxima- 
+tor. If the approximation is sufficiently good, 

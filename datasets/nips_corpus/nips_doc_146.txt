@@ -1,0 +1,149 @@
+107 
+SKELETONIZATION: 
+A TECHNIQUE FOR TRIMMING THE FAT 
+FROM A NETWORK VIA RELEVANCE ASSESSMENT 
+Michael C. Mozer 
+Paul Smolensky 
+Department of Computer Science & 
+Institute of Cognitive Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+ABSTRACT 
+This paper proposes a means of using the knowledge in a network to 
+determine the functionality or relevance of individual units, both for 
+the purpose of understanding the network's behavior and improving its 
+performance. The basic idea is to iteratively train the network to a cer- 
+tain performance criterion, compute a measure of relevance that identi- 
+fies which input or hidden units are most critical to performance, and 
+automatically trim the least relevant units. This skeletonization tech- 
+nique can be used to simplify networks by eliminating units that con- 
+vey redundant information; to improve learning performance by first 
+learning with spare hidden units and then trimming the unnecessary 
+ones away, thereby constraining generalization; and to understand the 
+behavior of networks in terms of minimal rules. 
+INTRODUCTION 
+One thing that connectionist networks have in common with brains is that if you open 
+them up and peer inside, all you can see is a big pile of goo. Internal organization is 
+obscured by the sheer number of units and connections. Although techniques such as 
+hierarchical cluster analysis (Sejnowski & Rosenberg, 1987) have been suggested as a 
+step in understanding network behavior, one would like a better handle on the role that 
+individual units play. This paper proposes one means of using the knowledge in a net- 
+work to determine the functionality or relevance of individual units. Given a measure of 
+relevance for each unit, the least relevant units can be automatically trimmed from the 
+network to construct a skeleton version of the network. 
+Skeleton networks have several potential applications: 
+� Constraining generalization. By eliminating input and hidden units that serve no pur- 
+pose, the number of parameters in the network is reduced and generalization will be 
+constrained (and hopefully improved). 
+� Speeding up learning. Learning is fast with many hidden units, but a large number of 
+hidden units allows for many possible generalizations. Learning is slower with few 
+108 Mozer and Smolensky 
+hidden units, but generalization tends to be better. One idea for speeding up learning is 
+to train a network with many hidden units and then eliminate the irrelevant ones. This 
+may lead to a rapid learning of the training set, and then gradually, an improvement in 
+generalization performance. 
+� Understanding the behavior of a network in terms of rules. One often wishes to get a 
+handle on the behavior of a network by analyzing the network in terms of a small 
+number of rules instead of an enormous number of parameters. In such situations, one 
+may prefer a simple network that performed correctly on 95% of the cases over a com- 
+plex network that performed correctly on 100%. The skeletonization process can dis- 
+cover such a simplified network. 
+Several researchers (Chauvin, 1989; Hanson & Pratt, 1989; David Rumelhart, personal 
+communication, 1988) have studied techniques for the closely related problem of reduc- 
+ing the number of free parameters in back propagation networks. Their approach 
+involves adding extra cost terms to the usual error function that cause nonessential 
+weights and units to decay away. We have opted for a different approach -- the all-or- 
+none removal of units -- which is not a gradient descent procedure. The motivation for 
+our approach was twofold. First, our initial interest was in designing a procedure that 
+could serve to focus attention on the most important units, hence an explicit relevance 
+metric was needed. Second, our impression is that it is a tricky matter to balance a pri- 
+mary and secondary error term against one another. One must determine the relative 
+weighting of these terms, weightings that may have to be adjusted over the course of 
+learning. In our experience, it is often impossible to avoid local minima -- compromise 
+solutions that partially satisfy each of the error terms. This conclusion is supported by 
+the experiments of Hanson and Pratt (1989). 
+DETERMINING THE RELEVANCE OF A UNIT 
+Consider a multi-layer feedforward network. How might we determine whether a given 
+unit serves an important function in the network? One obvious source of information is 
+its outgoing connections. If a unit in layer l has many large-weighted connections, then 
+one might expect its activity to have a big impact on higher layers. However, this need 
+not be. The effects of these connections may cancel each other out; even a large input to 
+units in layer/+1 will have little influence if these units are near saturation; outgoing 
+connections from the innervated units in/+1 may be small; and the unit in I may have a 
+more-or-less constant activity, in which case it could be replaced by a bias on units in 
+/+1. Thus, a more accurate measure of the relevance of a unit is needed. 
+What one really wants to know is, what will happen to the performance of the network 
+when a unit is removed? That is, how well does the network do with the unit versus 
+without it? For unit i, then, a straightforward measure of the relevance, Pi, is 
+Pi = Ewithout unit i -- Ewith unit i, 
+where E is the error of the network on the training set. The problem with this measure is 
+that to compute the error with a given unit removed, a complete pass must be made 
+through the training set. Thus, the cost of computing p is O(np) stimulus presentations, 
+where n is the number of units in the network and p is the number of patterns in the 
+Skeletonization 109 
+training set. Further, if the training set is not fixed or is not known to the experimenter, 
+additional difficulties arise in computing p. 
+We therefore set out to find a good approximation to p. Before presenting this approxi- 
+mation, it is first necessary to introduce an additional bit of notation. Suppose that asso- 
+ciated with each unit i is a coefficient % which represents the attentional strength of the 
+unit (see Figure 1). This coefficient can be thought of as gafing the flow of activity from 
+the unit: 
+oj =f 
+where oj is the activity of unit j, wji the connection strength to j from i, and f the sig- 
+moid squashing function. If xi = O, unit i has no influence on the rest of the network; if 
+i = 1, unit i is a conventional unit. In terms of tx, the relevance of unit i can then be 
+rewritten as 
+Pi = E,=o - E,=I � 
+We can approximate pi using the derivative of the error with respect to 
+Assuming that this equality holds approximately for y = 0: 
+Eo=0 - Eo= 3E 3E 
+=  or -Pi = 
+-1 aeti ,= 
+Our approximation for Pi is then 15i - 
+3E 
+Figure 1. A 4-2-3 network with attenfional coefficients on the input and hidden units. 
+This derivative can be computed using an error propagation procedure very similar to 
+that used in adjusting the weights with back propagation. Additionally, note that because 
+the approximation assumes that eq is 1, the cq never need be changed. Thus, the tx are 
+not actual parameters of the system, just a bit of notational convenience used in 
+110 Mozer and Smolensky 
+estimating relevance. 
+In practice, we have found that E/ct fluctuates strongly in time and a more stable esti- 
+mate that yields better results is an exponentially-decaying time average of the derivative. 
+In the simulations reported below, we use the following measure: 
+15i (t + 1) = .815i (t) + .2 0E (t) 
+One f'mal detail of relevance assessment we need to mention is that relevance is com- 
+puted based on a linear error function, E t = , I t,j - o,j I (where p is an index over pat- 
+terns, j over output units; tt, j is the target output, o,j the actual output). The usual qua- 
+dratic error function, E q = ,(t,j - o,j)2, provides a poor estimate of relevance if the out- 
+put pattern is close to the target. This difficulty with E q is further elaborated in Mozer 
+and Smolensky (1989). In the results reported below, while E  is used as the error 
+metric in training the weights via conventional back propagation, lb is measured using E t . 
+This involves separate back propagation phases for computing the weight updates and the 
+relevance measures. 
+A SIMPLE EXAMPLE: THE CUE SALIENCE PROBLEM 
+Consider a network with four inputs labeled A-D, one hidden unit, and one output. We 
+generated ten training patterns such that the correlations between each input unit and the 
+output are as shown in the first row of Table 1. (In this particular task, a hidden layer is 
+not necessary. The inclusion of the hidden unit simply allowed us to use a standard 
+three-layer architecture for all tasks.) 
+In this and subsequent simulations, unit activities range from -1 to 1, input and target 
+output patterns are binary (-1 or 1) vectors. Training continues until all output activities 
+are within some acceptable margin of the target value. Additional details of the training 
+procedure and network parameters are described in Mozer arid Smolensky (1989). 
+To perform perfecfiy, the network need only attend to input ^. This is not what the 
+input-hidden connections do, however; their weights have the same qualitative profde as 
+the correlations (second row of Table 1).  In contrast, the relevance values for the input 
+Table 1 
+Input Unit 
+A B C D 
+Correlation with Output Unit 1.0 0.6 0.2 0.0 
+Input-Hidden Connection Strengths 3.15 1.23 .83 -.01 
+Pi 5.36 0.07 0.06 0.00 
+0.46 ---0.03 0.01 -0.02 
+1 The values reported in Table 1 are an average over 100 replicarims of the simulation with different initial ran- 
+dom weights. Bfore averaging, however, the signs of the weights were flipped if the hidden-output connection 
+was negative. 
+Skeletonization 111 
+units show ^ to be highly relevant while B-D have negligible relevance. Further, the 
+qualitative picture presented by the profile of 15i

@@ -1,0 +1,167 @@
+Bayesian Modeling of Facial Similarity 
+Baback Moghaddam 
+Mitsubishi Electric Research Laboratory 
+201 Broadway 
+Cambridge, MA 02139, USA 
+babackmerl. com 
+Tony Jebara and Alex Pentland 
+Massachusettes Institute of Technology 
+20 Ames St. 
+Cambridge, MA 02139, USA 
+{j ebara, sandy)media. mir. edu 
+Abstract 
+In previous work [6, 9, 10], we advanced a new technique for direct 
+visual matching of images for the purposes of face recognition 
+and image retrieval, using a probabilistic measure of similarity 
+based primarily on a Bayesian (MAP) analysis of image differ- 
+ences, leading to a dual basis similar to eigenfaces [13]. The 
+performance advantage of this probabilistic matching technique 
+over standard Euclidean nearest-neighbor eigenface matching was 
+recently demonstrated using results from DARPA's 1996 FERET 
+face recognition competition, in which this probabilistic matching 
+algorithm was found to be the top performer. We have further 
+developed a simple method of replacing the costly compution of 
+nonlinear (online) Bayesian similarity measures by the relatively 
+inexpensive computation of linear (offiine) subspace projections 
+and simple (online) Euclidean norms, thus resulting in a significant 
+computational speed-up for implementation with very large image 
+databases as typically encountered in real-world applications. 
+1 Introduction 
+Current approaches to image matching for visual object recognition and image 
+database retrieval often make use of simple image similarity metrics such as 
+Euclidean distance or normalized correlation, which correspond to a template- 
+matching approach to recognition [2, 5]. For example, in its simplest form, the 
+Bayesian Modeling of Facial Similarity 911 
+similarity measure S(Ii, I2) between two images I and 12 can be set to be inversely 
+proportional to the norm IIIx - I211. Such a simple formulation suffers from a major 
+drawback: it does not exploit knowledge of which types of variation are critical 
+(as opposed to incidental) in expressing similarity. In this paper, we formulate a 
+probabilistic similarity measure which is based on the probability that the image 
+intensity differences, denoted by A = I - 12, are characteristic of typical variations 
+in appearance of the same object. For example, for purposes of face recognition, 
+we can define two classes of facial image variations: intrapersonal variations 2r 
+(corresponding, for example, to different facial expressions of the same individual) 
+and eztrapersonal variations 2E (corresponding to variations between different 
+individuals). Our similarity measure is then expressed in terms of the probability 
+= P(X E = (1) 
+where P(QrlA) is the a posteriori probability given by Bayes rule, using estimates 
+of the likelihoods P(AIQi ) and P(AIQE). The likelihoods are derived from training 
+data using an efficient subspace method for density estimation of high-dimensional 
+data [7, 8]. This Bayesian (MAP) approach can also be viewed as a generalized 
+nonlinear extension of Linear Discriminant Analysis (LDA) [12, 3] or FisherFace 
+techniques [1] for face recognition. Moreover, our nonlinear generalization has 
+distinct computational/storage advantages over some of these linear methods for 
+large databases. 
+2 Difference Density Modeling 
+Consider the problem of characterizing the type of intensity differences which 
+occur when matching two images in a face recognition task. We have two classes 
+(intrapersonal 2r and extrapersonal 2) which we will assume form Gaussian 
+distributions whose likelihoods can be estimated as P(A]2i) and P(Al2e ) for a 
+given intensity difference A - I - 12. 
+Given these likelihoods we can evaluate a similarity score S(Ii, 12) between a pair 
+of images directly in terms of the intrapersonal a posterJori probability as given by 
+Bayes rule: 
+P(A IS2r)P(S2r) 
+$ = P(Als2,)p(s2,) + p(Als2)p(s2) (2) 
+where the priors P(Q) can be set to reflect specific operating conditions (e.g., 
+number of test images vs. the size of the database) or other sources of a priori 
+knowledge regarding the two images being matched. Additionally, this particular 
+Bayesian formulation casts the standard face recognition task (essentially an M-ary 
+classification problem for M individuals) into a binary pattern classification problem 
+with Qr and Q. This much simpler problem is then solved using the maximum 
+a posteriori (MAP) rule -- i.e., two images are determined to belong to the same 
+1 
+individual if P(l A) > P(E[A), or equivalently, if S(I,I2) > 3' 
+To deal with the high-dimensionality of A, we make use of the efficient density 
+estimation method proposed by Moghaddam & Pentland [7, 8] which divides 
+the vector space T N into two complementary subspaces using an eigenspace 
+decomposition. This method relies on a Principal Components Analysis (PCA) 
+[4] to form a low-dimensional estimate of the complete likelihood which can be 
+evaluated using only the first M principal components, where M << N. 
+912 B. Moghaddam, T. Jebara and A. Pentland 
+3 Efficient Similarity Computation 
+Consider now a feature space of A vectors, the differences between two images 
+(Ij and Ix). The two classes of interest in this space correspond to intrapersonal 
+and extrapersonal variations and each is modeled as a high-dimensional Gaussian 
+density as in Equation 3. The densities are zero-mean since for each A - Ij - Ix 
+there exists a A = Ix - Ij. 
+-�.; 
+P(AIflE ) = 
+P(AI ) = (2r)DIiSi12 
+(3) 
+By PCA, the Gaussians are known to only occupy a subspace of image space (face- 
+space) and thus, only the top few eigenvectors of the Gaussian densities are relevant 
+for modeling. These densities are used to evaluate the similarity score in Equation 2. 
+Computing the similarity score involves first subtracting a candidate image Ij from a 
+database entry Ix. The resulting A image is then projected onto the eigenvectors of 
+the extrapersonal Gaussian and also the eigenvectors of the intrapersonal Gaussian. 
+The exponentials are computed, normalized and then combined as in Equation 2. 
+This operation is iterated over all members of the database (many Ix images) until 
+the maximum score is found (i.e. the match). Thus, for large databases, this 
+evaluation is expensive but can be simplified by offline transformations. 
+To compute the likelihoods P(AI,) and P(AIE) we pre-process the Ix images 
+with whitening transformations. Each image is converted and stored as whitened 
+subspace coefficients; i for intrapersonal space and e for extrapersonal space (see 
+Equation 4). Here, A and V are matrices of the largest eigenvalues and eigenvectors 
+of EE or E. Typically, we have used M = 100 and ME = 100 for r and FtE 
+respectively. 
+1 1 
+ij - A l/Ij ej = AEI/EIj (4) 
+After this pre-processing, evaluating the Gaussians can be reduced to simple 
+Euclidean distances as in Equation 5. Denominators are of course pre-computed. 
+These likelihoods are evaluated and used to compute the MAP similarity S in 
+Equation 2. Euclidean distances are computed between the 100-dimensional i 
+vectors as well as the 100-dimensional e vectors. Thus, roughly 2 x (ME + Mr) - 
+400 arithmetic operations are required for each similarity computation, avoiding 
+repeated image differencing and projections. 
+= = 
+e- �11ej -e II ' 
+e- �1tij-ikll 2 
+P(AIfiI ) = P(Ij - Ilfi) = 
+(a) 
+The ML similarity matching is even simpler since only the intra-personal class is 
+evaluated, leading to the following modified form for the similarity measure 
+e- �11i,-ikll = 
+S'= P(AIEh ) = (6) 
+Bayesian Modeling of Facial Similarity 913 
+Figure 1: Examples of FERET frontal-view image pairs 
+(training) and (b) the Probe set (testing). 
+(b) 
+used for (a) the Gallery 
+set 
+Multiscale I 
+Head Search 
+Figure 2: Face alignment system [7]. 
+4 Experimental Results 
+To test our recognition strategy we used a collection of images from the ARPA 
+FERET face database. The set of images consists of pairs of frontal-views (FA/FB) 
+and are divided into two subsets: the gallery (training set) and the probes 
+(testing set). The gallery images consisted of 74 pairs of images (2 per individual) 
+and the probe set consisted of 38 pairs of images, corresponding to a subset of the 
+gallery members. The probe and gallery datasets were captured a week apart and 
+exhibit differences in clothing, hair and lighting (see Figure 1). 
+Each of these images were affine normalized with a canonical model using an 
+automatic face-processing system which normalizes for translation, scale as well 
+as slight rotations (both in-plane and out-of-plane). This system is described in 
+detail in [7, 8] and uses maximum-likelihood estimation of object location (in this 
+case the position and scale of a face and the location of individual facial features) 
+to geometrically align faces into standard normalized form as shown in Figure 2. 
+All the faces in our experiments were geometrically aligned and normalized in this 
+manner prior to further analysis. 
+4.1 Eigenface Matching 
+As a baseline comparison, we first used an eigenface matching technique for 
+recognition [13]. The normalized images from the gallery and the probe sets were 
+projected onto a 100-dimensional eigenspace similar to that shown in Figure 3 and 
+a nearest-neighbor rule based on a Euclidean distance measure was used to match 
+914 B. Moghaddatn, T. Jebara and.4. Pentland 
+Figure 3: Standard Eigenfaces. 
+(a) 
+(b) 
+Figure 4: Dual Eigenfaces: (a) Intrapersonal, (b) Extrapersonal 
+each probe image to a gallery image. We note that this method corresponds to 
+a generalized template-matching method which uses a Euclidean norm measure of 
+similarity which is, however, restricted to the principal subspace of the data. The 
+rank-1 recognition rate obtained with this method was found to be 84%. 
+4.2 Bayesian Matching 
+For our probabilistic algorithm, we first gathered training data by computing 
+the intensity differences for a training subset of 7

@@ -1,0 +1,162 @@
+Hidden Markov Models in Molecular 
+Biology: New Algorithms and 
+Applications 
+Pierre Baldi * 
+Jet Propulsion Laboratory 
+California Institute of Technology 
+Pasadena, CA 91109 
+Yves C hauvin ? 
+Net-ID, Inc. 
+8, Cathy Place 
+Menlo Park, CA 94305 
+Tim Hunkapiller 
+Division of Biology 
+California Institute of Technology 
+Marcella A. McClure 
+Department of Evolutionary Biology 
+University of California, Irvine 
+Abstract 
+Hidden Markov Models (HMMs) can be applied to several impor- 
+tant problems in molecular biology. We introduce a new convergent 
+learning algorithm for HMMs that, unlike the classical Baum-Welch 
+algorithm is smooth and can be applied on-line or in batch mode, 
+with or without the usual Viterbi most likely path approximation. 
+Left-right HMMs with insertion and deletion states are then trained 
+to represent several protein families including immunoglobulins and 
+kinases. In all cases, the models derived capture all the important 
+statistical properties of the families and can be used efficiently in 
+a number of important tasks such as multiple alignment, motif de- 
+tection, and classification. 
+*and Division of Biology, California Institute of Technology. 
+t and Department of Psychology, Stanford University. 
+747 
+748 Baldi, Chauvin, Hunkapiller, and McClure 
+1 INTRODUCTION 
+Hidden Markov Models (e.g., Rabiner, 1989) and the more general EM algorithm in 
+statistics can be applied to the modeling and analysis of biological primary sequence 
+information (Churchill (1989), Lawrence and Reilly (1990), Baldi et al. (1992), 
+Cardon and Stormo (1992), Hz. ussler et al. (1992)). Most notably, as in speech 
+recognition applications, a family of evolutionarily related sequences can be viewed 
+as consisting of different utterances of the same prototypical sequence resulting from 
+a common underlying HMM dynamics. A model trained from a family can then be 
+used for a number of tasks including multiple alignments and classification. The 
+multiple alignment is particularly important since it reveals the highly conserved 
+regions of the molecules with functional and structural significance even in the 
+absence of any tertiary information. The multiple alignment is also an essential 
+tool for proper phylogenetic tree reconstruction and other important tasks. Good 
+algorithms based on dynamic programming exist for the alignment of two sequences. 
+However they scale exponentially with the number of sequences and the general 
+multiple alignment problem is known to be NP-complete. Here, we briefly present 
+a new algorithm and its variations for learning in HMMs and the results of some of 
+the applications of this approach to new protein families. 
+2 HMMs FOR BIOLOGICAL PRIMARY SEQUENCES 
+A HMM is characterized by a set of states, an alphabet of symbols, a probability 
+transition matrix T = (tij) and a probability emission matrix eij. As in speech 
+applications, we are going to consider left-right architectures: once a given state is 
+left it can never be visited again. Common knowledge of evolutionary mechanisms 
+suggests the choice of three types of states (in addition to the start and to the 
+end state): the main states rnl, ..., rnv, the delete states dl, ..., dv+ and the insert 
+states i, ..., iN+. N is the length of the model which is usually chosen equal to the 
+average length of the sequences in the family and, if needed, can be adjusted in later 
+stages. The details of a typical architecture are given in Figure 1. The alphabet 
+has 4 letters in the case of DNA or RNA sequences, one symbol per nucleotide, 
+and 20 letters in the case of proteins, one symbol per amino acid. Only the main 
+and insert states emit letters, while the delete states are of course mute. The 
+linear sequence of state transitions start - rn - m2 - ... - mN - end is the 
+backbone of the model and correponds to the path associated with the prototypical 
+sequence in the family under consideration. Insertions and deletions are defined 
+with respect to this backbone. Insertions and deletions are treated symmetrically 
+except for the loops on the insert states needed to account for multiple insertions. 
+The adjustable parameters of the HMM provide a natural way of incorporating 
+variable gap penalties. A number of other architectures are also possible. 
+3 LEARNING ALGORITHMS 
+Learning from examples in HMMs is typically accomplished using the Baum-Welch 
+algorithm. In the Baum-Welch algorithm, the expected number nij (resp. mij) 
+of i - j transitions (resp. emissions of letter j from state i) induced by the data 
+are calculated using the forward-backward procedure. The transition and emission 
+Hidden Markov Models in Molecular Biology: New Algorithms and Applications 749 
+Figure 1: The basic left-right HMM architecture. S and E are the start and end 
+states. 
+probabilities are then reset to the observed frequencies by 
+ti  __ nij and e- +. rnij (1) 
+ni mi 
+where ni -- -]j nij and mi - -]j mij. It is clear that this algorithm can lead to 
+abrupt jumps in parameter space and that the procedure cannot be used for on- 
+line learning (after each training example). This is even more so if, in order to 
+save some computations, the Viterbi approximation is used to estimate likelihoods 
+and transition and emission statistics by computing only the most likely paths as 
+opposed to the forward-bacward procedure where all possible paths are examined. 
+A new algorithm for HMM learning which is smooth and can be used on-line or in 
+batch mode, with or without the Viterbi approximation, can be defined as follows. 
+For each 
+First, we use a Boltzmann-Gibbs representation for the parameters. 
+(resp. eij) we define a new parameter wij (resp. vii) by 
+�wij 
+tij = -]./ eWk and 
+(2) 
+Normalisation constraints are naturally enforced by this representation throughout 
+learning with the added advantage that none of the parameters can reach the ab- 
+sorbing value 0. After computing on-line or in batch mode the statistics nij and 
+mij using the forward-backward procedure (or the usual Viterbi approximation), 
+the update equations are particularly simple and given by 
+Awij -- ](nij _ tij) and Avij -- ](mij eij) (3) 
+ni mi 
+where / is the learning rate. In Baldi et al. (1992) a proof is given that this 
+algorithm must converge to a maximum of the product of the likelihoods of the 
+training sequences. In the case of an on-line Viterbi approximation, the optimal 
+path associated with the current training sequence is first computed. The update 
+equations are then given by 
+Awij ---- rl(tj -- tij) and Avij -- rl(tj -eij) (4) 
+750 Baldi, Chauvin, Hunkapiller, and McClure 
+Here, for a fixed state i, ti and tiej are the target transition and emission val- 
+ues' ft.. - I every time the transition si -* s i is part of the Viterbi path of the 
+corresponding training sequence sequence and 0 otherwise and similarly for tie/. 
+After training, the model derived can be used for a number of tasks. First, by 
+computing for each sequence its most likely path through the model using the 
+Viterbi algorithm, multiple sequences can be aligned to each other in time O(KN2), 
+linear in the number K of sequences. The model can also be used for classification 
+and data base searches. The likelihood of any sequence (randomly generated or 
+taken from any data base) can be calc'lated and compared to the likelihood of the 
+sequences in the family being modeled. Additional applications are discussed in 
+Baldi et al. (1992). 
+4 EXPERIMENTS AND RESULTS 
+The previous approach has been applied to a number of protein families including 
+globins, immunoglobulins, kinases, aspartic acid proteases and G-coupled receptor 
+proteins. The first application and alignment of the globin family using HMMs 
+(trained with the Viterbi approximation of the Baum-Welch algorithm, and a num- 
+ber of additional heuristics) was given by Haussler et al. (1992). Here, we briefly 
+describe some of our results on the immunoglobulin and the kinase families  
+4.1 IMMUNOGLOBULINS 
+Immunoglobulins or antibodies are proteins produced by B cells that bind with 
+specificity to foreign antigens in order to neutralize them or target their destruction 
+by other effector cells (e.g., Hunkapiller  Hood, 1989). The set of sequences used in 
+our experiments consists of immunoglobulins V region sequences from the Protein 
+Identification Resources (PIR) data base. It corresponds to 294 sequences, with 
+minimum length 90, average length 117 and maximum length 254. The variation in 
+length resulted from including any sequence with a V region, including those that 
+also included signal or leader sequences, germline sequences that did not include the 
+J segment, and some that contained the C region as well. Seventy seqences contained 
+one or more special characters indicating an ambiguous amino acid determination 
+and were removed. 
+For the immunoglobulins variable V regions, we have trained a model of length 117 
+using a random subset of 150 sequences. Figure 2 displays the alignment corre- 
+sponding to the first 20 sequences in this random subset. Letters emitted from the 
+main states are upper case and letters emitted from insertion states are lower case. 
+Dashes represent deletions or accomodate for insertions. As can be observed, the 
+algorithm has been able to detect all the main regions of highly conserved residues. 
+Most importantly, the cysteine residues towards the beginning and the end respon- 
+sible for the disulphide bonds which holds the chains together are perfectly aligned 
+and marked. The only exception is the fifth sequence from the bottom which has 
+a serine residue in its terminal portion. It is also important to remark that some 
+ Recently, Hausssler et al. have also independently applied their approach to the kinase 
+family (Haussler, private communication). 
+Hidden Markov Models in Molecular Biology: New Algorithms and Applications 751 
+PH0106 
+B27563 
+MHMS76 
+D25035 
+D24672 
+PH0100 
+B27888 
+PL0160 
+E

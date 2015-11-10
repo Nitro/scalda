@@ -1,0 +1,146 @@
+Visual gesture-based robot guidance 
+with a modular neural system 
+E. Littmann, 
+Abt. Neuroinformatik, Fak. f. Informatik 
+Universit/it Ulm, D-89069 Ulm, FRG 
+enno@neuro.informatik.uni-ulm.de 
+A. Drees, and H. Ritter 
+AG Neuroinformatik, Techn. Fakult/it 
+Univ. Bielefeld, D-33615 Bielefeld, FRG 
+andrea,helge@techfak.uni-bielefeld.de 
+Abstract 
+We report on the development of the modular neural system Sm- 
+E^GLI for the visual guidance of robot pick-and-place actions. 
+Several neural networks are integrated to a single system that vi- 
+sually recognizes human hand pointing gestures from stereo pairs 
+of color video images. The output of the hand recognition stage is 
+processed by a set of color-sensitive neural networks to determine 
+the cartesian location of the target object that is referenced by the 
+pointing gesture. Finally, this information is used to guide a robot 
+to grab the target object and put it at another location that can 
+be specified by a second pointing gesture. The accuracy of the cur- 
+rent system allows to identify the location of the referenced target 
+object to an accuracy of I cm in a workspace area of 50x50 cm. In 
+our current environment, this is sufficient to pick and place arbi- 
+trarily positioned target objects within the workspace. The system 
+consists of neural networks that perform the tasks of image seg- 
+mentation, estimation of hand location, estimation of 3D-pointing 
+direction, object recognition, and necessary coordinate transforms. 
+Drawing heavily on the use of learning algorithms, the functions of 
+all network modules were created from data examples only. 
+1 Introduction 
+The rapidly developing technology in the fields of robotics and virtual reality re- 
+quires the development of new and more powerful interfaces for configuration and 
+control of such devices. These interfaces should be intuitive for the human advisor 
+and comfortable to use. Practical solutions so far require the human to wear a 
+device that can transfer the necessary information. One typical example is the data 
+glove [14, 12]. Clearly, in the long run solutions that are contactless will be much 
+more desirable, and vision is one of the major modalities that appears especially 
+suited for the realization of such solutions. 
+In the present paper, we focus on a still restricted but very important task in robot 
+control, the guidance of robot pick-and-place actions by unconstrained human poin- 
+ting gestures in a realistic laboratory environment. The input of target locations by 
+904 E. LITTMANN, A. DREES, H. RITTER 
+pointing gestures provides a powerful, very intuitive and comfortable functionality 
+for a vision-based man-machine interface for guiding robots and extends previous 
+work that focused on the detection of hand location or the discrimination of a small, 
+discrete number of hand gestures only [10, 1, 2, 8]. Besides two color cameras, no 
+special device is necessary to evaluate the gesture of the human operator. 
+A second goal of our approach is to investigate how to build a neural system for 
+such a complex task from several neural modules. The development of advanced 
+artificial neural systems challenges us with the task of finding architectures for the 
+cooperation of multiple functional modules such that part of the structure of the 
+overall system can be designed at a useful level of abstraction, but at the same time 
+learning can be used to create or fine-tune the functionality of parts of the system 
+on the basis of suitable training examples. 
+To approach this goal requires to shift the focus from exploring the properties of 
+single networks to exploring the properties of entire s/sterns of neural networks. 
+The work on mixtures of experts [3, 4] is one important contribution along these 
+lines. While this is a widely applicable and powerful approach, there clearly is 
+a need to go beyond the exploration of strictly hierarchical systems and to gain 
+experience with architectures that admit more complex types of information flow 
+as required e.g. by the inclusion of features such as control of focal attention or 
+reentrant processing branches. The need for such features arose very naturally in 
+the context of the task described above, and in the following section we will report 
+our results with a system architecture that is crucially based on the exploitation of 
+such elements. 
+2 System architecture 
+Our system, described in fig. 1, is situated in a complex laboratory environment. A 
+robot arm with manipulator is mounted at one side of a table with several objects 
+of different color placed on it. A human operator is positioned at the next side to 
+the right of the robot. This scenery is watched by two cameras from the other two 
+sides from high above. The cameras yield a stereo color image of the scene (images 
+I0). The operator points with one hand at one of the objects on the table. On the 
+basis of the image information, the object is located and the robot grabs it. Then, 
+the operator points at another location, where the robot releases the object. 1 
+The syst. em consists of several hardware components: a PUMA 5{50 robot arm with 
+six axes and a three-fingered manipulator 2; two single-chip PULNIX color cameras; 
+two ANDROX vision boards wit. h software for data acquisition and processing; a 
+work space consisting of a table with a black grid on a yellow surface. Robot and 
+person refer to the same work space. Bot. h cameras must show both the human 
+hand and the table with the objects. Within this constraint,, the position of the 
+cameras can be chosen freely as long as they yield significantly different views. 
+An important prerequisite for the recognition of the pointing direction is the seg- 
+mentation of the human hand from the background scenery. This task is solved by 
+a LLM network (S1) trained to yield a probability value for each image pixel to 
+belong to the hand region. The training is based on the local color information. 
+This procedure has been investigated in [7]. 
+An important feature of the chosen method is the great reliability and robustness 
+of both the classification performance and the localization accuracy of the searched 
+object. Furthermore, the performance is quite constant over a wide range of image 
+resolutions. This allows a fast two-step procedure: First, the images are segmented 
+in low resolution (SI: I1  A1) and the hand position is extracted. Then, a small 
+1 In analogy to the sea eagle who watches its prey from high above, shoots down to grab 
+the prey, and then flies to a safe place to feed, we nicknamed our system SEE-EAC, LE. 
+2Development by Prof. Pfeiffer, TU Munich 
+Visual Gesture-based Robot Guidance with a Modular Neural System 905 
+: .... ...:.......:8:.:... : .... : . 
+I1 
+s1 LLM 
+LLM 
+s2 
+I0 
+(PSOM) P1 L--- D 
+LLM LLM S3 
+P 2 A3 
+p$o 
+Fig. 1: System architecture. From two color camera images I0 we extract the hand position 
+(11  S1  A1 (pixel coord.)  P1  cartesian hand coord.). In a subframe centered on 
+the hand location (12) we &fermirip th pointing direction (12  S2  A2 (pixel coord.)  
+G  D  pointing angles). Pointing direction and hand location define a cartesian target 
+location that is mapped to image coord. that define the centers of object subframes (10  
+P2 > 13) There we determine the target object (13  S3  A3) and map the pixel coord. 
+of its centers to world coord. (A3  P3  world target loc.). These coordinates are used 
+to guide the robot R to the target object. 
+906 E. LITTMANN, A. DREES, H. RITTER 
+subframe (I2) around the estimated hand position is processed in high resolution 
+by another dedicated LLM network (S2:I2 -- A2). For details of the segmentation 
+process, refer to [6]. 
+The extraction of hand information by LLMs on the basis of Gabor masks has 
+already been studied for hand posture [9] and orientation [5]. The method is based 
+on a segmented image containing the hand only (A2). This image is filtered by 36 
+Gabor masks that are arranged on a 3x3 grid with 4 directions per grid position 
+and centered on the hand. The filter kernels have a radius of 10 pixels, the distance 
+between the grid points is 20 pixels. The 36 filter responses (G) form the input 
+vector for a LLM network (D). Further details of the processing are reported in [6]. 
+The network yields the pointing direction of the hand (D: I2 -- G -- pointing 
+direction). Together with the hand position which is computed by a parametrized 
+self-organizing map (PSOM, see below and [11, 13]) (PI: A1 -, cartesian hand 
+position), a (cartesian) target location in the workspace can be calculated. This 
+location can be retransformed by the PSOM into pixel coordinates (P2: cartesian 
+target location -- target pixel coordinates). These coordinates define the center of 
+an attention region (I3) that is searched for a set of predefined target objects. 
+This object recognition is performed by a set of LLM color segmentation networks 
+(S3:I3 -- A3), each previously trained for one of the defined targets. A ranking 
+procedure is used to determine the target object. The pixel coordinates of the target 
+in the segmented image are mapped by the PSOM to world coordinates (P3:A3 -* 
+cartesian target position). The robot R now moves to above these world coordinates, 
+moves vertically down, grabs whatever is there, and moves upward again. Now, the 
+system evaluates a second pointing gesture that specifies the place where to place 
+the object. This time, the world coordinates calculated on the basis of the pointing 
+direction from network D and the cartesian hand location from PSOM P1 serve 
+directly as target location for the robot. 
+For our processing we must map corresponding pixels in the stereo images to car- 
+tesian world coordinates. For these transformations, training data was generated 
+with aid of the robot on a precise sampling grid. We automatically extract the 
+pixel coordinates of a LED at the tip of the robot manipulat

@@ -1,0 +1,159 @@
+Context-Dependent Classes in a Hybrid 
+Recurrent Network-HMM Speech 
+Recognition System 
+Dan Kershaw Tony Robinson Mike Hochberg 
+Cambridge University Engineering Department, 
+Trumpington Street, Cambridge CB2 1PZ, England. 
+Tel: [+44] 1223 332800, Fax: [+44] 1223 332662. 
+Email: djk, ajr @eng.cam.ac.uk 
+Abstract 
+A method for incorporating context-dependent phone classes in 
+a connectionist-HMM hybrid speech recognition system is intro- 
+duced. A modular approach is adopted, where single-layer networks 
+discriminate between different context classes given the phone class 
+and the acoustic data. The context networks are combined with a 
+context-independent (CI) network to generate context-dependent 
+(CD) phone probability estimates. Experiments show an average 
+reduction in word error rate of 16% and 13% from the CI system 
+on ARPA 5,000 word and SQALE 20,000 word tasks respectively. 
+Due to improved modelling, the decoding speed of the CD system 
+is more than twice as fast as the CI system. 
+INTRODUCTION 
+The ABBOT hybrid connectionist-HMM system performed competitively with many 
+conventional hidden Markov model (HMM) systems in the 1994 ARPA evaluations 
+of speech recognition systems (Hochberg, Cook, Renals, Robinson & Schechtman 
+1995). This hybrid framework is attractive because it is compact, having far fewer 
+parameters than conventional HMM systems, whilst also providing the discrimina- 
+tive powers of a connectionist architecture. 
+It is well established that particular phones vary acoustically when they occur in 
+different phonetic contexts. For example a vowel may become nasalized when fol- 
+lowing a nasal sound. The short-term contextual influence of co-articulation is 
+*Mike Hochberg is now at Nuance Communications, 333 Ravenswood Avenue, Building 
+110, Menlo Park, CA 94025, USA. Tel: [-I-1] 415 6148260. 
+Context-dependent Classes in a Speech Recognition System 751 
+handled in HMMs by creating a model for all sufficiently differing phonetic con- 
+texts with enough acoustic evidence. This modelling of phones in their particular 
+phonetic contexts produces sharper probability density functions. This approach 
+vastly improves HMM recognition accuracy over equivalent context-independent 
+systems (Lee 1989). Although the recurrent neural network (RNN) model acoustic 
+context internally (within the state vector), it does not model phonetic context. 
+This paper presents an approach to improving the ^BBOT system through phonetic 
+context-dependent modelling. 
+In Cohen, Franco, Morgan, Rumelhart & Abrash (1992) separate sets of context- 
+dependent output layers are used to model context effects in different states of HMM 
+phone models. A set of networks discriminate between phones in 8 different broad- 
+class left and right contexts. Training time is reduced by initialising from a CI multi- 
+layer perceptron (MLP) and only changing the hidden-to-output weights during 
+context-dependent training. This system performs well on the DARPA Resource 
+Management Task. The work presented in Zhoa, Schwartz, Sroka & Makhoul (1995) 
+followed along similar work to Cohen et al. (1992). A context-dependent mixture 
+of experts (ME) system (Jordan & Jacobs 1994) based on the structure of the 
+context-independent ME was built. For each state, the whole training data was 
+divided into 46 parts according to its left or right context. Then, a separate ME 
+model was built for each context. 
+Another approach to phonetic context-dependent modelling with MLPs was pro- 
+posed by Bourlard & Morgan (1993). It was based on factoring the conditional 
+probability of a phone-in-context given the data in terms of the phone given the 
+data, and its context given the data and the phone. The approach taken in this 
+paper is a mixture of the above work. However, this work augments a recurrent net- 
+work (rather than an MLP) and concentrates on building a more compact system, 
+which is more suited to our requirements. As a result, the context training scheme is 
+fast and is implemented on a workstation (rather than a parallel processing machine 
+as is used for training the RNN). 
+OVERVIEW OF THE ABBOT HYBRID SYSTEM 
+The basic framework of the ABBOT system is similar to the one described in Bourlard 
+& Morgan (1994) except that a recurrent network is used as the acoustic model 
+for the within the HMM framework. A more detailed description of the recurrent 
+network for phone probability estimation is given in Robinson (1994). At each 16ms 
+time frame, the acoustic vector u(t) is mapped to an output vector y(t), which 
+represents an estimate of the posterior probability of each of the phone classes 
+yi(t ) - Pr(qi(t) lutl+4), (1) 
+where qi(t) is phone class i at time t, and u[ - {u(1),...,u(t)} is the input from 
+time i to t. Left (past) acoustic context is modelled internally by a 256 dimensional 
+state vector x(t), which can be envisaged as storing the information that has 
+been presented at the input. Right (future) acoustic context is given by delaying 
+the posterior probability estimation until four frames of input have been seen by the 
+network. The network is trained using a modified version of error back-propagation 
+through time (Robinson 1994). 
+Decoding with the hybrid connectionist-HMM approach is equivalent to conven- 
+tional HMM decoding, with the difference being that the RNN models the state 
+observations. Like typical HMM systems, the recognition process is expressed as 
+finding the maximum a posteriori state sequence for the utterance. The decoding 
+criterion specified above requires the computation of the likelihood of the acoustic 
+752 D. KERSHAW, T. ROBINSON, M. HOCHBERG 
+data given a phone (state) sequence, 
+p(u(t)lqi(t) ) _ Pr(qi(t)lu(t))p(u(t)), 
+Pr(qi) (2) 
+where p(u(t)) is the same for all phones, and hence drops out of the decoding 
+process. Hence, the network outputs are mapped to scaled likelihoods by, 
+p(u(t)lqi(t)) yi(t) 
+- Pr(qi) ' (3) 
+where the priors Pr(qi) are estimated from the training data. Decoding uses the 
+NOW^Y decoder (Renals & Hochberg 1995) to compute the utterance model that is 
+most likely to have generated the observed speech signal. 
+CONTEXT-DEPENDENT PROBABILITY ESTIMATION 
+The approach taken by this work is to augment the CI RNN, in a similar vein 
+to Boutlard & Morgan (1993). The context-dependent likelihood, p(Ut]Ct, Qt), 
+can be factored as, 
+p(UtICt Qt)- Pr(CtlUt'Qt)p(UtlQt) 
+' Pr(CtIQt) ' 
+(4) 
+where C is a set of context classes and Q is a set of context-independent phones or 
+monophones. Substituting for the context independent probability density function, 
+p(Ut]Qt), using (2), this becomes 
+p(UtICt Qt) - Pr(CtlUt' Qt) Pr(Qt[Ut) 
+' Pr(Ct IQt) Pr(Qt) p(Ut). 
+(5) 
+The term p(Ut) is constant for all frames, so this drops out of the decoding process 
+and is ignored for all further purposes. This format is extremely appealing since 
+Pr(CtlQt) and Pr(Qt) are estimated from the training data and the CI RNN es- 
+timates Pr(QtlUt). All that is then needed is an estimate of Pr(CtlUt, Qt). The 
+approach taken in this paper uses a set of context experts or modules for each mono- 
+phone class to augment the existing CI RNN. 
+TRAINING ON THE STATE VECTOR 
+An estimate of Pr(CtlUt, Qt) can be obtained by training a recurrent network to 
+discriminate between contexts cj(t) for phone class qi(t), such that 
+Yjli(t) - Pr(cj(t)]utl+4, qi(t)), (6) 
+where yjli(t) is an estimate of the posterior probability of context class j given 
+phone class i. However, training recurrent neural networks in this format would 
+be expensive and difficult. For a recurrent format, the network must contain no 
+discontinuities in the frame-by-frame acoustic input vectors. This implies all recur- 
+rent networks for all the phone classes i must be shown all the data. Instead, the 
+assumption is made that since the state vector x = f(u), then 
+x(t + 4) is a good representation for U -{-4. 
+Hence, a single-layer perceptron is trained on the state vectors corresponding to 
+each monophone, qi, to classify the different phonetic context classes. Finally, 
+Context-dependent Classes in a Speech Recognition System 753 
+the likelihood estimates for the phonetic context class j for phone class i used 
+in decoding are given by, 
+Pr(qi(t)lu[ +4) Pr(cj(t)lx(t + 4), qi(t)) 
+p(u(t)[cj(t),qi(t))  Pr(cj(t)lqi(t))Pr(qi(t)) , 
+(7) 
+Pr(cj]qi) Pr(qi) ' 
+Embedded training is used to estimate the parameters of the CD networks and 
+the training data is aligned using a Viterbi segmentation. Each context network 
+is trained on a non-overlapping subset of the state vectors generated from all the 
+Viterbi aligned training data. The context networks were trained using the RProp 
+training procedure (Robinson 1994). 
+u(t+4_._)  y(t) 
+Y2 (t) 
+Y3(t) > 
+T / ,I '. ' 
+ � Yji(t)   / 
+x(t+4) / -' 
+Figure 1' The Phonetic Context-Dependent RNN Modular System. 
+The frame-by-frame phonetic context posterior probabilities are required as input to 
+the ow^� decoder, i.e. all the outputs from the context modules on the right hand 
+side of Figure 1. These posterior probabilities are calculated from the numerator 
+of (7). The CI RNN stage operates in its normal fashion, generating frame-by-frame 
+monophone posterior probabilities. At the same time the CD modules take the state 
+vector generated by the RNN as input, in order to classify into a context class. The 
+754 D. KERSHAW, T. ROBINSON, M. HOCHBERG 
+RNN posterior probability outputs are multiplied by the module outputs to form 
+context-dependent posterior probability estimates. 
+RELATIONSHIP WITH MIXTURE OF EXPERTS 
+This erchitecture has similarities with mixture of experts (Jordan & Jacobs 1994). 
+During training, rather than making a soft split of the data as in the mixture of 
+experts case, the Viterbi segmentation selects one expert at every exemplar. This 
+means only one expert is responsible for each example in the data. This assumes that 
+the Viterbi segmentation is a good approximation to the seg

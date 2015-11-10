@@ -1,0 +1,180 @@
+Learning Generative Models with the 
+Up-Propagation Algorithm 
+Jong-Hoon Oh nd H. Sebastian Seung 
+Bell Labs, Lucent Technologies 
+Murray Hill, NJ 07974 
+{jhoh [ seung}bell-labs. com 
+Abstract 
+Up-propagation is an algorithm for inverting and learning neural network 
+generative models. Sensory input is processed by inverting a model that 
+generates patterns from hidden variables using top-down connections. 
+The inversion process is iterative, utilizing a negative feedback loop that 
+depends on an error signal propagated by bottom-up connections. The 
+error signal is also used to learn the generative model from examples. 
+The algorithm is benchmarked against principal component analysis in 
+experiments on images of handwritten digits. 
+In his doctrine of unconscious inference, Helmholtz argued that perceptions are 
+formed by the interaction of bottom-up sensory data with top-down expectations. 
+According to one interpretation of this doctrine, perception is a procedure of sequen- 
+tial hypothesis testing. We propose a new algorithm, called up-propagation, that 
+realizes this interpretation in layered neural networks. It uses top-down connections 
+to generate hypotheses, and bottom-up connections to revise them. 
+It is important to understand the difference between up-propagation and its an- 
+cestor, the backpropagation algorithm[I]. Bckpropagation is a learning algorithm 
+for recognition models. As shown in Figure la, bottom-up connections recognize 
+patterns, while top-down connections propagate an error signal that is used to learn 
+the recognition model. 
+In contrast, up-propagation is an algorithm for inverting ad learning generatire 
+models, as shown in Figure lb. Top-down connections generate patterns from a 
+set of hidden variables. Sensory input is processed by inverting the generative 
+model, recovering hidden variables that could have generated the sensory data. 
+This operation is called either pattern recognition or pattern analysis, depending 
+on the meaning of the hidden variables. Inversion of the generafive model is done 
+iteratively, through a negative feedback loop driven by an error signal from the 
+bottom-up connections. The error signal is also used for learning the connections 
+606 J-H. Oh and H. $. Seung 
+error 
+(a) 
+recognition 
+generation 
+(b) 
+error 
+Figure 1: Bottom-up and top-down processing in neural networks. (a) Backprop 
+network (b) Up-prop network 
+in the generarive model. 
+Up-propagation can be regarded as a generalization of principal component analysis 
+(PCA) emd its variants like Conic[2] to nonlinear, multilayer generafive models. Our 
+experiments with images of handwritten digits demonstrate that up-propagation 
+learns a global, nonlinear model of a pattern metalloid. With its global parametriza- 
+tion, this model is distinct from locally linear models of pattern manifolds[3]. 
+1 INVERTING THE GENERATIVE MODEL 
+The generative model is a network of L + 1 layers of neurons, with layer 0 at the 
+bottom and layer L at the top. The vectors xt, t = 0... L, are the activations of 
+the layers. The pattern x0 is generated from the hidden variables xL by a top-down 
+pass through the network, 
+Xt--1 ---- f(Wtxt), t = L, . . . , 1. 
+(1) 
+The nonlinear function f acts on vectors component by component. The matrix 
+Wt contains the synaptic connections from the neurons in layer t to the neurons in 
+layer t - 1. A bias term bt- can be added to the argument of f, but is omitted 
+here. It is convenient to define auxiliary variables &t by xt = f(&t). In terms of 
+these auxiliary variables, the top-down pass is written as 
+t--1 --' Wtf(:t) 
+Given a sensory input d, the top-down generative model can be inverted by finding 
+hidden variables xL that generate a pattern xo matching d. If some of the hid- 
+den variables represent the identity of the pattern, the inversion operation is called 
+recognition. Alternatively, the hidden variables may just be a more compact repre- 
+sentation of the pattern, in which case the operation is called analysis or encoding. 
+The inversion is done iteratively, as described below. 
+In the following, the operator � denotes elementwise multiplication of two vectors, 
+so that z = x � y means z i ---- xiYi for all i. The bottom-up pass starts with the 
+mismatch between the sensory data d and the generated pattern x0, 
+5o = f'(:o) * (d- Xo) , 
+(3) 
+which is propagated upwards by 
+6t = f'(t) * (W?(t-1) � 
+(4) 
+When the error signal reaches the top of the network, it is used to update the hidden 
+variables xi, 
+AXL ( W[aL-1 � (5) 
+Learning Generative Models with the Up-Propagation Algorithm 607 
+This update closes the negative feedback loop. Then a new pattern x0 is generated 
+by a top-down pass (1), and the process starts over again. 
+This iterative inversion process performs gradient descent on the cost function  
+x0] 2, subject to the constraints (1). This can be proved using the chain rule, as in 
+the traditional derivation of the backprop algorithm. Another method of proof is 
+to add the equations (1) as constraints, using Lagrange multipliers, 
+L 
+lid- f(0)l 2 -Jr Z [-l[:t-1 - Wtf(:t)] (6) 
+2 ' 
+t----1 
+This derivation has the advantage that the bottom-up activations 5t have an inter- 
+pretation as Lagrange multipliers. 
+Inverting the generafive model by negative feedback can be interpreted as a process 
+of sequential hypothesis testing. The top-down connections generate a hypothesis 
+about the sensory data. The bottom-up connections propagate an error signal 
+that is the disagreement between the hypothesis and data. When the error signal 
+reaches the top, it is used to generate a revised hypothesis, and the generate-test- 
+revise cycle starts all over again. Perception is the convergence of this feedback loop 
+to the hypothesis that is most consistent with the data. 
+2 LEARNING THE GENERATIVE MODEL 
+The synaptic weights Wt determine the types of patterns that the network is able to 
+generate. To learn from examples, the weights are adjusted to improve the network's 
+eneration ability. A suitable cost function for learning is the reconstruction error 
+Id- x012 averaged over an ensemble of examples. Online gradient descent with 
+respect to the synaptic weights is performed by a learning rule of the form 
+AWt cr (7) 
+The same error signal 5 that was used to invert the generative model is also used 
+to learn it. 
+The batch form of the optimization is compactly written using matrix notation. 
+To do this, we define the matrices D, X0,..., XL whose columns are the vectors d, 
+x0,...,xL corresponding to examples in the training set. Then computation and 
+learning are the minimization of 
+min 1 {D - Xo{ 2 (8) 
+XL ,Wt  ' 
+subject to the constraint that 
+Xt- = f(WtXt) , t= 1,...,L. 
+(9) 
+In other words, up-prop is a dual minimization with respect to hidden variables and 
+synaptic connections. Computation minimizes with respect to the hidden variables 
+Xr, and learning minimizes with respect to the synaptic weight matrices Wt. 
+From the geometric viewpoint, up-propagation is an algorithm for learning pattern 
+manifolds. The top-down pass (1) maps an nL-dimensional vector XL to an no- 
+dimensional vector x0. Thus the generafive model parametrizes a continuous nL- 
+dimensional manifold embedded in no-dimensional space. Inverting the generatire 
+model is equivalent to finding the point on the manifold that is closest to the sensory 
+data. Learning the generatire model is equivalent to deforming the manifold to fit 
+a database of examples. 
+608 J-H. Oh and H. S. Sewng 
+w 
+principal components 
+Figure 2: One-step generation of handwritten digits. Weights of the 256-9 up-prop 
+network (left) versus the top 9 principal components (right) 
+target mage xO t=O t=l t=10 t=100 t=1000 
+4 
+2 
+0 
+0 
+xl 
+4 4 
+10 0 5 10 0 
+5 10 0 5 10 0 5 5 10 
+Figure 3: Iterative inversion of a generative model as sequential hypothesis testing. 
+A fully trained 256-9 network is inverted to generate an approximation to a target 
+image that was not previously seen during training. The stepsize of the dynamics 
+was fixed to 0.02 to show time evolution of the system. 
+Pattern memifolds are relevant when patterns vary continuously. For example, the 
+variations in the image of a three-dimensional object produced by changes of view- 
+point are clearly continuous, and can be described by the action of a transformation 
+group on a prototype pattern. Other types of variation, such as deformations in 
+the shape of the object, are also continuous, even though they may not be readily 
+describable in terms of transformation groups. Continuous variability is clearly not 
+confined to visual images, but is present in many other domains. Many existing 
+techniques for modeling pattern manifolds, such as PCA or PCA mixtures[3], de- 
+pend on linear or locally linear approximations to the manifold. Up-prop constructs 
+a globally parametrized, nonlinear manifold. 
+3 ONE-STEP GENERATION 
+The simplest generative model of the form (1) has just one step 
+propagation minimizes the cost function 
+rain lid- f(WzX)l 
+Xx,Wx  
+(L = 1). Up- 
+(10) 
+For a linear f this reduces to PCA, as the cost function is minimized when the vec- 
+tors in the weight matrix W span the same space as the top principal components 
+of the data D. 
+Up-propagation with a one-step generative model was applied to the USPS 
+database[4], which consists of example images of handwritten digits. Each of the 
+7291 training and 2007 testing images was normalized to a 16 x 16 grid with pixel 
+intensities in the range [0, 1]. A separate model was trained for each digit class. The 
+nonlinearity f was the logistic function. Batch optimization of (10) was done by 
+Learning Generafive Models with the Up-Propagation Algorithm 609 
+0.02 
+0.02 
+0.015 
+0.01 
+Reconstruction Error 
+0 5 10 I 20 25 30 35 40 
+number of vectors 
+Figure 4: Reconstruction error for 256--n networks as a function of n. The error of 
+PCA with n principal components is shown for comparison. 

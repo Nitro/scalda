@@ -1,0 +1,230 @@
+A Lagrangian Approach to Fixed Points 
+Erie Mjolsness 
+Department of Computer Science 
+Yale University 
+P.O. Box 2158 Yale Station 
+New Haven, CT 16520-2158 
+Willard L. Miranker 
+IBM Watson Research Center 
+Yorktown Heights, NY 10598 
+Abstract 
+We present a new way to derive dissipative, optimizing dynamics from 
+the Lagrangian formulation of mechanics. It can be used to obtain both 
+standard and novel neural net dynamics for optimization problems. To 
+demonstrate this we derive standard descent dynamics as well as nonstan- 
+dard variants that introduce a computational attention mechanism. 
+I INTRODUCTION 
+Neural nets are often designed to optimize some objective function E of the current 
+state of the system via a dissipative dynamical system that has a circuit-like imple- 
+mentation. The fixed points of such a system are locally optimal in E. In physics the 
+preferred formulation for many dynamical derivations and calculations is by means 
+of an objective function which is an integral over time of a Lagrangian function, 
+L. From Lagrangians one usually derives time-reversable, non-dissipative dynamics 
+which cannot converge to a fixed point, but we present a new way to circumvent 
+this limitation and derive optimizing neural net dynamics from a Lagrangian. We 
+apply the method to derive a general attention mechanism for optimization-based 
+neural nets, and we describe simulations for a graph-matching network. 
+2 
+LAGRANGIAN FORMULATION OF NEURAL 
+DYNAMICS 
+Often one must design a network with nontrivial temporal behaviors such as run- 
+ning longer in exchange for less circuitry, or focussing attention on one part of a 
+77 
+78 Mjolsness and Miranker 
+problem at a time. In this section we transform the original objective function (c.f. 
+[Mjolsness and Garrett, 1989]) into a Lagrangian which determines the detailed dy- 
+namics by which the objective is optimized. In section 3.1 we will show how to add 
+in an extra level of control dynamics. 
+2.1 THE LAGIt, ANGIAN 
+Replacing an objective E with an associated Lagrangian, L, is an algebraic trans- 
+formation: 
+dE 
+E[v] - LE ,vl 1 - K[,vl 1 + d-q-' 
+The action S = f_ Ldt is to be extremized in a novel way: 
+5S/56i(t) = 0 (i.e.OL/Ovi(t) = 0). 
+(1) 
+(2) 
+In (1), q is an optional set of control parameters (see section 3.1) and K is a cost- 
+of-movement term independent of the problem and of E. For one standard class of 
+neural networks, 
+[vl = -(/)  v,v -  a,v, +  ,(v,) (3) 
+so 
+where g- 
+-- OE/Ovi = E jvj + hi - g-l(vi), 
+l(v) = 4'(v). Also dE/dr is of course y4(OE/Ovi)6i. 
+(4) 
+2.2 THE GREEDY FUNCTIONAL DERIVATIVE 
+In physics, Lagrangian dynamics usually have a conserved total energy which pro- 
+hibits convergence to fixed points. Here the main difference is the unusual func- 
+tional derivative with respect to 6 rather than v in equation (2). This is a greedy 
+functional derivative, in which the trajectory is optimized from beginning to each 
+time t by choosing an extremal value of v(t) without considering its effect on any 
+subsequent portion of the trajectory: 
+*v(t) 
+Since 
+dtL[, v] , 5(O) Ot] 
+5S OL 
+= 5(0)  
+5S 
+dt';[,,v]  **,(t---3' (5) 
+OK OE 
+o6. + Ov,' (6) 
+equations (1) and (2) preserve fixed points (where OE/Ovi = 0) if OK/O6i = 0  
+2.3 STEEPEST DESCENT DYNAMICS 
+For example, with K = i qS(i:i/r) one may recover and generalize steepest-descent 
+dynamics: 
+OE. 
+E[v] - L[,I,']-  (O,/r) + y. --v,, (7) 
+i i 
+A Lagrangian Approach to Fixed Points 79 
+V2 q; 
+t 
+(a) (b) 
+Figure 1: (a) Greedy functional derivatives result in greedy optimization: the 
+next point in a trajectory is chosen on the basis of previous points but not future 
+ones. (b) Two time variables t and v may increase during nonoverlapping inter- 
+vals of an underlying physical time variable, T. For example t = fdTq(T) and 
+v = f dTq2(T) where x and 2 are nonoverlapping clock signals. 
+oz, lOi,(t) = 0  ,'(*i/r)/r + 0E/ovi = 0, i.e. 
+6 = ,.g(- ,. oE/ov). 
+As usual g = (,)-1 A transfer function with -1 
+velocity constraint -r _(/i _( r. 
+_< g() _< 
+(8) 
+(9) 
+I could enforce a 
+2.4 HOPFIELD/GIOSSBERG DYNAMICS 
+With a suitable K one may recover the analog neuron dynamics of Hopfield (and 
+Grossberg): 
+L = E g'(u,) + E v vi' vi m g(ui). (10) 
+i i s 
+o�/oai(t) = 0  ai + oz/o, = 0, i.e. 
+() 
+itl = -OE/Ovi and vi = g(ui). (12) 
+We conjecture that this function K[iq, ui] is optimal in a certain sense: if we lin- 
+earize the u dynamics and consider the largest and smallest eigenvalues, extremized 
+separately over the entire domain of u, with -T constrained to have bounded pos- 
+itive eigenvalues, then the ratio of such largest and smallest eigenvalues is minimal 
+for this K. This criterion is of practical importance because the largest eigenvalue 
+should be bounded for circuit implementability, and the smallest eigenvalue should 
+be bounded away from zero for circuit convergence in finite time. 
+80 Mjolsness and Miranker 
+2.5 A CHANGE OF VARIABLES SIMPLIFIES L 
+We note a change of variable which simplifies the kinetic energy term in the above 
+dynamics, for use in the next section: 
+(13) 
+which is supposed to be identical to hi = -OE/Ovi, v = #(ui) (c.f. (12)). This can 
+be arranged by choosing w: 
+dw i .' OE dv i 
+dul ui --  
+dw , dv , dr,/d., (14) 
+:: dul = dwl = dwl/dui 
+u. 
+= and v, = (15) 
+i,e. 
+3 APPLICATION TO COMPUTATIONAL ATTENTION 
+We can introduce a computational attention mechanism for neural nets as follows. 
+Suppose we can only afford to simulate A out of N >> A neurons at a time in a 
+large net. We shall do this by simulating A real neurons indexed by a  { 1... A), 
+corresponding to a dynamically chosen subset of the N virtual neurons indexed 
+byi {1...N). 
+3.0.1 Constraints 
+In great generality, the correspondance 
+matrix of control parameters 
+qia = ria  [0, 1] 
+Zi 'ia ---- 1, 
+ r _< 1. 
+can be chosen dynamically via a sparse 
+constrained so that 
+(16) 
+Alternatively, the r variables can be coordinated to describe a window or focus 
+of attention by taking rid to be a function of a small number of parameters q 
+specifying the window, which are adjusted to optimize /[r[q]]. This procedure, 
+which can result in significant economies, was used for our computer experiments. 
+3.0.2 Neuron Dynamics 
+The assumed control relationship is 
+= 
+(17) 
+i.e. virtual neuron wi follows the real neuron to which r assigns it. Equation (15) 
+then determines ui(t) and v(t). A plausible kinetic energy term for k is the same 
+A Lagrangian Approach to Fixed Points 81 
+as for w (c.f. equation (13)), since that choice (equivalent to the Hoplield case) has 
+a good eigenvalue ratio for the u variables. The Lagrangian for the real neurons 
+becomes 
+1 . OE . 
+a ia 
+and the equations of motion (greedy variation) may be shown to be 
+(18) 
+(19) 
+3.1 CONTROL DYNAMICS FOR ATTENTION 
+Now we need dynamics for the control parameters r or more generally q. An objec- 
+tive function transformation (proposed and subjected to preliminary experiments in 
+[Mjolsness, 1987]) can be used to construct a new objective for the control parame- 
+ters, q, which rewards speedy convergence of the original objective E as a function 
+of the original variables v by measuring dE/dr: 
+E[v] - k[q] = b(dE/dt) + co, t[q] 
+= b[Ei(0z/0vi)] + 
+(20) 
+where b is a monotonic, odd function that can be used to limit the range of . We 
+can calculate dE/dr from equations (17) and (19): 
+OE . OE 
+benefit(r) ---- b() - b ria--wika = -b ria gvvi ' 
+(21) 
+where OE/Ovi = j 7}jvj + hi - ui. If we assume that cost favors fixed points 
+for which ria  0 or 1 and i ria -, 0 or 1, there is a fixed-point-preserving 
+transformation of (21) to 
+benefit(r) ---- -b riagt(lq )( vi ) . 
+(22) 
+This is monotonic in a linear function of r. It remains to specify cost and a kinetic 
+energy term K. 
+3.2 INDEPENDENT VIRTUAL NEURONS 
+First consider independent ria. As in the Tank-Hopfield [Tank and Hopfield, 1986] 
+linear programming net, we could take 
+o =   , - 1 + r ,- 1 + 0(,). (2a) 
+a ' 
+Thus the r dynamics just sorts the virtual neurons and chooses the A neurons 
+with largest g(ui)OE/Ovi. For dynamics, we introduce a new time variable r that 
+82 Mjolsness and Miranker 
+may not even be proportional to t (see figure lb) and imitate the Lagrangians for 
+Hopfield dynamics: 
+ia 
+and 
+(2) 
+3.3 JUMPING WINDOW OF ATTENTION 
+A far more cost-effective net involves partitioning the virtual neurons into real-net- 
+sized blocks indexed by c, so i - (c, a) where a indexes neurons within a block. 
+Let X  [0, 1] indicate which block is the current window or focus of attention, i.e. 
+Using (22), this implies 
+(27) 
+and 
+1 
+= 1) + 
+(28) 
+Since /co,r here favors Ea Xa = I and X e {0, 1}, benefit has the same fixed 
+points as, and can be replaced by, 
+(29) 
+Then the dynamics for X is just that of a winner-take-all neural net among the blocks 
+which will select the largest value of b[a g'(uc,,)(OE/Ov,,)]. The simulations of 
+Section 4 report on an earlier version of this control scheme, which selected instead 
+the block with the largest value of ]], [OE/Ovo,,[. 
+3.4 IOLLING WINDOW OF ATTENTION 
+Here the r variables for a neural net embedded in a d-dimensional space are deter- 
+mined by a vector x representing the geometric position of the window. Ecost can be 
+dropped entirely, and E can be calculated from r(x). Suppose the embedding is via 
+a d-dimensional grid which for notational purposes is partitioned into window-sized 
+squares indexed by integer-valued vectors c and a. Then 
+r,a, = 6aw(La + a- x), 
+(30) 
+where 
+(611/4-+L) ] 
+&o(x) 
+if -1/2 _x,+L< 1/2 
+if -1/2 <_xt,-L_< 1/2 (31) 
+otherwise 
+A Lagrangian Approach to Fixed Points 83 
+and 
+ovom 
+The advantage of (30) over, for example, a jumping or sliding window of attention 
+is that only a small number of real neurons are being reassigned to new virtual 
+neurons at any one time. 
+3.4.1 Dynamics of a lolling Window 

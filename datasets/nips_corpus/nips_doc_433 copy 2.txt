@@ -1,0 +1,141 @@
+Obstacle Avoidance through Reinforcement 
+Learning 
+Tony J. Prescott and John E. W. Mayhew 
+Artificial Intelligence and Vision Research Unit, 
+University of Sheffield, S 10 2TN, England. 
+Abstract 
+A method is described for generating plan-like, reflexive, obstacle 
+avoidance behaviour in a mobile robot. The experiments reported here 
+use a simulated vehicle with a primitive range sensor. Avoidance 
+behaviour is encoded as a set of continuous functions of the perceptual 
+input space. These functions are stored using CMACs and trained by a 
+variant of Bano and Sutton's adaptive critic algorithm. As the vehicle 
+explores its surroundings it adapts its responses to sensory stimuli so 
+as to minimise the negative reinforcement arising from collisions. 
+Strategies for local navigation are therefore acquired in an explicitly 
+goal-driven fashion. The resulting trajectories form elegant collision- 
+free paths through the environment 
+I INTRODUCTION 
+Following Simon's (1969) observation that complex behaviour may simply be the 
+reflection of a complex environment a number of researchers (eg. Braitenberg 1986, 
+Anderson and Donath 1988, Chapman and Agre 1987) have taken the view that 
+interesting, plan-like behaviour can emerge from the interplay of a set of pre-wired 
+reflexes with regularities in the world. However, the temporal structure in an agent's 
+interaction with its environment can act as more than just a trigger for fixed reactions. 
+Given a suitable learning mechanism it can also be exploited to generate sequences of new 
+responses more suited to the problem in hand. Hence, this paper attempts to show that 
+obstacle avoidance, a basic level of navigation competence, can be developed through 
+learning a set of conditioned responses to perceptual stimuli. 
+In the absence of a teacher a mobile robot can evaluate its performance only in terms of 
+final outcomes. A negative reinforcement signal can be generated each time a collision 
+occurs but this information tells the robot neither when nor how, in the train of actions 
+preceding the crash, a mistake was made. In reinforcement learning this credit assignment 
+523 
+524 Prescott and Mayhew 
+problem is overcome by forming associations between sensory input patterns and 
+predictions of future outcomes. This allows the generation of internal secondary 
+reinforcement signals that can be used to select improved responses. Several authors 
+have discussed the use of reinforcement learning for navigation, this research is inspired 
+primarily by that of Barto, Sutton and co-workers (1981, 1982, 1983, 1989) and Werbos 
+(1990). The principles underlying reinforcement learning have recently been given a firm 
+mathematical basis by Watkins (1989) who has shown that these algorithms are 
+implementing an on-line, incremental, approximation to the dynamic programming 
+method for determining optimal control. Sutton (1990) has also made use of these ideas 
+in formulating a novel theory of classical conditioning in animal learning. 
+We aim to develop a reinforcement learning system that will allow a simple mobile robot 
+with minimal sensory apparatus to move at speed around an indoor environment avoiding 
+collisions with stationary or slow moving obstacles. This paper reports preliminary 
+results obtained using a simulation of such a robot. 
+2 THE ROBOT SIMULATION 
+Our simulation models a three-wheeled mobile vehicle, called the 'sprite', operating in a 
+simple two-dimensional world (500x500 cm) consisting of walls and obstacles in which 
+the sprite is represented by a square box (30x30 cm). Restrictions on the acceleration and 
+the braking response of the vehicle model enforce a degree of realism in its ability to 
+initiate fast avoidance behaviour. The perceptual system simulates a laser range-finder 
+giving the logarithmically scaled distance to the nearest obstacle at set angles from its 
+current orientation. An important feature of the research has been to explore the extent 
+to which spatially sparse but frequent data can support complex behaviour. We show 
+below results from simulations using only three rays emitted at angles -60 �, 0 �, and +60 �. 
+The controller operates directly on this unprocessed sensory input. The continuous 
+trajectory of the vehicle is approximated by a sequence of discrete time steps. In each 
+interval the sprite acquires new perceptual data then performs the associated response 
+generating either a change in position or a feedback signal indicating that a collision has 
+occured preventing the move. After a collision the sprite reverses slightly then attempts 
+to rotate and move off at a random angle (90-180 � from its original heading), if this is not 
+possible it is relocated to a random starting position. 
+3 LEARNING ALGORITHM 
+The sprite learns a multi-parameter policy (I-I) and an evaluation (V). These functions 
+are stored using the CMAC coarse-coding architecture (Albus 1971), and updated by a 
+reinforcement learning algorithm similar to that described by Watkins (1989). The action 
+functions comprising the policy are acquired as gaussian probability distributions using 
+the method proposed by Williams (1988). The following gives a brief summary of the 
+algorithm used. 
+Let xt be the perceptual input pattern at time t and rt the external reward, then the 
+reinforcement learning error (see Barto et al., 1989) is given by 
+�t+l = rt+l + �Vt(Xt+l) - Vt(xt) (1) 
+where � is a constant (0 < � < 1). This error is used to adjust V and H by gradient 
+descent ie. 
+Obstacle Avoidance through Reinforcement Learning 525 
+Vt+(x) = Vt(x) + ot �t+l mr(x) and (2) 
+lit+(x) = lit(x)+ [3�t+1 nt(x) (3) 
+where ot and [3 are learning rates and mr(x) and nt(x ) are the evaluation and policy 
+eligibility traces for pattern x. The eligibility traces can be thought of as activity in 
+short-term memory that enables learning in the LTM store. The minimum STM 
+requirement is to remember the last input pattern and the exploration gradient Aat of the 
+last action taken (explained below), hence 
+mt+(x) = 1 and nt+(x)= Aat iff x is the current pattern, 
+m +  (x) = n +  (x) = 0 otherwise. (4) 
+Learning occurs faster, however, if the memory trace of each pattern is allowed to decay 
+slowly over time with strength of activity being related to recency. Hence, if the rate of 
+decay is given by ) (0 <= ) <= 1) then for patterns other than the current one 
+mt + 1 (x) =  m t (x) and n t + 1 (x) = . n t (X). 
+Using a decay rate of less than 1.0 the eligibility trace for any input becomes negligible 
+within a short time, so in practice it is only necessary to store a list of the most recent 
+patterns and actions (in our simulations only the last four values are stored). 
+The policy acquired by the learning system has two elements (f and O) corresponding to 
+the desired forward and angular velocities of the vehicle. Each element is specified by a 
+gaussian pdf and is encoded by two adjustable parameters denoting its mean and standard 
+deviation (hence the policy as a whole consists of four continuous functions of the input). 
+In each time-step an action is chosen by selecting randomly from the two distributions 
+associated with the current input pattern. 
+In order to update the policy the exploratory component of the action must be computed, 
+this consists of a four-vector with two values for each gaussian element. Following 
+Williams we define a standard gaussian density function g with parameters g and c and 
+output y such that 
+(y-!a) 2 
+1 202 
+g(y, g, c0 - 2./-a e 
+the derivatives of the mean and standard deviation 1 are then given by 
+Y-B [(Y- B) 2 -oa] 
+A g =  and Ac = 
+2 c0 (5) 
+The exploration gradient of the action as a whole is therefore the vector 
+Aat = [A,uf, Ao'f, Ago, Ao'o ]. (6) 
+The four policy functions and the evaluation function are each stored using a CMAC 
+table. This technique is a form of coarse-coding whereby the euclidean space in which a 
+function lies is divided into a set of overlapping but offset tilings. Each tiling consists 
+of regular regions of pre-defined size such that all points within each region are mapped to 
+a single stored parameter. The value of the function at any point is given by the average 
+of the parameters stored for the corresponding regions in all of the tilings. In our 
+1In practice we use (In s) as the second adjustable parameter to ensure that the standard 
+deviation of the gaussian never has a negative value (see Williams 1988 for details). 
+526 Prescott and Mayhew 
+simulation each sensory dimension is quantised into five discrete bins resulting in a 
+5X5X5 filing, five tilings are overlaid to form each CMAC. If the input space is 
+enlarged (perhaps by adding further sensors) the storage requirements can be reduced by 
+using a hashing function to map all the tiles onto a smaller number of parameters. This 
+is a useful economy when there are large areas of the state space that are visited rarely or 
+not at all. 
+4 EXPLORATION 
+In order for the sprite to learn useful obstacle avoidance behaviour it has to move around 
+and explore its environment. If the sprite is rewarded simply for avoiding collisions an 
+optimal strategy would be to remain still or to stay within a small, safe, circular orbit. 
+Therefore to force the sprite to explore its world a second source of reinforcement is used 
+which is a function of its current forward velocity and encourages it to maintain an 
+optimal speed. To further promote adventurous behaviour the initial policy over the 
+whole state-space is for the sprite to have a positive speed. A system which has a high 
+initial expectation of future rewards will settle less rapidly for a locally optimal solution 
+than a one with a low expectation. Therefore the value function is set initially to the 
+maximum reward attainable by the sprite. 
+Improved policies are found by deviating from the currently preferred set of actions. 
+However, there is a trade-off to be made between exploiting the 

@@ -1,0 +1,149 @@
+A VLSI Neural Network for Color Constancy 
+Andrew Moore 
+Computation and Neural Systems Program, 116-81 
+California Institute of Technology 
+Pasadena, CA 91125 
+Geoffrey Fox* 
+Dept. of Physics 
+California Institute of Technology 
+Pasadena, CA 91125 
+John Allman 
+Dept. of Biology, 216-76 
+California Institute of Technology 
+Pasadena, CA 91125 
+Rodney Goodman 
+Dept. of Electrical Engineering, 116-81 
+California Institute of Technology 
+Pasadena, CA 91125 
+Abstract 
+A system for color correction has been designed, built, and tested suc- 
+cessfully; the essential components are three custom chips built using sub- 
+threshold analog CMOS VLSI. The system, based on Land's Retinex the- 
+ory of color constancy, produces colors similar in many respects to those 
+produced by the visual system. Resistive grids implemented in analog 
+VLSI perform the smoothing operation central to the algorithm at video 
+rates. With the electronic system, the strengths and weaknesses of the 
+algorithm are explored. 
+1 A MODEL FOR COLOR CONSTANCY 
+Humans have the remarkable ability to perceive object colors as roughly constant 
+even if the color of the illumination is varied widely. Edwin Land, founder of the 
+Polaroid Corporation, models the computation that results in this ability as three 
+identical center-surround operations performed independently in three color planes, 
+such as red, green, and blue (Land, 1986). The basis for this model is as follows. 
+Consider first an array of grey papers with different reflectances. (Land designated 
+these arrays Mondrians, since they resemble the works of the Dutch painter Piet 
+*Present address: Dept. of Physics, Syracuse University, Syracuse, NY 13244 
+370 
+A VLSI Neural Network for Color Constancy 371 
+Mondrian.) Land illuminated a Mondrian with a gradient of illumination, ten times 
+more bright at the top than at the bottom, so that the flux reaching the eye from a 
+dark grey patch at top was identical to the flux from a light grey patch at bottom. 
+Subjects reported that the top paper was dark grey and the bottom paper was 
+light grey. Land accounted for this with a center minus surround model. At each 
+point in an image, the incoming light is compared to a spatial average of light in 
+the neighborhood of the point in question. Near the top of the Mondrian, the 
+abundance of white is sensed and subtracted from the central sensor to normalize 
+the central reading with respect to neighboring values, weighted with distance; 
+near the bottom, the abundance of dark is sensed and used to correct the central 
+reading. Land proposed that the weighting function of the surround is a monotonic 
+decreasing function of distance, such as 1/r 2. 
+In earlier work, similar experiments were carried out with color Mondrians (Land, 
+1977; McCann el. al., 1976). However, instead of varying the intensity of illumi- 
+nation, Land and his colleagues varied the color of the illumination. The color of 
+patches in a Mondrian remained nearly constant despite large changes in the illu- 
+minant color. This is the phenomenon of color constancy: the ability of observers 
+to judge, under a wide variety of lighting conditions, the approximate reflectance 
+or intrinsic color of objects. Land and his colleagues proposed a variety of different 
+models for this phenomenon, collectively referred to as Relinec models. (The term 
+Retinex was coined by Land since he was not sure whether the computation was 
+going on in the retina, the cortex, or both.) In his most recent paper on the subject 
+(Land, 1986), Land simply extended the black-and-white model to the three color 
+dimensions. In each of three independent color planes, the color at a given point is 
+compared to that of the points surrounding it, weighted as 1Iv 2. 
+2 EFFICIENT CALCULATION OF THE SURROUND 
+In practical terms, the Retinex algorithm corresponds to subtracting from an image 
+a blurred version of itself. The distance weighting (type of blurring) Land proposes 
+varies as 1/r 2, so the operation is a center minus surround operation, where the 
+surround is the center convolved with a 1/r 2 kernel. 
+[ 1] 
+lo,,i(x, y) = l(x, y) - log li(x, y) � - 
+rye0 (1) 
+where li is the signal or lightness in color plane i, and l is the log of the signal. The 
+logs are important since the signal is composed of illuminant times reflectance and 
+the log of a product is a sum. By subtracting the blurred version of the image after 
+taking logs, the illuminant is subtracted away in the ideal case (but see below). 
+This type of Retinex algorithm, then, has a psychophysical basis and sound compu- 
+tational underpinnings (Hurlbert, 1986). But the complexity is too great. Since the 
+required surround is so large, such a convolution across an NxN pixel image entails 
+on the order of N 4 operations. On a chip, this corresponds to explicit connections 
+from each pixel to most if not all other pixels. 
+A similar operation can be carried out much more efficiently by switching from 
+372 Moore, Allman, Fox, and Goodman 
+a convolution to a resistive grid calculation. The operations are similar since the 
+weighting of neighboring points (Green's function) in a resistive grid decreases in 
+the limit as the exponential of the distance from a given location on a resistive grid 
+(Mead, 1989). Again, the kernel is a monotonic decreasing function. With this type 
+of kernel, the operation in each Retinex (color channel) is 
+y) = y) - y) � e- 
+(2) 
+where A is the length constant or extent of weighting in the grid. Since the calcula- 
+tion is purely local, the complexity is reduced dramatically from O(N 4) to O(N2). 
+On a chip, a local computation corresponds to connections only between nearest- 
+neighbor pixels. 
+3 
+EVALUATION OF THE ALGORITHM WITH 
+COMPUTER SIMULATIONS 
+3.1 STRENGTHS AND WEAKNESSES OF THE ALGORITHM 
+Images of a subject holding a color poster were captured under fluorescent and 
+incandescent light with an RGB video camera and a 24 bit frame grabber. First, 
+the camera was adjusted so that the color looked good under fluorescent light. Next, 
+without readjusting the camera, the fiuorescents were turned off and the subject was 
+illuminated with incandescent light. The results were unacceptable. The skin color 
+was very red, and, since the incandescent lamp was not very bright, the background 
+was lost in darkness. The two images were processed with the Land algorithm, using 
+resistive grids to form the surround for subtraction. Details of the simulations and 
+color images can be found in (Moore et. al, 1991). For the good, fluorescent image, 
+the processing improved the image contrast somewhat. For the poor, incandescent 
+image, the improvement was striking. Skin color was nearly normal, shadows were 
+softened, and the the background was pulled out of darkness. 
+Computer simulation also pointed out two weaknesses of the algorithm: color Mach 
+bands and the greying out of large monochromatic regions. Color Mach bands 
+arise from this algorithm in the following way. Suppose that a strongly colored 
+region, e.g. red, abuts a grey region. In the grey region, the surround subtracted 
+at a given point has a strong red component. Therefore, after subtraction of the 
+surround, a grey point is rendered as grey minus red, or equivalently, grey plus 
+the complementary color of red, which is blue-green. Since the surround weighting 
+decreases with distance, the points in the image closest to the red area are strongly 
+tinged with blue-green, while points further away are less discolored. Induction of 
+this sort in black-and-white images is known as the Mach band effect. An analogous 
+induction effect in color is intrinsic to this algorithm. 
+Greying out of large colored areas is also an intrinsic weakness of the algorithm. 
+The surrounds used in the simulations are quite large, with a length constant of 
+nearly one third of the image. Often a large portion of an image is of a single color, 
+e.g. a blue sky commonly fills the upper half of many natural scenes. In the sky 
+region, the surround samples mostly blue, and with subtraction, blue is subtracted 
+from blue, leaving a grey sky. This effect illustrates the essence of the algorithm 
+A VLSI Neural Network for Color Constancy 373 
+- it operates under a grey worm assumption. The image for which this algorithm 
+is ideal is richly colored, with reds and their green complements, yellows and their 
+blue complements, and whites with their black complements. In such images, the 
+large surround is sampling the color of a grey mirror, since the sum of a color 
+and its complement is grey. If this condition holds, the color subtracted when the 
+surround is subtracted from a point in the image is the color of the illuminant; 
+the surround acts as a dull grey mirror which reflects the illuminant. [Many color 
+constancy schemes rely on this assumption; for a review see (Lennie and D'Zmura, 
+X988).] 
+3.2 AN EXTENSION TO THE LAND ALGORITHM 
+These two weaknesses arise from too much surround subtraction in solidly colored 
+areas. One way the minimize the effects is to modulate the surround with a measure 
+of image structure, which we call edginess, before subtraction. So, while for the 
+original algorithm, the operation is output = center- surround , to ameliorate 
+induction effects and lessen reliance on the grey world assumption, the surround 
+weight should be modified pointwise. In particular, if edginess is given a value 
+close to zero in homogeneous regions like the blue sky, and is given a value close 
+to one in detailed areas, a better formulation is output = center - surround. 
+edginess. In this relation, the surround is effectively zeroed in smooth areas before 
+it is subtracted, so that induction is diminished - more of the original color is 
+retained. The extended algorithm, then, is a working compromise between color 
+constancy via strict application of the grey world assumption and no color constancy 
+at all. To compute a measure of spatial structur

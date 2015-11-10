@@ -1,0 +1,150 @@
+Triangulation by Continuous Embedding 
+Marina Meilfi and Michael I. Jordan 
+{mmp, jordan}@ai.mit.edu 
+Center for Biological & Computational Learning 
+Massachusetts Institute of Technology 
+45 Carleton St. E25-201 
+Cambridge, MA 02142 
+Abstract 
+When triangulating a belief network we aim to obtain a junction 
+tree of minimum state space. According to (Rose, 1970), searching 
+for the optimal triangulation can be cast as a search over all the 
+permutations of the graph's vertices. Our approach is to embed 
+the discrete set of permutations in a convex continuous domain D. 
+By suitably extending the cost function over D and solving the 
+continous nonlinear optimization task we hope to obtain a good 
+triangulation with respect to the aformentioned cost. This paper 
+presents two ways of embedding the triangulation problem into 
+continuous domain and shows that they perform well compared to 
+the best known heuristic. 
+1 INTRODUCTION. WHAT IS TRIANGULATION ? 
+Belief networks are graphical representations of probability distributions over a set 
+of variables. In what follows it will be always assumed that the variables take 
+values in a finite set and that they correspond to the vertices of a graph. The 
+graph's arcs will represent the dependencies among variables. There are two kinds of 
+representations that have gained wide use: one is the directed acyclic graph model, 
+also called a Bayes net, which represents the joint distribution as a product of the 
+probabilities of each vertex conditioned on the values of its parents; the other is the 
+undirected graph model, also called a Markov field, where the joint distribution is 
+factorized over the cliques  of an undirected graph. This factorization is called a 
+junction tree and optimizing it is the subject of the present paper. The power of both 
+models lies in their ability to display and exploit existent marginal and conditional 
+independencies among subsets of variables. Emphasizing independencies is useful 
+A clique is a fully connected set of vertices and a maximal clique is a clique that is 
+not contained in any other clique. 
+558 M. Meil and M. I. Jordan 
+from both a qualitative point of view (it reveals something about the domain under 
+study) and a quantitative one (it makes computations tractable). The two models 
+differ in the kinds of independencies they are able to represent and often times 
+in their naturalness in particular tasks. Directed graphs are more convenient for 
+learning a model from data; on the other hand, the clique structure of undirected 
+graphs organizes the information in a way that makes it immediately available to 
+inference algorithms. Therefore it is a standard procedure to construct the model 
+of a domain as a Bayes net and then to convert it to a Markov field for the purpose 
+of querying it. 
+This process is known as decomposition and it consists of the following stages: 
+first, the directed graph is transformed into an undirected graph by an operation 
+called moralization. Second, the moralized graph is triangulated. A graph is called 
+triangulated if any cycle of length > 3 has a chord (i.e. an edge connecting two 
+nonconsecutive vertices). If a graph is not triangulated it is always possible to add 
+new edges so that the resulting graph is triangulated. We shall call this procedure 
+triangulation and the added edges the fill-in. In the final stage, the junction tree 
+(Kjaerulff, 1991) is constructed from the maximal cliques of the triangulated graph. 
+We define the state space of a clique to be the cartesian product of the state spaces 
+of the variables associated to the vertices in the clique and we call weight of the 
+clique the size of this state space. The weight of the junction tree is the sum of the 
+weights of its component cliques. All further exact inference in the net takes place 
+in the junction tree representation. The number of computations required by an 
+inference operation is proportional to the weight of the tree. 
+For each graph there are several and usually a large number of possible triangu- 
+lations, with widely varying state space sizes. Moreover, triangulation is the only 
+stage where the cost of inference can be influenced. It is therefore critical that the 
+triangulation procedure produces a graph that is optimal or at least good in this 
+respect. 
+Unfortunately, this is a hard problem. No optimal triangulation algorithm is known 
+to date. However, a number of heuristic algorithms like mazimum cardinality search 
+(Tarjan and Yannakakis, 1984), lezicographic search (Rose et at., 1976) and the 
+minimum weight heuristic (MW) (Kjaerulff, 1990) are known. An optimization 
+method based on simulated annealing which performs better than the heuristics 
+on large graphs has been proposed in (Kjaerulff, 1991) and recently a divide and 
+conquer algorithm which bounds the maximum clique size of the triangulated graph 
+has been published (Becker and Geiger, 1996). All but the last algorithm are based 
+on R,ose's (Rose, 1970) elimination procedure: choose a node v of the graph, connect 
+all its neighbors to form a clique, then eliminate v and all the edges incident to it 
+and proceed recursively. The resulting filled-in graph is triangulated. 
+It can be proven that the optimal triangulation can always be obtained by applying 
+Pose's elimination procedure with an appropriate ordering of the nodes. It follows 
+then that searching for an optimal triangulation can be cast as a search in the space 
+of all node permutations. The idea of the present work is the following: embed 
+the discrete search space of permutations of n objects (where n is the number of 
+vertices) into a suitably chosen continuous space. Then extend the cost to a smooth 
+function over the continuous domain and thus transform the discrete optimization 
+problem into a continuous nonlinear optimization task. This allows one to take 
+advantage of the thesaurus of optimization methods that exist for continuous cost 
+functions.The rest of the paper will present this procedure in the following sequence: 
+the next section introduces and discusses the objective function; section 3 states 
+the continuous version of the problem; section 4 discusses further aspects of the 
+optimization procedure and presents experimental results and section 5 concludes 
+Triangulation by Continuous Embedding 
+the paper. 
+559 
+2 THE OBJECTIVE 
+In this section we introduce the objective function that we used and we discuss its 
+relationship to the junction tree weight. First, some notation. Let G = (V, E) be a 
+graph, its vertex set and its edge set respectively. Denote by n the cardinality of the 
+vertex set, by r,the number of values of the (discrete) variable associated to vertex 
+v G V, by # the elimination ordering of the nodes, such that #v = i means that 
+node v is the i-th node to be eliminated according to ordering , by n(v) the set of 
+neighbors of v G V in the triangulated graph and by C,= {v} U {u 6 n(v) I #u > 
+#v}. 2 Then, a result in (Golumbic, 1980) allows us to express the total weight of 
+the junction tree obtained with elimination ordering # as 
+J#)- yismax(C)II r (1) 
+v6V u6C 
+where ismax(C, is a variable which is 1 when C,is a maximal clique and 0 oth- 
+erwise. As stated, this is the objective of interest for belief net triangulation. Any 
+reference to optimality henceforth will be made with respect to J*. 
+This result implies that there are no more than n maximal cliques in a junction tree 
+and provides a method to enumerate them. This suggests defining a cost function 
+that we call the raw weight J as the sum over all the cliques C,(thus possibly 
+including some non-maximal cliques): 
+J(#) = Y II r 
+(2) 
+J is the cost function that will be used throughout this paper. A reason to use 
+it instead of J* in our algorithm is that the former is easier to compute and to 
+approximate. How to do this will be the object of the next section. But it is 
+natural to ask first how well do the two agree? 
+Obviously, J is an upper bound for J*. Moreover, it can be proved that if r = min r 
+J#) _< J(#)_< J#)r(1-) 
+and therefore that J is less than a fraction 1/(r- 1) away from J*. The upper 
+bound is attained when the triangulated graph is fully connected and all r are 
+equal. 
+In other words, the differece between J and J* is largest for the highest cost tri- 
+angulation. We also expect this difference to be low for the low cost triangulation. 
+An intuitive argument for this is that good triangulations are associated with a 
+large number of smaller cliques rather than with a few large ones. But the former 
+situation means that there will be only a small number of small size non-maximal 
+cliques to contribute to the difference J- J*, and therefore that the agreement with 
+J* is usually closer than (3) implies. This conclusion is supported by simulations 
+(Meil and Jordan, 1997). 
+2Both n(v) asad C depend on # but we chose not to emphasize this in the notation 
+for the sake of readability. 
+560 M. Meil and M. I. Jordan 
+3 THE CONTINUOUS OPTIMIZATION PROBLEM 
+This section shows two ways of defining J over continuous domains. Both rely on 
+a formulation of J that eliminates explicit reference to the cliques C; we describe 
+this formulation here. 
+Let us first define new variables !auv and eu u, v = 1, .., n. For any permutation 
+1 if u < v { 
+/u = 0 otherw-se eu = 
+1 if the edge (u,v)  Et0 F# 
+0 otherwise 
+where F# is the set of fill-in edges. 
+In other words, / represent precedence relationships and e represent the edges 
+between the n vertices. Therefore, they will be called precedence variables and edge 
+variables respectively. With these variables, J can be expressed as 
+vV uV 
+(4) 
+In (4), the product/ae acts as an indicator variable being 1 iff u 6 C is true. 
+For any given permutation, finding the tt variables is straightforward. Computing 
+the edge variables is possible thanks to a result in (Rose et al., 1976). It states that 
+an edge

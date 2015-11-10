@@ -1,0 +1,141 @@
+Visual Speech Recognition with 
+Stochastic Networks 
+Javier R. Move!!an 
+Department of Cognitive Science 
+University of California San Diego 
+La Jolla, Ca 92093-0515 
+Abstract 
+This paper presents ongoing work on a speaker independent visual 
+speech recognition system. The work presented here builds on previous 
+research efforts in this area and explores the potential use of simple 
+hidden Markov models for limited vocabulary, speaker independent 
+visual speech recognition. The task at hand is recognition of the first 
+four English digits, a task with possible applications in car-phone 
+dialing. The images were modeled as mixtures of independent 
+Gaussian distributions, and the temporal dependencies were captured 
+with standard left-to-right hidden Markov models. The results indicate 
+that simple hidden Markov models may be used to successfully 
+recognize relatively unprocessed image sequences. The system achieved 
+performance levels equivalent to untrained humans when asked to 
+recognize the first four English digits. 
+1 INTRODUCTION 
+Visual articulation is an important source of information in face to face speech perception. 
+Laboratory studies have shown that visual information allows subjects to tolerate an extra 
+4-dB of noise in the acoustic signal. This is particularly important considering that each 
+decibel of signal to noise ratio translates into a 10-15% error reduction in the 
+intelligibility of entire sentences (McCleod and Summerfield, 1990). Lip reading alone 
+provides a basis for understanding for a large majority of the hearing impaired and when 
+supplemented by acoustic or electrical signals it allows fluent understanding of speech in 
+highly trained subjects. However visual information plays more than a simple 
+compensatory role in speech perception. From early on humans are predisposed to 
+integrate acoustic and visual information. Sensitivity to correspondences in auditory and 
+visual information for speech events has been shown in 4 month old infants (Spelke, 
+1976; Kuhl & Meltzoff, 1982). By 6 years of age, humans consistently use audio visual 
+contingencies to understand speech (Massaro, 1987). By adulthood, visual articulation 
+automatically modulates perception of the acoustic signal. Under laboratory conditions it 
+is possible to create powerful illusions in which subjects mistakenly hear sounds which 
+are biased by visual articulations. Subjects in these experiments are typically unaware of 
+852 Javier Movellan 
+the discrepancy between the visual and auditory tracks and their experience is that of a 
+unified auditory percept (McGurk & McDonnald, 1976). 
+Recent years have seen a revival of interest in audiovisual speech perception both in 
+psychology and in the pattern recognition literature. There have been isolated efforts to 
+build synthetic models of visual and audio-visual speech recognition (Petahan, 1985; 
+Nishida, 1986; Yuhas, Goldstein, Sejnowski & Jenkins, 1988; Bregler, Manke, Hild & 
+Waibel, 1993; Wolff, Prassad, Stork, & Hennecke, 1994). The main goal of these efforts 
+has been to explore different architectures and visual processing techniques and to 
+illustrate the potential use of visual information to improve the robustness of current 
+speech recognition systems. Cognitive psychologists have also developed high level 
+models of audio-visual speech perception that describe regularities in the way humans 
+integrate visual and acoustic information (Massaro, 1987). In general these studies 
+support the idea that human responses to visual and acoustic stimuli are conditional 
+independent. This regularity has been used in some synthetic systems to simplify the 
+task of integrating visual and acoustic signals (Wolff, Prassad, Stork, & Hennecke, 
+1994). Overall, multimodal speech perception is still an emerging field in which a lot of 
+exploration needs to be done. The work presented here builds on the previous research 
+efforts in this area and explores the potential use of simple hidden Markov models for 
+limited vocabulary, speaker independent visual speech recognition. The task at hand is 
+recognition of the first four English digits, a task with possible applications in car-phone 
+dialing. 
+2 TRAINING SAMPLE 
+The training sample consisted of 96 digitized movies of 12 undergraduate students (9 
+males, 3 females) from the Cognitive Science Department at UCSD. Video capturing was 
+performed in a windowless room at the Center for Research in Language at UCSD. 
+Subjects were asked to talk into a video camera and to say the first four digits in English 
+twice. Subjects could monitor the digitized images in a small display conveniently 
+located in front of them. They were asked to position themselves so that that their lips be 
+roughly centered in the feed-back display. Gray scale video images were digitized at 30 
+fps, 100x75 pixels, 8 bits per pixel. The video tracks were hand segmented by selecting a 
+few relevant frames before and after the beginning and end of activity in the acoustic track. 
+Statistics of the entire training sample are shown in table 1. 
+Table 1: Frame number statistics. 
+Digit Average S.D. 
+One 8.9 2.1 
+Two 9.6 2.1 
+Three 9.7 2.3 
+Four 10.6 2.2 
+3 IMAGE PREPROCESS1NG 
+There are two different approaches to visual preprocessing in the visual speech recognition 
+literature (Bregler, Manke, Hild & Waibel, 1993). The first approach, represented by the 
+work of Wolff and colleagues (Wolff, Prassad, Stork, & Hennecke, 1994) favors 
+sophisticated image preprocessing techniques to extract a limited set of hand-crafted 
+features (e.g., height and width of the lips). The advantage of this approach is that it 
+Visual Speech Recognition with Stochastic Networks 853 
+drastically reduces the number of input dimensions. This translates into lower variability 
+of the signal, potentially improved generalization, and large savings in computing time. 
+The disadvantage is that vital information may be lost when compressing the image into 
+a limited set of hand-crafted features. Variability is reduced at the possible expense of 
+bias. Moreover, tests have shown that subtle holistic features such as the wrinkling and 
+protmsion of the lips may play an important role in human lip-reading (Montgomery & 
+Jackson, 1983). The second approach to visual preprocessing emphasizes preserving the 
+original images as much as possible and letting the recognition engine discover the 
+relevant features in the images. In most cases, images are low-pass filtered and 
+dimension-reduced by using principal component analysis. The results in this papers 
+indicate that good results can be obtained even without the use of principal components. 
+In this investigation image preprocessing consisted of the following phases: 
+1. Symmetry enforcement: At each time flame the raw images were symmetrized by 
+averaging pixel by pixel the left and right side of each image, using the vertical midline 
+as the axis of symmetry. For convenience from now on we will refer to the raw images as 
+rho-images and the symmetrized images as sigma-images. The potential benefits of 
+sigma-images are robustness, and compression, since the number of relevant pixels is 
+reduced by half. 
+2. Temporal differentiaion: At each time frame we calculated the pixel by pixel differences 
+between present sigma-images and immediately past sigma-images. For convenience we 
+refer to the resulting images as delta-images. One of the potential advantages of delta- 
+images in the visual domain is their robustness to changes in illumination and the fact 
+that they emphasize the dynamic aspects of the visual track. 
+3. Low pass filtering and subsampling: The sigma and delta images were compressed and 
+subsampled using 20x15 equidistant Gaussian filters. Different values of the standard 
+deviation of the Gaussian filters were tested. 
+4. Logistic thresholding and scaling: The sigma and delta images were independently 
+thresholded by feeding the output of the Gaussian filters through a according to the 
+following equation 
+y= 256 
+where f is the logistic function, and /.t, O', are respectively the average and standard 
+deviation of the gray level distribution of entire image sequences. The constant K 
+controls the sharpness of the logistic function. Assuming an approximately Gaussian 
+distribution of gray levels when K=I the thresholding function approximates histogram 
+equalization, a standard technique in visual processing. Three different K values were 
+tried: 0.3, 0.6 and 1.2. 
+5. Composites of the relevant portions of the blurred sigma and delta images were fed to 
+the recognition network. The number of pixels of each processed image was 300 (150 
+from the blurred sigma images and 150 from the blurred delta images). Figure 1 shows 
+the effect of the different preprocessing stages. 
+854 Javier Movellan 
+1 
+Figure 1: Image Preprocessing. 1) Rho-Image. 2) Sigma-Image. 
+3) Delta-Image. 4) Filtered and Sharpened Composite. 
+4 RECOGNITION NETWORK 
+We used the standard approach in limited vocabulary systems: a bank of hidden Markov 
+models, one per word category, independently trained on the corresponding word 
+categories. The images were modeled as mixtures of continuous probability distributions 
+in pixel space. We tried mixtures of Gaussians and mixtures of Cauchy distributions. 
+The mixtures of Cauchy distributions were very stable numerically but they did perform 
+very poorly when compared to the Gaussian mixtures. We believe the reason for their 
+poor performance is the tendency of Cauchy-based maximum-likelihood estimates to 
+focus on individual exemplars. Gaussian-based estimates are much more prone to blend 
+exemplars that belong to the same cluster. The initial state probabilities, transition 
+probabilities, mixture coefficients, mixture centroids and variance parameters were trained 
+using the E-M algorithm. 
+We initially encountered severe numerical underflow problems when using the E-M 
+algorithm with Gaussian mixtures. T

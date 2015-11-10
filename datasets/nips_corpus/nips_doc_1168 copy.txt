@@ -1,0 +1,153 @@
+Gaussian Processes for Bayesian 
+Classification via Hybrid Monte Carlo 
+David Barber and Christopher K. I. Williams 
+Neural Computing Research Group 
+Department of Computer Science and Applied Mathematics 
+Aston University, Birmingham B4 7ET, UK 
+d. barberast on. ac. uk c.k.i. williamsast on. ac. uk 
+Abstract 
+The full Bayesian method for applying neural networks to a pre- 
+diction problem is to set up the prior/hyperprior structure for the 
+net and then perform the necessary integrals. However, these inte- 
+grals are not tractable analytically, and Markov Chain Monte Carlo 
+(MCMC) methods are slow, especially if the parameter space is 
+high-dimensional. Using Gaussian processes we can approximate 
+the weight space integral analytically, so that only a small number 
+of hyperparameters need be integrated over by MCMC methods. 
+We have applied this idea to classification problems, obtaining ex- 
+cellent results on the real-world problems investigated so far. 
+I INTRODUCTION 
+To make predictions based on a set of training data, fundamentally we need to 
+combine our prior beliefs about possible predictive functions with the data at hand. 
+In the Bayesian approach to neural networks a prior on the weights in the net induces 
+a prior distribution over functions. This leads naturally to the idea of specifying our 
+beliefs about functions more directly. Gaussian Processes (GPs) achieve just that, 
+being examples of stochastic process priors over functions that allow the efficient 
+computation of predictions. It is also possible to show that a large class of neural 
+network models converge to GPs in the limit of an infinite number of hidden units 
+(Neal, 1996). In previous work (Williams and Rasmussen, 1996) we have applied GP 
+priors over functions to the problem of predicting a real-valued output, and found 
+that the method has comparable performance to other state-of-the-art methods. 
+This paper extends the use of GP priors to classification problems. 
+The GPs we use have a number of adjustable hyperparameters that specify quan- 
+tities like the length scale over which smoothing should take place. Rather than 
+Gaussian Processes for Bayesian Classification via Hybrid Monte Carlo 341 
+optimizing these parameters (e.g. by maximum likelihood or cross-validation meth- 
+ods) we place priors over them and use a Markov Chain Monte Carlo (MCMC) 
+method to obtain a sample from the posterior which is then used for making pre- 
+dictions. An important advantage of using GPs rather than neural networks arises 
+from the fact that the GPs are characterized by a few (say ten or twenty) hyperpa- 
+rameters, while the networks have a similar number of hyperparameters but many 
+(e.g. hundreds) of weights as well, so that MCMC integrations for the networks are 
+much more difficult. 
+We first briefly review the regression framework as our strategy will be to transform 
+the classification problem into a corresponding regression problem by dealing with 
+the input values to the logistic transfer function. In section 2.1 we show how to 
+use Gaussian processes for classification when the hyperparameters are fixed, and 
+then describe the integration over hyperparameters in section 2.3. Results of our 
+method as applied to some well known classification problems are given in section 
+3, followed by a brief discussion and directions for future research. 
+1.1 Gaussian Processes for regression 
+We outline the GP method as applied to the prediction of a real valued output 
+y. = y(zr.) for a new input value ;r., given a set of training data 7) = {(;ri,ti), i = 
+1...n} 
+Given a set of inputs ,,x,...,, a GP allows us to specify how correlated we 
+expect their corresponding outputs y = (V(x), V(2),..., V(,)) to be. We denote 
+this prior over functions as P(y), and similarly, P(F,, Y) for the joint distribution 
+including F,. If we also specify P(tly), the probability of observing the particular 
+values t = (t,...t,) w given actual values y (i.e. a noise model) then 
+i 
+P(y. lt)= P(Y*'Ylt)dy= Pt) P(Y*'Y)P(tly)dy (1) 
+Hence the predictive distribution for y. is found from the marginalization of the 
+product of the prior and the noise model. If P(tly) and P(y,, y) are Gaussian then 
+P(y. lt) is a Gaussian whose mean and variance can be calculated using matrix 
+computations involving matrices of size n x n. Specifying P(y., y) to be a multidi- 
+mensional Gaussian (for all values of n and placements of the points ;r., ;r,... 
+means that the prior over functions is a GP. More formally, a stochastic process is a 
+collection of random variables {Y(a)la e X} indexed by aset X. In our case X will 
+be the input space with dimension d, the number of inputs. A GP is a stochastic 
+process which can be fully specified by its mean function (;r): E[Y(zr)] and its 
+covariance function C(a, a') = E[(Y(;r)- p(a))(Y(a') - p(a'))]; any finite set of 
+Y-variables will have a joint multivariate Gaussian distribution. Below we consider 
+GPs which have y(a) = O. 
+2 GAUSSIAN PROCESSES FOR CLASSIFICATION 
+For simplicity of exposition, we will present our method as applied to two class 
+problems as the extension to multiple classes is straightforward. 
+By using the logistic transfer function a to produce an output which can be in- 
+terpreted as (), the probability of the input  belonging to class 1, the job of 
+specifying a prior over functions w can be transformed into that of specifying a prior 
+over the input to the transfer function. We call the input to the transfer function 
+the activation, and denote it by y, with a'(zr) = r(y(zr)). For input ;ri, we will 
+denote the corresponding probability and activation by a'i and yi respectively. 
+342 D. Barber and C K. L Williams 
+To make predictions when using fixed hyperparameters we would like to compute 
+k, - f w,P(v, lt ) d,, which requires us to find P(,lt) - P((ze,)lt ) for a new 
+input ,. This can be done by finding the distribution P(y, It) (y, is the activation of 
+w,) and then using the appropriate Jacobian to transform the distribution. Formally 
+the equations for obtaining P(y, lt) are identical to equation 1. However, even if 
+we use a GP prior so that P(y,, y) is Gaussian, the usual expression for P(tly ) - 
+I-Ii w'(1 - i) 1-t' for classification data (where the t's take on values of 0 or 1), 
+means that the marginalization to obtain P(y, It) is no longer analytically tractable. 
+We will employ Laplace's approximation, i.e. we shall approximate the integrand 
+P(y,, yl t, O) by a Gaussian distribution centred at a maximum of this function with 
+respect to y,, y with an inverse covariance matrix given by -7V log P(y,, ylt, ). 
+The necessary integrations (marginalization) can then be carried out analytically 
+(see, e.g. Green and Silverman (1994) �5.3) and we provide a derivation in the 
+following section. 
+2.1 Maximizing P(y,, 
+Let y+ denote (y,,y), the complete set of activations. By Bayes' theorem 
+log P(y+ It) - log P(tly)+log P(y+)-log P(t), and let + -- log P(tly)+log P(y+). 
+As P(t) does not depend on y+ (it is just a normalizing factor), the maximum of 
+P(y+lt) is found by maximizing + with respect to y+. We define � similarly in 
+relation to P(ylt). Using log P(tilyi) = tiyi - log(1 + e y'), we obtain 
++ = trY-Zl�g( 
+i--1 
+ = t!rY-El�g( 
+i--1 
+1_ ._ i n+l 
+yK+xy+ -  log IK+I 2 
+ i n 
+y:rK-y- log[K I - log2a' 
+-- log 2a, (2) 
+where K+ is the covariance matrix of the GP evaluated at l,...a, a,. K+ can 
+be partitioned in terms of an n x n matrix K, a n x 1 vector k and a scalar k,, viz. 
+( 
+K+ = kI k, 
+(4) 
+As y, only enters into equation 2 in the quadratic prior term and has no data point 
+associated with it, maximizing q+ with respect to y+ can be achieved by first 
+maximizing q with respect to y and then doing the further quadratic optimization 
+to determine the posterior mean 9,- To find a maximum of q we use the Newton- 
+Raphson (or Fisher scoring) iteration y, = 
+equation 3 with respect to y we find 
+Differentiating 
+w = (t- )- K-y (5) 
+vv = -a'--w (6) 
+where W = diag('l(1 - w1) , .., r.1 - r.), which gives the iterative equation 1, 
+ynw .__ (/.(-1 _.{_ W)-Iw(y _.{_ w-l(t _ 7i')) 
+(7) 
+a The complexity of calculating each iteration using standard matrix methods is O(n3). 
+In our implementation, however, we use conjugate gradient methods to avoid exphcitly 
+inverting matrices. In addition, by using the previous iterate y as an initial guess for the 
+conjugate gradient solution to equation 7, the iterates are computed an order of magnitude 
+faster than using standard Mgorithms. 
+Gaussian Processes for Bayesian Classification via Hybrid Monte Carlo 343 
+Given a converged solution 0 for y, 9, can easily be found using y, = kTK-iO = 
+W -1 
+leT(t -- it). vat(y,) is given by (K x + +)(+x)(+), where W+ is the W matrix 
+with a zero appended in the (n + 1)th diagonal position. 
+Given the (Gaussian) distribution of y, we then wish to find the mean of the dis- 
+tribution of P(r, lt) which is found from it, = f a(y,)P(y, It). We calculate this by 
+approximating the sigmoid by a set of five cumulative normal densities (erf) that 
+interpolate the sigmoid at chosen points. This leads to a very fast and accurate 
+analytic approximation for the mean class prediction. 
+The justification of Laplace's approximation in our case is somewhat different from 
+the argument usually put forward, e.g. for asymptotic normality of the maximum 
+likelihood estimator for a model with a finite number of parameters. This is because 
+the dimension of the problem grows with the number of data points. However, if 
+we consider the infill asymptotics, where the number of data points in a bounded 
+region increases, then a local average of the training data at any point z will pro- 
+vide a tightly localized estimate for r(a) and hence y(a), so we would expect the 
+distribution P(y) to become more Gaussian with increasing data. 
+2.2 Parameterizing the covariance function 
+There are many 

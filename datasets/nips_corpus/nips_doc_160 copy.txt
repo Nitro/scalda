@@ -1,0 +1,188 @@
+594 
+Range Image Restoration 
+using Mean Field Annealing 
+Griff L. Bilbro 
+Wesley E. Snyder 
+Center for Communications and Signal Processing 
+North Carolina State University 
+Raleigh, NC 
+Abstract 
+A new optimization strategy, Mean Field Annealing, is presented. 
+Its application to MAP restoration of noisy range images is derived 
+and experimentally verified. 
+1 Introduction 
+The application which motivates this paper is image analysis; specifically the anal- 
+ysis bf range images. We [BS86] [GS87] and others [YA85][BJ88] have found that 
+surface curvature has the potential for providing an excellent, view-invariant fea- 
+ture with which to segment range images. Unfortunately, computation of curvature 
+requires, in turn, computation of second derivatives of noisy data. 
+We cast this task as a restoration problem: Given a measurement g(z, y), we assume 
+that g(z, y) resulted from the addition of noise to some ideal image f(z, y) which 
+we must estimate from three things: 
+1. The measurement g(z, y). 
+2. The statistics of the noise, here assumed to be zero mean with variance r '. 
+3. Some a priori knowledge of the smoothness of the underlying surface(s). 
+We will turn this restoration problem into a minimization, and solve that mini- 
+mization using a strategy called Mean Field Annealing. A neural net appears to be 
+the ideal architecture for the resulting algorithm, and some work in this area has 
+already been reported [CZVJ$$]. 
+2 
+Simulated Annealing and Mean Field Anneal- 
+ing 
+The strategy of SSA may be summarized as follows: 
+Let H(f) be the objective function whose minimum we seek, where fig some pa- 
+rameter vector. 
+A parameter T controls the algorithm. The SSA algorithm begins at a relatively 
+high value of T which is gradually reduced. Under certain conditions, SSA will 
+converge to a global optimum, [GO84] [RS87] 
+Range Image Restoration Using Mean Field Annealing 595 
+even though local minima may occur. However, SSA suffers from two drawbacks: 
+� It is slow, and 
+� there is no way to directly estimate [MMP87] a continuously-valued f or its 
+derivatives. 
+The algorithm presented in section 2.1 perturbs (typically) a single element off at 
+each iteration. In Mean Field Annealing, we perturb the entire vector f at each 
+iteration by making a deterministic calculation which lowers a certain average of 
+H,  H(f ) , at the current temperature. We thus perform a rather conventional 
+non-linear minimization (e.g. gradient descent), until a minimum is found at that 
+temperature. We will refer to the minimization condition at a given T as the 
+equilibrium for that T. Then, T is reduced, and the previous equilibrium is used as 
+the initial condition for another minimization. 
+MFA thus converts a hard optimization problem into a sequence of easier problems. 
+In the next section, we justify this approach by relating it to SSA. 
+2.1 Stochastic Simulated Annealing 
+The problem to be solved is to find  where  minimizes H(f). 
+minimi.ation with the following strategy: 
+SSA solves this 
+1. Define PT x e -HIT. 
+2. Find the equilibrium conditions on PT, at the current temperature, T. By equi- 
+librium, we mean that any statistic of pT(f) is constant. These statistics could 
+be derived from the Markov chain which SSA constructs: f0, fx, ..., fN, ..., al- 
+though in fact such statistical analysis is never done in normal running of an 
+SSA algorithm. 
+3. Reduce T gradually. 
+4. As T -. O, PT(f) becomes sharply peaked at f, the minimum. 
+2.2 Mean Field Annealing 
+In Mean Field Annealing, we provide an analytic mechanism for approximating the 
+equilibrium at arbitrary T. In MFA, we define an error function, 
++ f (H H0)df 
+which follows from Peierl's inequality [BGZ76]: 
+F _< Fo+ < H- H0 > (S) 
+where F - -Tl f e% - df and Fo - -Tl f e  dr. The significance of EMr is as 
+follows: the minimum of EMr determines the best approximation given the form 
+596 Bilbro and Snyder 
+of H0 to the equilibrium statistics of the SSA-generated MRF at T. We will then 
+anneal on T. In the next section, we choose a special form for H0 to simplify this 
+process even further. 
+1. Define some Ho(f, z) which will be used to estimate H(f). 
+2. At temperature T, minimize EMr(z) where EMr is a functional of H0 and 
+H which characterizes the difference between H0 and H. The process of 
+minimizing EMr will result in a value of the parameter z, which we will 
+denote as i,. 
+a. Define r(f) = n0(f, r) and r(f)  e -'/r. 
+3 Image Restoration Using MFA 
+We choose a Hamiltonian which represents both the noise in the image, and our a 
+priori knowledge of the local shape of the image data. 
+1 
+i 
+zt, =  v(,t('o,)) () 
+where foe represents [Bes86] the set of values of pixels neighboring pixel i (e.g. the 
+value of f at i along with the f values at the four nearest neighbors of i); A is some 
+scalar valued function of that set of pixels (e.g. the 5 pixel approximation to the 
+Laplacian or the 9 pixel approximation to the quadratic variation); and 
+v(,t) = , .. () 
+The noise term simply says that the image should be similar to the data, given noise 
+of variance r 2. The prior term drives toward solutions which are locally planar. Re- 
+cently, a simpler V(z) = z: and a similar A were successfully used to design a neural 
+net [CZVJ88] which restores images consisting of discrete, but 256-valued pixels. 
+Our formulation of the prior term emphasizes the importance of point processes, 
+as defined [WP85] by Wolberg and Pavlidis. While we accept the eventual necessity 
+of incorporating line processes [MMPS7] [Mar85] [GG84] [Gem87] into restoration, 
+our emphasis in this paper is to provide a rigorous relationship between a point 
+process, the prior model, and the more usual mathematical properties of surfaces. 
+Using range imagery in this problem makes these relationships direct. By adopting 
+this philosophy, we can exploit the results of Grimson [Gri83] as well as those of 
+Brady and Horn [BH83] to improve on the Laplacian. 
+The Gaussian functional form of V is chosen because it is mathematically conve- 
+nient for Boltzmann statistics and because it reflects the following shape properties 
+recommended for grey level images in the literature and is especially important if 
+Range Image Restoration Using Mean Field Annealing 597 
+line processes are to be omitted: Besag [Bes86] notes that to encourage smooth 
+variation, V(A) should be strictly increasing in the absolute value of its argu- 
+ment and if occasional abrupt changes are expected, it should quickly reach a 
+maximum. 
+Rational functions with shapes similar to our V have been used in recent stochastic 
+approaches to image processing [GM85]. In Eq. 6, r is a soft threshold which 
+represents our prior knowledge of the probability of various values of V2f (the 
+Laplacian of the undegraded image). For ' large, we imply that high values of 
+the Laplacian are common - f is highly textured; for small values of v, we imply 
+that f is generally smooth. We note that for high values of r, the prior term is 
+insignificant, and the best estimate of the image is simply the data. 
+We choose the Mean Field HamiltonJan to be 
+1 
+o =  (/, - ,), (?) 
+i 
+and find that the optimal T approximately minimizes 
+H(o)  H(< f>)- . (osl-gl) ' b  
+both at very high and very low T. We have found experimentally that this approx- 
+imation to T does anneal to a satisfactory restoration. At each temperature, we 
+use gradient descent to find T with the following approximation to the gradient of 
+<H>: 
+and 
+V('i) '- 
+(9) 
+__- ,(---'. rio) 
+V/'-F T) 
+DifFerentiating Eq. 8 with this new notation, we find 
+_ + 
+() 
+Since 61+v,j is non-zero only when i -F v -- j, we have 
+_ 
+and this derivative can be used to find the equilibrium condition. 
+Algorithm 
+598 Bilbro and Snyder 
+1. Initially, we use the high temperature assumption, which eliminates the prior 
+term entirely, and results in 
+ej = yj; for T = oo. (13) 
+This will provide the initial estimate of z. Any other estimate quickly con- 
+verges to g. 
+2. Given an image z, form the image r '- (L � z), where the � indicates 
+convolution. 
+3. Create the image V v -- V'(r) -  ],�e--W 
+4. Using 12, perform ordinary non-linear minimization of  H ) starting from 
+the current z. The particular strategy followed is not critical. We have 
+successfully used steepest descent and more sophisticated cougate gradi- 
+ent [PFTV88] methods. The simpler methods seem adequate for Gaussian 
+noise. 
+5. Update z to the minimizing  found in step 4. 
+6. Reduce T and go to 2. When T is sufficiently close to 0, the algorithm is 
+complete. 
+In step 6 above, r essentially defines the appropriate low-temperature stopping 
+point. In section 5, we will elaborate on the determination of r and other such 
+constants. 
+4 Performance 
+In this section, we describe the performance of the algorithm as it is applied to 
+several range images. We will use range images, in which the data is of the form 
+z = z(z,y). (14) 
+4.1 Images With High Levels of Noise 
+Figure I illustrates a range image consisting of three objects, a wedge (upper left), 
+a cylinder with rounded end and hole (right), and a trapezoidal block viewed from 
+the top. The noise in this region is measured at r - 3units out of a total range of 
+about 100 units. Unsophisticated smoothing will not estimate second derivatives of 
+such data without blurring. Following the surface interpolation literature, [Gri83] 
+[BH83] we use the quadratic variation as the argument of the penalty function for 
+the prior term to 
+2f,2 (82f)2 + c92f 2 
+r = + ,0y2 
+and performing the derivative in a manner analogous to Eq. 
+Laplacian of the restoration is shown in Figure 2. 
+taken as indicated by the red line on Figure 2. 
+(15) 
+11 and 12. The 
+Figure 3 shows a cross-section 
+Fig. 1 Original range image 
+Fig. 2 Laplacian of the restored image 
+Fig. 3 Cross section 
+Through Laplacian along 
+Red Line 
+4.2 Comparison With Existing Technique

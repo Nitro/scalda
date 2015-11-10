@@ -1,0 +1,153 @@
+The Tempo 2 Algorithm: Adjusting Time-Delays By 
+Supervised Learning 
+Ulrich Bodenhausen and Alex Waibel 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+In this work we describe a new method that adjusts time-delays and the widths of 
+time-windows in artificial neural networks automatically. The input of the units 
+are weighted by a gaussian input-window over time which allows the learning 
+rules for the delays and widths to be derived in the same way as it is used for the 
+weights. Our results on a phoneme classification task compare well with results 
+obtained with the TDNN by Waibel et al., which was manually optimized for the 
+same task. 
+1 INTRODUCTION 
+The processing of pattern-sequences has been investigated with several neural network 
+architectures. One approach to processing of temporal context with neural networks is 
+to implement time-delays. This approach is neurophysiologically plausible, because real 
+axons have a limited conduction speed (which is dependent on the diameter of the axon and 
+whether it is myelinated or not). Additionally, the length of most axons is much greater 
+than the euclidean distance between the connected neurons. This leads to a great variety 
+of different time-delays in the brain. Artificial networks that make use of time-delays have 
+been suggested [10, 11, 12, 8, 2, 3]. 
+In the TDNN [11, 12] and most other artificial neural networks with time-delays the delays 
+are implemented as hat-shaped input-windows over time. A unit j that is connected with 
+unit i by a connection with delay n is only receiving information about the activity of unit i 
+n time-steps ago. A set of connections with consecutive time-delays is used to let each unit 
+gather a certain amount of temporal context. In these networks, weights are automatically 
+trained but the architecture of the network (time-delays, number of connections and number 
+of units) have to be predetermined by laborious experiments [8, 6]. 
+155 
+156 Bodenhausen and Waibel 
+In this work we describe a new algorithm that adjusts time-delays and the width of the 
+input-window automatically. The learning rules require input-windows over time that can 
+be described by a smooth function. With these input-windows it is possible to derive 
+learning rules for adjusting the center and the width of the window. During training, new 
+connections are added if they are needed by splitting already existing connections and 
+training them independently. 
+Adaptive time-delays in neural networks could have significant advantages for the pro- 
+cessing of pattern-sequences, especially if the relevant information is distributed across 
+non-consecutive patterns. A typical example for this kind of pattern sequences are rhythms 
+(relevant in music and speech). In a rhythm, there are many events but also many gaps 
+between these events. Another example is speech, where some parts of an utterance are 
+more important for understanding than others (example: 'hat', 'fat', 'cat'..). Therefore a 
+network that allocates existing and new resources to the parts of the input sequence that are 
+most helpful for the task could be more compact and efficient for various tasks. 
+2 THE TEMPO 2 NETWORK 
+The Tempo 2 network is an artificial neural network with adaptive weights, adaptive time- 
+delays and adaptive widths of gaussian input windows over time. It is a generalization 
+of the Back-Propagation network proposed by Rumelhart, Hinton and Williams [9]. The 
+network is based on some ideas that were tested with the Tempo 1 network [2, 3]. 
+The Tempo 2 network is designed to learn about the relevant temporal context during 
+training. A unit in the network is activated by input from a gaussian shaped input-window 
+centered around (t-d) and standard deviation o-, where d (the time-delay) and o- (the width of 
+the input-window) are to be learned i (see Fig. 1 and 2). This means that the center and the 
+width of each input-window can be adjusted by learning rules. The adaptive time-delays 
+allow the processing of temporal context that is distributed across several non-consecutive 
+patterns of the sequence. The adaptive width of the window enables the receiving unit to 
+monitor a variable sequence of consecutive activations over time of each sending unit. New 
+connections can be added if they are needed (see section 2.1). The input of unitj at time t, 
+x(t)j, is 
+t 
+x(t)j = E E Yk(V)O(v, t, djk, trjOwj 
+r=O k 
+with O(r, t, d.#,, rj) representing the gaussian input window given by 
+1 e(r_t+a,)2/2..  
+O( r, t, djk , ajk) - 
+where y is the output of the previous sending unit and wi, dj and vjk are the weights, 
+delays and widths on its connections, respectively. 
+This approach is partly motivated by neurophysiology and mathematics. In the brain, a 
+spike that is sent by a neuron via an axon is not received as a spike by the receiving cell. 
+Other windows are possible. The function describing the shape of the window has to be smooth. 
+The Tempo 2 Algorithm: Adjusting Time-Delays By Supervised Learning 157 
+input 
+input 3 
+input n 
+Figure 1: The input to one unit in the Tempo 2 network. The boxes represent the activations 
+of the sending units; a tall box represents a high activity. 
+Rather, the postsynapfic potential has a short rise and a long tail. Let us assume a situation 
+with two neurons. Neuron A fires at time t-d, where d is the time that the signal needs to 
+travel along the connection and to activate neuron B. Neuron B is activated mostly at time 
+t, but the postsynaptic potential will decrease slowly and neuron B will get some input at 
+time t+l, some smaller input at time t+2 and so on. Functionally, a spike is smeared over 
+time and this provides some local memory. 
+For our simulations we simulate this behavior by allowing the receiving unit to be activated 
+by the weighted sum of activations around an input centered at time t-d. If the sending 
+unit (neuron A) was activated at time t-d, then the receiving unit (neuron B) will be 
+activated mostly at time t, will be less activated at time t+l, and so on. In our case, the 
+input-window function also allows the receiving unit to be (less) activated at times t- 1, t-2 
+etc.. This enables us to formulate a learning rule that can increase and decrease time-delays. 
+The gaussian input-window has the advantage that it provides some robustness against tem- 
+porally misaligned input tokens. By looking at Fig. 2 it is obvious that small misalignments 
+of the input signal do not change the input of the receiving unit significantly. The robustness 
+is dependent on the width of the window. Therefore a wide window would make the input 
+of the receiving unit more robust against signals shifted in time, but would also reduce the 
+time-resolution of the unit. This suggests the implementation of a learning rule that adjusts 
+the width of the input-windows of each connection. 
+With this gaussian input-window, it is possible to compute how the input of unit j would 
+change if the delay of a connection or the width of the input window were changed. The 
+formalism is the same as for the derivation of the learning rules for the weights in a standard 
+Back-Propagation network. The change of a delay is proportional to the derivative of the 
+output error with respect to the delay. The change of a width is proportional to the derivative 
+of the error with respect to the width. The error at the output is propagated back to the 
+hidden layer. The learning rules for weights wji, delays dji and widths o'ji were derived from 
+OE 
+Awji = -q Owji 
+158 Bodenhausen and Waibel 
+Adjusting the delays: 
+derivative positive / dela 
+=> increase delay 
+=> move window left 
+Adjusting the width of the windows : 
+/' delay 
+respect to o ..... / 
+............... � ...... Ba . .   ..... . .......... 
+A Bi A 
+Figure2: A graphical explanation of the learning rules for delays and widths: The derivative 
+of the gaussian input-window with respect to time is used for adjusting the time-delays. 
+The derivative with respect to r (dotted line) is used for adjusting the width of the window. 
+A majority of activation in area A will cause the window to grow. A majority of activity in 
+area B will cause the window to shrink. 
+OE 
+OE 
+where q, 2 and 3 are the learning rates and E is the error. As in the derivation of the 
+standard Back-Propagation learning rules, the chain rule is applied (z = w, d, o-): 
+0� OE Ox(t)j 
+Ozji Ox(t) Ozi 
+oE is the same in the learning rules for weights, delays and widths. The partial 
+where 
+derivatives of the input with respect to the parameters of the connections are computed as 
+follows: 
+t 
+Ox(t)i = E yi(r)O(r, t, dii, rii) 
+Ox(t)j 
+t 
+__ =  yi( r)wii dii O( r, t, dji , rji) 
+r=O 
+The Tempo 2 Algorithm: Adjusting Time-Delays By Supervised Learning 159 
+Splitting the Connections: 
+Figure 3: Splitting of a connection. The dotted line represents the old window and the 
+solid lines represent the two windows after splitting, respectively. 
+Ox(t)j t 00(r,t, dii, 
+2,1 ADDING NEW CONNECTIONS 
+Learning algorithms for neural networks that add hidden units have recently been proposed 
+[4, 5]. In our network connections are added to the already existing ones in a similar way 
+as it is used by Hanson for adding units [5]. During learning, the network starts with one 
+connection between two units. Depending on the task this may be insufficient and it wouldbe 
+desirable to add new connections where more connections are needed. New connections are 
+added by splitting already existing connections and afterwards training them independently 
+(see Fig. 3). The rule for splitting a connection is motivated by observations during training 
+runs. It was observed that input-windows started moving backwards and forwards (that 
+means the time-delays changed) after a certain level of performance was reached. This can 
+be interpreted as inconsistent time-delays which might be caused by temporal vari

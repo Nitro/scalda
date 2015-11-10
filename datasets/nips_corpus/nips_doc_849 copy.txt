@@ -1,0 +1,136 @@
+Recognizing Handwritten Digits Using Mixtures of Linear Models 
+Geoffrey E Hinton Michael Revow Peter Dayan 
+Department of Computer Science, University of Toronto 
+Toronto, Ontario, Canada M5S 1A4 
+Abstract 
+We construct a mixture of locally linear generative models of a col- 
+lection of pixel-based images of digits, and use them for recogni- 
+tion. Different models of a given digit are used to capture different 
+styles of writing, and new images are classified by evaluating their 
+log-likelihoods under each model. We use an EM-based algorithm 
+in which the M-step is computationally straightforward principal 
+components analysis (PCA). Incorporating tangent-plane informa- 
+tion [12] about expected local deformations only requires adding 
+tangent vectors into the sample covariance matrices for the PCA, 
+and it demonstrably improves performance. 
+1 Introduction 
+The usual way of using a neural network for digit recognition is to train it to output 
+one of the ten classes. When the training data is limited to N examples equally 
+distributed among the classes, there are only N log 2 10 bits of constraint in the class 
+labels so the number of free parameters that can be allowed in a discriminative 
+neural net model is severely limited. An alternative approach, motivated by density 
+estimation, is to train a separate autoencoder network on examples of each digit 
+class and to recognise digits by seeing which autoencoder network gives the best 
+reconstruction of the data. Because the output of each autoencoder has the same 
+dimensionality as the image, each training example provides many more bits of 
+constraint on the parameters. In the example we describe, 7000 training images are 
+sufficient to fit 384,000 parameters and the training procedure is fast enough to do 
+the fitting overnight on an R4400-based machine. 
+Auto-encoders can be viewed in terms of minimum description length descriptions 
+of data in which the input-hidden weights produce a code for a particular case and 
+1016 Geoffrey E. Hinton, Michael Revow, Peter Dayan 
+the hidden-output weights embody a genera five model which tums this code back 
+into a close approximation of the original example [14, 7]. Code costs (under some 
+prior) and reconstruction error (squared error assuming an isotropic Gaussian 
+misfit model) sum to give the overall code length which can be viewed as a lower 
+bound on the log probability density that the autoencoder assigns to the image. 
+This properly places the emphasis on designing appropriate generatire models 
+for the data which will generalise well by assigning high log probabilities to new 
+patterns from the same classes. 
+We apply this idea to recognising handwritten digits from grey-level pixel im- 
+ages using linear auto-encoders. Linear hidden units for autoencoders are barely 
+worse than non-linear ones when squared reconstruction error is used [1], but have 
+the great computational advantage during training that input-hidden and hidden- 
+output weights can be derived from principal components analysis (PCA) of the 
+training data. In effect a PCA encoder approximates the entire N dimensional dis- 
+tribution of the data with a lower dimensional Gaussian pancake [13], choosing, 
+for optimal data compression, to retain just a few of the PCs. One could build a 
+single PCA model for each digit - however the many different styles of writing 
+suggest that more than one Gaussian pancake should be used, by dividing the 
+population of a single digit class into a number of sub-classes and approximating 
+each class by its own model. A similar idea for data compression was used by [9] 
+where vector quantization was used to define sub-classes and PCA was performed 
+within each sub-class (see also [2]). We used an iterative method based on the 
+Expectation Maximisafion (EM) algorithm [4] to fit mixtures of linear models. 
+The reductio of the local linear approach would have just one training pattern in 
+each model. This approach would amount to a nearest neighbour method for 
+recognition using a Euclidean metric for error, a technique which is known to be 
+infelicitous. One reason for this poor performance is that characters do not only 
+differ in writing styles, but also can undergo simple transformations such as trans- 
+lations and rotations. These give rise to somewhat non-linear changes as measured 
+in pixel space. Nearest neighbour methods were dramatically improved methods 
+by defining a metric in which locally linearised versions of these transformations 
+cost nothing [12]. In their tangent distance method, each training or test point is 
+represented by a h-dimensional linear subspace, where each of these dimensions 
+corresponds to a linear version of one of the transformations, and distances are 
+measured between subspaces rather than points. The local linear autoencoder 
+method can be seen just like this - variations along one of the k principal compo- 
+nent directions are free, while variations along the remaining principal directions 
+cost. However, rather than storing and testing each training pattern, the local 
+models summarise the regularifies over a number of patterns. This reduces stor- 
+age and recognition time, and allows the directions of free variation to be averaged 
+over numbers of patterns and also to be determined by the data rather than being 
+pre-specified. A priori knowledge that particular transformations are important 
+can be incorporated using a version of the tangent-prop procedure [12], which is 
+equivalent in this case to adding in slightly transformed versions of the patterns. 
+Also reconstruction error could be assessed either at a test pattern, or, more like 
+tangent distance, between its transformation subspace and the models' principal 
+components subspaces. 
+Recognizing Handwritten Digits Using Mixtures of Linear Models 1017 
+a 
+Figure 1: Didactic example of tangent information and local linear models. 
+text for details. 
+See 
+Figure 1 illustrates the idea. Imagine that the four points 1-4 portray in image 
+space different examples of the same digit, subject to some smooth transformation. 
+As in tangent distance, one could represent this curve using the points and their 
+local tangents (thick lines). However one might do better splitting it into three 
+local linear models rather than four - model 'a' Oust a line in this simple case) 
+averages the upper part of the curvo more effectively than the combination of the 
+two tangents at '1' and '2'. However, given just the points, one might construct 
+model 'b' for '3' and '4', which would be unfortunate. Incorporating information 
+about the tangents as well would encourage the separation of these segments. Care 
+should be taken in generalising this picture to high dimensional spaces. 
+The next section develops the theory behind variants of these systems (which is 
+very similar to that in [5, 10]), and section 3 discusses how they perform. 
+2 Theory 
+Linear auto-encoders embody a model in which variations from the mean of a 
+population along certain directions are cheaper than along others, as measured by 
+the log-unlikelihood of examples. Creating such a generafive model is straight- 
+forward. Principal component analysis (PCA) is performed on the training data 
+and the leading lx principal components are retained, defining an Ix-dimensional 
+subspace onto which the n-dimensional inputs are projected. We choose Ix using 
+cross-validation, although a minimum description length criterion could also be 
+used. We ignore the effect of different variances along the different principal com- 
+ponents and use a model in which the code length for example  (the negative 
+log-likelihood) is proportional to the reconstruction error - the squared Euclidean 
+distance between the output of the autoencoder and the pattern itself. 
+Rather than having just one autoencoder for each digit, there is a whole collection, 
+and therefore we use EM to assign examples to n sub-classes, just as in clustering 
+using a mixture of Gaussians generative model. During the E-step, the responsi- 
+bility for each pattern is assigned amongst the sub-classes, and in the M-step PCA 
+is performed, altering the parameters of a sub-class appropriately to minimise the 
+1018 Geoffrey E. Hinton, Michael Revow, Peter Dayan 
+reconstruction cost of the data for which it is responsible. 
+Formally, the algorithm is: 
+1. Choose initial autoencoder assignments for each example in the training 
+set (typically using a K-means clustering algorithm). 
+2. Perform PCA separately for each autoencoder; 
+3. Reassign patterns to the autoencoder that reconstructs them the best; 
+4. Stop if no patterns have changed sub-class, otherwise return to step 2. 
+There is a 'soft' version of the algorithm in which the responsibility of autoencoder 
+q for example i is calculated as rtq = e -IIEq IIz/2rz/(- r e -IIEi*llz/2rz) where Err 
+is the reconstruction error. For this, in step 2, the examples are weighted for the 
+PCA by the responsibilities, and convergence is assessed by examining the change 
+in the log-likelihood of the data at each iteration. The soft version requires a choice 
+of cr 2, the assumed variance in the directions orthogonal to the pancake. 
+The algorithm generates a set of local linear models for each digit. Given a test 
+pattern we evaluate the code length (the log-likelihood) against all the models for 
+all the digits. We use a hard method for classification - determining the identity of 
+the pattern only by the model which reconstructs it best. The absolute quality of the 
+best reconstruction and the relative qualities of slightly sub-optimal reconstructions 
+are available to reject ambiguous cases. 
+For a given linear model not counting the code cost implies that deformations 
+of the images along the principal components for the sub-class are free. This is 
+like the metric used by [11] except that they explicitly specified the directions in 
+which deformations should be free, rather tha

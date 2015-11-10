@@ -1,0 +1,149 @@
+General-purpose localization 
+image regions 
+of textured 
+Ruth Rosenholtz* 
+Xerox PARC 
+3333 Coyote Hill Rd. 
+Palo Alto, CA 94304 
+Abstract 
+We suggest a working definition of texture: Texture is stuff that is 
+more compactly represented by its statistics than by specifying the 
+configuration of its parts. This definition suggests that to find 
+texture we look for outliers to the local statistics, and label as 
+texture the regions with no outliers. We present a method, based 
+upon this idea, for labeling points in natural scenes as belonging to 
+texture regions, while simultaneously allowing us to label low- 
+level, bottom-up cues for visual attention. This method is based 
+upon recent psychophysics results on processing of texture and 
+popout. 
+1 WHAT IS TEXTURE, AND WHY DO WE WANT TO 
+FIND IT? 
+In a number of problems in computer vision and image processing, one must 
+distinguish between image regions that correspond to objects and those which 
+correspond to texture, and perform different processing depending upon the type of 
+region. Current computer vision algorithms assume one magically knows this 
+region labeling. But what is texture? We have the notion that texture involves a 
+pattern that is somehow homogeneous, or in which signal changes are too 
+complex to describe, so that aggregate properties must be used instead (Saund, 
+1998). There is by no means a fu'm division between texture and objects; rather, the 
+characterization often depends upon the scale of interest (Saund, 1998). 
+* Email: rruthparc.xerox.com 
+818 R. Rosenholtz 
+Ideally the definition of texture should probably depend upon the application. We 
+investigate a definition that we believe will be of fairly general utility: Texture is 
+stuff that seems to belong to the local statistics. We propose extracting several 
+texture features, at several different scales, and labeling as texture those regions 
+whose feature values are likely to have come from the local distribution. 
+Outliers to the local statistics tend to draw our attention (Rosenholtz, 1997, 1998). 
+The phenomenon is often referred to 
+statistically homogeneous regions as 
+salient outliers to the local statistics. 
+absence of popout. 
+as popout. Thus while labeling (locally) 
+texture, we can simultaneously highlight 
+Our revised def'mition is that texture is the 
+In Section 2, we discuss previous work in both human perception and in finding 
+texture and regions of interest in an image. In Section 3, we describe our method. 
+We present and discuss results on a number of real images in Section 4. 
+2 PREVIOUS WORK 
+See (Wolfe, 1998) for a review of the visual search literature. Popout is typically 
+studied using simple displays, in which an experimental subject searches for the 
+unusual, target item, among the other, distractor items. One typically attempts to 
+judge the saliency, or degree to which the target pops out, by studying the 
+efficiency of search for that item. Typically popout is modeled by a relatively low- 
+level operator, which operates independently on a number of basic features of the 
+image, including orientation, contrast/color, depth, and motion. In this paper, we 
+look only at the features of contrast and orientation. 
+Within the image-processing field, much of the work in finding texture has defined 
+as texture any region with a high luminanee variance, e.g. Vaisey & Gersho (1992). 
+Unfortunately, the luminanee variance in a region containing an edge can be as high 
+as that in a textured region. Won & Park (1997) use model fitting to detect image 
+blocks containing an edge, and then label blocks with high variance as containing 
+texture. 
+Recently, several computer vision researchers have also tackled this problem. 
+Leung & Malik (1996) found regions of completely deterministic texture. Other 
+researchers have used the def'mition that if the luminanee goes up and then down 
+again (or vice versa) it's texture (Forsyth et al, 1996). However, this method will 
+treat lines as if they were texture. Also, with no notion of similarity within a texture 
+(also lacking in the image-processing work), one would mark a fault in a texture 
+as belonging to that texture. This would be unacceptable for a texture synthesis 
+application, in which a routine that tried to synthesize such a texture would most 
+likely fail to reproduce the (highly visible ) fault. More recently, Shi and Malik 
+(1998) presented a method for segmenting images based upon texture features. Their 
+method performs extremely well at the segmentation task, dividing an image into 
+regions with internal similarity that is high compared to the similarity across 
+regions. However, it is difficult to compare with their results, since they do not 
+explicitly label a subset of the resulting regions as texture. Furthermore, this 
+method may also tend to mark a fault in a texture as belonging to that texture. 
+This is both because the method is biased against separating out small regions, and 
+because the grouping of a patch with one region depends as much upon the 
+difference between that patch and other regions as it does upon the similarity 
+between the patch and the given region. 
+Very little computer vision work has been done on attentional cues. Milanese et al 
+(1993) found salient image regions using both top-down information and a bottom- 
+up conspicuity operator, which marks a local region as more salient the greater the 
+General-Purpose Localization of Textured Image Regions 819 
+difference between a local feature value and the mean feature value in the 
+surrounding region. However, for the same difference in means, a local region is 
+less salient when there is a greater variance in the feature values in the surrounding 
+region (Duncan & Humphreys, 1989; Rosenholtz, 1997). We use as our sallehey 
+measure a test for outliers to the local distribution. This captures, in many cases, the 
+dependence of sallehey on difference between a given feature value and the local 
+mean, relative to the local standard deviation. We will discuss our sallehey measure 
+in greater detail in the following section. 
+3 FINDING TEXTURE AND REGIONS OF INTEREST 
+We compute multiresolution feature maps for orientation and contrast, and then look 
+for outliers in the local orientation and contrast statistics. We do this by first 
+creating a 3-level Gaussian pyramid representation of the image. To extract 
+contrast, we filter the pyramid with a difference of circularly symmetric Gaussians. 
+The response of these filters will oscillate, even in a region with constant-contrast 
+texture (e.g. a sinewave pattern). We approximate a computation of the maximum 
+response of these filters over a small region by first squaring the filter responses, 
+and then filtering the contrast energy with an appropriate Gaussian. Finally, we 
+threshold the contrast to eliminate low-contrast regions (flat texture). These 
+thresholds (one for each scale) were set by examining the visibility of sinewave 
+patterns of various spatial frequencies. 
+We compute orientation in a simple and biologically plausible way, using Bergen & 
+Landy's (1991) back pocket model for low-level computations: 
+1. Filter the pyramid with horizontal, vertical, and 4-45 � oriented Gaussian second 
+derivatives. 
+Compute opponent energy by squaring the filter outputs, pooling them over a 
+region 4 times the scale of the second derivative filters, and subtracting the 
+vertical from the horizontal response and the +45 � from the -45 � response. 
+3. Normalize the opponent energy at each scale by dividing by the total energy in 
+the 4 orientation energy bands at that scale. 
+The result is two images at each scale of the pyramid. To a good approximation, in 
+regions which are strongly oriented, these images represent kcos(20) and ksin(20), 
+where 0 is the local orientation at that scale, and k is a value between 0 and 1 which 
+is related to the local orientation specificity. Orientation estimates from points with 
+low specificity tend to be very noisy. In images of white noise, 80% of the 
+estimates of k fall below 0.5, therefore with 80% confidence, an orientation 
+specificity of k>0.5 did not occur due to chance. We use this value to threshold out 
+orientation estimates with low orientedhess. 
+We then estimate D, the local feature distribution, for each feature and scale, using 
+the method of Parzen windows. The blurring of the distribution estimate by the 
+Parzen window mimics uncertainty in estimates of feature values by the visual 
+system. We collect statistics over a local integration region. For texture processing, 
+the size of this region is independent of viewing .distance, and is roughly 10S in 
+diameter, where S is the support of the Gaussian 2 na derivative filters used to extract 
+the texture features (Kingdom & Keeble, 1997; Kingdom et al, 1995). 
+We next compute a non-parametric measure of saliency: 
+{ P(v ID) h (1) 
+saliency = -lOmaxP(xiD)J 
+820 R. Rosenholtz 
+Note that if D were Gaussian N([t,oa), this simplifies to 
+x- u)  
+202 
+(2) 
+which should be compared to the standard parametric test for oufiiers, which uses 
+the measure(x-/)/(/. Our saliency measure is essentially a more general, non- 
+parametric form of this measure (i.e. it does not assume a Gaussian distribution). 
+Points with saliency less than 0.5 are labeled as candidate texture points. If D were 
+Gaussian, this would correspond to feature estimates within one standard deviation 
+of the mean. Points with saliency greater than 3.1 are labeled as candidates for 
+bottom-up attentional cues. If D were Gaussian, this would correspond to feature 
+estimates more than 2.50 from the mean, a standard parametric test for outliers. 
+One could, of course, keep the raw saliency values, as a measure of the likelihood 
+that a region contained texture, rather than setting a hard threshold. We use a hard 
+threshold in our examples to better display the results. Both the texture images and 
+the region of in

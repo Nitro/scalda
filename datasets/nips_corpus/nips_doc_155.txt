@@ -1,0 +1,139 @@
+73 
+LEARNING BY CHOICE 
+OF INTERNAL PEPPESENTATIONS 
+Tal Grossman, Ronny Meir and Eytan Domany 
+Department of Electronics, Weizmann Institute of Science 
+Rehovot 76100 Israel 
+ABSTRACT 
+We introduce a learning algorithm for multilayer neural net- 
+works composed of binary linear threshold elements. Whereas ex- 
+isting algorithms reduce the learning process to minimizing a cost 
+function over the weights, our method treats the internal repre- 
+sentations as the fundamental entities to be determined. Once a 
+correct set of internal representations is arrived at, the weights are 
+found by the local ahd biologically plausible Perceptton Learning 
+Rule (PLR). We tested our learning algorithm on four problems: 
+adjacency, symmetry, parity and combined symmetry-parity. 
+I. INTRODUCTION 
+Consider a network of binary linear threshold elements i, whose state $i - 4-1 
+is determined according to the rule 
+$i - sign(-. wi$ + Oi) (1) 
+Here wij is the (unidirectional) weight assigned to the connection from unit j to 
+i; 0i is a local bias. We focus our attention on feed-forward networks in which N 
+units of the inpu layer determine the states of H units of a hidden layer; these, in 
+turn, feed one or more output elements. 
+For a typical A vs B classificalion task such a network needs a single output, 
+with Sour _ +1 (or -1) when the input layer is set in a state that belongs to category 
+A (or B) of input space. The basic problem of learning is to find an algorithm, that 
+produces weights which enable the network to perform this task. In the absence 
+of hidden units learning can be accomplished by the PLR [Rosenblatt 1962], which 
+we now briefly describe. Consider j = 1, ..., N source units and a single target unit 
+i. When the source units are set in any one of p - 1, ..M patterns, i.e. $j - , 
+we require that the target unit (determined using (1)) takes preassigned values . 
+Learning takes place in the course of a training session. Starting from any arbitrary 
+initial guess for the weights, an input  is presented, resulting in the output taking 
+some value $. Now modify every weight according to the rule 
+V V V V 
+wij --* wij + r(1 - $ i )i j , (2) 
+74 Grossman, Meir and Domany 
+where r/  0 is a parameter ( = I is used to modify the bias 0). Another 
+input pattern is presented, and so on, until all inputs draw the correct output. 
+The Perceptton convergence lheorera states [Rosenblatt 1962, Minsky and Paperr 
+1969] that the PLR will find a solution (if one exists), in a finite number of steps. 
+However, of the 22r possible partitions of input space only a small subset (less than 
+2N2]N!) is linearly separable [Lewis and Coates 1967], and hence soluble by single- 
+layer perceptrons. To get around this, hidden units are added. Once a single hidden 
+layer (with a large enough number of units) is inserted beween input and output, 
+every classification problem has a solution. But for such architectures the PLR 
+cannot be implemented; when the network errs, it is not clear which connection is 
+to blame for the error, and what corrective action is to be taken. 
+Back-propagation [Pumelhart et al 1986] circumvents this credit-assignment 
+problem by dealing only with networks of continuous valued units, whose response 
+function is also continuous (sigmoid). Learning consists of a gradient-descent 
+type minimization of a cost function that measure the deviation of actual outputs 
+from the required ones, in the space of weights Wij , 0 i. A new version of BP, back 
+propagation of desired states, which bears some similarity to our algorithm, has 
+recently been introduced [Plaut 1987]. See also le Cun [1985] and Widrow and 
+Winter [1988] for related methods. 
+Our algorithm views the internal representations associated with various inputs 
+as the basic independent variables of the learning process. This is a conceptually 
+plausible assumption; in the course of learning a biological )r artificial system should 
+form maps and representations of the external world. Once such representations 
+are formed, the weights can be found by simple and local Hebbian learning rules 
+such as the PLR. Hence the problem of learning becomes one of searching for proper 
+internal representations, rather than one of minimization. Failure of the PLR to 
+converge to a solution is used as an indication that the current guess of internal 
+representations needs to be modified. 
+II. THE ALGORITHM 
+If we know the internal representations (e.g. the states taken by the hidden 
+layer when patterns from the training set are presented), the weights can be found 
+by the PLR. This way the problem of learning becomes one of choosing proper 
+internal representations, rather than of minimizing a cost function by varying the 
+values of weights. To demonstrate our approache, consider the classification prob- 
+lem with output values, $out, = out,, required in response to/ = 1, ..., M input 
+patterns. If a solution is found, it first maps each input onto an internal represen- 
+tation generated on the hidden layer, which, in turn, produces the correct output. 
+Now imagine that we are not supplied with the weights that solve the problem; 
+however the correct internal representations are revealed. That is, we are given a 
+table with M rows, one for each input. Every row has H bits /', for i - 1, ..H, 
+specifying the state of the hidden layer obtained in response to input pattern y. 
+One can now view each hidden-layer cell i as the target cell of the PLR, with the 
+N inputs viewed as source. Given sufficient time, the PLP will converge to a set 
+Learning by Choice of Internal Representations 75 
+of weights Wi,j, connecting input unit j to hidden unit i, so that indeed the input- 
+output association that appears in column i of our table will be realized. In a 
+similar fashion, the PLR will yield a set of weights wi, in a learning process that 
+uses the hidden layer as source and the output unit as target. Thus, in order to 
+solve the problcm of learning, all one needs is a search procedure in the space of 
+possible internal representations, for a table that can be used to generate a solution. 
+Updating of weights can be done in parallel for the two layers, using the current 
+table of internal representations. In the present algorithm, however, the process is 
+broken up into four distinct stages: 
+1. SETINREP: Generate a table of internal representations {/a,v} by presenting 
+each input pattern from the training set and calculating the state on the hidden 
+layer,using Eq.(la), with the existing couplings Wij and 0i. 
+2. LEARN23: The hidden layer cells are used as source, and the output as the 
+target unit of the PLR. The current table of internal representations is used as 
+the training set; the PLR tries to find appropriate weights wi and 0 to obtain the 
+desired outputs. If a solution is found, the problem has been solved. Otherwise 
+stop after I23 learning sweeps, and keep the current weights, to use in INREP. 
+3. INREP: Generate a new table of internal representations, which, when used in 
+(lb), yields the correct outputs. This is done by presenting the table sequentially, 
+row by row, to the hidden layer. If for row y the wrong output is obtained, the 
+internal representation h,v is changed. Having the wrong output means that the 
+field produced by the hidden layer on the output unit, h �ut, = j wj ' is 
+either too large or too small. We then randomly pick a site j of the hidden layer, 
+and try to flip the sign of '; if h �ut, changes in the right direction, we replace 
+the entry of our table, i.e. 
+We keep picking sites and changing the internal representation of pattern y until 
+the correct output is generated. We always generate the correct output this way, 
+provided j Iwjl > ]O�utl (as is the case for our learning process in LEARN23). 
+This procedure ends with a modified table which is our next guess of internal 
+representations. 
+4. LEA1ZN12: Apply the PLR with the first layer serving as source, treating 
+every hidden layer site separately as target. Actually, when an input from the 
+training set is presented to the first layer, we first check whether the correct result 
+is produced on the outpu! unit of the network. If we get wrong overall output, we 
+use the PLR for every hidden unit i, modifying weights incident on i according 
+to (2), using column i of the table as the desired states of this unit. If input y 
+does yield the correct output, we insert the current state of the hidden layer as the 
+internal representation associated with pattern y, and no learning steps are taken. 
+We sweep in this manner the training set, modifying weights Wij, (between input 
+and hidden layer), hidden-layer thresholds Oi, and, as explained above, internal 
+76 Grossman, Meir and Domany 
+representations. If the network has achieved error-free performance for the entire 
+training set, learning is completed. If no solution has been found after I12 sweeps 
+of the training set, we abort the PLR stage, keep the present values of wij, Oi, and 
+start SETINttEP again. 
+This is a fairly complete account of our procedure (see also Grossman et al 
+[1988]). There are a few details'that need to be added. 
+a) The impatience parameters: I12 and I23, which are rather arbitrary, are 
+introduced to guarantee that the PLR stage is aborted if no solution is found. This 
+is necessary since it is not clear that a solution exists for the weights, given the 
+current table of internal representations. Thus, if the PLR stage does not converge 
+within the time limit specified, a new table of internal representations is formed. 
+The parameters have to be large enough to allow the PLR to find a solution (if 
+one exists) with sufficiently high probability. On the other hand, too large values 
+are wasteful, since they force the algorithm to execute a long search even when 
+no solution exists. Therefore the best values of the impatience parameters can be 
+determined by optimi

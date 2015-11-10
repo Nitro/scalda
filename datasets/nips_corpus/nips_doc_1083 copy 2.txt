@@ -1,0 +1,229 @@
+Temporal Difference Learning in 
+Continuous Time and Space 
+Kenji Doya 
+doyah�p. atr. co. jp 
+ATR Human Information Processing Research Laboratories 
+2-2 Hikaxida, Seik-cho, Soraku-gun, Kyoto 619-02, Japan 
+Abstract 
+A continuous-time, continuous-state version of the temporal differ- 
+ence (TD) algorithm is derived in order to facilitate the application 
+of reinforcement learning to real-world control tasks and neurobi- 
+ological modeling. An optimal nonlinear feedback control law was 
+also derived using the derivatives of the value function. The per- 
+formance of the algorithms was tested in a task of swinging up a 
+pendulum with limited torque. Both the critic that specifies the 
+paths to the upright position and the actor that works as a non- 
+linear feedback controller were successfully implemented by radial 
+basis function (RBF) networks. 
+I INTRODUCTION 
+The temporal-difference (TD) algorithm (Sutton, 1988) for delayed reinforcement 
+learning has been applied to a variety of tasks, such as robot navigation, board 
+games, and biological modeling (Houk et al., 1994). Elucidation of the relationship 
+between TD learning and dynamic programming (DP) has provided good theoretical 
+insights (Barto et al., 1995). However, conventional TD algorithms were based on 
+discrete-time, discrete-state formulations. In applying these algorithms to control 
+problems, time, space and action had to be appropriately discretized using a priori 
+knowledge or by trial and error. Furthermore, when a TD algorithm is used for 
+neurobiological modeling, discrete-time operation is often very unnatural. 
+There have been several attempts to extend TD-like algorithms to continuous cases. 
+Bradtke et al. (1994) showed convergence results for DP-based algorithms for a 
+discrete-time, continuous-state linear system with a quadratic cost. Bradtke and 
+Duff (1995) derived TD-like algorithms for continuous-time, discrete-state systems 
+(semi-Markov decision problems). Baird (1993) proposed the advantage updating 
+algorithm by modifying Q-learning so that it works with arbitrary small time steps. 
+1074 K. DOYA 
+In this paper, we derive a TD learning algorithm for continuous-time, continuous- 
+state, nonlinear control problems. The correspondence of the continuous-time ver- 
+sion to the conventional discrete-time version is also shown. The performance of 
+the algorithm was tested in a nonlinear control task of swinging up a pendulum 
+with limited torque. 
+2 CONTINUOUS-TIME TD LEARNING 
+We consider a continuous-time dynamical system (plant) 
+(t) = f(x(t),u(t)) (1) 
+where x  X C R ' is the state and u  U C R TM is the control input (action). We 
+denote the immediate reinforcement (evaluation) for the state and the action as 
+r(t) = r(x(t), u(t)). (2) 
+Our goal is to find a feedback control law (policy) 
+u(t) = t4x(t)) (3) 
+that maximizes the expected reinforcement for a certain period in the future. To 
+be specific, for a given control law/, we define the value of the state x(t) as 
+VU(x(t))= -e ' r(x(s),u(s))ds, (4) 
+T 
+where x(s) and u(s) (t < s < c) follow the system dynamics (1) and the control 
+law (3). Our problem now is to find an optimal control law /* that maximizes 
+V u (x) for any state x  X. Note that r is the time scale of imminence-weighting 
+and the scaling factor - is used for normalization, i.e., f, oo -e - ds - 1 
+7' 7' 
+2.1 TD ERROR 
+The basic idea in TD learning is to predict future reinforcement in an on-line man- 
+ner. We first derive a local consistency condition for the value function V u (x). By 
+differentiating (4) by t, we have 
+rtv(x(t)) = V(x(t)) - (t). (5) 
+Let P(t) be the prediction of the value function VU(x(t)) from x(t) (output of the 
+critic). If the prediction is perfect, it should satisfy rtS(t) = P(t) - r(t). If this 
+is not satisfied, the prediction should be adjusted to decrease the inconsistency 
+(t) = (t) - p(t) + rP(t). (6) 
+This is a continuous version of the temporal difference error. 
+2.2 EULER DIFFERENTIATION: TD(0) 
+The relationship between the above continuous-time TD error and the discrete-time 
+TD error (Sutton, 1988) 
+(t) = (t) + p(t) - (t - xt) (7) 
+can be easily seen by a backward Euler approximation of P(t). By substituting 
+P(t) = (P(t) - P(t- At))/At into (6), we have 
+ = (t) + X 1 - --)(t) - (t - zxt) . 
+T 
+Temporal Difference in Learning in Continuous Time and Space 1075 
+At 
+This coincides with (7) if we make the discount factor ? - 1 - zx_tt _ e  , except 
+for the scaling factor 
+Now let us consider a case when the prediction of the value function is given by 
+P(t) = vibi(x(t)), (8) 
+i 
+where bi() are basis functions (e.g., sigmoid, Gaussian, etc) and vi are the weights. 
+The gradient descent of the squared TD error is given by 
+O�2(t) [ AtOP(t) OP(t-At)] 
+Avi (x Ovi (x -2(t) (1 --)-- . 
+r Ovi Ovi 
+In order to back-up the information about the future reinforcement to correct the 
+prediction in the past, we should modify P(t - At) rather than P(t) in the above 
+formula. This results in the learning rule 
+^ OP(t - At) 
+Avi cr r([j 9 = (t)bi(x(t- At)). (9) 
+This is equivalent to the TD(0) algorithm that uses the eligibility trace from the 
+previous time step. 
+2.3 SMOOTH DIFFERENTIATION: TD(A) 
+The Euler approximation of a time derivative is susceptible to noise (e.g., when 
+we use stochastic control for exploration). Alternatively, we can use a smooth 
+differentiation algorithm that uses a weighted average of the past input, such as 
+P(t) _ P(t) - P(t) where rctP(t ) = P(t) - P(t) 
+rc 
+and rc is the time constant of the differentiation. The corresponding gradient de- 
+scent algorithm is 
+O�2(t) OP(t) _ (t)(t) (10) 
+Avi oc Ovi oc (t) Ov-----' ' 
+where i is the eligibility trace for the weight 
+d- 
+= - (11) 
+Note that this is equivalent to the TD(A) algorithm (Sutton, 1988) with A = 1 ,xt 
+if we discretize the above equation with time step At. 
+3 OPTIMAL CONTROL BY VALUE GRADIENT 
+3.1 HJB EQUATION 
+The value function V* for an optimal control/* is defined as 
+V*(x(t)) = max -e---r-r(x(s),u(s))ds . (12) 
+u[t,o) r 
+According to the principle of dynamic programming (Bryson and Ho, 1975), we 
+consider optimization in two phases, [t, t + At] and [t + At, oc), resulting in the 
+expression 
+V*(x(t))= max -e * r(x(s),u(s))ds+e  V (x(t+At . 
+U[t,t+At) Jt T 
+1076 K. DOYA 
+By Taylor expanding the value at t + At as 
+OV* 
+V*(x(t + At)) = V*(x(t)) + --f(x(t), u(t))At + O(At) 
+Ox(t) 
+and then taking At to zero, we have a differential constraint for the optimal value 
+function 
+V*(t)= max r(x(t),u(t))+ -xf((),u(t)) . (13) 
+u(t)eu 
+This is a variant of the Hamilton-Jacobi-Bellman equation (Bryson and Ho, 1975) 
+for a discounted case. 
+3.2 OPTIMAL NONLINEAR FEEDBACK CONTROL 
+When the reinforcement r(x, u) is convex with respect to the control u, and the 
+vector field f(x, u) is linear with respect to u, the optimization problem in (13) has 
+a unique solution. The condition for the optimal control is 
+Or(x, u) or* Of(x, u) 
++r-- =0. (14) 
+0u 0x 0u 
+Now we consider the case when the cost for control is given by a convex potential 
+function Gj 0 for each control input 
+f(x, u) = rx(x) -  
+where reinforcement for the state rx (x) is still unknown. We also assume that the 
+input gain of the system 
+bj(x) = Of(x, u) 
+is available. In this case, the optimal condition (14) for ud is given by 
+OV* 
+-G'(ud) + r--x bj(x ) = 0. 
+Noting that the derivative G' () is a monotonic function since G() is convex, we have 
+the optimal feedback control law 
+OV* 
+u = (G')-x (r--ffb(x)) . (15) 
+Particularly, when the amplitude of control is bounded as Iwl < u? x, we can 
+enforce this constraint using a control cost 
+o(w) = cj f0 - 9-x(s)ds, (16) 
+where g-X() is an inverse sigmoid function that diverges at +1 (Hopfield, 1984). In 
+this case, the optimal feedback control law is given by 
+uj = uraxg (U? ax OV* ) 
+k cj r'-xbj(x) ' (17) 
+In the limit of cj - O, this results in the bang-bang control law 
+[OV* b. ] 
+uj=u? xsign[ Ox (x) . 
+(18) 
+Temporal Difference in Learning in Continuous Time and Space 1077 
+m Ol g 
+Figure 1: A pendulum with limited torque. The dynamics is given by mlg = 
+-luO + mglsinO + T. Parameters were m = l - 1, g = 9.8, and/ = 0.01. 
+12.5 
+10 
+7.5 
+5 
+2.5 
+0 � 
+20 40 60 80 100 
+trials 
+2O 
+17.5 
+15 
+12.5 
+10 
+7.5 
+5 
+2.5 
+0 
+360 
+3OO 
+240 
+180 
+120 
+6O 
+-120 
+-180 
+-240 
+-300 
+-360 
+-1815120-90-60-30 0 30 60 90 120150180 
+(a) (b) 
+360 
+3OO 
+240 
+180 
+120 
+6O 
+-12 
+-24 
+-360 
+20 40 60 80 100 -1815120-90 -60 -30 0 30 60 90 120 150 180 
+trials th 
+(c) (d) 
+Figure 2: Left: The learning curves for (a) optimal control and (c) actor-critic. 
+t_up: time during which 101 < 90 �. Right: (b) The predicted value function P after 
+100 trials of optimal control. (d) The output of the controller after 100 trials with 
+actor-critic learni.ng. The thick gray line shows the trajectory of the pendulum. th: 
+0 (degrees), om: 0 (degrees/sec). 
+1078 K. DOYA 
+4 ACTOR-CRITIC 
+When the information about the control cost, the input gain of the system, or the 
+gradient of the value function is not available, we cannot use the above optimal 
+control law. However, the TD error (6) can be used as internal reinforcement for 
+training a stochastic controller, or an actor (Barto et al., 1983). 
+In the simulation below, we combined our TD algorithm for the critic with a rein- 
+forcement learning algorithm for real-valued output (Gullapalli, 1990). The output 
+of the controller was given by 
+uj(t)=uaXg(iwjibi(x(t))+ernj(t)) , (19) 
+where nj (t) is normalized Gaussian noise and wji is a weight. The size of this per- 
+turbation was changed based on the predicted performance by cr = cr 0 exp(-P(t)). 
+The connection weights were changed by 
+Awji cr (t)nj(t)bi(x(t)). (20) 
+5 SIMULATION 
+The performance of the above continuous-time TD algorithm was tested on a task 
+of swinging up a pendulum with limited torque (Figure 1). Control of this one- 
+degree-of-fr

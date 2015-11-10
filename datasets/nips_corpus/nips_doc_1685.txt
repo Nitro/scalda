@@ -1,0 +1,176 @@
+The Infinite Gaussian Mixture Model 
+Carl Edward Rasmussen 
+Department of Mathematical Modelling 
+Technical University of Denmark 
+Building 321, DK-2800 Kongens Lyngby, Denmark 
+carl@imm.dtu.dk http://bayes.imm.dtu.dk 
+Abstract 
+In a Bayesian mixture model it is not necessary a priori to limit the num- 
+ber of components to be finite. In this paper an infinite Gaussian mixture 
+model is presented which neatly sidesteps the difficult problem of find- 
+ing the right number of mixture components. Inference in the model is 
+done using an efficient parameter-free Markov Chain that relies entirely 
+on Gibbs sampling. 
+1 Introduction 
+One of the major advantages in the Bayesian methodology is that overfitting is avoided; 
+thus the difficult task of adjusting model complexity vanishes. For neural networks, this 
+was demonstrated by Neal [ 1996] whose work on infinite networks led to the reinvention 
+and popularisation of Gaussian Process models [Williams & Rasmussen, 1996]. In this 
+paper a Markov Chain Monte Carlo (MCMC) implementation of a hierarchical infinite 
+Gaussian mixture model is presented. Perhaps surprisingly, inference in such models is 
+possible using finite amounts of computation. 
+Similar models are known in statistics as Dirichlet Process mixture models and go back 
+to Ferguson [1973] and Antoniak [1974]. Usually, expositions start from the Dirichlet 
+process itself [West et al, 1994]; here we derive the model as the limiting case of the well- 
+known finite mixtures. Bayesian methods for mixtures with an unknown (finite) number 
+of components have been explored by Richardson & Green [ 1997], whose methods are not 
+easily extended to multivariate observations. 
+2 Finite hierarchical mixture 
+The finite Gaussian mixture model with k components may be written as: 
+k 
+P(/Ii,--' ,k,$1,... ,$k,71'1,... ,71'k)-- Z71'jJV'(j,$j-1), (1) 
+j=l 
+where/j are the means, sj the precisions (inverse variances), 7rj the mixing proportions 
+(which must be positive and sum to one) and iV' is a (normalised) Gaussian with specified 
+mean and variance. For simplicity, the exposition will initially assume scalar observations, 
+n of which comprise the training data y -- {y,... , Yn}. First we will consider these 
+models for a fixed value of k, and later explore the properties in the limit where k --> oc. 
+The Infinite Gaussian Mixture Model 555 
+Gibbs sampling is a well known technique for generating samples from complicated mul- 
+tivariate distributions that is often used in Monte Carlo procedures. In its simplest form, 
+Gibbs sampling is used to update each variable in turn from its conditional distribution 
+given all other variables in the system. It can be shown that Gibbs sampling generates sam- 
+ples from the joint distribution, and that the entire distribution is explored as the number of 
+Gibbs sweeps grows large. 
+We introduce stochastic indicator variables, ci, one for each observation, whose role is to 
+encode which class has generated the observation; the indicators take on values 1... k. 
+Indicators are often referred to as missing data in a mixture model context. 
+In the following sections the priors on component parameters and hyperparameters will 
+be specified, and the conditional distributions for these, which will be needed for Gibbs 
+sampling, will be derived. In general the form of the priors are chosen to have (hopefully) 
+reasonable modelling properties, with an eye to mathematical convenience (through the use 
+of conjugate priors). 
+2.1 Component parameters 
+The component means,/j, are given Gaussian priors: 
+p(/jlX, r) ,-, Af(A, r-x), (2) 
+whose mean, ,k, and precision, r, are hyperparameters common to all components. The 
+hyperparameters themselves are given vague Normal and Gamma priors: 
+p(,k) A/'(y, ay2), p(r) (1,-2 r-W2exp(_ray2/2), (3) 
+2 are the mean and variance of the observations . The shape parameter of 
+where/y and ay 
+the Gamma prior is set to unity, corresponding to a very broad (vague) distribution. 
+The conditional posterior distributions for the means are obtained by multiplying the like- 
+lihood from eq. (1) conditioned on the indicators, by the prior, eq. (2): 
+p(/ujlc, y, sj,X,r)  jf(jrtjsj + Xr 1 ) 1 >. Yi, (4) 
+rtj $j q- r ' rtj $j q- r ' J ---- nj  
+i:ci----j 
+where the occupation number, n j, is the number of observations belonging to class j, and 
+j is the mean of these observations. For the hyperparameters, eq. (2) plays the role of 
+the likelihood which together with the priors from eq. (4) give conditional posteriors of 
+standard form: 
+A/'( trytry2 q-  E:i J 
+try-2 + kr 
+1 ) 
+try + kr 
+(5) 
+P(rlfil,...,fi k ,) ,. (k q- 1, [.1_ (try2 + E(j _ X)2)]-). 
+ k+l 
+j=l 
+The component precisions, $j, are given Gamma priors: 
+p(sjl3, w ) ,, O(3, w-), (6) 
+whose shape, , and mean, w -, are hypeameters coon to all components, with 
+priors of inverse Gaa and Gaa form: 
+p(-)G(1,1)p()m-a/2exp(-1/(2)), p(w)G(1, a). (7) 
+Stfictly spewing, the priors ought not to depend on the observations. The cent procede is 
+equivflent to normrising the obseations d using unit priors. A wide vety of reasonable priors 
+will lead to sil results. 
+556 C. E. Rasmussen 
+The conditional posterior precisions are obtained by multiplying the likelihood from eq. (1) 
+conditioned on the indicators, by the prior, eq. (6): 
+1 
+p(sSIc, y, ttS,/?, w) -,, O(/? + nj, [/? + n---. (w/? + E (Y'- tt5)2)]-1) ' 
+i:ci=j 
+(8) 
+For the hyperparameters, eq. (6) plays the role of likelihood which together with the priors 
+from eq. (7) give: 
+k 
+( ) 
+p(wlsl,..., s,3)  G k + 1, [k3 + I Y ' 
+j=l 
+P(/[$1, . . . ,$k, W) O(F(-) 
+k 
+exp ( )( )(a-a)/2 H(sjw)a/2 exp( 2 )' 
+(9) 
+The latter density is not of standard form, but it can be shown that p(log(/)lsl,..., sk, w) 
+is log-concave, so we may generate independent samples from the distribution for log(/) 
+using the Adaptive Rejection Sampling (ARS) technique [Gilks & Wild, 1992], and trans- 
+form these to get values for/. 
+The mixing proportions, 7rj, are given a symmetric Dirichlet (also known as multivariate 
+beta) prior with concentration parameter a/k: 
+II , 
+p(7rl,... ,7rklc )  Dirichlet(c/k,... ,a/k) = F(c/k) j=l 
+(10) 
+where the mixing proportions must be positive and sum to one. Given the mixing propor- 
+tions, the prior for the occupation numbers, n, is multinomial and the joint distribution of 
+the indicators becomes: 
+p(Cl,... ,Ck17r1,... ,7rk) -- 
+k n 
+Tj = E (JKronecker(Ci,j). (11) 
+j=l i=1 
+Using the standard Dirichlet integral, we may integrate out the mixing proportions and 
+write the prior directly in terms of the indicators: 
+p(cl,... f (12) 
+k 
+f II + 
+= r(/) k 5+/k-ldj -- r( + ) j=l 
+j=l 
+In order to be able to use Gibbs sampling for the (discrete) indicators, ci, we need the 
+conditional prior for a single indicator given all the others; this is easily obtained from 
+eq. (12) by keeping all but a single indicator fixed: 
+p(ci -- jlc_i,c) - n_,a + c/k (13) 
+n-l+c 
+where the subscript -i indicates all indexes except i and n-i,j is the number of observa- 
+tions, excluding Yi, that are associated with component j. The posteriors for the indicators 
+are derived in the next section. 
+Lastly, a vague prior of inverse Gamma shape is put on the concentration parameter 
+p(c-l)  (1, 1) ?p(o)cro-3/2exp(-1/(2o)). (14) 
+The Infinite Gaussian Mixture Model 557 
+The likelihood for a may be derived from eq. (12), which together with the prior from 
+eq. (14) gives: 
+akr(a) p(alk, n) cr ak-a/2 exp(- 1/(2a))r(a) (15) 
+= + + 
+Notice, that the conditional posterior for a depends only on number of observations, n, and 
+the number of components, k, and not on how the observations are distributed among the 
+components. The distribution p(log(a)Ik, n) is log-concave, so we may efficiently generate 
+independent samples from this distribution using ARS. 
+3 The infinite limit 
+So far, we have considered k to be a fixed finite quantity. In this section we will explore 
+the limit k --> oc and make the final derivations regarding the conditional posteriors for 
+the indicators. For all the model variables except the indicators, the conditional posteriors 
+for the infinite limit is obtained by substituting for k the number of classes that have data 
+associated with them, krep, in the equations previously derived for the finite model. For the 
+indicators, letting k --> oc in eq. (13), the conditional prior reaches the following limits: 
+components where n-i,j > 0: p(ci = jlc-i, a) = 
+all other compo- p(ci  ci, for all i'  ilc-, a) - 
+nents combined: 
+n-i,j 
+n-l+a 
+a (16) 
+n-l+a 
+This shows that the conditional class prior for components that are associated with other 
+observations is proportional to the number of such observations; the combined prior for 
+all other classes depends only on a and n. Notice how the analytical tractability of the 
+integral in eq. (12) is essential, since it allows us to work directly with the (finite number 
+of) indicator variables, rather than the (infinite number of) mixing proportions. We may 
+now combine the likelihood from eq. (1) conditioned on the indicators with the prior from 
+eq. (16) to obtain the conditional posteriors for the indicators: 
+components for which rt_i,j > 0: p(ci -- tj, Sj, a) oc (17) 
+p(ci = jlc-i,a)p(yil/j,sj,c-i) cr n-i, s}/2exp( - sj(yi - /j)2/2), 
+n-l+a 
+all other components combined: p(ci  ci, for all i  i'Ic_i, A, r, , w, a) oc 
+p(ci  ci, for all i  i'fc_i,a ) / p(yi]/j, sj )p(uj, sj[A, r, , w)djdsj. 
+The likelihood for components with observations other than yi currently associated with 
+them is Gaussian with component parameters/j and sj. The likelihood pertaining to the 
+currently unrepresented classes (which have no parameters associated with them) is ob- 
+tained through integration over the prior distribution for these. Note, that we need not 
+differentiate between the infinitely many unrepresented classes, since their parameter dis

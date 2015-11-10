@@ -1,0 +1,161 @@
+JPMAX: Learning to Recognize Moving 
+Objects as a Model-fitting Problem 
+Suzanna Becker 
+Department of Psychology, McMaster University 
+Hamilton, Ont. L8S 4K1 
+Abstract 
+Unsupervised learning procedures have been successful at low-level 
+feature extraction and preprocessing of raw sensor data. So far, 
+however, they have had limited success in learning higher-order 
+representations, e.g., of objects in visual images. A promising ap- 
+proach is to maximize some measure of agreement between the 
+outputs of two groups of units which receive inputs physically sep- 
+arated in space, time or modality, as in (Becker and Hinton, 1992; 
+Becker, 1993; de Sa, 1993). Using the same approach, a much sim- 
+pler learning procedure is proposed here which discovers features 
+in a single-layer network consisting of several populations of units, 
+and can be applied to multi-layer networks trained one layer at 
+a time. When trained with this algorithm on image sequences of 
+moving geometric objects a two-layer network can learn to perform 
+accurate position-invariant object classification. 
+1 LEARNING COHERENT CLASSIFICATIONS 
+A powerful constraint in sensory data is coherence over time, in space, and across 
+different sensory modalities. An unsupervised learning procedure which can capital- 
+ize on these constraints may be able to explain much of perceptual self-organization 
+in the mammalian brain. The problem is to derive an appropriate cost function for 
+unsupervised learning which will capture coherence constraints in sensory signals; 
+we would also like it to be applicable to multi-layer nets to train hidden as well 
+as output layers. Our ultimate goal is for the network to discover natural object 
+classes based on these coherence assumptions. 
+934 $uzanna Becker 
+1.1 PREVIOUS WORK 
+Successive images in continuous visual input are usually views of the same object; 
+thus, although the image pixels may change considerably from frame to frame, 
+the image usually can be described by a small set of consistent object descriptors, 
+or lower-level feature descriptors. We refer to this type of continuity as temporal 
+coherence. This sort of structure is ubiquitous in sensory signals, from vision as 
+well as other senses, and can be used by a neural network to derive temporally 
+coherent classifications. This idea has been used, for example, in temporal versions 
+of the Hebbian learning rule to associate items over time (Weinshall, Edelman and 
+Bfilthoff, 1990; FSldigk, 1991). To capitalize on temporal coherence for higher-order 
+feature extraction and classification, we need a more powerful learning principle. 
+A promising approach is to maximize some measure of agreement between the out- 
+puts of two groups of units which receive inputs physically separated in space, time 
+or modality, as in (Becker and Hinton, 1992; Becker, 1993; de Sa, 1993). This forces 
+the units to extract features which are coherent across the different input sources. 
+Becker and Hintoh's (1992) Imax algorithm maximizes the mutual information be- 
+tween the outputs of two modules, a and , connected to different parts of the 
+input, a and b. Becker (1993) extended this idea to the problem of classifying tem- 
+porally varying patterns by applying the discrete case of the mutual information 
+cost function to the outputs of a single module at successive time steps, a(t) and 
+y-(t + 1). However, the success of this method relied upon the back-propagation of 
+derivatives to train the hidden layer and it was found to be extremely susceptible 
+to local optima. de Sa's method (1993) is closely related, and minimizes the prob- 
+ability of disagreement between output classifications, a(t) and y-(t), produced by 
+two modules having different inputs, e.g., from different sensory modalities. The 
+success of this method hinges upon bootstrapping the first layer by initializing the 
+weights to randomly selected training patterns, so this method too is susceptible to 
+the problem of local optima. If we had a more flexible cost function that could be 
+applied to a multi-layer network, first to each hidden layer in turn, and finally to 
+theoutput layer for classification, so that the two layers could discover genuinely 
+different structure, we might be able to overcome the problem of getting trapped 
+in local optima, yielding a more powerful and efficient learning procedure. 
+We can analyze the optimal solutions for both de Sa's and Becker's cost functions 
+(see Figure 1 a) and see that both cost functions are maximized by having perfect 
+one-to-one agreement between the two groups of units over all cases, using a one-of-n 
+encoding, i.e., having only a single output unit on for each case. A major limitation 
+of these methods is that they strive for perfect classifications by the units. While 
+this is desirable at the top layer of a network, it is an unsuitable goal for training 
+intermediate layers to detect low-level features. For example, features like oriented 
+edges would not be perfect predictors across spatially or temporally nearby image 
+patches in images of translating and rotating objects. Instead, we might expect that 
+an oriented edge at one location would predict a small range of similar orientations 
+at nearby locations. So we would prefer a cost function whose optimal solution was 
+more like those shown in Figure 1 b) or c). This would allow a feature i in group a 
+to agree with any of several nearby features, e.g. i - 1, i, or i q- 1 in group b. 
+JPMAX 935 
+a) b) c) 
+Figure 1: Three possible joint distributions for the probability that the ith and jth 
+units in two sets of m classification units are both on. White is high density, black 
+is low density. The optimal joint distribution for Becker's and de Sa's algorithms 
+is a matrix with all its density either in the diagonal as in a), or any subset of the 
+diagonal entries for de Sa's method, or a permutation of the diagonal matrix for 
+Becker's algorithm. Alternative distributions are shown in b) and c). 
+1.2 THE JPMAX ALGORITHM 
+One way to achieve an arbitrary configuration of agreement over time between two 
+groups of units (as in Figure I b) or c)) is to treat the desired configuration as a 
+prior joint probability distribution over their outputs. We can obtain the actual 
+distribution by observing the temporal correlations between pairs of units' outputs 
+in the two groups over an ensemble of patterns. We can then optimize the actual 
+distribution to fit the prior. We now derive two different cost functions which 
+achieve this result. Interestingly, they result in very similar learning rules. 
+Suppose we have two groups of m units as shown in Figure 2 a), receiving inputs, x- 
+and , from the same or nearby parts of the input image. Let Ca(t) and Cb(t) be 
+the classifications of the two input patches produced by the network at time step t; 
+the outputs of the two groups of units, Ya( ) and yb(t), represent these classification 
+eneti(t) 
+probabilities: 
+yai(t) - P(Ca(t) = i) - Ejenet(t) 
+eneti (t) 
+ybi(t) -- P(Cb(t) -- i) -- Ejenet(t ) (1) 
+(the usual softmax output function) where netai(t) and netj(t) are the weighted 
+net inputs to units. We could now observe the expected joint probability distribu- 
+tion qij - E[yai(t)yj(t 4. 1)It- E[P(Ca(t)-i,Cb(t 4- 1)- J)]t by computing the 
+temporal covariances between the classification probabilities, averaged over the en- 
+semble of training patterns; this joint probability is an m2-valued random variable. 
+Given the above statistics, one possible cost function we could minimize is the 
+- log probability of the observed temporal covariance between the two sets of units' 
+outputs under some prior distribution (e.g. Figure I b) or c)). If we knew the 
+actual frequency counts for each (joint) classification k = kn,..., km, k2,..., kmm, 
+936 $uzanna Becker 
+a) a' b) 
+III I III Illl Jill 
+Illlllllllllllll 
+111llll[11111lll 
+IIII III IIIll IIII 
+I III III I II 
+I111111 
+At 
+( (t) C A (t) 
+Figure 2: a) Two groups of 15 units receive inputs from a 2D retina. The groups 
+are able to observe each other's outputs across lateral links with unit time delays. 
+b) A second layer of two groups of 3 units is added to the architecture in a). 
+rather than just the observed joint probabilities, qij = E [k_], then given our prior 
+model, pxi,... ,Pmm, we could compute the probability of the observations under a 
+multinomial distribution: 
+P() -- l-[i,j kij! .. Pij (2) 
+Using the de Moivre-Laplace approximation leads to the following: 
+1 (kij - npij)2 ) 
+- (3) 
+exp   npij 
+P()  V/(27rn) mJ-1 ni,jpij i,j 
+Taking the derivative of the - log probability wrt kij leads to a very simple learning 
+rule which depends only on the observed probabilities qij and priors Pij: 
+0 - log P() npij - kij 
+Ok o 
+npij 
+Pij -- qij 
+Pij 
+(4) 
+G(p,q) = -  Z (pij logpij - pij logqij) 
+i j 
+(5) 
+To obtain the final weight update rule, we just multiply this by o_. One problem 
+n Owl ' 
+with the above formulation is that the priors Pij must not be too close to zero for 
+the de Moivre-Laplace approximation to hold. In practice, this cost function works 
+well if we simply ignore the derivative terms where the priors are zero. 
+An alternative cost function (as suggested by Peter Dayan) which works equally well 
+is the Kullback-Liebler divergence or G-error between the desired joint probabilities 
+Pij and the observed probabilities qij: 
+JPMAX 93 7 
+Figure 3:10 of the 1500 training patterns: geometric objects centered in 36 possible 
+locations on a 1�-by-1� pixel grid. Object location varied randomly between patterns. 
+The derivative of G wrt qij is: 
+OG _ pij (6) 
+Oqij qij 
+subject to -.ij qij -- I (enforced by the softmax output function). Note the simi- 
+larity between the learning rules given by equations 4 and 6. 
+2 EXPERIMENTS 
+The network shown in Figure 2 a) was trained to minimize equation 5 on an en- 
+semble of pattern trajectories of circles, squares and triangles (see Fig

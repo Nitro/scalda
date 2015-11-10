@@ -1,0 +1,180 @@
+VLSI Implementation of Cortical Visual Motion 
+Detection Using an Analog Neural Computer 
+Ralph Etienne-Cummings 
+Electrical Engineering, 
+Southern Illinois University, 
+Carbondale, IL 62901 
+Jan Van der Spiegel 
+The Moore School, 
+University of Pennsylvania, 
+Philadelphia, PA 19104 
+Naomi Takahashi 
+The Moore School, 
+University of Pennsylvania, 
+Philadelphia, PA 19104 
+Alyssa Apsel 
+Electrical Engineering, 
+California Inst. Technology, 
+Pasadena, CA 91125 
+Paul Mueller 
+Corticon Inc., 
+3624 Market Str, 
+Philadelphia, PA 19104 
+Abstract 
+Two dimensional image motion detection neural networks have been 
+implemented using a general purpose analog neural computer. The 
+neural circuits perform spatiotemporal feature extraction based on the 
+cortical motion detection model of Adelson and Bergen. The neural 
+computer provides the neurons, synapses and synaptic time-constants 
+required to realize the model in VLSI hardware. Results show that 
+visual motion estimation can be implemented with simple sum-and- 
+threshold neural hardware with temporal computational capabilities. 
+The neural circuits compute general 2D visual motion in real-time. 
+1 INTRODUCTION 
+Visual motion estimation is an area where spatiotemporal computation is of fundamental 
+importance. Each distinct motion vector traces a unique locus in the space-time domain. 
+Hence, the problem of visual motion estimation reduces to a feature extraction task, with 
+each feature extractor tuned to a particular motion vector. Since neural networks are 
+particularly efficient feature extractors, they can be used to implement these visual motion 
+estimators. Such neural circuits have been recorded in area MT of macaque monkeys, 
+where cells are sensitive and selective to 2D velocity (Maunsell and Van Essen, 1983). 
+In this paper, a hardware implementation of 2D visual motion estimation with 
+spatiotemporal feature extractors is presented. A silicon retina with parallel, continuous 
+time edge detection capabilities is the front-end of the system. Motion detection neural 
+networks are implemented on a general purpose analog neural computer which is 
+composed of programmable analog neurons, synapses, axon/dendrites and synaptic time- 
+686 R. Etienne-Cummings, J. van der Spiegel, N. Takahashi, A. Apsel and P. Mueller 
+constants (Van der Spiegel et al., 1994). The additional computational freedom introduced 
+by the synaptic time-constants, which are unique to this neural computer, is required to 
+realize the spatiotemporal motion estimators. The motion detection neural circuits are 
+based on the early 1D model of Adelson and Bergen and recent 2D models of David Heeger 
+(Adelson and Bergen, 1985; Heeger et al., 1996). However, since the neurons only 
+computed delayed weighted sum-and-threshold functions, the models must be modified. 
+The original models require division for intensity normalization and a quadratic non- 
+linearity to extract spatiotemporal energy. In our model, normalization is performed by 
+the silicon retina with a large contrast sensitivity (all edges are normalized to the same 
+output), and rectification replaces the quadratic non-linearity. Despite these modifications, 
+we show that the model works correctly. The visual motion vector is implicitly coded as 
+a distribution of neural activity. 
+Due to its computational complexity, this method of image motion estimation has not 
+been attempted in discrete or VLSI hardware. The general purpose analog neural computer 
+offers a unique avenue for implementing and investigating this method of visual motion 
+estimation. The analysis, implementation and performance of spatiotemporal visual 
+motion estimators are discussed. 
+2 SPATIOTEMPORAL FEATURE EXTRACTION 
+The technique of estimating motion with spatiotemporal feature extraction was proposed 
+by Adelson and Bergen in 1985 (Adelson and Bergen, 1985). It emerged out of the 
+observation that a point moving with constant velocity traces a line in the space-time 
+domain, shown in figure la. The slope of the line is proportional to the velocity of the 
+point. Hence, the velocity is represented as the orientation of the line. Spatiotemporal 
+orientation detection units, similar to those proposed by Hubel and Wiesel for spatial 
+orientation detection, can be used for detecting motion (Hubel and Wiesel, 1962). In the 
+frequency domain, the motion of the point is also a line where the slope of the line is the 
+velocity of the point. Hence orientation detection filters, shown as circles in figure lb, 
+can be used to measure the motion of the point relative to their tuned velocity. A 
+population of these tuned filters, figure lc, can be used to measure general image motion. 
+x-direction 
+Fourier 
+Transform 
+(a) (b) 
+Figure 1: (a) 1D Motion as Orientation in 
+! 
+Responce 
+-Velocity 
+� 
++Velocity 
+(c) 
+the Space-Time Domain. 
+(b) and (c) Motion detection with Oriented Spatiotemporal Filters. 
+If the point exhibits 2D motion, the proble m is substantially more complicated, as 
+observed by David Heeger (1987). A point executing 2D motion spans a plane in the 
+frequency domain. The spatiotemporal orientation filter tuned to this motion must also 
+span a plane (Heeger et al., 1987, 1996). Figure 2a shows a filter tuned to 2D motion. 
+Unfortunately, this torus shaped filter is difficult to realize without special mathematical 
+tools. Furthermore, to create a general set of filters for measuring general 2D motion, the 
+filters must cover all the spatiotemporal frequencies and all the possible velocities of the 
+stimuli. The latter requirement is particularly difficult to obtain since there are two 
+degrees of freedom (v, Vy) to cover. 
+VLSi Implementation of Cortical Visual Motion Detection 687 
+Tuned 2D Filter 
+ Plane 
+(a) 
+Figure 2: (a) 2D Motion Detection with 2D Oriented Spatiotemporal 
+Filters. (b) General 2D Motion Detection with 2 Sets of 1D Filters. 
+To circumvent these problems, our model decomposes the image into two orthogonal 
+images, where the perpendicular spatial variation within the receptive field of the filters 
+are eliminated using spatial smoothing. Subsequently, 1D spatiotemporal motion 
+detection is used on each image to measure the velocity of the stimuli. This technique 
+places the motion detection filters, shown as the circles in figure 2b, only in the ton-tot 
+and toy-tot planes to extract 2D motion, thereby drastically reducing the complexity of the 
+2D motion detection model from O(n 2) to O(2n). 
+2.1 CONSTRUCTING THE SPATIOTEMPORAL MOTION FILTERS 
+The filter tuned to a velocity Vox (V0y) is centered at toox (tooy) and (Oot where Vox = 
+(V0y = toot/to0y). To create the filters, quadrature pairs (i.e. odd and even pairs) of spatial 
+and temporal band-pass filters centered at the appropriate spatiotemporal frequencies are 
+summed and differenced (Adelson and Bergen, 1985). The /2 phase relationship between 
+the filters allows them to be combined such that they cancel in opposite quadrants, 
+leaving the desired oriented filter, as shown in figure 3a. Equation 1 shows examples of 
+quadrature pairs of spatial and temporal filters implemented. The coefficients of the filters 
+balance the area under their positive and negative lobes. The spatial filters in equation 1 
+have a 5 x 5 receptive field, where the sampling interval is determined by the silicon 
+retina. Figure 3b shows a contour plot of an oriented filter (c=l 1 tads/s, 152=2i=40). 
+S(even) = [0.5 -0.32Cos(Ox)-O. 18Cos(2Ox)] (a) 
+S(odd) = [-0.66jSin(Ox)-O.32jSin(2Ox)] (b) 
+T(even) = -(0t262 
+(irot + a)(jcot + c51 )(riot + 2)' oc << 1 -- 2 
+r(odd) = ic0t6162 
+(riot +a)(jcot + 61)(Jcot +62); oc << 61 = 62 
+Left Motion = S(e)r(e) - S(o)r(o) or S(e)r(o) - S(o)r(e) 
+Right Motion = S(e)r(e) + S(o)r(o) or S(e)r(o) + S(o)r(e) 
+(c) 
+(d) 
+(1) 
+(e) 
+(f) 
+To cover a wide range of velocity and stimuli, multiple filters are constructed with 
+various velocity, spatial and temporal frequency selectivity. Nine filters are chosen per 
+dimension to mosaic the cox-tot and toy-tot planes as in figure 2b. The velocity of a 
+stimulus is given by the weighted average of the tuned velocity of the filters, where the 
+weights are the magnitudes of each filter's response. All computations for 2D motion 
+detection based on cortical models have been realized in hardware using a large scale 
+general purpose analog neural computer. 
+688 R. Etienne-Cummings, J. van der Spiegel, N. Takahashi, A. Apsel and P. Mueller 
+S(e)T(e) 
+to t 
+'--  I r�x D--x I t-tox 
+ I 
+S(e)T(e)+S(o)T(o) S(e)T(e)-S(o)T(o) 
+Right Motion (+v x) Left Motion (-v x) 
+(a) 
+tot 
+-- I - _ tox 30 
+S(o)T(o) tot 
+0 
+tot [Hz] 
+-30 
+Tuned Velocity: v x = 6.3 mm/s 
+60 
+-60 
+-4.5 -3.0-1.5 0 1.5 
+0 x [ l/mm] 
+(b) 
+Spatiotemporal Filters. 
+3.O 4.5 
+Figure 3: (a) Constructing Oriented (b) 
+Contour Plot of One of the Filters Implemented. 
+3 HARDWARE IMPLEMENTATION 
+3.1 GENERAL PURPOSE ANALOG NEURAL COMPUTER 
+The computer is intended for fast prototyping of neural network based applications. It 
+offers the flexibility of programming combined with the real-time performance of a 
+hardware system (Mueller, 1995). It is modeled after the biological nervous system, i.e. 
+the cerebral cortex, and consists of electronic analogs of neurons, synapses, synaptic time 
+constants and axon/dendrites. The hardware modules capture the functional and 
+computational aspects of the biological counterparts. The main features of the system are: 
+configurable interconnection architecture, programmable neural elements, modular and 
+expandable architecture, and spatiotemporal processing. These features make the network 
+ideal to implement a wide range of network architectures and applications. 
+The system, shown in part in figure 4, is constructed from three types of modules (chips): 
+(1) neurons, (2) synapses and (3) synaptic time constants and axon/dendrites. The neurons 
+have a piece-wise linear transfer function with programmable (8bit) threshold and 
+minimum output at thr

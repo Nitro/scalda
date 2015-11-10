@@ -1,0 +1,148 @@
+Active Gesture Recognition using 
+Learned Visual Attention 
+Trevor Darrell and Alex Pentland 
+Perceptual Computing Group 
+MIT Media Lab 
+20 Ames Street, Cambridge MA, 02138 
+trevor, sandymedia. mir. edu 
+Abstract 
+We have developed a foveated gesture recognition system that runs 
+in an unconstrained office environment with an active camera. Us- 
+ing vision routines previously implemented for an interactive envi- 
+ronment, we determine the spatial location of salient body parts 
+of a user and guide an active camera to obtain images of gestures 
+or expressions. A hidden-state reinforcement learning paradigm is 
+used to implement visual attention. The attention module selects 
+targets to loveate based on the goal of successful recognition, and 
+uses a new multiple-model Q-learning formulation. Given a set 
+of target and distractor gestures, our system can learn where to 
+foveate to maximally discriminate a particular gesture. 
+1 INTRODUCTION 
+Vision has numerous uses in the natural world. It is used by many organisms in 
+navigation and object recognition tasks, for finding resources or avoiding predators. 
+Often overlooked in computational models of vision, however, and particularly rel- 
+evant for humans, is the use of vision for communication and interaction. In these 
+domains visual perception is an important communication modality, either in ad- 
+dition to language or when language cannot be used. In general, people place 
+considerable weight on visual signals from another individual, such as facial expres- 
+sion, hand gestures, and body language. We have been developing neurally-inspired 
+methods which combine low-level vision and learning to model these visual abilities. 
+Previously, we presented a method for view-based recognition of spatio-temporal 
+hand gestures [2] and a similar mechanism for the analysis/real-time tracking of 
+facial expressions [4]. These methods offered real-time performance and a relatively 
+high level of accuracy, but required foveated images of the object performing the 
+Active Gesture Recognition Using Learned Visual Attention 859 
+gesture. There are many domains/tasks for which these are not unreasonable as- 
+sumptions, such as interaction with a single user workstation or an automobile with 
+a single driver. However the method had limited usefulness in unconstrained do- 
+mains, such as intelligent rooms or interactive virtual environments, when the 
+identity and location of the user are unknown. 
+In this paper, we expand our gesture recognition method to include an active com- 
+ponent, utilizing a foveated image sensor that can selectively track a person's hand 
+or face as they walk through a room. The camera tracking and model selection 
+routines are guided by an action-selection system that implements visual attention 
+based on reinforcement learning. Using on a simple reward schedule, this attention 
+system learns the appropriate object (hand, head) to foveate in order to maximize 
+recognition performance. 
+2 FOVEATED GESTURE ANALYSIS 
+Our system for foveated gesture recognition combines person tracking routines, 
+an active, high-resolution camera, and view-based normalized correlation analysis. 
+First we will briefly describe the person tracking module and view-based analysis, 
+then discuss their use with an active camera. 
+We have implemented vision routines to track a user in in an office setting as part 
+of our ALIVE system, an Artificial Life Interactive Video Environment[3]. This 
+system can track people and identify head/hand locations as they walk about a 
+room, and provides the contextual environment within which view-based gesture 
+analysis methods can be successfully applied. The ALIVE system assumed little 
+prior knowledge of the user, and operated on coarse-scale images.  ALIVE allows 
+a user to interact with virtual artificial life creatures, through the use of a magic- 
+mirror metaphor in which user sees him/herself presented in a video display along 
+with virtual creatures. A wide field-of-view video camera acquires an image of the 
+user, which is then combined with computer graphics imagery and projected on a 
+large screen in front of the user. Vision routines in ALIVE compute figure/ground 
+segmentation and analyze the user's silhouette to determine the location of head, 
+hands, and other salient body features. We use only a single, calibrated, wide field- 
+of-view camera to determine the 3-D position of these features? For details of our 
+person tracking method see [14]. 
+In our approach to real-time expression matching/tracking, a set of view-based 
+correlation models is used to represent spatio-temporal gesture patterns. We take 
+a sequence of images representing the gesture to be trained, and build a set of 
+view models that are sufficient to track the object as it performs the gesture. Our 
+view models are normalized correlation templates, and can either be intensity-based 
+or based on band-pass or wavelet-based signal representations. 3 We applied our 
+model to the problem of hand gesture recognition [2] as well as for tracking facial 
+expressions [4]. For facial tracking, we implemented an interpolation paradigm to 
+map view-based correlation scores to facial motor controls. We used the Radial Basis 
+Function (RBF) method[7]; interpolation was performed using a set of exemplars 
+consisting of pairs of real faces and model faces in different expressions, which were 
+A simple mechanism for recognition of hand gestures was implemented in the original 
+ALIVE system but made no use of high-resolution view models, and could only recognize 
+pointing and waving motions defined by the motion of the centroid of the hand. 
+2By assuming the the user is sitting or standing on the ground plane, we use the imaging 
+and ground plane geometry to compute the location of the user in 3-D. 
+aThe latter have the advantage of being less dependent on illumination direction. 
+860 T. DARRELL, A. PENTLAND 
+animation / rendering 
+ scene imac 
+)erson tracking: 
+color segementation 
+2 cadlOcalizatiOn .) 
+:  faces 
+VIEW-BASED 
+GESTURE 
+ANAL YSIS 
+J 
+-'<---- Video Wall -''' -' 
+/--Wide-angle camera ..-  ''''/!i!iii 
+;:':' '-- User 
+(Narrowiil':r'........ 
+pan/tilt base '... 
+Figure 1: Overview of system for person tracking and active gesture recognition. 
+Static, wide-field-of-view, camera tracks user's head and hands, which drives gaze 
+control of active narrow-field-of-view camera. Foveated images are used for view- 
+based gesture analysis and recognition. Graphical objects are rendered on video 
+wall and can react to user's position, pose, and gestures. 
+obtained by generating a 3-D model face and asking the user to match it. With this 
+simple formalism, we were able to track expressions of a real user and interpolate 
+equivalent 3-D model faces in real-time. 
+This view-based analysis requires detailed imagery, which cannot be obtained from 
+a single, fixed camera as the user walks about a room. To provide high resolution 
+images for gesture recognition, we augment the wide field-of-view camera in our 
+interactive environment with an active, narrow-field-of-view camera, as shown in 
+Figure 1. Information about head/hand location from the existing ALIVE routines 
+is used to drive the motor control parameters of the narrow field camera. Currently 
+the camera can be directed to autonomously track head or hands. Using a highly 
+simplified, two expression model of facial expression (neutral and surprised), we have 
+been able to track facial expressions as users move about the room and the narrow 
+angle camera followed the face. For details on this foveated gesture recognition see 
+[5] 
+3 VISUAL ATTENTION FOR RECOGNITION 
+The visual routines in the ALIVE system can be used to track the head and hands 
+of a user, and the active camera can provide foveated images for gesture recognition. 
+If we know a priori which body part will produce the gesture of interest, or if we 
+have a sufficient number of active cameras to track all body parts, then we have 
+solved the problem. Of course, in practice there are more possible loci of gesture 
+performance than there are active cameras, and we have to address the problem of 
+action selection for visual routines, i.e., attention. In our active gesture recognition 
+system, we have adopted an action selection model based on reinforcement learning. 
+Active Gesture Recognition Using Learned Visual Attention 861 
+3.1 THE ACTIVE GESTURE RECOGNITION PROBLEM 
+We define an Active Gesture Recognition (AGR) task as follows. First, we assume 
+primitive routines exist to provide the continuous valued control and tracking of the 
+different body parts that perform gestures. Second, we assume that body pose and 
+hand/face state is represented as a feature set, based on the representation produced 
+by our body tracker and view-based recognition system, and we define a gesture 
+to be a configuration of the user's body pose and hand/face expression. Third, we 
+assume that, in addition to there being actions for foveating all the relevant body 
+parts, there is also a special action labeled accept, and that the execution of this 
+action by the AGR system signifies detection of the gesture. Finally, the goal of 
+the AGR task is to execute the accept action whenever the user is in the target 
+gesture state, and not to perform that action when the user is in any other (e.g. 
+distractor) state. The AGR system should use the foveation actions to optimally 
+discriminate the target pattern from distractor patterns, even when no single view 
+of the user is sufficient to decide what gesture the user is performing. 
+An important problem in applying reinforcement learning to this task is that our 
+perceptual observations may not provide a complete description of the user's state. 
+Indeed, because we have a foveated image sensor we know that the user's true 
+gestural state will be hidden whenever the user is performing a gesture and the 
+camera is not fov

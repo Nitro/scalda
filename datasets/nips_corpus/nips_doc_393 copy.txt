@@ -1,0 +1,178 @@
+Proximity Effect Corrections in Electron Beam 
+Lithography Using a Neural Network 
+Robert C. Frye 
+AT&T Bell Laboratories 
+600 Mountain Avenue 
+Murray Hill, NJ 08854 
+Kevin D. Cummings* 
+AT&T Bell Labormories 
+600 Mountain Avenue 
+Murray Hill, NJ 08854 
+Edward A. Rietman 
+AT&T Bell Laboratories 
+600 Mountain Avenue 
+Murray Hill, NJ 08854 
+Abstract 
+We have used a neural network to compute corrections for images written 
+by electron beams to eliminate the proximity effects caused by electron 
+scattering. Iterative methods are effective, but require prohibitively 
+computation time. We have instead trained a neural network to perform 
+equivalent corrections, resulting in a significant speed-up. We have 
+examined hardware implementations using both analog and digital 
+electronic networks. Both had an acceptably small error of 0.5% compared 
+to the iterative results. Additionally, we verified that the neural network 
+correctly generalized the solution of the problem to include patterns not 
+contained in its training set. We have experimentally verified this approach 
+on a Cambridge Instruments EBMF 10.5 exposure system. 
+1 INTRODUCTION 
+Scattering imposes limitations on the minimum feature sizes that can be reliably 
+obtained with electron beam lithography. Linewidth corrections can be used to control 
+the dimensions of isolated femures (i.e. intmproximity, Sewell, 1978), but meet with 
+little success when dealing with the same features in a practical context, where they are 
+surrounded by other features (i.e. interproximity). Local corrections have been 
+proposed using a self-consistent method of computation for the desired incident dose 
+pattern (Parikh, 1978). Such techniques require inversion of large matrices and 
+prohibitive amounts of computation time. Lynch et al., 1982, have proposed an 
+analytical method for proximity corrections based on a solution of a set of approximate 
+equations, resulting in a considerable improvement in speed. 
+The method that we present here, using a neural network, combines the computational 
+simplicity of the method of Lynch et al. with the accuracy of the self-consistent 
+methods. The first step is to determine the scattered energy profile of the electron 
+beam which depends on the substrate structure, beam size and electron energy. This is 
+Present address: Motorola Inc. Phoenix Corporate Research Laboratories, 2100 East Elliot Rd. Tempe, 
+AZ 85284. 
+443 
+444 Frye, Cummings, and Rietman 
+then used to compute spatial variations in the dosage that result when a particular 
+image is scattered. This can be used to iteratively compute a corrected image for the 
+input pattem. The goal of the correction is to adjust the written image so that the 
+incident pattem of dose after scattering approximates the desired one as closely as 
+possible. We have used this iterative method on a test image to form a training set for 
+a neural network. The architecture of this network was chosen to incorporate the basic 
+mathematical structure as the analytical method of Lynch et al., but relies on an 
+adaptive procedure to determine its characteristic parameters. 
+2 CALCULATING PROXIMITY CORRECTED PATTERNS 
+We determined the radial distribution of scattered dose from a single pixel by using a 
+Monte-Carlo simulation for a variety of substrates and electron beam energies 
+(Cummings, 1989). As an example problem, we looked at resist on a heavy metal 
+substrate. (These are of interest in the fabrication of masks for x-ray lithography.) For 
+a 20 KeV electron beam this distribution, or proximity function, can be approximated 
+by the analytical expression 
+f(r) 1 e-(r/a? ve-(r/,) 
+-- + + 
+%(l+v+) at2 2y2 22 
+where 
+at = 0.038 gm, y = 0.045 gm,  = 0.36 gm, v = 3.49 and  = 6.42. 
+The unscattered image is assumed to be composed of an array of pixels, I0(x,y). For a 
+beam with a proximity function f(r) like the one given above, the image after scattering 
+will be 
+I0(x-m,y-n) f((m2+n2)'/'), 
+which is the discrete convolution of the original image with the lineshape f(r). The 
+approach suggested by analogy with signal processing is to deconvolve the image by 
+an inverse filtering operation. This method cannot be used, however, because it is 
+impossible to generate negative amounts of electron exposure. Restricting the beam to 
+positive exposures makes the problem inherently nonlinear, and we must rely instead 
+on an iterative, rather than analytical, solution. 
+Figure 1 shows the pattern that we used to generate a training set for the neural 
+network. This pattern was chosen to include examples of the kinds of features that are 
+difficult to resolve because of proximity effects. Minimum feature sizes in the pattern 
+ore 0.25gm and the overall image, using 0.125gm pixels, is 180 pixels (22.5t. tm) on a 
+side, for a total of 32,400 pixels. The initial incident dose pattern for the iterative 
+correction of this image started with a relative exposure value of 100% for exposed 
+pixels and 0 for unexposed ones. The scattered intensity distribution was computed 
+from this incident dose using the discrete two-dimensional convolution with the 
+summation truncated to a finite range, r0. For the example proximity function 95% o[ 
+the scattered intensity is contained within a radius of 1.125t. tm (9 pixels) and this 
+value was used for r 0. The scattered intensity distribution was computed and compared 
+with the desired pattern of 100% for exposed and 0 for unexposed pixels. The 
+Proximity Effect Corrections in Electron Beam Lithography 445 
+difference between the resulting scattered and desired distributions is the error. This 
+error was subtracted from the dose pattern to be used for the next iteration. However, 
+since negative doses are not allowed, negative regions in the correction were truncated 
+to zero. 
+II Illll 
+Illll 
+Illll 
+Illll 
+� � � � � 
+Figure 1: Training pattern 
+180 
+pixels 
+Using this algorithm, a pixel that receives a dosage that is too small will have a 
+negative error, and on the next iteration its intensity will be increased. Unexposed 
+pixels (i.e. regions where resist is to be removed) will always have some dosage 
+scattered into them from adjacent features, and will consequently always show a 
+positive error. Because the written dose in these regions is always zero, rather than 
+negative, it is impossible for the iterative solution to completely eliminate the error in 
+the final scattered distribution. However, the nonlinear exposure properties of the resist 
+will compensate for this. Moreover, since all exposed features receive a uniform dose 
+after correction, it is possible to choose a resist with the optimal contrast properties for 
+the pattern. 
+Although this iterative method is effective, it is also time consuming. Each iteration on 
+the test pattern required about 1 hour to run on a 386 based computer. Four iterations 
+were required before the smallest features in the resist were properly resolved. Even 
+the expected order of magnitude speed increase from a large mainframe computer is 
+not sufficient to correct the image from a full sized chip consisting of several billion 
+pixels. The purpose of the neural network is to do these same calculations, but in a 
+much shorter time. 
+3 NETWORK ARCHITECTURE AND TRAINING 
+Figure 2 shows the relationship between the image being corrected and the neural 
+network. The correction for one pixel takes into account the image surrounding it. 
+Since the neighborhood must include all of the pixels that contribute appreciable 
+scattered intensity to the central pixel being corrected, the size of the network was 
+determined by the same maximum radius, r0 = 1.125grn, that characterized the 
+scattering proximity function. The large number of inputs would be difficult to manage 
+in an analog network if these inputs were general analog signals, but fortunately the 
+input data are binary, and can be loaded into an analog network using digital shift 
+registers. 
+446 a'ye Cummings and Riernan 
+Figure 3 shows a schematic diagram of the analog network. The binary signals from 
+the shift registers representing a portion of the image were connected to the buffer 
+amplifiers through 10 K.Q resistors. Each was connected to only one summing node, 
+corresponding to its radial distance from the center pixel. This stage converted the 19 x 
+19 binary representation of the image into 10 analog voltages that represented the 
+radial distribution of the surrounding intensity. The summing amplifier at the output 
+was connected to these 10 nodes by variable resistors. This resulted in an output that 
+was a weighted sum of the radial components. 
+network 
+input 
+summing 
+node 
+corrected 
+mage 
+t network 
+pixel to be 
+corrected 
+Figure 2: Network configuration 
+binary 
+inputs 
+fixed 
+weights 
+� adjustable 
+I weights 
+r=O 
+I analog 
+1 output 
+current 
+1 summing 
+neuron 
+I buffer 
+1 amplifiers 
+Figure 3: Schematic diagram of the analog network 
+Proximity Effect Corrections in Electron Beam Lithography 447 
+Functionally, this network does the operation 
+9 
+Vou t =  Wr<IO>r, 
+r=O 
+where w r are the weight coefficients set by the adjustable resistors and <I0> r are the 
+average values of the pixel intensity at radius r. The form of this relationship is 
+identical to the one proposed by Lynch et al. but uses an adaptive method, rather than 
+an analytical one, to determine the coeff�cients 
+The prototype analog hardware network was built on a wire wrap board using 
+74HC164 8 bit CMOS static shift registers and LM324 quad operational amplifiers for 
+the active devices. The resistors in the first layer were 10 KII thin-film resistors in 
+dual-in-line packages and had a tolerance of 1%. The ten adjustable resistors in the 
+second layer of the network were 10 turn precision trimmers. Negative weights were 
+made by inverting the sign of the voltage at the buffer amplifiers. For comparison, we 
+also evaluated a digital hardware implementation of this network. It was implemented 
+on 

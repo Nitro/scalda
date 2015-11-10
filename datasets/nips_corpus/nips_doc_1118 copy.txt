@@ -1,0 +1,149 @@
+SPERT-II: A Vector Microprocessor 
+System and its Application to Large 
+Problems in Backpropagation Training 
+John Wawrzynek, Krste Asanovid, & Brian Kingsbury 
+University of California at Berkeley 
+Department of Electrical Engineering and Computer Sciences 
+Berkeley, CA 94720-1776 
+{j ohnw, krste, bed k) @cs. berkeley. edu 
+James Beck, David Johnson, & Nelson Morgan 
+International Computer Science Institute 
+1947 Center Street, Suite 600 
+Berkeley, CA 94704-1105 
+{ beck, d avid j, morgan) @ icsi. berkeley. edu 
+Abstract 
+We report on our development of a high-performance system for 
+neural network and other signal processing applications. We have 
+designed and implemented a vector microprocessor and pack- 
+aged it as an attached processor for a conventional workstation. 
+We present performance comparisons with commercial worksta- 
+tions on neural network backpropagation training. The SPERT-II 
+system demonstrates significant speedups over extensively hand- 
+optimization code running on the workstations. 
+I Introduction 
+We are working on pattern recognition problems using neural networks with a large 
+number of parameters. Because of the large computational requirements of our area 
+of research, we set out to design an integrated circuit that would serve as a good 
+building block for our systems. Initially we considered designing extremely special- 
+ized chips, as this would maximize performance for a particular algorithm. However, 
+the algorithms we use undergo considerable change as our research progresses. Still, 
+we needed to provide some specialization if our design was to offer significant im- 
+provement over commercial workstation systems. Competing with workstations is 
+620 J. WAWRZYNEK, K. ASANOVIC, B. KINGSBURY, J. BECK, D. JOHNSON, N. MORGAN 
+a challenge to anyone designing custom programmable processors, but as will be 
+shown in this paper, one can still provide a performance advantage by focusing on 
+one general class of computation. 
+Our solution was to design a vector microprocessor, TO, optimized for fixed-point 
+computations, and to package this as an inexpensive workstation accelerator board. 
+In this manner, we gain a considerable performance/cost advantage for neural net- 
+work and other signal processing algorithms, while leveraging the commercial work- 
+station environment for software development and I/O services. 
+In this paper, we focus on the neural network applications of the SPERT-II system. 
+We are also investigating other applications in the areas of human-machine interface 
+and multimedia processing, as we believe vector microprocessors show promise in 
+providing the flexible, cost-effective, high-performance computing required. 
+Section 2 discusses the design of the hardware, followed in Section 3 by a discussion 
+of the software environment we are developing and a discussion of related systems 
+in Section 4. In Section 5 we discuss how we map a backpropagation training task 
+to the system and in Section 6 we compare the resulting performance with two 
+commercial workstation systems. 
+2 SPERT-II System 
+SPERT-II is a double slot SBus card for use in Sun compatible workstations and is 
+shown in Figure 1. The board contains a TO vector microprocessor and its memory, 
+a Xilinx FPGA device for interfacing with the host, and various system support 
+devices. 
+SPERT-!i 
+Board 
+Host Workstation 
+Vector Arithmetic Pipeline 
+� I TM i 
+Vector Registers 
+Vector Arithmetic Pipeline 
+Vector Memory Pipeline 
+Data 8MB SRAM 
+',11 
+Figure 1' SPERT-II System Organization 
+2.1 The TO vector microprocessor 
+Development of the TO vector microprocessor follows our earlier work on the original 
+SPERT VLIW/SIMD neuro-microprocessor (Wawrzynek, 1993). The most signifi- 
+cant change we have made to the architecture is to move to a vector instruction set 
+architecture (ISA), based on the industry standard MIPS RISC scalar ISA (Kane, 
+1992) extended with vector coprocessor instructions. The resulting ISA, which we 
+call Torrent, offers important advantages over our previous design. We gain access to 
+existing software tools for the MIPS architecture, including optimizing C compilers, 
+assemblers, linkers, and debuggers. VLIW machines expose details of the hardware 
+implementation at the instruction set level, and so must change instruction sets 
+SPERT-II: A Vector Microprocessor System 621 
+hen scaling to higher degrees of on-chip parallelism. In contrast, vector ISAs pro- 
+vide a simple abstraction of regular data parallelism that enables different hardware 
+implementations to make different trade-offs between cost and performance while 
+remaining software compatible. Compared with the VLIW/SIMD design, the vector 
+ISA reduces requirements on instruction cache space and fetch bandwidth. It also 
+makes it easier to write optimized library routines in assembly language, and these 
+library routines will still run well on future devices with greater on-chip parallelism. 
+In the design of the TO vector microprocessor, the main technique we employ to 
+improve cost-performance over a commercial general purpose processor is to inte- 
+grate multiple fixed-point datapaths with a high-bandwidth memory system. Fast 
+digital arithmetic units, multipliers in particular, require chip area proportional to 
+the square of the number of operand bits. In modern microprocessors and digital 
+signal processors a single floating-point unit takes up a significant portion of the chip 
+area. High-precision arithmetic units also requires high memory bandwidth to move 
+large operands. However, for a wide class of problems, full-precision floating-point, 
+or even high-precision fixed-point arithmetic, is not needed. Studies by ourselves 
+and others have shown that for error back-propagation training of neural networks, 
+16-bit weights and 8-bit activation values provide similar training performance to 
+IEEE single-precision floating-point (Asanovid, 1991). 
+However, fast fixed-point multiply-adds alone are not sufficient to increase perfor- 
+mance on a wide range of problems. Other components of a complete application 
+may dominate total compute time if only multiply-add operations are accelerated. 
+Our processor integrates a fast general-purpose RISC core, and includes general 
+purpose operations in its vector instruction set to obtain a balanced design. 
+The TO processor is a complete single chip implementation of the Torrent archi- 
+tecture. It was fabricated in Hewlett-Packard's CMOS26B process using 1.0ttm 
+scalable CMOS design rules and two layers of metal. The die measures 16.75mm x 
+16.75mm, and contains 730,701 transistors. TO runs at an internal clock rate of 
+40MHz. 
+The main components of TO are the MIPS-II compatible RISC CPU with an on- 
+chip instruction cache, a vector unit coprocessor, a 128-bit wide external memory 
+interface, and an 8-bit wide serial host interface (TSIP) and control unit. The 
+external memory interface supports up to 4 GB of memory over a 128-bit wide data 
+bus. The current SPERT-II board uses 16, 4 Mb SRAM parts to provide 8 MB of 
+main memory. 
+At the core of the TO processor is a MIPS-II compatible 32-bit integer RISC pro- 
+cessor with a 1 KB instruction cache. The system coprocessor provides a 32-bit 
+counter/timer and registers for host synchronization and exception handling. 
+The vector unit contains a vector register file with 16 vector registers, each holding 
+32 elements of 32 bits each, and three vector functional units, VP0, VP1, and 
+VMP. VP0 and VP1 are vector arithmetic functional units. With the exception of 
+multiplies, that must execute in VP0, either pipeline can execute any arithmetic 
+operation. The multipliers perform 16-bit x 16-bit multiplies producing 32-bit 
+results. All other arithmetic, logical and shift functions operate on 32 bits. VMP 
+is the vector memory unit, and it handles all vector load/store operations, scalar 
+load/store operations, and the vector insert/extract operations. 
+All three vector functional units are composed of 8 parallel pipelines, and so can 
+each produce up to 8 results per cycle. The TO memory interface has a single 
+memory address port, therefore non-unit stride and indexed memory operations are 
+limited to a rate of one element per cycle. 
+622 J. WAWRZYNEK, K. ASANOVIC, B. KINGSBURY, J. BECK, D. JOHNSON, N. MORGAN 
+The elements of a vector register are striped across all 8 pipelines. With the max- 
+imum vector length of 32, a vector functional unit can accept a new instruction 
+every 4 cycles. TO can saturate all three vector functional units by issuing one 
+instruction per cycle to each, leaving a single issue slot every 4 cycles for the scalar 
+unit. In this manner, TO can sustain up to 24 operations per cycle. Several im- 
+portant library routines, such as matrix-vector and matrix-matrix multiplies, have 
+been written which achieve this level of performance. All vector pipeline hazards 
+are fully interlocked in hardware, and so instruction scheduling is only required to 
+improve performance, not to ensure correctness. 
+3 SPERT-II Software Environment 
+The primary design goal for the SPERT-II software environment was that it should 
+appear as similar as possible to a conventional workstation environment. This 
+should ease the task of porting existing workstation applications, as well as provide 
+a comfortable environment for developing new code. 
+The Torrent instruction set architecture is based on the MIPS-II instruction set, 
+with extra coprocessor instructions added to access the vector unit functionality. 
+This compatibility allows us to base our software environment on the GNU tools 
+which already include support for MIPS based machines. We have ported the 
+gee C/C++ compiler, modified the gdb symbolic debugger to debug TO programs 
+remotely from the host, enhanced the gas assembler to understand the new vector 
+instructions and to schedule code to avoid interlocks, and we also employ the GNU 
+linker and other library management util

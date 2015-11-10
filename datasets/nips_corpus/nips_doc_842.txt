@@ -1,0 +1,146 @@
+Developing Population Codes By 
+Minimizing Description Length 
+Richard S. Zemel 
+CNL, The Salk Institute 
+10010 North Torrey Pines Rd. 
+La Jolla, CA 92037 
+Geoffrey E. Hinton 
+Department of Computer Science 
+University of Toronto 
+Toronto M5S 1A4 Canada 
+Abstract 
+The Minimum Description Length principle (MDL) can be used to 
+train the hidden units of a neural network to extract a representa- 
+tion that is cheap to describe but nonetheless allows the input to 
+be reconstructed accurately. We show how MDL can be used to 
+develop highly redundant population codes. Each hidden unit has 
+a location in a low-dimensional implicit space. If the hidden unit 
+activities form a bump of a standard shape in this space, they can 
+be cheaply encoded by the center of this bump. So the weights from 
+the input units to the hidden units in an autoencoder are trained 
+to make the activities form a standard bump. The coordinates of 
+the hidden units in the implicit space are also learned, thus allow- 
+ing flexibility, as the network develops a discontinuous topography 
+when presented with different input classes. Population-coding in 
+a space other than the input enables a network to extract nonlinear 
+higher-order properties of the inputs. 
+Most existing unsupervised learning algorithms can be understood using the Min- 
+imum Description Length (MDL) principle (Rissanen, 1989). Given an ensemble 
+of input vectors, the aim of the learning algorithm is to find a method of coding 
+each input vector that minimizes the total cost, in bits, of communicating the input 
+vectors to a receiver. There are three terms in the total description length: 
+� The code-cost is the number of bits required to communicate the code 
+that the algorithm assigns to each input vector. 
+ll 
+12 Zemel and Hinton 
+� The model-cost is the number of bits required to specify how to recon- 
+struct input vectors from codes (e.g., the hidden-to-output weights). 
+� The reconstruction-error is the number of bits required to fix up any 
+errors that occur when the input vector is reconstructed from its code. 
+Formulating the problem in terms of a communication model allows us to derive an 
+objective function for a network (note that we are not actually sending the bits). 
+For example, in competitive learning (vector quantization), the code is the identity 
+of the winning hidden unit, so by limiting the system to 7/ units we limit the 
+average code-cost to at most log 2 7/bits. The reconstruction-error is proportional 
+to the squared difference between the input vector and the weight-vector of the 
+winner, and this is what competitive learning algorithms minimize. The model-cost 
+is usually ignored. 
+The representations produced by vector quantization contain very little information 
+about the input (at most log s 7/bits). To get richer representations we must allow 
+many hidden units to be active at once and to have varying activity levels. Principal 
+components analysis (PCA) achieves this for linear mappings from inputs to codes. 
+It can be viewed as a version of MDL in which we limit the code-cost by only 
+having a few hidden units, and ignoring the model-cost and the accuracy with which 
+the hidden activities must be coded. An autoencoder (see Figure 2) that tries to 
+reconstruct the input vector on its output units will perform a version of PCA if the 
+output units are linear. We can obtain novel and interesting unsupervised learning 
+algorithms using this MDL approach by considering various alternative methods of 
+communicating the hidden activities. The algorithms can all be implemented by 
+backpropagating the derivative of the code-cost for the hidden units in addition to 
+the derivative of the reconstruction-error backpropagated from the output units. 
+Any method that communicates each hidden activity separately and independently 
+will tend to lead to factorial codes because any mutual information between hidden 
+units will cause redundancy in the communicated message, so the pressure to keep 
+the message short will squeeze out the redundancy. In (Zemel, 1993) and (Hinton 
+and Zemel, 1994), we present algorithms derived from this MDL approach aimed 
+at developing factoriM codes. Although factoriM codes are interesting, they are not 
+robust against hardware failure nor do they resemble the population codes found in 
+some parts of the brain. Our aim in this paper is to show how the MDL approach 
+can be used to develop population codes in which the activities of hidden units are 
+highly correlated. For a more complete discussion of the details of this algorithm, 
+see (Zemel, 1993). 
+Unsupervised algorithms contain an implicit assumption about the nature of the 
+structure or constraints underlying the input set. For example, competitive learning 
+algorithms are suited to datasets in which each input can be attributed to one of 
+a set of possible causes. In the algorithm we present here, we assume that each 
+input can be described as a point in a low-dimensional continuous constraint space. 
+For instance, a complex shape may require a detailed representation, but a set of 
+images of that shape from multiple viewpoints can be concisely represented by first 
+describing the shape, and then encoding each instance as a point in the constraint 
+space spanned by the viewing parameters. Our goal is to find and represent the 
+constraint space underlying high-dimensional data samples. 
+Developing Population Codes by Minimizing Description Length 13 
+size  
+� 0 � 
+� 
+� 
+0X0 * 
+orientatior 
+Figure 1: The population code for an instance in a two-dimensional implicit space. 
+The position of each blob corresponds to the position of a unit within the population, 
+and the blob size corresponds to the unit's activity. Here one dimension describes 
+the size and the other the orientation of a shape. We can determine the instantiation 
+parameters of this particular shape by computing the center of gravity of the blob 
+activities, marked here by an X. 
+I POPULATION CODES 
+In order to represent inputs as points drawn from a constraint space, we choose 
+a population code style of representation. In a population code, each code unit is 
+associated with a position in what we call the implicit space, and the code units' 
+pattern of activity conveys a single point in this space. This implicit space should 
+correspond to the constraint space. For example, suppose that each code unit 
+is assigned a position in a two-dimensional implicit space, where one dimension 
+corresponds to the size of the shape and the second to its orientation in the image 
+(see Figure 1). A population of code units broadly-tuned to different positions can 
+represent any particular instance of the shape by their relative activity levels. 
+This example illustrates that population codes involve three quite different spaces: 
+the input-vector space (the pixel intensities in the example); the hidden-vector space 
+(where each hidden, or code unit entails an additional dimension); and this third, 
+low-dimensional space which we term the implicit space. In a learning algorithm 
+for population codes, this implicit space is intended to come to smoothly represent 
+the underlying dimensions of variability in the inputs, i.e., the constraint space. 
+For instance, the Kohonen (1982) algorithm defines the implicit space topology 
+through fixed neighborhood relations, and the algorithm then manipulates hidden- 
+vector space so that neighbors in implicit space respond to similar inputs. 
+This form of coding has several computational advantages, in addition to its signif- 
+icance due to its prevalence in biological systems. Population codes contain some 
+redundancy and hence have some degree of fault-tolerance, and they reflect under- 
+lying structure of the input, in that similar inputs are mapped to nearby implicit 
+positions. They also possess a hyperacuity property, as the number of implicit 
+positions that can be represented far exceeds the number of code units. 
+14 Zemel and Hinton 
+2 LEARNING POPULATION CODES WITH MDL 
+Autoencoders are a general way of addressing issues of coding, in which the hidden 
+unit activities for an input are the codes for that input which are produced by the 
+input-hidden weights, and in which reconstruction from the code is done by the 
+hidden-output mapping. In order to allow an autoencoder to develop population 
+codes for an input set, we need some additional structure in the hidden layer that 
+will allow a code vector to be interpreted as a point in implicit space. While most 
+topographic-map formation algorithms (e.g., the Kohonen and elastic net (Durbin 
+and Willshaw, 1987) algorithms) define the topology of this implicit space by fixed 
+neighborhood relations, in our algorithm we use a more explicit representation. 
+Each hidden unit has weights coming from the input units that determine its activity 
+level. But in addition to these weights, it has another set of adjustable parameters 
+that represent its coordinates in the implicit space. To determine what implicit 
+position is represented by a vector of hidden activities, we can average together the 
+implicit coordinates of the hidden units, weighting each coordinate vector by the 
+activity level of the unit. 
+Suppose, for example, that each hidden unit is connected to an 8x8 retina and has 
+2 implicit coordinates that represent the size and orientation of a particular kind of 
+shape on the retina, as in our earlier example. If we plot the hidden activity levels 
+in the implicit space (not the input space), we would like to see a bump of activity 
+of a standard shape (e.g., a Gaussian) whose center represents the instantiation 
+parameters of the shape (Figure 2 depicts this for a 1D implicit space). If the 
+activities form a perfect Gaussian bump of fixed variance we can communicate 
+them by simply communicating the coordinates of the mean of the Gaussian; this 
+is very economical if there are many less implicit coordinates than hidden units. 
+

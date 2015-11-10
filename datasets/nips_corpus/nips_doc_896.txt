@@ -1,0 +1,143 @@
+Extracting Rules from Artificial Neural Networks 
+with Distributed Representations 
+Sebastian Thrun 
+University of Bonn 
+Department of Computer Science III 
+R6merstr. 164, D-53117 Bonn, Germany 
+E-mail: thrun @ carbon.informatik.uni-bonn.de 
+Abstract 
+Although artificial neural networks have been applied in a variety of real-world scenarios 
+with remarkable success, they have often been criticized for exhibiting a low degree of 
+human comprehensibility. Techniques that compile compact sets of symbolic rules out 
+of artificial neural networks offer a promising perspective to overcome this obvious 
+deficiency of neural network representations. 
+This paper presents an approach to the extraction of if-then rules from artificial neu- 
+ral networks. Its key mechanism is validity interval analysis, which is a generic 
+tool for extracting symbolic knowledge by propagating rule-like knowledge through 
+Backpropagation-style neural networks. Empirical studies in a robot arm domain illus- 
+trate the appropriateness of the proposed method for extracting rules from networks with 
+real-valued and distributed representations. 
+1 Introduction 
+In the last few years artificial neural networks have been applied successfully to a variety 
+of real-world problems. For example, neural networks have been successfully applied in 
+the area of speech generation [12] and recognition [18], vision and robotics [8], handwritten 
+character recognition [5], medical diagnostics [11], and game playing [13]. While in these 
+and other approaches neural networks have frequently found to outperform more traditional 
+approaches, one of their major shortcomings is their low degree of human comprehensibility. 
+In recent years, a variety of approaches for compiling rules out of networks have been 
+proposed. Most approaches [1, 3, 4, 6, 7, 16, 17] compile networks into sets of rules with 
+equivalent structure: Each processing unit is mapped into a separate rule-or a small set 
+of rules-, and the ingoing weights are interpreted as preconditions to this rule. Sparse 
+connectivity facilitates this type rule extraction, and so do binary activation values. In order 
+to enforce such properties, which is a necessary prerequisite for these techniques to work 
+effectively, some approaches rely on specialized training procedures, network initializations 
+506 Sebastian Thrun 
+and/or architectures. 
+While such a methodology is intriguing, as it draws a clear one-to-one correspondence 
+between neural inference and rule-based inference, it is not universally applicable to arbitrary 
+Backpropagation-style neural networks. This is because artificial neural networks might not 
+meet the strong representational and structural requirements necessary for these techniques 
+to work successfully. When the internal representation of the network is distributed in nature, 
+individual hidden units typically do not represent clear, logical entities. One might argue that 
+networks, if one is interested in extracting rules, should be constructed appropriately. But this 
+would outrule most existing network implementationa, as such considerations have barely 
+played a role. In addition, such an argument would suppress the development of distributed, 
+non-discrete internal representations, which have often be attributed for the generalization 
+properties of neural networks. It is this more general class of networks that is at stake in this 
+paper. 
+This paper presents a rule extraction method which finds rules by analyzing networks as a 
+whole. The rules are of the type ifz then t, where both z and /are described by a linear set 
+of constraints. The engine for proving the correspondence of rule and network classification is 
+VI-Analysis. Rules extracted by VI-Analysis can be proven to exactly describe the network. 
+2 Validity-Interval Analysis 
+Validity Interval Analysis (in short: VI-Analysis) is a generic tool for analyzing the input- 
+output behavior of Backpropagation-style neural networks. In short, they key idea of VI- 
+Analysis is to attach intervals to the activation range of each unit (or a subset of all units, 
+like input and output units only), such that the network's activations must lie within these 
+intervals. These intervals are called validity intervals. VI-Analysis checks whether such 
+a set of intervals is consistent, i.e., whether there exists a set of network activations inside 
+the validity intervals. It does this by iteratively refining the validity intervals, excluding 
+activations that are provably inconsistent with other intervals. In what follows we will 
+present the general VI-Analysis algorithm, which can be found in more detail elsewhere [ 14]. 
+Let n denote the total number of units in the network, and let zi denote the (output) activation 
+of unit i (i - 1,..., n). If unit i is an input unit, its activation value will simply be the 
+external input value. If not, i.e., if i refers to a hidden or an output unit, let P(i) denote the 
+set of units that are connected to unit i through a link. The activation zi is computed in two 
+steps: 
+zi = tri(neti) with neti = E wiz + Oi 
+E(i) 
+The auxiliary variable neti is the net-input of unit i, and wi and Oi are the weights and 
+biases, respectively. tri denotes the transfer function (squashing function), which usually is 
+given by 
+1 with -(zi)=-ln( 1 1) 
+tri(neti) = 1 + e -n*, tr i 1 xi 
+Validity intervals for activation values xi are denoted by [ai, bi]. If necessary, validity intervals 
+are projected into the net-input space of unit i, where they will be denoted by [ai, bi]. Let 
+:t be a set of validity intervals for (a subset of) all units. An activation vector (xl,..., x,) 
+is said to be admissible with respect to :t, if all activations lie in :Z. A set of intervals :t is 
+consistent, if there exists an admissible activation vector. Otherwise :t is inconsistent. 
+Assume an initial set of intervals, denoted by :t, is given (in the next section we will present 
+a procedure for generating initial intervals). VI-Analysis refines :t iteratively using linear 
+Extracting Rules from Artificial Neural Networks with Distributed Representations 507 
+layer 
+layel' 
+lakl;bkl} [ak;bk,.1 [asa;bk3 
+� 
+�� ...� 
+I ai'; hi2' I [ air; bi3' ] [ ai'; hi.' ] 
+�� ...� 
+non-linear squashing functions o 
+linear equations 
+Figure 1: VI-Analysis in a single weight layer. Units in layer V are connected to the units 
+in layer $. A validity interval [aj, bj] is assigned to each unit j E o t3 $. By projecting the 
+validity intervals for all i E $, intervals [ai, bi] for the net-inputs neti are created. These, plus 
+the validity intervals for all units k E o, form a set of linear constraints on the activations z 
+in layer 7 . Linear programming is now employed to refine all interval bounds one-by-one. 
+programming [9], so that those activation values which are inconsistent with other intervals 
+are excluded. In order to simplify the presentation, let us assume without loss of generality 
+(a) that the network is layered and fully connected between two adjacent layers , and (b) 
+that there is an interval [ai, bi] C_ [0, 1] in Z for every unit in o and $.2 Consider a single 
+weight layer, connecting a layer of. preceding units, denoted by o, to a layer of succeeding 
+units, denoted by $ (cf Fig. 1). In order to make linear programming techniques applicable, 
+the non-linearity of the transfer function must be eliminated. This is achieved by projecting 
+[ai, bi] back to the corresponding net-input intervals 3 [ai, bi] = ty-]([ai, bi])  2 for all 
+i 6 $. The resulting validity intervals in P and $ form the following set of linear constraints 
+on the activation values in P: 
+VkE7. 
+VIES' 
+x: _ a: and x: _ b: 
+E wix + Oi _ a/i [by substituting neti = E wix + Oil 
+kE kE7:' 
+ wix + Oi 5 bi [by substituting neti =  wix + Oil 
+(l) 
+Notice that all these constraints are linear in the activation values xe (k  o). Linear 
+programming allows to maximize or minimize arbitrary linear combinations of the variables 
+xj while not violating a set of linear constraints [9]. Hence, linear programming can be 
+applied to refine lower and upper bounds for validity intervals one-by-one. 
+In VI-Analysis, constraints are propagated in two phases: 
+1. Forward phase. To refine the bounds ai and bi for units i E 8, new bounds 8i and i are 
+IThis assumption simplifies the description of VI-Analysis, although VI-Analysis can also be applied 
+to arbitrary non-layered, partially connected network architectures, as well as recurrent networks not 
+examined here. 
+2The canonical interval [0, 1] corresponds to the state of maximum ignorance about the activation 
+of a unit, and hence is the default interval if no more specific interval is known. 
+3Here  denotes the set of real numbers extended by -t-ext. Notice that this projection assumes that 
+the transfer function is monotonic. 
+508 Sebastian Thrun 
+derived: 
+: cr(a) with a' i = minneti : min E wikxk q- Oi 
+= cr(['i) with ['i = maxneti = max E wikx + Oi 
+k E7  
+If i > ai, a tighter lower bound is found and ai is updated by a i. Likewise, bi is set to 
+if [i < hi. Notice that the min/max operator is computed within the bounds imposed by 
+Eq. 1, using the Simplex algorithm (linear programming) [9]. 
+2. Backward phase. In the backward phase the bout/ds a and b of all units k  7  are 
+refined. 
+a = minx and  = maxx 
+As in the forward phase, a is updated by a: ifad: > a, and b: is updated by : if[: < b:. 
+If the network has multiple weight layers, this process is applied to all weight layers one-by- 
+one. Repetitive refinement results in the propagation of interval constraints through multiple 
+layers in both directions. The convergence of VI-Analysis follows from the fact that the 
+update rule that intervals are changed monotonically, since they can only shrink or stay the 
+same. 
+Recall that the input of VI-Analysis is a set of intervals :Z C_ [0, 1] ' that co

@@ -1,0 +1,171 @@
+Promoting Poor Features to Supervisors: 
+Some Inputs Work Better as Outputs 
+Rich Caruana 
+JPRC and 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+caruana@cs.cmu.edu 
+Virginia R. de Sa 
+Sloan Center for Theoretical Neurobiology and 
+W. M. Keck Center for Integratire Neuroscience 
+University of California, San Francisco CA 94143 
+desa@phy. ucsf. edu 
+Abstract 
+In supervised learning there is usually a clear distinction between 
+inputs and outputs -- inputs are what you will measure, outputs 
+are what you will predict from those measurements. This paper 
+shows that the distinction between inputs and outputs is not this 
+simple. Some features are more useful as extra outputs than as 
+inputs. By using a feature as an output we get more than just the 
+case values but CalX learn a mapping from the other inputs to that 
+feature. For many features this mapping may be more useful than 
+the feature value itself. We present two regression problems and 
+one classification problem where performance improves if features 
+that could have been used as inputs are used as extra outputs 
+instead. This result is surprising since a feature used as an output 
+is not used during testing. 
+1 Introduction 
+The goal in supervised learning is to learn functions that map inputs to outputs 
+with high predictive accuracy. The standard practice in neural nets is to use all 
+features that will be available for the test cases as inputs, and use as outputs only 
+the features to be predicted. 
+Extra features available for training cases that won't be available during testing 
+can be used as extra outputs that often benefit the original output[2][5]. Other 
+ways of adding information to supervised learning through outputs include hints[l], 
+tangent-prop[7], and EBNN[8]. In unsupervised learning it has been shown that 
+inputs arising from different modalities can provide supervisory signals (outputs for 
+the other modality) to each other and thus aid learning [3][6]. 
+If outputs are so useful, and since any input could be used as an output, would some 
+inputs be more useful as outputs.'? Yes. In this paper we show that in supervised 
+backpropagation learning, some features are more useful as outputs than as inputs. 
+This is surprising since using a feature as an output only extracts information from 
+it during training; during testing it is not used. 
+390 R. Caruana and V. R. de Sa 
+This paper uses the following terms: The Main Task is the output to be learned. 
+The goal is to improve performance on the Main Task. Regular Inputs are the 
+features provided as inputs in all experiments. Extra Inputs (Extra Outputs) are 
+the extra features when used as inputs (outputs). STD is standard backpropagation 
+using the Regular Inputs as inputs and the Main Task as outputs. STD+IN uses 
+the Extra Features as Extra Inputs to learn the Main Task. STD+OUT uses the 
+Extra Features, but as Extra Outputs learned in parallel with the Main Task, using 
+just the Regular Inputs as inputs. 
+2 Poorly Correlated Features 
+This section presents a simple synthetic problem where it is easy to see why using a 
+feature as an extra output is better than using that same feature as an extra input. 
+Consider the following function: 
+Fi(A,B) = SIGMOID(A+B), SIGMOID(x) = 1/(1 + e(-)) 
+The STD net in Figure la has 20 inputs, 16 hidden units, and one output. We use 
+backpropagation on this net to learn Fl(). A and B are uniformly sampled from the 
+interval [-5,5]. The network's input is binary codes for A and B. The range [-5,5] is 
+discretized into 2 l� bins and the binary code of the resulting bin number is used as 
+the input coding. The first 10 input units receive the code for A and the second 10 
+that for B. The target output is the unary real (unencoded) value Fi(A,B). 
+fully connected  fully connected  
+hidden layer hidden layer 
+ooooo OOoOO 
+OO0'00CXX)O' 0000000000 
+II I I1 IIIII II I I I IIIII I111111111 II11111111 
+binary inputs binary inputs binary inputs binary inputs 
+coding for A coding for B coding for A cling for B 
+RO u I & T npu . j Rular Input  
+C: S?D+OUT Hain ott Bxt;& ott 
+I I 
+fully connected  
+ooo 
+OOOOOO' 0000000000 
+binary inputs binary inputs 
+coding for A coding for B 
+R&gu 1 & Input j 
+Figure 1: Three Neural Net Architectures for Learning F1 
+Backpropagation is done with per-epoch updating and early stopping. Each trial 
+uses new random training, halt, and test sets. Training sets contain 50 patterns. 
+This is enough data to get good performance, but not so much that there is not 
+room for improvement. We use large halt and test sets -- 1000 cases each -- to 
+minimize the effect of sampling error in the measured performances. Larger halt 
+and test sets yield similar results. We use this methodology for all the experiments 
+in this paper. 
+Table 1 shows the mean performance of 50 trials of STD Net la with backpropaga- 
+tion and early stopping. 
+Now consider a similar function: 
+F2(A,B) = SIGMOID(A-B). 
+Suppose, in addition to the 10-bit codings for A and B, you are given the unencoded 
+unary value F2(A,B) as an extra input feature. Will this extra input help you learn 
+Fi(A,B) better? Probably not. A+B and A-B do not correlate for random A and B. 
+The correlation coefficient for our training sets is typically less than :k0.01. Because 
+Promoting Poor Features to Supervisors 391 
+Table 1: Mean Test Set Root-Mean-Squared-Error on F1 
+Network Trials Mean RMSE Significance 
+STD 50 0.01348 
+STD+IN 50 0.01347 ns 
+STD+OUT 50 0.01331 0.013' 
+of this, knowing the value of F2(A,B) does not tell you much about the target value 
+Fi(A,B) (and vice-versa). 
+Fi(A,B)'s poor correlation with F2(A,B) hurts backprop's ability to learn to use 
+F2(A,B) to predict Fi(A,B). The STD+IN net in Figure lb has 21 inputs -- 20 
+for the binary codes for A and B, and an extra input for F2(A,B). The 2nd line in 
+Table 1 shows the performance of STD+IN for the same training, halting, and test 
+sets used by STD; the only difference is that there is an extra input feature in the 
+data sets for STD+IN. Note that the performance of STD+IN is not significantly 
+different from that of STD -- the extra information contained in the feature F2(A,B) 
+does not help backpropagation learn FI(A,B) when used as an eztra input. 
+If F2(A,B) does not help backpropagation learn Fi(A,B) when used as an input, 
+should we ignore it altogether? No. FI(A,B) and F2(A,B) are strongly related. 
+They both benefit from decoding the binary input encoding to compute the subfea- 
+tures A and B. If, instead of using F2(A,B) as an extra input, it is used as an extra 
+output trained with backpropagation, it will bias the shared hidden layer to learn 
+A and B better, and this will help the net better learn to predict Fi(A,B). 
+Figure lc shows a net with 20 inputs for A and B, and 2 outputs, one for Fi(A,B) 
+and one for F2(A,B). Error is back-propagated from both outputs, but the per- 
+formance of this net is evaluated only on the output Fi(A,B) and early stopping 
+is done using only the performance of this output. The 3rd line in Table 1 shows 
+the mean performance of 50 trials of this multitask net on Fi(A,B). Using F2(A,B) 
+as an extra output significantly improves performance on Fi(A,B). Using the ex- 
+tra feature as an extra output is better than using it as an extra input. By using 
+F�(A,B) as an output we make use of more than just the individual output values 
+F�(A,B) but learn to eztract information about the function mapping the inputs to 
+F�(A,B). This is a key difference between using features as inputs and outputs. 
+The increased performance of STD+OUT over STD and STD+IN is not due to 
+STD+OUT reducing the capacity available for the main task Fi(). All three nets 
+-- STD, STD+IN, STD+OUT -- perform better with more hidden units. (Because 
+larger capacity favors STD+OUT over STD and STD+IN, we report results for the 
+moderate sized 16 hidden unit nets to be fair to STD and STD+IN.) 
+3 Noisy Features 
+This section presents two problems where extra features are more useful as inputs 
+if they have low noise, but which become more useful as outputs as their noise 
+increases. Because the extra features are ideal features for these problems, this 
+demonstrates that what we observed in the previous section does not depend on 
+the extra features being contrived so that their correlation with the main task is 
+low - features with high correlation can still be more useful as outputs. 
+Once again, consider the main task from the previous section: 
+Fi(A,B) = SIGMOID(A+B) 
+392 R. Caruana and V. R. de Sa 
+Now consider these extra features: 
+EF(A) = A + NOISE_SCALE * Noisel 
+EF(B) = B + NOISE_SCALE * Noise2 
+Noisel and Noise2 are uniformly sampled on [-1,1]. If NOISE_SCALE is not too 
+large, EF(A) and EF(B) are excellent input features for learning Fi(A,B) because 
+the net can avoid learning to decode the binary input representations. However, as 
+NOISE_SCALE increases, EF(A) and EF(B) become less useful and it is better for 
+the net to learn FI(A,B) from the binary inputs for A and B. 
+As before, we try using the extra features as either extra inputs or as extra outputs. 
+Again, the training sets have 50 patterns, and the halt and test sets have 1000 
+patterns. Unlike before, however, we ran preliminary tests to find the best net size. 
+The results showed 256 hidden units to be about optimal for the STD nets with 
+early stopping on this problem. 
+0.06 ' ' ' ' ' , , , , , 
+0.18 - 
+0.17 ] ........................ 
+u 0.055 u 0.16 
+0.15 
+ 0.05 
+I-  0.14 
+J J STD+OUT -+-- 
+0.13 j 
+0.045 
+0.12 
+0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10. 
+Feature Noise Scale Feature Noise Scale 
+Figure 2: STD, STD+IN, and STD+OUT on F1 (left) and F3 (right) 
+Figure 2a plots the average performance of 50 trials of STD+IN and STD+OUT 
+as NOISE_SCALE varies from 0.0 to 10.0. The performance of STD, which does 
+not use EF(A) and EF(B), is shown as a horizontal line; it 

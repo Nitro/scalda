@@ -1,0 +1,175 @@
+Coding time-varying signals using sparse, 
+shift-invariant representations 
+Michael S. Lewicki* 
+lewickisalk. edu 
+Terrence J. Sejnowski 
+terrysalk. edu 
+Howard Hughes Medical Institute 
+Computational Neurobiology Laboratory 
+The Salk Institute 
+10010 N. Torrey Pines Rd. 
+La Jolla, CA 92037 
+Abstract 
+A common way to represent a time series is to divide it into short- 
+duration blocks, each of which is then represented by a set of basis 
+functions. A limitation of this approach, however, is that the tem- 
+poral alignment of the basis functions with the underlying structure 
+in the time series is arbitrary. We present an algorithm for encoding 
+a time series that does not require blocking the data. The algorithm 
+finds an efficient representation by inferring the best temporal po- 
+sitions for functions in a kernel basis. These can have arbitrary 
+temporal extent and are not constrained to be orthogonal. This 
+allows the model to capture structure in the signal that may occur 
+at arbitrary temporal positions and preserves the relative temporal 
+structure of underlying events. The model is shown to be equivalent 
+to a very sparse and highly overcomplete basis. Under this model, 
+the mapping from the data to the representation is nonlinear, but 
+can be computed efficiently. This form also allows the use of ex- 
+isting methods for adapting the basis itself to data. This approach 
+is applied to speech data and results in a shift invariant, spike-like 
+representation that resembles coding in the cochlear nerve. 
+I Introduction 
+Time series are often encoded by first dividing the signal into a sequence of blocks. 
+The data within each block is then fit with a standard basis such as a Fourier or 
+wavelet. This has a limitation that the components of the bases are arbitrarily 
+aligned with respect to structure in the time series. Figure I shows a short segment 
+of speech data and the boundaries of the blocks. Although the structure in the signal 
+is largely periodic, each large oscillation appears in a different position within the 
+blocks and is sometimes split across blocks. This problem is particularly present 
+for acoustic events with sharp onset, such as plosives in speech. It also presents 
+*To whom correspondence should be addressed. 
+Coding Time-Varying Signals Using Sparse, Shift-Invariant Representations 731 
+difficulties for encoding the signal efficiently, because any basis that is adapted to 
+the underlying structure must represent all possible phases. This can be somewhat 
+circumvented by techniques such as windowing or averaging sliding blocks, but it 
+would be more desirable if the representation were shift invariant. 
+time 
+Figure 1: Blocking results in arbitrary phase alignment the underlying structure. 
+2 The Model 
+Our goal is to model a signal by using a small set of kernel functions that can be 
+placed at arbitrary time points. Ultimately, we want to find the minimal set of 
+functions and time points that fit the signal within a given noise level. We expect 
+this type of model to work well for signals composed of events whose onset can occur 
+at arbitrary temporal positions. Examples of these include, musical instruments 
+sounds with sharp attack or plosive sounds in speech. 
+We assume time series x(t) is modeled by 
+i 
+(1) 
+where 7.i indicates the temporal position of the ith kernel function, qb,[i], which is 
+scaled by si. The notation re[i] represents an index function that specifies which of 
+the M kernel functions is present at time 7.i. A single kernel function can occur at 
+multiple times during the time series. Additive noise at time t is given by e(t). 
+A more general way to express (1) is to assume that the kernel functions exist 
+at all time points during the signal, and let the non-zero coefficients determine 
+the positions of the kernel functions. In this case, the model can be expressed in 
+convolutional form 
+X() ----  / Sm(T)(m( -- 7-)47- q- e(t) (2) 
+m 
+-- E sin(t) * g}m(t) q- e(t), (3) 
+m 
+where s. (7.) is the coefficient at time 7. for kernel function qb.. 
+It is also helpful to express the model in matrix form using a discrete sampling of 
+the continuous time series: 
+x - As q- e. (4) 
+732 M. S. Lewicki and T. J. Sejnowski 
+The basis matrix, A, is defined by 
+A = [C(051)C(02) ... C(05M)] , 
+(5) 
+where C(a) is an N-by-N circulant matrix parameterized by the vector a. This 
+matrix is constructed by replicating the kernel functions at each sample position 
+C(a) = 
+ao aN- 1 ... a2 al ] 
+al ao ... a3 a2 
+aN-2 aN-3 ... ao aN-1 
+aN-1 aN-2 o.. al ao 
+(6) 
+The kernels are zero padded to be of length N. The length of each kernel is typically 
+much less than the length of the signal, making A very sparse. This can be viewed as 
+a special case of a Toeplitz matrix. Note that the size of A is MN-by-N, and is thus 
+an example of an overcomplete basis, i.e. a basis with more basis functions than 
+dimensions in the data space (Simoncelli et al., 1992; Coifman and Wickerhauser, 
+1992; Mallat and Zhang, 1993; Lewicki and Sejnowski, 1998). 
+3 A probabilistic formulation 
+The optimal coefficient values for a signal are found by maximizing the posterior 
+distribution 
+ - argmaxP(slx, A ) = argmaxP(xlA, s)P(s ) 
+$ 
+(7) 
+where  is the most probable representation of the signal. Note that omission of the 
+normalizing constant P(xlA) does not change the location of the maximum. This 
+formulation of the problem offers the advantage that the model can fit more general 
+types of distributions and naturally denoises the signal. Note that the mapping 
+from x to � is nonlinear with non-zero additive noise and an overcomplete basis 
+(Chen et al., 1996; Lewicki and Sejnowski, 1998). Optimizing (7) essentially selects 
+out the subset of basis functions that best account for the data. 
+To define a probabilistic model, we follow previous conventions for linear genera- 
+rive models with additive noise (Cardoso, 1997; Lewicki and Sejnowski, 1998). We 
+assume the noise, e, to have a Gaussian distribution which yields a data likelihood 
+for a given representation of 
+I (x- As) 2 (8) 
+log P(xlA , s) or - 2a----  . 
+The function P(s) describes the a priori distribution of the coefficients. Under the 
+assumption that P(s) is sparse (highly.peaked around zero), maximizing (7) results 
+in very few nonzero coefficients. A compact representation of  is to describe the 
+values of the non-zero coefficients and their temporal positions 
+M nrr, 
+= II = II II 
+m m=l i=1 
+P(um,i)P('rm,i) , 
+(9) 
+where the prior for the non-zero coefficient values, u,,i, is assumed to be Laplacian, 
+and the prior for the temporal positions (or intervals), r.,i, is assumed to be a 
+gamma distribution. 
+Coding Time- Varying Signals Using Sparse, Shift-Invariant Representations 733 
+4 Finding the best encoding 
+A difficult challenge presented by the proposed model is finding a computationally 
+tractable method for fitting it to the data. The brute-force approach of generating 
+the basis matrix A generates a intractable number basis functions for signals of 
+any reasonable length, so we need to look for ways of making the optimization of 
+(7) more efficient. The gradient of the log posterior is given by 
+0 logP(slA, x)  Ar(x _ As) + z(s) (10) 
+Os ' 
+where z(s) = (log P(s))'. A basic operation required is v = ATu. We saw that 
+x = As can be computed efficiently using convolution (2). Because A T is also block 
+circulant 
+'at= [ �(�[) 
+(11) 
+where qb'(1: N) = qb(N: -1: 1). Thus, terms involving A r can also be computed 
+efficiently using convolution 
+[ (fil(-t)*u(t) ] 
+v = ATu = ... (12) 
+CfM(--t) * u(t) 
+Obtaining an initial representation 
+An alternative approach to optimizing (7) is to make use of the fact that if the 
+kernel functions are short enough in length, direct multiplication is faster than 
+convolution, and that, for this highly overcomplete basis, most of the coefficients 
+will be zero after being fit to the data. The central problem in encoding the signal 
+then is to determine which coefficients are non-zero, ideally finding a description of 
+the time series with the minimal number of non-zero coefficients. This is equivalent 
+to determining the best set of temporal positions for each of the kernel functions 
+(1). 
+A crucial step in this approach is to obtain a good initial estimate of the coefficients. 
+One way to do this is to consider the projection of the signal onto each of the basis 
+functions, i.e. A'x. This estimate will be exact (i.e. zero residual error) in the 
+case of zero noise and A orthogonal. For the non-orthogonal, overcomplete case the 
+solution will be approximate, but for certain choices of the basis matrix, an exact 
+representation can still be obtained efficiently (Daubechies, 1990; Simoncelli et al., 
+1992). 
+Figure 2 shows examples of convolving two different kernel functions with data. One 
+0 
+disadvantage with this initial solution is that the coefficient functions s, (t) are not 
+sparse. For example, even though the signal in figure 2a is composed of only three 
+instances of the kernel function, the convolution is mostly non-zero. 
+A simple procedure for obtaining a better initial estimate of the most probable 
+coefficients is to select the time locations of the maxima (or extrema) in the convo- 
+lutions. These are positions where the kernel functions capture the greatest amount 
+of signal structure and where the optimal coefficients are likely to be non-zero. This 
+generates a large number of positions, but their number can be reduced further by 
+selecting only those that contribute significantly, i.e. where the average power is 
+greater tha some fraction of the noise level. From these, a basis for the entire signal 
+is constructed by replicating the kernel functions at the appropriate time positions. 
+734 
+M. S. Lewicki and T. J. Sejnowski 
+b 
+Figure 2: Convolution using the fast Fourier transform is an efficient way to select an 
+initial solution for the temporal positions of the kernel

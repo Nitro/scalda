@@ -1,0 +1,134 @@
+Using Expectation to Guide Processing: 
+A Study of Three Real-World Applications 
+Shumeet Baluja 
+Justsystem Pittsburgh Research Center & 
+School of Computer Science, Carnegie Mellon University 
+baluja@cs.cmu.edu 
+Abstract 
+In many real world tasks, only a small fraction of the available inputs are important 
+at any particular time. This paper presents a method for ascertaining the relevance 
+of inputs by exploiting temporal coherence and predictability. The method pro- 
+posed in this paper dynamically allocates relevance to inputs by using expectations 
+of their future values. As a model of the task is learned, the model is simulta- 
+neously extended to create task-specific predictions of the future values of inputs. 
+Inputs which are either not relevant, and therefore not accounted for in the model, 
+or those which contain noise, will not be predicted accurately. These inputs can be 
+de-emphasized, and, in turn, a new, improved, model of the task created. The tech- 
+niques presented in this paper have yielded significant improvements for the 
+vision-based autonomous control of a land vehicle, vision-based hand tracking in 
+cluttered scenes, and the detection of faults in the etching of semiconductor wafers. 
+1 Introduction 
+In many real-world tasks, the extraneous information in the input can be easily confused 
+with the important features, making the specific task much more difficult. One of the 
+methods in which humans function in the presence of many distracting features is to selec- 
+tively attend to only portions of the input signal. A means by which humans select where 
+to focus their attention is through the use of expectations. Once the important features in 
+the current input are found, an expectation can be formed of what the important features in 
+the next inputs will be, as well as where they will be. The importance of features must be 
+determined in the context of a specific task; different tasks can require the processing of 
+different subsets of the features in the same input. 
+There are two distinct uses of expectations. Consider Carnegie Mellon's Naylab autono- 
+mous navigation system. The road-following module [Pomerleau, 1993] is separate from 
+the obstacle avoidance modules [Thorpe, 1991]. One role of expectation, in which unex- 
+pected features are de-emphasized, is appropriate for the road-following module in which 
+the features to be tracked, such as lane-markings, appear in predictable locations. This use 
+of expectation removes distractions from the input scene. The second role of expectation, 
+to emphasize unexpected features, is appropriate for the obstacle avoidance modules. This 
+use of expectation emphasizes unanticipated features of the input scene. 
+2 Architectures for Attention 
+In many studies of attention, saliency maps (maps which indicate input relevance) have 
+been constructed in a bottom-up manner. For example, in [Koch & Ullman, 1985], a 
+860 S. Baluja 
+saliency map, which is not task-specific, is created by emphasizing inputs which are dif- 
+ferent from their neighbors. An alternate approach, presented in [Clark & Fen'ier, 1992], 
+places multiple different, weighted, task-specific feature detectors around the input image. 
+The regions of the image which contain high weighted sums of the detected features are 
+the portion of the scene which are focused upon. Top-down knowledge of which features 
+are used and the weightings of the features is needed to make the procedure task-specific. 
+In contrast, the goal of this study is to learn which task-specific features are relevant with- 
+out requiring top-down knowledge. 
+In this study, we use a method based on Input Reconstruction Reliability Estimation 
+(IRRE) [Pomerleau, 1993] to determine which portions of the input are important for the 
+task. IRRE uses the hidden units of a neural network (NN) to perform the desired task and 
+to reconstruct the inputs. In its original use, IRRE estimated how confident a network's 
+outputs were by measuring the similarity between the reconstructed and current inputs. 
+Figure l(Left) provides a schematic of IRRE. Note that the weights between the input and 
+hidden layers are trained to reduce both task and reconstruction error. 
+Because the weights between the input and hidden layers are trained to reduce both task 
+and reconstruction error, a potential drawback of IRRE is the use of the hidden layer to 
+encode all of the features in the image, rather than only the ones required for solving the 
+particular task [Pomerleau, 1993]. This can be addressed by noting the following: if a 
+strictly layered (connections are only between adjacent layers) feed-forward neural net- 
+work can solve a given task, the activations of the hidden layer contain, in some form, the 
+important information for this task from the input layer. One method of determining what 
+is contained in the hidden layer is to attempt to reconstruct the original input image, based 
+solely upon the representation developed in the hidden layer. Like IRRE, the input image 
+is reconstructed from the activations of the units in the hidden layer. Unlike IRRE, the hid- 
+den units are not trained to reduce reconstruction error, they are only trained to solve the 
+particular task. The network's allocation of its limited representation capacity at the hid- 
+den layer is an indicator of what it deems relevant to the task. Information which is not rel- 
+evant to the task will not be encoded in the hidden units. Since the reconstruction of the 
+inputs is based solely on the hidden units' activations, and the irrelevant portions of the 
+input are not encoded in the hidden units' activations, the inputs which are irrelevant to the 
+task cannot be reconstructed. See Figure l(Right). 
+By measuring which inputs can be reconstructed accurately, we can ascertain which inputs 
+the hidden units have encoded to solve the task. A synthetic task which demonstrates this 
+idea is described here. Imagine being given a 10x10 input retina such as shown in 
+Figure 2a&b. The task is to categorize many such examples into one of four classes. 
+Because of the random noise in the examples, the simple underlying process, of a cross 
+being present in one of four locations (see Figure 2c), is not easily discernible, although it 
+is the feature on which the classifications are to be based. Given enough examples, the NN 
+will be able to solve this task. However, even after the model of the task is learned, it is 
+difficult to ascertain to which inputs the network is attending. To determine this, we can 
+freeze the weights in the trained network and connect a input-reconstruction layer to the 
+hidden units, as shown in Figure 1 (Right). After training these connections, by measuring 
+where the reconstruction matches the actual input, we can determine which inputs the net- 
+work has encoded in its hidden units, and is therefore attending. See Figure 2d. 
+weights 
+trained to ' � ' in-uts ' I outputs I [ inputst 
+reduce task I outputs [ I P t 
+- - trained to 
+reduce task idden [  
+I hid. den I weights error only. . we.igh.ts . 
+' ,' trmned to reduce 
+� -. - � trained to reduce  reconstruction 
+.w e.gnt, s. s reconstruction 
+trmnea to � : .,o I eo  o'q error 
+reduce task I '}'u't ! .....  [ inputst [ only� 
+and reconstruction 
+errol'. 
+Figure 1: (Left) IRRE. (Right) Modified IRRE. 
+Using Expectation to Guide Processing 861 
+m 
+B: C: D:  
+3 4 ['!lll II 
+Figure 2: (^ & B): Samples of training data (cross appears in position 4 & 1 respectively). Note the large 
+amounts of noise. (C): The underlying process puts a cross in one of these four locations. (D): The black 
+crosses are where the reconstruction matched the inputs; these correspond exactly to the underlying process. 
+IRRE and this modified IRRE are related to auto-encoding networks [Cottrell, 1990] and 
+principal components analysis (PCA). The difference between auto-encoding networks 
+and those employed in this study is that the hidden layers of the networks used here were 
+trained to perform well on the specific task, not to reproduce the inputs accurately. 
+2.1 Creating Expectations 
+A notion of time is necessary in order to focus attention in future frames. Instead of recon- 
+structing the current input, the network is trained to predict the next input; this corre- 
+sponds to changing the subscript in the reconstruction layer of the network shown in 
+Figure 1 (Right) from t to t+ 1. The prediction is trained in a supervised manner, by using 
+the next set of inputs in the time sequence as the target outputs. The next inputs may con- 
+tain noise or extraneous features. However, since the hidden units only encode information 
+to solve the task, the network will be unable to construct the noise or extraneous features 
+in its prediction. 
+To this point, a method to create a task-specific expectation of what the next inputs will be 
+has been described. As described in Section 1, there are two fundamentally different ways 
+in which to interpret the difference between the expected next inputs and the actual next 
+inputs. The first interpretation is that the difference between the expected and the actual 
+inputs is a point of interest because it is a region which was not expected. This has appli- 
+cations in anomaly detection; it will be explored in Section 3.2. In the second interpreta- 
+tion, the difference between the expected and actual inputs is considered noise. Processing 
+should be de-emphasized from the regions in which the difference is large. This makes the 
+assumption that there is enough information in the previous inputs to specify what and 
+where the important portions of the next image will be. As shown in the road-following 
+and hand-tracking task, this method can remove spurious features and noise. 
+3 Real-World Applications 
+Three real-world tasks are discussed in this section. The first, vision-based road following, 
+shows how the task-specific expectations developed in the previous 

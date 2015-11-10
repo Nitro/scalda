@@ -1,0 +1,212 @@
+Reverse TDNN: An Architecture for Trajectory 
+Generation 
+Patrlce Simard 
+AT&T Bell Laboratories 
+101 Crawford Corner Rd 
+Holmdel, NJ 07733 
+Yann Le Curt 
+AT&T Bell Laboratories 
+101 Crawford Corner Rd 
+Holmdel, NJ 07733 
+Abstract 
+The backpropagation algorithm can be used for both recognition and gen- 
+eration of time trajectories. When used as a recognizer, it has been shown 
+that the performance of a network can be greatly improved by adding 
+structure to the architecture. The same is true in trajectory generation. 
+In particular a new architecture corresponding to a reversed TDNN is 
+proposed. Results show dramatic improvement of performance in the gen- 
+eration of hand-written characters. A combination of TDNN and reversed 
+TDNN for compact encoding is also suggested. 
+i INTRODUCTION 
+Trajectory generation finds interesting applications in the field of robotics, automa- 
+tion, filtering, or time series prediction. Neural networks, with their ability to learn 
+from examples, have been proposed very early on for solving non-linear control prob- 
+lems adaptively. Several neural net architectures have been proposed for trajectory 
+generation, most notably recurrent networks, either with discrete time and exter- 
+nal loops (Jordan, 1986), or with continuous time (Pearlmutter, 1988). Aside from 
+being recurrent, these networks are not specifically tailored for trajectory genera- 
+tion. It has been shown that specific architectures, such as the Time Delay Neural 
+Networks (Lang and Hinton, 1988), or convolutional networks in general, are better 
+than fully connected networks at recognizing time sequences such as speech (Waibel 
+et al., 1989), or pen trajectories (Guyon et al., 1991). We show that special archi- 
+tectures can also be devised for trajectory generation, with dramatic performance 
+improvement. 
+579 
+580 Simard and Le Cun 
+Two main ideas are presented in this paper. The first one rests on the assumption 
+that most trajectory generation problems deal with continuous trajectories. Fol- 
+lowing (Pearlmutter, 1988), we present the differential units, in which the total 
+input to the neuron controls the em rate of change (time derivative) of that unit 
+state, instead of directly controlling its state. As will be shown the differential 
+units can be implemented in terms of regular units. 
+The second idea comes from the fact that trajectories are usually come from a 
+plan, resulting in the execution of a motor program. Executing a complete motor 
+program will typically involve executing a hierarchy of sub-programs, modified by 
+the information coming from sensors. For example drawing characters on a piece 
+of paper involves deciding which character to draw (and what size), then drawing 
+each stroke of the character. Each stroke involves particular sub-programs which 
+are likely to be common to several characters (straight lines of various orientations, 
+curved lines, loops...). Each stroke is decomposed in precise motor patterns. In 
+short, a plan can be described in a hierarchical fashion, starting from the most 
+abstract level (which object to draw), which changes every half second or so, to 
+the lower level (the precise muscle activation patterns) which changes every 5 or 
+10 milliseconds. It seems that this scheme can be particularly well embodied by 
+an Oversampled Reverse TDNN. a multilayer architecture in which the states 
+of the units in the higher layers are updated at a faster rate than the states of 
+units in lower layers. The ORTDNN resembles a Subsampled TDNN (Bottou et al., 
+1990)(Guyon et al., 1991), or a subsampled weight-sharing network (Le Cun et al., 
+1990a), in which all the connections have been reversed, and the input and output 
+have been interchanged. The advantage of using the ORTDNN, as opposed to a 
+table lookup, or a memory intensive scheme, is the ability to generalize the learned 
+trajectories to unseen inputs (plans). With this new architecture it is shown that 
+trajectory generation problems of large complexity can be solved with relatively 
+small resources. 
+2 THE DIFFERENTIAL UNITS 
+In a time continuous network, the forward propagation can be written as: 
+T Ox(t) = -x(t) + g(wx(t)) + I(t) (1) 
+Ot 
+where x(t) is the activation vector for the units, T is a diagonal matrix such that 
+7}i is the time constant for unit i, I t is the input vector at time t, w is a weight 
+matrix such that wij is the connection from unit j to unit i, and g is a differentiable 
+(multi-valued) function. 
+A reasonable discretization of this equation is: 
+.t+l __ .t q_ AtT-l(_.t q_ g(wt) q_ i t) 
+where At is the time step used in the discretization, the superscript t means at time 
+tat (i.e. t = (tAt)). x0 is the starting point and is a constant. t ranges from 0 
+to M, with I � = 0. 
+Reverse TDNN: An Architecture for Trajectory Generation 581 
+The cost function to be minimized is: 
+i t--M 
+E= i  (s''- a')T(s' t -a t) 
+t--1 
+() 
+Where D t is the desired output, and S t is a rectangular matrix which has a 0 if 
+the corresponding x is unconstrained and i otherwise. Each pattern is composed 
+of pairs (I t, D t) for t  [1..MI. To minimize equation 3 with the constraints given 
+by equation 2 we express the Lagrage function (Le Cun, 1988): 
+t:M t:M-1 
+1 E(Sx_D)(Sx_D) + E 
+L -  t ~t t t ~t t T 
+t-1 t=O 
+(4) 
+Where t+l are Lagrange multipliers (for t � [1..M]). The superscript ' means that 
+the corresponding matrix is transposed. If we differentiate with respect to .t we 
+get: 
+OL) T 
+D- =6=(stt-at)-t+t+-atT-t+-at-wrg'(wt)m () 
+Fort[1..M-1] and 0� _0=(stem D M) gM for the boundary condition. 
+g' a diagonal matrix containing the derivatives of g (g'(wx)w is the jacobian of g). 
+From this an update rule for t can be derived: 
+M = ( $M M _ d M) 
+t = (St t - d t) + (1 - ART-1); '+l + AtT-lwWVg(w.') '+l for t � [1..M - 1] 
+(�) 
+This is the rule used to compute the gradient (backpropagation). If the Lagrangian 
+is differentiated with respect to wii, the standard updating rule for the weight is 
+obtained: 
+OL t=M-1 
+ t ) (7) 
+OWij -- tT-1  -t+l=t,/PWik 
+t=l k 
+If the Lagrangian is differentiated with respect to T, we get: 
+OL t=M-1 
+= -T-'  ('+' - ')'+' (8) 
+OT 
+t=O 
+From the last two equations, we Call derived a learning algorithm by gradient descent 
+(9) 
+OL 
+Awij = -rhO Owij 
+1 OL t=M-1 
+: 
+Awl i --19T 0 1 -- --rlTAti (.t+l _ .t)t+l 
+Ti, - 
+(10) 
+where h, and /T are respectively tile learning rates for the weights and the time 
+constants (in practice better results are obtained by having different learning rates 
+/wo and /T, per connections). The constant /T must be chosen with caution 
+582 Simard and Le Cun 
+i  
+1 
+1 D; +1 1 D +1 
+4  g l(wx') 1-1/% g2(wx') 
+Figure 1: A backpropagation implementation of equation 2 for a two units network 
+between time t and t q- 1. This figure repeats itself vertically for every time step 
+from t = 0 to t = M. The quantities .t+l .t+l lt _ .t (wx t) 
+ , 2, .-- q-g q-I and 
+d = -x q- g2(wx t) q- I are computed with linear units. 
+since if any time constants 7]i were to become less than one, the system would 
+be unstable. Performing gradient descent in  instead of in 7i is preferable for 
+numerical stability reasons. 
+Equation 2 is implemented with a feed forward backpropagation network. It should 
+first be noted that this equation can be written as a linear combination of x t (the 
+activation at the previous time), the input, and a non-linear function g of wx t. 
+Therefore, this can be implemented with two linear units and one nonlinear unit 
+with activation function g. To keep the time constraint, the network is unfolded 
+in time , with the weights shared from one time step to another. For instance a 
+simple two fully connected units network with no threshold can be implemented 
+as in Fig. I (only the layer between time t and t q- i is shown). The network 
+repeats itself vertically for each time step with the weights shared between time 
+steps. The main advantage of this implementation is that all equations 6, 7 and 8 
+are implemented implicitly by the back-propagation algorithm. 
+3 
+CHARACTER GENERATION: LEARNING TO 
+GENERATE A SINGLE LETTER 
+In this section we describe a simple experiment designed to 1) illustrate how tra- 
+jectory generation can be implemented with a recurrent network, 2) to show the 
+advantages of using differential units instead of the traditional non linear units and 
+3) to show how the fully connected architecture (with differential units) severly 
+limits the learning capacity of the network. The task is to draw the letter A with 
+Reverse TDNN: An Architecture for Trajectory Generation 583 
+oUtlmJl 2 
+Oulput 2 
+Target drawing 
+1.25, 
+.15, 
+.25 
+-.25 
+-.75 
+-1.25 
+1.25 
+.75 
+.25 
+-.25 
+-.75 
+-1.25 
+-1.25 -.% ' 
+Network drawing 
+/}5 
+1.25 
+1 
+Output o 
+1.25 
+.75 
+.25 
+-.25 
+-.75 
+-1.25 
+1.25, 
+.25, 
+Oupu 1 -.25, 
+Oulput 2 
+Output trajeclories 
+0 15 30 45 $0 75 90 105120135 
+-1.25 
+0 15 30 45 60 75 90 105120135 
+1.25, 
+.25 
+-.25 
+-.75, 
+-1.25 
+Time 
+Figure 2: Top left: Trajectory representing the letter A. Bottom left: Trajectory 
+produced by the network after learning. The dots correspond to the target points of 
+the original trajectory. The curve is produced by drawing output unit 2 as a function 
+of output unit 1, using output unit 0 for deciding when the pen is up or down. Right: 
+Trajectories of the three output units (pen-up/pen-down, X coordinate of the pen 
+and Y coordinate of the pen) as a function of time. The dots corresponds to the 
+target points of the original trajectory. 
+a pen. The network has 3 output units, two for the X and Y position of the pen, 
+and one to code whether the pen is up or down. The network has a total 21 units, 
+no input unit, 18 hidden units and 3 output units. The network is fully connected. 
+Character glyphs are obtained from a tablet which records points at successive 
+instants of time. The data therefore is a sequence of triple

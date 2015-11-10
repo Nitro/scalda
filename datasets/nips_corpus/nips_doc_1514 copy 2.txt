@@ -1,0 +1,152 @@
+Learning to Find Pictures of People 
+Sergey Ioffe 
+Computer Science Division 
+U.C. Berkeley 
+Berkeley CA 94720 
+ioffe (cs. berkeley. edu 
+David Forsyth 
+Computer Science Division 
+U.C. Berkeley 
+Berkeley CA 94720 
+dafcs. berkeley. edit 
+Abstract 
+Finding articulated objects, like people, in pictures presents a par- 
+ticularly difficult object recognition probleln. We show how to 
+find people by finding putative body segments, and then construct- 
+ing assemblies of those segments that are consistent with the con- 
+straints on the appearance of a person that result froill kinematic 
+properties. Since a reasonable model of a person requires at. lea.st 
+nine segments, it is not possible to present every group to a classi- 
+fier. Instead, the search can be pruned by using projected versions 
+of a classifier that accepts groups corresponding to people. We 
+describe an efficient projection algorithm for one popular classi- 
+fier, and demonstrate that our approach can be used to deterlnine 
+whether images of real scenes contain people. 
+1 Introduction 
+Several typical collections containing over ten million images are listed in [2]. There 
+is an extensive literature on obtaining images from large collections using features 
+computed froin the whole ilnage, including colour histograms, texture measures and 
+shape measures; a partial review appears in [5]. 
+However, in the most comprehensive field study of usage practices (a paper by 
+Enser [2] surveying the use of the Hulton Deutsch collection), there is a clear user 
+preference for searching these collections on image semantics. An ideal search tool 
+would be a quite general object recognition system that, could be adapted quickly 
+and easily to the types of objects sought by a user. An important special case 
+is finding people and determining what they are doing. This is hard, because 
+people have many internal degrees of freedom. We follow the approach of [3], 
+and represent people as collections of cylinders, each representing a body segment. 
+Regions that could be the projections of cylinders are easily found using techniques 
+similar to those of [1]. Once these regions are found, they nmst be assembled 
+Learning to Find Pictures of People 783 
+into collections that are consistent with the appearance of images of real people, 
+which are constrained by the kinematics of human joints; consistency is tested 
+with a classifier. Since there are many candidate segments, a brute force search 
+is impossible. We show how this search can be pruned using projections of the 
+classifier. 
+2 Learning to Build Segment Configurations 
+Suppose that. :� segments have been found in an image, and there are m body parts. 
+We will define a labeling as a set L = {(l,s),(12,s,),...,(l.,s)} of pairs where 
+each seglnent,s G {1...N} is labeled with the lobell  {1...m}. A labeling is 
+complete if it represents a full m-segment configuration (Fig. 2(a,b)). 
+Assume we have a classifier C that for any coinplete labeling L outputs C(L) > 0 
+if L corresponds to a person-like configuration, and C(L) < 0 otherwise. Finding 
+all the possible body configuratiols in an image is equivalent to finding all the 
+complete labelings L for which C(L) > 0. This calmot be done with brute-force 
+search through the entire set.. The search can be pruned if, for an (incolnplete) 
+labeling L' there is no colnplete L _D L' such that C(L) > 0. For instance, if two 
+seglnelts cannot represent the upper and lower left. arm, as in Figure la, then we 
+do not consider any complete labelings where they are labeled as such. 
+Projected clossificrs make the search for body configurations eflicient by pruning 
+labelings using the properties of smaller sub-labelings (as in [7], who use manually 
+determined bounds and do not learn the tests). Given a classifier C which is a 
+function of a set of features whose values depend on segments with labels l ... 
+the projected classifier 6't . is a function of of all those features that depend 
+only on the segments with labels ll ... lu. In particular, C...t (L ) > 0 if there is 
+SOllie extension L of L  such that C(L) > 0 (see figure 1).The converse need not 
+be true: the feature values required to bring a projected point inside the positive 
+volulne of (' may not be realized with any labeling of the current set. of segments 
+1 ..... N. For a projected classifier to be useful, it lnust be easy to compute the 
+projection, and it must be effective in rejecting labelings at. an early stage. These 
+are strong requirements which are not satisfied by most good classifiers; for example, 
+in our experience a support vector machine with a posit, ive definite quadratic kernel 
+projects easily but typically yields unrestrictive projected classifiers. 
+2.1 Building Labelings Incrementally 
+Assume we have a classifier C that accepts assemblies corresponding to people and 
+that, we can construct projected classifiers as we need thein. We will now show how 
+to use them to construct labelings, using a pyramid of classificr.s. 
+A pyramid of classifiers (Fig. 1(c)), determined by the classifier C and a permutation 
+of labels (l...I/,.) consists of nodes Nt .... t corresponding to each of the projected 
+classifiers C), . t,, i _< j. Each of the bottom-level nodes Nt, receives the set of all 
+segments in the image as the input. The top node Nt .t, outputs the set of all 
+complete labelings L: {(/,s)... (/m,sm)} such that C.(L) > 0, i.e. tile set of all 
+asselnblies in the image classified as people. Further, each node h}, . t, outputs the 
+set of all sub-labelings L: {(li,si)...(lj,sj)} such that Ct,. t(L) > 0. 
+The nodes Nt, at, the bottom level work by selecting all segments si in the ilnage for 
+which (_', {(/,. si)} > 0. Each of the remaining nodes has two parts: merging and 
+filtering. The merging stage of node Nt .... t merges the outputs of its children by 
+computing the set of all labelings {(li,si)...(lj,s)} where {(h,s)... (/_, s_)} 
+784 S. Ioffe and D. Forsyth 
+y(sl,s2) 
+x(sl) 
+segments 
+tput 
+Figure 1: (a) Two segments that cannot correspond to the left upper and lower 
+arm. Any configuration where they do can be rejected using a projected classifier 
+regardless of the other segments that might appear in the configuration. (b) Pro- 
+jecting a classifier C'{ (l,s),(12, s2)}. The shaded area is the volume classified as 
+positive, for the feature set {x(s),y(s,s2)}. Finding the projection C't amounts 
+to projecting off the features that cannot be computed from s only, i.e., y(s, s2). 
+(c) A pyramid of classifiers. Each node outputs sub-assemblies accepted by the cor- 
+responding projected classifier. Each node except those in the bottom row works by 
+forming labelings from the outputs of its two children, and filtering the result using 
+the corresponding projected classifier. The top node outputs the set of all complete 
+labelings that correspond to body configurations. 
+and {(li+, si+)... (lj, sj) } are in the outputs of Nt .... z_ and Ni,.[.1...$ , respectively� 
+The filtering stage then selects, from the resulting set of labelings, those for which 
+Cz .... t.(.) > 0, and the resulting set is the output of Nz .... tj. It is clear, from the 
+definition of projected classifiers, that the output of the pyramid is, in fact, the set 
+of all complete L for which C(L) > 0 (note that Ct...z, = C). 
+The only constraint on the order in which the outputs of nodes are computed is that 
+children nodes have to be applied before parents. In our implementation, we use 
+nodes Nt .... t where j changes from 1 to m, and, for each j, i changes from j down to 
+1. This is equivalent to computing sets of labelings of the form {(/1, sx)... (lj, sj)} 
+in order, where getting (j + 1)-segment labelings from j-segment ones is itself an 
+incremental process, whereby we check labels against lj+l in the order lj, l j_ l, � � �, l. 
+In practice, we choose the latter order on the fly for each increment step using a 
+greedy algorithm, to minimize the size of labeling sets that are constructed (note 
+that in this case the classifiers no longer form a pyramid). The order (/1 ...l,) in 
+which labels are added to an assembly needs to be fixed. We determine this order 
+with a greedy algorithm by running a large segment set through the labeling builder 
+and choosing the next label to add so as to minimize the number of labelings that 
+result. 
+2.2 Classifiers that Project 
+In our problem, each segment from the set {1...N} is a rectangle in some position 
+and orientation. Given a complete labeling L: {(1, Sl), ..., (rn,.s,)}, we want to 
+have C'(L) > 0 iff the segment arrangement produced by L looks like a person. 
+Learning to Find Pictures of People 785 
+y 0.22 0.38 
+0.25 , 0.25 =0.25+0.22 --0.25+0.6, 
+0.4 ,, 0.4 0.62 I.O , 
+, =0.4+0.22 --0.4+0.6 , t0.2; 
+i 
+0.15 ', 0.15 0.37 0.75 
+, =0.15+0.22 =0.15+0.6 ' 
+0 0.22 0.6 x 
+=0.22+0.38 
+' I I ' 
+' 0 0.22 0.6 ' 
+a b c 
+Figure : (a) All segments extracted for an image. (b) A labeled segment con- 
+figuration corresponding to a person, where T--torso, LUA=left upper arm, etc. 
+The head is not marked because we are not looking for it with our method The 
+single left leg segment in (a) has been broken in (b) to generate the upper and 
+lower leg segments. (c) (top) A combination of a bounding box (the dashed line) 
+and a boosted classifier, for two features x and y. Each plane in the boosted 
+classifier is a thick line with the positive half-space indicated by an arrow; the 
+associated weight /3 is shown next to the arrow. The shaded area is the posi- 
+tive volume of the classifier, which are the points P where -! wl(P(f)) > 1/2. 
+The weights wx(.) and wv(.) are shown along the x- and y-axes, respectively, and 
+the total weight wx(P(x)) + wv(P(y)) is shown for each region of the bounding 
+box. (bottom) The projected classifier, given by w(P(x)) > 1/2- 5 = 0.1 where 
+5: mx{0.as, 0.s} = 
+Each feature will depend on a few segments (1 to 3 

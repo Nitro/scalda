@@ -1,0 +1,138 @@
+Optimizing admission control while ensuring 
+quality of service in multimedia networks via 
+reinforcement learning* 
+Timothy X Brown t, Hui Tong t, Satinder Singh 
+- Electrical and Computer Engineering 
+$ Computer Science 
+University of Colorado 
+Boulder, CO 80309-0425 
+{timxb, tonh, baveja}@colorado.edu 
+Abstract 
+This paper examines the application of reinforcement learning to a 
+telecommunications networking problem. The problem requires that rev- 
+enue be maximized while simultaneously meeting a quality of service 
+constraint that forbids entry into certain states. We present a general 
+solution to this multi-criteria problem that is able to earn significantly 
+higher revenues than alternatives. 
+1 Introduction 
+A number of researchers have recently explored the application of reinforcement learning 
+(RL) to resource allocation and admission control problems in telecommunications. e.g., 
+channel allocation in wireless systems, network routing, and admission control in telecom- 
+munication networks [1, 6, 7, 8]. Telecom problems are attractive applications for RL 
+research because good, simple to implement, simulation models exist for them in the en- 
+gineering literature that are both widely used and results on which are trusted, because 
+there are existing solutions to compare with, because small improvements over existing 
+methods can lead to significant savings in the long run, because they have discrete states, 
+and because there are many potential commercial applications. However, existing RL ap- 
+plications have ignored an issue of great practical importance to telecom engineers, that 
+of ensuring quali.ty of service (QoS) while simultaneously optimizing whatever resource 
+allocation performance criterion is of interest. 
+This paper will focus on admission control for broadband multimedia communication net- 
+works. These networks are unlike the current internet in that voice, video, and data calls 
+arrive and depart over time and, in exchange for giving QoS guarantees to customers, the 
+network collects revenue for calls that it accepts into the network. In this environment, ad- 
+mission control decides what calls to accept into the network so as to maximize the earned 
+revenue while meeting the QoS guarantees of all carried customers. 
+*Timothy Brown and Hui Tong were funded by NSF CAREER Award NCR-9624791. Satinder 
+Singh was funded by NSF grant IIS-9711753. 
+Optimizing Admission Control via RL 983 
+Meeting QoS requires a decision function that decides when adding a new call will violate 
+QoS guarantees. Given the diverse nature of voice, video, and data traffic, and their often 
+complex underlying statistics, finding good QoS decision functions has been the subject 
+of intense research [2, 5]. Recent results have emphasized that robust and efficient QoS 
+decision functions require on-line adaptive methods [3]. 
+Given we have a QoS decision function, deciding which of the heterogeneous arriving calls 
+to accept and which to reject in order to maximize revenue can be framed as a dynamic 
+program problem. The rapid growth in the number of states with problem complexity has 
+led to reinforcement learning approaches to the problem [6]. 
+In this paper we consider the problem of finding a control policy that simultaneously meets 
+QoS guarantees and maximizes the network's earned revenue. We show that the straightfor- 
+ward approach of mixing positive rewards for revenue with negative rewards for violating 
+QoS leads to sub-optimal policies. Ideally we would like to find the optimal policy from 
+the subset of policies that never violate the QoS constraint. But there is no a priori useful 
+way to characterize the space of policies that don't violate the QoS constraint. We present 
+a general approach to meeting such multicriteria that solves this problem and potentially 
+many other applications. Experiments show that incorporating QoS and RL yield signifi- 
+cant gains over some alternative heuristics. 
+2 Problem Description 
+This section describes the admission control problem model that will be used. To em- 
+phasize the main features of the problem, networking issues such as queueing that are not 
+essential have been simplified or eliminated. It should be emphasized that these aspects 
+can readily be incorporated back into the problem. 
+We focus on a single network link. Users attempt to access the link over time and the 
+network immediately chooses to accept or reject the call. If accepted, the call generates 
+traffic in terms of bandwidth as a function of time. At a later time, the call terminates and 
+departs from the network. For each call accepted, the network receives revenue at a fixed 
+rate over the duration of the call. The network measures QoS metrics such as transmission 
+delays or packet loss rates and compares them against the guarantees given to the calls. 
+Thus, the problem is described by the call arrival, traffic, and departure processes; the 
+revenue rates; QoS metrics; QoS constraints; and link model. The choices used in this 
+paper are given in the next paragraph. 
+Calls are divided into discrete classes indexed by i. The calls are generated via a Poisson 
+arrival process (arrival rate hi) and exponential holding times (mean holding time 1/ti). 
+Within a call the bandwidth is an Or/OFF process where the traffic is either ON at rate ri or 
+OFF at rate zero with mean holding times ,N, and ,. The effective immediate revenue 
+are c. The link has a fixed bandwidth B. The total bandwidth used by accepted calls varies 
+over time. The QoS metric is the fraction of time that the total bandwidth exceeds the link 
+bandwidth (i.e. the overload probability, p). The QoS guarantee is an upper limit, p*. 
+In previous work each call had' a constant bandwidth over time so that the effect on QoS 
+was predictable. Variable rate traffic is safely approximated by assuming that it always 
+transmits at its maximum or peak rate. Such so-called peak rate allocation under-utilizes 
+the network; in some cases by orders of magnitude less than what is possible. Stochastic 
+traffic rates in real traffic, the desire for high network utilization/revenue, and the resulting 
+potential for QoS violations distinguish the problem in this paper. 
+3 Semi-Markov Decision Processes 
+At any given point of time, the system is in a particular configuration, :c, defined by the 
+number of each type of ongoing calls. At random times a call arrival or a call termination 
+984 T. X. Brown, H. Tong and S. Singh 
+event, e, can occur. The configuration and event together determine the state of the sys- 
+tem, s = (x, e). When an event occurs, the learner has to choose an action feasible for 
+that event. The choice of action, the event, and the configuration deterministically define 
+the next configuration and the payoff received by the learner. Then after an interval the 
+next event occurs, and this cycle repeats. The task of the learner is to determine a pol- 
+icy that maximizes the discounted sum of payoffs over an infinite horizon. Such a system 
+constitutes a finite state, finite action, semi-Markov decision process (SMDP). 
+3.1 Multi-criteria Objective 
+The admission control objective is to learn a policy that assigns an accept or reject decision 
+to each possible state of the system so as to maximize 
+J = E ?tc(t)dt , 
+where E{-} is the expectation operator, c(t) is the total revenue rate of ongoing calls at 
+time t, and 3'  (0, 1) is a discount factor that makes immediate profit more valuable than 
+future profit.  
+In this paper we restrict the maximization to policies that never enter states that violate QoS 
+guarantees. In general SMDP, due to stochastic state transitions, meeting such constraints 
+may not be possible (e.g. from any state no matter what actions are taken there is a pos- 
+sibility of entering restricted states). In this problem service quality decreases with more 
+calls in the system and adding calls is strictly controlled by the admission controller so that 
+meeting this QoS constraint is possible. 
+3.2 Q-learning 
+RL methods solve SMDP problems by learning good approximations to the optimal value 
+function, J*, given by the solution to the Bellman optimality equation which takes the 
+following form for the dynamic call admission problem: 
+J*(s) = max [Ezxt,s,{c(s,a, At)+f(At)J*(s')} ] (1) 
+aA(s) 
+where A(s) is the set of actions available in the current state s, At is the random time 
+until the next event, c(s, a, At) is the effective immediate payoff with the discounting, and 
+,(At) is the effective discount for the next state s . 
+We learn an approximation to J* using Watkin's Q-learning algorithm. To focus on the 
+dynamics of this papefts problem and not on the confounding dynamics of function ap- 
+proximation, the problem state space is kept small enough so that table lookup can be used. 
+Bellman's equation can be rewritten in Q-values as 
+J*(s) = max Q*(s,a) (2) 
+aGA(s) 
+Call Arrival: When a call arrives, the Q-value of accepting the call and the Q-value of 
+rejecting the call is determined. If rejection has the highel' value, we drop the call. Else, if 
+acceptance has the highel- value, we accept the call. 
+Call Termination: No action needs to be taken. 
+Whatever out' decision, we update our value function as follows: on a transition from state 
+s to s' on action a in time At, 
+Q(s,a) = (1- ()Q(s,a) +( (c(s,a, At) + 3,(At) max Q(s' b)) (3) 
+bA(s')  
+1Since we will compare policies based on total reward rather than discounted sum of reward, we 
+can use the Tauberian approximation [4], i.e., 7 is chosen to be sufficiently close to 1. 
+Optimizing ldmission Control via RL 985 
+where ct C [0, 1] is the learning rate. 
+In order for Q-learning to perform well, all potentially important state-action pairs (s, a) 
+must be explored. At each state, with probability e we apply an action that will lead to a 
+less visited configuration, instead of the action recommended by the Q-value. However, to 
+up

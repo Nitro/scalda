@@ -1,0 +1,163 @@
+Combining Neural Network Regression 
+Estimates with Regularized Linear 
+Weights 
+Christopher J. Metz and Michael J. Pazzani 
+Dept. of Information and Computer Science 
+University of California, Irvine, CA 92717-3425 U.S.A. 
+(cmerz,pazzani)@ics.uci.edu 
+Category: Algorithms and Architectures. 
+Abstract 
+When combining a set of learned models to form an improved es- 
+timator, the issue of redundancy or multicollinearity in the set of 
+models must be addressed. A progression of existing approaches 
+and their limitations with respect to the redundancy is discussed. 
+A new approach, PCR*, based on principal components regres- 
+sion is proposed to address these limitations. An evaluation of the 
+new approach on a collection of domains reveals that: 1) PCR* 
+was the most robust combination method as the redundancy of the 
+learned models increased, 2) redundancy could be handled without 
+eliminating any of the learned models, and 3) the principal compo- 
+nents of the learned models provided a continuum of regularized 
+weights from which PCR* could choose. 
+1 INTRODUCTION 
+Combining a set of learned models  to improve classification and regres- 
+sion estimates has been an area of much research in machine learning 
+and neural networks [Wolpert, 1992, Metz, 1995, Pertone and Cooper, 1992, 
+Leblanc and Tibshirani, 1993, Breiman, 1992, Meir, 1995, 
+Krogh and Vedelsby, 1995, Tresp, 1995, Chan and Stolfo, 1995]. The challenge of 
+this problem is to decide which models to rely on for prediction and how much 
+weight to give each. 
+A learned model may be anything from a decision/regression tree to a neural network. 
+Combining Neural Network Regression Estimates 565 
+The goal of combining learned models is to obtain a more accurate prediction than 
+can be obtained from any single source alone. One major issue in combining a set 
+of learned models is redundancy. Redundancy refers to the amount of agreement or 
+linear dependence between models when making a set of predictions. The more the 
+set agrees, the more redundancy is present. In statistical terms, this is referred to 
+as the multicollinearity problem. 
+The focus of this paper is to explore and evaluate the properties of existing meth- 
+ods for combining regression estimates (Section 2), and to motivate the need for 
+more advanced methods which deal with multicollinearity in the set of learned mod- 
+els (Section 3). In particular, a method based on principal components regression 
+(PCR, [Draper and Smith, 1981]) is described, and is evaluated emperically demon- 
+strating the it is a robust and efficient method for finding a set of combining weights 
+with low prediction error (Section 4). Finally, Section 5 draws some conclusions. 
+2 MOTIVATION 
+The problem of combining a set of learned models is defined using the terminology 
+of [Peptone and Cooper, 1992]. Suppose two sets of data are given: a training set 
+7)Train = (Xm,Ym) and a test set 7)Test = (xl,yl). Now suppose 7)Train is used to 
+build a set of functions,  = fi(x), each element of which approximates f(x). The 
+goal is to find the best approximation of f(x) using . 
+To date, most approaches to this problem limit the space of approximations of f(x) 
+to linear combinations of the elements of , i.e., 
+N 
+i=1 
+where cti is the coefficient or weight of fi(x). 
+The focus of this paper is to evaluate and address the limitations of these ap- 
+proaches. To do so, a brief summary of these approaches is now provided progress- 
+ing from simpler to more complex methods pointing out their limitations along the 
+way. 
+The simplest method for combining the members of  is by taking the unweighted 
+average, (i.e., cti = l/N). Perpone and Cooper refer to this as the Basic Ensemble 
+Method (BEM), written as 
+N 
+fSZM - 1/N  fi(x) 
+i=1 
+This equation can also be written in terms of the misfit function for each fi(x). 
+These functions describe the deviations of the elements of  from the true solution 
+and are written as 
+rni(x)-- f(x)- fi(x). 
+Thus, 
+N 
+fSZM -- f(x) - 1/N  mi(x). 
+i--1 
+Pertone and Cooper show that as long as the mi(x) are mutually independent 
+with zero mean, the error in estimating f(x) can be made arbitrarily small by 
+increasing the population size of . Since these assumptions break down in practice, 
+566 C. J. Merz and M. J. Pazzani 
+they developed a more general approach which finds the optimal ' weights while 
+allowing the mi(;r)'s to be correlated and have non-zero means. This Generalized 
+Ensemble Method (GEM) is written as 
+N N 
+i=1 i=1 
+where 
+c'J and Cij = E[mi(z)mj(z)] 
+- 
+Oq -- N N C_ � 
+Et= E./= t. 
+C is the symmetric sample covariance matrix for the misfit function and the goal is to 
+minimize , aiaj Cij. Note that the misfit functions are calculated on the training 
+data and f(z) is not required. The main disadvantage to this approach is that it 
+involves taking the inverse of C which can be unstable. That is, redundancy in 
+the members of  leads to linear dependence in the rows and columns of C which 
+in turn leads to unreliable estimates of C - 
+To circumvent this sensitivity redundancy, Perpone and Cooper propose a method 
+for discarding member(s) of  when the strength of its agreement with another 
+member exceeds a certain threshold. Unfortunately, this approach only checks for 
+linear dependence (or redundancy) between pairs of fi(x) and two fi(x) for i y j. 
+In fact, fi(x) could be a linear combination of several other members of  and the 
+instability problem would be manifest. Also, depending on how high the threshold is 
+set, a member of  could be discarded while still having some degree of uniqueness 
+and utility. An ideal method for weighting the members of  would neither discard 
+any models nor suffer when there is redundancy in the model set. 
+The next approach reviewed is linear regression (LR) 3 which also finds the optimal 
+weights for the fi(x) with respect to the training data. In fact, GEM and LR are 
+both considered optimal because they are closely related in that GEM is a form 
+of linear regression with the added constraint that -]/N= ai = 1. The weights for 
+LR are found as follows 4, 
+N 
+i=1 
+where 
+a = (.fff)-fTF fli = fi(x)l _< j _< M and F = f(xj). 
+Like GEM, LR and LRC are subject to the multicollinearity problem because finding 
+the ci's involves taking the inverse of a matrix. That is, if the f matrix is composed 
+of fi (x) which strongly agree with other members of , some linear dependence will 
+be present. 
+2Optimal here refers to weights which minimize mean square error for the training data. 
+aActually, it is a form of hnear regression without the intercept term. The more general 
+form, denote by LRC, would be formulated the same way but with member, f0 which 
+always predicts 1. According to [Leblanc and Tibshirani, 1993] having the extra constant 
+term will not be necessary (i.e., it will equal zero) because in practice, Elf(x)]. 
+4Note that the constraint, .i ai = 1, for GEM is a form of regularization 
+[Leblanc and Tibshirani, 1993]. The purpose of regularizing the weights is to provide an 
+estimate which is less biased by the training sample. Thus, one would not expect GEM 
+and LR to produce identical weights. 
+Combining Neural Network Regression Estimates 567 
+Given the limitations of these methods, the goal of this research was to find a method 
+which finds weights for the learned models with low prediction error without discard- 
+ing any of the original models, and without being subject to the multicollinearity 
+problem. 
+3 METHODS FOR HANDLING MULTICOLLINEARITY 
+In the abovementioned methods, multicollinearity leads to inflation of the vari- 
+ance of the estimated weights, c. Consequently, the weights obtained from fit- 
+ting the model to a particular sample may be far from their true values. To 
+circumvent this problem, approaches have been developed which: 1) constrain 
+the estimated regression coefficients so as to improve prediction performance (i.e., 
+ridge regression, RIDGE [Montgomery and Friedman 1993], and principal compo- 
+nents regression), 2) search for the coefficients via gradient descent procedures (i.e., 
+Widrow-Hofflearning, GD and EG+- [Kivinen and Warmuth, 1994]), or build mod- 
+els which make decorrelated errors by adjusting the bias of the learning algorithm 
+[Opitz and Shavlik, 1995] or the data which it sees [Meir, 1995]. The third approach 
+ameliorates, but does not solve, the problem because redundancy is an inherent part 
+of the task of combining estimators. 
+The focus of this paper is on the first approach. Leblanc and Tibshirani 
+[Leblanc and Tibshirani, 1993] have proposed several ways of constraining or regu- 
+larizing the weights to help produce estimators with lower prediction error: 
+1. Shrink & towards (l/K, l/K,..., l/K) T where K is the number of learned 
+models. 
+3. ci >_ 0, i = 1,2...K 
+Breiman [Breiman, 1992] provides an intuitive justification for these constraints by 
+pointing out that the more strongly they are satisfied, the more interpolative the 
+weighting scheme is. In the extreme case, a uniformly weighted set of learned models 
+is likely to produce a prediction between the maximum and minimum predicted 
+values of the learned models. Without these constraints, there is no guarantee that 
+the resulting predictor will stay near that range and generalization may be poor. 
+The next subsection describes a variant of principal components regression and 
+explains how it provides a continuum of regularized weights for the original learned 
+models. 
+3.1 PRINCIPAL COMPONENTS REGRESSION 
+When dealing with the above mentioned multicollinearity problem, principal com- 
+ponents regression [Draper and Smith, 1981] may be used to summarize and extract 
+the relevant information from the learned models. The main idea of PCR is to 
+map the original learned models to a set of (independent) principal components in 
+which each component is a linear combination of the original learned models,

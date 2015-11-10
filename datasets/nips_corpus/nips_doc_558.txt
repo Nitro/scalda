@@ -1,0 +1,174 @@
+Multimodular Architecture for Remote Sensing 
+Operations. 
+Sylvie Thiria(1, 2) Carlos Mejia (1) 
+Fouad Badran(I, 2) Michel Cr6pon(3) 
+O) Laboratoire de Recherche en Informatique 
+Universit6 de Paris Sud, B 490 - 91405 ORSAY Cedex France 
+(2) CEDRIC, Conservatoire National des Arts et M6tiers 
+292 rue Saint Martin - 75 003 PARIS 
+(3) Laboratoire d'Oc6anographie et de Climatologie (LODYC) 
+T14 Universit6 de PARIS 6 - 75005 PARIS (FRANCE) 
+Abstract 
+This paper deals with an application of Neural Networks to satellite 
+remote sensing observations. Because of the complexity of the 
+application and the large amount of data, the problem cannot be solved 
+by using a single method. The solution we propose is to build multi- 
+modules NN architectures where several NN cooperate together. Such 
+system suffer from generic problem for whom we propose solutions. 
+They allow to reach accurate performances for multi-valued function 
+approximations and probability estimations. The results are compared 
+with six other methods which have been used for this problem. We 
+show that the methodology we have developed is general and can be 
+used for a large variety of applications. 
+675 
+676 Thiria, Mejia, Badran, and Cr6pon 
+1 INTRODUCTION 
+Neural Networks have been used for many years to solve hard real world applications 
+which involve large amounts of data. Most of the time, these problems cannot be solved 
+with a unique technique and involve successive processing of the input data. 
+Sophisticated NN architectures have thus been designed to provide good performances e.g. 
+[Lecun et al. 90]. However this approach is limited for many reasons: the design of 
+these architectures requires a lot of a priori knowledge about the task and is complicated. 
+Such NN are difficult to train because of their large size and are dedicated to a specific 
+problem. Moreover if the task is slightly modified, these NN have to be entirely 
+redesigned and retrained. It is our feeling that complex problems cannot be solved 
+efficiently with a single NN whatever sophisticated it is. A more fruitful approach is to 
+use modular architectures where several simple NN modules cooperate together. This 
+methodology is far more general and allows to easily build very sophisticated architectures 
+which are able to handle the different processing steps which are necessary for example in 
+speech or signal processing. These architectures can be easily modified to incorporate 
+some additional knowledge about the problem or some changes in its specifications. 
+We have used these ideas to build a multi-module NN for a satellite remote sensing 
+application. This is a hard problem which cannot be solved by a single NN. The 
+different modules of our architecture are thus dedicated to specific tasks and allow to 
+perform successive processing of the data. This approach allows to take into account in 
+successive steps different informations about the problem. Furthermore, errors which 
+may occur at the output of some modules may be corrected by others which allows to 
+reach very good performances. Making these different modules cooperate raises several 
+problems which appear to be generic for these architectures. It is thus interesting to study 
+different solutions for their design, training, and the efficient information exchanges 
+between modules. In the present paper, we first briefly describe the geophysical problem 
+and its difficulties, we then present the different modules of our architecture and their 
+cooperation, we compare our results to those of several other methods and discuss the 
+advantages of our method. 
+2 THE GEOPHYSICAL PROBLEM 
+Scatterometers are active microwave radars which accurately measure the power of 
+transmitted and backscatter signal radiations in order to compute the normalized radar cross 
+section (c0) of the ocean surface. The c 0 depends on the wind speed, the incidence angle 0 
+(which is the angle between the radar beam and the vertical at the illuminated cell) and the 
+azimuth angle (which is the horizontal angle Z between the wind and the antenna of the 
+radar). The empirically based relationship between c;0 and the local wind vector can be 
+established which leads to the determination of a geophysical model function. 
+The model developed by A. Long gives a more precise form to this functional. It has 
+been shown that for an angle of incidence 0, the general expression for c0 can be 
+satisfactorily represented by a Fourrier series: 
+Multimodular Architecture for Remote Sensing Options 677 
+O0 = U.( 1 + bl.COSZ + b2.cos 2Z) 
+1 + bl + b2 
+with U = A.v 
+(1) 
+Long's model specifies that A and /only depend on the angle of incidence 0, and that b 1 
+and b 2 are a function of both the wind speed v and the angle of incidence 0 (Figure 1). 
+Satellite 
+swath 
+antenna 3 
+I 
+I 
+I 
+I 
+/% 
+Figure 1 � Definition of the different geophysical scales. 
+For now, the different parameters bl, b2 A and � used in this model are determined 
+experimentally. 
+Conversely it becomes possible to compute the wind direction by using several antenna 
+with different orientations with respect to the satellite track. The geophysical model 
+function (1) can then be inverted using the three measurements of c0 given by the three 
+antennas, it computes wind vector (direction and speed). Evidence shows that for a given 
+trajectory within the swath (Figure 1) i.e. (01,02,03) fixed, 0 i being the incidence angle of 
+the beam linked to antenna i, the functional F is of the form presented in Fig.2 . 
+In the absence of noise, the determination of the wind direction would be unique in most 
+cases. Noise-free ambiguities arise due to the bi-harmonic nature of the model function 
+with respect to Z- The functional F presents singular points. At constant wind speed F 
+yields a Lissajous curve; in the singular points the direction is ambiguous with respect 
+to the triplet measurements ((Jl,(J2,(J3) as it is seen in Fig. 2. At these points F yields 
+two directions differing by 160 �. In practice, since the backscatter signal is noisy the 
+number and the frequency of ambiguities is increased. 
+678 Thiria, Mejia, Badran, and Crpon 
+(a) 
+45� ! 
+10 o 
+270 � 
+135 � 
+170 � 
+(b) 
+Figure 2: (a) Representation of the Functional F for a given trajectory (b) Graphics 
+obtained for a section of (a) at constant wind speed. 
+The problem is therefore how to set up an accurate (exact) wind map using the observed 
+measurements (0,02,03). 
+3 THE METHOD 
+We propose to use multi-layered quasi-linear networks (MLP) to carry out this inversion 
+phase. Indeed these nets are able of approximate complex non-linear functional relations; 
+it becomes possible by using a set of measurements to determine F and to realize the 
+inversion. 
+The determination of the wind's speed and direction lead to two problems of different 
+complexity, each of them is solved using a dedicated multi-modular system. The two 
+modules are then linked together to build a two level architecture. To take into account 
+the strong dependence of the measurements with respect to the trajectory, each module (or 
+level ) consists of n distinct but similar systems, a specific system being dedicated to each 
+satellite trajectory (n being the number of trajectories in a swath (Figure 1)). 
+The first level will allow the determination of the wind speed at every point of the swath. 
+The results obtained will then be supplied to the second level as supplementary data 
+which allow to compute the wind direction. Thus, we propose a two-level architecture 
+which constitutes an automatic method for the computation of wind maps (Figure 3). 
+The computation is performed sequentially between the different levels, each one 
+supplying the next with the parameters needed. 
+Owing to the space variability of the wind, the measurements at a point are closely related 
+to those performed in the neighbourhood. Taking into account this context must 
+therefore bring important supplementary information to dealiase the ambiguities. At a 
+point, the input data for a given system are therefore the measurements observed at that 
+point and at it's eight closest neighbours. 
+All the networks used by the different systems are MLP trained with the back-propagation 
+algorithm. The successive modifications were performed using a second order Stochastic 
+gradient: which is the approximation of the Levenberg-Marquardt rule. 
+Multimodular Architecture for Remote Sensing Options 679 
+Responses 
+Satellite 
+o 
+o o 
+Level3: 
+Ambiguities correction  = 
+Level2: 
+Wind Direction 
+computation   
+Lower Speed Wint 
+Networl 
+Level I: 
+Wind Speed 
+computation 
+ Deamln'guation 
+Procedure 
+ nrprea. on 
+ Procedure 
+ Wind Direction 
+iml Network 
+Higher Speed 
+Wind Network 
+n Network 
+or R3 ? 
+(a)  
+Figure 3 � The three systems S 1, S2 and S3 for a given trajectory. 
+One system is dedicated to a proper trajectory. As a result the networks used on the same 
+level of the global architecture are of the same type; only the learning set numerical 
+values change from one system to another. Each network learning set will therefore 
+consist of the data mesured on its trajectory. We present here the results for the central 
+trajectory, performances for the others are similar. 
+3.1 THE NETWORK DECODING : FIRST LEVEL 
+A system (S1) in the first level allows to compute the wind speed (in ms -1) along a 
+trajectory. Because the function F 1 to be learned (signal - wind speed) is highly non- 
+linear, each system is made of three networks (see Figure 3): R1 allows to decide the 
+range of the wind speed (4 <_ v < 12 or 12 < v < 20); according to the R1 output an 
+accurate value is computed using R2 for the first range and R3 for the other. The first 
+level is built from 10 of these systems (one for each trajectory). 
+Each network (R1, R2, R3) consists of four fully connected layers. For a given point, we 
+have introduced the knowledge of the radar measurements at the neighbouring points. The 
+same ex

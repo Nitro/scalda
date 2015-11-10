@@ -1,0 +1,143 @@
+Neural network models of chemotaxis in 
+the nematode Caenorhabditis elegans 
+Thomas C. Ferre, Ben A. Marcotte, Shawn It. Lockery 
+Institute of Neuroscience, University of Oregon, Eugene, Oregon 97403 
+Abstract 
+We train recurrent networks to control chemotaxis in a computer 
+model of the nematode C. elegant. The model presented is based 
+closely on the body mechanics, behavioral analyses, neuroanatomy 
+and neurophysiology of G. elegans, each imposing constraints rel- 
+evant for information processing. Simulated worms moving au- 
+tonomously in simulated chemical environments display a variety 
+of chemotaxis strategies si_m_ilar to those of biological worms. 
+1 INTRODUCTION 
+The nematode C'. ele�ans provides a unique opportunity to study the neuronal ba- 
+sis of neural computation in an animal capable of complex goal-oriented behaviors. 
+The adult hermaphrodite is only 1 mm long, and has exactly 302 neurons and 95 
+muscle cells. The morphology of every cell and the location of most electrical and 
+chemical synapses are known precisely (White et aL, 1986), making C. elegans espe- 
+cially attractive for study. Whole-cell recordings are now being made on identified 
+neurons in the nerve ring of G. elegans to determine electrophysiological properties 
+which underly information processing in this animal (Lockery and Goodman, un- 
+published). However, the strengths and polarities of synaptic connections are not 
+known, so we use neural network optimization to find sets of synaptic strengths 
+which reproduce actual nematode behavior in a simulated worm. 
+We focus on chemotaxis, the ability to move up (or down) a gradient of chemical 
+attractants (or repellants). In the laboratory, flat Petri dishes (radius = 4.25 cm) 
+are prepared with a Gaussian-shaped field of attractant at the center, and worms 
+are allowed to move freely about. Worms propel themselves forward by generating 
+an undulatory body wave, which produces sinusoidal movement. In chemotaxis, the 
+nervous system generates motor commands which bias this movement and direct 
+56 T. C. Ferrde, B. A. Marcotte and S. R. Lockery 
+the animal toward higher attractant concentration. 
+Anatomical constraints pose important problems for C. ele.qar during chemotaxis. 
+In particular, the animal detects the presence of chemicals with a pair of sensory 
+organs (ampbids) at the tip of the nose, each containing the processes of multiple 
+chemosensory neurons. During normal locomotion, however, the animal moves on 
+its side so that the two ampbids are perpendicular to the Petri dish. C. ele.qar can- 
+not, therefore, sense the gradient directly. One possible strategy for cherootaxis, 
+which has been suggested previously (Ward, 1973), is that the animal computes a 
+temporal derivative of the local concentration during a single head sweep, and com- 
+bines this with some form of proprioceptive feedback indicating muscle contraction 
+and the direction of head sweep, to compute the spatial gradient for cherootaxis. 
+The existence of this and other strategies is discussed later. 
+In Section 2, we derive a simple model of the nematode body which produces realis- 
+tic sinusoidal trajectories in response to motor commands from the nervous system. 
+In Section 3, we give a simple model of the C'. ele.qar nervous system based on 
+prelim_nary physiological data. In Section 4, we use a stochastic optimization algo- 
+rithm to determine sets of synaptic weights which control chemotaxis, and discuss 
+solutions. 
+2 BIOMECHANICS OF NEMATODE ORIENTATION 
+Nematode locomotion has been studied in detail (Niebur and ErdSs, 1991; Niebur 
+and ErdSs, 1993). These authors derived NewtonJan force equations for each mus- 
+cular segment of the body, which can be solved numerically to generate forward 
+sinusoidal movement. Unfortunately, such a thorough treatment is computation- 
+ally intensive and not practical to use with network optimization. To simplify the 
+problem we first recognize that chemotaxis is a behavior more of orientation than of 
+locomotion. We therefore derive a set of biomechanical equations which direct the 
+head to generate sinusoidal movement, which can be biased by the network toward 
+higher chemical concentrations. 
+We focus our attention on the point (x, y) at the tip of the nose, since that is where 
+the animal senses the chemical environment. As shown in Figure l(a), we assign 
+a velocity vector t7 directed along the midline of the first body segment, i.e., the 
+head. Assuming that the worm moves forward at constant speed v, we can write 
+the velocity vector as 
+(dx dy) = (vcosO(t),vsinO(t)) 
+(t)---- ,  
+(1) 
+where x, y and 0 are measured relative to fixed coordinates in the Petri dish. 
+Assuming that the worm moves without lateral slipping and that the undulatory 
+wave of muscular contraction initiated in the neck travels posteriorally without 
+modification, then each body segment simply follows the one previous (anterior) to 
+it. In this way, the head directs the movement and the rest of the body simply 
+follows. 
+Figure l(b) shows an expanded view of the neck segment. As the worm moves 
+forward, the posterior boundary of that segment assumes the position held by its 
+anterior neighbor at a slightly earlier time. If L is the total body length and N is 
+Neural Network Models of Chernotaxis 57 
+the number of body segments, then this time delay is at _ L]Nv. (For L = 1 ram, 
+v = 0.22 rnm/s and N = 10 we have at - 0.45 s, roughly an order of magnitude 
+smaller than the relevant behavioral time scale: the head-sweep period T _ 4.2 s.) 
+If we define the neck angle a(t) -- 01(t) - 02(t), then the above arguments imply 
+a(t) = o(t) - o(t - at) ,,, ao2 at 
+(2) 
+where the second relation is essentially a backward-Euler algorithm for 
+Since 0 -- 0, we have reached the intuitive result that the neck angle a determines 
+the rate of turning dS]dr. Note that while 0 and 02 are defined relative to the 
+fixed laboratory coordinates, their difference a is invariant under rotations of these 
+coordinates, and can therefore be viewed as intrinsic to the body. This allows us 
+to derive an expression for a in terms of muscle cell contraction, or motor neuron 
+depolarization, as follows. 
+(a) .o (b) 
+Figure 1: Nematode body mechanics. (a) Segmented model of the nematode body, 
+showing the direction of motion 6. (b) Expanded view of the neck segment, showing 
+dorsal (D) and ventral (V) neck muscles. 
+Nematodes maintain nearly constant volume during movement. To incorporate this 
+constraint, albeit approximately, we assume that at all times the geometry of each 
+segment is such that (/D --lo) -- --(/V- lo), where lo  L/N is the equilibrium length 
+of a relaxed segment. For small angles a, we have a _ (/v - ID)/d, where d is the 
+body diameter. The dashed lines in Figure l(b) indicate dorsal and ventral muscles, 
+which are believed to develop tension nearly independent of length (Toida et 
+1975). When contracting, these muscles must work ag_aJnst the elasticity of the 
+cuticle, internal fluid pressure, and elasticity and developed tension of the opposing 
+muscles. If these elastic forces act linearly, then To-Tv - k (/v--lb), where TD and 
+Tv are dorsal and ventral muscle tensions, and k is an effective force constant. For 
+simplicity, we further assume that each muscle develops tension linearly in response 
+to the voltage of its corresponding motor neuron, i.e., TD,V --  VD,V, where  is a 
+positive constant, and VD and Vv are dorsal and ventral motor neuron voltages. 
+Combining these results, we have finally 
+= 'y - 
+58 T. C. Ferre, B. A. Marcotte and S. R. Lockery 
+where 7 = (Nv/L). (/kd). With appropriate motor commands, equations (1) and 
+(3) can be integrated numerically to generate sinusoidal worm trajectories like those 
+of biological worms. This model embodies the main anatomical features that are 
+likely to be important in C. elegans cherootaxis, yet is sufficiently compact to be 
+embedded in a network optimization procedure. 
+3 CHEMOTAXIS CONTROL CIRCUIT 
+C. elegans neurons are tiny and have very simple morpologies: a typical neuron 
+in the head has a spherical soma 1-2 /m in diameter, and a single cylindrical 
+process 60-80/m in length and 0.1-0.2/m in diameter. Compartmental mod- 
+els, based on this morphology and preliminary physiological recordings, indicate 
+that C. elegans neurons are effectively isopotential (Lockery, 1995). Furthermore, 
+C. elegans neurons do not fire classical all-or-none action potentials, but appear to 
+rely primarily on graded signal propagation (Lockery and Goodman, unpublished). 
+Thus, a reasonable starting point for a network model is to represent each neuron 
+by a single isopotential compartment, in which voltage is the state variable, and the 
+membrane conductance in purely ohmic. 
+Anatomical data indicate that the C. elegans nervous system has both electrical and 
+chemical synapses, but the synaptic transfer functions are not bnown. However, 
+steady-state synaptic transfer functions for chemical synapses have been measured 
+in Ascaris suurn, a related species of nematode, where it was found that postsynaptic 
+voltage is a graded function of presynaptic voltage, due to tonic neurotransmitter 
+release (Davis and Stretton, 1989). This voltage dependence is sigmoidal, i.e., 
+Vpost  tanh(Vpre). A simple network model which captures all of these features is 
+dl -14 + V=tanh ' w, (1 - ) + V?i(t) (4) 
+rdt = 
+j=l 
+where If/ is the voltage of the i th neuron. Here all voltages are measured relative 
+to a common resting potential, Vmax is an arbitrary voltage scale which sets the 
+operational range of the neurons, and f] sets the voltage sensitivity of the synaptic 
+transfer function. The weight wij represents the net strength and polarity of all 
+synaptic connections from neuron j to neuron i, and the constants  determine the 
+center of each transfer function. The membane time constant r is assumed to be 
+the same for all cells, and will be 

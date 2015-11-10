@@ -1,0 +1,140 @@
+A MCMC approach to Hierarchical Mixture 
+Modelling 
+Christopher K. I. Williams 
+Institute for Adaptive and Neural Computation 
+Division of Informatics, University of Edinburgh 
+5 Forrest Hill, Edinburgh EH 1 2QL, Scotland, UK 
+ckiw@dai. ed.ac.uk http: //anc. ed. ac .uk 
+Abstract 
+There are many hierarchical clustering algorithms available, but these 
+lack a firm statistical basis. Here we set up a hierarchical probabilistic 
+mixture model, where data is generated in a hierarchical tree-structured 
+manner. Markov chain Monte Carlo (MCMC) methods are demonstrated 
+which can be used to sample from the posterior distribution over trees 
+containing variable numbers of hidden units. 
+1 Introduction 
+Over the past decade or two mixture models have become a popular approach to clustering 
+or competitive learning problems. They have the advantage of having a well-defined ob- 
+jective function and fit in with the general trend of viewing neural network problems in a 
+statistical framework. However, one disadvantage is that they produce a flat cluster struc- 
+ture rather than the hierarchical tree structure that is returned by some clustering algorithms 
+such as the agglomerative single-link method (see e.g. [12]). In this paper I formulate a 
+hierarchical mixture model, which retains the advantages of the statistical framework, but 
+also features a tree-structured hierarchy. 
+The basic idea is illustrated in Figure 1 (a). At the root of the tree (level 1) we have a single 
+centre (marked with a x). This is the mean of a Gaussian with large variance (represented 
+by the large circle). A random number of centres (in this case 3) are sampled from the level 
+1 Gaussian, to produce 3 new centres (marked with o's). The variance associated with the 
+level 2 Gaussians is smaller. A number of level 3 units are produced and associated with 
+the level 2 Gaussians. The centre of each level 3 unit (marked with a +) is sampled from 
+its parent Gaussian. This hierarchical process could be continued indefinitely, but in this 
+example we generate data from the level 3 Gaussians, as shown by the dots in Figure l(a). 
+A three-level version of this model would be a standard mixture model with a Gaussian 
+prior on where the centres are located. In the four-level model the third level centres are 
+clumped together around the second level means, and it is this that distinguishes the model 
+from a flat mixture model. Another view of the generative process is given in Figure l(b), 
+where the tree structure denotes which nodes are children of particular parents. Note also 
+that this is a directed acyclic graph, with the arrows denoting dependence of the position of 
+the child on that of the parent. 
+A MCMC Approach to Hierarchical Mixture Modelling 681 
+In section 2 we describe the theory of probabilistic hierarchical clustering and give a dis- 
+cussion of related work. Experimental results are described in section 3. 
+(a) 
+(b) 
+Figure 1: The basic idea of the hierarchical mixture model. (a) x denotes the root of the 
+tree, the second level centres are denoted by o's and the third level centres by +'s. Data is 
+generated from the third level centres by sampling random points from Gaussians whose 
+means are the third level centres. (b) The corresponding tree structure. 
+2 Theory 
+We describe in turn (i) the prior over trees, (ii) the calculation of the likelihood given a 
+data vector, (iii) Markov chain Monte Carlo (MCMC) methods for the inference of the tree 
+structure given data and (iv) related work. 
+2.1 Prior over trees 
+We describe first the prior over the number of units in each layer, and then the prior on 
+connections between layers. Consider a L layer hierarchical model. The root node is in 
+level 1, there are n2 nodes in level 2, and so on down to n� nodes on level L. These 
+n's are collected together in the vector n. We use a Markovian model for P(n), so that 
+P(n) = P(n)P(n2ln)...P(nLlnL_) with P(n) = 6(n, 1). Currently these are 
+taken to be Poisson distributions offset by 1, so that P(rti+ Irti) ,--, Po(,Xini) + 1, where 
+,Xi is a parameter associated with level i. The offset is used so that there must always be at 
+least one unit in any layer. 
+Given n, we next consider how the tree is formed. The tree structure describes which node 
+in the ith layer is the parent of each node in the (i + 1)th layer, for i - 1,... , L - 1. Each 
+unit has an indicator vector which stores the index of the parent to which it is attached. We 
+collect all these indicator vectors together into a matrix, denoted Z(n). The probability of 
+a node in layer (i + 1) connecting to any node in layer i is taken to be 1/rt i. Thus 
+P(n, Z(n)): 
+L--1 
+II 
+i=1 
+We now describe the generation of a random tree given n and Z(n). For simplicity we 
+describe the generation of points in 1-d below, although everything can be extended to 
+arbitrary dimension very easily. The mean/ of the level 1 Gaussian is at the origin I. The 
+lit is easy to relax this assumption so that ttt has a prior Gaussian distribution, or is located at 
+some point other than the origin. 
+682 C. K. I. Williams 
+level 2 means tt, j = 1, are generated from .A/'(tt 1 , cry), where cr 2 is the variance 
+� . /g 2 
+associated with the level i node. Similarly, the position of each level 3 node is generated 
+from its level 2 parent as a displacement from the position of the level 2 parent. This 
+displacement is a Gaussian RV with zero mean and variance cr22. This process continues 
+on down to the visible variables. In order for this model to be useful, we require that 
+cr 2 > cr > ... > cr_l, i.e. that the variability introduced at successive levels declines 
+monotonically (cf scaling of wavelet coefficients). 
+2.2 Calculation of the likelihood 
+The data that we observe are the positions of the points in the final layer; this is denoted 
+x. To calculate the likelihood of x under this model, we need to integrate out the locations 
+of the means of the hidden variables in levels 2 through to L - 1. This can be done expli- 
+citly, however, we can shorten this calculation by realizing that given Z(n), the generative 
+distribution for the observables x is Gaussian A/'(0, C). The covariance matrix C can be 
+calculated as follows. Consider two leaf nodes indexed by k and 1. The Gaussian RVs that 
+generated the position of these two leaves can be denoted 
+ .,  (L-) (;-) 
+xk = wk +w. +... +.% , xt = w +w +... +w 
+To calculate the covariance between xk and xt, we simply calculate {xkxt}. This depends 
+crucially on how many of the w's are shared between nodes k and 1 (cf path analysis). For 
+example, if w}  w], i.e. the nodes lie in different branches of the tree at level l, their 
+covariance is zero. If k = l, the variance is just the sum of the variances of each RV in the 
+tree. In between, the covariance of xk and xt can be determined by finding at what level in 
+the tree their common parent occurs. 
+Under these assumptions, the log likelihood L of x given Z(n) is 
+lxTC_x_ 1 nL log2r. (1) 
+L = log Ic[ - 2 
+In fact this calculation can be speeded up by taking account of the tree structure (see e.g. 
+[8]). Note also that the posterior means (and variances) of the hidden variables can be 
+calculated based on the covariances between the hidden and visible nodes. Again, this 
+calculation can be carried out more efficiently; see Pearl [1 1] (section 7.2) for details. 
+2.3 Inference for n and Z(n) 
+Given n we have the problem of trying to infer the connectivity structure Z given the 
+observations x. Of course what we are interested in is the posterior distribution over Z, 
+i.e. P(ZIx, n). One approach is to use a Markov chain Monte Carlo (MCMC) method 
+to sample from this posterior distribution. A straightforward way to do this is to use the 
+Metropolis algorithm, where we propose changes in the structure by changing the parent of 
+a single node at a time. Note the similarities of this algorithm to the work of Williams and 
+Adams [14] on Dynamic Trees (DTs); the main differences are (i) that disconnections are 
+not allowed, i.e. we maintain a single tree (rather than a forest), and (ii) that the variables 
+in the DT image models are discrete rather than Gaussian. 
+We also need to consider moves that change n. This can be effected with a split/merge 
+move. In the split direction, consider a node with a parent and several children. Split this 
+node and randomly assign the children to the two split nodes. Each of the split nodes keeps 
+the same parent. The probability of accepting this move under the Metropolis-Hastings 
+scheme is 
+(P(nt'Z(nt)'x)Q(nt'Z(nt);n'Z(n))) 
+a=min 1, p(n,Z(n)lx)Q(n,Z(n);n,,Z(n,) ) , 
+A MCMC Approach to Hierarchical Mixture Modelling 683 
+where Q(n', Z(n'); n, Z(n)) is the proposal probability of configuration (n', Z(n')) given 
+configuration (n, Z(n)). This scheme is based on the work on MCMC model composition 
+(MG '3) by Madigan and York [9], and on Green's work on reversible jump MCMC [5]. 
+Another move that changes n is to remove dangling nodes, i.e. nodes which have no 
+children. This occurs when all the nodes in a given layer decide not to use one or more 
+nodes in the layer above. 
+An alternative to sampling from the posterior is to use approximate inference, such as 
+mean-field methods. These are currently being investigated for DT models [ 1 ]. 
+2.4 Related work 
+There are a very large number of papers on hierarchical clustering; in this work we have fo- 
+cussed on expressing hierarchical clustering in terms of probabilistic models. For example 
+Ambros-Ingerson et al [2] and Mozer [ 10] developed models where the idea is to cluster 
+data at a coarse level, subtract out mean and cluster the residuals (recursively). This paper 
+can be seen as a probabilistic interpretation of this idea. 
+The reconstruction of phylogenetic trees from biological sequence (DNA or protein) in- 
+formation gives rise to the problem of inferring a binary tree from the data. Durbin et a

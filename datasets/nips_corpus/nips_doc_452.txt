@@ -1,0 +1,156 @@
+Generalization Performance in PARSECoA 
+Structured Connectionist Parsing Architecture 
+Ajay N. Jain* 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213-3890 
+ABSTRACT 
+This paper presents PARSEC--a system for generating connectionist 
+parsing networks from example parses. PARSEC is not based on formal 
+grammar systems and is geared toward spoken language tasks. PARSEC 
+networks exhibit three strengths important for application to speech pro- 
+cessing: 1) they learn to parse, and generalize well compared to hand- 
+coded grammars; 2) they tolerate several types of noise; 3) they can 
+learn to use multi-modal input. Presented are the PARSEC architecture 
+and performance analyses along several dimensions that demonstrate 
+PARSEC's features. PARSEC's performance is compared to that of tra- 
+ditional grammar-based parsing systems. 
+1 INTRODUCTION 
+While a great deal of research has been done developing parsers for natural language, ade- 
+quate solutions for some of the particular problems involved in spoken language have not 
+been found. Among the unsolved problems are the difficulty in constructing task-specific 
+grammars, lack of tolerance to noisy input, and inability to effectively utilize non-sym- 
+bolic information. This paper describes PARSEC--a system for generating connectionist 
+parsing networks from example parses. 
+*Now with Alliant Techsystems Research and Technology Center (jain@rtc.atk. com). 
+209 
+210 
+Jain 
+Figure 1: PARSEC's high-level architecture 
+PARSEC networks exhibit three strengths: 
+� They automatically learn to parse, and generalize well compared to hand-coded 
+grammars. 
+� They tolerate several types of noise without any explicit noise modeling. 
+� They can learn to use multi-modal input such as pitch in conjunction with syntax and 
+semantics. 
+The PARSEC network architecture relies on a variation of supervised back-propagation 
+learning. The architecture differs from some other connectionist approaches in that it is 
+highly structured, both at the macroscopic level of modules, and at the microscopic level 
+of connections. Structure is exploited to enhance system performance. 1 
+Conference registration dialogs formed the primary development testbed for PARSEC. A 
+separate speech recognition effort in conference registration provided data for evaluating 
+noise-tolerance and also provided an application for PARSEC in speech-to-speech transla- 
+tion (Waibel et al. 1991). 
+PARSEC differs from early connectionist work in parsing (e.g. Fanty 1985; Selman 1985) 
+in its emphasis on learning. It differs from recent connectionist approaches (e.g. Elman 
+1990; Miikkulainen 1990) in its emphasis on performance issues such as generalization 
+and noise tolerance in real tasks. This papers presents the PARSEC architecture, its train- 
+ing algorithms, and performance analyses that demonstrate PARSEC's features. 
+2 PARSEC ARCHITECTURE 
+The PARSEC architecture is modular and hierarchical. Figure 1 shows the high-level 
+architecture. PARSEC can learn to parse complex English sentences including multiple 
+clauses, passive constructions, center-embedded constructions, etc. The input to PARSEC 
+is presented sequentially, one word at a time. PARSEC produces a case-based representa- 
+tion of a parse as the input sentence develops. 
+1pARSEC is a generalization of a previous connectionist parsing architecture (Jain 1991). For a 
+detailed exposition of PARSEC, please refer to Jain's Phi) thesis (in preparation). 
+Generalization Performance in PARSEC--A Structured Connectionist Parsing Architecture 211 
+INPUT 
+(fxom previous mod- 
+ule or environment) 
+formor{ 
+OUTPUT: 
+(labels for input) 
+Figure 2: Basic structure of a PARSEC module 
+The parse for the sentence, I will send you a form immediately, is: 
+([statement] 
+([clause] 
+([agent] I) 
+([action] will send) 
+([recipient] you) 
+([patient] a form) 
+([time] immediately))) 
+Input words are represented as binary feature patterns (primarily syntactic with some 
+semantic features). These feature representations are hand-crafted. 
+Each module of PARSEC can perform either a transformation or a labeling of its input. 
+The output function of each module is represented across localist connectionist units. The 
+actual transformations are made using non-connectionist subroutines. 2 Figure 2 shows the 
+basic structure of a PARSEC module. The bold ovals contain units that learn via back- 
+propagation. 
+There are four steps in generating a PARSEC network: 1) create an example parse file; 2) 
+define a lexicon; 3) train the six modules; 4) assemble the full network. Of these, only the 
+first two steps require substantial human effort, and this effort is small relative to that 
+required for writing a grammar by hand. Training and assembly are automatic. 
+2.1 PREPROCESSING MODULE 
+This module marks alphanumeric sequences, which are replaced by a single special 
+marker word. This prevents long alphanumeric strings from overwhelming the length con- 
+straint on phrases. Note that this is not always a trivial task since words such as a and 
+one are lexically ambiguous. 
+INPUT: It costs three hundred twenty one dollars. 
+OUTPUT: It costs ALPHANUM dollars. 
+2These transformations could be carded out by connectionist networks, but at a substantial com- 
+putational cost for training and a risk of undergeneralization. 
+212 Jain 
+2.2 PHRASE MODULE 
+The Phrase module processes the evolving output of the Prep module into phrase blocks. 
+Phrase blocks are non-recursive contiguous pieces of a sentence. They correspond to sim- 
+ple noun phrases and verb groups. 3 Phrase blocks are represented as grouped sets of units 
+in the network. Phrase blocks are denoted by brackets in the following: 
+INPUT: I will send you a new form in the morning. 
+OUTPUT: [I] [will send] [you] [a new form] [in the morning]. 
+2.3 CLAUSE MAPPING MODULE 
+The Clause module uses the output of the Phrase module as input and assigns the clausal 
+structure. The result is an unambiguous bracketing of the phrase blocks that is used to 
+transform the phrase block representation into representations for each clause: 
+INPUT: [I] [would like] [to register] [for the conference]. 
+OUTPUT: { [I] [would like] } { [to register] [for the conference] }. 
+2.4 ROLE LABELING MODULE 
+The Roles module associates case-role labels with each phrase block in each clause. It also 
+denotes attachment structure for prepositional phrases (MOD-1 indicates that the cur- 
+rent phrase block modifies the previous one): 
+INPUT: { [The rifles] [of papers] [are printed] [in the forms] } 
+OUTPUT: { [The rifles] [of papers] [are printed] [in the forms] } 
+PATIENT MOD-1 ACTION LOCATION 
+2.5 INTERCLAUSE AND MOOD MODULES 
+The Interclause and Mood modules are similar to the Roles module. They both assign 
+labels to constituents, except they operate at higher levels. The Interclause module indi- 
+cates, for example, subordinate and relative clause relationships. The Mood module indi- 
+cates the overall sentence mood (declarative or interrogative in the networks discussed 
+here). 
+3 GENERALIZATION 
+Generalization in large connectionist networks is a critical issue. This is especially the 
+case when training data is limited. For the experiments reported here, the training data was 
+limited to twelve conference registration dialogs containing approximately 240 sentences 
+with a vocabulary of about 400 words. Despite the small corpus, a large number of English 
+constructs were covered (including passives, conditional constructions, center-embedded 
+relative clauses, etc.). 
+A set of 117 disjoint sentences was obtained to test coverage. The sentences were gener- 
+ated by a group of people different from those that developed the 12 dialogs. These sen- 
+tences used the same vocabulary as the 12 dialogs. 
+3Abney has described a similar linguistic unit called a chunk (Abney 1991). 
+Generalization Performance in PARSEC---A Structured Connectionist Parsing Architecture 213 
+3.1 EARLY PARSEC VERSIONS 
+Straightforward training of a PARSEC network resulted in poor generalization perfor- 
+mance, with only 16% of the test sentences being parsed correctly. One of the primary 
+sources for error was positional sensitivity acquired during training of the three transfor- 
+mational modules. In the Phrase module, for example, each of the phrase boundary detec- 
+tor units was supposed to learn to indicate a boundary between words in specific positions. 
+Each of the units of the Phrase module is performing essentially the same job, but the net- 
+work doesn't know this and cannot learn this from a small sample set. By sharing the 
+connection weights across positions, the network is forced to be position insensitive (sim- 
+ilar to TDNN's as in Waibel et al. 1989). After modifying PARSEC to use shared weights 
+and localized connectivity in the lower three modules, generalization performance 
+increased to 27%. The primary source of error shifted to the Roles module. 
+Part of the problem could be ascribed to the representation of phrase blocks. They were 
+represented across rows of units that each define a word. In the phrase block the big dog, 
+dog would have appeared in row 3. This changes to row 2 if the phrase block is just the 
+dog. A network had to learn to respond to the heads of phrase blocks even though they 
+moved around. An augmented phrase block representation in which the last word of the 
+phrase block was copied to position 0 solved this problem. With the augmented phrase 
+block representation coupled with the previous improvements, PARSEC achieved 44% 
+coverage. 
+3.2 PARSEC: FINAL VERSION 
+The final version of PARSEC uses all of the previous enhancements plus a technique 
+called Programmed Constructive Learning (PCL). In PCL, hidden units are added to a 
+network one at a time as they are needed. Also, there is a specific series of hidden unit 
+types for each module of a PARSEC network. The hidden unit types progress from being

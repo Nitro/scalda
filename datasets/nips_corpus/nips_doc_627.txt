@@ -1,0 +1,173 @@
+A Parallel Gradient Descent Method for Learning 
+in Analog VLSI Neural Networks 
+J. Alspector 
+R. Melr* B. Yuhas A. Jayakumar 
+Bellcore 
+Morristown, NJ 07962-1910 
+D. Lippe! 
+Abstract 
+Typical methods for gradient descent in neural network learning involve 
+calculation of derivatives based on a detailed knowledge of the network 
+model. This requires extensive, time consuming calculations for each pat- 
+tern presentation and high precision that makes it difficult to implement 
+in VLSI. We present here a perturbation technique that measures, not 
+calculates, the gradient. Since the technique uses the actual network as 
+a measuring device, errors in modeling neuron activation and synaptic 
+weights do not cause errors in gradient descent. The method is parallel 
+in nature and easy to implement in VLSI. We describe the theory of such 
+an algorithm, an analysis of its domain of applicability, some simulations 
+using it and an outline of a hardware implementation. 
+I Introduction 
+The most popular method for neural network learning is back-propagation (Rumel- 
+hart, 1986) and related algorithms that calculate gradients based on detailed knowl- 
+edge of the neural network model. These methods involve calculating exact values 
+of the derivative of the activation function. For analog VLSI implementations, such 
+techniques require impossibly high precision in the synaptic weights and precise 
+modeling of the activation functions. It is much more appealing to measure rather 
+than calculate the gradient for analog VLSI implementation by perturbing either a 
+*Present address: Dept. of EE; Technion; Haifa, Israel 
+Present address: Dept. of EE; MIT; Cambridge, MA 
+836 
+A Parallel Gradient Descent Method for Learning in Analog VLSI Neural Networks 837 
+single weight (Jabri, 1991) or a single neuron (Widrow, 1990) and measuring the 
+resulting change in the output error. However, perturbing only a single weight or 
+neuron at a time loses one of the main advantages of implementing neural networks 
+in analog VLSI, namely, that of computing weight changes in parallel. The one- 
+weight-at-a-time perturbation method has the same order of time complexity as a 
+serial computer simulation of learning. A mathematical analysis of the possibility 
+of model free learning using parallel weight perturbations followed by local corre- 
+lations suggests that random perturbations by additive, zero-mean, independent 
+noise sources may provide a means of parallel learning (Dembo, 1990). We have 
+pre :riously used such a noise source (Alspector, 1991) in a different implementable 
+learning model. 
+2 Gradient Estimation by Parallel Weight Perturbation 
+2.1 A Brownian Motion Algorithm 
+One can estimate the gradient of the error E(w) with respect to any weight w 
+by perturbing w by 5w and measuring the change in the output error 5E as the 
+entire weight vector w except for component w is held constant. 
+5E = E(w +SWl)- E(w) (1) 
+6wl 
+This leads to an approximation to the true gradient as 
+Owx : 
+OE 5E 
+= + (2) 
+c9w 6w 
+For small perturbations, the second (and higher order) term can be ignored. This 
+method of perturbing weights one-at-a-time has the advantage of using the correct 
+physical neurons and synapses in a VLSI implementation but has time complexity 
+of O(W) where W is the number of weights. 
+Following (Dembo, 1990), let us now consider perturbing all weights simultaneously. 
+However, we wish to have the perturbation vector 6w chosen uniformly on a hyper- 
+cube. Note that this requires only a random sign multiplying a fixed perturbation 
+and is natural for VLSI. Dividing the resulting change in error by any single weight 
+change, say 5w, gives 
+5E 
+which by a Taylor expansion is 
+= E(w + E(w) 
+5w 
+leading to the approximation (ignoring higher order terms) 
+838 Alspector, Meir, Yuhas, Jayakumar, and Lippe 
+An important point of this paper, emphasized by (Dembo, 1990) and embodied in 
+Eq. (5), is that the last term has expectation value zero for random and indepen- 
+dently distributed 6wi since the last expression in parentheses is equally likely to 
+be +1 as -1. Thus, one can approximately follow the gradient by perturbing all 
+weights at the same time. If each synapse has access to information about the re- 
+sulting change in error, it can adjust its weight by assuming it was the only weight 
+perturbed. The weight change rule 
+6E 
+/xwi = -V , (6) 
+where /is a learning rate, will follow the gradient on the average but with the 
+considerable noise implied by the second term in Eq. (5). This type of stochas- 
+tic gradient descent is similar to the random-direction Kiefer-Wolfowitz method 
+(Kushner, 1978), which can be shown to converge under suitable conditions on / 
+and 6wi. This is also reminiscent of Brownian motion where, although particles may 
+be subject to considerable random motion, there is a general drift of the ensemble 
+of particles in the direction of even a weak external force. In this respect, there is 
+some similarity to the directed drift algorithm of (Venkatesh, 1991), although that 
+work applies to binary weights and single layer percepttons whereas this algorithm 
+should work for any level of weight quantization or precision - an important ad- 
+vantage for VLSI implementations - as well as any number of layers and even for 
+recurrent networks. 
+2.2 Improving the Estimate by Multiple Perturbations 
+As was pointed out by (Dembo, 1990), for each pattern, one can reduce the variance 
+of the noise term in Eq. (5) by repeating the random parallel perturbation many 
+times to improve the statistical estimate. If we average over P perturbations, we 
+have 
+where p indexes the perturbation number. The variance of the second term, which 
+is a noise, r, is 
+where the expectation value, <> leads to the Kronecker delta function, PP' This 
+' ii' � 
+reduces Eq. (8) to 
+A Parallel Gradient Descent Method for Learning in Analog VLSI Neural Networks 839 
+p--1 
+The double sum over perturbations and weights (assunfing the gradient is bounded 
+and all gradient directions have the same order of magnitude) has magnitude 
+O(PW) so that the variance is 0(-) and the standard deviation is 
+< (v ,2)>� = 0 . (10) 
+Therefore, for a fixed variance in the noise term, it may be necessary to have a 
+number of perturbations of the same order as the number of weights. So, if a 
+high precision estimate of the gradient is needed throughout learning, it seems as 
+though the time complexity will still be O(W) giving no advantage over single 
+perturbations. However, one or a few of the gradient derivatives may donfinate 
+the noise and reduce the effective number of parameters. One can also make a 
+qualitative argmnent that early in learning, one does not need a precise estimate of 
+the gradient since a general direction in weight space will suffice. Later, it will be 
+necessary to make a more precise estimate for learning to converge. 
+2.3 The Gibbs Distribution and the Learning Problem 
+Note that the noise of Eq. (7) is gaussian since it is composed of a sum of random 
+sign terms which leads to a binomial distribution and is gaussian distributed for 
+large P. Thus, in the continuous time limit, the learning problem has Langevin 
+dynanfics such that the time rate of change of a weight w is, 
+dw 5 E O E 
+,it = -v : + , (11) 
+and the learning problem converges in probability (Zinn-Justin, 1989), so that 
+asymptotically Pt(w) e< exp[-flE(w)] where /3 is inversely proportional to the 
+noise variance. 
+Therefore, even though the gradient is noisy, one can still get a useful learning algo- 
+rithm. Note that we can anneal  by a variable perturbation method. Depending 
+on the annealing schedule, this can result in a substantial speedup in learning over 
+the one-weight-at-a-time perturbation technique. 
+2.4 Similar Work in these Proceedings 
+Coincidentally, there were three other papers with sinfilar work at NIPS*92. This 
+algorithm was presented with different approaches by both (Flower, 1993) and 
+(Cauwenberghs, 1993). 1 A continuous time version was implemented in VLSI 
+but not on a neural network by (Kirk, 1993). 
+1We note that (Cauwenberghs, 1993) shows that nmltiple perturbations are not needed for learning 
+if Aw is small enough and he does not study them. This does not agree with our simulations (following) 
+840 Alspector, Meir, Yuhas, Jayakumar, and Lippe 
+3 Simulations 
+3.1 Learning with �arious Perturbation Iterations 
+We tried some simple problems using this technique in software. We used a standard 
+sigmoid activation function with unit gain, a fixed size perturbation of .005 and 
+random sign. The learning rate, r], was .1 and momentum, a, was 0. We varied 
+the number of perturbation iterations per pattern presentation from 1 to 128 (2 l 
+where I varies from 0 to 7). We performed 10 runs for each condition and averaged 
+the results. Fig. la shows the average learning curves for a 6 input, 12 hidden, 1 
+output unit parity problem as the number of perturbations per pattern presentation 
+is varied. The symbol plotted is I. 
+panty 6 avg 10 rephcaton 6 avg 10 
+7 
+7 
+4 
+4 3333 
+33 
+33 
+3 
+33 
+33 3333 
+3 3 
+3 
+3 333 
+3 3 3 3 
+3 3 
+Figure 1. Learning curves for 6-12-1 parity and 6-6-6 replication. 
+There seems to be a critical number of perturbations, Pc, about 16 (l = 4) in this 
+case, below which learning slows dramatically. 
+We repeated the measurements of Fig. la for different sizes of the parity problem 
+using a N-2N-1 network. We also did these measurements on a different problem, 
+rephcation or identity, where the task is to rephcate the bit pattern of the input on 
+the output. We used a N-N-N network for this task so that we have a comparison 
+with the parity problem as N varies for roughly the same nmnber of weights (2N 2 + 
+2N) in each network. The learning curves for the 6-6-6 problem are plotted in Fig. 
+lb. The critical value also seems to be 16 (l = 4). 
+perhaps because we do not decrease 5w and 7 as learning proceeds. He did not check th

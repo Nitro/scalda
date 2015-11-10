@@ -1,0 +1,140 @@
+Coastal Navigation with Mobile Robots 
+Nicholas Roy and Sebastian Thrun 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+{ nicholas. roy I sebastian. thrun } @ cs. cmu. edu 
+Abstract 
+The problem that we address in this paper is how a mobile robot can plan in order 
+to arrive at its goal with minimum uncertainty. Traditional motion planning algo- 
+rithms often assume that a mobile robot can track its position reliably, however, in real 
+world situations, reliable localization may not always be feasible. Partially Observable 
+Markov Decision Processes (POMDPs) provide one way to maximize the certainty of 
+reaching the goal state, but at the cost of computational intractability for large state 
+spaces. 
+The method we propose explicitly models the uncertainty of the robot's position as 
+a state variable, and generates trajectories through the augmented pose-uncertainty 
+space. By minimizing the positional uncertainty at the goal, the robot reduces the 
+likelihood it becomes lost. We demonstrate experimentally that coastal navigation 
+reduces the uncertainty at the goal, especially with degraded localization. 
+1 Introduction 
+For an operational mobile robot, it is essential to prevent becoming lost. Early motion 
+planners assumed that a robot would never be lost - that a robot could always know its 
+position via dead reckoning without error [7]. This assumption proved to be untenable due 
+to the small and inevitable inconsistencies in actual robot motion; robots that rely solely on 
+dead reckoning for their position estimates lose their position quickly. Mobile robots now 
+perform position tracking using a combination of sensor data and odometry [2, 10, 5]. 
+However, the robot's ability to track its position can vary considerably with the robot's 
+position in the environment. Some parts of the environment may lack good features for lo- 
+calization [ 11 ]. Other parts of the environment can have a large number of dynamic features 
+(for example, people) that can mislead the localization system. Motion planners rarely, if 
+ever, take the robot's position tracking ability into consideration. As the robot's localiza- 
+tion suffers, the likelihood that the robot becomes lost increases, and as a consequence, the 
+robot is less likely to complete the given trajectory. 
+Most localization systems therefore compensate by adding environment-specific knowl- 
+edge to the localization system, or by adding additional sensing capabilities to the robot, 
+to guarantee that the robot can complete every possible path. In general, however, such 
+alterations to the position tracking abilities of the robot have limitations, and an alternative 
+scheme must be used to ensure that the robot can navigate with maximum reliability. The 
+conventional planners represent one end of a spectrum of approaches (figure 1), in that a 
+plan can be computed easily, but at the cost of not modelling localization performance. 
+At opposite end of the spectrum is the Partially Observable Markov Decision Process 
+1044 N. Roy and S. Thrun 
+Conventional 
+Path Planner POMDP 
+Tractable Intractable 
+Not Robust Robust 
+Figure 1: The continuum of possible approaches to the motion planning, from the robust but in- 
+tractable POMDP, to the potentially failure-prone but real-time conventional planners. Coastal navi- 
+gation lies in the middle of this spectrum. 
+(POMDP). POMDPs in a sense are the brass ring of planning with uncertainty; a POMDP 
+policy will make exactly the right kind of compromise between conventional optimality 
+considerations and certainty of achieving the goal state. Many people have examined the 
+use of POMDPs for mobile robot navigation [5, 6, 8]. However, computing a POMDP 
+solution is computationally intractable (PSPACE-hard) for large state systems - a mobile 
+robot operating in the real world often has millions of possible states. As a result, many 
+of the mobile robot POMDP solutions have made simplifying assumptions about the world 
+in order to reduce the state space size. Many of these assumptions do not scale to larger 
+environments or robots. In contrast, our hypothesis is that only a small number of the 
+dimensions of the uncertainty matter, and that we can augment the state with these dimen- 
+sions to approximate a solution to the POMDP. 
+The coastal navigation model developed in this paper represents a tradeoff between robust 
+trajectories and computational tractability, and is inspired by traditional navigation of ships. 
+Ships often use the coasts of continents for navigation in the absence of better tools such 
+as GPS, since being close to the land allows sailors to determine with high accuracy where 
+they are. The success of this method results from coast lines containing enough information 
+in their structure for accurate localization. By navigating sufficiently close to areas of the 
+map that have high information content, the likelihood of getting lost can be minimized. 
+2 Modelling Uncertainty 
+The problem that we address in this paper is how a mobile robot can plan in order to arrive 
+at its goal with minimum uncertainty. Throughout this discussion, we will be assuming a 
+known map of the environment [9]. The position, x, of the robot is given as the location 
+(z, y) and direction 0, defined over a space X = (X, Y, O). Our localization method is 
+a grid-based implementation of Markov localization [3, 5]. This method represents the 
+robot's belief in its current position using a 3-dimensional grid over X - (X, Y, �), which 
+allows for a discrete approximation of arbitrary probability distributions. The probability 
+that the robot has a particular pose x is given by the probability p(x). 
+State Augmentation We can extend the state of the robot from the 3-dimensional pose 
+space to an augmented pose-uncertainty space. We can represent the uncertainty of the 
+robot's positional distribution as the entropy, 
+H(px) = - fp(x)log(p(x)) 
+x 
+(1) 
+We therefore represent the state space of the robot as the tuple 
+S = 
+: (x, (x)) 
+State Transitions In order to construct a plan between two points in the environment, 
+we need to be able to represent the effect of the robot's sensing and moving actions. The 
+implementation of Markov localization provides the following equations for the tracking 
+Coastal Navigation with Mobile Robots 1045 
+the robot's pose from x to x': 
+= f,(x'lx, (2) 
+x 
+= ap(z[x)p(x) (3) 
+These equations are taken from [3, 12], where equation (2) gives the prediction phase of 
+localization (after motion u), and equation (3) gives the update phase of localization (after 
+receiving observation z). c is a normalizing constant. We extend these equations to the 
+fourth dimension as follows: 
+3 Planning 
+p(slu) : (4) 
+p(sl,.) : 
+Equations (4) and (5) provide a mechanism for tracking the robot's state, and in fact contain 
+redundant information, since the extra state variable H (x) is also contained in the probabil- 
+ity distribution p(x). However, in order to make the planning problem tractable, we cannot 
+in fact maintain the probabilistic sensing model. To do so would put the planning problem 
+firmly in the domain of POMDPs, with the associated computational intractability. Instead, 
+we make a simplifying assumption, that is, that the positional probability distribution of 
+the robot can be represented at all times by a Gaussian centered at the mean x. This allows 
+us to approximate the positional distribution with a single statistic, the entropy. In POMDP 
+terms, we using the assumption of Gaussian distributions to compress the belief space to a 
+single dimension. We can now represent the positional probability distribution completely 
+with the vector s, since the width of the Gaussian is represented by the entropy H (x). 
+More importantly, the simplifying assumption allows us to track the state of the robot de- 
+terministically. Although the state transitions are stochastic (as in equation (4)), the obser- 
+vations are not. At any point in time, the sensors identify the true state of the system, with 
+some certainty given by H(p(xlz)). This allows us to compress the state transitions into a 
+single rule: 
+p(sl)- (6) 
+The final position of the robot depends only on the motion command t and can be identified 
+by sensing z. However, the uncertainty of the pose, H(p(xlt , z)), is a function not only 
+of the motion command but also the sensing. The simplifying assumption of Gaussian 
+models is in general untenable for localization; however, we shall see that this assumption 
+is sufficient for the purpose of motion planning. 
+One final modification must be made to the state transition rule. In a perfect world, it 
+would be possible to predict exactly what observation would be made. However, it is 
+exactly the stochastic and noisy nature of real sensors that generates planning difficulty, 
+yet the update rule (6) assumes that it is possible to predict measurement z at pose x. 
+Deterministic prediction is not possible; however, it is possible to compute probabilities 
+for sensor measurements, and thus generate an expected value for the entropy based on the 
+probability distribution of observations Z, which leads to the final state transition rule: 
+p�l,) = (p(xl,),Ez[r(p(xl,,,.))]) (7) 
+where Ez [H(p(xl u, z))] represents the expected value of the entropy of the pose distribu- 
+tion over the space of possible sensor measurements. 
+With the transition rule in equation (7), we can now compute the transition probabilities 
+for any particular state using a model of the robot's motion, a model of the robot's sensor 
+and a map of the environment. The probability p(xlu) is given by a model of the robot's 
+motion, and can be easily precomputed for each action u. The expectation term Ez [HI 
+1046 N. Roy and S. Thrun 
+can also be precomputed for each possible state s. The precomputation of these transition 
+probabilities is very time-intensive, because it requires simulating sensing at each state in 
+the e

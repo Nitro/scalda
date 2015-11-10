@@ -1,0 +1,153 @@
+Learning Sparse Perceptrons 
+Jeffrey C. Jackson 
+Mathematics 2z Computer Science Dept. 
+Duquesne University 
+600 Forbes Ave 
+Pittsburgh, PA 15282 
+jackson@mathcs.duq.edu 
+Mark W. Craven 
+Computer Sciences Dept. 
+University of Wisconsin-Madison 
+1210 West Dayton St. 
+Madison, WI 53706 
+craven@cs.wisc.edu 
+Abstract 
+We introduce a new algorithm designed to learn sparse percep- 
+ttons over input representations which include high-order features. 
+Our algorithm, which is based on a hypothesis-boosting method, 
+is able to PAC-learn a relatively natural class of target concepts. 
+Moreover, the algorithm appears to work well in practice: on a set 
+of three problem domains, the algorithm produces classifiers that 
+utilize small numbers of features yet exhibit good generalization 
+performance. Perhaps most importantly, our algorithm generates 
+concept descriptions that are easy for humans to understand. 
+I Introduction 
+Multi-layer perceptron (MLP) learning is a powerful method for tasks such as con- 
+cept classification. However, in many applications, such as those that may involve 
+scientific discovery, it is crucial to be able to explain predictions. Multi-layer percep- 
+trons are limited in this regard, since their representations are notoriously difficult 
+for humans to understand. We present an approach to learning understandable, 
+yet accurate, classifiers. Specifically, our algorithm constructs sparse percepttons, 
+i.e., single-layer perceptrons that have relatively few non-zero weights. Our algo- 
+rithm for learning sparse perceptrons is based on a new hypothesis boosting algo- 
+rithm (Freund 2z Schapire, 1995). Although our algorithm was initially developed 
+from a learning4heoretic point of view and retains certain theoretical guarantees (it 
+PAC-learns the class of sparse perceptrons), it also works well in practice. Our ex- 
+periments in a number of real-world domains indicate that our algorithm produces 
+perceptrons that are relatively comprehensible, and that exhibit generalization per- 
+formance comparable to that of backprop-trained MLP's (Rumelhart et al., 1986) 
+and better than decision trees learned using C4.5 (Quinlan, 1993). 
+Learning Sparse Perceptrons 655 
+We contend that sparse perceptrons, unlike MLP's, are comprehensible because they 
+have relatively few parameters, and each parameter describes a simple (i.e. linear) 
+relationship. As evidence that sparse percepttons are comprehensible, consider that 
+such linear functions are commonly used to express domain knowledge in fields such 
+as medicine (Spackman, 1988) and molecular biology (Stormo, 1987). 
+2 Sparse Perceptrons 
+A perceptton is a weighted threshold over the set of input features and over higher- 
+order features consisting of functions operating on only a limited number of the 
+input features. Informally, a sparse perceptron is any perceptron that has relatively 
+few non-zero weights. For our later theoretical results we will need a more precise 
+definition of sparseness which we develop now. Consider a Boolean function f: 
+{0, 1} ' - {-1, +1}. Let Cl* be the set of all conjunctions of at most k of the inputs 
+to f. Cl* includes the conjunction of 0 inputs, which we take as the identically 
+I function. All of the functions in Cl* map to {-1, +1}, and every conjunction in 
+Cl* occurs in both a positive sense (+1 represents true) and a negated sense (-1 
+represents true). Then the function f is a k-perceptron if there is some integer s 
+such that f(x) = sign(Y,is__l hi(x)), where for all i, hi  Cl*, and sign(y) is undefined 
+if y = 0 and is Y/lYl otherwise. Note that while we have not explicitly shown any 
+weights in our definition of a k-perceptron f, integer weights are implicitly present 
+in that we allow a particular hi  Cl* to appear more than once in the sum defining 
+f. In fact, it is often convenient to think of a k-perceptron as a simple linear 
+discriminant function with integer weights defined over a feature space with O(nl*) 
+features, one feature for each element of Cl*. 
+We call a given collection of s conjunctions hi  el, a k-perceptron representation of 
+the corresponding function f, and we call s the size of the representation. We define 
+the size of a given k-perceptron function f as the minimal size of any k-perceptron 
+representation of f. An s-sparse k-perceptron is a k-perceptron f such that the size 
+of f is at most s. We denote by 7 the set of Boolean functions over {0, 1} ' which 
+[j n. 
+can be represented as k-perceptrons, and we define 7l* = ,7l* The subclass of 
+s-sparse k-perceptrons is denoted by 7l*,s. We are also interested in the class 7 
+of k-perceptrons with real-valued weights, at most r of which are non-zero. 
+3 The Learning Algorithm 
+In this section we develop our learning algorithm and prove certain performance 
+guarantees. Our algorithm is based on a recent hypothesis boosting algorithm 
+that we describe after reviewing some basic learning-theory terminology. 
+3.1 PAC Learning and Hypothesis Boosting 
+Following Valiant (1984), we say that a function class r (such as 7l* for fixed k) 
+is (strongly) PAC-learnabIe if there is an algorithm 4 and a polynomial function 
+px such that for any positive e and 5, any f  r (the target function), and any 
+probability distribution D over the domain of f, with probability at least I - 
+5, algorithm 4(EX(f, D),e, 5) produces a function h (the hypothesis) such that 
+Pr[PrD[f(x)  h(x)] > e] < 5. The outermost probability is over the random choices 
+made by the EX oracle and any random choices made by 4. Here EX(f, D) denotes 
+an oracle that, when queried, chooses a vector of input values x with probability 
+D and returns the pair (x, f(x)) to 4. The learning algorithm 4 must run in time 
+pl(n, s, e -x, 5-1), where n is the length of the input vector to f and s is the size of 
+656 J.C. JACKSON, M. W. CRAVEN 
+AdaBoost 
+Input: training set $ of rn examples of function f, weak learning algorithm /L that 
+is (� - ',)-approximate, 7 
+Algorithm: 
+ ln(m) 
+1. T-2-  
+2. for all x  $, w(x) <-- 1/m 
+3. for i = 1 to T do 
+4. for all z 
+5. invoke /L on $ and distribution 
+6. i - --x.a,(x)i(x)Di(x) 
+?. 
+8. for all x 
+9. enddo 
+Output: h(x)-- sign (-T=_ ln(/i). hi(z)) 
+Figure 1: The AdaBoost algorithm. 
+f; the algorithm is charged one unit of time for each call to EX. We sometimes 
+call the function h output by 4 an e-approximator (or strong approximator) to f 
+with respect to D. If r is PAC-learnable by an algorithm 4 that outputs only 
+hypotheses in class 7/ then we say that r is PAC-Iearnable by 7/. If r is PAC- 
+learnable for e - 1/2 - 1/p2(n, s), where p is a polynomial function, then r is 
+weakly PAC-learnable, and the output hypothesis h in this case is called a weak 
+approximator. 
+Our algorithm for finding sparse perceptrons is, as indicated earlier, based on the 
+notion of hypothesis boosting. The specific boosting algorithm we use (Figure 1) 
+is a version of the recent AdaBoost algorithm (Freund & Schapire, 1995). In the 
+next section we apply AdaBoost to boost a weak learning algorithm for 7k,s into 
+a strong learner for 7k,s. AdaBoost is given a set $ of m examples of a function 
+1 
+f � (0, 1) '  (-1, +1) and a weak learning algorithm /L which takes e -  - 7 
+for a given 7 (7 must be bounded by an inverse polynomial in n and s). AdaBoost 
+runs for T - ln(rn)/(27 ) stages. At each stage it creates a probability distribution 
+Di over the training set and invokes /L to find a weak hypothesis hi with respect 
+to Di (note that an example oracle EX(f, Di) can be simulated given Di and S). 
+At the end of the T stages a final hypothesis h is output; this is just a weighted 
+threshold over the weak hypotheses (hi I I _ i _ T). If the weak learner succeeds 
+in producing a (� -'),)-approximator at each stage then AdaBoost's final hypothesis 
+is guaranteed to be consistent with the training set (Freund & Schapire, 1995). 
+3.2 PAC-Learning Sparse k-Perceptrons 
+We now show that sparse k-perceptrons are PAC learnable by real-weighted k- 
+perceptrons having relatively few nonzero weights. Specifically, ignoring log factors, 
+7),s is learnable by 7)o(s ) for any constant k. We first show that, given a training 
+set for any f  7),s, we can efficiently find a consistent h  7)o(s ). This consis- 
+tency algorithm is the basis of the algorithm we later apply to empirical learning 
+problems. We then show how to turn the consistency algorithm into a PAC learning 
+algorithm. Our proof is implicit in somewhat more general work by Freund (1993), 
+although he did not actually present a learning algorithm for this class or analyze 
+Learning Sparse Perceptrons 657 
+the sample size needed to ensure e-approximation, as we do. Following Freund, we 
+begin our development with the following lemma (Goldmann et al., 1992): 
+Lemma I (Goldmann Hastad Razborov) For f' {0, 1} - {-1,+1} and H, 
+any set of functions w. ith the same domain and range, if f can be represented as 
+f(x) - sign(-i= hi(x)), where hi e H, then for any probability distribution D 
+I 1 
+over {0, 1) there is some hi such that PrD[f(x)  hi(x)] <_ 
+If we specialize this lemma by taking H = Ck (recall that Ck is the set of conjunc- 
+tions of at most k input features of f) then this implies that for any f E 7k,s and 
+any probability distribution D over the input features of f there is some hi  Ck 
+that weakly approximates f with respect to D. Therefore, given a training set $ 
+and distribution D that has nonzero weight only on instances in $, the following 
+simple algorithm is a weak learning algorithm for 7: exhaustively test each of the 
+O(n ) possible conjunctions of at most k features until we find a conjunction that 
+(� ;)-approximates f with respect to D (we can efficiently compute the approx- 
+imation of a conjunction hi by summing the values of D over those inputs where hi 
+and f agree). Any such conjunction can be returned as the weak hypothesis. Th

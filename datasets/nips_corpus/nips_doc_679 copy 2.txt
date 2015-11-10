@@ -1,0 +1,162 @@
+Directional-Unit Boltzmann Machines 
+Richard S. Zemel 
+Computer Science Dept. 
+University of Toronto 
+Toronto, ONT M5S 1A4 
+Christopher K. I. Williams 
+Computer Science Dept. 
+University of Toronto 
+Toronto, ONT M5S 1A4 
+Michael C. Mozer 
+Computer Science Dept. 
+University of Colorado 
+Boulder, CO 80309-0430 
+Abstract 
+We present a general formulation for a network of stochastic di- 
+rectional units. This formulation is an extension of the Boltzmann 
+machine in which the units are not binary, but take on values in a 
+cyclic range, between 0 and 27r radians. The state of each unit in 
+a Directional-Unit Boltzmann Machine (DUBM) is described by a 
+complex variable, where the phase component specifies a direction; 
+the weights are also complex variables. We associate a quadratic 
+energy function, and corresponding probability, with each DUBM 
+configuration. The conditional distribution of a unit's stochastic 
+state is a circular version of the Gaussian probability distribution, 
+known as the von Mises distribution. In a mean-field approxima- 
+tion to a stochastic DUBM, the phase component of a unit's state 
+represents its mean direction, and the magnitude component spec- 
+ifies the degree of certainty associated with this direction. This 
+combination of a value and a certainty provides additional repre- 
+sentational power in a unit. We describe a learning algorithm and 
+simulations that demonstrate a mean-field DUBM'S ability to learn 
+interesting mappings. 
+Many kinds of information can naturally be represented in terms of angular, or 
+directional, variables. A circular range forms a suitable representation for explicitly 
+directional information, such as wind direction, as well as for information where 
+the underlying range is periodic, such as days of the week or months of the year. 
+In computer vision, tangent fields and optic flow fields are represented as fields of 
+oriented line segments, each of which can be described by a magnitude and direction. 
+Directions can also be used to represent a set of symbolic labels, e.g., object label 
+A at 0, and object label B at 7r/2 radians. We discuss below some advantages of 
+representing symbolic labels with directional units. 
+172 
+Directional-Unit Boltzmann Machines 173 
+These and many other phenomena can be usefully encoded using a directional 
+representation--a polar coordinate representation of complex values in which the 
+phase parameter indicates a direction between 0 and 27r radians. We have devised a 
+general formulation of networks of stochastic directional units. This paper describes 
+a directional-unit Boltzmann machine (DUBM), which is a novel generalization of a 
+Boltzmann machine (Ackley, Hinton and Sejnowski, 1985) in which the units are 
+not binary, but instead take on directional values between 0 and 27r. 
+1 STOCHASTIC DUBM 
+A stochastic directional unit takes on values on the unit circle. We associate with 
+unit j a random variable Zj; a particular state of j is described by a complex 
+number with magnitude one and direction, or phase rj: zj = e irj 
+The weights of a DUBM also take on complex values. The weight from unit k to 
+unit j is: wjk -- bjke%k. We constrain the weight matrix W to be Hermitian' 
+W T = W*, where the diagonal elements of the matrix are zero, and the asterisk 
+indicates the complex conjugate operation. Note that if the components are real, 
+then W T = W, which is a real symmetric matrix. Thus, the Hermitian form is a 
+natural generalization of weight symmetry to the complex domain. 
+This definition of W leads to a Hermitian quadratic form that generalizes the real 
+quadratic form of the Hopfield energy function: 
+E(z) -1/2 z*:rWz = 1/2 y *w 
+= - zj% j (1) 
+j,k 
+where z is the vector of the units' complex states in a particular global configuration. 
+Noest (1988) independently proposed this energy function. It is similar to that 
+used in Fradkin, Huberman, and Shenker's (1978) generalization of the XY model 
+of statistical mechanics to allow arbitary weight phases Oj, and coupled oscillator 
+models, e.g., Baldi and Meir (1990). 
+We can define a probability distribution over the possible states of a stochastic 
+network using the Boltzmann factor. In a DUBM, we can describe the energy as a 
+function of the state of a particular unit j: 
+*W ' 
+E(Zj = zj) = -1/2 [yzizwj + y zkzj 1 
+k k 
+We define 
+Xj -- Z * ' 
+kWjk -- aje*Ctj 
+k 
+to be the net input to unit j, where aj and oj denote the magnitude and phase of 
+x j, respectively. 
+Applying the Boltzmann factor, we find that the probability that unit j is in a 
+particular state is proportional to: 
+p(Zj = e = d 
+where  is the reciprocal of the system temperature. 
+174 
+Zemel, Williams, and Mozer 
+o 
+Figure 1' A circular normal density function laid over a unit circle. The dots 
+along the circle represent samples of the circular normal random variable Z 5. The 
+expected direction of ZS, , is 7r/4; r 5 is its resultant length. 
+This probability distribution for a unit's state corresponds to a distribution known 
+as the yon Mises, or circular normal, distribution (Mardia, 1972). Two parameters 
+completely characterize this distribution: a mean direction Y = (0, 27r] and a con- 
+centration parameter m > 0 that behaves like the reciprocal of the variance of a 
+Gaussian distribution on a linear random variable. The probability density function 
+of a circular normal random variable Z is1: 
+p(r; Y, m) = 1 e,COS(-) 
+27rI0(m) (3) 
+From Equations 2 and 3, we see that if a unit adopts states according to its contribu- 
+tion to the system energy, it will be a circular normal variable with mean direction 
+aj and concentration parameter mj : /aj. These parameters are directly deter- 
+mined by the net input to the unit. 
+Figure 1 shows a circular normal density function for ZS, the state of unit j. This 
+figure also shows the expected value of its stochastic state, which we define as: 
+Y5 = < Z5 > = r5 ei/j (4) 
+where 75, the phase of YS, is the mean direction and rs, the magnitude of yj, is the 
+resultant length. For a circular normal random variable, 75 = J-J, and rj -- Io(mj)' 
+When samples of Z 5 are concentrated on a small arc about the mean (see Figure 1), 
+rj will approach length one. This corresponds to a large concentration parameter 
+(rn 5 - /as). Conversely, for small ms, the distribution approaches the uniform 
+distribution on the circle, and the resultant length falls toward zero. For a uniform 
+distribution, r 5 = 0. Note that the concentration parameter for a unit's circular 
+The normalization factor Io(m) is the modified Bessel function of the first kind and 
+ '* �dO. It can 
+order zero. An integral representation of this function is Io(m) = � f e +mc�s 
+be computed by numerical routines. 
+2An integral representation of the modified Bessel function of the first kind and order 
+ ,* cO, Ocos(kO)dO. Note that I(m) dlo(m)/dm. 
+kisI(m)=;f e m = 
+Directional-Unit Boltzmann Machines 175 
+normal density function is proportional to/, the reciprocal of the system tempera- 
+ture. Higher temperatures will thus have the effect of making this distribution more 
+uniform, just as they do in a binary-unit Boltzmann machine. 
+2 EMERGENT PROPERTIES OF A DUBM 
+A network of directional units as defined above contains two important emergent 
+properties. The first property is that the magnitude of the net input to unit j 
+describes the extent to which its various inputs agree. Intuitively, one can think 
+of each component zkw]k of the sum that comprises xj as predicting a phase for 
+unit j. When the phases of these components are equal, the magnitude of xj, aj, is 
+maximized. If these phase predictions are far apart, then they will act to cancel each 
+other out, and produce a small aj. Given xj, we can compute the expected value 
+of the output of unit j. The expected direction of the unit roughly represents the 
+weighted average of the phase predictions, while the resultant length is a monotonic 
+function of a I and hence describes the agreement between the various predictions. 
+The key idea here is that the resultant length directly describes the degree of cer- 
+tainty in the expected direction of unit j. Thus, a DUBM naturally incorporates a 
+representation of the system's confidence in a value. This ability to combine several 
+sources of evidence, and not only represent a value but also describe the certainty 
+of that value is an important property that may be useful in a variety of domains. 
+The second emergent property is that the DUBM energy is globally rotation- 
+invariant--E is unaffected when the same rotation is applied to all units' states 
+in the network. For each DUBM configuration, there is an equivalence class of con- 
+figurations which have the same energy. In a similar way, we find that the magnitude 
+of xj is rotation-invariant. That is, when we translate the phases of all units but 
+one by some phase, the magnitude of that unit is unaffected. This property under- 
+lies one of the key advantages of the representation: both the magnitude of a unit's 
+state as well as system energy depend on the relative rather than absolute phases 
+of the units. 
+3 DETERMINISTIC DUBM 
+Just as in deterministic binary-unit Boltzmann machines (Peterson and Anderson, 
+1987; Hinton, 1989), we can greatly reduce the computational time required to 
+run a large stochastic system if we invoke the mean-field approximation, which 
+states that once the system has reached equilibrium, the stochastic variables can be 
+approximated by their mean values. In this approximation, the variables are treated 
+as independent, and the system probability distribution is simply the product of 
+the probability distributions for the individual units. 
+Gisln, Peterson, and Sbderberg (1992) originally proposed a mean-field theory for 
+networks of directional (or rotor) units, but only considered the case of real- 
+valued weights. They derived the mean-field consistency equations by using the 
+saddle-poin

@@ -1,0 +1,174 @@
+A Neural Network to Detect 
+Homologies in Proteins 
+Yoshua Bengio 
+School of Computer Science 
+McGill University 
+Montreal, Canada H3A 2A7 
+Samy Bengio 
+Departement d'Informatique 
+Universite de Montreal 
+Yannick Pouliot 
+Department of Biology 
+McGill University 
+Montreal Neurological Institute 
+Patrick Agin 
+Departement d'Informatique 
+Universite de Montreal 
+ABSTRACT 
+In order to detect the presence and location of immunoglobu- 
+lin (Ig) domains from amino acid sequences we built a system 
+based on a neural network with one hidden layer trained with 
+back propagation. The program was designed to efficiently 
+identify proteins exhibiting such domains, characterized by a 
+few localized conserved regions and a low overall homology. 
+When the National Biomedical Research Foundation (NBRF) 
+NEW protein sequence database was scanned to evaluate the 
+program's performance, we obtained very low rates of false 
+negatives coupled with a moderate rate of false positives. 
+1 INTRODUCTION 
+Two amino acid sequences from proteins are homologous if they can be 
+aligned so that many corresponding amino acids are identical or have similar 
+chemical properties. Such subsequences (domains) often exhibit similar three 
+dimensional structure. Furthemore, sequence similarity often results from 
+common ancestors. Immunoglobulin (Ig) domains are sets of/-sheets bound 
+424 Bengio, Bengio, Pouliot and Agin 
+by cysteine bonds and with a characteristic tertiary structure. Such domains 
+are found in many proteins involved in immune, cell adhesion and receptor 
+functions. These proteins collectively form the immunoglobulin superfamily 
+(for review, see Williams and Barclay, 1987). Members of the superfamily 
+often possess several Ig domains. These domains are characterized by well- 
+conserved groups of amino acids localized to specific subregions. Other resi- 
+dues outside of these regions are often poorly conserved, such that there is 
+low overall homology between Ig domains, even though they are clearly 
+members of the same superfamily. 
+Current search programs incorporating algorithms such as the Wilbur-Lipman 
+algorithm (1983) or the Needleman-Wunsch algorithm (1970) and its modifica- 
+tion by Smith and Waterman (1981) are ill-designed for detecting such 
+domains because they implicitly consider each amino acid to be equally im- 
+portant. This is not the case for residues within domains such as the Ig 
+domain, since only some amino acids are well conserved, while most are vari- 
+able. One solution to this problem are search algorithms based upon the sta- 
+tistical occurrence of a residue at a particular position (Wang et al., 1989; 
+Gribskov et al., 1987). The Profile Analysis set of programs published by the 
+University of Wisconsin Genetics Computer Group (Devereux et al., 1984) 
+rely upon such an algorithm. Although Profile Analysis can be applied to 
+search for domains (c.f. Blaschuk, Pouliot & Holland 1990), the output from 
+these programs often suffers from a high rate of false negatives and positives. 
+Variations in domain length are handled using the traditional method of penal- 
+ties proportional to the number of gaps introduced, their length and their po- 
+sition. This approach entails a significant amount of spurious recognition if 
+there is considerable variation in domain length to be accounted for. 
+We have chosen to address these problems by training a neural network to 
+recognize accepted Ig domains. Perceptrons and various types of neural net- 
+works have been used previously in biological research with various degrees of 
+success (cf. Stormo et al., 1982; Qian and Sejnowski, 1988). Our results sug- 
+gest that they are well suited for detecting relatively cryptic sequence patterns 
+such as those which characterize Ig domains. Because the design and training 
+procedure described below is relatively simple, network-based search pro- 
+grams constitute a valid solution to problems such as searching for proteins 
+assembled from the duplication of a domain. 
+2 ALGORITHM, NETWORK DESIGN AND TRAINING 
+The network capitalizes upon data concerning the existence and localization 
+of highly conserved groups of amino acids characteristic of the Ig domain. Its 
+design is similar in several respects to neural networks we have used in the 
+study of speech recognition (Bengio et al., 1989). Four conserved subregions 
+(designated P1-P4) of the Ig domain homology were identified. These roughly 
+correspond to /-strands B, C, E and F, respectively, of the Ig domain (see 
+also Williams and Barclay, 1988). Amino acids in these four groups are not 
+necessarily all conserved, but for each subregion they show a distribution very 
+different from the distribution generally observed elsewhere in these proteins. 
+Hence the first and most important stage of the system learns about these 
+joint distributions. The program scans proteins using a window of 5 residues. 
+A Neural Network to Detect Homologies in Proteins 425 
+The first stage of the system consists of a 2-layer feedforward neural network 
+(5 X 20 inputs - 8 hidden - 4 outputs; see Figure 1) trained with back propaga- 
+tion (Rumelhart et al., 1986). Better results were obtained for the recognition 
+of these conserved regions with this architecture than without hidden layer 
+(similar to a perceptron). The second stage evaluates, based upon the stream 
+of outputs generated by the first stage, whether and where a region similar to 
+the Ig domain has been detected. This stage currently uses a simple dynamic 
+programming algorithm, in which constraints about order of subregions and 
+distance between them are explicitly programmed. We force the recognizer to 
+detect a sequence of high values (above a threshold) for the four conserved 
+regions, in the correct order and such that the sum of the values obtained at 
+the four recognized regions is greater than a certain threshold. Weak penalties 
+are applied for violations of distance constraints between conserved subre- 
+gions (e.g., distance between P1 and P2, P2 and P3, etc) based upon simple 
+rules derived from our analysis of Ig domains. These rules have little impact if 
+strong homologies are detected, such that the program easily handles the large 
+variation in domain size exhibited by Ig domains. It was necessary to explicit- 
+ly formMate these constraints given the low number of training examples as 
+well as the assumption that the distance between groups is not a critical 
+discriminating factor. We have assumed that inter-region subsequences prob- 
+ably do not significantly influence discrimination. 
+o o 
+4 output units 
+representing 
+4 features of 
+the Ig domain 
+0 0 0 0 0 
+8 hidden 
+units 
+window scanning 5 consecutive residues 
+20 
+possible 
+amino 
+adds 
+Figure 1: Structure of the neural network 
+426 Bengio, Bengio, Pouliot and Agin 
+filename : AZZ771.NEW 
+input sequence name : Ig epsilon chain C region - Human 
+HOMOLOGY starting at 24 
+VTLGCLATGYFPEPVMVTWDTGSLNGI-rMTLPAI-fLTLSGHYATISLLTVSGAWAKQMFTC 
+P1 P2 P3 P4 
+Ending at 84. Score : 3.581 
+HOMOLOGY starting at 130 
+IQLLCLVSGYTPGTINITWLEDGQVMDVDLSTAS1TQEGELASTQSELTLSQKHWLSDRTYTC 
+P1 P2 P3 P4 
+Ending at 192. Score : 3.825 
+HOMOLOGY starting at 234 
+PTITCLWDLAPSKGTVNLTWSRASGKPVNHSTRKEEKQRNGTLTVTSTLPVGTRDWIEGETYQC 
+P1 P2 P3 P4 
+Ending at 298. Score : 3.351 
+HOMOLOGY starting at 340 
+RTLACLIQNFMPEDISVQWLHNEVQLPDARHSTTQPRKTKGSGFFVFSRLEVTRAEWEQKDEFIC 
+P1 P2 P3 P4 
+Ending at 404. Score = 3.402 
+Figure 2: Sample output from a search of NEW. Ig domains 
+present within the constant region of an epsilon Ig chain 
+(NBRF file number A22771) are listed with the position of 
+P1-P4 (see text). The overall score for each domain is also list- 
+ed. 
+As a training set we used a group of 30 proteins comprising bona fide Ig 
+domains (Williams and Barclay, 1987). In order to increase the size of the 
+training set, additional sequences were stochastically generated by substituting 
+residues which are not in critical positions of the domain. These substitutions 
+were designed not to affect the local distribution of residues to minimize 
+changes in the overall chemical character of the region. 
+The program was evaluated and optimized by scanning the NBRF protein da- 
+tabases (PROTEIN and NEW) version 19. Results presented below are based 
+upon searches of the NEW database (except where otherwise noted) and were 
+generated with a cutoff value of 3.0. Only complete sequences from ver- 
+tebrates, insects (including Drosophila melanogaster) and eukaryotic viruses 
+were scanned. This corresponds to 2422 sequences out of the 4718 present in 
+the NEW database. Trial runs with the program indicated that a cutoff thres- 
+hold of between 2.7 and 3.0 eliminates the vast majority of false positives with 
+little effect upon the rate of false negatives. A sample output is listed in Fig- 
+ure 2. 
+3 RESULTS 
+When the NEW protein sequence database of NBRF was searched as 
+described above, 191 proteins were identified to possess at least one Ig 
+domain. A scan of the 4718 proteins comprising the NEW database required 
+an average of 20 hours of CPU time on a VAX 11/780. This is comparable to 
+other computationally intensive programs (e.g., Profile Analysis). When run 
+on a SUN 4 computer, similar searches required 1.3 hours of CPU time. This 
+is sufficiently fast to allow the user to alter the cutoff threshold repeatedly 
+when searching for proteins with low homology. 
+A Neural Network to Detect Homologies in Proteins 427 
+Table 1: Output from a search of the NEW protein sequence database. 
+Domains are sorted according to overall score. 
+3.0081 Class II hlstocompeclb. antlgen. HI.A-DR beta- I chain precursor (REM) - Human 3.4295 Ig kappa chain V region - Mouse H 37-80 
+3.0148 Nonspecif cross.reacting anti,on pecursor - Human 3.4295 Ig kappa chain V region - Mouse H37-84 
+3.OI 61 Platelet-derived growth factor receptor precursor - Mouse 
+3.OI64 Tie class I hlstocompatlb. antlgen. TI 3-c alpha chain - Mouse 
+3.OI 64 Tie class I 

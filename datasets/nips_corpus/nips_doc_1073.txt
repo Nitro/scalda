@@ -1,0 +1,168 @@
+Primitive Manipulation Learning with 
+Connectionism 
+Yoky Matsuoka 
+The Artificial Intelligence Laboratory 
+NE43-819 
+Massachusetts Institute of Techonology 
+Cambridge, MA 02139 
+Abstract 
+Infants' manipulative exploratory behavior within the environment 
+is a vehicle of cognitive stimulation[McCall 1974]. During this time, 
+infants practice and perfect sensorimotor patterns that become be- 
+havioral modules which will be seriated and imbedded in more com- 
+plex actions. This paper explores the development of such primitive 
+learning systems using an embodied light-weight hand which will 
+be used for a humanoid being developed at the MIT Artificial In- 
+telligence Laboratory[Brooks and Stein 1993]. Primitive grasping 
+procedures are learned from sensory inputs using a connectionist 
+reinforcement algorithm while two submodules preprocess sensory 
+data to recognize the hardness of objects and detect shear using 
+competitive learning and back-propagation algorithm strategies, 
+respectively. This system is not only consistent and quick dur- 
+ing the initial learning stage, but also adaptable to new situations 
+after training is completed. 
+1 INTRODUCTION 
+Learning manipulation in an unpredictable, changing environment is a complex task. 
+It requires a nonlinear controller to respond in a nonlinear system that contains a 
+significant amount of sensory inputs and noise[Miller, et al 1990]. Investigating the 
+human manipulation learning system and implementing it in a physical system has 
+not been done due to its complexity and too many unknown parameters. Conven- 
+tional adaptive control theory assumes too many parameters that are constantly 
+changing in a real environment [Sutton, et al 1991, Williams 1988]. For an embod- 
+ied hand, even the simplest form of learning process requires a more intelligent 
+control network. Wiener [Wiener 1948] has proposed the idea of Connectionism, 
+which suggests that a muscle is controlled by affecting the gain of the efferent- 
+890 Y. MATSUOKA 
+Figure 1: A four fingered hand, using a novel tendon driven design for the fingers, 
+was constructed for these experiments. It includes four motors and 36 sensors. The 
+hand, unlike almost every other robot hand, is fully self contained with integrated 
+motors and an onboard microprocessor for local motor and sensory processing. A 
+parallel port connects this processor to a Motorola 68332 for learning and high level 
+control. 
+nerve - muscle - kinesthetic-end-body - afferent nerve - central-spinal-synapse - 
+efferent-nerve loop. Each system within the loop such as an efferent nerve contains 
+its own feedback loop system. This kind of loop is inherently nonlinear with the 
+capability of handling many noisy inputs and may be implemented in a physical 
+hand. For this paper, only primitive manipulation grasping learning that occurs 
+without communicating with other features such as eyes and ears is considered. 
+1.1 THE HARDWARE SETUP 
+This project uses an anthropomorphic scale hand which has three fingers and an 
+opposing thumb as shown in Figure 1. There are four motors, one controlling each 
+finger, each of which has two coupled joints that are controlled by a cable. Mo- 
+tors are integrated with rotational potentiometers to detect the motor positions. 
+Force/pressure sensors cover the surface of all fingers and the palm has four ad- 
+ditional touch position sensors. All the sensory readings are multiplexed and con- 
+verted to digital signals at a Motorola 6811 microcontroller which is integrated on 
+the top of the palm. 
+2 THE STRUCTURE OF THE MODEL 
+Using connectionist ideas, a grasping network was implemented using a internal 
+self reinforcement system, Grasping Action Network, GAN, and two trained neu- 
+ral network components, Hardness Recognition Network, HRN, and Slip Detection 
+Network, SDN, as shown in Figure 2. 
+In the grasping action network, the Reinforced Probability Net, RPN, takes 
+the classified information, H(x), from HRN and a set of actions, A -- 
+{al, a2,---, az l a(j) -- a set of actuator inputs of jth action}, and outputs an action 
+merit vector, M(A), that assigns a value to each action. Then, the stochastic Action 
+Primitive Manipulation Learning with Connectionism 891 
+World 
+Hardess 
+I Rec�gniti�nl 
+[Network 
+Set of 
+Actions 
+I 
+H(x) 
+Grasping Action Network 
+Stochastic 
+Action 
+Selector 
+Slip Detection 
+Network 
+tM(A) 
+A I ._lReinforcernent  
+i--IPr�bability I 
+I lNetwork (RPN)I 
+S(x) r 
+action 
+Sensors HAND Actuators 
+Figure 2: Grasping Network Block Diagram 
+Selector takes M(A) and selects an action sending the information to the actua- 
+tors. According to the action given, the shear detection network gives an output, 
+$(x), the probability of slip existence, which can be converted to an immidiate pay- 
+off value, r. RPN is reinforced using TD methods, back-propagating a reinforced 
+correction vector, RC(n). The simplified algorithm is as follows: 
+1. H(x) -- current hardness class; for each ation a(j), M(a(j)) -- 
+RPN(H(x),a(j)); 
+2. a <-- SAS(M(A)); 
+3. Perform action a; 
+4. Send new sensory information to hardness recognition network and shear 
+detection network; (H(x), S(x)) ,-- new hardness class and shear value; 
+5. r = -2S(x) + 1; 
+6. Re = M(A) + (r); where  is a damping constant. 
+7. Adjust the RPN by back-propagating RC; 
+8. Go to 1; 
+Each network is described below separately. 
+2.1 HARDNESS RECOGNITION NETWORK 
+Competitive learning theory is used to categorize the hardness of objects over time. 
+An experiment was conducted with eight different objects of the same size and 
+different compressibilities. Each object is touched by curling one finger around 
+the object very slowly, precisely taking three seconds to fold fingers fully, hold for 
+two seconds, and straighten the finger taking three seconds. The sensory readings 
+are taken from both force sensors on the finger and the potentiometer reading, 
+p(t), of the motor controlling the finger which are converted to an eight bit digital 
+information, recorded at 7 hertz. As the finger curls, the motor moves at a constant 
+rate when the finger does not contact the object surface. At this stage, dp(t)/dt 
+is a non zero constant. When the object is firmly grasped, the finger stops curling 
+and results in dp(t)/dt - O. The significant difference between different hardness 
+object can be seen in the stage where dp(t)/dt is not constant. This stage signifies 
+892 Y. MATSUOKA 
+lOO 
++ 
+Figure 3: Competitive learning trained network with testing inputs: '+' are inputs, 
+'o' are the neurons, and '*' are testing inputs(all the test inputs are clustered around 
+the existing trained neurons) 
+that the object and the finger are in contact, but the object's compliancy is letting 
+the finger continue to move. 
+2.1.1 Training and Results 
+For each curling experiment, two numbers are extracted and recorded. The first 
+is the duration of dp(t)/dt non constant time, At. It is expressed in digital units 
+where one unit is 0.14 seconds. The other is the maximum force sensor reading 
+expressed in a seven bit digital number. Using those data as inputs, a 2 layer, 6 
+neuron competitive network is constructed with random initial synaptic weights and 
+trained. Once the network is trained, different inputs can be fed to the network to 
+find the category of the touched object. This strategy works well for this purpose 
+since there is no clear cut way to categorize objects. The trained network was tested 
+with data taken from objects not used for training and shown in Figure 3. With very 
+diverse test objects, the sensory readings fell close to the trained neurons. Initially 
+training the network with six diverse hardness categories gives a good distribution 
+of graspable objects. Even if an object with dramatically different compliancy is 
+found, it only takes roughly 10 experiments to take data and 500 epochs to retrain, 
+all of which takes less than one minute to do. 
+2.2 SLIP DETECTION NETWORK 
+Shear is locally detectable sensory information if there exist multiple rows of pres- 
+sure sensors perpendicular to the direction of slip. With the way the robot hand 
+for this research is oriented, the palm is perpendicular to the ground and fingers 
+are horizontal, which makes the three fingers orthogonal to the direction of slip. In 
+order to simulate the shear learning process, sensory data from the fingers are used 
+as inputs and the visual feedback about the existence of shear is used as the desired 
+output to train a feedforward network. Since shear is a time dependent process, the 
+input signals have to contain multiple time space sensor readings. Two discrete time 
+steps with the step size 0.28 seconds is satisfactory since slipping is not a reversible 
+operation without an external force applied. The size of input vector needs to be 
+minimized in order to speed up the learning operation. As a solution, the number 
+of sensory reading levels m, which has 128 levels straight out of the controller, is 
+reduced to numbers between 5 and 0, where 5 is for the reading level between 81 
+and 127 and 0 is for the reading level 0. These are the only information needed to 
+train a back-propagation classifier because it can generalize the numbers between 
+Primitive Manipulation Learning with Connectionism 893 
+Figure 4: Six neuron hidden layer training result: left, r/= 0.1; middle, r/= 1.01; 
+right, r/= 3.0. 
+maximum and minimum well with an optimal number of layers and without over- 
+training. When the data is overtrained, the inputs are overfitted and cannot adapt 
+the values between 4 and 1. Reducing rn to two still contains enough information 
+conserving the physics of shear and makes the calculation much simpler and faster. 
+The desired output data is one bit information, 1 being shear detected and 0 being 
+no shear. 
+2.2.1 Training and Results 
+Having six input nodes and one output neuron, a four layer with two hidden layer 
+feedforward network is constructed. A four layer

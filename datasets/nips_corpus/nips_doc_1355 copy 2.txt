@@ -1,0 +1,168 @@
+Classification by Pairwise Coupling 
+TREVOR HASTIE * 
+Stanford University 
+and 
+ROBERT TIBSHIRANI 
+University of 'Foronto 
+Abstract 
+We discuss a strategy for polychotomous classification that involves 
+estimating class probabilities for each pair of classes, and then cou- 
+pling the estimates together. The coupling model is similar to the 
+Bradley-Terry method for paired comparisons. We study the na- 
+ture of the class probability estimates that arise, and examine the 
+performance of the procedure in simulated datasets. The classifiers 
+used include linear discriminants and nearest neighbors: applica- 
+tion to support vector machines is also briefly described. 
+I Introduction 
+We consider the discrimination problem with K classes and N training observations. 
+The training observations consist of predictor measurements x-- (Xl, x2,...x r) on 
+p predictors and the known class memberships. Our goal is to predict the class 
+membership of an observation with predictor vector x0 
+Typically K-class classification rules tend to be easier to learn for K - 2 than for 
+K  2 --only one decision boundary requires attention. Friedman (1996) suggested 
+the following approach for the the K-class problem: solve each of the two-class 
+problems, and then for a test observation, combine all the pairwise decisions to 
+form a I:-class decision. Friedman's combination rule is quite intuitive: assign to 
+the class that wins the most pairwise comparisons. 
+Department of Statistics, Stanford University, Stanford California 94305; 
+t revo r @ playfair. st anford. edu 
+Department of Preventive Medicine and Biostatistics, and Department of Statistics; 
+tibsutst at.toronto.edu 
+508 T. Hastie and R. Tibshirani 
+Friedman points out that this rule is equivalent to the Bayes rule when the class 
+posterior probabilities Pi (at the test point) are known: 
+argma[pd: argma.[5] ] Z + > Pj/(Pi + 
+Note that Friedman's rule requires only an estimate of each pairwise decision. Many 
+(pairwise) classifiers provide not only a rule, but estimated class probabilities as well. 
+In this paper we argue that one can improve on Friedman's procedure by combining 
+the pairwise class probability estimates into a joint probability estimate for all K 
+classes. 
+This leads us to consider the following problem. Given a set of events A1, A=,... 
+some experts give us pairwise probabilities rij: Prob(AilAi or Aj). Is there a set 
+of probabilities Pi = Prob(Ai) that are compatible with the rij? 
+In an exact sense, the answer is no. Since Prob(Ai}Ai or Aj) = Pj/(pi +p j) and 
+Pi = 1, we are requiring that K-1 free parameters satisfy K(K-1)/2 constraints 
+and, this will not have a solution in general. For example, if the rij are the ijth 
+entries in the matrix 
+0.1 0 
+0.6 0.3 
+(1) 
+then they are not compatible with any pi's. This is clear since r12 > .5 and r23 > .5, 
+but also r31 > .5. 
+The model Prob(AlA or Aj) = p/(p + pS) forms the basis for the Bradley- 
+Terry model for paired comparisons (Bradley & Terry 1952). In this paper we 
+fit this model by minimizing a Kullback-Leibler distance criterion to find the best 
+approximation 3ij: JSi/(JSi q- jSj) tO a given set of rii's. We carry this out at each 
+predictor value x, and use the estimated probabilities to predict class membership 
+at x. 
+In the example above, the solution is ) = (0.47, 0.25, 0.28). This solution makes 
+qualitative sense since event A1 beats A2 by a larger margin than the winner of 
+any of the other pairwise matches. 
+Figure 1 shows an example of these procedures in action. There are 600 data points 
+in three classes, each class generated from a mixture of Gaussians. A linear dis- 
+criminant model was fit to each pair of classes, giving pairwise probability estimates 
+vii at each x. The first panel shows Friedman's procedure applied to the pairwise 
+rules. The shaded regions are areas of indecision, where each class wins one vote. 
+The coupling procedure described in the next section was then applied, giving class 
+probability estimates )(x) at each x. The decision boundaries resulting from these 
+probabilities are shown in the second panel. The procedure has done a reasonable 
+job of resolving the confusion, in this case producing decision boundaries similar 
+to the three-class LDA boundaries shown in panel 3. The numbers in parentheses 
+above the plots are test-error rates based on a large test sample from the same pop- 
+ulation. Notice that despite the indeterminacy, the max-wins procedure performs 
+no worse than the coupling procedure. and both perform better than LDA. Later 
+we show an example where the coupling procedure does substantially better than 
+max-wins. 
+Classification by Pairwise Coupling 509 
+Pairwise LDA + Max (0.132) Pairwise LDA + Coupling (0.136) 3-Class LDA (0.213) 
+Figure 1: A three class problem, with the data in each class generated from a mixture 
+of Gausstans. The first panel shows the maximum-win procedure. The second panel 
+shows the decision boundary from coupling of the pairwise linear discriminant rules 
+based on d in (6). The third panel shows the three-class LDA boundaries. Test-error 
+rates are shown in parentheses. 
+This paper is organized as follows. The coupling model and algorithm are given 
+in section 2. Pairwise threshold optimization, a key advantage of the pairwise 
+approach, is discussed in section 3. In that section we also examine the performance 
+of the various methods on some simulated problems, using both linear discriminant 
+and nearest neighbour rules. The final section contains some discussion. 
+2 Coupling the probabilities 
+Let the probabilities at feature vector x be p(x) = (p (x),... pK(x)). In this section 
+we drop the argument x, since the calculations are done at each x separately. 
+We assume that for each i  j, there are nij observations in the training set and 
+from these we have estimated conditional probabilities rij -- Prob(ili or j). 
+Our model is 
+nij rij  Binomial(rij , I. tij ) 
+Pi 
+= (2) 
+Pi + Pj 
+or equivalently 
+log Iij -- log(p/)-- log(p/+ pj), 
+(3) 
+a log-nonlinear model. 
+We wish to find i6i's so that the tij'S are close to the rij's. There are K - 1 
+independent parameters but K(K - 1)/2 equations, so it is not possible in general 
+to find .i6i's so that Iij = vii for all i, j. 
+Therefore we must settle for Iij's that are close to the observed rij s. Our closeness 
+criterion is the average (weighted) Kullback-Leibler distance between rij and ]gij: 
+�(P): E nij [rij log 
+i<j ]gij 
+i -- rij 
++ (1 - rij) log 1 - tij 
+(4) 
+510 T. Hastie and R. Tibshirani 
+and we find p to minimize this function. 
+This model and criterion is formally equivalent to the Bradley-Terry model for 
+preference data. One observes a proportion vii of nij preferences for item i, and 
+the sampling model is binomial, as in (2). If each of the rij were independent, then 
+�(p) would be equivalent to the log-likelihood under this model. However our 
+are not independent as they share a common training set and were obtained from 
+a common set of classifiers. Furthermore the binomial models do not apply in this 
+case: the vii are evaluations of functions at a point, and the randomness arises in 
+the way these functions are constructed from the training data. We include the 
+as weights in (4); this is a crude way of accounting for the different precisions in 
+the pairwise probability estimates. 
+The score (gradient) equations are: 
+_ nijij ---- Y nij rij; i -- 1,2 .... K 
+j ;i j ;i 
+(5) 
+subject to  Pi = 1. We use the following iterative procedure to compute the/Si's: 
+Algorithm 
+1. Start with some guess for the/5i, and corresponding tij. 
+2. Repeat (i = 1, 2,..., K, 1,...) until convergence: 
+j ;i nij 
+renormalize the iSi, and recompute the [tij. 
+The algorithm also appears in Bradley & Terry (1952). The updates in step 2 at- 
+tempt to modify p so that the sufficient statistics match their expectation, but go 
+only part of the way. We prove in Hastie & Tibshirani (1996) that �(p) increases 
+at each step. Since �(p) is bounded above by zero, the procedure converges. At 
+convergence, the score equations are satisfied, and the [tijs and ) are consistent. 
+This algorithm is similar in flavour to the Iterative Proportional Scaling (IPS) pro- 
+cedure used in log-linear models. IPS has a long history, dating back to Deming & 
+Stephan (1940). Bishop, Fienberg & Holland (1975) give a modern treatment and 
+many references. 
+The resulting classification rule is 
+o(x) = argma.[pi(x)] 
+(6) 
+Figure 2 shows another examplesimilar to Figure 1, where we can compare the 
+performance of the rules d and d. The hatched area in the top left panel is an 
+indeterminate region where there is more than one class achieving max(/i). In the 
+top right panel the coupling procedure has resolved this indeterminacy in favor of 
+class 1 by weighting the various probabilities. See the figure caption for a description 
+of the bottom panels. 
+Classification by Pairwise Coupling 511 
+Parwse LDA + Max (0.449) 
+Parwse LDA + Couphug (0 358) 
+LDA (0.457) ODA (0,334) 
+Figure 2: A three class problem similar to that in figure 1, with the data in each 
+class generated from a mixture of Gausstans. The first panel shows the maximum- 
+wins procedure c). The second panel shows the decision boundary from coupling of 
+the pairwise linear discriminant rules based on  in (6). The third panel shows the 
+three-class LDA boundaries, and the fourth the QDA boundaries. The numbers in 
+the captions are the error rates based on a large test set from the same population. 
+3 Pairwise threshold optimization 
+As pointed out by Friedman (1996), approaching the classification problem in a 
+pairwise fashion allows one to optimize the classifier in a way that would be com- 
+putationally burdensome for a If-class classifier. Here we discuss optimization of 
+the classification threshold. 
+For each two class problem, let logit pij(x) = dij(x). Normally we would classify to 
+class i if dij(x) >

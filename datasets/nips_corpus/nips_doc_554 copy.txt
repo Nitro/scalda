@@ -1,0 +1,162 @@
+Fast Learning with Predictive Forward Models 
+Carlos Brody* 
+Dept. of Computer Science 
+IIMAS, UNAM 
+M6xico D.F. 01000 
+M6xico. 
+e-mail: carioshope. cailech. edu 
+Abstract 
+A method for transforming performance evaluation signals distal both in 
+space and time into proximal signals usable by supervised learning algo- 
+rithms, presented in [Jordan & Jacobs 90], is examined. A simple obser- 
+vation concerning differentiation through models trained with redundant 
+inputs (as one of their networks is) explains a weakness in the original 
+architecture and suggests a modification: an internal world model that 
+encodes action-space exploration and, crucially, cancels input redundancy 
+to the forward model is added. Learning time on an example task, cart- 
+pole balancing, is thereby reduced about 50 to 100 times. 
+I INTRODUCTION 
+In many learning control problems, the evaluation used to modify (and thus im- 
+prove) control may not be available in terms of the controller's output: instead, it 
+may be in terms of a spatial transformation of the controller's output variables (in 
+which case we shall term it as being distal in space), or it may be available only 
+several time steps into the future (termed as being distal in time). For example, 
+control of a robot arm may be exerted in terms of joint angles, while evaluation may 
+be in terms of the endpoint cartesian coordinates; furthermore, we may only wish 
+to evaluate the endpoint coordinates reached after a certain period of time: the co- 
+*Current address: Computation and Neural Systems Program, California Institute of 
+Technology, Pasadena CA. 563 
+564 Brody 
+ordinates reached at the end of some motion, for instance. In such cases, supervised 
+learning methods are not directly applicable, and other techniques must be used. 
+Here we study one such technique (proposed for cases where the evaluation is distal 
+in both space and time by [Jordan & Jacobs 90]), analyse a source of its problems, 
+and propose a simple solution for them which leads to fast, efficient learning. 
+We first describe two methods, and then combine them into the predictive forward 
+modeling technique with which we are concerned. 
+1.1 FORWARD MODELING 
+Forward Modeling [Jordan & Rumelhart 90] is useful for dealing with evaluations 
+which are distal in space; it involves the construction of a differentiable model to 
+approximate the controller-action --, evaluation transformation. Let our controller 
+have internal parameters w, output c, and be evaluated in space e, where e = e(c) 
+is an unknown but well-defined transformation. If there is a desired output in 
+space e, called e*, we can write an error function, that is, an evaluation we wish 
+minimised, and differentiate it w.r.t. the controller's weights to obtain 
+OE Oc Oe OE 
+E= (e* -e) 2 Ow = Ow ' O' ' Oe (1) 
+Using a differentiable controller allows us to obtain the first factor in the second 
+equation, and the third factor is also known; but the second factor is not. However, 
+if we construct a differentiable model (called a 'q'orward model) of e(c), then we 
+can obtain an approximation to the second term by differentiating the model, and 
+use this to obtain an estimate of the gradient OE/Ow through equation (1); this 
+can then be used for comparatively fast minimisation of E, and is what is known 
+as forward modeling. 
+1.2 PREDICTIVE CRITICS 
+To deal with evaluations which are distal in time, we may use a critic network, as 
+in [Barto, Sutton & Anderson 83]. For a particular control policy implemented by 
+the controller network, the critic is trained to predict the final evaluation that will 
+be obtained given the current state - using, for example, Sutton's TD algorithm 
+[Sutton 88]. The estimated final evaluation is then available as soon as we enter a 
+state, and so may in turn be used to improve the control policy. This approach is 
+closely related to dynamic programming [Barto, Sutton & Watkins 89]. 
+1.3 PREDICTIVE FORWARD MODELS 
+While the estimated evaluation we obtain from the critic is no longer distal in time, 
+it may still be distal in space. A natural proposal in such cases, where the evaluation 
+signal is distal both in space and time, is to combine the two techniques described 
+above: use a differentiable model as a predictive critic [Jordan & Jacobs 90]. If 
+we know the desired final evaluation, we can then proceed as in equation (1) and 
+obtain the gradient of the error w.r.t. the controller's weights. Schematically, this 
+would look like figure 1. When using a backprop network for the predictive model, 
+Fast Learning with Predictive Forward Models 565 
+state  
+vector 
+CONTHOLLEH 
+NETWOHK 
+ I_ predicted 
+control _ ij._  evaluation 
+.- -- 
+PREDICTIVE 
+MODEL 
+Figure 1: Jordan and Jax:obs' predictive forward modeling architecture. Solid lines indi- 
+cate data paths, the dazhed line indicates bax:kpropagation. 
+we would backpropagate through it, through it's control input, and then into the 
+controller to modify the controller network. We should note that since predictions 
+make no sense without a particular control policy, and the controller is only modified 
+through the predictive model, both networks must be trained simultaneously. 
+[Jordan & Jacobs 90] applied this method to a well-known problem, that of learn- 
+ing to balance an inverted pendulum on a movable cart by exerting appropriate 
+horizontal forces on the cart. The same task, without differentiating the critic, was 
+studied in [Barto, Sutton & Anderson 83]. There, reinforcement learning methods 
+were used instead to modify the controller's weights; these perform a search which 
+in some cases may be shown to follow, on average, the gradient of the expected 
+evaluation w.r.t. the network weights. Since differentiating the critic allows this 
+gradient to be found directly, one would expect much faster learning when using 
+the architecture of figure 1. However, Jordan and Jacobs' results show precisely the 
+opposite: it is surprisingly slow. 
+2 THE REDUNDANCY PROBLEM 
+We can explain the above surprising result if we consider the fact that the predictive 
+model network has redundant inputs: the control vector 'is a function of the state 
+vector g (call this ' = (). Let r and a be the number of components of the 
+control and state vectors, respectively. Instead of drawing its inputs from the entire 
+volume of (r+ a)-dimensional input space, the predictor is trained only with inputs 
+which lie on the a-dimensional manifold defined by the relation . Away from the 
+manifold the network is free to produce entirely arbitrary outputs. Differentiation 
+of the model will then provide non-arbitrary gradients only for directions tangential 
+to the manifold; this is a condition that the axes of the control dimensions will 
+not, in general, satisfy. 1 This observation, which concerns any model trained with 
+redundant inputs, is the very simple yet principal point of this paper. 
+One may argue that since the control policy is continually changing, the redundancy 
+picture sketched out here is not in fact accurate: as the controller is modified, many 
+ Note that if ff is single-valued, there is no way the manifold can fold around to cover 
+all (or most) of the  -t- a input space. 
+566 Brody 
+EVALUATION RF_./J EVALUATION 
+La'VALUATION FUNCTION 
+� b c d 
+CONTROL OUTPUT 
+Figure 2: The evaluation as a function of control action. Curves A,B,C,D represent 
+possible (wrong) estimates of the real curve made by the predictive model network. 
+possible control policies are seen by the predictor, so creating volume in input 
+space and leading to correct gradients obtained from the predictor. However, the 
+way in which this modification occurs is significant. An argument based on empirical 
+observations will be made to sustain this. 
+Consider the example shown in figure 2. The graph shows what the real evaluation 
+at some point in state space is, as a function of a component of the control action 
+taken at that point; this function is what the predictive network should approximate. 
+Suppose the function implemented by the predictive network initially looks like the 
+curve which crosses the real evaluation function at point (a); suppose also that the 
+current action taken also corresponds to point (a). Here we see a one-dimensional 
+example of the redundancy problem: though the prediction at this point is entirely 
+accurate, the gradient is not. If we wish to minimise the predicted evaluation, we 
+would change the action in the direction of point (b). Examples of point (a) will 
+no longer be presented to the predictive network, so it could quite plausibly modify 
+itself simply so as to look like the estimated evaluation curve B which is shown 
+crossing point (b) (a minimal change necessary to continue being correct). Again, 
+the gradient is wrong and minimising the prediction will change the action in the 
+same direction as before, perhaps to point (c); then to (d), and so on. Eventually, 
+the prediction, though accurate, will have zero gradient, as in curve D, and no 
+modifications will occur. In practice, we have observed networks getting stuck 
+in this fashion. Though the objective was to minimise the evaluation, the system 
+stops learning at a point far from optimal. 
+The problem may be solved, as Jordan and Jacobs did, by introducing noise in 
+the controllet's output, thus breaking the redundancy. Unfortunately, this degrades 
+Fast Learning with Predictive Forward Models 567 
+state 
+vector 
+control 
+vector 
+CONTROLLER 
+NETWORK 
+predicted 
+ state  
+__ predicted 
+valuation 
+INTERMEDIATE 
+(WORLD) MODEL 
+PREDICTIVE 
+MODEL 
+Figure 3: The proposed system architecture. Again, solid lines represent data paths while 
+the dashed llne represents backpropagation (or differentiation). 
+signal quality and means that since we are predicting future evaluations, we wish to 
+predict the effects of future noise - a notoriously difficult objective. The predictive 
+n

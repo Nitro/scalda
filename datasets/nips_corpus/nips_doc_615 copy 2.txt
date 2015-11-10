@@ -1,0 +1,165 @@
+Bayesian Learning 
+via Stochastic Dynamics 
+Radford M. Neal 
+Department of Computer Science 
+University of Toronto 
+Toronto, Ontario, Canada M5S 1A4 
+Abstract 
+The attempt to find a single optimal weight vector in conven- 
+tional network training can lead to overfitting and poor generaliza- 
+tion. Bayesian methods avoid this, without the need for a valida- 
+tion set, by averaging the outputs of many networks with weights 
+sampled from the posterior distribution given the training data. 
+This sample can be obtained by simulating a stochastic dynamical 
+system that has the posterior as its stationary distribution. 
+1 CONVENTIONAL AND BAYESIAN LEARNING 
+I view neural networks as probabilistic models, and learning as statistical inference. 
+Conventional network learning finds a single optimal set of network parameter 
+values, corresponding to maximum likelihood or maximum penalized likelihood in- 
+ference. Bayesian inference instead integrates the predictions of the network over 
+all possible values of the network parameters, weighting each parameter set by its 
+posterior probability in light of the training data. 
+1.1 NEURAL NETWORKS AS PROBABILISTIC MODELS 
+Consider a network taking a vector of real-valued inputs, x, and producing a vector 
+of real-valued outputs, y, perhaps computed using hidden units. Such a network 
+architecture corresponds to a function, f, with y = f(x, w), where w is a vector of 
+connection weights. If we assume the observed outputs, y, are equal to y plus Gaus- 
+sian noise of standard deviation a, the network defines the conditional probability 
+475 
+476 Neal 
+for an observed output vector given an input vector as follows: 
+P(y Ix, (r) oc exp(-[y- f(x,w)12/2r 2) 
+(1) 
+The probability of the outputs in a training set (x, y),..., (x,, y,) given this fixed 
+noise level is therefore 
+P(yx,...,y, lxx,...,x,,(r) oc exp(-Zlyc-f(xc,w)12/2(r 2) (2) 
+Often a is unknown. A Bayesian approach to handling this is to assign a a vague 
+prior distribution and then :ntegrating it away, giving the following probability for 
+the training set (see (Buntine and Weigend, 1991) or (Neal, 1992) for details)' 
+mo+nD 
+P(yx,...,y,]x,...,x,) oc (8o+ly-f(x,w)l) -  (3) 
+where so and mo are parameters of the prior for (r. 
+1.2 CONVENTIONAL LEARNING 
+Conventional backpropagation learning tries to find the weight vector that assigns 
+the highest probability to the training data, or equivalently, that minimizes minus 
+the log probability of the training data. When (r is assumed known, we can use (2) 
+to obtain the following objective function to minimize: 
+M(w) = Z [Y-f(xc,w)l /2a 2 (4) 
+When a is unknown, we can instead minimize the following, derived from (3)' 
+M(w) - ,0+,z) log (so +  lY - f(x, w)l ) (5) 
+-- 2 
+Conventional learning often leads to the network overfitting the training data -- 
+modeling the noise, rather than the true regularities. This can be alleviated by 
+stopping learning when the the performance of the network on a separate validation 
+set begins to worsen, rather than improve. Another way to avoid overfitting is to 
+include a weight decay term in the objective function, as follows: 
+M'(w) - Alwl = + M(w) (6) 
+Here, the data fit term, M(w), may come from either (4) or (5). We must somehow 
+find an appropriate value for A, perhaps, again, using a separate validation set. 
+1.3 BAYESIAN LEARNING AND PREDICTION 
+Unlike conventional training, Bayesian learning does not look for a single optimal 
+set of network weights. Instead, the training data is used to find the posterior 
+probability distribution over weight vectors. Predictions for future cases are made 
+by averaging the outputs obtained with all possible weight vectors, with each con- 
+tributing in proportion to its posterior probability. 
+To obtain the posterior, we must first define a prior distribution for weight vectors. 
+We might, for example, give each weight a Gaussian prior of standard deviation w: 
+P(w) oc exp(-lwl/2u?) (7) 
+Bayesian Learning via Stochastic Dynamics 477 
+We can then obtain the posterior distribution over weight vectors given the training 
+cases (x, y),..., (x,, y,) using Bayes' Theorem: 
+P(wl(xl,y),...,(x,,y,)) oc P(w)P(y,...,y, I x,...,x,,w) (8) 
+Based on the training data, the best prediction for the output vector in a test case 
+with input vector x., assuming squared-error loss, is 
+:. = / f(x.,w)P(w [ (x,y),...,(x.,y.))dw (9) 
+A full predictive distribution for the outputs in the test case can also be obtained, 
+quantifying the uncertainty in the above prediction. 
+2 INTEGRATION BY MONTE CARLO METHODS 
+Integrals such as that of (9) are difficult to evaluate. Buntinc and Weigend (1991) 
+and MacKay (1992) approach this problem by approximating the posterior distribu- 
+tion by a Gaussian. Instead, I evaluate such integrals using Monte Carlo methods. 
+If we randomly select weight vectors, w0,..., WN-, each distributed according to 
+the posterior, the prediction for a test case can be found by approximating the 
+integral of (9) by the average output of networks with these weights: 
+1 
+Y*   Zf(x*'w') (10) 
+This formula is valid even if the wt are dependent, though a larger sample may 
+then be needed to achieve a given error bound. Such a sample can be obtained 
+by simulating an ergodic Markov chain that has the posterior as its stationary 
+distribution. The early part of the chain, before the stationary distribution has 
+been reached, is discarded. Subsequent vectors are used to estimate the integral. 
+2.1 FORMULATING THE PROBLEM IN TERMS OF ENERGY 
+Consider the general problem of obtaining a sample of (dependent) vectors, qt, 
+with probabilities given by P(q). For Bayesian network learning, q will be the 
+weight vector, or other parameters from which the weights can be obtained, and 
+the distribution of interest will be the posterior. 
+It will be convenient to express this probability distribution in terms of a potential 
+energy function, E(q), chosen so that 
+P(q) o exp(-E(q)) (11) 
+A momentum vector, p, of the same dimensions as q, is also introduced, and defined 
+to have a kinetic energy of �[p[2. The sum of the potential and kinetic energies is 
+the Hamiltonian: 
+H(q,p) = E(q) + �lpl 2 (12) 
+From the Hamiltonian, we define a joint probability distribution over q and p (phase 
+space) as follows: 
+P(q,p)  exp(-H(q,p)) (13) 
+The marginal distribution for q in (13) is that of (11), from which we wish to sample. 
+478 Neal 
+We can therefore proceed by sampling from this joint distribution for q and p, and 
+then just ignoring the values obtained for p. 
+2.2 HAMILTONIAN DYNAMICS 
+Sampling from the distribution (13) can be split into two subproblems -- first, 
+to sample uniformly from a surface where H, and hence the probability, is con- 
+stant, and second, to visit points of differing H with the correct probabilities. The 
+solutions to these subproblems can then be interleaved to give an overall solution. 
+The first subproblem can be solved by simulating the Hamiltoninn dynamics of 
+the system, in which q and p evolve through a fictitious time, r, according to the 
+following equations: 
+dq_ OH dp _ OH _ 
+dr - Op = p' dr - 0q - -VZ(q) (14) 
+This dynamics leaves H constant, and preserves the volumes of regions of phase 
+space. It therefore visits points on a surface of constant H with uniform probability. 
+When simulating this dynamics, some discrete approximation must be used. The 
+leap frog method exactly maintains the preservation of phase space volume. Given 
+a size for the time step, e, an iteration of the leapfrog method goes as follows: 
++ E/2) 
+q(r+ e) 
++ 
+= p(r)-- (e/2)VE(q(r)) 
+= q(r) +ep 
+= p(r + e) - (e/2)VE(q(r q- e)) 
+(15) 
+2.3 THE STOCHASTIC DYNAMICS METHOD 
+To create a Markov chain that converges to the distribution of (13), we must inter- 
+leave leapfrog iterations, which keep H (approximately) constant, with steps that 
+can change H. It is convenient for the latter to affect only p, since it enters into H 
+in a simple way. This general approach is due to Anderson (1980). 
+I use stochastic steps of the following form to change H: 
+p' = ap + (1- a2)/2n 
+(16) 
+where 0 _< a < 1, and n is a random vector with components picked independently 
+from Gaussian distributions of mean zero and standard deviation one. One can 
+show that these steps leave the distribution of (13) invariant. Alternating these 
+stochastic steps with dynamical leapfrog steps will therefore sample values for q 
+and p with close to the desired probabilities. In so far as the discretized dynamics 
+does not keep H exactly constant, however, there will be some degree of bias, which 
+will be eliminated only in the limit as e goes to zero. 
+It is best to use a value of a close to one, as this reduces the random walk aspect 
+of the dynamics. If the random term in (16) is omitted, the procedure is equivalent 
+to ordinary batch mode backpropagation learning with momentum. 
+Bayesian Learning via Stochastic Dynamics 479 
+2.4 THE HYBRID MONTE CARLO METHOD 
+The bias introduced into the stochastic dynamics method by using an approxima- 
+tion to the dynamics is eliminated in the Hybrid Monte Carlo method of Duane, 
+Kennedy, Pendleton, and Roweth (1987). 
+This method is a variation on the algorithm of Metropolis, et al (1953), which 
+generates a Markov chain by considering randomly-selected changes to the state. 
+A change is always accepted if it lowers the energy (H), or leaves it unchanged. If 
+it increases the energy, it is accepted with probability exp(--AH), and is rejected 
+otherwise, with the old state then being repeated. 
+In the Hybrid Monte Carlo method, candidate changes are produced by picking a 
+random value for p from its distribution given by (13) and then performing some pre- 
+determined number of leapfrog steps. If the leapfrog method were exact, H would 
+be unchanged, and these changes would always be accepted. Since the method 
+is actually only approximate, H sometimes increases, and changes are sometimes 
+re

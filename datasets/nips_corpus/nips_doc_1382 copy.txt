@@ -1,0 +1,130 @@
+Reinforcement Learning with 
+Hierarchies of Machines * 
+Ronald Parr and Stuart Russell 
+Computer Science Division, UC Berkeley, CA 94720 
+{parr,russell} @cs.berkeley.edu 
+Abstract 
+We present a new approach to reinforcement learning in which the poli- 
+cies considered by the learning process are constrained by hierarchies of 
+partially specified machines. This allows for the use of prior knowledge 
+to reduce the search space and provides a framework in which knowledge 
+can be transferred across problems and in which component solutions 
+can be recombined to solve larger and more complicated problems. Our 
+approach can be seen as providing a link between reinforcement learn- 
+ing and behavior-based or teleo-reactive approaches to control. We 
+present provably convergent algorithms for problem-solving and learn- 
+ing with hierarchical machines and demonstrate their effectiveness on a 
+problem with several thousand states. 
+1 Introduction 
+Optimal decision making in virtually all spheres of human activity is rendered intractable 
+by the complexity of the task environment. Generally speaking, the only way around in- 
+tractability has been to provide a hierarchical organization for complex activities. Although 
+it can yield suboptimal policies, top-down hierarchical control often reduces the complexity 
+of decision making from exponential to linear in the size of the problem. For example, hier- 
+archical task network (HTN) planners can generate solutions containing tens of thousands 
+of steps [5], whereas flat planners can manage only tens of steps. 
+HTN planners are successful because they use aplan library that describes the decomposition 
+of high-level activities into lower-level activities. This paper describes an approach to 
+learning and decision making in uncertain environments (Markov decision processes) that 
+uses a roughly analogous form of prior knowledge. We use hierarchical abstract machines 
+(HAMs), which impose constraints on the policies considered by our learning algorithms. 
+HAMs consist of nondeterministic finite state machines whose transitions may invoke 
+lower-level machines. Nondeterminism is represented by choice states where the optimal 
+action is yet to be decided or learned. The language allows a variety of prior constraints 
+to be expressed, ranging from no constraint all the way to a fully specified solution. One 
+*This research was supported in part by ARO under the MURI program Integrated Approach to 
+Intelligent Systems, grant number DAAH04-96-1-0341. 
+1044 R. Parr and S. Russell 
+Obstacle 
+Obstacle 
+(a) (b) (c) 
+Figure 1- (a) An MDP with m 3600 states. The initial state is in the top left. (b) Close- 
+up showing a typical obstacle. (c) Nondeterministic finite-state controller for negotiating 
+obstacles. 
+useful intermediate point is the specification of just the general organization of behavior 
+into a layered hierarchy, leaving it up to the learning algorithm to discover exactly which 
+lower-level activities should be invoked by higher levels at each point. 
+The paper begins with a brief review of Markov decision processes (MDPs) and a descrip- 
+tion of hierarchical abstract machines. We then present, in abbreviated form, the following 
+results: 1) Given any HAM and any MDP, there exists a new MDP such that the optimal 
+policy in the new MDP is optimal in the original MDP among those policies that satisfy the 
+constraints specified by the HAM. This means that even with complex machine specifica- 
+tions we can still apply standard decision-making and learning methods. 2) An algorithm 
+exists that determines this optimal policy, given an MDP and a HAM. 3) On an illustrative 
+problem with 3600 states, this algorithm yields dramatic performance improvements over 
+standard algorithms applied to the original MDP. 4) A reinforcement learning algorithm 
+exists that converges to the optimal policy, subject to the HAM constraints, with no need 
+to construct explicitly a new MDP. 5) On the sample problem, this algorithm learns dra- 
+matically faster than standard RL algorithms. We conclude with a discussion of related 
+approaches and ongoing work. 
+2 Markov Decision Processes 
+We assume the reader is familiar with the basic concepts of MDPs. To review, an MDP is 
+a 4-tuple, ($, .A, T,/) where $ is a set of states, 4 is a set of actions, T is a transition 
+model mapping $ x .A x $ into probabilities in [0, 1], and/ is a reward function mapping 
+,S x M x $ into real-valued rewards. Algorithms for solving MDPs can return apolicy 7r that 
+maps from $ to .A, a real-valued value function V on states, or a real-valued Q-function on 
+state-action pairs. In this paper, we focus on infinite-horizon MDPs with a discount factor 
+/3. The aim is to find an optimal policy r* (or, equivalently, V* or Q*) that maximizes the 
+expected discounted total reward of the agent. 
+Throughout the paper, we will use as an example the MDP shown in Figure 1 (a). Here .A 
+contains four primitive actions (up, down, left, right). The transition model, T, specifies that 
+each action succeeds 80% of time, while 20% of the time the agent moves in an unintended 
+perpendicular direction. The agent begins in a start state in the upper left comer. A reward 
+of 5.0 is given for reaching the goal state and the discount factor/3 is 0.999. 
+3 Hierarchical abstract machines 
+A HAM is a program which, when executed by an agent in an environment, constrains the 
+actions that the agent can take in each state. For example, a very simple machine might 
+dictate, repeatedly choose right or down, which would eliminate from consideration all 
+policies that go up or left. HAMs extend this simple idea of constraining policies by 
+providing a hierarchical means of expressing constraints at varying levels of detail and 
+Reinforcement Learning with Hierarchies of Machines 1045 
+specificity. Machines for HAMs are defined by a set of states, a transition function, and a 
+start function that determines the initial state of the machine. Machine states are of four 
+types: Action states execute an action in the environment. Call states execute another 
+machine as a subroutine. Choice states nondeterministically select a next machine state. 
+Stop states halt execution of the machine and return control to the previous call state. 
+The transition function determines the next machine state after an action or call state 
+as a stochastic function of the current machine state and some features of the resulting 
+environment state. Machines will typically use a partial description of the environment to 
+determine the next state. Although machines can function in partially observable domains, 
+for the purposes of this paper we make the standard assumption that the agent has access to 
+a complete description as well. 
+A HAM is defined by an initial machine in which execution begins and the closure of all 
+machines reachable from the initial machine. Figure 1 (c) shows a simplified version of 
+one element of the HAM we used for the MDP in Figure 1. This element is used for 
+traversing a hallway while negotiating obstacles of the kind shown in Figure 1 (b). It runs 
+until the end of the hallway or an intersection is reached. When it encounters an obstacle, a 
+choice point is created to choose between two possible next machine states. One calls the 
+backof machine to back away from the obstacle and then move forward until the next one. 
+The other calls the follow-wall machine to try to get around the obstacle. The follow-wall 
+machine is very simple and will be tricked by obstacles that are concave in the direction of 
+intended movement; the backof machine, on the other hand, can move around any obstacle 
+in this world but could waste time backing away from some obstacles unnecessarily and 
+should be used sparingly. 
+Our complete navigation HAM involves a three-level hierarchy, somewhat reminiscent 
+of a Brooks-style architecture but with hard-wired decisions replaced by choice states. The 
+top level of the hierarchy is basically just a choice state for choosing a hallway navigation 
+direction from the four coordinate directions. This machine has control initially and regains 
+control at intersections or corners. The second level of the hierarchy contains four machines 
+for moving along hallways, one for each direction. Each machine at this level has a choice 
+state with four basic strategies for handling obstacles. Two back away from obstacles 
+and two attempt to follow walls to get around obstacles. The third level of the hierarchy 
+implements these strategies using the primitive actions. 
+The transition function for this HAM assumes that an agent executing the HAM has access 
+to a short-range, low-directed sonar that detects obstacles in any of the four axis-parallel 
+adjacent squares and a long-range, high-directed sonar that detects larger objects such as 
+the intersections and the ends of hallways. The HAM uses these partial state descriptions 
+to identify feasible choices. For example, the machine to traverse a hallway northwards 
+would not be called from the start state because the high-directed sonar would detect a wall 
+to the north. 
+Our navigation HAM represents an abstract plan to move about the environment by re- 
+peatedly selecting a direction and pursuing this direction until an intersection is reached. 
+Each machine for navigating in the chosen direction represents an abstract plan for moving 
+in a particular direction while avoiding obstacles. The next section defines how a HAM 
+interacts with a specific MDP and how to find an optimal policy that respects the HAM 
+constraints. 
+4 Defining and solving the HAM-induced MDP 
+A policy for a model, M, that is HAM-consistent with HAM H is a scheme for making 
+choices whenever an agent executing H in M, enters a choice state. To find the optimal 
+HAM-consistent policy we apply H to M to yield an induced MDP, H o M. A somewhat 
+simplified description of the construction of H o 3//is as follow

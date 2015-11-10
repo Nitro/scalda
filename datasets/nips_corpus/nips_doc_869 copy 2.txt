@@ -1,0 +1,144 @@
+Using a Saliency Map for Active Spatial Selective 
+Attention: Implementation & Initial Results 
+Shumeet Baluja 
+baluja@cs.cmu.edu 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Dean A. Pomerleau 
+pomerleau @ cs.cmu.edu 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+In many vision based tasks, the ability to focus attention on the important 
+portions of a scene is crucial for good performance on the tasks. In this paper 
+we present a simple method of achieving spatial selective attention through 
+the use of a saliency map. The saliency map indicates which regions of the 
+input retina are important for performing the task. The saliency map is cre- 
+ated through predictive auto-encoding. The performance of this method is 
+demonstrated on two simple tasks which have multiple very strong distract- 
+ing features in the input retina. Architectural extensions and application 
+directions for this model are presented. 
+1 MOTIVATION 
+Many real world tasks have the property that only a small fraction of the available input is 
+important at any particular time. On some tasks this extra input can easily be ignored. 
+Nonetheless, often the similarity between the important input features and the irrelevant 
+features is great enough to interfere with task performance. Two examples of this phenom- 
+ena are the famous cocktail party effect, otherwise known as speech recognition in a 
+noisy environment, and image processing of a cluttered scene. In both cases, the extrane- 
+ous information in the input signal can be easily confused with the important features, 
+making the task much more difficult. 
+The concrete real world task which motivates this work is vision-based road following. In 
+this domain, the goal is to control a robot vehicle by analyzing the scene ahead, and choos- 
+ing a direction to travel based on the location of important features like lane marking and 
+road edges. This is a difficult task, since the scene ahead is often cluttered with extraneous 
+features such as other vehicle, pedestrians, trees, guardrails, crosswalks, road signs and 
+many other objects that can appear on or around a roadway. 1 While we have had signifi- 
+cant success on the road following task using simple feed-forward neural networks to 
+transform images of the road ahead into steering commands for the vehicle [Pomerleau, 
+1993b], these methods fail when presented with cluttered environments like those encoun- 
+1. For the general task of autonomous navigation, these extra features are extremely important, but for 
+restricted task of road following, which is the focus of this paper, these features are merely distractions. 
+Although we are addressing the more general task using the techniques described here in combination with 
+other methods, a description of these efforts is beyond the scope of this paper. 
+452 Shuneet Baluja, Dean A. Pomerleau 
+tered when driving in heavy traffic, or on city streets. 
+The obvious solution to this difficulty is to focus the attention of the processing system on 
+only the relevant features by masking out the noise. Because of the high degree of simi- 
+laxity between the relevant features and the noise, this filtering is often extremely difficult. 
+Simultaneously learning to perform a task like road following and filtering out clutter in a 
+scene is doubly difficult because of a chicken-and-egg problem. It is hard to learn which 
+features to attend to before knowing how to perform the task, and it is hard to learn how to 
+perform the task before knowing which features to attend to. 
+This paper describes a technique designed to solve this problem. It involves deriving a 
+saliency map of the image from a neural network's internal representation which high- 
+lights regions of the scene considered to be important. This saliency map is used as feed- 
+back to focus the attention of the network's processing on subsequent images. This 
+technique overcomes the chicken-and-egg problem by simultaneously learning to identify 
+which aspects of the scene are important, and how to use them to perform a task. 
+2 THE SALIENCY MAP 
+A saliency map is designed to indicate which portions of the image are important for com- 
+pleting the required task. The trained network should be able to accomplish two goals with 
+the presentation of each image. The first is to perform the given task using the inputs and 
+the saliency map derived from the previous image, and the second is to predict the salient 
+portions of the next image. 
+2.1 Implementation 
+The creation of the saliency map is similar to the technique of Input Reconstruction Reli- 
+ability Estimation (IRRE) by [Pomerleau, 1993]. IRRE attempts to predict the reliability 
+of a network's output. The prediction is made by reconstructing the input image from lin- 
+ear transformations of the activations in the hidden layer, and comparing it with the actual 
+image. IRRE works on the premise that the greater the similarity between the input image 
+and the reconstructed input image, the more the internal representation has captured the 
+important input features, and therefore the more reliable the network's response. 
+A similar method to IRRE can be used to create a saliency map. The saliency map should 
+be determined by the important features in the current image for the task to be performed. 
+Because compressed representations of the important features in the current image are 
+represented in the activations of the hidden units, the saliency map is derived from these, 
+as shown in Figure 1. It should be noted that the hidden units, from which the saliency 
+map is derived, do not necessarily contain information similar to principal components (as 
+is achieved through auto-encoder networks), as the relevant task may only require infor- 
+mation on a small portion of the image. In the simple architecture depicted in Figure 1, the 
+internal representation must contain information which can be transformed by a single 
+layer of adjustable weights into a saliency map for the next image. If such a transforma- 
+tion is not possible, separate hidden layers, with input from the task-specific internal rep- 
+resentations could be employed to create the saliency map. 
+The saliency map is trained by using the next image, of a time-sequential data set, as the 
+target image for the prediction, and applying standard error backpropagation on the differ- 
+ences between the next image and the predicted next image. The weights from the hidden 
+Using a Saliency Map for Active Spatial Selective Attention 453 
+Output Units 
+Hidden Units 
+Input Retina 
+(delayed 1 time step) 
+Predicted 
+Next 
+Image 
+derived 
+saliency 
+map 
+Relevant Portion of Input 
+Figure 1: A simple architecture for 
+using a saliency map. The dashed 
+line represents chilled 
+connections, i.e. errors from these 
+connections do not propagate back 
+further to impact the activations of 
+the hidden units. This architecture 
+assumes that the target task 
+contains information which will 
+help determine the salient portions 
+of the next frame. 
+units to the saliency map are adjusted using standard backpropagation, but the error terms 
+are not propagated to the weights from the inputs to the hidden units. This ensures that the 
+hidden representation developed by the network is determined only by the target task, and 
+not by the task of prediction. 
+In the implementation used here, the feedback is to the input layer. The saliency map is 
+created to either be the same size as the input layer, or is scaled to the same size, so that it 
+can influence the representation in a straight-forward manner. The saliency map's values 
+are scaled between 0.0 and 1.0, where 1.0 represents the areas in which the prediction 
+matched the next image exactly. The value of 1.0 does not alter the activation of the input 
+unit, a value of 0.0 turns off the activation. The exact construction of the saliency map is 
+described in the next section, with the description of the experiments. The entire network 
+is trained by standard backpropagation; in the experiments presented, no modifications to 
+the standard training algorithm were needed to account for the feedback connections. 
+The training process for prediction is complicated by the potential presence of noise in the 
+next image. The saliency map cannot reconstruct the noise in the next image, because it 
+can only construct the portions of the next image which can be derived from the activation 
+of the hidden units, which are task-specific. Therefore, the noise in the next image will not 
+be constructed, and thereby will be de-emphasized in the next time step by the saliency 
+map. The saliency map serves as a filter, which channels the processing to the important 
+portions of the scene [Mozer, 1988]. One of the key differences between the filtering 
+employed in this study, and that used in other focus of attention systems, is that this filter- 
+ing is based on expectations from multiple frames, rather than on the retinal activations 
+from a single frame. An alternative neural model of visual attention which was explored 
+by [Olshausen et al., 1992] achieved focus of attention in single frames by using control 
+neurons to dynamically modify synaptic strengths. 
+The saliency map may be used in two ways. It can either be used to highlight portions of 
+the input retina or, when the hidden layer is connected in a retinal fashion using weight 
+sharing, as in [LeCun et al., 1990], it can be used to highlight important spatial locations 
+within the hidden layer itself. The difference is between highlighting individual pixels 
+from which the features are developed or highlighting developed features. Discussion of 
+the psychological evidence for both of these types of highlighting (in single-frame retinal 
+activation based context), is given in [Pashler and Badgio, 1985]. 
+This network architecture shares several characteristics with a Jordan-style r

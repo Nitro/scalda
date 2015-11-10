@@ -1,0 +1,150 @@
+Application of Blind Separation of Sources to 
+Optical Recording of Brain Activity 
+Holger Schiiner, Martin Stetter, Ingo SchieBl 
+Department of Computer Science 
+Technical University of Berlin Germany 
+{ hfsch, moatl, ingos } @ cs. tu-berlin. de 
+John E.W. Mayhew 
+University of Sheffield, UK 
+j.e. mayhew @ sheffield. ac. uk 
+Jennifer S. Lund, Niall McLoughlin 
+Institute of Ophthalmology 
+University College London, UK 
+{j. lund, n. mcloughlin} @ucl. ac. uk 
+Klaus Obermayer 
+Department of Computer Science, 
+Technical University of Berlin, Germany 
+oby@ cs. tu-berlin. de 
+Abstract 
+In the analysis of data recorded by optical imaging from intrinsic signals 
+(measurement of changes of light reflectance from cortical tissue) the re- 
+moval of noise and artifacts such as blood vessel patterns is a serious 
+problem. Often bandpass filtering is used, but the underlying assumption 
+that a spatial frequency exists, which separates the mapping component 
+from other components (especially the global signal), is questionable. 
+Here we propose alternative ways of processing optical imaging data, us- 
+ing blind source separation techniques based on the spatial decorrelation 
+of the data. We first perform benchmarks on artificial data in order to 
+select the way of processing, which is most robust with respect to sen- 
+sor noise. We then apply it to recordings of optical imaging experiments 
+from macaque primary visual cortex. We show that our BSS technique is 
+able to extract ocular dominance and orientation preference maps from 
+single condition stacks, for data, where standard post-processing pro- 
+cedures fail. Artifacts, especially blood vessel patterns, can often be 
+completely removed from the maps. In summary, our method for blind 
+source separation using extended spatial decorrelation is a superior tech- 
+nique for the analysis of optical recording data. 
+1 Introduction 
+One approach in the attempt of comprehending how the human brain works is the analysis 
+of neural activation patterns in the brain for different stimuli presented to a sensory system. 
+An example is the extraction of ocular dominance or orientation preference maps from 
+recordings of activity of neurons in the primary visual cortex of mammals. A common 
+technique for extracting such maps is optical imaging (OI) of intrinsic signals. Currently 
+this is the imaging technique with the highest spatial resolution ( 100 ktm) for mapping of 
+the cortex. This method is explained e.g. in [1], for similar methods using voltage sensitive 
+dyes see [2, 3]. OI uses changes in light reflection to estimate spatial patterns of stimulus 
+950 H. Sch6ner, M. Stetter, I. Schiefil, J. E. Mayhew, J. Lund, N. McLoughlin and K. Obermayer 
+answers. The overall change recorded by a CCD or video camera is the total signal. The 
+part of the total signal due to local neural activity is called the mapping component and it 
+derives from changes in deoxyhemoglobin absorption and light scattering properties of the 
+tissue. Another component of the total signal is a global component, which is also cor- 
+related with stimulus presentation, but has a much coarser spatial reolution. It derives its 
+part from changes in the blood volume with the time. Other components are blood vessel 
+artifacts, the vasomotor signal (slow oscillations of neural activity), and ongoing activity 
+(spontaneous, stimulus-uncorrelated activity). Problematic for the extraction of activity 
+maps are especially blood vessel artifacts and sensor noise, such as photon shot noise. A 
+procedure often used for extracting the activity maps from the recordings is bandpass fil- 
+tering, after preprocessing by temporal, spatial, and trial averaging. Lowpass filtering is 
+unproblematic, as the spatial resolution of the mapping signal is limited by the scattering 
+properties of the brain tissue, hence everything above a limiting frequency must be noise. 
+The motivation for highpass filtering, on the other hand, is questionable as there is no spe- 
+cific spatial frequency separating local neural activity patterns and the global signal [4]). 
+A different approach, Blind Source Separation (BSS), models the components of the 
+recorded image frames as independent sources, and the observations (recorded image 
+frames) as noisy linear mixtures of the unknown sources. After performing the BSS the 
+mapping component should ideally be concentrated in one estimated source, the global 
+signal in another, and blood vessel artifacts, etc. in further ones. Previous work ([5]) has 
+shown that BSS algorithms, which are based on higher order statistics ([6, 7, 8]), fail for 
+optical imaging data, because of the high signal to noise ratio. 
+In this work we suggest and investigate versions of the M&S algorithm [9, 10], which are 
+robust against sensor noise, and we analyze their performance on artificial as well as real 
+optical recording data. In stion 2 we describe an improved algorithm, which we later 
+compare to other methods in stion 3. There an artificial data set is used for the analysis 
+of noise robustness, and benchmark results are presented. Then, in section 4, it is shown 
+that the newly developed algorithm is very well able to separate the different components 
+of the optical imaging data, for ocular dominance as well as orientation preference data 
+from monkey striate cortex. Finally, section 5 provides conclusions and perspectives for 
+future work. 
+2 Second order blind source separation 
+Let rn be the number of mixtures and r the sample index, i.e. a vector specifying a pixel in 
+the recorded images. The observation vectors y(r) -- (Yt (r),..., yr(r))Y are assumed 
+to be linear mixtures of rn unknown sources s(r) -- (st (r),..., sr (r))'t' with A being the 
+rn x m mixing matrix and n describing the sensor noise: 
+y(r) = As(r) + n 
+(1) 
+The goal of BSS is to obtain optimal source estimates (r) under the assumption that the 
+original sources are independent. In the noiseless case W - A-t would be the optimal 
+demixing matrix. In the noisy case, however, W also has to compensate for the added 
+noise: (r) = Wy(r) -- W. A. s(r) q- W. n. BSS algorithms are generally only able to 
+recover the original sources up to a permutation and scaling. 
+Extended Spatial Decorrelation (ESD) uses the second order statistics of the observa- 
+tions to find the source estimates. If sources are statistical independent all source cross- 
+correlations 
+= zx)) r = 
+1 
++ zxr) , i 4 j (2) 
+Application of BSS to Optical Recording of Brain Activity 951 
+must vanish for all shifts At, while the autocorrelations (i = j) of the sources remain (the 
+variances). Note that this implies that the sources must be spatially smooth. 
+Motivated by [10] we propose to optimize the cost function, which is the sum of the 
+squared cross-correlations of the estimated sources over a set of shifts {At}, 
+Ar ij 
+  (i(r)j (r  r)), 
+r ij 
+with respt to the demixing matrix W. The matrix Ci,j(r)  (yi(r)yj(r  r)) de- 
+notes the mixture cross-cogelations for a shift r. This cost function is minimized using 
+the Polak Ribiere Conjugate Gradient technique, where the line sech is substituted by a 
+dynamic step width adaptation ([11]). To keep the demixing matrix W from converging to 
+the zero matrix, we introduce a constrent which keeps the diagonal elements of T  W- 1 
+(in the noiseless case and for non-sphered data T is an estimate of the mixing matrix, with 
+possible permutations) at a value of 1.0. Convergence properties e improved by sphering 
+the data (transforming their cogelation matrix for shift zero to an identity matrix) prior to 
+dogelating the mixtures. 
+Note that use of multiple shifts r allows to use more information about the auto- and 
+cross-cogelation structure of the mixtures for the sepation process. Two shifts provide 
+just enough constraints for a unique solution ([10]). Multiple shifts, and the rundancy 
+they introduce, additionally allow to cancel out pt of the noise by approximate simulta- 
+neous diagonalization of the cogesponding cross cogelation matrices. 
+In the presence of sensor noise, added after mixing, the standard sphering technique is 
+problematic. When calculating the zero-shift cross-correlation matrix the variance of the 
+noise contaminates the result, and sphering using a shifted cross-correlation matrix, is r- 
+oremended ([12]). or spatially white sensor noise and sources with reasonable auto cor- 
+relations this technique is more appropriate. In the following we denote the standard algo- 
+rithm by pa0, and the viant using noise robust sphering by dpa]. 
+3 Benchmarks for artificial data 
+The artificial data set used here, whose sources are approximately uncorrelated for all 
+shifts, is shown in the left part of figure 1. The mixtures were produced by generating a 
+random mixing matrix (in this case with condition number 3.73), applying it to the sources, 
+and finally adding white noise of different variances. 
+In order to measure the performance on the artificial data set we measure a reconstruction 
+error (FIE) between the estimated and the correct sources via (see [13]): 
+FIE(W): od (y (r)sT (r)) , 
+od(C) =  E N - 1 maxk 
+i j 
+The correlation between the real and the estimated sources (the argument to od), should 
+be close to a permutation matrix, if the separation is successful. If the maxima of two rows 
+are in the same column, the separation is labeled unsuccessful. Otherwise, the normalized 
+absolute sum of non-permutation (cross-correlation) elements is computed and returned as 
+the reconstruction error. 
+We now compare the method based on optimization of (3) by gradient descent with the fol- 
+lowing variants of second order blind source separation: (1) standard spatial decorrelation 
+952 H. Sch6ner, M. Stetter, L Schiefil, J. E. Mayhew, J. Lund, N. McLoughlin and K. Obermayer 
+ 0.5 
+-:.-.-.:.-.:- .....,.- 0.2 
+'*' :': * '0.1 
+0 
+6 ' , I 
+5 10 15 25 
+Signal to Noise Ratio (dB) 
+0.5 
+

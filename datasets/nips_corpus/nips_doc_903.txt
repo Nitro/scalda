@@ -1,0 +1,162 @@
+A Rapid Graphsbased Method for 
+Arbitrary TransformationsInvariant 
+Pattern Classification 
+Alessandro Sperduti 
+Dipartimento di Informatica 
+Universirk di Pisa 
+Corso Italia 40 
+56125 Pisa, ITALY 
+persodi. unipi. it 
+David (3. Stork 
+Machine Learning and Perception Group 
+Ricoh California Research Center 
+2882 Sand Hill Road 115 
+Menlo Park, CA USA 94025-7022 
+storkcrc. ricoh. com 
+Abstract 
+We present a graph-based method for rapid, accurate search 
+through prototypes for transformation-invariant pattern classifica- 
+tion. Our method has in theory the same recognition accuracy as 
+other recent methods based on 'tangent distance [Simard et al., 
+1994], since it uses the same categorization rule. Nevertheless ours 
+is significantly faster during classification because far fewer tan- 
+gent distances need be computed. Crucial to the success of our 
+system are 1) a novel graph architecture in which transformation 
+constraints and geometric relationships among prototypes are en- 
+coded during learning, and 2) an improved graph search criterion, 
+used during classification. These architectural insights are applica- 
+ble to a wide range of problem domains. Here we demonstrate that 
+on a handwriting recognition task, a basic implementation of our 
+system requires less than half the computation of the Euclidean 
+sorting method. 
+I INTRODUCTION 
+In recent years, the crucial issue of incorporating invariances into networks for pat- 
+tern recognition has received increased attention, most especially due to the work of 
+666 Alessandro Sperduti, David G. Stork 
+Simard and his colleagues. To a regular hierachical backpropagation network Simard 
+et al. [1992] added a Jacobian network, which insured that directional derivatives 
+were also learned. Such derivatives represented directions in feature space corre- 
+sponding to the invariances of interest, such as rotation, translation, scaling and 
+even line thinning. On small training sets for a function approximation problem, 
+this hybrid network showed performance superior to that of a highly tuned back- 
+propagation network taken alone; however there was negligible improvement on 
+large sets. In order to find a simpler method applicable to real-world problems, 
+Simard, Le Cun & Denker [1993] later used a variation of the nearest neighbor 
+algorithm, one incorporating tangent distance (T-distance or DT) as the classifi- 
+cation metric -- the smallest Euclidean distance between patterns after the optimal 
+transformation. In this way, state-of-the-art accuracy was achieved on an isolated 
+handwritten character task, though at quite high computational complexity, owing 
+to the inefficient search and large number of Euclidean and tangent distances that 
+had to be calculated. 
+Whereas Simard, Hastie & Saeckinger [1994] have recently sought to reduce this 
+complexity by means of pre-clustering stored prototypes, we here take a different 
+approach, one in which a (graph) data structure formed during learning contains 
+information about transformations and geometrical relations among prototypes. 
+Nevertheless, it should be noted that our method can be applied to a reduced 
+(clustered) training set such as they formed, yielding yet faster recognition. Simard 
+[1994] recently introduced a hierarchical structure of successively lower resolution 
+patterns, which speeds search only if a minority of patterns are classified more 
+accurately by using the tangent metric than by other metrics. In contrast, our 
+method shows significant improvement even if the majority or all of the patterns 
+are most accurately classified using the tangent distance. 
+Other methods seeking fast invariant classification include Wilensky and 
+Manukian's scheme [1994]. While quite rapid during recall, it is more properly 
+considered distortion (rather than coherent transformation) invariant. Moreover, 
+some transformations such as line thinning cannot be naturally incorporated into 
+their scheme. Finally, it appears as if their scheme scales poorly (compared to 
+tangent metric methods) as the number of invariances is increased. 
+It seems somewhat futile to try to improve significantly upon the recognition ac- 
+curacy of the tangent metric approach -- for databases such as NIST isolated 
+handwritten characters, Simard et al. [1993] reported accuracies matching that 
+of humans! Nevertheless, there remains much that can be done to increase the 
+computational efficiency during recall. This is the problem we address. 
+2 TRANSFORMATION INVARIANCE 
+In broad overview, during learning our method constructs a labelled graph data 
+structure in which each node represents a stored prototype (labelled by its category) 
+as given by a training set, linked by arcs representing the T-distance between them. 
+Search through this graph (for classification) takes advantage of the graph structure 
+and an improved search criterion. To understand the underlying computations, we 
+must first consider tangent space. 
+Graph-Based Method for Arbitrary Transformation-lnvariant Pattern Classification 667 
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: =============================== 
+:::: :::: .� :::::::::::::::::::::::::::::::::::::::::: :s:4::': ' ..'. : .:::: :::  
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::: ' 
+::::::::::::::::::::::::: x:.:v:::::.:::.'.' .<::<:$::.:. :k 
+.... .: :s.:: :.. :.:.: :i ' ' ''' 
+::::::::::::::::::::::::::::::::::::::::::::::::: ,.:k -, ..4,....%,..x....... ?>.,,..,.::j!:[:?.:: .:: 
+x I 
+Figure 1: Geometry of tangent space. Here, a three-dimensional feature space 
+contains the current prototype, Pc, and the subspace consisting of all patterns 
+obtainable by performing continuous transformations of it (shaded). Two candidate 
+prototypes and a test pattern, T, as well as their projections onto the T-space of 
+Pc are shown. The insert (above) shows the progression of search through the 
+corresponding portion of the recognition graph. The goal is to rapidly find the 
+prototype closest to T (in the T-distance sense), and our algorithm (guided by the 
+minimum angle Oj in the tangent space) finds that P2 is so closer to T than are 
+either P1 or Pc (see text). 
+Figure 1 illustrates geometry of tangent space and the relationships among the fun- 
+damental entities in our trained system. A labelled (current) trained pattern is 
+represented by Pc, and the (shaded) surface corresponds to patterns arising under 
+continuous transformations of Pc. Such transformations might include rotation, 
+translation, scaling, line thinning, etc. Following Simard et al. [1993], we approxi- 
+mate this surface in the vicinity of Pc by a subspace the tangent space or T-space 
+of Pc  which is spanned by tangent vectors, whose directions are determined by 
+infinitessimally transforming the prototype Pc. The figure shows an ortho-normal 
+basis {TVa, TV}, which helps to speed search during classification, as we shall see. 
+A test pattern T and two other (candidate) prototypes as well as their projections 
+onto the T-space of Pc are shown. 
+668 Alessandro Sperduti, David G. Stork 
+3 THE ALGORITHMS 
+Our overall approach includes constructing a graph (during learning), and searching 
+it (for classification). The graph is constructed by the following algorithm: 
+Graph construction 
+Initialize N =  patterns; k =  nearest neighbors; t =  invariant transforma- 
+tions 
+Begin Loop For each prototype Pi (i = 1 - N) 
+� Compute a t-dimensional orthonormal basis for the T-space of Pi 
+� Compute (one-sided) T-distance of each of the N - 1 prototypes 
+Pj (j  i) using Pi's T-space 
+� Represent Pj� (the projection of Pj onto the T-space of Pi) in the 
+tangent orthonormal frame of Pi 
+End Loop 
+Connect Pi to each of its k T-nearest neighbors, storing their associ- 
+ated normalized projections P� 
+During classification, our algorithm permits rapid search through prototypes. Thus 
+in Figure 1, starting at Pc we seek to find another prototype (here, P2) that is 
+closer to the test point T. After P2 is so chosen, it becomes the current pattern, 
+and the search is extended using its T-space. Graph search ends when the closest 
+prototype to T is found (i.e., closest in a T-distance sense). 
+We let D, denote the current minimum tangent distance. Our search algorithm is: 
+Input Test pattern T 
+Initialize 
+Graph search 
+Do 
+� Choose initial candidate prototype, Po 
+� Set Pc-Po 
+� Set D ,-- DT(Pc, T), i.e., the T-distance of T from Pc 
+� For each prototype Pj connected to Pc compute cos(9j) = .T 
+� Sort these prototypes by increasing values of 9j and put them into a 
+candidate list 
+� Pick Pj from the top of the candidate list 
+� In T-space of Pj, compute DT(Pj, T) 
+If DT(Py, T) < D then Pc - Pj and D - DT(Py, T) 
+otherwise mark Pj as a failure (F), and pick next prototype from 
+the candidate list 
+Until Candidate list empty 
+Return D or the category label of the optimum prototype found 
+Graph-Based Method for Arbitrary Transforrnation-lnvariant Pattern Classification 669 
+M f 
+F F 
+F F F F 
+D r 4.91 3.70 3.61 3.03 2.94 
+Figure 2: The search through the 2 category graph for the T-nearest stored 
+prototype to the test pattern is shown (N = 720 and k = 15 nearest neighbors). 
+The number of T-distance calculations is equal to the number of nodes visited plus 
+the number of failures (marked F); i.e., in the case shown 5 + 26 = 31. The backward 
+search step attempt is thwarted because the middle node has already been visited 
+(marked M). Notice in the prototypes how the search is first a downward shift, then 
+a counter-clockwise rotation m a mere four steps through the graph. 
+Figure 2 illustrates search through a network of 2 prototypes. Note how the T- 
+distance of the test pattern decreases, and that with only four steps through the 
+graph the optimal prototype is found. 
+There are several ways in which our search technique can be i

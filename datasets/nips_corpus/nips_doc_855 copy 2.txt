@@ -1,0 +1,163 @@
+Real-Time Control of a Tokamak Plasma 
+Using Neural Networks 
+Chris M Bishop 
+Neural Computing Research Group 
+Department of Computer Science 
+Aston University 
+Birmingham, B4 7ET, U.K. 
+c.m.bishop@aston.ac.uk 
+Paul S Haynes, Mike E U Smith, Tom N Todd, 
+David L Trotman and Colin G Windsor 
+AEA Technology, Culham Laboratory, 
+Oxfordshire OX14 3DB 
+(Euratom/UKAEA Fusion Association) 
+Abstract 
+This paper presents results from the first use of neural networks 
+for the real-time feedback control of high temperature plasmas in 
+a tokamak fusion experiment. The tokamak is currently the prin- 
+cipal experimental device for research into the magnetic confine- 
+ment approach to controlled fusion. In the tokamak, hydrogen 
+plasmas, at temperatures of up to 100 Million K, are confined 
+by strong magnetic fields. Accurate control of the position and 
+shape of the plasma boundary requires real-time feedback control 
+of the magnetic field structure on a time-scale of a few tens of mi- 
+croseconds. Software simulations have demonstrated that a neural 
+network approach can give significantly better performance than 
+the linear technique currently used on most tokamak experiments. 
+The practical application of the neural network approach requires 
+high-speed hardware, for which a fully parallel implementation of 
+the multilayer perceptron, using a hybrid of digital and analogue 
+technology, has been developed. 
+1008 C. Bishop, P. Haynes, M. Smith, T. Todd, D. Trotman, C. Windsor 
+1 INTRODUCTION 
+Fusion of the nuclei of hydrogen provides the energy source which powers the sun. 
+It also offers the possibility of a practically limitless terrestrial source of energy. 
+However, the harnessing of this power has proved to be a highly challenging prob- 
+lem. One of the most promising approaches is based on magnetic confinement of a 
+high temperature (10 7 - 10 s Kelvin) plasma in a device called a tokamak (from the 
+Russian for 'toroidal magnetic chamber') as illustrated schematically in Figure 1. 
+At these temperatures the highly ionized plasma is an excellent electrical conduc- 
+tor, and can be confined and shaped by strong magnetic fields. Early tokamaks 
+had plasmas with circular cross-sections, for which feedback control of the plasma 
+position and shape is relatively straightforward. However, recent tokamaks, such as 
+the COMPASS experiment at Culham Laboratory, as well as most next-generation 
+tokamaks, are designed to produce plasmas whose cross-sections are strongly non- 
+circular. Figure 2 illustrates some of the plasma shapes which COMPASS is de- 
+signed to explore. These novel cross-sections provide substantially improved energy 
+confinement properties and thereby significantly enhance the performance of the 
+tokamak. 
+z 
+R 
+Figure 1: Schematic cross-section of a tokamak experiment show- 
+ing the toroidal vacuum vessel (outer D-shaped curve) and plasma 
+(shown shaded). Also shown are the radial (R) and vertical (Z) co- 
+ordinates. To a good approximation, the tokamak can be regarded 
+as axisymmetric about the Z-axis, and so the plasma boundary can 
+be described by its cross-sectional shape at one particular toroidal 
+location. 
+Unlike circular cross-section plasmas, highly non-circular shapes are more difficult to 
+produce and to control accurately, since currents through several control coils must 
+be adjusted simultaneously. Furthermore, during a typical plasma pulse, the shape 
+must evolve, usually from some initial near-circular shape. Due to uncertainties 
+in the current and pressure distributions within the plasma, the desired accuracy 
+for plasma control can only be achieved by making real-time measurements of the 
+position and shape of the boundary, and using error feedback to adjust the currents 
+in the control coils. 
+The physics of the plasma equilibrium is determined by force balance between the 
+Real-Time Control of Tokamak Plasma Using Neural Networks 1009 
+circle ellipse D-shape bean 
+Figure 2: Cross-sections of the COMPASS vacuum vessel showing 
+some examples of potential plasma shapes. The solid curve is the 
+boundary of the vacuum vessel, and the plasma is shown by the 
+shaded regions. 
+thermal pressure of the plasma and the pressure of the magnetic field, and is rel- 
+atively well understood. Particular plasma configurations are described in terms 
+of solutions of a non-linear partial differential equation called the Grad-Shafranov 
+(GS) equation. Due to the non-linear nature of this equation, a general analytic 
+solution is not possible. However, the GS equation can be solved by iterative nu- 
+merical methods, with boundary conditions determined by currents flowing in the 
+external control coils which surround the vacuum vessel. On the tokamak itself it 
+is changes in these currents which are used to alter the position and cross-sectional 
+shape of the plasma. Numerical solution of the GS equation represents the stan- 
+dard technique for post-shot analysis of the plasma, and is also the method used 
+to generate the training dataset for the neural network, as described in the next 
+section. However, this approach is computationally very intensive and is therefore 
+unsuitable for feedback control purposes. 
+For real-time control it is necessary to have a fast (typically _ 50/sec.) determi- 
+nation of the plasma boundary shape. This information can be extracted from a 
+variety of diagnostic systems, the most important being local magnetic measure- 
+ments taken at a number of points around the perimeter of the vacuum vessel. 
+Most tokamaks have several tens or hundreds of small pick up coils located at care- 
+fully optimized points around the torus for this purpose. We shall represent these 
+magnetic signals collectively as a vector m. 
+For a large class of equilibria, the plasma boundary can be reasonably well repre- 
+sented in terms of a simple parameterization, governed by an angle-like variable 0, 
+given by 
+R(O) = Ro+acos(O+6sinO) 
+Z(O) = Zo + a: sin 0 
+where we have defined the following parameters 
+1010 C. Bishop, P. Haynes, M. Smith, T. Todd, D. Trotman, C. Windsor 
+R0 radial distance of the plasma center from the major axis of the torus, 
+Z0 vertical distance of the plasma center from the torus midplane, 
+a minor radius measured in the plane Z - Z0, 
+ elongation, 
+5 triangularity. 
+We denote these parameters collectively by y. The basic problem which has to be 
+addressed, therefore, is to find a representation for the (non-linear) mapping from 
+the magnetic signals m to the values of the geometrical parameters yk, which can 
+be implemented in suitable hardware for real-time control. 
+The conventional approach presently in use on many tokamaks involves approxi- 
+mating the mapping between the measured magnetic signals and the geometrical 
+parameters by a single linear transformation. However, the intrinsic non-linearity 
+of the mappings suggests that a representation in terms of feedforward neural net- 
+works should give significantly improved results (Lister and Schnurrenberger, 1991; 
+Bishop et al., 1992; Lagin et al., 1993). Figure 3 shows a block diagram of the 
+control loop for the neural network approach to tokamak equilibrium control. 
+signals 
+� nd.hepe y: 
+Figure 3: Block diagram of the control loop used for real-time 
+feedback control of plasma position and shape. 
+2 SOFTWARE SIMULATION RESULTS 
+The dataset for training and testing the network was generated by numerical so- 
+lution of the GS equation using a free-boundary equilibrium code. The data base 
+currently consists of over 2,000 equilibria spanning the wide range of plasma po- 
+sitions and shapes available in COMPASS. Each equilibrium configuration takes 
+several minutes to generate on a fast workstation. The boundary of each configu- 
+ration is then fitted using the form in equation 1, so that the equilibria are labelled 
+with the appropriate values of the shape parameters. Of the 120 magnetic signals 
+available on COMPASS which could be used to provide inputs to the network, a 
+Real-Time Control of Tokamak Plasma Using Neural Networks 1011 
+subset of 16 has been chosen using sequential forward selection based on a linear 
+representation for the mapping (discussed below). 
+It is important to note that the transformation from magnetic signals to flux surface 
+parameters involves an exact linear invariance. This follows from the fact that, if all 
+of the currents are scaled by a constant factor, then the magnetic fields will be scaled 
+by this factor, and the geometry of the plasma boundary will be unchanged. It is 
+important to take advantage of this prior knowledge and to build it into the network 
+structure, rather than force the network to learn it by example. We therefore 
+normalize the vector m of input signals to the network by dividing by a quantity 
+proportional to the total plasma current. Note that this normalization has to be 
+incorporated into the hardware implementation of the network, as will be discussed 
+in Section 3. 
+4 
+=2 
+-4 
+-4 -2 () 2 4 ' 
+Database Database 
+L i El:)ngtio- .0.,' 
+' b ' 0:4' 0:8' 12 
+Database 
+Database Database Database 
+Figure 4: Plots of the values from the test set versus the values 
+predicted by the linear mapping for the 3 equilibrium parameters, 
+together with the corresponding plots for a neural network with 4 
+hidden units. 
+The results presented in this paper are based on a multilayer perceptron architecture 
+having a single layer of hidden units with 'tanh' activation functions, and linear 
+output units. Networks are trained by minimization of a sum-of-squares error using 
+a standard conjugate gradients optimization algorithm, and the number of hidden 
+1012 C. Bishop, P. Haynes, M. Smith, T. Todd, D. Trotman, C. Windsor 
+units is optimized by measuring performance with respect to an independent test 
+set. Results from the neural network mapping are compared with those from the 
+optimal linear mapping, that is the single linear transformation which minimizes 
+the same sum

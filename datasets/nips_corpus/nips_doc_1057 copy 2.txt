@@ -1,0 +1,150 @@
+Predictive Q-Routing: A Memory-based 
+Reinforcement Learning Approach to 
+Adaptive Traffic Control 
+Samuel P.M. Choi, Dit-Yan Yeung 
+Department of Computer Science 
+Hong Kong University of Science and Technology 
+Clear Water Bay, Kowloon, Hong Kong 
+{pmchoi, dyyeung}�c s. ust. hk 
+Abstract 
+In this paper, we propose a memory-based Q-learning algorithm 
+called predictive Q-routing (PQ-routing) for adaptive traffic con- 
+trol. We attempt to address two problems encountered in Q-routing 
+(Boyan &; Littman, 1994), namely, the inability to fine-tune rout- 
+ing policies under low network load and the inability to learn new 
+optimal policies under decreasing load conditions. Unlike other 
+memory-based reinforcement learning algorithms in which mem- 
+ory is used to keep past experiences to increase learning speed, 
+PQ-routing keeps the best experiences learned and reuses them 
+by predicting the traffic trend. The effectiveness of PQ-routing 
+has been verified under various network topologies and traffic con- 
+ditions. Simulation results show that PQ-routing is superior to 
+Q-routing in terms of both learning speed and adaptability. 
+1 INTRODUCTION 
+The adaptive traffic control problem is to devise routing policies for controllers (i.e. 
+routers) operating in a non-stationary environment to minimize the average packet 
+delivery time. The controllers usually have no or only very little prior knowledge of 
+the environment. While only local communication between controllers is allowed, 
+the controllers must cooperate among themselves to achieve the common, global 
+objective. Finding the optimal routing policy in such a distributed manner is very 
+difficult. Moreover, since the environment is non-stationary, the optimal policy 
+varies with time as a result of changes in network traffic and topology. 
+In (Boyan &; Littman, 1994), a distributed adaptive traffic control scheme based 
+946 S.P.M. CHOI, D. YEUNG 
+on reinforcement learning (RL), called Q-routing, is proposed for the routing of 
+packets in networks with dynamically changing traffic and topology. Q-routing is a 
+variant of Q-learning (Watkins, 1989), which is an incremental (or asynchronous) 
+version of dynamic programming for solving multistage decision problems. Unlike 
+the original Q-learning algorithm, Q-routing is distributed in the sense that each 
+communication node has a separate local controller, which does not rely on global 
+information of the network for decision making and refinement of its routing policy. 
+2 EXPLORATION VERSUS EXPLOITATION 
+As in other RL algorithms, one important issue Q-routing must deal with is the 
+tradeoff between exploration and exploitation. While exploration of the state space 
+is essential to learning good routing policies, continual exploration without putting 
+the learned knowledge into practice is of no use. Moreover, exploration is not done 
+at no cost. This dilemma is well known in the RL community and has been studied 
+by some researchers, e.g. (Thrun, 1992). 
+One possibility is to divide learning into an exploration phase and an exploitation 
+phase. The simplest exploration strategy is random exploration, in which actions 
+are selected randomly without taking the reinforcement feedback into consideration. 
+After the exploration phase, the optimal routing policy is simply to choose the next 
+network node with minimum Q-value (i.e. minimum estimated delivery time). In 
+so doing, Q-routing is expected to learn to avoid congestion along popular paths. 
+Although Q-routing is able to alleviate congestion along popular paths by routing 
+some traffic over other (possibly longer) paths, two problems are reported in (Boyan 
+gc Littman, 1994). First, Q-routing is not always able to find the shortest paths 
+under low network load. For example, if there exists a longer path which has a 
+Q-value less than the (erroneous) estimate of the shortest path, a routing policy 
+that acts as a minimum selector will not explore the shortest path and hence will 
+not update its erroneous Q-value. Second, Q-routing suffers from the so-called 
+hysteresis problem, in that it fails to adapt to the optimal (shortest) path again 
+when the network load is lowered. Once a longer path is selected due to increase in 
+network load, a minimumselector is no longer able to notice the subsequent decrease 
+in traffic along the shortest path. Q-routing continues to choose the same (longer) 
+path unless it also becomes congested and has a Q-value greater than some other 
+path. Unless Q-routing continues to explore, the shortest path cannot be chosen 
+again even though the network load has returned to a very low level. However, as 
+mentioned in (Boyan &; Littman, 1994), random exploration may have very negative 
+effects on congestion, since packets sent along a suboptimal path tend to increase 
+queue delays, slowing down all the packets passing through this path. 
+Instead of having two separate phases for exploration and exploitation, one alterna- 
+tive is to mix them together, with the emphasis shifting gradually from the former 
+to the latter as learning proceeds. This can be achieved by a probabilistic scheme for 
+choosing next nodes. For example, the Q-values may be related to probabilities by 
+the Boltzmann-Gibbs distribution, involving a randomness (or pseudo-temperature) 
+parameter T. To guarantee sufficient initial exploration and subsequent conver- 
+gence, T usually has a large initial value (giving a uniform probability distribution) 
+and decreases towards 0 (degenerating to a deterministic minimum selector) during 
+the learning process. However, for a continuously operating network with dynami- 
+cally changing traffic and topology, learning must be continual and hence cannot be 
+controlled by a prespecified decay profile for T. An algorithm which automatically 
+adapts between exploration and exploitation is therefore necessary. It is this very 
+reason which led us to develop the algorithm presented in this paper. 
+Predictive Q-Routing 947 
+3 PREDICTIVE Q-ROUTING 
+A memory-based Q-learning algorithm called predictive Q-routin 9 (PQ-routing) is 
+proposed here for adaptive traffic control. Unlike Dyna (Peng & Williams, 1993) 
+and prioritized sweepin9 (Moore & Atkeson, 1993) in which memory is used to keep 
+past experiences to increase learning speed, PQ-routing keeps the best experiences 
+(best Q-values) learned and reuses them by predicting the traffic trend. The idea 
+is as follows. Under low network load, the optimal policy is simply the shortest 
+path routing policy. However, when the load level increases, packets tend to queue 
+up along the shortest paths and the simple shortest path routing policy no longer 
+performs well. If the congested paths are not used for a period of time, they will 
+recover and become good candidates again. One should therefore try to utilize these 
+paths by occasionally sending packets along them. We refer to such controlled 
+exploration activities as probing. The probing frequency is crucial, as frequent 
+probes will increase the load level along the already congested paths while infrequent 
+probes will make the performance little different from Q-routing. Intuitively, the 
+probing frequency should depend on the congestion level and the processing speed 
+(recovery rate) of a path. The congestion level can be reflected by the current 
+Q-value, but the recovery rate has to be estimated as part of the learning process. 
+At first glance, it seems that the recovery rate can be computed simply by dividing 
+the difference in Q-values from two probes by the elapse time. However, the recovery 
+rate changes over time and depends on the current network traffic and the possibility 
+of link/node failure. In addition, the elapse time does not truly reflect the actual 
+processing time a path needs. Thus this noisy recovery rate should be adjusted for 
+every packet sent. It is important to note that the recovery rate in the algorithm 
+should not be positive, otherwise it may increase the predicted Q-value without 
+bound and hence the path can never be used again. 
+TABLES: 
+Q(d,y) 
+B(a,y) 
+Predictive Q-Routing Algorithm 
+- estimated dehvery time from node x to node d via neighboring node y 
+- best estimated dehvery time from node x to node d via neighboring node y 
+- recovery rate for path from node x to node d via neighboring node y 
+- last update time for path from node x to node d via neighboring node y 
+TABLE UPDATES: (after a packet arrives at node y from node x) 
+AQ = (transmission delay + queueing time at y + minz{Qy(d,z)}) - Q(d,y) 
+Q(d,y) Q(d,y)+aAQ 
+B(d,y) -- min(B(d,y),Q(d,y)) 
+if (AQ < 0) then 
+AR - AQ / (current time- Ux(d,y)) 
+y) .- y) + 
+else if (AQ > 0) then 
+y) Rx(a, y) 
+end if 
+U(d, y) -- current time 
+ROUTING POLICY: (packet is sent from node x to node y) 
+At = current time -- Ux(d,y) 
+Q(d,y) - max(Q(d,y) + At R(d,y),B(d,y)) 
+y  argminy{Q(d,y)} 
+There are three learning parameters in the PQ-routing algorithm. c is the Q- 
+function learning parameter as in the original Q-learning algorithm. In PQ-routing, 
+this parameter should be set to 1 or else the accuracy of the recovery rate may be 
+948 S.P.M. CHOI, D. YEUNG 
+affected. fi is used for learning the recovery rate. In our experiments, the value of 
+0.7 is used. 7 is used for controlling the decay of the recovery rate, which affects 
+the probing frequency in a congested path. Its value is usually chosen to be larger 
+than . In our experiments, the value of 0.9 is used. 
+PQ-learning is identical to Q-learning in the way the Q-function is updated. The 
+major difference is in the routing policy. Instead of selecting actions based solely 
+on the current Q-values, the recovery rates are used to yield better estimates of 
+the Q-values before the minimum selector is applied. This is desirable because the 
+Q-values on which routing decisions are based may become outdated due to the 
+ever-changing traffic. 
+4 EMPIRICAL RESULTS 
+4.1 A 15-NODE NETWORK 
+To demonst

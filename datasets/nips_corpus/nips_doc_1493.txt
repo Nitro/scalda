@@ -1,0 +1,143 @@
+Kernel PCA and De-Noising in Feature Spaces 
+Sebastian Mika, Bernhard Schiilkopf, Alex Smola 
+Klaus-Robert Miiller, Matthias Scholz, Gunnar Ritsch 
+GMD FIRST, Rudower Chaussee 5, 12489 Berlin, Germany 
+{mika, bs, smola, klaus, scholz, raetsch} @first. gmd.de 
+Abstract 
+Kernel PCA as a nonlinear feature extractor has proven powerful as a 
+preprocessing step for classification algorithms. But it can also be con- 
+sidered as a natural generalization of linear principal component anal- 
+ysis. This gives rise to the question how to use nonlinear features for 
+data compression, reconstruction, and de-noising, applications common 
+in linear PCA. This is a nontrivial task, as the results provided by ker- 
+nel PCA live in some high dimensional feature space and need not have 
+pre-images in input space. This work presents ideas for finding approxi- 
+mate pre-images, focusing on Gaussian kernels, and shows experimental 
+results using these pre-images in data reconstruction and de-noising on 
+toy examples as well as on real world data. 
+1 PCA and Feature Spaces 
+Principal Component Analysis (PCA) (e.g. [3]) is an orthogonal basis transformation. 
+The new basis is found by diagonalizing the centered covariance matrix of a data set 
+{xk e RVlk = 1,... ,�}, defined by (7 = ((xi - (xk))(xi - (Xk))T). The coordi- 
+nates in the Eigenvector basis are called principal components. The size of an Eigenvalue 
+A corresponding to an Eigenvector v of (7 equals the amount of variance in the direction 
+of v. Furthermore, the directions of the first n Eigenvectors corresponding to the biggest 
+n Eigenvalues cover as much variance as possible by n orthogonal directions. In many ap- 
+plications they contain the most interesting information: for instance, in data compression, 
+where we project onto the directions with biggest variance to retain as much information 
+as possible, or in de-noising, where we deliberately drop directions with small variance. 
+Clearly, one cannot assert that linear PCA will always detect all structure in a given data set. 
+By the use of suitable nonlinear features, one can extract more information. Kernel PCA 
+is very well suited to extract interesting nonlinear structures in the data [9]. The purpose of 
+this work is therefore (i) to consider nonlinear de-noising based on Kernel PCA and (ii) to 
+clarify the connection between feature space expansions and meaningful patterns in input 
+space. Kernel PCA first maps the data into some feature space F via a (usually nonlinear) 
+function {I, and then performs linear PCA on the mapped data. As the feature space F 
+might be very high dimensional (e.g. when mapping into the space of all possible d-th 
+order monomials of input space), kernel PCA employs Mercer kernels instead of carrying 
+Kernel PCA and De-Noising in Feature Spaces 537 
+out the mapping � explicitly. A Mercer kernel is a function k(x, y) which for all data 
+sets {xi} gives rise to a positive matrix Kij -- k(a:i, a:j) [6]. One can show that using 
+k instead of a dot product in input space corresponds to mapping the data with some � 
+to a feature space F [1], i.e. k(x,y) = ((x) � (y)). Kernels that have proven useful 
+include Gaussian kernels k(x, y) = exp(- [Ix - ull 2c) and polynomial kernels k(x, y) = 
+(x. y)d. Clearly, all algorithms that can be formulated in terms of dot products, e.g. Support 
+Vector Machines [1], can be carried out in some feature space F without mapping the data 
+explicitly. All these algorithms construct their solutions as expansions in the potentially 
+infinite-dimensional feature space. 
+The paper is organized as follows: in the next section, we briefly describe the kernel PCA 
+algorithm. In section 3, we present an algorithm for finding approximate pre-images of 
+expansions in feature space. Experimental results on toy and real world data are given in 
+section 4, followed by a discussion of our findings (section 5). 
+2 Kernel PCA and Reconstruction 
+To perform PCA in feature space, we need to find Eigenvalues A > 0 and Eigenvectors 
+V E F\{0} satisfying AV -- V with  - ((xk)(xk)r). l Substituting  into the 
+Eigenvector equation, we note that all solutions V must lie in the span of -images of the 
+training data. This implies that we can consider the equivalent system 
+A((xk)' V) = ((xk).V)for all k = 1,... ,� (1) 
+and that there exist coefficients Oil,... , Ot� such that 
+v = -w(xi) (2) 
+i=1 
+Substituting  and (2) into (1), and defining an � x � matrix K by Kij := ( (xi). (I, (xj)) = 
+k(a:i, a:j), we arrive at a problem which is cast in terms of dot products: solve 
+�,,Xot = Kot (3) 
+where a = (Oil, . . . , ot�) T (for details see [7]). Normalizing the solutions V k, i.e. (V k � 
+V k) = 1, translates into k(a k � o k) = 1. To extract nonlinear principal components 
+for the -image of a test point x we compute the projection onto the k-th component by 
+k k(x, xi). For feature extraction, we thus have to evaluate � 
+]k := ( vk '(I)(x)) = El21 
+kernel functions instead of a dot product in F, which is expensive if F is high-dimensional 
+(or, as for Gaussian kernels, infinite-dimensional). To reconstruct the -image of a vector 
+x from its projections/k onto the first n principal components in F (assuming that the 
+Eigenvectors are ordered by decreasing Eigenvalue size), we define a projection operator 
+Pn by 
+Pn(g) --  k V k (4) 
+k=l 
+If n is large enough to take into account all directions belonging to Eigenvectors with non- 
+zero Eigenvalue, we have Pn(a:i) -- (a:i). Otherwise (kernel) PCA still satisfies (i) that 
+the overall squared reconstruction error i II Pn(a:i) -- (a:i)II 2 is minimal and (ii) the 
+retained variance is maximal among all projections onto orthogonal directions in F. In 
+common applications, however, we are interested in a reconstruction in input space rather 
+than in F. The present work attempts to achieve this by computing a vector z satisfying 
+� (z) = Pn(X). The hope is that for the kernel used, such a z will be a good approxi- 
+mation of x in input space. However, (i) such a z will not always exist and (ii) if it exists, 
+For simplicity, we assume that the mapped data are centered in F. Otherwise, we have to go 
+through the same algebra using (x) := (x) - ((I'(xi)). 
+538 S. Mika et al. 
+it need be not unique. 2 As an example for (i), we consider a possible representation of F. 
+One can show [7] that  can be thought of as a map (m) = k(x, .) into a Hilbert space 7-/k 
+of functions i cti k(mi, .) with a dot product satisfying (k(m, .). k(gt, .)) = k(m, gt). Then 
+7-/k is called reproducing kernel Hilbert space (e.g. [6]). Now, for a Gaussian kernel, 7-/k 
+contains all linear superpositions of Gaussian bumps on R N (plus limit points), whereas 
+by definition of {I, only single bumps k(m, .) have pre-images under {I,. When the vector 
+Pn(m) has no pre-image z we try to approximate it by minimizing 
+p(z) = II'(z) - Pn(m)112 (5) 
+This is a special case of the reduced set method [2]. Replacing terms independent of z by 
+f, we obtain 
+p(z) -II(z)112- Pn(m)) + f (6) 
+Substituting (4) and (2) into (6), we arrive at an expression which is written in terms of 
+dot products. Consequently, we can introduce a kernel to obtain a formula for p (and thus 
+Vz p) which does not rely on carrying out {I, explicitly 
+n 
+k k(z, mi) + f (7) 
+k=l i=1 
+3 Pre-Images for Gaussian Kernels 
+To optimize (7) we employed standard gradient descent methods. If we restrict our attention 
+to kernels of the form k(m,//) = k(llm - ll 2) (and thus satisfying k(m, m) = const. for all 
+m), an optimal z can be determined as follows (cf. [8]): we deduce from (6) that we have 
+to maximize 
+p(z) = ((z). Pn(X)) + ft'= E 7ik(z,xi) + fY 
+i=1 
+(8) 
+ k (for some ft' independent of z). For an extremum, the 
+where we set 7i = 
+gradient with respect to z has to vanish: V,p(z) = 5']i= 7ik'(llz - m,ll2)(z - m,) -- 0. 
+This leads to a necessary condition for the extremum: z = 5'], 6, m,/5']j 6, with 6, = 
+7, k'([I z - a:i[12). For a Gaussian kernel k(m,//) = exp(-[Im - 2/c) we get 
+z -- E=x 7, exp(-IIz - mill 2c)mi (9) 
+Ei=i 7i exp(-llz - m, ll 2 
+We note that the denominator equals ((z)- Pn(I)(m)) (cf. (8)). Making the assumption that 
+Pn(X)  0, we have ((x) � Pn(X)) = (Pn(X) - Pn(X)) > 0. AS k is smooth, we 
+conclude that there exists a neighborhood of the extremum of (8) in which the denominator 
+of (9) is  0. Thus we can devise an iteration scheme for z by 
+E,= 7, exp(-llzt - m, II 2/c)m, 
+Zt+ 1 -- � (10) 
+Ei:I 7i exp(-Ilzt - m112/c) 
+Numerical instabilities related to ({I, (z) � Pn{I ' (m)) being small can be dealt with by restart- 
+ing the iteration with a different starting value. Furthermore we note that any fixed-point 
+of (10) will be a linear combination of the kernel PCA training data mi. If we regard (10) 
+in the context of clustering we see that it resembles an iteration step for the estimation of 
+2If the kernel allows reconstruction of the dot-product in input space, and under the assumption 
+that a pre-image exists, it is possible to construct it explicitly (cf. [7]). But clearly, these conditions 
+do not hold true in general. 
+Kernel PCA and De-Noising in Feature Spaces 539 
+the center of a single Gaussian cluster. The weights or 'probabilities' 7i reflect the (anti-) 
+correlation between the amount of (a:) in Eigenvector direction V k and the contribution 
+of (a:i) to this Eigenvector. So the 'cluster center' z is drawn towards training patterns 
+with positive 7i and pushed away from those with negative 7i, i.e. for a fixed-point z the 
+influence of training patterns with smaller distance to a: will tend to be bigger. 
+4 Experiments 
+To test the feasibility of the proposed algorithm, we run several toy and real world ex- 
+periments. They were performed using (10) and Gaussian kernels of the form k(a:, y) = 
+exp(- (llx - y where n equals the dimension of input space. We mainly focused 
+on the application of de-noising, which differs from 

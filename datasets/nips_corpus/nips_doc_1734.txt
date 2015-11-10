@@ -1,0 +1,191 @@
+The Nonnegative Boltzmann Machine 
+Oliver B. Downs 
+Hopfield Group 
+Schultz Building 
+Princeton University 
+Princeton, NJ 08544 
+obdowns@princeton. edu 
+David J.C. MacKay 
+Cavendish Laboratory 
+Madingley Road 
+Cambridge, CB3 0HE 
+United Kingdom 
+mackay@mrao. cam. ac. uk 
+Daniel D. Lee 
+Bell Laboratories 
+Lucent Technologies 
+700 Mountain Ave. 
+Murray Hill, NJ 07974 
+ddlee@bell- labs. com 
+Abstract 
+The nonnegative Boltzmann machine (NNBM) is a recurrent neural net- 
+work model that can describe multimodal nonnegative data. Application 
+of maximum likelihood estimation to this model gives a learning rule that 
+is analogous to the binary Boltzmann machine. We examine the utility of 
+the mean field approximation for the NNBM, and describe how Monte 
+Carlo sampling techniques can be used to learn its parameters. Reflec- 
+tive slice sampling is particularly well-suited for this distribution, and 
+can efficiently be implemented to sample the distribution. We illustrate 
+learning of the NNBM on a translationally invariant distribution, as well 
+as on a generative model for images of human faces. 
+Introduction 
+The multivariate Gaussian is the most elementary distribution used to model generic da- 
+ta. It represents the maximum entropy distribution under the constraint that the mean and 
+covariance matrix of the distribution match that of the data. For the case of binary data, 
+the maximum entropy distribution that matches the first and second order statistics of the 
+data is given by the Boltzmann machine [1]. The probability of a particular state in the 
+Boltzmann machine is given by the exponential form: 
+P({si: +1}): exp - Z siAidsJ + bisi � (1) 
+ij ' 
+Interpreting Eq. 1 as a neural network, the parameters Aid represent symmetric, recurrent 
+weights between the different units in the network, and bi represent local biases. Unfortu- 
+nately, these parameters are not simply related to the observed mean and covariance of the 
+The Nonnegative Boltzmann Machine 429 
+(a) : - .... ... 
+50- 
+40- 
+3O 
+20 
+10- 
+O 
+0 
+2 
+3 
+1 2 3 4 5 54 1 2 3 4 5 
+(b) 
+5 
+4 
+3 
+2 
+1 
+Oo 
+Figure 1' a) Probability density and b) shaded contour plot of a two dimensional competi- 
+tive NNBM distribution. The energy function E(:v) for this distribution contains a saddle 
+point and two local minima, which generates the observed multimodal distribution. 
+data as they are for the normal Gaussian. Instead, they need to be adapted using an iterative 
+learning rule that involves difficult sampling from the binary distribution [2]. 
+The Boltzmann machine can also be generalized to continuous and nonnegative variables. 
+In this case, the maximum entropy distribution for nonnegative data with known first and 
+second order statistics is described by a distribution previously called the rectified Gaus- 
+sian distribution [3]: 
+P(z) = exp [-E(z)] ifzi > 0 Vi, 
+if any :i < 0, (2) 
+where the energy fimction E(:c) and normalization constant Z are: 
+2 
+z = az exp[-E(z)]. (4) 
+>o 
+The properties of this nonnegative Boltzmann machine (NNBM) distribution differ quite 
+substantially from that of the normal Gaussian. In particular, the presence of the nonnega- 
+tivity constraints allows the distribution to have multiple modes. For example, Fig. 1 shows 
+a two-dimensional NNBM distribution with two separate maxima located against the rec- 
+tifying axes. Such a multimodal distribution would be poorly modelled by a single normal 
+Gaussian. 
+In this submission, we discuss how a multimodal NNBM distribution can be learned from 
+nonnegative data. We show the limitations of mean field approximations for this distribu- 
+tion, and illustrate how recent developments in efficient sampling techniques for continuous 
+belief networks can be used to tune the weights of the network [4]. Specific examples of 
+learning are demonstrated on a translationally invariant distribution, as well as on a gener- 
+ative model for face images. 
+Maximum Likelihood 
+The learning rule for the NNBM can be derived by maximizing the log likelihood of the 
+observed data under Eq. 2. Given a set of nonnegative vectors {u}, where tt = 1..M 
+430 O. B. Downs, D. J. MacKay and D. D. Lee 
+indexes the different examples, the log likelihood is: 
+M M 
+1 1 
+L= M Zl�gP(:u) - M ZE(x-'U)-l�gZ' (5) 
+tt=l /=1 
+Taking the derivatives ofEq. 5 with respect to the parameters A and b gives: 
+0L 
+= <xixj>f- <xixj>c (6) 
+OAij 
+OL 
+= (xi)c - (xi)f, (7) 
+where the subscript c denotes a clamped average over the data, and the subscript f 
+denotes a free average over the NNBM distribution: 
+M 
+1 
+(f(x))c = M y f(:u) (8) 
+(f(x))f : (9) 
+These derivatives are used to define a gradient ascent learning rule for the NNBM that is 
+similar to that of the binary Boltzmann machine. The contrast between the clamped and 
+free covariance matrix is used to update the iteractions A, while the difference between the 
+clamped and free means is used to update the local biases b. 
+Mean field approximation 
+The major difficulty with this learning algorithm lies in evaluating the averages {XiXj) f 
+and (Xi)f. Because it is analytically intractable to calculate these free averages exactly, 
+approximations are necessary for learning. Mean field approximations have previously 
+been proposed as a deterministic alternative for learning in the binary Boltzmann machine, 
+although there have been contrasting views on their validity [5, 6]. Here, we investigate the 
+utility of mean field theory for approximating the NNBM distribution. 
+The mean field equations are derived by approximating the NNBM distribution in Eq. 2 
+with the factorized form: 
+1 1 (x) * 
+II II - 
+Q(3C) '-- Qri(3Ci) --' . T i 
+i i 
+where the different marginal densities Q(xi) are characterized by the means ri with a fixed 
+constant '7. The product of ?-distributions is the natural factorizable distribution for non- 
+negative random variables. 
+The optimal mean field parameters ri are determined by minimizing the Kullback-Leibler 
+divergence between the NNBM distribution and the factorized distribution: 
+D:L(QIIP) = dxQ(x)log [p-j = (E(x))(x) + logZ- H(Q). (11) 
+Finding the minimum of Eq. 11 by setting its derivatives with respect to the mean field 
+parameters ri to zero gives the simple mean field equations: 
+[ 1] 
+Aii-i = (? + 1) bi - Aijrj + -- (12) 
+� -i 
+The Nonnegative Boltzmann Machine 431 
+y 
+(a) 
+P(x) 
+xi+ 1 x i x 
+(b) 
+Figure 2: a) Slice sampling in one dimension. Given the current sample point, a:i, a height 
+t E [0, P(a:)] is randomly chosen. This defines a slice (:c  StP(:c ) > t) in which a 
+new :Ci+z is chosen. b) For a multidimensional slice S, the new point a:i+z is chosen using 
+ballistic dynamics with specular reflections off the interior boundaries of the slice. 
+These equations can then be solved self-consistently for ri. The free statistics of the 
+NNBM are then replaced by their statistics under the factorized distribution Q (a:): 
+<Xi)f  Ti, <XiXj)f  [( + 1) 2 q- ()/ q- 1)(ij]TiTj. 
+(13) 
+The fidelity of this approximation is determined by how well the factorized distribution 
+Q(z) models the NNBM distribution. Unfortunately, for distributions such as the one 
+shown in Fig. 3, the mean field approximation is quite different from that of the true mul- 
+timodal NNBM distribution. This suggests that the naive mean field approximation is i- 
+nadequate for learning in the NNBM, and in fact attempts to use this approximation fail 
+to learn the examples given in following sections. However, the mean field approximation 
+can still be used to initialize the parameters to reasonable values before using the sampling 
+techniques that are described below. 
+Monte-Carlo sampling 
+A more direct approach to calculating the free averages in Eq. 6-7 is to numerically ap- 
+proximate them. This can be accomplished by using Monte Carlo sampling to generate a 
+representative set of points that sufficiently approximate the statistics of the continuous dis- 
+tribution. In particular, Markov chain Monte-Carlo methods employ an iterative stochastic 
+dynamics whose equilibrium distribution converges to that of the desired distribution [4]. 
+For the binary Boltzmann machine, such sampling dynamics involves random spin flips 
+which change the value of a single binary component. Unfortunately, these single compo- 
+nent dynamics are easily caught in local energy minima, and can converge very slowly for 
+large systems. This makes sampling the binary distribution very difficult, and more spe- 
+cialized computational techniques such as simulated annealing, cluster updates, etc., have 
+been developed to try to circumvent this problem. 
+For the NNBM, the use of continuous variables makes it possible to investigate different 
+stochastic dynamics in order to more efficiently sample the distribution. We first experi- 
+mented with Gibbs sampling with ordered overrelaxation [7], but found that the required 
+inversion of the error function was too computationally expensive. Instead, the recently 
+developed method of slice sampling [8] seems particularly well-suited for implementation 
+in the NNBM. 
+The basic idea of the slice sampling algorithm is shown in Fig. 2. Given a sample point 
+:ci, a random t  [0, O_P(:Ci)] is first uniformly chosen. Then a slice S is defined as the 
+connected set of points (a:  S I aP(a:) > t), and the new point a:i+z  S is chosen 
+432 O. B. Downs, D. J. MacKay and D. D. Lee 
+'i, ' ' (a) 
+iO 1 2 3 4 5 
+00 1 2 3 4 5 
+Figure 3' Contours of the two-dimensional competitive NNBM distribution overlaid by a) 
+3' - 1 mean field approximation and b) 500 reflected slice samples. 
+randomly from this slice. The distribution of z,, for large n can be shown to converge 
+to the desired density P(x). Now, for the NNBM, solving the boundary points along a 
+particular direction in a given slice is quite simple, since it only involves solving the roots 
+of a quadratic equation. In order to efficiently choose a new point within a particular slice, 
+ref

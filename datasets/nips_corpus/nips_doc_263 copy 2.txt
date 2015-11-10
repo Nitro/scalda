@@ -1,0 +1,197 @@
+324 Jordan and Jacobs 
+I I 
+Learning to 
+Control an Unstable 
+Forward Modeling 
+System with 
+Michael I. Jordan 
+Brain and Cognitive Sciences 
+MIT 
+Cambridge, MA 02139 
+Robert A. Jacobs 
+Computer and Information Sciences 
+University of Massachusetts 
+Amherst, MA 01003 
+ABSTRACT 
+The forward modeling approach is a methodology for learning con- 
+trol when data is available in distal coordinate systems. We extend 
+previous work by considering how this methodology can be applied 
+to the optimization of quantities that are distal not only in space 
+but also in time. 
+In many learning control problems, the output variables of the controller are not 
+the natural coordinates in which to specify tasks and evaluate performance. Tasks 
+are generally more naturally specified in distal coordinate systems (e.g., endpoint 
+coordinates for manipulator motion) than in the proximal coordinate system of 
+the controller (e.g., joint angles or torques). Furthermore, the relationship between 
+proximal coordinates and distal coordinates is often not known a priori and, if 
+known, not easily inverted. 
+The forward modeling approach is a methodology for learning control when train- 
+ing data is available in distal coordinate systems. A forward model is a network 
+that learns the transformation from proximal to distal coordinates so that distal 
+specifications can be used in training the controller (Jordan & Rumelhart, 1990). 
+The forward model can often be learned separately from the controller because it 
+depends only on the dynamics of the controlled system and not on the closed-loop 
+dynamics. 
+In previous work, we studied forward models of kinematic transformations (Jordan, 
+1988, 1990) and state transitions (Jordan & Rumelhart, 1990). In the current paper, 
+Learning to Control an Unstable System with Forward Modeling 325 
+we go beyond the spatial credit assignment problems studied in those papers and 
+broaden the application of forward modeling to include cases of temporal credit 
+assignment (cf. Barto, Sutton,  Anderson, 1983; Werbos, 1987). As discussed 
+below, the function to be modeled in such cases depends on a time integral of the 
+closed-loop dynamics. This fact has two important implications. First, the data 
+needed for learning the forward model can no longer be obtained solely by observing 
+the instantaneous state or output of the plant. Second, the forward model is no 
+longer independent of the controller: If the parameters of the controller are changed 
+by a learning algorithm, then the closed-loop dynamics change and so does the 
+mapping from proximal to distal variables. Thus the learning of the forward model 
+and the learning of the controller can no longer be separated into different phases. 
+1 FORWARD MODELING 
+In this section we briefly summarize our previous work on forward modeling (see 
+also Nguyen  Widrow, 1989 and Werbos, 1987). 
+1.1 LEARNING A FORWARD MODEL 
+Given a fixed control law, the learning of a forward model is a system identification 
+problem. Let z - g(s, u) be a system to be modeled, where z is the output or the 
+state-derivative, s is the state, and u is the control. We require the forward model 
+to minimize the cost functional 
+(1) 
+where i - O(s, u,v) is the parameterized function computed by the model. Once 
+the minimum is found, backpropagation through the model provides an estimate 
+0z (cf. Jordan, 1988). 
+z of the system JacobJan matrix 3-5 
+1.2 LEARNING A CONTROLLER 
+Once the forward model is sufficiently accurate, it can be used in the training of the 
+controller. Backpropagation through the model provides derivatives that indicate 
+how to change the outputs of the controller. These derivatives can be used to 
+change the parameters of the controller by a further application of backpropagation. 
+Figure i illustrates the general procedure. 
+This procedure minimizes the distal cost functional 
+(2) 
+where z* is a reference signal. To see this, let the controller output be given as a 
+function u - f(s, z*, w) of the state s*, the reference signal z*, and a parameter 
+vector w. Differentiating J with respect to w yields 
+Ou T Oz T 
+VwJ=- Ow Ou 
+326 Jordan and Jacobs 
+Feedforward 
+Controller 
+I x 
+z 
+Plant 
+Forward 
+- - Model 
+Figure 1: Learning a Controller. The Dashed Line Represents Backpropagation. 
+The Jacobian matrix 0z 
+3-6 cannot be assumed to be available a priori, but can be 
+estimated by backpropagation through the forward model. Thus the error signal 
+available for learning the controller is the estimated gradient 
+/ Ou'z 
+7wJ=- 0w 0u (z*-z)dt. (4) 
+We now consider a task in which the foregoing framework must be broadened to 
+allow a more general form of distal task specification. 
+2 THE TASK 
+The task is to learn to regulate an unstable nonminimum-phase plant. We have 
+chosen the oft-studied (e.g., Barto, Sutton, & Anderson, 1983; Widrow & Smith, 
+1964) problem of learning to balance an inverted pendulum on a moving cart. The 
+plant dynamics are given by: 
+mlcosO I b' + --mgisinO = 0 
+where rn is the mass of the pole, M is the mass of the cart, i is half the pole length, 
+I is the inertia of the pole around its base, and F is the force applied to the cart. 
+The task we studied is similar to that studied by Barto, Sutton,  Anderson (1983). 
+A state-feedback controller provides forces to the cart, and the system evolves until 
+failure occurs (the cart reaches the end of the track or the pole reaches a critical 
+angle). The system learns from failure; indeed, it is assumed that the only teaching 
+information provided by the environment is the signal that failure has occurred. 
+Learning to Control an Unstable System with Forward Modeling 327 
+Ixl 0  
+sgn(x) 0 
+I1 0 
+sgn() 0 
+lel 0 
+sgn (e) 0 
+, 0 
+ 0- 
+ O 
+' 0 
+ 0 
+Controller 
+Forward Model 
+O m 
+o 
+o 
+o 
+o 
+o 
+o 
+o 
+o 
+o 
+to plant 
+Temporal 
+Difference 
+Unit 
+:� 
+Figure 2: The Network Architecture 
+There are several differences between our task and that studied by Barto, Sutton,/ 
+Anderson (1983). First, disturbances (white noise) are provided by the environment 
+rather than by the learning algorithm. This implies that in our experiments the 
+level of noise seen by the controller does not diminish to zero over the course of 
+learning. Second, we used real-valued forces rather than binary forces. Finally, we 
+do not assume the existence of a reset button that reinitializes the system to the 
+origin of state space; upon failure the system is restatted in a random configuration. 
+3 OUR APPROACH 
+In our approach, the control system learns a model that relates the current state of 
+the plant and the current control signal to a prediction of future failure. We make 
+use of a temporal difference algorithm (Sutton, 1988) to learn the transformation 
+from (state, action) pairs to an estimate of the inverse of the time until failure. 
+This mapping is then used as a differentiable forward model in the learning of the 
+controller--the controller is changed so as to minimize the output of the model and 
+thereby maximize the time until failure. 
+The overall system architecture is shown in Figure 2. We describe each component 
+in detail in the following sections. 
+An important feature that distinguishes this architecture from previous work (e.g., 
+328 Jordan and Jacobs 
+Barto, Sutton, & Anderson, 1983) is the path from the action unit into the forward 
+model. This path is necessary for supervised learning algorithms to be used (see 
+also Werbos, 1987). 
+3.1 LEARNING THE FORWARD MODEL 
+Temporal difference algorithms learn to make long term predictions by achieving 
+local consistency between predictions at neighboring time steps, and by grounding 
+the chain of predictions when information from the environment is obtained. In our 
+case, if z(t) is the inverse of the time until failure, then consistency is defined by 
+the requirement that z-(t) - z-(t + 1) + 1. The chain is grounded by defining 
+z(T) - 1, where T is the time step on which failure occurs. 
+To learn to estimate the inverse of the time until failure, the following temporal 
+difference error terms are used. For time steps on which failure does not occur, 
+1 
+e(t) = 1 + :-:(t + 1) - 
+where 2(t) denotes the output of the forward model. When failure occurs, the target 
+for the forward model is set to unity: 
+e(t) = 1- 
+The error signal e(t) is propagated backwards at time t + 1 using activations saved 
+from time t. Standard backpropagation is used to compute the changes to the 
+weights. 
+3.2 LEARNING THE CONTROLLER 
+If the controller is performing as desired, then the output of the forward model 
+is zero (that is, the predicted time-until-failure is infinity). This suggests that an 
+appropriate distal error signal for the controller is zero minus the output of the 
+forward model. 
+Given that the forward model has the control action as an input, the distal error 
+can be propagated backward to the hidden units of the forward model, through the 
+action unit, and into the controller where the weights are changed (see Figure 2). 
+Thus the controller is changed in such a way as to minimize the output of the 
+forward model and thereby maximize the time until failure. 
+3.3 LEARNING THE FORWARD MODEL AND THE CONTROLLER 
+SIMULTANEOUSLY 
+As the controller varies, the mapping that the forward model must learn also varies. 
+Thus, if the forward model is to provide reasonable derivatives, it must be contin- 
+uously updated as the controller changes. We find that it is possible to train the 
+forward model and the controller simultaneously, provided that we use a larger 
+learning rate for the forward model than for the controller. 
+Learning to Control an Unstable System with Forward Modeling 329 
+4 MISCELLANY 
+4.1 RESET 
+Although previous studies have assumed the existence of a reset button that 
+can restart the system at the origin of state space, we prefer not to make such an 
+assumption. A reset button implies the existence of a controller that can stabilize 
+the system, and the 

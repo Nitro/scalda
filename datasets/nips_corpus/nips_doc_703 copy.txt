@@ -1,0 +1,199 @@
+Optimal Brain Surgeon: 
+Extensions and performance comparisons 
+Babak Hassibi* 
+David G. Stork 
+Gregory Wolff 
+Takahiro Watanabe 
+Ricoh California Research Center 
+2882 Sand Hill Road Suite 115 
+Menlo Park, CA 94025-7022 
+and 
+*Department of Electrical Engineering 
+105B Durand Hall 
+Stanford University 
+Stanford, CA 94305-4055 
+Abstract 
+We extend Optimal Brain Surgeon (OBS) -- a second-order 
+method for pruning networks -- to allow for general error mea- 
+sures, and explore a reduced computational and storage implemen- 
+tation via a dominant eigenspace decomposition. Simulations on 
+nonlinear, noisy pattern classification problems reveal that OB$ 
+does lead to improved generalization, and performs favorably in 
+comparison with Optimal Brain Damage (OBD). We find that the 
+required retraining steps in OBD may lead to inferior generaliza- 
+tion, a result that can be interpreted as due .to injecting noise back 
+into the system. A common technique is to stop training of a large 
+network at the minimum validation error. We found that the test 
+error could be reduced even further by means of OB$ (but not 
+OBD) pruning. Our results justify the t - o approximation used 
+in OB$ and indicate why retraining in a highly pruned network 
+may lead to inferior performance. 
+263 
+264 Hassibi, Stork, Wolff, and Watanabe 
+1 INTRODUCTION 
+The fundamental theory of generalization favors simplicity. For a given level of 
+performance on observed data, models with fewer parameters can be expected to 
+perform better on test data. In practice, we find that neural networks with fewer 
+weights typically generalize better than large networks with the same training error. 
+To this end, LeCun, Denker and Solla's (1990) Optimal Brain Damage method 
+(OBD) sought to delete weights by keeping the training error as small as possible. 
+Hassibi and Stork (1993) extended OBD to include the off-diagonal terms in the 
+network's Hessian, which were shown to be significant and important for pruning 
+in classical and benchmark problems. 
+OBD and Optimal Brain Surgeon (OBS) share the same basic approach of training 
+a network to (local) minimum in error at weight w*, and then pruning a weight 
+that leads to the smallest increase in the training error. The predicted functional 
+increase in the error for a change in full weight vector 5w is: 
+OE )T 1 02E 
+6E = � 6w 6w v � 
+0 =H 
+� + o([[wll 3) , (1) 
+� � 
+m0 
+where H is the Hessian matrix. The first term vanishes because we are at a local 
+minimum in error; we ignore third- and higher-order terms (Gorodkin et al., 1993). 
+Hassibi and Stork (1993) first showed that the general solution for minimizing this 
+function given the constraint of deleting one weight was: 
+2 
+Wq 1 Wq 
+W---- [$_l]q q $ -1 .eq and Lq-- 2 [$-l]qq (2) 
+Here, eq is the unit vector along the qth direction in weight space and Lq is the 
+saliency of weight q -- an estimate of the increase in training error if weight q is 
+pruned and the other weights updated by the left equation in Eq. 2. 
+2 
+GENERAL ERROR MEASURES AND FISHER'S 
+METHOD OF SCORING 
+In this section we show that the recursive procedure for computing the inverse 
+Hessian for sum squared errors presented in Hassibi and Stork (1993) generalizes 
+to any twice differentiable distance norm and that the key approximation based on 
+Fisher's method of scoring is still valid. 
+Consider an arbitrary twice differentiable distance norm d(t, o) where t is the de- 
+sired output (teaching vector) and o = F(w, in) the actual output. Given a weight 
+vector w, F maps the input vector in to the output; the total error over P patterns 
+1 P , o[kl). 
+is E =  k=l d( t[k] It is straightforward to show that for a single output 
+unit network the Hessian is: 
+Optimal Brain Surgeon: Extensions and Performance Comparisons 265 
+1 P cgF(w, in [k]) c92d(t[k],o []) cgFT(w, in []) 
+H =   Ow 002 Ow 
+k=l 
+1 P cgd(t [1, o [1) c92F(w, in [k]) 
+7 0o 0w 2 
+k=l 
+(3) 
+The second term is of order O(]lt - oil); using Fisher's method of scoring (Sever & 
+Wild, 1989), we set this term to zero. Thus our Hessian reduces to: 
+I OF(w, in 02d(t[l,o 0FT(w, in 
+H: 0w 002 0w (4) 
+k=l 
+c92 d(t [kl ,o[l ) 
+We define X  �(w'in[) and a  and following the logic of Hsibi 
+0W 002 
+and Sork (1993) we can easily show tha the recursion for computing the inverse 
+Hessian becomes: 
+T 
+--1 Hi ' Xk+l 'Xk+l ' Hi , H 1: ct-1I, and H 1 = H -1 
+Hk+ 1 = H 1 - ___p + XkL 1 � H 1 � Xk+ 1 ' 
+ak 
+(5) 
+where  is a small parameter -- effectively a weight decay constant. Note how 
+different error measures d(t, o) scale the gradient vectors Xk forming the Hessian 
+(Eq. 4). For the squared error d(t, o) -- (t - 0) 2, we have a: 1, and all gradient 
+vectors are weighted equally. The cross entropy or Kullback-Leibler distance, 
+o (1 -o) 0 _< o,t < 1 (6) 
+d(t,o) = olog  + (1 - o) log (1 - t) ' - 
+i Hence if o [] is close to zero or one, X is given a large 
+yields ak = Otkl(1--OIkl)' 
+weight in the Hessian; conversely, the smallest value of a occurs when o [] = 1/2. 
+This is desirable and makes great intuitive sense, since in the cross entropy norm 
+the value of o [] is interpreted as the probability that the kth input pattern belongs 
+to a particular class, and therefore we give large weight to X whose class we are 
+most certain and small weight to those which we are least certain. 
+3 EIGENSPACE DECOMPOSITION 
+Although OBS has been shown to be a powerful method for small and interme- 
+diate sized networks -- Hassibi, Stork and Wolff (1993) applied OBS successfully 
+to NETtalk -- its use in larger problems is difficult because of large storage and 
+computation requirements. For a network of n weights, simply storing the Hessian 
+requires 0(n2/2) elements and O(Pn 2) computations are needed for each pruning 
+step. Reducing this computational burden requires some type of approximation. 
+Since OBS uses the inverse of the Hessian, any approximation to OBS will at some 
+level reduce to an approximation of H. For instance OBD uses a diagonal approx- 
+imation; magnitude-based methods use an isotropic approximation; and dividing 
+the network into subsets (e.g., hidden-to-output and input-to-hidden) corresponds 
+to the less-restrictive block diagonal approximation. In what follows we explore the 
+dominant eigenspace decomposition of the inverse Hessian as our approximation. It 
+should be remembered that all these are subsets of the full OBS approach. 
+266 Hassibi, Stork, Wolff, and Watanabe 
+3.1 Theory 
+The dominant eigendecomposition is the best low-rank approximation of a matrix 
+(in an induced 2-norm sense). Since the largest eigenvalues of H-1 are the smallest 
+eigenvalues of H, this method will, roughly speaking, be pruning weights in the 
+approximate nullspace of H. Dealing with a low rank approximation of H -1 will 
+drastically reduce the storage and computational requirements. 
+Consider the eigendecomposition of H: 
+0 ) , , 
+H = (UsUN) N UN = UsYlsUs + UNNUN' 
+(7) 
+where Es contains the largest eigenvalues of H and N the smallest ones. (We use 
+the subscripts q and N to loosely connote signal and noise.) The dimension of the 
+noise subspace is typically ra << n. Us and UN are n x (n -- ra) and n x ra matrices 
+that span the dominant eigenspace of H and H-l, and * denotes matrix transpose 
+and complex conjugation. If, as suggested above, we restrict the weight prunings to 
+lie in UN, we obtain the following saliency and full weight change when removing 
+the qth weight: 
+2 
+I Wq (8) 
+Jq ----  eq T' UN' ]r 1 � rv-e q 
+Wq -- 1 � 
+(V = eqT'UN' [1. Uv .eq N UNeq , (9) 
+where we have used 'bars' to indicate that these are approximations to Eq. 2. Note 
+now that we need only to store ]N and UN, which have roughly nm elements. 
+Likewise the computation required to estimate N and UN is O(Pnm). 
+The bound on Lq is: 
+Lq _ Lq _ Lq q- 2 LqLq 1 
+wq  ' er(s)' (10) 
+where er(s) is the smallest eigenvalue of $. Moreover if er(s) is large enough so 
+1 we have the following simpler form: 
+that rr(s) > [H_l]q q 
+Lq < .q < Lq (11) 
+-- --1-- 
+[H-1lqq_(s) 
+In either case Eqs. 10 and 11 indicate that the larger _(s) is, the tighter the bounds 
+are. Thus if the subspace dimension m is such that the eigenvalues in Us are large, 
+then we will have a good approximation. 
+LeCun, Simard and Pearlmutter (1993) have suggested a method that can be used 
+to estimate the smallest eigenvectors of the Hessian. However, for OBS (as we shall 
+see) it is best to use the Hessian with the t - o approximation, and their method 
+is not appropriate. 
+Optimal Brain Surgeon: Extensions and Performance Comparisons 267 
+3.2 Simulations 
+We pruned networks trained on the three Monk's problems (Thrun et al., 1991) us- 
+ing the full OBS and a 5-dimensional eigenspace version of OBS, using the validation 
+error rate for stopping criterion. (We chose a 5-dimensional subspace, because this 
+reduced the computational complexity by an order of magnitude.) The Table shows 
+the number of weights obtained. It is clear that this eigenspace decomposition was 
+not particularly successful. It appears as though the the off-diagonal terms in H be- 
+yond those in the eigenspace are important, and their omission leads to bad pruning. 
+However, this warrants further study. 
+Monkl 
+Monk2 
+Monk3 
+unpruned OBS 5-d eigenspace 
+58 
+39 
+39 
+14 
+16 
+4 
+28 
+27 
+11 
+4 OBS/OBD COMPARISON 
+General criteria for comparing pruning methods do not exist. Since such meth- 
+ods amount to assuming a particular prior distribution over the parameters, the 
+empirical results usually tell us more about the problem space, than about the 
+methods themselves. However, for two methods, such as OBS and OBD, which 
+utilize the same cost function, and differ only in their approximations, empirical 
+comparisons can be informative. Hence, we have applied both OBS and OBD to 
+several problems, including an artificially generated statistical classification task, 
+and a real-world copier voltage control 

@@ -1,0 +1,148 @@
+The Error Coding and Substitution PaCTs 
+GARETH JAMES 
+and 
+TREVOR HASTIE 
+Department of Statistics, Stanford University 
+Abstract 
+A new class of plug in classification techniques have recently been de- 
+veloped in the statistics and machine learning literature. A plug in clas- 
+siftcation technique (PACT) is a method that takes a standard classifier 
+(such as LDA or TREES) and plugs it into an algorithm to produce a 
+new classifier. The standard classifier is known as the Plug in Classi- 
+fier (PiC). These methods often produce large improvements over using 
+a single classifier. In this paper we investigate one of these methods and 
+give some motivation for its success. 
+1 Introduction 
+Dietterich and Bakiri (1995) suggested the following method, motivated by Error Correct- 
+ing Coding Theory, for solving k class classification problems using binary classifiers. 
+� Produce a k by B (B large) binary coding matrix, ie a matrix of zeros and ones. 
+We will denote this matrix by Z, its i, j th component by Zij, its ith row by Zi and 
+its j th column by Z j. 
+� Use the first column of the coding matrix (Z ) to create two super groups by 
+assigning all groups with a one in the corresponding element of Z  to super group 
+one and all other groups to super group zero. 
+� Train your plug in classifier (PiC) on the new two class problem. 
+� Repeat the process for each of the B columns (Z  , Z2,... , Z B) to produce B 
+trained classifiers. 
+For a new test point apply each of the B classifiers to it. Each classifier will 
+produce a/Sj which is the estimated probability the test point comes from the 
+jth super group one. This will produce a vector of probability estimates,  = 
+� � r. 
+The Error Coding and Substitution PaCTs 543 
+To classify the point calculate Li -' 'f=l lI3j - Zijl for each of the k groups (ie 
+for i from 1 to k). This is the L1 distance between f and Zi (the ith row of Z). 
+Classify to the group with lowest L1 distance or equivalently argi rain Li 
+We call this the ECOC PACT. Each row in the coding matrix corresponds to a unique (non- 
+minimal) coding for the appropriate class. Dietterich's motivation was that this allowed 
+errors in individual classifiers to be corrected so if a small number of classifiers gave a 
+bad fit they did not unduly influence the final classification. Several PiC's have been tested. 
+The best results were obtained by using tree's, so all the experiments in this paper are stated 
+using a standard CART PiC. Note however, that the theorems are general to any PiC. 
+In the past it has been assumed that the improvements shown by this method were at- 
+tributable to the error coding structure and much effort has been devoted to choosing an 
+optimal coding matrix. In this paper we develop results which suggest that a randomized 
+coding matrix should match (or exceed) the performance of a designed matrix. 
+2 The Coding Matrix 
+Empirical results (see Dietterich and Bakiri (1995)) suggest that the ECOC PaCT can pro- 
+duce large improvements over a standard k class tree classifier. However, they do not shed 
+any light on why this should be the case. To answer this question we need to explore its 
+probability structure. The coding matrix, Z, is central to the PACT. In the past the usual 
+approach has been to choose one with as large a separation between rows (Zi) as possible 
+(in terms of hamming distance) on the basis that this allows the largest number of errors 
+to be corrected. In the next two sections we will examine the tradeoffs between a designed 
+(deterministic) and a completely randomized matrix. 
+Some of the results that follow will make use of the following assumption. 
+k 
+= = q j = 1,... ,B (1) 
+i=1 
+where qi - P((i [ X) is the posterior probability that the test observation is from group 
+i given that our predictor variable is X. This is an unbiasedness assumption. It states that 
+on average our classifier will estimate the probability of being in super group one correctly. 
+The assumption is probably not too bad given that trees are considered to have low bias. 
+2.1 Deterministic Coding Matrix 
+Let/)i = 1 - 2Li/B for i = 1... k. Notice that arg/rain Li -' argi max/5)i so using Di 
+to classify is identical to the ECOC PACT. Theorem 3 in section 2.2 explains why this is an 
+intuitive transformation to use. 
+Obviously no PaCT can outperform the Bayes Classifier. However we would hope that it 
+would achieve the Bayes Error Rate when we use the Bayes Classifier as our PiC for each 
+2 class problem. We have defined this property as Bayes Optimality. Bayes Optimality is 
+essentially a consistency result It states, if our PiC converges to the Bayes Classifier, as 
+the training sample size increases, then so will the PACT. 
+Definition 1 A PaCT is said to be Bayes Optimal if, for any test set, it always classifies to 
+the bayes group when the Bayes Classifier is our PiC. 
+For the ECOC PaCT this means that arg i max qi = argi max hi, for all points in the 
+predictor space, when we use the Bayes Classifier as our PiC. However it can be shown 
+that in this case 
+B 
+2 
+IDi = I -  E qt E(Ztj - Zij) 2 i= 1,... ,k 
+li j=l 
+544 G. James and T. Hastie 
+It is not clear from this expression why there should be any guarantee that argi max D i = 
+arg i max qi. In fact the following theorem tells us that only in very restricted circumstances 
+will the ECOC PaCT be Bayes Optimal. 
+Theorem 1 The Error Coding method is Bayes Optimal iff the Hamming distance between 
+every pair of rows of the coding matrix is equal. 
+The hamming distance between two binary vectors is the number of points where they 
+differ. For general B and k there is no known way to generate a matrix with this property 
+so the ECOC PaCT will not be Bayes Optimal. 
+2.2 Random Coding Matrix 
+We have seen in the previous section that there are potential problems with using a deter- 
+ministic matrix. Now suppose we randomly generate a coding matrix by choosing a zero 
+or one with equal probability for every coordinate. Let i = E(1 -_ 2[/32 - Zil I T) where 
+T is the training set. Then tti is the conditional expectation of Di and we can prove the 
+following theorem. 
+Theorem 2 For a random coding matrix, conditional on T, argi max )i --+ argi max/i 
+a.s. as B - oc. Or in other words the classification from the ECOC PaCT approaches the 
+classification from just using argi max Ii a.s. 
+This leads to corollary 1 which indicates we have eliminated the main concern of a deter- 
+ministic matrix. 
+Corollary 1 When the coding matrix is randomly chosen the ECOC PaCT is asymptoti- 
+cally Bayes Optimal ie argi max Oi - arg i max qi a.s. as t3 --, oc 
+This theorem is a consequence of the strong law. Theorems 2 and 3 provide motivation for 
+the ECOC procedure. 
+Theorem 3 Under assumption 1 for a randomly generated coding matrix 
+E)i - Elti -- qi i = 1... k 
+This tells us that Oi is an unbiased estimate of the conditional probability so classifying to 
+the maximum is in a sense an unbiased estimate of the Bayes classification. 
+Now theorem 2 tells us that for large B the ECOC PaCT will be similar to classifying using 
+arg i max Pi only. However what we mean by large depends on the rate of convergence. 
+Theorem 4 tells us that this rate is in fact exponential. 
+Theorem 4 If we randomly choose Z then, conditional on T, for any fixed X 
+Pr(argimaxl)i  argi max/i ) _< (k- 1).e -rob 
+for some constant m. 
+Note that theorem 4 does not depend on assumption 1. This tells us that the error rate for 
+the ECOC PaCT is equal to the error rate using argi max/ti plus a term which decreases 
+exponentially in the limit. This result can be proved using Hoeffding's inequality (Hoeffd- 
+ing (1963)). 
+Of course this only gives an upper bound on the error rate and does not necessarily indicate 
+the behavior for smaller values of B. Under certain conditions a Taylor expansion indicates 
+that Pr(arg i maxDi  argi max/i)  0.5 -- rnx/ for small values of rnx/. So we 
+The Error Coding and Substitution PaCTs 545 
+o 
+o 
+i 1/sqrt(B) convergence 
+50 100 150 200 
+Figure 1: Best fit curves for rates 1/x/- and 1/B 
+might expect that for smaller values of B the error rate decreases as some power of B but 
+that as B increases the change looks more and more exponential. 
+To test this hypothesis we calculated the error rates for 6 different values of B 
+(15, 26,40, 70,100,200)on the LETFER data set (available from the Irvine Repository 
+of machine learning). Each value of B contains 5 points corresponding to 5 random matri- 
+ces. Each point is the average over 20 random training sets. Figure 1 illustrates the results. 
+Here we have two curves. The lower curve is the best fit of 1/x/ to the first four groups. 
+It fits those groups well but under predicts errors for the last two groups. The upper curve 
+is the best fit of lIB to the last four groups. It fits those groups well but over predicts errors 
+for the first two groups. This supports our hypothesis that the error rate is moving through 
+the powers of B towards an exponential fit. 
+We can see from the figure that even for relatively low values of B the reduction in error 
+rate has slowed substantially. This indicates that almost all the remaining errors are a result 
+of the error rate of argi max/ti which we can not reduce by changing the coding matrix. 
+The coding matrix can be viewed as a method for sampling from the distribution of 
+1 - 2 [j -- Zij [. If we sample randomly we will estimate/i (its mean). It is well known that 
+the optimal way to estimate such a parameter is by random sampling so it is not possible to 
+improve on this by designing the coding matrix. Of course it may be possible to improve 
+on argi max/i by using the training data to influence the sampling procedure and hence 
+estimating a different quantity. However a designed coding matrix does not use the training 
+data. It should not be possible to improve on random sampling by using such a procedure 
+(as has been attempted in the p

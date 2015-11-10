@@ -1,0 +1,157 @@
+Bayesian Unsupervised Learning of 
+Higher Order Structure 
+Michael S. Lewicki Terrence J. Sejnowski 
+lewicki�salk. edu terry�salk. edu 
+The Salk Institute 
+Howard Hughes Medical Institute 
+Computational Neurobiology Lab 
+10010 N. Torrey Pines Rd. 
+La Jolla, CA 92037 
+Abstract 
+Multilayer architectures such as those used in Bayesian belief net- 
+works and Helmholtz machines provide a powerful framework for 
+representing and learning higher order statistical relations among 
+inputs. Because exact probability calculations with these mod- 
+els are often intractable, there is much interest in finding approxi- 
+mate algorithms. We present an algorithm that efficiently discovers 
+higher order structure using EM and Gibbs sampling. The model 
+can be interpreted as a stochastic recurrent network in which ambi- 
+guity in lower-level states is resolved through feedback from higher 
+levels. We demonstrate the performance of the algorithm on bench- 
+mark problems. 
+I Introduction 
+Discovering high order structure in patterns is one of the keys to performing complex 
+recognition and discrimination tasks. Many real world patterns have a hierarchical 
+underlying structure in which simple features have a higher order structure among 
+themselves. Because these relationships are often statistical in nature, it is natural 
+to view the process of discovering such structures as a statistical inference problem 
+in which a hierarchical model is fit to data. 
+Hierarchical statistical structure can be conveniently represented with Bayesian 
+belief networks (Pearl, 1988; Lauritzen and Spiegelhalter, 1988; Neal, 1992). These 
+530 M. S. Lewicki and T. J. Sejnowski 
+models are powerful, because they can capture complex statistical relationships 
+among the data variables, and also mathematically convenient, because they allow 
+efficient computation of the joint probability for any given set of model parameters. 
+The joint probability density of a network of binary states is given by a product of 
+conditional probabilities 
+P(S1... Sn[W) = H P(Si[pa[Si], W) (1) 
+i 
+where W is the weight matrix that parameterizes the model. Note that the prob- 
+ability of an individual state Si depends only on its parents. This probability is 
+given by 
+P(Si = 1]pa[Si], W) = h(y Sjwji) (2) 
+J 
+where wji is the weight from $j to $i (wji = 0 for j < i). 
+The weights specify a hierarchical prior on the input states, which are the fixed 
+subset of states at the lowest layer of units. The active parents of state $i represent 
+the underlying causes of that state. The function h specifies how these causes are 
+combined to give the probability of $i. We assume h to be the noisy OR function, 
+h(u) = 1 - exp(-u), u >= 0. 
+2 Learning Objective 
+The learning objective is to adapt W to find the most probable explanation of the 
+input patterns. The probability of the input data is 
+P(D,:,,IW) = II P(D,JW) (3) 
+P(D,IW) is computed by marginalizing over all states of the network 
+v(r)lw) = v(r)ls, w)v(slw) 
+(4) 
+Because the number of different states, S, is exponential in the number of units, 
+computing the sum exactly is intractable and must be approximated. The nature 
+of the learning tasks discussed here, however, allow us to make accurate approxi- 
+mations. A desirable property for representations is that most patterns have just 
+one or a few possible explanations. In this case, all but a few terms P(DnlS,W ) 
+will be zero, and, as described below, it becomes feasible to use sampling based 
+methods which select S according to P(SIDn , W). 
+3 Inferring the Internal Representation 
+Given the input data, finding its most likely explanation is an inference process. 
+Although it is simple to calculate the probability of any particular network state, 
+there is no simple way to determine the most probable state given input D. A 
+general approach to this problem is Gibbs sampling (Pearl, 1988; Neal, 1992). 
+Bayesian Unsupervised Learning of Higher Order Structure 531 
+In Gibbs sampling, each state $i of the network is updated iteratively according to 
+the probability of Si given the remaining states in the network. This conditional 
+probability can be computed using 
+P($i[$j : j  i,W) oc P($i[pa[$i],W) II P($jlpa[$],$,W) (5) 
+jech[$i] 
+where ch[Si] indicates the children of state S. In the limit, the ensemble of states 
+obtained by this procedure will be typical samples from P(SID, W). More generally, 
+any subset of states can be fixed and the rest sampled. 
+The Gibbs equations have an interpretation in terms of a stochastic recurrent neural 
+network in which feedback from higher levels influences the states at lower levels. 
+For the models defined here, the probability of Si changing state given the remaining 
+states is 
+1 
+P(Si -- 1-$i15j; j  i, W) = 1 + exp(-Axi) (6) 
+The variable Axi indicates how much changing the state $i changes the probability 
+of the network state 
+Axi = logh(ui;1-Si)- logh(ui;Si) +  logh(uj+Sij;Sj) -logh(uj;Sj) (7) 
+jch[Si] 
+where h(u; a) = h(u) if a = I and 1 - h(u) if a = 0. The variable ui is the causal 
+input to Si, given by  Swi. The variable 5 5 specifies the change in u s for a 
+change in Si: 5ij = +Sjw 0 if Si = 0 and -Sw if Si = 1. 
+The first two terms in (7) can be interpreted as the feedback from higher levels. The 
+sum can be interpreted as the feedforward input from the children of Si. Feedback 
+allows the lower level units to use information only computable at higher levels. The 
+feedforward terms typically dominate the expression, but the feedback becomes the 
+determining factor when the feedforward input is ambiguous. 
+For general distributions, Gibbs sampling can require many samples to achieve a 
+representative samples. But if there is little ambiguity in the internal representation, 
+as is the goal, Gibbs sampling can be as efficient as a single feedforward pass. One 
+potential problem is that Gibbs sampling will not work before the weights have 
+adapted, when the representations are highly ambiguous. We show below, however, 
+that it is not necessary to sample for long periods in order for good representations 
+to be learned. As learning proceeds, the internal representations obtained with 
+limited Gibbs sampling become increasingly accurate. 
+4 Adapting the Weights 
+The complexity of the model is controlled by placing a prior on the weights. For 
+the form of the noisy OR function in which all weights are constrained to be pos- 
+itive, we assume the prior to be the product of independent gamma distributions 
+parameterized by a and/. The objective function becomes 
+� = P(D,..IW)P(Wla, 
+(s) 
+A simple and efficient EM-type formula for adapt the weights can be derived by 
+setting O�/wij to zero and solving for wij. Using the transformations fij - I - 
+532 M. S. Lewicki and T. J. Sejnowski 
+exp(-wij) and gi -- 1 - exp(-ui) we obtain 
+/ 
+= (9) 
+where S (n) is the state obtained with Gibbs sampling for the nth input pattern. 
+The variable fij can be interpreted as the frequency of state $j given cause $i. The 
+sum in the above expression is a weighted average of the number of times $j was 
+active when $i was active. The ratio fij/gj weights each term in the sum inversely 
+according to the number of different causes for $j. If $i is the unique cause of $j 
+then fij = gj and the term would have full weight. 
+A straightforward application of the learning algorithm would adapt all the weights 
+at the same time. This does not produce good results, however, because there 
+is nothing to prevent the model from learning overly strong priors. This can be 
+prevented by adapting the weights in the upper levels after the weights in the lower 
+levels have stabilized. This allows the higher levels to adapt to structure that is 
+actually present in the data. We have obtained good results from both the naive 
+method of adapting the lowest layers first and from more sophisticated methods 
+where stability was based on how often a unit changed during the Gibbs sampling. 
+5 Examples 
+In the following examples, the weight prior was specified with a - 1.0 and/ - 1.5. 
+Weights were set to random values between 0.05 and 0.15. Gibbs sampling was 
+stopped if the maximum state change probability was less than 0.05 or after 15 
+sweeps through the units. Weights were reestimated after blocks of 200 patterns. 
+Each layer of weights was adapted for 10 epochs before adapting the next layer. 
+A High Order Lines Problem. The first example illustrates that the algorithm 
+can discover the underlying features in complicated patterns and that the higher 
+layers can capture interesting higher order structure. The first dataset is a variant of 
+the lines problem proposed by FSlditk (1989). The patterns in the dataset are com- 
+posed of horizontal and vertical lines as illustrated in figure 1. Note that, although 
+@- 
+Figure 1: Dataset for the high order lines problem. (A) Patterns are generated by 
+selecting one of the pattern types according to the probabilities next to the arrows. Top 
+patterns are copied to the input. The horizontal and vertical lines on the left are selected 
+with probability 0.3. (B) Typical input patterns. 
+Bayesian Unsupervised Learning of Higher Order Structure 533 
+the datasets are displayed on a 2-D grid, the network makes no assumptions about 
+topography. Because the network is fully connected, all spatial arrangements of the 
+inputs are identical. The weights learned by the network are shown in figure 2. 
+Figure 2: The weights in a 25-10-5 network after training. Blocks indicate the weights to 
+each unit. Square size is proportional to the weight values. Second layer units capture the 
+structure of the horizontal and vertical lines. Third layer units capture the correlations 
+among the lines. The first unit in the third layer is active when the 'll' is present. The 
+second, fourth, and fifth units have learned to represent the '+', '=', and ']' respectively, 
+with the remaining unit acting as a bias. 
+The Shifter Problem. The s

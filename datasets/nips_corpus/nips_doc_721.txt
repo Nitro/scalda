@@ -1,0 +1,172 @@
+Supervised learning from incomplete 
+data via an EM approach 
+Zoubin Ghahramani and Michael I. Jordan 
+Department of Brain & Cognitive Sciences 
+Massachusetts Institute of Techuology 
+Cambridge, MA 02139 
+Abstract 
+Real-world learning tasks may involve high-dimensional data sets 
+with arbitrary patterns of missing data. In this paper we present 
+a framework based on maximum likelihood density estimation for 
+learning from such data. sets. We use mixture models for the den- 
+sity estimates and make two distinct appeals to the Expectation- 
+Maximization (EM) principle (Dempster et al., 1977) in deriving 
+a learning algorithm--EM is used both for the estimation of mix- 
+ture components and for coping with missing data. The result- 
+ing algorithm is applicable to a wide range of supervised as well 
+as unsupervised learning problems. Results kom a classification 
+benchmark--the iris data set--are presented. 
+1 Introduction 
+Adaptive systems generally operate in environments that are fraught with imper- 
+fections; nonetheless they must cope with these imperfections and learn to extract 
+as much relevant information as needed for their particular goals. One form of 
+imperfection is incompleteness in sensing information. Incompleteness can arise ex- 
+trinsically from the data generation process and intrinsically from failures of the 
+system's sensors. For example, an object recognition system must be able to learn 
+to classify images with occlusions, and a robotic controller must be able to integrate 
+multiple sensors even when only a fraction may operate at any given time. 
+In this paper we present a framework--derived from parametric statistics--for learn- 
+120 
+Supervised Learning from Incomplete Data via an EM Approach 121 
+ing from data sets with arbitrary patterns of iucompleteness. Learning in this frame- 
+work is a classical estimation problem requiring an explicit probabilistic model and 
+an algorithm for estimating the parameters of the model. A possible disadvantage 
+of parametric methods is their lack of flexibility when compared with nonparamet- 
+ric methods. This problem, however, can be largely circumvented by the use of 
+mixture models (McLachlan and Basford, 1988). Mixture models combine much of 
+the flexibility of nonparametric methods with certain of the analytic advantages of 
+parametric methods. 
+Mixture models have been utilized recently for supervised learning problems in the 
+form of the mixlures of experts architecture (Jacobs et al., 1991; Jordan and 
+Jacobs, 1994). This architecture is a parametric regression model with a modular 
+structure similar to the nonparametric decision tree and adaptive spline models 
+(Breiman et al., 1984; Friedman, 1991). The approach presented here differs from 
+these regression-based approaches in that the goal of learning is to estimate the 
+density of the data. No distinction is made between input and output variables; the 
+joint density is estimated and this estimate is then used to form an input/output 
+map. Similar approaches have been discussed by Specht (1991) and Tresp et al. 
+(1993). To estimate the vector function y -- f(x) the joint density P(x,y) is esti- 
+mated and, given a particular input x, the conditional density P(yl x) is formed. 
+To obtain a single estimate of y rather than the full conditional density one can 
+evaluate  = E(y[x), the expectation of y given x. 
+The density-based approach to learning can be exploited in several ways. First, 
+having an estimate of the joint density allows for the representation of any rela- 
+tion between the variables. From P(x,y), we can estimate ' -- f(x), the inverse 
+ _. f-1 (y), or any other relation between two subsets of the elements of the con- 
+catenated vector (x, y). 
+Second, this density-based approach is applicable both to supervised learning and 
+unsupervised learning in exactly the same way. The only distinction between su- 
+pervised and unsupervised learning in this framework is whether some portion of 
+the data vector is denoted as input and another portion as target. 
+Third, as we discuss in this paper, the density-based approach deals naturally with 
+incomplete data, i.e. missing values in the data set. This is because the problem 
+of estimating mixture densities can itself be viewed as a missing data problem (the 
+labels for the component densities are missing) and an Expectation-Maximization 
+(EM) algorithm (Dempster et al., 1977) can be developed to handle both kinds of 
+missing data. 
+Density estimation using EM 
+This section outlines the basic learning algorithm for finding the maximum like- 
+lihood parameters of a mixture model (Dempster et al., 1977; Duda and Hart, 
+1973; Nowlan, 1991). We assume that the data Y = {x,..., XN} are generated 
+independently froin a mixture density 
+M 
+P(xi) = E P(xilc�J;OJ )P(j)' (1) 
+j=l 
+122 Ghahramani and Jordan 
+where each component of the mixture is denoted cod and parametrized by Oj. From 
+equation (1) and the independence assumption we see that the log likelihood of the 
+parameters given the data set is 
+N M 
+t(01x) - log P(xilw; (2) 
+i=1 j=l 
+By the maximum likelihood principle the best model of the data has parameters 
+that maximize/(01l'). This function, however, is not easily maximized numerically 
+because it involves the log of a sum. 
+Intuitively, there is a credit-assignment problem: it is not clear which component 
+of the mixture generated a given data point and thus which parameters to adjust 
+to fit that data point. The EM algorithm for mixture models is an iterative method 
+for solving this credit-assignment problem. The intuition is that if one had access 
+to a hidden random variable z that indicated which data point was genera. ted 
+by which component, then the maximization problem would decouple into a set 
+of simple maximizations. Using the indicator variable z, a complete-data log 
+likelihood function can be written 
+N M 
+/,(0IX, Z) - 1ogP(x, lz,;O)P(zi;O), (3) 
+i=1 j=l 
+which does not involve a log of a summation. 
+Since z is unknown l, cannot be utilized directly, so we instead work with its ex- 
+pectation, denoted by Q(OlOk). As shown by (Dempster et al., 1977), t(01x) can be 
+maximized by iterating the following two steps: 
+E step: Q(OlOk) = 
+M step: 0k+ = argmax Q(OlOk). (4) 
+0 
+The E (Expectation) step computes the expected complete data log likelihood and 
+the M (Maximization) step finds the parameters that maximize this likelihood. 
+These two steps form the basis of the EM algorithm; in the next two sections we 
+will outline how they can be used for real and discrete density estimation. 
+2.1 Real-valued data: mixture of Gaussians 
+Real-valued data can be lnodeled as a mixture of Gaussians. For this model the 
+E-step simplifies to computing hij = E[zij [xi, Ok], the probability that Gaussian j, 
+as defined by the parameters estimated at time step k, generated data point. i. 
+^ k)T  - 
+I1-/2exp{-�(xi - tj Ej 'k(xi- )} 
+hij = 1 [[-1/2xp{  x . (5) 
+The M-step re-estimates the means and covariances of the Gaussians I using the 
+data set weighted by the hij' 
+a) ' k+l _ E4_-i hijxl 
+Ij -- EiN__i hij ' 
+^k+l E/V_.i hij(xi /.3k.' + 1 ) (xi . k+l)T 
+(6) 
+Though this derivation assumes equal priors for the Gaussians, if the priors are viewed 
+as mixing parameters they can also be learned in the maximization step. 
+Supervised Learning from Incomplete Data via an EM Approach 123 
+2.2 Discrete-valued data: mixture of Bernoullis 
+D-dimensional binary data x = (Xl,..., Xd,...ZD), Zd ( {0, 1}, can be modeled as 
+a mixture of M Bernoulli densities. That is, 
+M D 
+P(xlO ) = y. P(wj) H pJ(1 - jd) (1-xa). 
+j----1 d=l 
+(7) 
+For this model tile E-step involves computing 
+d=l /jd k -- Ija] 
+% = i - 
+/-l=l 11d=l tld k -- r  
+(8) 
+and the M-step again re-estimates the parameters by 
+/,k4-1 __ Y-/N'-I hijXi (9) 
+More generally, discrete or categorical data can be modeled as generated by a mix- 
+ture of multinonlial densities and similar derivations for the learning algorithm can 
+be applied. Finally, the exteusion to data with mixed real, binary, and categorical 
+dimensions call be readily derived by assuming a joint density with mixed compo- 
+nents of the three types. 
+3 Learning from incomplete data 
+In the previous section we presented one aspect of the EM algorithm: learning 
+mixture models. Another important application of EM is to learning froin data 
+sets with missing values (Little and Rubin, 1987; Dempster et al., 1977). This 
+application has been pursued in the statistics literature for non-mixture density 
+estimation problems; in this paper we combine this application of EM with that of 
+learning mixture parameters. 
+We assume that. the data set ,� = {Xl,..., XN} is divided into an observed com- 
+ponent .�o and a missing component ,l'm. Similarly, each data vector xi is divided 
+X � 
+into ( i, x?) where each data vector can have different missing components--this 
+would be denoted by superscript mi and oi, but we have simplified the notation for 
+the sake of clarity. 
+To handle missing data we rewrite the EM algorithln as follows 
+E step: O(OlOk ) = E[I(OI.t'�,xm,z)IX�,Oi] 
+m step: 0+1 = argmax O(O[Ok). (10) 
+0 
+Comparing to equation (4) we see that aside from the indicator variables Z we have 
+added a second form of incomplete data., ,�m, correspouding to the missing values 
+in the data set. The E-step of the algorithm estimates both these forms of missing 
+information; in essence it uses the current estimate of the data density to complete 
+the missing values. 
+124 Ghahramani and Jordan 
+3.1 Real-valued data: mixture of Gaussians 
+We start by writing the log likelihood of the complete data, 
+N M N M 
+/,(0IX�, Xm, Z) - ZZzijlogP(xilzi,O)+ ZEzijlogP(zilO). (11) 
+i j i j 
+We can ignore the second term since we will only be estimating the parameters of 
+the P(xilzi, 0). Using equation (11) for the mixture ot' Gaussians wc note that if 
+only the indicator variables zl are missing, the E step ca

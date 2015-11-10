@@ -1,0 +1,172 @@
+A Self-Organizing Integrated Segmentation And 
+Recognition Neural Net 
+Jim Keeler * 
+MCC 
+3500 West Balcones Center Drive 
+Austin, TX 78729 
+David E. Rumelhart 
+Psychology Department 
+Stanford University 
+Stanford, CA 94305 
+Abstract 
+We present a neural network algorithm that simultaneously performs seg- 
+mentation and recognition of input patterns that self-organizes to detect 
+input pattern locations and pattern boundaries. We demonstrate this neu- 
+ral network architecture on character recognition using the NIST database 
+and report on results herein. The resulting system simultaneously seg- 
+ments and recognizes touching or overlapping characters, broken charac- 
+ters, and noisy images with high accuracy. 
+1 INTRODUCTION 
+Standard pattern recognition systems usually involve a segmentation step prior to 
+the recognition step. For example, it is very common in character recognition to 
+segment characters in a pre-processing step then normalize the individual characters 
+and pass them to a recognition engine such as a neural network, as in the work of 
+LeCun et al. 1988, Martin and Pittman (1988). 
+This separation between segmentation and recognition becomes unreliable if the 
+characters are touching each other, touching bounding boxes, broken, or noisy. 
+Other applications such as scene analysis or continuous speech recognition pose 
+similar and more severe segmentation problems. The difficulties encountered in 
+these applications present an apparent dilemma: one cannot recognize the patterns 
+*keeler@mcc.com Reprint requests: coila@mcc.com or at the above address. 
+496 
+A Self-Organizing Integrated Segmentation and Recognition Neural Net 497 
+Sheets of Sz 
+9 Exponential Outputs: Pz !-t-$z 
+\ Units: Block 3 
+8 \ -- e 
+7 
+6 
+4 
+! 
+! 
+! 
+! 
+! 
+I 
+! 
+! 
+I 
+I II 
+o 
+I \ 
+Targets 
+Hidden 
+Block 2 
+Summing Units: 
+Sz=,Z, cyz 
+Hidden 
+Block 1 
+hijk 
+Grey-scale 
+Input image 
+l(x,y) 
+Figure 1: The ISR network architecture. The input image may contain several 
+characters and is presented to the network in a two-dimensional grey-scale image. 
+The units in the first block, hijk, have linked-local receptive field connections to the 
+input image. Block 2, Hz,y,z,, has a three-dimensional linked-local receptive field 
+to block 1, and the exponential unit block, block 3, has three-dimensional linked- 
+local receptive field connections to block 2. These linked fields insure translational 
+invariance (except for edge-effects at the boundary). The exponential unit block 
+has one layer for each output category. These units are the output units in the test 
+mode, but hidden units during training: the exponential unit activity is summed 
+over (sz) to project out the positional information, then converted to a probability 
+pz. Once trained, the exponential unit layers serve as smart histograms giving 
+sharp peaks of activity directly above the corresponding characters in the input 
+image, as shown to the left. 
+498 Keeler and Rumelhart 
+until they are segmented, yet in many cases one cannot segment the patterns until 
+they are recognized. 
+A solution to this apparent dilemm is to simultaneously segment and recognize 
+the patterns. Integration of the segmentation and recognition steps is essential for 
+further progress in these difficult pattern recognition tasks, and much effort has been 
+devoted to this topic in speech recognition. For example, Hidden Markov models 
+integrate the task of segmentation and recognition as a part of the word-recognition 
+module. Nevertheless, little neural network research in pattern recognition has 
+focused on the integrated segmentation and recognition (ISR) problem. 
+There are several ways to achieve ISR in a neural network. The first use of back- 
+propagation ISR neural networks for character recognition was reported by Keeler, 
+Rumelhart and Leow (1991a). The ISR neural network architecture is similar to 
+the time-delayed neural network architecture for speech recognition used by Lang, 
+Hinton, and Waibel (1990). 
+The following section outlines the neural network algorithm and architecture. De- 
+tails and rationale for the exact structure and assumptions of the network can be 
+found in Keeler et al. (1991a,b). 
+2 NETWORK ARCHITECTURE AND ALGORITHM 
+The basic organization of the network is illustrated in Figure 2. The input consists 
+of a two-dimensional grey-scale image representing the pattern to be processed. We 
+designate this input pattern by the two-dimensional field I(x, y). In general, we 
+assume that any pattern can be presented at any location and that the characters 
+may touch, overlap or be broken or noisy. The input then projects to a linked-local- 
+receptive-field block of sigmoidal hidden units (to enforce translational invariance). 
+We designate the activation of the sigmoidal units in this block by 
+The second block of hidden units, H,y,z,, is a linked-local receptive field block of 
+sigmoidal units that receives input from a three-dimensional receptive field in the 
+hijk block. In a standard neural network architecture we would normally connect 
+block H to the output units. However we connect block H to a block of exponential 
+units X,yz. The X block serves as the outputs after the network has been trained; 
+there is a sheet of exponential units for each output category. These units are 
+connected to block H via a linked-local receptive field structure. 
+where the net input to the unit is 
+and ww is the weight from hidden unit H,v,,, to the exponential unit 
+Since we use linked weights in each block, the entire structure is translationally 
+invariant. We make use of this property in our training algorithm and project out 
+the positional information by summing over the entire layer, $ = Y]v Xw. This 
+allows us to give non-specific target information in the form of the input contains 
+a b and a 3, but I will not say where. We do this by converting the summed 
+$a 
+information it/to an output probability, p - 
+A Self-Organizing Integrated Segmentation and Recognition Neural Net 499 
+2.1 The learning Rule 
+There are two objective functions that we have used to train ISR networks: cross 
+entropy and total-sum-square-error. I = -z tzlnpz + (1- tz)ln(1- pz), where tz 
+equals I if pattern z is presented and 0 otherwise. Computing the gradient with 
+respect to the net input to a particular exponential unit yields the following term 
+in our learning rule: 
+O__l = (t _ p) X, (2) 
+It should be noted that this is a kind of competitive rule in which the learning is 
+proportional to the relative strength of the activation at the unit at a particular 
+location in the X layer to the strength of activation in the entire layer. For example, 
+suppose that X2,3, = 1000 and X,3,= 100. Given the above rules, X2,3,5 would 
+receive about 10 times more of the output error than the unit X,a,. Thus the units 
+compete with each other for the credit or blame of the output, and the rich get 
+richer until the proper target is achieved. This favors self-organization of highly 
+localized spikes of activity in the exponential layers directly above the particular 
+character that the exponential layer detects (smart histograms  shown in Fig- 
+ure 1). Note that we never give positional information in the network but that the 
+network self-organizes the exponential unit activity to discern the positional infor- 
+mation. The second function is the total-sum-square error, E =  (t - p)2. For 
+the total-sum-square error meure, the gradient term becomes 
+OE = - 
+Again this h a competitive term, but the competition is only important for Xyz 
+large, otherwise the denominator is dominated by 1 for small y Xyz. We used 
+the quadratic error function for the networks reported in the next section. 
+3 NIST DATABASE RECOGNITION 
+3.1 Data 
+We tested this neural network algorithm on the problem of segmenting and rec- 
+ognizing handwritten numerals from the NIST database. This database contains 
+approximately 273,000 samples of handwritten numerals collected from the Bureau 
+of Census field staff. There were 50 different forms used in the study, each with 
+33 fields, 28 of which contain handwritten numerals ranging in length from 2 to 10 
+digits per field. We only used fields of length 2 to 6 (field numbers 6 to 30). We 
+used two test sets: a small test set, Test Set A of approximately 4,000 digits, 1,000 
+fields, from forms labeled f1800 to f1840 and a larger test set, Test Set B, containing 
+20,000 numerals 5,000 fields and 200 forms from f1800 to f1899 and f2000 to f2199. 
+We used two different training sets: a hand-segmented training set containing ap- 
+proximately 33,000 digits from forms f0000 to f0636 (the Segmented Training Set) 
+and another training set that was never hand-segmented from forms f0000 to f1800 
+(the Unsegmented Training Set. We pre-processed the fields with a simple box- 
+removal and size-normalization program before they were input to the ISR net. 
+500 Keeler and Rumelhart 
+The hand segmentation was conventional in the sense that boxes were drawn around 
+each of the characters, but we the boxes included any other portions of characters 
+that may be nearby or touching in the natural context. Note that precise labeling of 
+the characters is not essential at all. We have trained systems where only the center 
+information the characters was used and found no degradation in performance. This 
+is due to the fact that the system self-organizes the positional information, so it is 
+only required that we know whether a character is in a field, not precisely where. 
+3.2 TRAINING 
+We trained several nets on the NIST database. The best training procedure was 
+as follows: Step 1): train the network to an intermediate level of accuracy (96% 
+or so on single characters, about 12 epochs of training set 1). Note that when we 
+train on single characters, we do not need isolated characters - there are often 
+portions of other nearby characters within the input field. Indeed, it helps the 

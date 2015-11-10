@@ -1,0 +1,143 @@
+Learning the structure of similarity 
+Joshua B. Tenenbaum 
+Department of Brain and Cognitive Sciences 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+jbtpsyche. mir. edu 
+Abstract 
+The additive clustering (ADCL US)model (Shepard & Arabie, 1979) 
+treats the similarity of two stimuli as a weighted additive measure 
+of their common features. Inspired by recent work in unsupervised 
+learning with multiple cause models, we propose a new, statistically 
+well-motivated algorithm for discovering the structure of natural 
+stimulus classes using the ADCLUS model, which promises substan- 
+tial gains in conceptual simplicity, practical efficiency, and solution 
+quality over earlier efforts. We also present preliminary results with 
+artificial data and two classic similarity data sets. 
+1 INTRODUCTION 
+The capacity to judge one stimulus, object, or concept as similarto another is thought 
+to play a pivotal role in many cognitive processes, including generalization, recog- 
+nition, categorization, and inference. Consequently, modeling subjective similarity 
+judgments in order to discover the underlying structure of stimulus representations 
+in the brain/mind holds a central place in contemporary cognitive science. Mathe- 
+matical models of similarity can be divided roughly into two families: spatial models, 
+in which stimuli correspond to points in a metric (typically Euclidean) space and 
+similarity is treated as a decreasing function of distance; and set-theoretic models, in 
+which stimuli are represented as members of salient subsets (presumably correspond- 
+ing to natural classes or features in the world) and similarity is treated as a weighted 
+sum of common and distinctive subsets. 
+Spatial models, fit to similarity judgment data with familiar multidimensional scal- 
+ing (MD$) techniques, have yielded concise descriptions of homogeneous, perceptual 
+domains (e.g. three-dimensional color space), often revealing the salient dimensions 
+of stimulus variation (Shepard, 1980). Set-theoretic models are more general, in 
+principle able to accomodate discrete conceptual structures typical of higher-level 
+cognitive domains, as well as dimensional stimulus structures more common in per- 
+4 J.B. TENENBAUM 
+ception (Tversky, 1977). In practice, however, the utility of set-theoretic models is 
+limited by the hierarchical clustering techniques that underlie conventional methods 
+for discovering the discrete features or classes of stimuli. Specifically, hierarchical 
+clustering requires that any two classes of stimuli correspond to disjoint or properly 
+inclusive subsets, while psychologically natural classes may correspond in general to 
+arbitrarily overlapping subsets of stimuli. For example, the subjective similarity of 
+two countries results from the interaction of multiple geographic and cultural fac- 
+tors, and there is no reason a priori to expect the subsets of communist, African, or 
+French-speaking nations to be either disjoint or properly inclusive. 
+In this paper we consider the additive clustering (ADCL US) model (Shepard & Ara- 
+bie, 1979), the simplest instantiation of Tversky's (1977) general contrast model that 
+accommodates the arbitrarily overlapping class structures associated with multiple 
+causes of similarity. Here, the similarity of two stimuli is modeled as a weighted 
+additive measure of their common clusters: 
+K 
+ij =  wkfikfjk -]- c, (1) 
+k=l 
+where ij is the reconstructed similarity of stimuli i and j, the weight wk captures 
+the salience of cluster k, and the binary indicator variable fik equals i if stimulus i 
+belongs to cluster k and 0 otherwise. The additive constant c is necessary because the 
+similarity data are assumed to be on an interval scale.  As with conventional clus- 
+tering models, ADCLUS recovers a system of discrete subsets of stimuli, weighted by 
+salience, and the similarity of two stimuli increases with the number (and weight) 
+of their common subsets. ADCLUS, however, makes none of the structural assump- 
+tions (e.g. that any two clusters are disjoint or properly inclusive) which limit the 
+applicability of conventional set-theoretic models. Unfortunately this flexibility also 
+makes the problem of fitting the ADCLUS model to an observed similarity matrix 
+exceedingly dicult. 
+Previous attempts to fit the model have followed a heuristic strategy to minimize a 
+squared-error energy function, 
+= - = - 
+ij ij k 
+by alternately solving for the best cluster configurations fi given the current weights 
+w and solving for the best weights given the current clusters (Shepard &Arabie, 
+1979; Arabie& Carroll, 1980). This strategy is appealing because given the clus- 
+ter configuration, finding the optimal weights becomes a simple linear least-squares 
+problem? However, finding good cluster configurations is a difficult problem in com- 
+binatorial optimization, and this step h always been the weak point in previous 
+work. The original ADCLUS (Shepard & Arable, 1979) and later MAPCLUS (Ara- 
+ble & Carroll, 1980) algorithms employ ad hoc techniques of combinatorial optimiza- 
+tion that sometimes yield unexpected or uninterpretable final results. Certainly, no 
+rigorous theory exists that would explain why these approaches fail to discover the 
+underlying structure of a stimulus set when they do. 
+Essentially, the ADCLUS model is so challenging to fit because it generates similar- 
+ities from the interaction of many independent underlying causes. Viewed this way, 
+modeling the structure of similarity looks very similar to the multiple-cause learning 
+In the reminder of this paper, we absorb c into the sum over k, tang the sum over 
+k = 0,..., K, defining w0  c, and fing fio = 1, (Yi). 
+eStrictly speaking, because the weights are typicy constrned to be nonnegative, more 
+elaborate techniques than standard finear least-squares procedures may be required. 
+Learning the Structure of Similarity 5 
+problems that are currently a major focus of study in the neural computation litera- 
+ture (Ghahramani, 1995; Hinton, Dayan, et al., 1995; Saund, 1995; Neal, 1992). Here 
+we propose a novel approach to additive clustering, inspired by the progress and 
+promise of work on multiple-cause learning within the Expectation-Maximization 
+(EM) framework (Ghahramani, 1995; Neal, 1992). Our EM approach still makes 
+use of the basic insight behind earlier approaches, that finding {w} given {fik} is 
+easy, but obtains better performance from treating the unknown cluster memberships 
+probabilistically as hidden variables (rather than parameters of the model), and per- 
+haps more importantly, provides a rigorous and well-understood theory. Indeed, it 
+is natural to consider {fi} as unobserved features of the stimuli, complement- 
+ing the observed data {8ij } in the similarity matrix. Moreover, in some experimental 
+paradigms, one or more of these features may be considered observed data, if subjects 
+report using (or are requested to use) certain criteria in their similarity judgments. 
+2 ALGORITHM 
+2.1 Maximum likelihood formulation 
+We begin by formulating the additive clustering problem in terms of maximum like- 
+lihood estimation with unobserved data. Treating the cluster weights w = {w} 
+as model parameters and the unobserved cluster memberships f = {fi} as hidden 
+causes for the observed similarities s = {sij}, it is natural to consider a hierarchical 
+generative model for the complete data (including observed and unobserved com- 
+ponents) of the form p(s, f[w) = p(s]f, w)p(f[w). In the spirit of earlier approaches 
+to ADCLUS that seek to minimize a squared-error energy function, we take p(slf , w) 
+to be gaussian with common variance 
+p(s[f, w) cr exp{ 1 E(8i j _ ij)2} _-- exp{_ 1__ E(Si j _  wfifj)2}. (3) 
+i;j i;j k 
+Note that logp(s[f, w) is equivalent to -E/(2tr 2) (ignoring an additive constant), 
+where E is the energy defined above. In general, priors p(f[w) over the cluster 
+configurations may be useful to favor larger or smaller clusters, induce a dependence 
+between cluster size and cluster weight, or bias particular kinds of class structures, 
+but only uniform priors are considered here. In this case -E/(2tr 2) also gives the 
+complete data loglikelihood log p(s, f[w). 
+2.2 The EM algorithm for additive clustering 
+Given this probabilistic model, we can now appeal to the EM algorithm as the basis 
+for a new additive clustering technique. EM calls for iterating the following two- 
+step procedure, in order to obtain successive estimates of the parameters w that are 
+guaranteed never to decrease in likelihood (Dempster et al., 1977). In the E-step, we 
+calculate 
+1 (-E),,w(). (4) 
+Q(wlw �) = Ep(ftls, w(n)) logp(s, ft[w) _ 2tr 2 
+f, 
+Q(wlw �) is equivalent to the expected value of E as a function of w, averaged over 
+all possible configurations ft of the NK binary cluster memberships, given the ob- 
+served data s and the current parameter estimates w �. In the M-step, we maximize 
+Q(wl w(n)) with respect to w to obtain w (n+x). 
+Each cluster configuration ft contributes to the mean energy in proportion to its 
+probability under the gaussian generative model in (3). Thus the number of configu- 
+rations making significant contributions depends on the model variance a 2. For large 
+6 J.B. TENENBAUM 
+a 2, the probability is spread over many configurations. In the limiting case (r 2 - 0, 
+only the most likely configuration contributes, making EM effectively equivalent to 
+the original approaches presented in Section i that use only the single best cluster 
+configuration to solve for the best cluster weights at each iteration. 
+In line with the basic insight embodied less rigorously in these earlier algorithms, the 
+M-step still reduces to a simple (constrained) linear least-squares problem, because 
+the mean energy (E) = Zi7 j (8i2j -- 2sij -k wk(fikfjk) q- -kl WkWt(fikfjkfitfjl)), 
+like the energy E, is quadratic in the weights w. The E-step, which amounts to 
+

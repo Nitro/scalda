@@ -1,0 +1,185 @@
+Integrated Modeling and Control 
+Based on Reinforcement Learning 
+and Dynamic Programming 
+Richard S. Sutton 
+GTE Laboratories Incorporated 
+Waltham, MA 02254 
+Abstract 
+This is a summary of results with Dyna, a class of architectures for intel- 
+ligent systems based on approximating dynamic programming methods. 
+Dyna architectures integrate trial-and-error (reinforcement) learning and 
+execution-time planning into a single process operating alternately on the 
+world and on a learned forward model of the world. We describe and 
+show results for two Dyna architectures, Dyna-AHC and Dyna-Q. Using a 
+navigation task, results are shown for a simple Dyna-AHC system which 
+simultaneously learns by trial and error, learns a world model, and plans 
+optimal routes using the evolving world model. We show that Dyna-Q 
+architectures (based on Watkins's Q-learning) are easy to adapt for use in 
+changing environments. 
+1 Introduction to Dyna 
+Dyna architectures (Sutton, 1990) use learning algorithms to approximate the con- 
+ventional optimal control technique known as dynamic programming (DP) (Bell- 
+man, 1957; Bertsekas, 1987). DP itself is not a ]earning method, but rather a 
+computational method for determining optimal behavior given a complete model of 
+the task to be solved. It is very similar to state-space search, but differs in that 
+it is more incremental and never considers actual action sequences explicitly, only 
+single ctions at a time. This makes DP more amenable to incremental planning 
+at execution time, and also makes it more suitable for stochastic or incompletely 
+modeled environments, as it need not consider the extremely large number of se- 
+quences possible in an uncertain environment. Learned world models are likely 
+to be stochastic and uncertain, making DP approaches particularly promising for 
+471 
+472 Sutton 
+learning systems. Dyna architectures are those that learn a world model online 
+while using approximations to DP to learn and plan optimal behavior. 
+The theory of Dyna is based on the theory of DP and on DP's relationship to 
+reinforcement learning (Watkins, 1989; Barto, Sutton & Watkins, 1989, 1990), to 
+temporal-difference learning (Sutton, 1988), and to AI methods for planning and 
+search (Korf, 1990). Werbos (1987) has previously argued for the general idea of 
+building AI systems that approximate dynamic programming, and Whitehead & 
+Ballard (1989) and others (Sutton & Barto, 1981; Sutton & Pinette, 1985; Rumel- 
+hart et al., 1986; Lin, 1991; Riolo, 1991) have presented results for the specific 
+idea of augmenting a reinforcement learning system with a world model used for 
+planning. 
+2 Dyna-AHC: Dyna by Approximating Policy Iteration 
+The Dyna-AHC architecture is based on approximating a DP method known as 
+policy iteration (see Bertsekas, 1987). It consists of four components interacting as 
+shown in Figure 1. The policy is simply the function formed by the current set of 
+reactions; it receives as input a description of the current state of the world and 
+produces as output an action to be sent to the world. The world represents the 
+task to be solved; prototypically it is the robot's external environment. The world 
+receives actions from the policy and produces a next state output and a reward 
+output. The overall task is defined as maximizing the long-term average reward 
+per time step. The architecture also includes an explicit world model. The world 
+model is intended to mimic the one-step input-output behavior of the real world. 
+Finally, the Dyna-AHC architecture includes an evaluation function that rapidly 
+maps states to values, much as the policy rapidly maps states to actions. The 
+evaluation function, the policy, and the world model are each updated by separate 
+learning processes. 
+The policy is continually modified by an integrated planning/learning process. The 
+policy is, in a sense, a plan, but one that is completely conditioned by current input. 
+The planning process is incremental and can be interrupted and resumed at any 
+time. It consists of a series of shallow seaches, each typically of one ply, and yet 
+ultimately produces the same result as an arbitrarily deep conventional search. I 
+call this relazation planning. 
+Relaxation planning is based on continually adjusting the evaluation function in 
+such a way that credit is propagated to the appropriate steps within action se- 
+quences. Generally speaking, the evaluation e(x) of a state x should be equal to 
+the best of the states y that can be reached from it in one action, taking into 
+consideration the reward (or cost) r for that one transition: 
+e(x) = max E (r + e(y) Ix, a), (1) 
+aActions 
+where E {. I '} denotes a conditional expected value and the equal sign is quoted to 
+indicate that this is a condition that we would like to hold, not one that necessarily 
+does hold. If we have a complete model of the world, then the right-hand side can 
+be computed by looking ahead one action. Thus we can generate any number of 
+training examples for the process that learns the evaluation function: for any x, 
+Integrated Modeling and Control Based on Reinforcement Learning 473 
+EVALUATION 
+FUNCTION 
+Heuristic 
+Reward 
+(scalar) 
+Reward 
+(scalar) 
+State 
+POLICY 
+WORLD 
+Action 
+WORLD MODEL 
+;WITCH 
+Figure 1. Overview of Dyna-AHC 
+1. Decide if this will be a real experience 
+or a hypothetical one. 
+2. Pick a state x. If this is a real expe- 
+rience, use the current state. 
+3. Choose an action: a -- Policy(x) 
+4. Do action a; obtain next state St and 
+reward r from world or world model. 
+5. If this is a real experience, update 
+world model from x, a, St and r. 
+6. Update evaluation function so that 
+e(x) is more like r + 7e(y); this is 
+temporal-difference learning. 
+7. Update policy strengthen or weaken 
+the tendency to perform action a in 
+state x according to the error in the 
+evaluation function: r+'),e(y)-e(x). 
+8. Go to Step 1. 
+Figure 2. Inner Loop of Dyna-AHC. 
+These steps are repeatedly continually, 
+sometimes with real experiences, some- 
+times with hypothetical ones. 
+the right-hand side of (1) is the desired output. If the learning process converges 
+such that (1) holds in all states, then the optimal policy is given by choosing the 
+action in each state z that achieves the maximum on the right-hand side. There is an 
+extensive theoretical basis from dynamic programming for algorithms of this type for 
+the special case in which the evaluation function is tabular, with enumerable states 
+and actions. For example, this theory guarantees convergence to a unique evaluation 
+function satisfying (1) and that the corresponding policy is optimal (Bertsekas, 
+1987). 
+The evaluation function and policy need not be tables, but can be more compact 
+function approximators such as connectionist networks, decision trees, k-d trees, 
+or symbolic rules. Although the existing theory does not apply to these machine 
+learning algorithms directly, it does provide a theoretical foundation for exploring 
+their use in this way. 
+The above discussion gives the general idea of relaxation planning, but not the ex- 
+act form used in policy iteration and Dyna-AHC, in which the policy is adapted 
+simultaneously with the evaluation function. The evaluations in this case are not 
+supposed to reflect the value of states given optimal behavior, but rather their 
+value given current behavior (the current policy). As the current policy gradually 
+approaches optimality, the evaluation function also approaches the optimal evalua- 
+tion function. In addition, Dyna-AHC is a Monte Carlo or stochastic approximation 
+variant of policy iteration, in which the world model is only sampled, not examined 
+directly. Since the real world can also be sampled, by actually taking actions and 
+observing the result, the world can be used in place of the world model in these 
+methods. In this case, the result is not relaxation planning, but a trial-and-error 
+learning process much like reinforcement learning (see Barto, Sutton g Watkins, 
+474 Sutton 
+STEPS 
+PER 
+TRIAL 
+800 
+7O0 
+600 
+5OO 
+400 
+3OO 
+2OO 
+100 
+14 
+11 
+10 Planning Steps 
+20 40 60 80 100 
+TRIALS 
+Figure 3. Learning Curves of Dyna- 
+AItC Systems on a Navigation Task 
+WITHOUT PLANNING (k = O) 
+WITH PLANNING (k = I00) 
+Figure 4. Policies Found by Planning 
+and Non-Planning Dyna-AHC Systems 
+by the Middle of the Second Trial. The 
+black square is the current location of 
+the system. The arrows indicate action 
+probabilities (excess over smallest) for 
+each direction of movement. 
+1989, 1990). In Dyna-AHC, both of these are done at once. The same algorithm is 
+applied both to real experience (resulting in learning) and to hypothetical experi- 
+ence generated by the world model (resulting in relaxation planning). The results 
+in both cases are accumulated in the policy and the evaluation function. 
+There is insufficient room here to fully justify the algorithm used in Dyna-AHC, 
+but it is quite simple and is given in outline form in Figure 2. 
+3 A Navigation Task 
+As an illustration of the Dyna-AHC architecture, consider the task of navigating 
+the maze shown in the upper right of Figure 3. The maze is a 6 by 9 grid of 
+possible locations or states, one of which is marked as the starting state, S, and 
+one of which is marked as the goal state, G. The shaded states act as barriers and 
+cannot be entered. All the other states are distinct and completely distinguishable. 
+From each there are four possible actions: UP, DOWN, RIGHT, and LEFT, which 
+change the state accordingly, except where such a movement would take the take 
+the system into a barrier or outside the maze, in which case the location is not 
+changed. Reward is zero for all transitions except for those into the goal state, for 
+which it is +1. Upon entering the goal state, the system is instantly transported 
+back to the start state to begin the next trial. None of this structure and dynamics 
+is known to the Dyna-AHC system a priori. 
+In t

@@ -1,0 +1,132 @@
+Linear concepts and hidden variables: 
+An empirical study 
+Adam J. Grove 
+NEC Research Institute 
+4 Independence Way 
+Princeton NJ 08540 
+grove@research.nj.nec.com 
+Dan Roth* 
+Department of Computer Science 
+University of Illinois at Urbana-Champaign 
+1304 W. Springfield Ave. Urbana 61801 
+danrcs.uiuc.edu 
+Abstract 
+Some learning techniques for classification tasks work indirectly, by first trying 
+to fit a full probabilistic model to the observed data. Whether this is a good idea 
+or not depends on the robustness with respect to deviations from the postulated 
+model. We study this question experimentally in a restricted, yet non-trivial and 
+interesting case: we consider a conditionally independent attribute (CIA) model 
+which postulates a single binary-valued hidden variable z on which all other 
+attributes (i.e., the target and the observables) depend. In this model, finding the 
+most likely value of any one variable (given known values for the others) reduces 
+to testing a linear function of the observed values. 
+We learn CIA with two techniques: the standard EM algorithm, and a new 
+algorithm we develop based on covariances. We compare these, in a conu'olled 
+fashion, against an algorithm (a version of Winnow) that attempts to find a good 
+linear classifier directly. Our conclusions help delimit the fragility of using the 
+CIA model for classification: once the data departs from this model, performance 
+quickly degrades and drops below that of the directly-learned linear classifier. 
+1 Introduction 
+We consider the classic task of predicting a binary (0/1) target variable z0, based on 
+the values of some n other binary variables z ... z,,. We can distinguish between two 
+styles of learning approach for such tasks. Parametric algorithms postulate some form of 
+probabilistic model underlying the data, and try to fit the model's parameters. To classify an 
+example we can compute the conditional probability distribution for z0 given the values of 
+the known variables, and then predict the most probable value. Non-parametric algorithms 
+do not assume that the training data has a particular form. They instead search directly in 
+the space of possible classification functions, attempting to find one with small error on the 
+training set of examples. 
+An important advantage of parametric approaches is that the induced model can be used to 
+support a wide range of inferences, aside from the specified classification task. On the other 
+hand, to postulate a particular form of probabilistic model can be a very strong assumption. 
+'Parfly supported by ONR grant N00014-96-1-0550 while visiting Harvard University. 
+Linear Concepts and Hidden Variables: An Empirical Study 501 
+So it is important to understand how robust such methods are when the real world deviates 
+from the assumed model. 
+In this paper, we report on some experiments that test this issue. We consider the specific 
+case of n + ! conditionally independent attributes zi together with a single unobserved 
+variable z, also assumed to be binary valued, on which the zi depend (henceforth, the 
+binary CIA model); see Section 2. In fact, such models are plausible in many domains 
+(for instance, in some language interpretation tasks; see [GR96]). We fit the parameters of 
+the CIA model using the well-known expectation-maximization (EM) technique [DLR77], 
+and also with a new algorithm we have developed based on estimating covariances; see 
+Section 4. In the nonparametric case, we simply search for a good linear separator. This is 
+because the optimal predictors for the binary CIA model (i.e., for predicting one variable 
+given known values for the rest) are also linear. This means that our comparison is fair 
+in the sense that neither strategy can choose from classifiers with more expressive power 
+than the other. As a representative of the non-parametric class of algorithms, we use the 
+Winnow algorithm of [Lit88], with some modifications (see Section 6). Winnow works 
+directly to find a good linear separator. It is guaranteed to find a perfect separator if one 
+exists, and empirically seems to be fairly successful even when there is no perfect separator 
+[GR96, Blu97]. It is also very fast. 
+Our experimental methodology is to first generate synthetic data from a true CIA model 
+and test performance; we then study various deviations from the model. There are various 
+interesting issues involved in constructing good experiments, including the desirability of 
+controlling the inherent difficulty of learning a model. Since we cannot characterize the 
+entire space, we consider here only deviations in which the data is drawn from a CIA model 
+in which the hidden variable can take more than two values. (Note that the optimal classifier 
+given z0 is generally not linear in this case.) 
+Our observations are not qualitatively surprising. CIA does well when the assumed model 
+is correct, but performance degrades when the world departs from the model. But as we 
+discuss, we found it surprising how fragile this model can sometimes be, when compared 
+against algorithms such as Winnow. This is even though the data is not linearly separable 
+either, and so one might expect the direct learning techniques to degrade in performance as 
+well. But it seems that V9mnow and related approaches are far less fragile. Thus the main 
+contribution of this work is that our results shed light on the specific tradeoff between fitting 
+parameters to a probabilistic model, versus direct search for a good classifier. Specifically, 
+they illustrate the dangers of predicting using a model that is even slightly simpler than 
+the distribution actually generating the data, vs. the relative robustness of directly searching 
+for a good predictor. This would seem to be an important practical issue, and highlights the 
+need for some better theoretical understanding of the notion of robustness. 
+2 Conditionally Independent Attributes 
+Throughout we assume that each example is a binary vector   {0, 1} +, and that each 
+example is generated independently at random according to some unknown distribution on 
+{0, 1} +. We use Xi to denote the i'th attribute, considered as a random variable, and 
+to denote a value for Xi. In the conditionally independent attribute (CIA) model, examples 
+are generated as follows. We postulate a hidden variable Z with k values, which takes 
+h-I 
+values z for 0 < z < k with probability at, > 0. Since we must have ',=0 at, = 1 
+there are k - 1 independent parameters. Having randomly chosen a value z for the hidden 
+variable, we choose the value ai for each observable Xi: the value is 1 with probability 
+p?), and 0 otherwise. Here p?)  [0, 1]. The attributes' values are chosen independently 
+of each other, although z remains fixed. Note that there are thus (n + 1)k probability 
+parameters p?). In the following, let P denote the set of all (n + 1)k + k - 1 parameters 
+in the model. From this point, and until Section 7, we always assume that k -- 2 and in this 
+case, to simplify notation, we write at as at, ao (= 1 - at) as at', p as Pi and p,O. as qi. 
+502 A. J. Grove and D. Roth 
+3 The Expectation-Maximization algorithm (EM) 
+One traditional unsupervised approach to learning the parameters of this model is to find 
+the maximum-likelihood parameters of the distribution given the data. That is, we attempt 
+to find the set of parameters that maximizes the probability of the data observed. 
+Finding the maximum likelihood parameterization analytically appears to be a difficult 
+problem, even in this rather simple setting. However, a practical approach is to use the well- 
+known Expectation-Maximization algorithm (EM) [DLR77], which is an iterative approach 
+that always converges to a local maximum of the likelihood function. In our setting, the 
+procedure is as follows. We simply begin with a randomly chosen parameterization P, and 
+then we iterate until (apparent) convergence: 1 
+Expectation: For all ,i, compute is/= p(,i A z = 1) and vi = p(,i A z = 0). 
+Maximization: Reestimate P as follows (writing 1I = }'i ui and V = }'i vi): 
+EL-, ,l(cr + v) 
+After convergence has been detected all we know is that we are near a local minima of the 
+likelihood function. Thus it is prudent to repeat the process with many different restarts. 
+(All our experiments were extremely conservative concerning the stopping criteria at each 
+iteration, and in the number of iterations we tried.) But in practice, we are never sure that 
+the true optimum has been located. 
+4 Covariances-Based approach 
+Partly in response to concern just expressed, we also developed another heuristic technique 
+for learning 7 . The algorithm, which we call COV, is based on measuring the covariance 
+between pairs of attributes. Since we do not see Z, attributes will appear to be correlated. In 
+fact, if the CIA model is correct, it is easy to show that covariance between X, and X (de- 
+fined as t,, =//, -/// where//,/,//, are the expectations of Xi, X, (X, and X), 
+respectively), will be $ti,j = ota'8,8.i where 8, denotes p/ - qi. We also know that the 
+expected value of X, is/z/-- ap/+ ot'q,. Furthermore, we will be able to get very accurate 
+estimates of//just by observing the proportion of samples in which z, is 1. Thus, if we 
+could estimate both a and & it would be trivial to solve for estimates of p/and q,. 
+To estimate &, suppose we have computed all the pairwise covariances using the data; 
+we use 0i, to denote our estimate of !lid. For any distinct j, k  i we clearly have 
+omdS -- I 1 so we could estimate 8/2 using this equation. A better estimate would be 
+ ., ' 
+to consider all pairs j, k and average the individual estimates. However, not all individual 
+estimates are equally good. It can be shown that the smaller tt,k is, the less reliable 
+we should expect the estimate to be (and in the limit, where X and Xk are perfectly 
+uncorrelated, we get no valid estim

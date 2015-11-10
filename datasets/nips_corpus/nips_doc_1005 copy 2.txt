@@ -1,0 +1,153 @@
+Improving Committee Diagnosis with 
+Resampling Techniques 
+Barnbang Parmanto 
+Department of Information Science 
+University of Pittsburgh 
+Pittsburgh, PA 15260 
+parmato Olis.pitt. edu 
+Paul W. Munro 
+Department of Information Science 
+University of Pittsburgh 
+Pittsburgh, PA 15260 
+munro Oils.pitt. edu 
+Howard R. Doyle 
+Pittsburgh Transplantation Institute 
+3601 Fifth Ave, Pittsburgh, PA 15213 
+doyle vesalius. tzs. meal.pitt. edu 
+Abstract 
+Central to the performance improvement of a committee relative to 
+individual networks is the error correlation between networks in the 
+committee. We investigated methods of achieving error indepen- 
+dence between the networks by training the networks with different 
+resampling sets from the original training set. The methods were 
+tested on the sinwave artificial task and the real-world problems of 
+hepatoma (liver cancer) and breast cancer diagnoses. 
+1 INTRODUCTION 
+The idea of a neural net committee is to combine several neural net predictors 
+to perform collective decision making, instead of using a single network (Pertone, 
+1993). The potential of a committee in improving classification performance has 
+been well documented. Central to this improvement is the extent to which the 
+errors tend to coincide. Committee errors occur where the misclassification sets of 
+individual networks overlap. On the one hand, if all errors of committee members 
+coincide, using a committee does not improve performance. On the other hand, if 
+errors do not coincide, performance of the committee dramatically increases and 
+asymptotically approaches perfect performance. Therefore, it is beneficial to make 
+the errors among the networks in the committee less correlated in order to improve 
+the committee performance. 
+Improving Committee Diagnosis with Resampling Techniques 883 
+One way of making the networks less correlated is to train them with different sets 
+of data. Decreasing the error correlation by training members of the committee 
+using different sets of data is intuitively appealing. Networks trained with different 
+data sets have a higher probability of generalizing differently and tend to make 
+errors in different places in the problem space. 
+The idea is to split the data used in the training into several sets. The sets are 
+not necessarily mutually exclusive, they may share part of the set (overlap). This 
+idea resembles resampling methods such as cross-validation and bootstrap known 
+in statistics for estimating the error of a predictor from limited sets of available 
+data. In the committee framework, these techniques are recast to construct different 
+training sets from the original training set. David Wolpert (1992) has put forward 
+a general framework of training the committee using different partitions of the 
+data known as stacked generalization. This approach has been adopted to the 
+regression environment and is called stacked regression (Breiman, 1992). Stacked 
+regression uses cross-validation to construct different sets of regression functions. 
+A similar idea of using a bootstrap method to construct different training sets has 
+been proposed by Breiman (1994) for classification and regression trees predictors. 
+2 THE ALGORITHMS 
+2.1 BOOTSTRAP COMMITTEE (BOOTC) 
+Consider a total of N items are available for training. The approach is to generate 
+K replicates from the original set, each containing the same number of item as the 
+original set. The replicates are obtained from the original set by drawing at random 
+with replacement. See Efron& Tibshirani (1993) for background on bootstrapping. 
+Use each replicate to train each network in the committee. 
+Using this bootstrap procedure, each replicate is expected to include roughly 36 
+% duplicates (due to replacement during sampling). Only the distinct fraction is 
+used for training and the leftover fraction for early stopping, if necessary (notice 
+slight difference from the standard bootstrapping and from Breiman's bagging). 
+Early stopping usually requires a fraction of the data to be taken from the original 
+training set, which might degrade the performance of the neural network. The 
+advantage of a BOOTC is that the leftover sample is already available. 
+Algorithm: 
+1. Generate bootstrap replicates L,..., L K from the original set. 
+2. For each bootstrap replicate, collect unsampled items into leftover sample 
+sets, giving: /*x,...,/.K. 
+3. For each L k, train a network. Use the leftover set l *k as validation stopping 
+criteria if necessary. Giving K neural net predictors: f(z; L ) 
+4. Build a committee from the bootstrap networks using a simple averaging 
+ K L  
+procedure: fco(Z)-  _ f(z; ) 
+There is no rule as to how many bootstrap replicates should be used to achieve a 
+good performance. In error estimation, the number ranges from 20 to 200. It is 
+beneficial to keep the number of replicates, hence the number of networks, small to 
+reduce training time. Unless the networks are trained on a parallel machine, training 
+time increases proportionally to the number of networks in the committee. In this 
+experiment, 20 bootstrap training replicates were constructed for 20 networks in 
+884 B. PARMANTO, P. W. MUNRO, H. R. DOYLE 
+the committee. Twenty replicates were chosen since beyond this number there is 
+no significant improvement on the performance. 
+2.2 CROSS-VALIDATION COMMITTEE (CVC) 
+The algorithm is quite similar to the procedure used in prediction error estimation. 
+First, generate replicates from the original training set by removing a fraction of 
+the data. Let D denote the original data, and D - denote the data with subset 
+v removed. The procedure revolves so that each item is in the removed fraction 
+at least once. Generate replicates Dv,...D vk and train each network in the 
+committee with one replicate. 
+An important issue in the CVC is the degree of data overlap between the replicates. 
+The degree of overlap depends on the number of replicates and the size of a removed 
+fraction from the original sample. For example, if the committee consists of 5 
+networks and 0.5 of the data are removed for each replicate, the minimum fraction 
+4 (calculation: 
+of overlap is 0 (calculation: (v x 9.) - and the mimum is 
+1.0-  
+Algorithm: 
+1. Divide data into v-fractions d,..., dv 
+2. Leave one fraction dk and train network f with the rest of the data (D-d:). 
+3. Use d as a validation stopping criteria, if necessary. 
+4. Build a committee from the networks using a simple averaging procedure. 
+The fraction of data overlap determines the trade-off between the individual network 
+performance and error correlation between the networks. Lower correlation can be 
+expected if the networks train with less overlapped data, which means a larger 
+removed fraction and smaller fraction for training. The smaller the training set 
+size, the lower the individual network performance that can be expected. 
+We investigated the effect of data overlap on the error correlations between the 
+networks and the committee performance. We also studied the effect of training 
+size on the individual performance. The goal was to find an optimal combination 
+of data overlap and individual training size. 
+3 THE BASELINE &: PERFORMANCE EVALUATION 
+To evaluate the improvement of the proposed methods on the committee perfor- 
+mance, they should be compared with existing methods as the baseline. The com- 
+mon method for constructing a committee is to train an ensemble of networks 
+independently. The networks in the committee are initialized with different sets 
+of weights. This type of committee has been reported as achieving significant im- 
+provement over individual network performances in regression (Hashem, 1993) and 
+classification tasks (Pertone, 1993; Parmanto et al., 1994). 
+The baseline, BOOTC, and CVC were compared using exactly the same architecture 
+and using the same pair of training-test sets. Performance evaluation was conducted 
+using 4-fold exhaustive cross-validation where 0.25 fraction of the original data is 
+used for the test set and the remainder of the data is used for the training set. The 
+procedure was repeated 4 times so that all items were once on the test set. The 
+performance was calculated by averaging the results of 4 test sets. The simulations 
+Improving Committee Diagnosis with Resampling Techniques 885 
+were conducted several times using different initial weights to exclude the possibility 
+that the improvement was caused by chance. 
+4 EXPERIMENTS 
+4.1 SYNTHETIC DATA: SINWAVE CLASSIFICATION 
+The sinwave task is a classification problem with two classes, a negative class rep- 
+resented as 0 and a positive class represented as 1. The data consist of two input 
+variables, a = (a, a2). The entire space is divided equally into two classes with 
+the separation line determined by the curve a2 = sin(a:). The upper half of the 
+rectangle is the positive class, while the lower half is the negative one (see Fig. 1). 
+Gaussian noise along the perfect boundary with variance of 0.1 is introduced to 
+the clean data and is presented in Fig. I (middle). Let z be a vector drawn from 
+the Gaussian distribution with variance r/, then the classification rule is given by 
+equation: 
+1 if(a2 + z) > sin('_-(a: + z.)) 
+Y(z) 0 if(a2 + z) < sin('-ax + z2) (1) 
+A similar artificial problem is used to analyze the bias-variance trade-offs by Geman 
+et al. (1992). 
+Figure 1: Complete and clean data/without noise (top), complete data with noise 
+(middle), and a small fraction used for training (bottom). 
+The population contains 3030 data items, since a grid of 0.1 is used for both a and 
+aa. In the real world, we usually have no access to the entire population. To mimic 
+this situation, the training set contained only a small fraction of the population. 
+Fig. 1 (bottom) visualizes a training set that contains 200 items with 100 items for 
+each class. The training set is constructed by randomly sampling the popul

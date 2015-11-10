@@ -1,0 +1,177 @@
+ART2/BP architecture for adaptive estimation of 
+dynamic processes 
+Einar Srheim* 
+Department of Computer Science 
+UNIK, Kjeller 
+University of Oslo 
+N-2007 Norway 
+Abstract 
+The goal has been to construct a supervised artificial neural network that 
+learns incrementally an unknown mapping. As a result a network con- 
+sisting of a combination of ART2 and backpropagation is proposed and 
+is called an ART2/BP network. The ART2 network is used to build 
+and focus a supervised backpropagation network. The ART2/BP network 
+has the advantage of being able to dynamically expand itself in response 
+to input patterns containing new information. Simulation results show 
+that the ART2/BP network outperforms a classical maximum likelihood 
+method for the estimation of a discrete dynamic and nonlinear transfer 
+function. 
+I INTRODUCTION 
+Most current neural network architectures such as backpropagation require a cyclic 
+presentation of the entire training set to converge. They are thus not very well suited 
+for adaptive estimation tasks where the training vectors arrive one by one, and where 
+the network may never see the same training vector twice. The ART2/BP network 
+system is an attempt to construct a network that works well on these problems. 
+Main features of our ART2/BP are: 
+� implements incremental supervised learning 
+� dynamically self-expanding 
+*e-mail address: einar@tellus.unik.no or einars@ifi.uio.no 
+169 
+170 Sorheim 
+� learning of a novel training pattern does not wash away memory of previous 
+training patterns 
+� short convergence time for learning a new pattern 
+2 BACKGROUND 
+Adaptive estimation of nonlinear functions requires some basic features of the esti- 
+mation algorithm. 
+1. Incremental learning 
+The input/output pairs arrive to the estimation machine one by one. By ac- 
+cumulating the input/output pairs into a training set and rerun the training 
+procedure at every arrival of a new input/output pair, one could use a conven- 
+tional method. Obvious disadvantages would however be 
+� huge learning time required as the size of the training set increases. 
+� an upper limit, N, on the number of elements in the training set will 
+have to be set. The training set will then be a gliding horizon of the N 
+last input/output pairs, and information prior to the N last input/output 
+pairs will be lost. 
+2. Plasticity 
+Learning of a new input/output pair should not wash away the memory of 
+previously learned nonconflicting input/output pairs. With most existing feed- 
+forward supervised nets this is hard to accomplish, though some efforts have 
+been made (Otwell 90). Some networks, like the ART-family and RCN (Ryan 
+1988) are plastic but they are self-organizing, not supervised. 
+To summarize: 
+Need a supervised network that learns incrementally the mapping of an unknown 
+system and that can be used to predict future outputs. The system in question 
+maps analog vectors to analog vectors. 
+3 COMBINED ARCHITECTURE 
+In the proposed network architecture an ART2 network controls a BP network, see 
+Figure 1. 
+The BP-network consists of many relatively small subnetworks where the subnets 
+are specialized on one particular domain of the input space. ART2 controls how the 
+input space is divided among the subnets and the total amount of subnets needed. 
+The ART2 network analyzes the input part of the input/output pairs as they arrive 
+to the system. For a given input pattern is, ART2 finds the category Cs which has 
+the closest resemblance to 's. If this resemblance is good enough,  is of category 
+Cs and the LTM-weights of Cs are updated. The BP-subnetwork BPs, connected 
+to Cs, is as a consequence activated S and relearning of BPs is done. The learning 
+set consists of a representative set of the neighbouring subnets patterns and a 
+small number of the previous patterns belonging to category Cs. To summarize the 
+ART2/BP Architecture for Adaptive Estimation of Dynamic Processes 171 
+algorithm goes as follows: 
+1. Send input vector to ART2 network 
+2. ART2 classification. 
+3. If in learning mode adjust ART2 LTM weights of the winning node. 
+4. Send input to the back propagation network connected to the winning ART2 
+node. 
+5. If in learning mode � 
+� find a representative training set. 
+� do epoch learning on training set. 
+Otherwise 
+� compute output of the selected back propagation network. 
+6. Go to 1. for new input vector. 
+The ART2/BP neural network can be used for adaptive estimation of nonlinear 
+dynamic processes. The mapping to be estimated then is 
+7(t + 6t) : f(ff(t),7(t)) (1) 
+s(t)  a m 
+The input/output pairs will be o = [ff(t),fi(t),7(t + 6t)], denote the input part of 
+/: '= [(t),7(t)] and the output part of io: 3= 7(t + 6t). 
+4 ART2 MODIFIED 
+ART2 was developed by Carpenter&; Grossberg see (Carpenter 1987) and (Carpen- 
+ter 1988). ART2 categorizes arbitrary sequences of analog input patterns, and the 
+categories can be of arbitrary coarseness. For a detailed description of ART2, see 
+(Carpenter 1987). 
+4.1 MODIFICATION 
+In the standard ART2-algorithm input vectors (patterns) are normalized. For this 
+application it is not desired to classify parallel vectors of different magnitude as 
+belonging to the same category. 
+where this element is simply 
+the new input vector becomes 
+By adding an extra element to the input vector 
+i+ = IIll  (2) 
+i '5 = [, II'll 3 (a) 
+~ _% 
+From a scaled vector of ':  = a .i the original vector ' could easily be found as � 
+i, - ,.111  (4) 
+-' [ ] 
+ ---- 1,2, .... ,n 
+172 Sorheim 
+and by using the augmented ' as the input to ART2 instead of ' one can at any 
+point in FI( representation layer ) and F2( categorization layer ) generate the corre- 
+sponding non-normalized vector. The F2 node competition is modified so that the 
+node having bottom-up LTM weights with the smallest distance (distance being the 
+euclidean norm) to the F1 layer pattern code wins the competition. The distance 
+dj of F2 node J is given by: 
+dj 
+: being the 12 - norm 
+: F1 pattern code. 
+: bottom- up LTM weights of F2 node J 
+Reset is done by calculating the distance d between the F1 layer pattern code it7 and 
+ � 
+(6) 
+and comparing it to a largest acceptable bound p. If d > p the winning node is 
+inhibited and a new node will be created. If d _< p LTM-patterns of the winning 
+node J are modified (learning). 
+5 BACK PROPAGATION NETWORK 
+The backpropagation network used in this work is of the standard feedforward type, 
+see (Rumelhart 1986) . The number of hidden layers and nodes should be kept low 
+in the subnetworks, for the problems in our simulations we used 1 hidden layer with 
+2 nodes. As for training algorithms several different kinds have been tried: 
+� Standard back propagation (SBP) 
+� A modified back propagation (MBP) method similar to the one used in the 
+BPS simulator from George Mason University. 
+� Quickprop (Q). 
+� A quasi-Newton method (BFGS). 
+All of these except SBP show similar performance in my test cases. 
+The BP-networks performs as an interpolator in this algorithm and any good inter- 
+polation algorithm can be used instead of BP. Approximation theory gives several 
+interesting techniques for approximation/interpolation of multidimensional func- 
+tions such as Radial Basis Functions and tIyper Basis Functions, for further detail 
+see (Poggio 90). These methods requires a representative training set where the 
+input part determines the location of centers in the input space. The ART2 algo- 
+rithm can be used for determining these centers in an adaptive way and thus making 
+possible an incremental version of the approximation theory techniques. This idea 
+has not been tested yet, but is an interesting concept for further research. 
+ART2/BP Architecture for Adaptive Estimation of Dynamic Processes 173 
+6 LEARNING 
+Learning in ART2/BP is a two stage process. First the input patterns is sent to 
+the ART2 network for categorizing and learning . ART2 will then activate the 
+BP subnetwork that is a local expert on patterns of the same category as the 
+input pattern, and learning of this subnetwork will occur. A training set that is 
+representative for the domain of the input space has to be found. Let a small 
+number of the last categorized input/output pairs be allocated to its corresponding 
+sub net to provide a part of the training set. Denote such a set as L_IO�, ( C being 
+the category). Define the location of F2 node J to be its bottom-up weights 'j. Let 
+the current input ' define an origin, then find the F2 nodes closest to origin in each 
+n-ant of the input space. Call this set of nodes Ns and the set of last input/output 
+pairs stored in these nodes N_IO. The training set is then chosen to be: 
+T = N_IO U L_IO 
+Before training, the elements in T are scaled to increase accuracy and to accelerate 
+learning. BP-learning is then performed, the stopping criteria being a fixed error 
+term or a maximum number of iterations. 
+7 ESTIMATION 
+In estimation mode learning in the network is turned off. Given an input thenetwork 
+will produce an output that hopefully will be close to the output of the real system. 
+The ART2-network selects a winning node in the same way as described before but 
+now the reset assembly is not activated. Then the input is fed to the corresponding 
+BP subnetwork and its output is used as an estimate of the original functions output. 
+Because each subnetwork is scaled to cover the domain of the input space made up 
+by the complex hull Co(T) of its training set T, the entire ART2/BP network will 
+cover the complex hull Co(T) C n+m where: 
+T= 
+{set of all previous Ps used to train the network} 
+Good estimation/prediction can thus be expected if * e Co(T). This means that if 
+the input vector 'lies in a domain of the input space that has not been previously 
+explored by the elements in the training set, the network will generalize poorly. 
+8 EXAMPLE 
+The ART2/BP network has been used to estimate a dynamic model of a ta

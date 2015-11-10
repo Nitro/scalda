@@ -1,0 +1,149 @@
+Learning the Similarity of Documents: 
+An Information-Geometric Approach to 
+Document Retrieval and Categorization 
+Thomas Hofmann 
+Department of Computer Science 
+Brown University, Providence, RI 
+hofmann@cs.brown.edu, www.cs.brown.edu/people/th 
+Abstract 
+The project pursued in this paper is to develop from first 
+information-geometric principles a general method for learning 
+the similarity between text documents. Each individual docu- 
+ment is modeled as a memoryless information source. Based on 
+a latent class decomposition of the term-document matrix, a low- 
+dimensional (curved) multinomial subfamily is learned. From this 
+model a canonical similarity function - known as the Fisher kernel 
+- is derived. Our approach can be applied for unsupervised and 
+supervised learning problems alike. This in particular covers inter- 
+esting cases where both, labeled and unlabeled data are available. 
+Experiments in automated indexing and text categorization verify 
+the advantages of the proposed method. 
+I Introduction 
+The computer-based analysis and organization of large document repositories is one 
+of today's great challenges in machine learning, a key problem being the quantitative 
+assessment of document similarities. A reliable similarity measure would provide 
+answers to questions like: How similar are two text documents and which documents 
+match a given query best? In a time, where searching in huge on-line (hyper-)text 
+collections like the World Wide Web becomes more and more popular, the relevance 
+of these and related questions needs not to be further emphasized. 
+The focus of this work is on data-driven methods that learn a similarity function 
+based on a training corpus of text documents without requiring domain-specific 
+knowledge. Since we do not assume that labels for text categories, document classes, 
+or topics, etc. are given at this stage, the former is by definition an unsupervised 
+learning problem. In fact, the general problem of learning object similarities pre- 
+cedes many classical unsupervised learning methods like data clustering that al- 
+ready presuppose the availability of a metric or similarity function. In this paper, 
+we develop a framework for learning similarities between text documents from first 
+principles. In doing so, we try to span a bridge from the foundations of statistics 
+in information geometry [13, 1] to real-world applications in information retrieval 
+and text learning, namely ad hoc retrieval and text categorization. Although the 
+developed general methodology is not limited to text documents, we will for sake 
+of concreteness restrict our attention exclusively to this domain. 
+Learning the Similarity of Documents 915 
+2 Latent Class Decomposition 
+Memoryless Information Sources Assume we have available a set of docu- 
+ments D = {dl,...,dv} over some fixed vocabulary of words (or terms) W = 
+{wl,..., wM}. In an information-theoretic perspective, each document di can be 
+viewed as an information source, i.e. a probability distribution over word sequences. 
+Following common practice in information retrieval, we will focus on the more re- 
+stricted case where text documents are modeled on the level of single word occur- 
+rences. This means that we we adopt the bag-of-words view and treat documents 
+as memoryless information sources. 1 
+A. Modeling assumption: Each document is a memoryless information source. 
+This assumption implies that each document can be represented by a multinomial 
+probability distribution P(wjldi), which denotes the (unigram) probability that a 
+generic word occurrence in document di will be wj. Correspondingly, the data can 
+be reduced to some simple sufficient statistics which are counts n(di, wj) of how 
+often a word wj occurred in a document di. The rectangular N x M matrix with 
+coefficients n(di, wj) is also called the term-document matrix. 
+Latent Class Analysis Latent class analysis is a decomposition technique for 
+contingency tables (cf. [5, 3] and the references therein) that has been applied to 
+language modeling [15] (aggregate Markov model) and in information retrieval [7] 
+(probabilistic latent semantic analysis). In latent class analysis, an unobserved 
+class variable zk 6 Z = {Zl,..., z�} is associated with each observation, i.e. with 
+each word occurrence (di, wj). The joint probability distribution over D x W is a 
+mixture model that can be parameterized in two equivalent ways 
+K K 
+e(d,, wj) - e(xk)e(d, lx)e(wjlx) - e(d,) e(wlx)e(xld,). (1) 
+k----1 k=l 
+The latent class model (1) introduces a conditional independence assumption, 
+namely that d and wj are independent conditioned on the state of the associated 
+latent variable. Since the cardinality of zk is typically smaller than the number of 
+documents/words in the collection, z acts as a bottleneck variable in predicting 
+words conditioned on the context of a particular document. 
+To give the reader a more intuitive understanding of the latent class decomposition, 
+we have visualized a representative subset of 16 factors from a K = 64 latent 
+class model fitted from the Reuters21578 collection (cf. Section 4) in Figure 1. 
+Intuitively, the learned parameters seem to be very meaningful in that they represent 
+identifiable topics and capture the corresponding vocabulary quite well. 
+By using the latent class decomposition to model a collection of memoryless sources, 
+we implicitly assume that the overall collection will help in estimating parameters 
+for individual sources, an assumption which has been validated in our experiments. 
+B. Modeling assumption: Parameters for a collection of memoryless informa- 
+tion sources are estimated by latent class decomposition. 
+Parameter Estimation The latent class model has an important geometrical 
+interpretation: the parameters qb -- P(wjlz ) define a low-dimensional subfamily 
+of the multinomial family, $(qb) = {r 6 [0;1] M : rj = y] �qb for some � 6 
+[0; 1] c, Y]k ;ha = 1}, i.e. all multinomials r that can be obtained by convex combi- 
+nations from the set of basis vectors {qb : I _< k <_ K}. For given d-parameters, 
+ Extensions to the more general case are possible, but beyond the scope of this paper. 
+916 T. Hofmann 
+government president banks pct union marks gold billion 
+tax chairman debt january air currency steel dlrs 
+budget executive brazil february workers dollar plant year 
+cut chief new rise strike german mining surplus 
+spending officer loans rose airlines bundesbank copper deficit 
+cuts vice dlrs 1986 aircraft central tons foreign 
+deficit company bankers december port mark silver current 
+taxes named bank year boeing west metal trade 
+reform board payments fell employees dollars production account 
+billion director billion prices airline dealers ounces reserves 
+trading american trade oil vs areas food house 
+exchange general japan crude cts weather drug reagan 
+futures motors japanese energy net area study president 
+stock chrysler ec petroleum loss normal aids administration 
+options gm states prices mln good product congress 
+index car united bpd shr crop treatment white 
+contracts ford officials barrels qtr damage company secretary 
+market test community barrel revs caused environmental told 
+london cars european exploration profit affected products volcker 
+exchanges motor imports price note people approval reagans 
+Figure 1:16 selected factors from a 64 factor decomposition of the Reuters21578 col- 
+lection. The displayed terms are the 10 most probable words in the class-conditional 
+distribution P(wjlzk ) for 16 selected states zk after the exclusion of stop words. 
+each b i, b -- P(zkl&), will define a unique multinomial distribution r i e $(b). 
+Since $(b) defines a submanifold on the multinomial simplex, it corresponds to a 
+curved exponential subfamily? We would like to emphasis that we propose to learn 
+both, the parameters within the family (the b's or mixing proportions P(z I&)) and 
+the parameters that define the subfamily (the 's or class-conditionals 
+The standard procedure for maximum likelihood estimation in latent variable mod- 
+els is the Expectation Maximization (EM) algorithm. In the E-step one computes 
+posterior probabilities for the latent class variables, 
+P(z)P(d, lz)P(wlzk) P(z)P(dIz)P(wjlz) (2) 
+P(ldg, - Ez lzz)P(wl,) - P(d, wj) 
+The M-step formulae can be written compactly as 
+e(wlz) 
+N M { in 
+n=l m=l I 
+(3) 
+where d denotes the Kronecker delta. 
+Related Models As demonstrated in [7], the latent class model can be viewed 
+as a probabilistic variant of Latent Semantic Analysis [2], a dimension reduction 
+technique based on Singular Value Decomposition. It is also closely related to the 
+non-negative matrix decomposition discussed in [12] which uses a Poisson sampling 
+model and has been motivated by imposing non-negativity constraints on a decom- 
+position by PCA. The relationship of the latent class model to clustering models 
+like distributional clustering [14] has been investigated in [8]. [6] presents yet an- 
+other approach to dimension reduction for multinomials which is based on spherical 
+models, a different type of curved exponential subfamilies than the one presented 
+here which is affine in the mean-value parameterization. 
+2Notice that graphical models with latent variable are in general stratified exponential 
+families [4], yet in our case the geometry is simpler. The geometrical view also illustrates 
+the well-known identifiability problem in latent class analysis. The interested reader is 
+referred to [3]. As a practical remedy, we have used a Bayesian approach with conjugate 
+(Dirichlet) prior distributions over all multinomials which for the sake of clarity is not 
+described in this paper since it is very technical but nevertheless rather straightforward. 
+Learning the Similarity of Documents 917 
+3 Fisher Kernel and Information Geometry 
+The Fisher Kernel We follow the work of [9] to derive kernel functions (and 
+hence similarity f

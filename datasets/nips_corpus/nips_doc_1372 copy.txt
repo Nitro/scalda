@@ -1,0 +1,179 @@
+Function Approximation with the 
+Sweeping Hinge Algorithm 
+Don R. Hush, Fernando Lozano 
+Dept. of Elec. and Comp. Engg. 
+University of New Mexico 
+Albuquerque, NM 87131 
+Bill Horne 
+MakeWaves, Inc. 
+832 Valley Road 
+Watchung, NJ 07060 
+Abstract 
+We present a computationally efficient algorithm for function ap- 
+proximation with piecewise linear sigmoidal nodes. A one hidden 
+layer network is constructed one node at a time using the method of 
+fitting the residual. The task of fitting individual nodes is accom- 
+plished using a new algorithm that searchs for the best fit by solving 
+a sequence of Quadratic Programming problems. This approach of- 
+fers significant advantages over derivative-based search algorithms 
+(e.g. backpropagation and its extensions). Unique characteristics 
+of this algorithm include: finite step convergence, a simple stop- 
+ping criterion, a deterministic methodology for seeking good local 
+minima, good scaling properties and a robust numerical implemen- 
+tation. 
+I Introduction 
+The learning algorithm developed in this paper is quite different from the tradi- 
+tional family of derivative-based descent methods used to train Multilayer Percep- 
+trons (MLPs) for function approximation. First, a constructive approach is used, 
+which builds the network one node at a time. Second, and more importantly, we 
+use piecewise linear sigmoidal nodes instead of the more popular (continuously dif- 
+ferentiable) logistic nodes. These two differences change the nature of the learning 
+problem entirely. It becomes a combinatorial problem in the sense that the number 
+of feasible solutions that must be considered in the search is finite. We show that 
+this number is exponential in the input dimension, and that the problem of find- 
+ing the global optimum admits no polynomial-time solution. We then proceed to 
+develop a heuristic algorithm that produces good approximations with reasonable 
+efficiency. This algorithm has a simple stopping criterion, and very few user spec- 
+ified parameters. In addition, it produces solutions that are comparable to (and 
+sometimes better than) those produced by local descent methods, and it does so 
+536 D. 1 Hush, E Lozano and B. Horne 
+using a deterministic methodology, so that the results are independent of initial 
+conditions. 
+2 Background and Motivation 
+We wish to approximate an unknown continuous function f(x) over a compact set 
+with a one-hidden layer network described by 
+n 
+(1) 
+i----1 
+where n is the number of hidden layer nodes (basis functions), x  a is the input 
+vector, and (a(x, w)} are sigmoidal functions parameterized by a weight vector w. 
+A set of example data, S = (xi, yi}, with a total of N samples is available for 
+training and test. 
+The models in (1) have been shown to be universal approximators. More impor- 
+tantly, (Barron, 1993) has shown that for a special class of continuous functions, 
+Fc, the generalization error satisfies 
+[ll- ..,vl]'] _( II.- ..ll ' + [IIL- f,,vll ] 
+- o + o 
+- ) 
+where [1.1[ is the appropriate two-norm, fn is the the best n-node approximation to 
+f, and fn,v is the approximation that best fits the samples in S. In this equation 
+Ill-f112 and E[llf,--.fn,Nl[ 2] correspond to the approximation and estimation error 
+respectively. Of particular interest is the O(1/n) bound on approximation error, 
+which for fixed basis functions is of the form O(1/n 2/a) (Barron, 1993). Barron's 
+result tells us that the (tunable) sigmoidal bases are able to avoid the curse of 
+dimensionality (for functions in Fc). Further, it has been shown that the O(1/n) 
+bound can be achieved constructivelit (Jones, 1992), that is by designing the basis 
+functions (nodes) one at a time. The proof of this result is itself constructive, 
+and thus provides a framework for the development of an algorithm which can (in 
+principle) achieve this bound. One manifestation of this algorithm is shown in 
+Figure 1. We call this the iterative approximation algorithm (IIA) because it builds 
+the approximation by iterating on the residual (i.e. the unexplained portion of the 
+function) at each step. This is the same algorithmic strategy used to form bases in 
+numerous other settings, e.g. Grahm-Schmidt, Conjugate Gradient, and Projection 
+Pursuit. The difficult part of the IIA algorithm is in the determination of the best 
+fitting basis function a, in step 2. This is the focus of the remainder of this paper. 
+3 Algorithmic Development 
+We begin by defining the hinging sigmoid (HS) node on which our algorithms are 
+based. An HS node performs the function 
+w+, [ > w+ 
+h(x,w) = ,[i, w_ _< [ _< w+ (2) 
+w_, [i _< w_ 
+where w ' - [t w+ w_] and  is an augmented input vector with a I in the first 
+component. An example of the surface formed by an HS node on a two-dimensional 
+input is shown in Figure 2. It is comprised of three hyperplanes joined pairwise 
+Function Approximation with the Sweeping Hinge Algorithm 537 
+Initialization: f0(x) = 0 
+for n- 1 to nmaz do 
+1. Compute Residual: 
+2. Fit Residual: 
+3. Update Estimate: 
+(x) = f(x) -- f-x(x) 
+a,(x) -- axg ming II(x) - (x)11 
+fn(X) = Cfn-x (x) + 
+where a and/ axe chosen to minimize Ill(x) - f(x)ll 
+endloop 
+Figure 1: Iterative Approximation Algorithm (IIA). 
+2.5 
+2 
+1.5 
+1 
+0,5 
+0 
+y 
+UNE PLUS 
+Figure 2: A Sigmoid Hinge function in two dimensions. 
+continuously at two hinge locations. The upper and middle hyperplanes are joined 
+at Hinge 1 and the lower and middle hyperplanes are joined at Hinge 2. These 
+hinges induce linear partitions on the input space that divide the space into three 
+regions, and the samples in $ into three subsets, 
+s+ -- ((x,,y,). w+ ) 
+s_ = ((x,,y,). *,% 5 
+(3) 
+These subsets, and the corresponding regions of the input space, are referred to as 
+the PLUS, LINEAR and MINUS subsets/regions respectively. We refer to this type 
+of partition as a sigmoidal partition. A sigmoidal partition of $ will be denoted 
+P = {$+, St, $_}, and the set of all such partitions will be denoted II = 
+Input samples that fall on the boundary between two regions can be assigned to the 
+set on either side. These points are referred to as hinge samples and play a crucial 
+role in subsequent development. Note that once a weight vector w is specified, the 
+partition P is completely determined, but the reverse is not necessarily true. That 
+is, there are generally an infinite number of weight vectors that induce the same 
+partition. 
+We begin our quest for a learning algorithm with the development of an expression 
+for the empirical risk. The empirical risk (squared error over the sample set) is 
+defined 
+I ): 
+Ep(w) =   (Yi - an(x/, w) (4) 
+s 
+538 D. R Hush, E Lozano and B. Horne 
+This expression can be expanded into three terms, one for each set in the partition, 
+After further expansion and rearrangement of terms we obtain 
+_ 2 
+Ep(w)= wTRw--wTr+s 
+(5) 
+where 
+2 1 2 
+=: Es = Es+ y, = Es_ y, (7) 
+R= 0 N+ 0 r= s w= w+ (8) 
+0 0 N_ s w_ 
+and N+, Nt and N_ are the number of sples in S+, St and S_ respectively. The 
+subscript P is used to emphize that this criterion is dependent on the partition (i.e. 
+P is required to form R d r). In fact, the nature of the partition plays a critical 
+role in determining the properties of the solution. When R is positive definite (i.e. 
+full rank), P is referred to  a stable partition, d when R h reduced rank P is 
+referred to  an unstable ptition. A stable ptition requires that Rt  0. For 
+purposes of algorithm development we will sume that Rt  0 when [St I  Nmin, 
+where Stain is a suitably chosen vue eater th or equal to d + 1. With this, a 
+necessy condition for a stable partition is that there be at let one sample in S+ 
+and S_ and Nt  Nmin. When seeking a minimizing solution for Ep (w) we restrict 
+ourselves to stable ptitions because of the potential nonuniqueness sociated with 
+solutions to unstable ptitions. 
+Determining a weight vector that simultaneously minimizes Ep(w) and preserves 
+the current partition can be posed as a constrained optimization problem. This 
+problem takes on the form 
+min �wTRw - wTr 
+subject to Aw _ 0 (9) 
+where the inequality constraints are designed to maintain the current partition de- 
+fined by (3). This is a Quadratic Programming problem with inequality constraints, 
+and because R  0 it has a unique global minimum. The general Quadratic Pro- 
+gramming problem is NP-hard and also hard to approximate (Bellare and Rogaway, 
+1993). However, the convex case which we restrict ourselves to here (i.e. R  0) 
+admits a polynomial time solution. In this paper we use the active set algorithm 
+(Luenberger, 1984) to solve (9). With the proper implementation, this algorithm 
+runs in O(k(d  + Nd)) time, where k is typically on the order of d or less. 
+The solution to the quadratic programming problem in (9) is only as good as the 
+current partition allows. The more challenging aspect of minimizing Er (w) is in 
+the search for a good partition. Unfortunately there is no ordering or arrangement 
+of partitions that is convex in Er(w), so the search for the optimal partition will 
+be a computationally challenging problem. An exhaustive search is usually out of 
+the question because of the prohibitively large number of partitions, as given by the 
+following lemma. 
+Lemma 1: Let S contain a total of N samples in R e that lie in general position. 
+Then the number of sigmoidal partitions defined in (3) is )(N+). 
+Function Approximation with the Sweeping Hinge Algorithm 539 
+Proof'. A detailed proof is beyond the scope of this paper, but an intuitive proof 
+follows. It is well-known that the number of linear dichotomies of N points in d 
+dimensions is O(N d) (Edelsbrunner, 1987). Each sigmoidal partition is comprised 
+of two linear dichotomies, one formed by Hinge I and the other by Hinge 2, and 
+these dichotomies are constrained to be simple translations of one another. Thus, 
+to enumerate all sigmoidal pa

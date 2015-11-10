@@ -1,0 +1,171 @@
+Learning by Combining Memorization 
+and Gradient Descent 
+John C. Platt 
+Synaptics, Inc. 
+2860 Zanker Road, Suite 206 
+San Jose, CA 95134 
+ABSTRACT 
+We have created a radial basis function network that allocates a 
+new computational unit whenever an unusual pattern is presented 
+to the network. The network learns by allocating new units and 
+adjusting the parameters of existing units. If the network performs 
+poorly on a presented pattern, then a new unit is allocated which 
+memorizes the response to the presented pattern. If the network 
+performs well on a presented pattern, then the network parameters 
+are updated using standard LMS gradient descent. For predicting 
+the Mackey Glass chaotic time series, our network learns much 
+faster than do those using back-propagation and uses a comparable 
+number of synapses. 
+I INTRODUCTION 
+Currently, networks that perform function interpolation tend to fall into one of two 
+categories: networks that use gradient descent for learning (e.g., back-propagation), 
+and constructive networks that use memorization for learning (e.g., k-nearest neigh- 
+bors). 
+Networks that use gradient descent for learning tend to form very compact repre- 
+sentations, but use many learning cycles to find that representation. Networks that 
+memorize their inputs need to only be exposed to examples once, but grow linearly 
+in the training set size. 
+The network presented here strikes a compromise between memorization and gradi- 
+ent descent. It uses gradient descent for the easy input vectors and memorization 
+for the hard input vectors. If the network performs well on a particular input 
+714 
+Learning by Combining Memorization and Gradient Descent 715 
+vector, or the particular input vector is already close to a stored vector, then the 
+network adjusts its parameters using gradient descent. Otherwise, it memorizes the 
+input vector and the corresponding output vector by allocating a new unit. The ex- 
+plicit storage of an input-output pair means that this pair can be used immediately 
+to improve the performance of the system, instead of merely using that information 
+for gradient descent. 
+The network, called the resource-allocation network (RAN), uses units whose re- 
+sponse is localized in input space. A unit with a non-local response needs to undergo 
+gradient descent, because it has a non-zero output for a large fraction of the training 
+data. 
+Because RAN is a constructive network, it automatically adjusts the number of 
+units to reflect the complexity of the function that is being interpolated. Fixed-size 
+networks either use too few units, in which case the network memorizes poorly, 
+or too many, in which case the network generalizes poorly. Parzen windows and 
+K-nearest neighbors both require a number of stored patterns that grow linearly 
+with the number of presented patterns. With RAN, the number of stored patterns 
+grows sublinearly, and eventually reaches a maximum. 
+1.1 PREVIOUS WORK 
+Previous workers have used networks with localized basis functions (Broomhead  
+Lowe, 1988) (Moody  Darken, 1988  89) (Poggio  Girosi, 1990). Moody has 
+further extended his work by incorporating a hash table lookup (Moody, 1989). The 
+hash table is a resource-allocating network where the values in the hash table only 
+become non-zero if the entry in the hash table is activated by the corresponding 
+presence of non-zero input probability. 
+The RAN adjusts the centers of the Gaussian units based on the error at the output, 
+like (Poggio  Girosi, 1990). Networks with centers placed on a high-dimensional 
+grid, such as (Broomhead  Lowe, 1988) and (Moody, 1989), or networks that use 
+unsupervised clustering for center placement, such as (Moody  Darken, 1988  
+89) generate larger networks than RAN, because they cannot move the centers to 
+increase the accuracy. 
+Previous workers have created function interpolation networks that allocate fewer 
+units than the size of training set. Cascade-correlation (Fahlman  Lebiere, 1990), 
+SONN (Tenorio  Lee, 1989), and MARS (Friedman, 1988) all construct networks 
+by adding additional units. These algorithms work well. The RAN algorithm 
+improves on these algorithms by making the addition of a unit as simple as possible. 
+RAN uses simple algebra to find the parameters of a new unit, while cascade- 
+correlation and MARS use gradient descent and SONN uses simulated annealing. 
+2 THE ALGORITHM 
+This section describes a resource-allocating network (RAN), which consists of a 
+network, a strategy for allocating new units, and a learning rule for refining the 
+network. 
+2.1 THE NETWORK 
+The RAN is a two-layer radial-basis-function network. The first layer consists of 
+716 Platt 
+units that respond to only a local region of the space of input values. The second 
+layer linearly aggregates outputs from these units and creates the function that 
+approximates the input-output mapping over the entire space. 
+A simple function that implements a locally tuned unit is a Gaussian: 
+zj = E(cj - I):, 
+k 
+xj -- exp(-zj/w?). 
+(1) 
+We use a C 1 continuous polynomial approximation to speed up the algorithm, 
+without loss of network accuracy: 
+xj = { (1-(zjlqw?)) 2 if zj < qw; 
+, 
+O, otherwise; 
+where q = 2.67 is chosen empirically to make the best fit to a Gaussian. 
+Each output of the network Yi is a sum of the outputs xj, each weighted by the 
+synaptic strength hij plus a global polynomial. The xj represent information about 
+local parts of the space, while the polynomial represents global information: 
+(3) 
+The hijxj term can be thought of as a bump that is added or subtracted to the 
+polynomial term k LikI + ?i to yield the desired function. 
+The linear term is useful when the function has a strong linear component. In 
+the results section, the Mackey-Glass equation was predicted with only a constant 
+term. 
+2.2 THE LEARNING ALGORITHM 
+The network starts with a blank slate: no patterns are yet stored. As patterns are 
+presented to it, the network chooses to store some of them. At any given point 
+the network has a current state, which reflects the patterns that have been stored 
+previously. 
+The allocator may allocate a new unit to memorize a pattern. After the new unit 
+is allocated, the network output is equal to the desired output . Let the index of 
+this new unit be n. 
+The peak of the response of the newly allocated unit is set to the memorized input 
+vector, 
+ - [. (4) 
+The linear synapses on the second layer are set to the difference between the output 
+of the network and the novel output, 
+= f- f. (5) 
+Learning by Combining Memorization and Gradient Descent 717 
+The width of the response of the new unit is proportional to the distance from the 
+nearest stored vector to the novel input vector, 
+where n is an overlap factor. As n grows larger, the responses of the units overlap 
+more and more. 
+The RAN uses a two-part memorization condition. An input-output pair ([, 2) 
+should be memorized if the input is far away from existing centers, 
+(7) 
+and if the difference between the desired output and the output of the network is 
+large 
+I1- 7(F)11 > (s) 
+Typically, e is a desired accuracy of output of the network. Errors larger than e 
+are immediately corrected by the allocation of a new unit, while errors smaller than 
+e are gradually repaired using gradient descent. The distance 6(t) is the scale of 
+resolution that the network is fitting at the tth input presentation. The learning 
+starts with 6(t) = 6max, which is the largest length scale of interest, typically the 
+size of the entire input space of non-zero probability density. The distance 6(t) 
+shrinks until the it reaches 6min, which is the smallest length scale of interest. The 
+network will average over features that are smaller than 6rnin. We used a function: 
+(t) = maX(Smax exp(--t/r), Smin), 
+(9) 
+where r is a decay constant. 
+At first, the system creates a coarse representation of the function, then refines the 
+representation by allocating units with smaller and smaller widths. Finally, when 
+the system has learned the entire function to the desired accuracy and length scale, 
+it stops allocating new units altogether. 
+The two-part memorization condition is necessary for creating a compact network. 
+If only condition (7) is used, then the network will allocate units instead of using 
+gradient descent to correct small errors. If only condition (8) is used, then fine-scale 
+units may be allocated in order to represent coarse-scale features, which is wasteful. 
+By allocating new units the RAN eventually represents the desired function ever 
+more closely as the network is trained. Fewer units are needed for a given accuracy 
+if the first-layer synapses cj}, the second-level synapses hij, and the parameters for 
+the global polynomial ?i and Lik are adjusted to decrease the error: � = [[7- 2[[ 2 
+(Widrow & Hoff, 1960). We use gradient descent on the second-layer synapses to 
+decrease the error whenever a new unit is not allocated: 
+= - 
+= - 
+(lO) 
+ALi}= ct(Ti - yi)I. 
+718 Platt 
+In addition, we adjust the centers of the responses of units to decrease the error: 
+Acjk -- 2wj(Ik --cji)x j (Ti - yi)hij � (11) 
+Equation (11) is derived from gradient descent and equation (1). Empirically, equa- 
+tion (11) also works for the polynomial approximation (2). 
+3 RESULTS 
+One application of an interpolating RAN is to predict complex time series. As 
+a test case, a chaotic time series can be generated with a nonlinear algebraic or 
+differential equation. Such a series has some short-range time coherence, but long- 
+term prediction is very difficult. 
+The IAN was tested on a particular chaotic time series created by the Mackey-Glass 
+delay-difference equation: 
+x(t q- 1) = (1 -- b)x(t) q- a 
+x(t- r) 
+1 + x(t- r)i0, 
+for a = 0.2, b = 0.1, and r = 17. We trained the network to predict the value 
+x(T + AT), given the values x(T),x(T-6),x(T- 12), and x(T- 18) as inputs. 
+The network was tested using two different lear

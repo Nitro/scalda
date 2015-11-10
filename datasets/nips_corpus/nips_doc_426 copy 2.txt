@@ -1,0 +1,166 @@
+A Framework for the Cooperation 
+of Learning Algorithms 
+L6on Bottou 
+Patrick Gailinari 
+Laboratoire de Recherche en Informatique 
+Universit6 de Paris XI 
+91405 Orsay Cedex 
+France 
+Abstract 
+We introduce a framework for training architectures composed of several 
+modules. This framework, which uses a statistical formulation of learning 
+systems, provides a unique formalism for describing many classical 
+connectionist algorithms as well as complex systems where several 
+algorithms interact. It allows to design hybrid systems which combine the 
+advantages of connectionist algorithms as well as other learning algorithms. 
+1 INTRODUCTION 
+Many recent achievements in the connectionist area have been carried out by designing 
+systems where different algorithms interact. For example (Bourlard & Morgan, 1991) 
+have mixed a Multi-Layer Perceptron (MLP) with a Dynamic Programming algorithm. 
+Another impressive application (Le Cun, Boser & al., 1990) uses a very complex multi- 
+layer architecture, followed by some statistical decision process. Also, in speech or image 
+recognition systems, input signals are sequentially processed through different modules. 
+Modular systems are the most promising way to achieve such complex tasks. They can 
+be built using simple components and therefore can be easily modified or extended, also 
+they allow to incorporate into their architecture some structural a priori knowledge about 
+the task decomposition. Of course, this is also true for connectionism, and important 
+781 
+782 Bottou and Gallinari 
+progresses in this field could be achieved if we were able to train multi-modules 
+architectures. 
+In this paper, we introduce a formal framework for designing and training such 
+cooperative systems. It provides a unique formalism for describing both the different 
+modules and the global system. We show that it is suitable for many connectionist 
+algorithms, which allows to make them cooperate in an optimal way according to the 
+goal of learning. It also allows to train hybrid systems where connectionist and classical 
+algorithms interact. Our formulation is based on a probabilistic approach to the problem 
+of learning which is described in section 2. One of the advantages of this approach is to 
+provide a formal definition of the goal of learning. In section 3, we introduce modular 
+architectures where each module can be described using this framework, and we derive 
+explicit formulas for training the global system through a stochastic gradient descent 
+algorithm. Section 4 is devoted to examples, including the case of hybrid algorithms 
+combining MLP and Learning Vector Quantization (Bollivier, Gallinari & Thiria, 1990). 
+2 LEARNING SYSTEMS 
+The probabilistic formulation of the problem of learning has been extensively studied for 
+three decades (Tsypkin 1971), and applied to control, pattern recognition and adaptive 
+signal processing. We recall here the main ideas and refer to (Tsypkin 1971) for a detailed 
+presentation. 
+2.1 EXPECTED COST 
+Let x be an instance of the concept to learn. In the case of a pattern recognition problem 
+for example, x would be a pair (pattern, class). The concept is mathematically defined by 
+an unknown probability density function p(x) which measures the likelihood of instance 
+X. 
+We shall use a system parameterized by w to perform some task that depends on p(x). 
+Given an example x, we can define a local cost, J(x,w), that measures how well our 
+system behaves on that example. For instance, for classification J would be zero if the 
+system puts a pattern in the correct class, or positive in case of misclassification. 
+Learning consists in finding a parameter w* that optimises some functional of the model 
+parameters. For instance, one would like to minimize the expected cost (1). 
+C(w): j' J(x,w) p(x)dx 
+(1) 
+The expected cost cannot be explicitely computed, because the density p(x) is unknown. 
+Our only knowledge of the process comes from a series of observations {x1...xn} drawn 
+from the unknown density p(x). Therefore, the quality of our system can only be 
+measured through the realisations J(x,w) of the local cost function for the different 
+observations. 
+A Framework for the Cooperation of Learning Algorithms 783 
+2.2 STOCHASTIC GRADIENT DESCENT 
+Gradient descent algorithms are the simplest minimization algorithms. We cannot, 
+however, compute the gradient of the expected cost (1), because p(x) is unknown. 
+Estimating these derivatives on a training set {Xl...xn}, gives the gradient algorithm (2), 
+where VJ denotes the gradient of J(x,w) with respect to w, and st, a small positive 
+constant, the learning rate. 
+Wt+l TM wt - st  V J(xi,wt) 
+i=1 
+The stochastic gradient descent algorithm (3) is an alternative to algorithm (2). At each 
+iteration, an example xt is drawn at random, and a new value of w is computed. 
+Wt+l TM wt - st VJ(xt,wt) 
+(3) 
+Algorithm (3) is faster and more reliable than (2), it is the only solution for training 
+adaptive systems like Neural networks (NN). Such stochastic approximations have been 
+extensively studied in adpative signal processing (Benveniste, Mefiver & Priouret, 1987), 
+(Ljung & Soderstr6m, 1983). Under certain conditions, algorithm (3) converges almost 
+surely (BoUou, 1991), (White, 1991) and allows to reach an optimal state of the system. 
+3 MODULAR LEARNING SYSTEMS 
+Most often, when the goal of learning is complex, it can be achieved more easily by 
+using a decomposition of the global task into several simpler subtasks which for instance 
+reflect some a priori knowledge about the structure of the problem. One can use this 
+decomposition to build modular architectures where each module will correspond to one of 
+the subtasks. 
+Within this framework, we will use the expected risk (1) as the goal of learning. The 
+problem now is to change the analytical formulation of the functional (1) so as to 
+introduce the modular decomposition of the global task. In (1), the analytic expression of 
+the local cost J(x,w) has two meanings: it describes a parametric relationship between the 
+inputs and the outputs of the system, and measures the quality of the system. To 
+introduce the decomposition, one may write this local cost J(x,w) as the composition of 
+several functions. One of them will take into account the local error and therefore measure 
+the quality of the system; the others will correspond to the decomposition of the 
+parametric relationship between the inputs and the outputs of the system (Figure 1). Each 
+of the modules will therefore receive some inputs from other modules or the external 
+world and produce some outputs which will be sent to other modules. 
+784 Bottou and Gallinari 
+w 
+Figure 1: A modular system 
+In classical systems, these modules correspond to well def'med processing stages like e.g. 
+signal processing, filtering, feature extraction, classification. They are trained sequentially 
+and then linked together to build a complete processing system which takes some inputs 
+(e.g. raw signals) and produces some outputs (e.g. classes). Neither the assumed 
+decomposition, nor the behavior of the different modules is guaranteed to optimally 
+contribute to the global goal of learning. We will show in the following that it is 
+possible to optimally train such systems. 
+3.1 TRAINING MODULAR SYSTEMS 
+Each function in the above composition defines a local processing stage or module whose 
+outputs are defined by a parametric function of its inputs (4). 
+� jy'l(n), yj: fj((Xk) k X-l(n) , (Wi) i W-l(n) ) (4) 
+y-1 (n) ( resp. X '1 (n), and W '1 (n)) denotes the set of subscripts associated to the outputs 
+y ( resp. inputs x and parameters w ) of module n. Conversely, output yj ( resp. input x k 
+and parameter w i ) belongs to module Y(j) ( resp. X(k) and W(i) ). 
+Modules are linked so as to build a feed-forward topology which is expressed by a 
+function ). 
+�k, Xk = Y)(k) (5) 
+We shah consider that the first module only feeds the system with examples and that the 
+last module only computes Ylast TM J(x,w). 
+Following (Le Cun, 1988), we can compute the derivatives of J with a Lagrangian 
+method. Let ( and I be the Lagrange coefficients for constraints (4) and (5). 
+L: J-Z Ik(Xk-y)(k)) - Z (J(YJ-fJ((Xk) k X-'Y(j), (wi), W-'Y(j) )) (6) 
+k j 
+By equating the derivatives of L with respect to x and y to zero, we get recursire formulas 
+for computing ( and l in a single backward pass along the acyclic graph ). 
+A Framework for the Cooperation of Learning Algorithms 785 
+last TM 1, 
+13k = ,Y_., (:zj aXk 
+jY'X(k) 
+, o.j = ,, k (if l�last) (7) 
+k6(-l(j) 
+Then, the derivatives of J with respect to the weights are: 
+(3wi (w) - o3wi ((z,,w) = ,Y_, (zj 
+j6 y-lW(i) 
+Once we have computed the derivatives of the local cost J(x,w), we can apply the 
+stochastic gradient descent algorithm (3) for minimizing of the expected cost C(w). 
+We shall say that each module is defined by the equations in (7) and (8) that characterize 
+its behavior. These equations are: 
+a forward equation (F) 
+a backward equation (B) 
+a gradient equation (G) 
+yj = fj((Xk) kX-l(n) , (wi)iWl(n) ) 
+(zJaaxf 
+jY'X(k) 
+aLL 
+The remaining equations do not depend on the nature of the modules. They describe how 
+modules interact during training. Like back-propagation, they address the credit 
+assignment problem between modules by globally minimizing a single cost function. 
+Training such a complex system actually consists in cooperatively training its 
+components. 
+4 EXAMPLES 
+Most learning algorithms, as well as new algorithms may be expressed as modular 
+learning systems. Here are some simple examples of modules and systems. 
+4.1 LINEAR AND QUASI-LINEAR SYSTEMS 
+MODULE SYMBOL FORWARD BACKWARD 
+Matrix product WX yi=WikXk pk= ..,(ZiWik 
+I 
+Mean square error MSE d=,(dk-Xk) 2 ,k=-2 (dk-Xk) 
+Perceptton error Perceptton J=-(dk-I +(Xk))Xk Ok =- (dk-I +(Xk)) 
+Sigmoid sig moYd yk=f(Xk) k=f'(Xk)Otk 
+GRADIENT 
+Aik=(ZiXk 
+A few basic modules are 

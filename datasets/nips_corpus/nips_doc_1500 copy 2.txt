@@ -1,0 +1,137 @@
+Exploring Unknown Environments with 
+Real-Time Search or Reinforcement Learning 
+Sven Koenig 
+College of Computing, Georgia Institute of Technology 
+skoenig @ cc.gatech.edu 
+Abstract 
+Learning Real-Time A* (LRTA*) is a popular control method that interleaves plan- 
+ning and plan execution and has been shown to solve search problems in known 
+environments efficiently. In this paper, we apply LRTA* to the problem of getting to 
+a given goal location in an initially unknown environment. Uninformed LRTA* with 
+maximal lookahead always moves on a shortest path to the closest unvisited state, 
+that is, to the closest potential goal state. This was believed to be a good exploration 
+heuristic, but we show that it does not minimize the worst-case plan-execution time 
+compared to other uninformed exploration methods. This result is also of interest to 
+reinforcement-learning researchers since many reinforcement learning methods use 
+asynchronous dynamic programming, interleave planning and plan execution, and 
+exhibit optimism in the face of uncertainty, just like LRTA*. 
+1 Introduction 
+Real-time (heuristic) search methods are domain-independent control methods that inter- 
+leave planning and plan execution. They are based on agent-centered search [Dasgupta et 
+al., 1994; Koenig, 1996], which restricts the search to a small part of the environment that 
+can be reached from the current state of the agent with a small number of action executions. 
+This is the part of the environment that is immediately relevant for the agent in its current 
+situation. The most popular real-time search method is probably the Learning Real-Time 
+A* (LRTA*) method [Korf, 1990]. It has a solid theoretical foundation and the following 
+advantageous properties: First, it allows for fine-grained control over how much planning 
+to do between plan executions and thus is an any-time contract algorithm [Russell and Zil- 
+berstein, 1991]. Second, it can use heuristic knowledge to guide planning, which reduces 
+planning time without sacrificing solution quality. Third, it can be interrupted at any state 
+and resume execution at a different state. Fourth, it amortizes learning over several search 
+episodes, which allows it to find plans with suboptimal plan-execution time fast and then 
+improve the plan-execution time as it solves similar planning tasks, until its plan-execution 
+time is optimal. Thus, LRTA* always has a small sum of planning and plan-execution 
+1004 Koenig 
+Initially, u(s) = 0 for all s E S. 
+2. If $c,,.,.�,t  G, then stop successlly. 
+3. Generate a local search space St  S with 
+st  St and St  G = O. 
+4. Update u(s) for all s  St igure 2). 
+5. a := one-ofarg,�z( ...... 
+6. Execute action a. 
+8. If s,,,  St,,, then go to 5. 
+9. Go to 2. 
+1. For all s 
+2. Ifu(s) < oc for all s G Stsc, thenretum. 
+3. s' := one-ofargminsss:,()=,, 
+min,e.4( ) u($ucc($,a)). 
+4. If min,e.4(8, ) u($ucc($,a)) = , then 
+return. 
+5. u($') := 1 + min,e,(, ) u($ucc($',a)). 
+6. Go to 2. 
+Figure 2: Value-Update Step 
+Figure 1' Uninformed LRTA* 
+time, and it minimizes the plan-execution time in the long run in case similar planning tasks 
+unexpectedly repeat. This is important since no search method that executes actions before 
+it has solved a planning task completely can guarantee to minimize the plan-execution time 
+right away. 
+Real-time search methods have been shown to be efficient alternatives to traditional search 
+methods in known environments. In this paper, we investigate real-time search methods 
+in unknown environments. In such environments, real-time search methods allow agents 
+to gather information early. This information can then be used to resolve some of the 
+uncertainty and thus reduce the amount of planning done for unencountered situations. 
+We study robot-exploration tasks without actuator and sensor uncertainty, where the sensors 
+on-board the robot can uniquely identify its location and the neighboring locations. The 
+robot does not know the map in advance, and thus has to explore its environment sufficiently 
+to find the goal and a path to it. A variety of methods can solve these tasks, including LRTA*. 
+The proceedings of the AAAI-97 Workshop on On-Line Search [Koenig et al., 1997] give 
+a good overview of some of these techniques. In this paper, we study whether uninformed 
+LRTA* is able to minimize the worst-case plan-execution time over all state spaces with the 
+same number of states provided that its lookahead is sufficiently large. Uninformed LRTA* 
+with maximal lookahead always moves on a shortest path to the closest unvisited state, that 
+is, to the closest potential goal state - it exhibits optimism in the face of uncertainty [Moore 
+and Atkeson, 1993]. We show that this exploration heuristic is not as good as it was believed 
+to be. This solves the central problem left open in [Pemberton and Korf, 1992] and improves 
+our understanding of LRTA*. Our results also apply to learning control for tasks other than 
+robot exploration, for example the control tasks studied in [Davies et al., 1998]. They are 
+also of interest to reinforcement-learning researchers since many reinforcement learning 
+methods use asynchronous dynamic programming, interleave planning and plan execution, 
+and exhibit optimism in the face of uncertainty, just like LRTA* [Barto et al., 1995; 
+Kearns and Singh, 1998]. 
+2 LRTA* 
+We use the following notation to describe LRTA*: $ denotes the finite set of states of the 
+environment, 8stay t  S the start state, and 0  G C_ $ the set of goal states. The number 
+of states is n := IXl. A(s) # 0 is the finite, nonempty set of actions that can be executed in 
+state s  S. succ(s, a) denotes the successor state that results from the execution of action 
+a  A(s) in state s  $. We also use two operators with the following semantics: Given 
+Exploring Unknown Environments 1005 
+a set X, the expression one-ofX returns an element of X according to an arbitrary rule. 
+A subsequent invocation of one-ofX can return the same or a different element. The 
+expression arg minxx f(z) returns the elements z E X that minimize f(z), that is, the 
+set {x  XIf(x ) = minx,�x f(x')}. 
+We model environments (topological maps) as state spaces that correspond to undirected 
+graphs, and assume that it is indeed possible to reach a goal state from the start state. We 
+measure the distances and thus plan-execution time in action executions, which is reasonable 
+if every action can be executed in about the same amount of time. The graph is initially 
+unknown. The robot can always observe whether its current state is a goal state, how many 
+actions can be executed in it, and which successor states they lead to but not whether the 
+successor states are goal states. Furthermore, the robot can identify the successor states 
+when it observes them again at a later point in time. This assumption is realistic, for 
+example, if the states look sufficiently different or the robot has a global positioning system 
+(GPS) available. 
+LRTA* learns a map of the environment and thus needs memory proportional to the number 
+of states and actions observed. It associates a small amount of information with the states 
+in its map. In particular, it associates a u-value u(s) with each state s  $. The u-values 
+approximate the goal distances of the states. They are updated as the search progresses and 
+used to determine which actions to execute. Figure 1 describes LRTA*: LRTA* first checks 
+whether it has already reached a goal state and thus can terminate successfully (Line 2). If 
+not, it generates the local search space St** C_ $ (Line 3). While we require only that the 
+current state is part of the local search space and the goal states are not [Barto et al., 1995], 
+in practice LRTA* constructs St** by searching forward from the current state. LRTA* then 
+updates the u-values of all states in the local search space (Line 4), as shown in Figure 2. 
+The value-update step assigns each state its goal distance under the assumption that the 
+u-values of all states outside of the local search space correspond to their correct goal 
+distances. Formally, if u(s)  [0, oo] denotes the u-values before the value-update step and 
+fi(s)  [0, oo] denotes the u-values afterwards, then fi(s) = 1 + minaA() fi(succ(s,a)) 
+for all s  $t** and fi(s) = u(s) otherwise. Based on these u-values, LRTA* decides which 
+action to execute next (Line 5). It greedily chooses the action that minimizes the u-value of 
+the successor state (ties are broken arbitrarily) because the u-values approximate the goal 
+distances and LRTA* attempts to decrease its goal distance as much as possible. Finally, 
+LRTA* executes the selected action (Line 6) and updates its current state (Line 7). Then, if 
+the new state is still part of the local search space used previously, LRTA* selects another 
+action for execution based on the current u-values (Line 8). Otherwise, it iterates (Line 9). 
+(The behavior of LRTA* with either minimal or maximal lookahead does not change if 
+Line 8 is deleted.) 
+3 Plan-Execution Time of LRTA* for Exploration 
+In this section, we study the behavior of LRTA* with minimal and maximal lookaheads in 
+unknown environments. We assume that no a-priori heuristic knowledge is available and, 
+thus, that LRTA* is uninformed. In this case, the u-values of all unvisited states are zero 
+and do not need to be maintained explicitly. 
+Minimal Lookahead: The lookahead of LRTA* is minimal if the local search space con- 
+tains only the current state. LRTA* with minimal lookahead performs almost no planning 
+between plan executions. Its behavior in initially known and unknown environments is 
+identical. Figure 3 shows an example. 
+Let gd(s) denote the goal distance of state s. Then, according to one of our previous results, 
+uninformed LRTA* with any lookahead reaches a goal state after at most y'.,  s gd(s) action 
+r--I 
+executions [Koenig and Simmons, 199

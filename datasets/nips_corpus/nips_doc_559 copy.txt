@@ -1,0 +1,164 @@
+Fast, Robust Adaptive Control by Learning only 
+Forward Models 
+Andrew W. Moore 
+MIT Artificial Intelligence Laboratory 
+545 Technology Square, Cambridge, MA 02139 
+amai. mir. edu 
+Abstract 
+A large class of motor control tasks requires that on each cycle the con- 
+troller is told its current state and must choose an action to achieve a 
+specified, state-dependent, goal behaviour. This paper argues that the 
+optimization of learning rate, the number of experimental control deci- 
+sions before adequate performance is obtained, and robustness is of prime 
+importance--if necessary at the expense of computation per control cy- 
+cle and memory requirement. This is motivated by the observation that 
+a robot which requires two thousand learning steps to achieve adequate 
+performance, or a robot which occasionally gets stuck while learning, will 
+always be undesirable, whereas moderate computational expense can be 
+accommodated by increasingly powerful computer hardware. It is not un- 
+reasonable to assume the existence of inexpensive 100 Mfiop controllers 
+within a few years and so even processes with control cycles in the low 
+tens of milliseconds will have millions of machine instructions in which to 
+make their decisions. This paper outlines a learning control scheme which 
+aims to make effective use of such computational power. 
+I MEMORY BASED LEARNING 
+Memory-based learning is an approach applicable to both classification and func- 
+tion learning in which all experiences presented to the learning box are explic- 
+itly remembered. The memory, Mere, is a set of input-output pairs, Mere = 
+{(x,y),(x2,y2),...,(xk,yk)}. When a prediction is required of the output of a 
+novel input lrquery , the memory is searched to obtain experiences with inputs close to 
+lrquery. These local neighbours are used to determine a locally consistent output for 
+the query. Three memory-based techniques, Nearest Neighbout, Kernel Regression, 
+and Local Weighted Regression, are shown in the accompanying figure. 
+571 
+572 Moore 
+ut 
+Nearest Neighbout: 
+Ypredict(:rquery) -- Yi where 
+Kernel Regression: Also 
+known as Shepard's interpo- 
+i minimizes {(zi - Zquery) 2: lation or Local Weighted Av- 
+(zi, yi)  Mem}. There erages. ?xp_edict(Zquery ) --- 
+is a general introduction (-wiyi)/2_wi where wi 
+in [5], some recent appli- 
+cations in [11], and recent 
+robot learning work in [9, 3]. 
+Input 
+Local Weighted Regres- 
+sion: finds the linear map- 
+ping y = Ax to minimize 
+the sum o/weighted squares 
+of residuals .axe) 
+exp(--(:ri- :rquery)2/Kwidth2)Yren diet is then A:rquery. 
+[6] describes some variants. .vvr was introduced for 
+robot learning control by [1]. 
+2 A MEMORY-BASED INVERSE MODEL 
+An inverse model maps State x Behaviour -. Action (s x b -. a). Behaviour is 
+the output of the system, typically the next state or time derivative of state. The 
+learned inverse model provides a conceptually simple controller: 
+1. Observe s and bgoa 1. 
+2. a := inverse-model(s, bgoal) 
+3. Perform action a and observe actual behaviour bactual. 
+4. Update MEM with (s, bactual '- a): If we are ever again in state s and 
+require behaviour bactual we should apply action a. 
+Memory-based versions of this simple algorithm have used nearest neighbout [9] 
+and LWR [3]. bgoal is the goal behaviour: depending on the task it may be fixed 
+or it may vary between control cycles, perhaps as a function of state or time. The 
+algorithm provides aggressive learning: during repeated attempts to achieve the 
+same goal behaviour, the action which is applied is not an incrementally adjusted 
+version of the previous action, but is instead the action which the memory and the 
+memory-based learner predicts will directly achieve the required behaviour. If the 
+function is locally linear then the sequence of actions which are chosen are closely 
+related to the Secant method [4] for numerically finding the zero of a function by 
+bisecting the line between the closest approximations that bracket the y = 0 axis. If 
+learning begins with an initial error E0 in the action choice, and we wish to reduce 
+this error to Eo/K, the number of learning steps is O(log log K): subject to benign 
+conditions, the learner jumps to actions close to the ideal action very quickly. 
+A common objection to learning the inverse model is that it may be ill-defined. For 
+a memory-based method the problems are particularly serious because of its update 
+rule. It updates the inverse model near bactua and therefore in those cases in which 
+bgoal and bactual differ greatly, the mapping near bgoal may not change. As a result, 
+Fast, Robust Adaptive Control by Learning only Forward Models 573 
+subsequent cycles will make identical mistakes. [10] discusses this further� 
+3 A MEMORY-BASED FORWARD MODEL 
+One fix for the problem of inverses becoming stuck is the addition of random noise 
+to actions prior to their application. However, this can result in a large proportion 
+of control cycles being wasted on experiments which the robot should have been able 
+to predict as valueless, defeating the initial aim of learning as quickly as possible. 
+An alternative technique using multilayer neural nets has been to learn a forward 
+model, which is necessarily well defined, to train a partial inverse. Updates to the 
+forward model are obtained by standard supervised training, but updates to the 
+inverse model are more sophisticated. The local Jacobian of the forward model 
+is obtained and this value is used to drive an incremental change to the inverse 
+model [8]. In conjunction with memory-based methods such an approach has the 
+disadvantage that incremental changes to the inverse model loses the one-shot learn- 
+ing behaviour, and introduces the danger of becoming trapped in a local minimum. 
+Instead, this investigation only relies on learning the forward model. Then the 
+inverse model is implicitly obtained from it by online numerical inversion instead of 
+direct lookup. This is illustrated by the following algorithm: 
+Observe s and bgoal. 
+Perform numerical inversion: 
+Search among a series of candidate actions 
+al, a2... ak: 
+bPredict := forard-aodel(s, al MEM) 
+1 ' 
+bPredict forward-model(s, a2 MEM) 
+2 := ' 
+predict := forvard-model(s, ak, MEM) 
+k 
+If TIME-OUT then perform experimental action else perform a k. 
+Update MEM with (s, ak  bactual) 
+Until [,.TIME-OUT J 
+o-I bPredict '- b I 
+A nice feature of this method is the absence of a preliminary training phase such 
+as random flailing or feedback control. A variety of search techniques for numerical 
+inversion can be applied. Global random search avoids local minima but is very slow 
+for obtaining accurate actions, hill climbing is a robust local procedure and more 
+aggressive procedures such as Newton's method can use partial derivative estimates 
+from the forward model to make large second-order steps. The implementation used 
+for subsequent results had a combination of global search and local hill climbing. 
+In very high speed applications in which there is only time to make a small number 
+of forward model predictions, it is not difficult to regain much of the speed advantage 
+of directly using an inverse model by commencing the action search with a0 as the 
+action predicted by a learned inverse model. 
+4 OTHER CONSIDERATIONS 
+Actions selected by a forward memory-based learner can be expected to converge 
+very quickly to the correct action in benign cases, and will not become stuck in dif- 
+ficult cases, provided that the memory based representation can fit the true forward 
+574 Moore 
+model. This proviso is weak compared with incremental learning control techniques 
+which typically require stronger prior assumptions about the environment, such as 
+near-linearity, or that an iterative function approximation procedure will avoid local 
+minima. One-shot methods have an advantage in terms of number of control cy- 
+cles before adequate performance whereas incremental methods have the advantage 
+of only requiring trivial amounts of computation per cycle. However, the simple 
+memory-based formalism described so far suffers from two major problems which 
+some forms of adaptive and neural controllers may avoid. 
+� Brittle behaviour in the presence of outliers. 
+� Poor resistance to non-stationary environments. 
+Many incremental methods implicitly forget all experiences beyond a certain hori- 
+zon. For example, in the delta rule Awij = ,(yctual . predict\ 
+-- Yi ).j, the age beyond 
+which experiences have a negligible effect is determined by the learning rate v. As 
+a result, the detrimental effect of misleading experiences is present for only a fixed 
+amount of time and then fades away 1. In contrast, memory-based methods remem- 
+ber everything for ever. Fortunately, two statistical techniques: robust regression 
+and cross-validation allow extensions to the numerical inversion method in which 
+we can have our cake and eat it too. 
+5 USING ROBUST REGRESSION 
+We can judge the quality of each experience (zi, yi)  Mean by how well it is 
+predicted by the rest of the experiences. A simple measure of the ith error is the 
+cross validation error, in which the experience is first removed from the memory 
+before prediction. e} ve =1 Predict(x,,Mean-{(x,,yi)}) I. With the memory- 
+based formalism, in which all work takes place at prediction time, it is no more 
+expensive to predict a value with one datapoint removed than with it included. 
+Once we have the measure e.xve of the quality of each experience, we can decide 
+if it is worth keeping. Robust statistics [7] offers a wide range of methods: this 
+implementation uses the Median Absolute Deviation (MAD) procedure. 
+6 FULL CROSS VALIDATION 
+The value - xve good 
+Ctotal --  xve 
+c i , summed over all experiences, provides a measure 
+of how well the current representation fits the data. By optimizing this value with 
+respect to internal learner parameters, such as the width of the local weighting 
+functi

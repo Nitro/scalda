@@ -1,0 +1,149 @@
+ADAPTIVE KNOT PLACEMENT FOR 
+NONPARAMETRIC REGRESSION 
+Hossein L. Najafi* 
+Department of Computer Science 
+University of Wisconsin 
+River Falls, WI 54022 
+Vladimir Cherkassky 
+Department of Electrical Engineering 
+University of Minnesota 
+Minneapolis, Minnesota 55455 
+Abstract 
+Performance of many nonparametric methods critically depends 
+on the strategy for positioning knots along the regression surface. 
+Constrained Topological Mapping algorithm is a novel method that 
+achieves adaptive knot placement by using a neural network based 
+on Kohonen's self-organizing maps. We present a modification to 
+the original algorithm that provides knot placement according to 
+the estimated second derivative of the regression surface. 
+I INTRODUCTION 
+Here we consider regression problems. Using mathematical notation, we seek to find 
+a function f of N - 1 predictor variables (denoted by vector X) from a given set of 
+n data points, or measurements, Zi = (Xi , Y/) (i = 1, ..., n) in N - dimensional 
+sample space: 
+Y -- f(X) -t- error 
+where error is unknown (but zero mean) aud its distribution may depend on X. The 
+distribution of points in the training set can be arbitrary, but uniform distribution 
+in the domain of X is often used. 
+* Responsible for correspondence, 
+hossein.naj afi@uwrf. edu. 
+Telephone (715) 425-3769, e-mail 
+247 
+248 Najafi and Cherkassky 
+The goal of this paper is to show how statistical considerations can be used to 
+improve the performance of a novel neural network algorithm for regression [CN91], 
+in order to achieve adaptive positioning of knots along the regression surface. By 
+estimating and employing the second derivative of the underlying function, the 
+modified algorithm is made more flexible around the regions with large second 
+derivative. Through empirical investigation, we show that this modified algorithm 
+allocates more units around the regions where the second derivative is large. This 
+increase in the local knot density introduces more flexibility into the model (around 
+the regions with large second derivative) and makes the model less biased around 
+these regions. However, no over-fitting is observed around these regions. 
+2 THE PROBLEM OF KNOT LOCATION 
+One of the most challenging problems in practical implementations of adaptive 
+methods for regression is adaptive positioning of knots along the regression surface. 
+Typically, knot positions in the domain of X are chosen as a subset of the training 
+data set, or knots are uniformly distributed in X. Once X-locations are fixed, 
+commonly used data-driven methods can be applied to determine the number of 
+knots. However, de Boor [dB78] showed that a polynomial spline with unequally 
+spaced knots can approximate an arbitrary function much better than a spline 
+with equally spaced knots. Unfortunately, the minimization problem involved in 
+determination of the optimal placement of knots is highly nonlinear and the solution 
+space is not convex [FS89]. Hence, the performance of many recent algorithms that 
+include adaptive knot placement (e.g. MARS) is difficult to evaluate analytically. In 
+addition, it is well-known that when data points are uniform, more knots should be 
+located where the second derivative of the function is large. However, it is difficult to 
+extend these results for non-uniform data in conjunction with data-dependent noise. 
+Also, estimating the second derivative of a true function is necessary for optimal 
+knot placement. Yet, the function itself is uuknown and its estimation depends on 
+the good placement of knots. This suggests the need for some iterative procedure 
+that alternates between function estimation(smoothing) and knot positioning steps. 
+Many ANN methods effectively try to solve the problem of adaptive knot loca- 
+tion using ad hoc strategies that are not statistically optimal. For example, local 
+adaptive methods [Che92] are generalization of kernel smoothers where the ker- 
+nel functions and kernel centers are deterlnined from the data by some adaptive 
+algorithm. Examples of local adaptive methods include several recently proposed 
+ANN models known as radial basis function (RBF) networks, regularization net- 
+works, networks with locally tuned units etc [BL88, MD89, PG90]. When applied 
+to regression problems, all these methods seek to fiud regression estimate in the 
+(most general) form /k=l biI-li(X, Ci) where X is the vector of predictor variable, 
+Ci is the coordinates of the i-th 'center' or 'bump', Hi is the response function of 
+the kernel type (the kernel width may be different for each center i), bi are linear 
+coefficients to be determined, and k is the total number of knots or 'centers'. 
+Whereas the general formulation above assumes global optimization of an error mea- 
+sure for the training set with respect, to all parameters, i.e. center locations, kernel 
+width and linear coefficients, this is not practically feasible because the error surface 
+is generally non-convex and may have local minima [PG90, MD89]. Hence most 
+Adaptive Knot Placement for Nonparametric Regression 249 
+practical approaches first solve the problem of center(knot) location and assume 
+identical kernel functions. Then the remaining problem of finding linear coefficients 
+bi is solved by using familiar methods of Linear Algebra [PG90] or gradient-descent 
+techniques [MD89]. It appears that the problem of center locations is the most 
+critical one for the local neural network techniques. Unfortunately, heuristics used 
+for center location are not based on any statistical considerations, and empirical 
+results are too sketchy [PG90, MD89]. In statistical methods knot locations are 
+typically viewed as free parameters of the model, and hence the number of knots 
+directly controls the model complexity. Alternatively, one can impose local regu- 
+larization constraints on adjacent knot locations, so that neighboring knots cannot 
+move independently. Such an approach is effectively implemented in the model of 
+self-organization known as Kohonen's Self-Organizing Maps (SOM) [Koh84]. This 
+model uses a set of units (knots) with neighborhood relations between units de- 
+fined according to a fixed topological structure (typically 1D or 2D grid). During 
+training or self-organization, data points are presented to the map iteratively, one 
+at a time, and the unit closest to the data moves towards it, also pulling along its 
+topological neighbors. 
+3 
+MODIFIED CTM ALGORITHM FOR ADAPTIVE 
+KNOT PLACEMENT 
+The SOM model has been applied to nonparametric regression by Cherkassky and 
+Najafi [CN91] in order to achieve adaptive positioning of knots along the regres- 
+sion surface. Their technique, called Constrained Topological Mapping (CTM), is a 
+modification of Kohonen's self-organization suitable for regression problems. CTM 
+interprets the units of the Kohonen map as movable knots of a regression surface. 
+Correspondingly, the problem of finding regression estimate can be stated as the 
+problem of forming an M - dimensional topological map using a set of samples 
+from N - dimensional sample space (where M _< N - 1) . Unfortunately, straight- 
+forward application of the Kohouen Algorithm to regression problem does not work 
+well [CN91]. Because, the presence of noise in the training data can fool the algo- 
+rithm to produce a map that is a multiple-valued function of independent variables 
+in the regression problem (1). This problem is overcome in the CTM algorithm, 
+where the nearest neighbor is found in the subspace of predictor variables, rather 
+than in the input(sample) space [CN91]. 
+We present next a concise description of the CTM algorithm. Using standard for- 
+mulation (1) for regression, the training data are N - dimensional vectors Zi = (Xi 
+, Y}), where Yi is a noisy observation of an unknown function of N - 1 predictor 
+variables given by vector Xi. The CTM algorithm constructs an M - dimensional 
+topological map in N - dimensional sample space (M _< N - 1) as follows: 
+0. Initialize the M - dimensional topological map in N - dimensional sample 
+space. 
+1. Given an input vector Z in N - dimensional sample space, find the closest 
+(best matching) unit i in the subspace of independent variables: 
+II W i II-' Minj{l[Z*- * 
+� Wj II} Vj [1,..., L] 
+250 Najafi and Cherkassky 
+where Z* is the projection of the input vector onto the subspace of inde- 
+pendent variables, Wj is the projection of the weight vector of unit j, and 
+k is the discrete time step. 
+2. Adjust the units' weights according to the following and return to 1: 
+W(k + 1) = Wj(k) +/9(k)Cj(k)(Z(k) - W'3(k)) �j (2) 
+where/9(k) is the learning rate and Cj(k) is the neighborhood for unit j at 
+iteration k and are given by: 
+( [[i- 
+exp 0'5 ,/9(k) x So ) 
+where k,a is the final value of the time step (k,a is equal to the product of 
+the training set size by the number of times it was recycled),/90 is the initial 
+learning rate, and/9 I is the final learning rate (/90 = 1.0 and/9 I - 0.05 were 
+used in all of our experiments), IIi- Jll is the topological distance between 
+the unit j and the best matched unit i and So is the initial size of the map 
+(i.e., the number of units per dimeusion) . 
+Note that CTM method achieves placement of units (knots) in X-space according 
+to density of training data. This is due to the fact that X-coordinates of CTM units 
+during training follow the standard Kohonen self-organization algorithm [Koh84], 
+which is known to achieve faithful approximation of an unknown distribution. How- 
+ever, existing CTM method does not place more knots where the underlying function 
+changes rapidly. The improved strategy for CTM knot placement in X-space takes 
+into account estimated second derivative of a fimction as is described next. 
+The problem with estimating second derivative is that the function itself is unknown. 
+This suggests using an iterative strategy for building a model, i.e., start with a crude 
+model, estimate the second de

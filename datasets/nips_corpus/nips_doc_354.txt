@@ -1,0 +1,191 @@
+Neural Networks Structured for Control 
+Application to Aircraft Landing 
+Charles Schley, Yves Chauvin, Van Henkle, Richard Golden 
+Thomson-CSF, Inc., Palo Alto Research Operations 
+630 Hansen Way, Suite 250 
+Palo Alto, CA 94306 
+Abstract 
+We present a generic neural network architecture capable of con- 
+trolling non-linear plants. The network is composed of dynamic, 
+parallel, linear maps gated by non-linear switches. Using a recur- 
+rent form of the back-propagation algorithm, control is achieved 
+by optimizing the control gains and task-adapted switch parame- 
+ters. A mean quadratic cost function computed across a nominal 
+plant trajectory is minimized along with performance constraint 
+penalties. The approach is demonstrated for a control task con- 
+sisting of landing a commercial aircraft in difficult wind conditions. 
+We show that the network yields excellent performance while re- 
+maining within acceptable damping response constraints. 
+1 INTRODUCTION 
+This paper illustrates how a recurrent back-propagation neural network algorithm 
+(Rumelhart, Hinton & Williams, 1986) may be exploited as a procedure for con- 
+trolling complex systems. In particular, a simplified mathematical model of an 
+aircraft landing in the presence of severe wind gusts was developed and simulated. 
+A recurrent back-propagation neural network architecture was then designed to 
+numerically estimate the parameters of an optimal non-linear control law for land- 
+ing the aircraft. The performance of the network was then evaluated. 
+1.1 A TYPICAL CONTROL SYSTEM 
+A typical control system consists of a controller and a process to be controlled. The 
+contro!ler's function is to accept task inputs along with process outputs and to de- 
+termine control signals tailored to the response characteristics of the process. The 
+415 
+416 Schley, Chauvin, Henkle, Golden 
+physical process to be controlled can be electro-mechanical, aerodynamic, etc. 
+and generally has well defined behavior. It may be subjected to disturbances from 
+its external environment. 
+1.2 CONTROLLER DESIGN 
+Many variations of both classical and modern methods to design control systems 
+are described in the literature. Classical methods use linear approximations of the 
+plant to be controlled and some loosely defined response specifications such as 
+bandwidth (speed of response) and phase margin (degree of stability). Classical 
+methods are widely used in practice, even for sophisticated control problems. 
+Modern methods are more universal and generally assume that a performance in- 
+dex for the process is specified. Controllers are then designed to optimize the 
+performance index. Our approach relates more to modern methods. 
+Narendra and Parthasarathy (1990) and others have noted that recurrent back- 
+propagation networks can implement gradient descent algorithms that may be used 
+to optimize the performance of a system. The essence of such methods is first to 
+propagate performance errors back through the process and then back through the 
+controller to give error signals for updating the controller parameters. Figure 1 
+provides an overview of the interaction of a neural control law with a complex 
+system and possible performance indices for evaluating various control laws. The 
+functional components 
+Control Disturbances needed to train the con- 
+Task Neural Net 
+Input . Control Process troller are shown within 
+Signals the shaded box of Figure 
+1. The objective per- 
+formance measure con- 
+tains factors that are writ- 
+ten mathematically and 
+usually represent terms 
+such as weighted square 
+error or other quantifiable 
+measures. The perform- 
+ance constraints are often 
+more subjective in nature 
+Figure 1: Neural Network Controller Design and can be formulated as 
+reward or penalty functions on categories of performance (e.g., good or bad). 
+2 A GENERIC NON-LINEAR CONTROL ARCHITECTURE 
+Many complex systems are in fact non-linear or multi-modal. That is, their 
+behavior changes in fundamental ways as a function of their position in the state 
+space. In practice, controllers are often designed for such systems by treating them 
+as a collection of systems linearized about a setpoint in state space. A linear 
+controller can then be determined separately for each of these system modes. 
+These observations suggest that a reasonable approach for controlling non-linear 
+or multi-modal systems would be to design a multi-modal control law. 
+2.1 THE SWITCHING PRINCIPLE 
+The architecture of our proposed general non-linear control law for multi-mod- 
+al plants is shown in Figure 2. Task inputs and process outputs are entered into 
+Neural Networks Structured for Control Application to Aircraft Landing 417 
+Task 
+Inputs 
+Process 
+Outputs 
+ht 
+ht 
+fin Switch 
+Sigmoid( ) 
+Multi 
+Basic Controller Block 
+,+ 
+� 
+� 
+� 
+Repeat 
+� 
+Figure 2: Neural Network Controller Architecture 
+multiple basic controller 
+blocks (shown within the 
+shaded box of Figure 2). 
+Each basic controller block 
+first determines a weighted 
+sum of the task inputs and 
+process outputs (multipli- 
+cation by weights W). 
+Then, the degree to which 
+the weighted sum passes 
+through the block is modi- 
+fied by means of a saturat- 
+ing switch and multiplier. 
+The input to the switch is 
+itself another weighted sum 
+of the task inputs and process outputs (multiplication by weights V). If the input to 
+the saturating switch is large, its output is unity and the weighted sum (weighted by 
+W) is passed through unchanged. At the other extreme, if the saturating switch has 
+zero output, the weighted sum of task inputs and process outputs does not appear in 
+the output. When these basic controller blocks are replicated and their outputs are 
+added, control signals consist of weighted sums of the controller inputs that can be 
+selected and/or blended by the saturating switches. The overall effect is a prototyp- 
+ical feed-forward and feedback controller with selectable gains and multiple path- 
+ways where the overall equivalent gains are a function of the task inputs and process 
+outputs. The resulting architecture yields a sigrna-pi processing unit in the final 
+controller (Rumelhart, Hinton & Williams, 1986). 
+2.2 MODELLING DYNAMIC MAPPINGS 
+Weights shown in Figure 2 may be constant and represent a static relationship be- 
+tween input and control. However, further controller functionality is obtained by 
+considering the weights V and W as dynamic mappings. For example, proportional 
+plus integral plus derivative (PID) feedback may be used to ensure that process 
+outputs follow task inputs with adequate steady-state error and transient damping. 
+Thus, the weights can express parameters of various generally useful control func- 
+tions. These functions, when combined with the switching principle, yield rich 
+capabilities that can be adapted to the task at hand. 
+3 AIRCRAFt LANDING 
+The generic neural network architecture of Figure 2 and the associated neural net- 
+work techniques were tested with a real-world application: automatic landing of 
+an aircraft. Here, we describe the aircraft and environment model during landing. 
+3.1 GLIDESLOPE AND FLARE 
+During aircraft landing, the final two phases of a landing trajectory consist of a 
+glideslope phase and a flare phase. Figure 3 shows these two phases. Flare 
+occurs at about 45 feet. Glideslope is characterized by a linear downward slope; 
+flare by an exponential shaped curve. When the aircraft begins flare, its response 
+characteristics are changed to make it more sensitive to the pilot's actions, making 
+the process multi-modal or non-linear over the whole trajectory. 
+418 Schley, Chauvin, Henkle, Golden 
+Altitude: h 
+At Flare Initiation 
+Altitude: h = h.! 
+Altitude Rate: /t = h! 
+Speed: V = Vf 
+At Touchdown: 
+Altitude: 
+Altitude Rate: 
+Position: 
+Pitch Angle: 
+0 < min  h TD ' hmax 
+Xmin - XTD  Xmax 
+Omin  OTD  Omax 
+begin flare 
+Glideslope Angle: 
+Pitch angle is measured between the 
+x axis and the aircraft velocity vector. 
+touchdown point 
+XTD -max 
+position x Glideslope Predicted Xm 
+Intercept Point 
+Figure 3: Glideslope and Flare Geometry 
+3.2 STATE EQUATIONS 
+Linearized equations of motion were used for the aircraft during each phase. They 
+are adequate during the short period of time spent during glideslope and flare. A 
+pitch stability augmentation system and an auto-throttle were added to the aircraft 
+state equations to damp the bare airframe oscillatory behavior and provide speed 
+control. The function of the autoland controller is to transform information about 
+desired and actual trajectories into the aircraft pitch command. This is input to the 
+pitch stability augmentation system to develop the aircraft elevator angle that in 
+turn controls the aircraft's actual pitch angle. Simplifications retain the overall 
+quality of system response (i.e., high frequency dynamics were neglected). 
+3.3 WIND MODEL 
+The environment influences the process through wind disturbances represented by 
+constant velocity and turbulence components. The magnitude of the constant ve- 
+locity component is a function of altitude (wind shear). Turbulence is a stochastic 
+process whose mean and variance are functions of altitude. For the horizontal and 
+vertical wind turbulence velocities, the so-called Dryden spectra for spatial turbu- 
+lence distribution are assumed. These are amenable to simulation and show rea- 
+sonable agreement with measured data (Neuman & Foster, 1970). The generation 
+of turbulence is effected by applying Gaussian white noise to coloring filters. 
+4 NEURAL NETWORK LEARNING IMPLEMENTATION 
+As previously noted, modern control theory suggests that a performance index for 
+evaluating control laws should first be constructed, and then the control law should 
+be computed to optimize the performance index. Generally, numerical methods 
+are used for estimating the parameters of a control law. Neural network algorithms 
+can actually be seen as constitu

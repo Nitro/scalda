@@ -1,0 +1,140 @@
+Learning Decision Theoretic Utilities Through 
+Reinforcement Learning 
+Magnus Steusmo 
+Computer Science Division 
+University of California 
+Berkeley, CA 94720, U.S.A. 
+magnus @ cs.berkeley. edu 
+Terrence J. Sejnowski 
+Howard Hughes Medical Institute 
+The Salk Institute 
+10010 North Torrey Pines Road 
+La Jolla, CA 92037, U.S.A. 
+terry@ salk.edu 
+Abstract 
+Probability models can be used to predict outcomes and compensate for 
+missing data, but even a perfect model cannot be used to make decisions 
+unless the utility of the outcomes, or preferences between them, are also 
+provided. This arises in many real-world problems, such as medical di- 
+agnosis, where the cost of the test as well as the expected improvement 
+in the outcome must be considered. Relatively little work has been done 
+on learning the utilities of outcomes for optimal decision making. In this 
+paper, we show how temporal-difference reinforcement learning (TD()0) 
+can be used to determine decision theoretic utilities within the context of 
+a mixture model and apply this new approach to a problem in medical di- 
+agnosis. TD()Q learning of utilities reduces the number of tests that have 
+to be done to achieve the same level of performance compared with the 
+probability model alone, which results in significant cost savings and in- 
+creased efficiency. 
+1 INTRODUCTION 
+Decision theory is normative or prescriptive and can tell us how to be rational and behave 
+optimally in a situation [French, 1988]. Optimal here means to maximize the value of the 
+expected future outcome. This has been formalized as the maximum expected utility prin- 
+ciple by [von Neumann and Morgenstern, 1947]. Decision theory can be used to make op- 
+timal choices based on probabilities and utilities. Probability theory tells us how probable 
+different future states are, and how to reason with and represent uncertainty information. 
+1062 M. Stensmo and T. J. Sejnowski 
+Utility theory provides values for these states so that they can be compared with each other. 
+A simple form of a utility function is a loss function. Decision theory is a combination of 
+probability and utility theory through expectation. 
+There has previously been a lot of work on learning probability models (neural networks, 
+mixture models, probabilistic networks, etc.) but relatively little on representing and rea- 
+soning about preference and learning utility models. This paper demonstrates how both lin- 
+ear utility functions (i.e., loss functions) and non-linear ones can be learned as an alternative 
+to specifying them manually. 
+Automated fault or medical diagnosis is an interesting and important application for deci- 
+sion theory. It is a sequential decision problem that includes complex decisions (What is 
+the most optimal test to do in a situation? When is it no longer effective to do more tests?), 
+and other important problems such as missing data (both during diagnosis, i.e., tests not yet 
+done, and in the database which learning is done from). We demonstrate the power of the 
+new approach by applying it to a real-world problem by learning a utility function to im- 
+prove automated diagnosis of heart disease. 
+PROBABILITY, UTILITY AND DECISION THEORY MODELS 
+The system has separate probability and decision theory models. The probability model is 
+used to predict the probabilities for the different outcomes that can occur. By modeling the 
+joint probabilities these predictions are available no matter how many or few of the input 
+variables are available at any instant. Diagnosis is a missing data problem because of the 
+question-and-answer cycle that results from the sequential decision making process. 
+Our decision theoretic automated diagnosis system is based on hypotheses and deductions 
+according to the following steps: 
+1. Any number of observations are made. This means that the values of one or several 
+observation variables of the probability model are determined. 
+2. The system finds probabilities for the different possible outcomes using the joint 
+probability model to calculate the conditional probability for each of the possible 
+outcomes given the current observations. 
+3. Search for the next observation that is expected to be most useful for improving 
+the diagnosis according to the Maximum Expected Utility principle. 
+Each possible next variable is considered. The expected value of the system pre- 
+diction with this variable observed minus the current maximum value before mak- 
+ing the additional observation and the cost of the observation is computed and de- 
+fined as the net value of information for this variable [Howard, 1966]. The variable 
+with the maximum of all of these is then the best next observation to make. 
+The steps 1-3 above are repeated until further improvements are not possible. This 
+happens when none of the net value of information values in step 3 is positive. 
+They can be negative since a positive cost has been subtracted. 
+Note that we only look ahead one step (called a myopic approximation [Gorry and Barnett, 
+1967]). This is in principle suboptimal, however, the reinforcement learning procedure de- 
+scribed below can compensate for this. The optimal solution is to consider all possible se- 
+quences, but the search tree grows exponentially in the number of unobserved variables. 
+Learning Decision Theoretic Utilities through Reinforcement Learning 1063 
+Joint probabilities are modeled using mixture models [McLachlan and Basford, 1988]. 
+Such models can be efficiently trained using the Expectation-Maximization (EM) algorithm 
+[Dempster et al., 1977], which has the additional benefit that missing variable values in the 
+training data also can be handled correctly. This is important since most real-world data 
+sets are incomplete. More detail on the probability model can be found in [Stensmo and 
+Sejnowski, 1995; Stensmo, 1995]. This paper is concerned with the utility function part of 
+the decision theoretic model. 
+The utilities are values assigned to different states so that their usefulness can be compared 
+and actions are chosen to maximize the expected future utility. Utilities are represented as 
+preferences when a certain disease has been classified but the patient in reality has another 
+one [Howard, 1980; Heckerman eta/., 1992]. For each pair of diseases there is a utility 
+value between 0 and 1, where a 0 means maximally bad and a 1 means maximally good. 
+This is a d x d matrix for d diseases, and the matrix can be interpreted as a kind of a loss 
+function. The notation is natural and helps for acquiring the values, which is a non-trivial 
+problem. Preferences are subjective contrary to probabilities which are objective (for the 
+purposes of this paper). For example, a doctor, a patient and the insurance company may 
+have different preferences, but the probabilities for the outcomes are the same. 
+Methods have been devised to convert perceived risk to monetary values [Howard, 1980]. 
+Subjects were asked to answer questions such as: How much would you have to be paid to 
+accept a one in a millionth chance of instant painless death? The answers are recorded for 
+various low levels of risk. It has been empirically found that people are relatively consis- 
+tent and that perceived risk is linear for low levels of probability. Howard defined the unit 
+micromort (mmt) to mean one in 1 millionth chance of instant painless death and [Heck- 
+erman et al., 1992] found that one subject valued 1 micromort to $20 (in 1988 US dollars) 
+linearly to within a factor of two. We use this to convert utilities in [0,1 ] units to dollar 
+values and vice versa. 
+Previous systems asked experts to supply the utility values, which can be very complicated, 
+or used some simple approximation. [Heckerman eta/., 1992] used a utility value of 1 for 
+misclassification penalty when both diseases are malign or both are benign, and 0 otherwise 
+(see Figure 4, left). They claim that it worked in their system but this approximation should 
+reduce accuracy. We show how to adapt and learn utilities to find better ones. 
+3 REINFORCEMENT LEARNING OF UTILITIES 
+Utilities are adapted using a type of reinforcement learning, specifically the method nf tem- 
+poral differences [Sutton, 1988]. This method is capable of adjusting the utility values cor- 
+rectly even though a reinforcement signal is only received after each full sequence of ques- 
+tions leading to a diagnosis. 
+The temporal difference algorithm (TD(ik)) learns how to predict future values from past 
+experience. A sequence of observations is used, in our case they are the results of the med- 
+ical tests that have been done. We used TD(ik) to learn how to predict the expected utility 
+of the final diagnosis. 
+Using the notation of Sutton, the function Pt predicts the expected utility at time t. Pt is a 
+vector of expected utilities, one for each outcome. In the linear form described above, Pt - 
+P (zt, wt) = wt zt, where wt is a matrix of utility values and zt is the vector of probabilities 
+of the outcomes, our state description. The objective is to learn the utility matrix wt. 
+1064 M. Stensmo and T. J. Sejnowski 
+We use an intra-sequence version of the TD()0 algorithm so that learning can occur during 
+normal operation of the system [Sutton, 1988]. The update equation is 
+t 
+= + - t)l 
+(1) 
+where a is the learning rate and ) is a discount factor. With Pk = P(zk, wt) = znwt and 
+t t 
+et -]/=! t-IVwP(zl, tot) 
+= = -]&=l )tt-x, (1)becomes the two equations 
+wt+l -- tot q- awt[zt+l -- zt]et 
+et+l -- t+l q- Act, 
+starting with e = z. These update equations were used after each question was answered. 
+When the diagnosis was done, the reinforcement signal z (considered to be observation 
+Pt+) was obtained and the weights were updated: wt+ = wt + awt[z - xt]et. A final up- 
+date of et was not necessary. Note that this method allows for the use of any differentiable 
+utility function, specifically a neural network, in the place of P

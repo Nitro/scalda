@@ -1,0 +1,148 @@
+The Efficient Learning of Multiple Task 
+Sequences 
+Satinder P. Singh 
+Department of Computer Science 
+University of Massachusetts 
+Amherst, MA 01003 
+Abstract 
+I present a modular network architecture and a learning algorithm based 
+on incremental dynamic programming that allows a single learning agent 
+to learn to solve multiple Markovian decision tasks (MDTs) with signif- 
+icant transfer of learning across the tasks. I consider a class of MDTs, 
+called composite tasks, formed by temporally concatenating a number of 
+simpler, elemental MDTs. The architecture is trained on a set of compos- 
+ite and elemental MDTs. The temporal structure of a composite task is 
+assumed to be unknown and the architecture learns to produce a tempo- 
+ral decomposition. It is shown that under certain conditions the solution 
+of a composite MDT can be constructed by computationally inexpensive 
+modifications of the solutions of its constituent elemental MDTs. 
+1 INTRODUCTION 
+Most applications of domain independent learning algorithms have focussed on 
+learning single tasks. Building more sophisticated learning agents that operate in 
+complex environments will require handling multiple tasks/goals (Singh, 1992). Re- 
+search effort on the scaling problem has concentrated on discovering faster learning 
+algorithms, and while that will certainly help, techniques that allow transfer of 
+learning across tasks will be indispensable for building autonomous learning agents 
+that have to learn to solve multiple tasks. In this paper I consider a learning agent 
+that interacts with an external, finite-state, discrete-time, stochastic dynamical en- 
+vironment and faces multiple sequences of Markovian decision tasks (MDTs). 
+251 
+252 Singh 
+Each MDT requires the agent to execute a sequence of actions to control the envi- 
+ronment, either to bring it to a desired state or to traverse a desired state trajectory 
+over time. Let S be the finite set of states and A be the finite set of actions available 
+to the agent.  At each time step t, the agent observes the system's current state 
+� t 6 S and executes action at 6 A. As a result, the agent receives a payoff with 
+expected value R(t, at) 6 1 and the system makes a transition to state t+ 6 S 
+with probability P,,+,(at). The agent's goal is to learn an optimal closed loop 
+control policy, i.e., a function assigning actions to states, that maximizes the agent's 
+objective. The objective used in this paper is J = Y0 7 tR(t, o), i.e., the sum 
+of the payoffs over an infinite horizon. The discount factor, 0 _ 7 _ 1, allows 
+future payoff to be weighted less than more immediate payoff. Throughout this 
+paper, I will assume that the learning agent does not have access to a model of the 
+environment. Reinforcement learning algorithms such as Sutton's (1988) temporal 
+difference algorithm and Watkins's (1989) Q-learning algorithm can be used to learn 
+to solve single MDTs (also see Barto et al., 1991). 
+I consider compositionally-structured MDTs because they allow the possibility of 
+sharing knowledge across the many tasks that have common subtasks. In general, 
+there may be r elemental MDTs labeled T, T,..., Try. Elemental MDTs cannot be 
+decomposed into simpler subtasks. Composite MDTs, labeled C, Cs,..., Cm, are 
+produced by temporally concatenating a number of elemental MDTs. For example, 
+Cj = [T(j, 1)T(j, 2)... T(j, k)] is composite task j made up of k elemental tasks that 
+have to be performed in the order listed. For 1 < i < k, T(j, i)  {T, T2,..., Tr,} is 
+the i th elemental task in the list for task Cj. The sequence of elemental tasks in a 
+composite task will be referred to as the decomposition of the composite task; the 
+decomposition is assumed to be unknown to the learning agent. 
+Compositional learning involves solving a composite task by learning to compose 
+the solutions of the elemental tasks in its decomposition. It is to be emphasized that 
+given the short-term, evaluative nature of the payoff from the environment (often 
+the agent gets informative payoff only at the completion of the composite task), 
+the task of discovering the decomposition of a composite task is formidable. In this 
+paper I propose a compositional learning scheme in which separate modules learn 
+to solve the elemental tasks, and a task-sensitive gating module solves composite 
+tasks by learning to compose the appropriate elemental modules over time. 
+2 ELEMENTAL AND COMPOSITE TASKS 
+All elemental tasks are MDTs that share the the same state set S, action set A, and 
+have the same environment dynamics. The payoff function for each elemental task 
+3, 1 _ i _ r, is Ri(z,a) = Y,Es P,,(a)ri(!t)- c(z,a), where ri(y) is a positive 
+reward associated with the state y resulting from executing action a in state z for 
+task T/, and c(, a) is the positive cost of executing action a in state . I assume 
+that ri() = 0 if � is not the desired final state for 3. Thus, the elemental tasks 
+share the same cost function but have their own reward functions. 
+A composite task is not itself an MDT because the payoff is a function of both 
+XThe extension to the case where different sets of actions are available in different states 
+is straightforward. 
+The Efficient Learning of Multiple Task Sequences 253 
+the state and the current elemental task, instead of the state alone. Formally, the 
+new state set 2 for a composite task, $, is formed by augmenting the elements of 
+set S by r bits, one for each elemental task. For each   S , the projected state 
+z  S is defined as the state obtained by removing the augmenting bits from z . 
+The environment dynamics and cost function, c, for a composite task is defined by 
+assigning to each   S  and a  A the transition probabilities and cost assigned 
+to the projected state z  S and a  A. The reward function for composite task 
+C), r, is defined as follows. r(z') >_ 0 if the following are all true: i) the projected 
+state a is the final state for some elemental task in the decomposition of Gj, say 
+task Ti, if) the augmenting bits of  corresponding to elemental tasks appearing 
+before and including subtask Ti in the decomposition of Cd are one, and iii) the rest 
+of the augmenting bits are .ero; r( ) = 0 everywhere else. 
+3 COMPOSITIONAL Q-LEARNING 
+Following Watkins (1989), I define the Q-value, Q(a,a), for z  $ and a  A, as the 
+expected return on taking action a in state a under the condition that an optimal 
+policy is followed thereafter. Given the Q-values, a greedy policy that in each state 
+selects an action with the highest associated Q-value, is optimal. Q-learning works 
+as follows. On executing action a in state a at time t, the resulting payoff and next 
+state are used to update the estimate of the Q-value at time t, t(z, a): 
+where /is the state at time t + 1, and at is the value of a positive learning rate 
+parameter at time t. Watkins and Dayan (1992) prove that under certain conditions 
+on the sequence {at}, if every state-action pair is updated infinitely often using 
+Equation 1, t converges to the true Q-values asymptotically. 
+Compositional Q-learning (CQ-learning) is a method for constructing the Q-values 
+of a composite task from the Q-values of the elemental tasks in its decomposition. 
+Let Qw(,a) be the Q-value of (z,a), z  S and a  A, for elemental task , 
+rCst  a) be the Q-value of (,a) for   S  and a  A, for task Ti 
+and let 'w t , , 
+when performed as part of the composite task C s = [T(d, 1)...T(j,k)]. Assume 
+T = T(j,l). Note that the superscript on Q refers to the task and the subscript 
+refers to the elemental task currently being performed. The absence of a superscript 
+implies that the task is elemental. 
+Consider a set of undiseounted (7 = 1) MDTs that have compositional structure 
+and satisfy the following conditions: 
+(A1) Each elemental task has a single desired final state. 
+(A2) For all elemental and composite tasks, the expected value of undiseounted 
+return for an optimal policy is bounded both from above and below for all states. 
+(AS) The cost associated with each state-action pair is independent of the task 
+being accomplished. 
+2The theory developed in this paper does not depend on the particular extension of S 
+chosen, as long as the appropriate connection between the new states and the elements of 
+S can be made. 
+254 Singh 
+(A4) For each elemental task 2, the reward function ri is zero for all states except 
+the desired final state for that task. For each composite task Cj, the reward function 
+r is zero for all states except possibl!l the final states of the elemental tasks in its 
+decomposition (Section 2). 
+Then, for any elemental task iF/and for all composite tasks Cj containing elemental 
+task Ti, the following holds: 
+q(',) = qT,(,) + S:(CS,'(J,O), (2) 
+for all ' 6 S' and a 6 A, where  6 S is the projected state, and K(Cj, T(j, l)) is a 
+function of the composite task Cj and subtask T(j, l), where 3} = T(j,/). Note that 
+K(Cy, T(j, l)) is independent of the state and the action. Thus, given solutions of 
+the elemental tasks, learning the solution of a composite task with r elemental tasks 
+requires learning only the values of the function K for the r different subtasks. A 
+proof of Equation 2 is given in Singh (1992). 
+A�nlin 
+bts 
+ Bls 
+Network 
+Tk 
+AeJ 
+le Acton tte 
+An e Allon 
+Figure 1: The CQ-Learning Architecture (CQ-L). This figure is adapted from Jacobs 
+et al. (1991). See text for details. 
+Equation 2 is based on the assumption that the decomposition of the composite 
+tasks is known. In the next Section, I present a modular architecture and learning 
+algorithm that simultaneously discovers the decomposition of a composite task and 
+implements Equation 2. 
+4 CQ-L: CQ-LEARNING ARCHITECTURE 
+Jacobs (1991) developed a modular connectionist architecture that performs task 
+decomposition. Jacobs's gating architecture consists of several expert netw

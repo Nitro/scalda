@@ -1,0 +1,169 @@
+Robust Full Bayesian Methods for Neural 
+Networks 
+Christophe Andrieu* 
+Cambridge University 
+Engineering Department 
+Cambridge CB2 1PZ 
+England 
+ca226@eng.cam.ac.uk 
+Joo FG de Preitas 
+UC Berkeley 
+Computer Science 
+387 Soda Hall, Berkeley 
+CA 94720-1776 USA 
+j fgf@ cs. berkeley. edu 
+Arnaud Doucet 
+Cambridge University 
+Engineering Department 
+Cambridge CB2 1PZ 
+England 
+ad2@eng.cam.ac.uk 
+Abstract 
+In this paper, we propose a full Bayesian model for neural networks. 
+This model treats the model dimension (number of neurons), model 
+parameters, regularisation parameters and noise parameters as ran- 
+dom variables that need to be estimated. We then propose a re- 
+versible jump Markov chain Monte Carlo (MCMC) method to per- 
+form the necessary computations. We find that the results are not 
+only better than the previously reported ones, but also appear to 
+be robust with respect to the prior specification. Moreover, we 
+present a geometric convergence theorem for the algorithm. 
+I Introduction 
+In the early nineties, Buntine and Weigend (1991) and Macly (1992) showed that a 
+principled Bayesian learning approach to neural networks can lead to many improve- 
+ments [1,2]. In particular, Macly showed that by approximating the distributions 
+of the weights with Gaussians and adopting smoothing priors, it is possible to obtain 
+estimates of the weights and output variances and to automatically set the regular- 
+isation coefficients. Neal (1996) cast the net much further by introducing advanced 
+Bayesian simulation methods, specifically the hybrid Monte Carlo method, into the 
+analysis of neural networks [3]. Bayesian sequential Monte Carlo methods have also 
+been shown to provide good training results, especially in time-varying scenarios 
+[4]. More recently, Rios Insua and Milllet (1998) and Holmes and Mallick (1998) 
+have addressed the issue of selecting the number of hidden neurons with growing 
+and pruning algorithms from a Bayesian perspective [5,6]. In particular, they apply 
+the reversible jump Markov Chain Monte Carlo (MCMC) algorithm of Green [7] 
+to feed-forward sigmoidal networks and radial basis function (RBF) networks to 
+obtain joint estimates of the number of neurons and weights. 
+We also apply the reversible jump MCMC simulation algorithm to RBF networks so 
+as to compute the joint posterior distribution of the radial basis parameters and the 
+number of basis functions. However, we advance this area of research in two impor- 
+tant directions. Firstly, we propose a full hierarchical prior for RBF networks. That 
+Authorship based on alphabetical order. 
+380 C. Andrieu, J. F. G. d. Freitas and A. Doucet 
+is, we adopt a full Bayesian model, which accounts for model order uncertainty and 
+regularisation, and show that the results appear to be robust with respect to the 
+prior specification. Secondly, we present a geometric convergence theorem for the 
+algorithm. The complexity of the problem does not allow for a comprehensive dis- 
+cussion in this short paper. We have, therefore, focused on describing our objectives, 
+the Bayesian model, convergence theorem and results. Readers are encouraged to 
+consult our technical report for further results and implementation details [8] 1 . 
+2 Problem statement 
+Many physical processes may be described by the following nonlinear, multivariate 
+input-output mapping: 
+Yt = f(xt) + nt (1) 
+where xt  IR d corresponds to a group of input variables, yt G c to the target vari- 
+ables, n t G c to an unknown noise process and t = {1, 2,--. } is an index variable 
+over the data. In this context, the learning problem involves computing an approx- 
+imation to the function f and estimating the characteristics of the noise process 
+given a set of N input-output observations: (9 = {Xl,X2,..- ,xv,yl, Y2,' , yv} 
+Typical examples include regression, where Yl:N,l:c 2 is continuous; classification, 
+where y corresponds to a group of classes and nonlinear dynamical system identi- 
+fication, where the inputs and targets correspond to several delayed versions of the 
+signals under consideration. 
+We adopt the approximation scheme of Holmes and Mallick (1998), consisting of 
+a mixture of k RBFs and a linear regression term. Yet, the work can be easily 
+extended to other regression models. More precisely, our model A4 is: 
+A/to � y = b + 'x + n k = 0 
+g4k' Yt = E=i aj(llx, - tjll) + b + n, k > 1 (2) 
+where II' II denotes a distance metric (usually Euclidean or Mahalanobis), U  IRd 
+denotes the j-th RBF centre for a model with k RBFs, aj  IR c the j-th RBF 
+amplitude and b  IR c and/  IR  x IR c the linear regression parameters. The noise 
+sequence nt  IRc is assumed to be zero-mean white Gaussian. It is important to 
+mention that although we have not explicitly indicated the dependency of b,/ and 
+nt on k, these parameters are indeed affected by the value of k. For convenience, 
+we express our approximation model in vector-matrix form: 
+yl,1 � ' ' Yl,c 
+y2,1 ' Y2,c 
+yN,1 ' ' ' yN,c 
+1 Xl,1 ' ' ' Xl,d 
+I X2,1 � ' � X2,d 
+1 xN,1 -''xN,d 
+{(Xl, [1)''' {(Xl, [k) 
+{(X2, [1)'' ' {(X2, [k) 
+ak,1 � � � ak,c 
+q- nl:N 
+1The software is available at http://www. cs .berkeley.edu/~jfgf. 
+2yl:N,l:c is an N by c matrix, where N is the number of data and c the number of 
+outputs. We adopt the notation yl:,j A (yl,j,y2,j,... ,y,j) to denote all the obser- 
+vations corresponding to the j-th output (j-th column of y). To simplify the notation, 
+y is equivalent to y,l:. That is, if one index does not 'appear, it is implied that we 
+are referring to all of its possible values. Similarly, y is equivalent to yl:N,l:c. We will 
+favour the shorter notation and only adopt the longer notation to avoid ambiguities and 
+emphasise certain dependencies. 
+Robust Full Bayesian Methods for Neural Networks 381 
+where the noise process is assumed to be normally distributed nt  JV'(0, cr) for 
+i - 1,... , c. In shorter notation, we have: 
+y = D(t:k,,:a,X,:V,::a)C:+a+k,:c + nt (3) 
+We assume here that the number k of RBFs and their parameters 0  
+{a:m,:c,th:k,:a, er12:c}, with m = 1 + d + k, are unknown. Given the data set 
+{x,y}, our objective is to estimate k and 0 C Ok. 
+3 Bayesian model and aims 
+We follow a Bayesian approach where the unknowns k and 0 are regarded as being 
+drawn from appropriate prior distributions. These priors reflect our degree of belief 
+on the relevant values of these quantities [9]. Furthermore, we adopt a hierarchical 
+prior structure that enables us to treat the priors' parameters (hyper-parameters) 
+as random variables drawn from suitable distributions (hyper-priors). That is, in- 
+stead of fixing the hyper-parameters arbitrarily, we acknowledge that there is an 
+inherent uncertainty in what we think their values should be. By devising proba- 
+bilistic models that deal with this uncertainty, we are able to implement estimation 
+techniques that are robust to the specification of the hyper-priors. 
+The overall parameter space O x � can be written as a finite union of sub- 
+kmax Ok) X  where 0o a (IRa+l) c x (I +)c and 
+spaces O x � = (Uk= 0{k} X = 
+Ok -- (a++) X (+) X  for k  {1,... ,kmax}. That is, a  (a++), 
+a  (+) and   . The hyper-parmeter space �  (+)+, with ele- 
+ments  A {A,52}, will be discussed at the end of this section. The space of 
+the radial basis cemres  is defined as a compact set including the input data: 
+k  {;l:k,i  [min(xl:N,i)--tEi,m(Xl:N,i)+tEi] k for/= 1,... ,d with j,i  
+t,i for j  l}. Ei = ]1 m(xl:,i) - min(xl:,i)l] denotes the Euclidean distance 
+for the i-th dimension of the input and, is a user specified parameter that we only 
+need to consider if we wish to place basis functions outside the region where the 
+input data lie. That is, we allow  to include the space of the input data and 
+extend it by a factor which is proportional to the spread of the input data. The 
+: d k 
+hyper-volume of this space is:  a (i=l (1 + 2,)Ei) . 
+The mimum number of basis functions is defined  kma  (N - (d + 1)) We 
+also define  a ' (k ' 
+= V=o t I x  with o  . Under the sumption of indepen- 
+dent outputs given (k, 0), the likelihood p(ylk, O, , x) for the approximation model 
+described in the previous section is: 
+exp 2a (Yl:'i- D(l:,X)al:m,i) (yl:,i- D(l:,X)al:m,i 
+i=1 
+We assume the following structure for the prior distribution: 
+p(k,O,) = p(al:lk, a 2,52)p(u:}k)p(k}A)p(e)p(A)p(52 ) 
+2 
+where the scale parameters a, are assumed to be independent of the hyper- 
+parameters (i.e. p(a2lA, 5 2) = p(a2)), independent of each other (p(a 2) = 
+c P(i)) and distributed according to conjugate inverse-Gamma prior distri- 
+i=1 2 
+2  Z( ). When Wo = 0 and o = O, we obtain Jeeys' un- 
+butions: i 2 , 
+ 2 
+informative prior [9]. For a given a2 the prior distribution p(k, a:m, :[ , A, 62) 
+is: 
+[i 22 I ] [ln(tr,:) ] / 1 
+12xriSilml-12exp( 2 2[:m,il:m'i) 
+382 C. Andrieu, J. E G. d. Freitas and A. Doucet 
+where Im denotes the identity matrix of size m x m and ]In(k, ul:k) is the indicator 
+function of the set F (1 if (k, u:k)  F, 0 otherwise). 
+The prior model order distribution p(klA) is a truncated Poisson distribution. Con- 
+ditional upon k, the RBF centres are uniformly distributed. Finally, conditional 
+upon (k,u:), the coefficients ot:m,i are assumed to be zero-mean Gaussian with 
+2 2 
+variance 5ier i . The hyper-parameters 52  (IR+) c and A  IR + can be respec- 
+tively interpreted as the expected signal to noise ratios and the expected num- 
+ber of radial basis. We assume that they are independent of each other, i.e. 
+p(A, 52) = p(A)p(52). Moreover, p(52) = 1-IiC=l p(5/2). As 52is a scale parameter, 
+we ascribe a vague conjugate prior density to it: 5/2 - :/;(aa2, fia2) for i = 1,... , c, 
+with aa2 = 2 and fia2> 0. The variance of this hyper-prior with aa2 = 2 is infinite. 
+We apply the same method to A by setting an uninformative conjugate 

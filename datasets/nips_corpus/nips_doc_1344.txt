@@ -1,0 +1,144 @@
+A Simple and Fast Neural Network 
+Approach to Stereovision 
+Rolf D. Henkel 
+Institute of Theoretical Physics 
+University of Bremen 
+P.O. Box 330 440, D-28334 Bremen 
+http://axon. physik. uni-bremen. do/~rdh 
+Abstract 
+A neural network approach to stereovision is presented based on 
+aliasing effects of simple disparity estimators and a fast coherence- 
+detection scheme. Within a single network structure, a dense dis- 
+parity map with an associated validation map and, additionally, 
+the fused cyclopean view of the scene are available. The network 
+operations are based on simple, biological plausible circuitry; the 
+algorithm is fully parallel and non-iterative. 
+1 Introduction 
+Humans experience the three-dimensional world not as it is seen by either their left 
+or right eye, but from a position of a virtual cyclopean eye, located in the middle 
+between the two real eye positions. The different perspectives between the left and 
+right eyes cause slight relative displacements of objects in the two retinal images 
+(disparities), which make a simple superposition of both images without diplopia 
+impossible. Proper fusion of the retinal images into the cyclopean view requires the 
+registration of both images to a common coordinate system, which in turn requires 
+calculation of disparities for all image areas which are to be fused. 
+1.1 The Problems with Classical Approaches 
+The estimation of disparities turns out to be a difficult task, since various random 
+and systematic image variations complicate this task. Several different techniques 
+have been proposed over time, which can be loosely grouped into feature-, area- 
+A Simple and Fast Neural Network Approach to Stereovision 809 
+and phase-based approaches. All these algorithms have a number of computational 
+problems directly linked to the very assumptions inherent in these approaches. 
+In feature-based stereo, intensity data is first converted to a set of features assumed 
+to be a more stable image property than the raw image intensities. Matching 
+primitives used include zerocrossings, edges and corner points (Frisby, 1991), or 
+higher order primitives like topological fingerprints (see for example: Fleck, 1991). 
+Generally, the set of feature-classes is discrete, causing the two primary problems 
+of feature-based stereo algorithms: the famous false-matches-problem and the 
+problem of missing disparity estimates. 
+False matches are caused by the fact that a single feature in the left image can 
+potentially be matched with every feature of the same class in the right image. 
+This problem is basic to all feature-based stereo algorithms and can only be solved 
+by the introduction of additional constraints to the solution. In conjunction with 
+the extracted features these constraints define a complicated error measure which 
+can be minimized by cooperative processes (Marr, 1979) or by direct (Ohta, 1985) 
+or stochastic search techniques (Yuille, 1991). While cooperative processes and 
+stochastic search techniques can be realized easily on a neural basis, it is not im- 
+mediately clear how to implement the more complicated algorithmic structures of 
+direct search techniques neuronally. Cooperative processes and stochastic search 
+techniques turn out to be slow, needing many iterations to converge to a local 
+minimum of the error measure. 
+The requirement of features to be a stable image property causes the second problem 
+of feature-based stereo: stable features can only be detected in a fraction of the 
+whole image area, leading to missing disparity estimates for most of the image area. 
+For those image parts, disparity estimates can only be guessed. 
+Dense disparity maps can be obtained with area-based approaches, where a suitable 
+chosen correlation measure is maximized between small image patches of the left and 
+right view. However, a neuronally plausible implementation of this seems to be not 
+readily available. Furthermore, the maximization turns out to be a computationally 
+expensive process, since extensive search is required in configuration space. 
+Hierarchical processing schemes can be utilized for speed-up, by using information 
+obtained at coarse spatial scales to restrict searching at finer scales. But, for general 
+image data, it is not guaranteed that the disparity information obtained at some 
+coarse scale is valid. The disparity data might be wrong, might have a different value 
+than at finer scales, or might not be present at all. Furthermore, by processing data 
+from coarse to fine spatial scales, hierarchical processing schemes are intrinsically 
+sequential. This creates additional algorithmic overhead which is again dicult to 
+realize with neuronal structures. 
+The same comments apply to phase-based approaches, where a locally extracted 
+Fourier-phase value is used for matching. Phase values are only defined modulo 
+2r, and this wrap-around makes the use of hierarchical processing essential for 
+these types of algorithms. Moreover, since data is analyzed in different spatial 
+frequency channels, it is nearly certain that some phase values will be undefined 
+at intermediate scales, due to missing signal energy in this frequency band (Fleet, 
+1993). Thus, in addition to hierarchical processing, some kind of exception handling 
+is needed with these approaches. 
+810 R. D. Henkel 
+2 Stereovision by Coherence Detection 
+In summary, classical approaches to stereovision seem to have difficulties with the 
+fast calculation of dense disparity-maps, at least with plausible neural circuitry. 
+In the following, a neural network implementation will be described which solves 
+this task by using simple disparity estimators based on motion-energy mechanisms 
+(Adelson, 1985; Qian, 1997), closely resembling responses of complex cells in visual 
+cortex (DeAngelis, 1991). Disparity units of these type belong to a class of disparity 
+estimators which can be derived from optical flow methods (Barron, 1994). Clearly, 
+disparity calculations and optical flow estimation share many similarities. The two 
+stereo views of a (static) scene can be considered as two time-slices cut out of 
+the space-time intensity pattern which would be recorded by an imaginary camera 
+moving from the position of the left to the position of the right eye. However, 
+compared to optical flow, disparity estimation is complicated by the fact that only 
+two discrete time-samples are available, namely the images of the left and right 
+view positions. 
+to 
+tl 
+t2 
+optical flow disparity calculations 
+Left 
+Right 1 
+Right 2 
+correct correct wrong 
+Figure 1: The velocity of an image patch manifests itself as principal texture direc- 
+tion in the space-time flow field traced out by the intensity pattern in time (left). 
+Sampling such flow patterns at discrete times can create aliasing-effects which lead 
+to wrong estimates. If one is using optical flow estimation techniques for disparity 
+calculations, this problem is always present. 
+For an explanation consider Fig. 1. A surface patch shifting over time traces out 
+a certain flow pattern. The principal texture direction of this flow indicates the 
+relative velocity of the image patch (Fig. 1, left). Sampling the flow pattern only 
+at discrete time points, the shift between two time-samples can be estimated 
+without ambiguity provided the shift is not too large (Fig. 1, middle). However, if a 
+certain limit is exceeded, it becomes impossible to estimate the shift correctly, given 
+the data (Fig. 1, right). This is a simple aliasing-effect in the time-direction; an 
+everyday example can be seen as motion reversal in movies. 
+In the case of stereovision, aliasing-effects of this type are always present, and they 
+limit the range of disparities a simple disparity unit can estimate. Sampling theory 
+gives a relation between the maximal spatial wavevector kmax (or, equivalently, the 
+minimum spatial wavelength  
+min) present in the data and the largest disparity 
+which can be estimated reliably (Henkel, 1997): 
+Idl < - )min ' (1) 
+A Simple and Fast Neural Network Approach to Stereovision 811 
+A well-known example of the size-disparity scaling expressed in equation (1) is 
+found in the context of the spatial frequency channels assumed to exist in the 
+visual cortex. Cortical cells respond to spatial wavelengths down to about half 
+their peak wavelength opt; therefore, they can estimate reliable only disparities 
+less than 1/4 Aopt. This is known as Marr's quarter-cycle limit (Blake, 1991). 
+Equation (1) immediately suggests a way to extend the limited working range of 
+disparity estimators: a spatial smoothing of the image data before or during dispar- 
+ity calculation reduces kmax, and in turn increases the disparity range. However, 
+spatial smoothing reduces also the spatial resolution of the resulting disparity map. 
+Another way of modifying the usable range of disparity estimators is the applica- 
+tion of a fixed preshift to the input data before disparity calculation. This would 
+require prior knowledge of the correct preshift to be applied, which is a nontrivial 
+problem. One could resort to hierarchical coarse-to-fine schemes, but the difficulties 
+with hierarchical schemes have already been elaL vrated. 
+The aliasing effects discussed are a general feature of sampling visual space with 
+only two eyes; instead of counteracting, one can exploit them in a simple coherence- 
+detection scheme, where the multi-unit activity in stacks of disparity detectors tuned 
+to a common view direction is analyzed. 
+Assuming that all disparity units i in a stack have random preshifts or presmoothing 
+applied to their input data, these units will have different, but slightly overlapping 
+working ranges Di = [d? in, d? a] for valid disparity estimates. An object with true 
+disparity d, seen in the common view direction of such a stack, will therefore split 
+the stack into two disjunct classes: the class C of estimators with d E Di for all 
+i E C, and

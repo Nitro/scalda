@@ -1,0 +1,133 @@
+Approximate Planning in Large POMDPs 
+via Reusable Trajectories 
+Michael Kearns 
+AT&T Labs 
+mkearns @research.att.com 
+Yishay Mansour 
+Tel Aviv University 
+mansour @ math.tau.ac. il 
+Andrew Y. Ng 
+UC Berkeley 
+ang @ cs.berkeley. edu 
+Abstract 
+We consider the problem of reliably choosing a near-best strategy from 
+a restricted class of strategies II in a partially observable Markov deci- 
+sion process (POMDP). We assume we are given the ability to simulate 
+the POMDP, and study what might be called the sample complexity -- 
+that is, the amount of data one must generate in the POMDP in order 
+to choose a good strategy. We prove upper bounds on the sample com- 
+plexity showing that, even for infinitely large and arbitrarily complex 
+POMDPs, the amount of data needed can be finite, and depends only 
+linearly on the complexity of the restricted strategy class II, and expo- 
+nentially on the horizon time. This latter dependence can be eased in a 
+variety of ways, including the application of gradient and local search 
+algorithms. Our measure of complexity generalizes the classical super- 
+vised learning notion of VC dimension to the settings of reinforcement 
+learning and planning. 
+Introduction 
+Much recent attention has been focused on partially observable Markov decision processes 
+(POMDPs) which have exponentially or even infinitely large state spaces. For such do- 
+mains, a number of interesting basic issues arise. As the state space becomes large, the 
+classical way of specifying a POMDP by tables of transition probabilities clearly becomes 
+infeasible. To intelligently discuss the problem of planning that is, computing a good 
+strategy 1 in a given POMDP -- compact or implicit representations of both POMDPs, and 
+of strategies in POMDPs, must be developed. Examples include factored next-state dis- 
+tributions [2, 3, 7], and strategies derived from function approximation schemes [8]. The 
+trend towards such compact representations, as well as algorithms for planning and learn- 
+ing using them, is reminiscent of supervised learning, where researchers have long empha- 
+sized parametric models (such as decision trees and neural networks) that can capture only 
+limited structure, but which enjoy a number of computational and information-theoretic 
+benefits. 
+Motivated by these issues, we consider a setting were we are given a generative model, or 
+Throughout, we use the word strategy to mean any mapping from observable histories to actions, 
+which generalizes the notion of policy in a fully observable MDP. 
+1002 M. Kearns, Y. Mansour and,4. Y. Ng 
+simulator, for a POMDP, and wish to find a good strategy 7r from some restricted class of 
+strategies II. A generative model is a black box that allows us to generate experience (tra- 
+jectories) from different states of our choosing. Generative models are an abstract notion of 
+compact POMDP representations, in the sense that the compact representations typically 
+considered (such as factored next-state distributions) already provide efficient generative 
+models. Here we are imagining that the strategy class II is given by some compact repre- 
+sentation or by some natural limitation on strategies (such as bounded memory). Thus, the 
+view we are adopting is that even though the world (POMDP) may be extremely complex, 
+we assume that we can at least simulate or sample experience in the world (via the gener- 
+ative model), and we try to use this experience to choose a strategy from some simple 
+class II. 
+We study the following question: How many calls to a generative model are needed to have 
+enough data to choose a near-best strategy in the given class? This is analogous to the 
+question of sample complexity in supervised learning -- but harder. The added difficulty 
+lies in the reuse of data. In supervised learning, every sample (:r, f(:r)) provides feedback 
+about every hypothesis function h(:r) (namely, how close h(:r) is to f(:r)). If h is restricted 
+to lie in some hypothesis class 7-/, this reuse permits sample complexity bounds that are far 
+smaller than the size of 7-/. For instance, only O(log(17-/I) ) samples are needed to choose 
+a near-best model from a finite class 7-/. If 7-/is infinite, then sample sizes are obtained 
+that depend only on some measure of the complexity of 7-/(such as VC dimension [9]), but 
+which have no dependence on the complexity of the target function or the size of the input 
+domain. 
+In the POMDP setting, we would like analogous sample complexity bounds in terms of 
+the complexity of the strategy class II -- bounds that have no dependence on the size or 
+complexity of the POMDP. But unlike the supervised learning setting, experience reuse 
+is not immediate in POMDPs. To see this, consider the straw man algorithm that, starting 
+with some r  II, uses the generative model to generate many trajectories under r, and 
+thus forms a Monte Carlo estimate of V'(s0). It is not clear that these trajectories under 
+r are of much use in evaluating a different r   II, since r and r  may quickly disagree 
+on which actions to take. The naive Monte Carlo method thus gives O(1II]) bounds on the 
+sample complexity, rather than O(log(Irtl)), for the finite case. 
+In this paper, we shall describe the trajectory tree method of generating reusable tra- 
+jectories, which requires generating only a (relatively) small number of trajectories -- a 
+number that is independent of the state-space size of the POMDP, depends only linearly 
+on a general measure of the complexity of the strategy class II, and depends exponentially 
+on the horizon time. This latter dependence can be eased via gradient algorithms such as 
+Williams' REINFORCE [10] and Baird and Moore's more recent VAPS [1], and by local 
+search techniques. Our measure of strategy class complexity generalizes the notion of VC 
+dimension in supervised learning to the settings of reinforcement learning and planning, 
+and we give bounds that recover for these settings the most powerful analogous results in 
+supervised learning -- bounds for arbitrary, infinite strategy classes that depend only on 
+the dimension of the class rather than the size of the state space. 
+2 Preliminaries 
+We begin with some standard definitions. A Markov decision process (MDP) is a tuple 
+(S, so, A, {P(.ls, a)},R), where: $ is a (possibly infinite) state set; so  $ is a start 
+state; A = {al,..., ak } are actions; P(.[s, a) gives the next-state distribution upon taking 
+action a from state s; and the reward function R(s, a) gives the corresponding rewards. 
+We assume for simplicity that rewards are deterministic, and further that they are bounded 
+Approximate Planning in Large POMDPs via Reusable Trajectories 1003 
+in absolute value by/max. A partially observable Markov decision process (POMDP) 
+consists of an underlying MDP and observation distributions Q(ols) for each state s, 
+where o is the random observation made at s. 
+We have adopted the common assumption of a fixed start state, 2 because once we limit 
+the class of strategies we entertain, there may not be a single best strategy in the class 
+different start states may have different best strategies in II. We also assume that we are 
+given a POMDP M in the form of a generafive model for M that, when given as input any 
+state-action pair (s, a), will output a state s' drawn according to P(.Is, a), an observation 
+o drawn according to Q(-[s), and the reward/(s, a). This gives us the ability to sample 
+the POMDP M in a random-access way. This definition may initially seem unreasonably 
+generous: the generative model is giving us a fully observable simulation of a partially 
+observable process. However, the key point is that we must still find a strategy that performs 
+well in the partially observable setting. As a concrete example, in designing an elevator 
+control system, we may have access to a simulator that generates random rider arrival times, 
+and keeps track of the waiting time of each rider, the number of riders waiting at every floor 
+at every time of day, and so on. However helpful this information might be in designing 
+the controller, this controller must only use information about which floors currently have 
+had their call button pushed (the observables). In any case, readers uncomfortable with 
+the power provided by our generative models are referred to Section 5, where we briefly 
+describe results requiring only an extremely weak form of partially observable simulation. 
+At any time t, the agent will have seen some sequence of observations, o0,...,ot, 
+and will have chosen actions and received rewards for each of the t time 
+steps prior to the current one. We write its observable history as h - 
+( (oo, ao, to),..., (or- , at- , r_ ), (o, _, _)). Such observable histories, also called tra- 
+jectories, are the inputs to strategies. More formally, a strategy r is any (stochastic) map- 
+ping from observable histories to actions. (For example, this includes approaches which 
+use the observable history to track the belief state [5].) A strategy class II is any set of 
+strategies. 
+We will restrict our attention to the case of discounted return, 3 and we let 7 E [0, 1) be the 
+discount factor. We define the e-horizon time to be H - log.(e(1 - 7)/2/rnax). Note 
+that returns beyond the first H-steps can contribute at most e/2 to the total discounted 
+return. Also, let Vmax - /max/(1 -- 7) bound the value function. Finally, for a POMDP 
+M and a strategy class II, we define opt(M, II) = support V(so) to be the best expected 
+return achievable from so using II. 
+Our problem is thus the following: Given a generative model for a POMDP M and a 
+strategy class II, how many calls to the generative model must we make, in order to have 
+enough data to choose a r E II whose performance V(so) approaches opt(M, II)? Also, 
+which calls should we make to the generative model to achieve this? 
+3 The Trajectory Tree Method 
+We now describe h

@@ -1,0 +1,162 @@
+Model of a Biological Neuron as a Temporal 
+Neural Network 
+Sean D. Murphy and Edward W. Kairiss 
+Interdepartmental Neuroscience Program, Department of Psychology, 
+and The Center for Theoretical and Applied Neuroscience, 
+Yale University, 
+Box 208205, New Haven, CT 06520 
+Abstract 
+A biological neuron can be viewed as a device that maps a multidimen- 
+sional temporal event signal (dendritic postsynaptic activations) into a 
+unidimensional temporal event signal (action potentials). We have 
+designed a network, the Spatio-Temporal Event Mapping (STEM) 
+architecture, which can learn to perform this mapping for arbitrary bio- 
+physical models of neurons. Such a network appropriately trained, 
+called a STEM cell, can be used in place of a conventional compartmen- 
+tal model in simulations where only the transfer function is important, 
+such as network simulations. The STEM cell offers advantages over 
+compartmental models in terms of computational efficiency, analytical 
+tractabililty, and as a framework for VLSI implementations of biologi- 
+cal neurons. 
+1 INTRODUCTION 
+Discovery of the mechanisms by which the mammalian cerebral cortex processes and 
+stores information is the greatest remaining challenge in the brain sciences. Numerous 
+modeling studies have attempted to describe cortical information processing in frame- 
+works as varied as holography, statistical physics, mass action, and nonlinear dynamics. 
+Yet, despite these theoretical studies and extensive experimental efforts, the functional 
+architecture of the cortex and its implementation by cortical neurons are largely a mystery. 
+Our view is that the most promising approach involves the study of computational models 
+with the following key properties: (1) Networks consist of large (>103 ) numbers of neu- 
+rons; (2) neurons are connected by modifiable synapses; and (3) the neurons themselves 
+possess biologically-realistic dynamics. 
+Property (1) arises from extensive experimental observations that information processing 
+and storage is distributed over many neurons. Cortical networks are also characterized by 
+sparse connectivity: the probability that any two local conical neurons are synaptically 
+connected is typically less than O. 1. These and other observations suggest that key features 
+of conical dynamics may not be apparent unless large, sparsely-connected networks are 
+studied. 
+Property (2) is suggested by the accumulated evidence that (a) memory formation is sub- 
+served by use-dependent synaptic modification, and (b) Hebbian synaptic plasticity is 
+present in many areas of the brain thought to be important for memory. It is also well 
+known that artificial networks composed of elements that are connected by Hebb-like syn- 
+apses have powerful computational propenies. 
+86 Sean D. Murphy, Edward W. Kairiss 
+Property (3) is based on the assumption that biological neurons are computationally more 
+complex than, for example, the processing elements that compose artificial (connectionis0 
+neural networks. Although it has been difficult to infer the computational function of cor- 
+tical neurons direcfiy from experimental data, models of neurons that explicifiy incorpo- 
+rate biophysical components (e.g. neuronal geometry, channel kinetics) suggest a 
+complex, highly non-linear dynamical transfer function. Since the testability of a model 
+depends on the ability to make predictions in terms of empirically measurable single-neu- 
+ron firing behavior, a biologically-realistic nodal element is necessary in the network 
+model. 
+Biological network models with the above properties (e.g. Wilson & Bower, 1992; Traub 
+and Wong, 1992) have been handicapped by the computationally expensive single-neuron 
+representation. These compartmental models incorporate the neuron's morphology and 
+membrane biophysics as a large (102 -104) set of coupled, non-linear differential equa- 
+tions. The resulting system is often stiff and requires higher-order numerical methods and 
+small time-steps for accurate solution. Although the result is a realistic approximation of 
+neuronal dynamics, the computational burden precludes exhaustive study of large net- 
+works for functionality such as learning and memory. 
+The present study is an effort to develop a computationally efficient representation of a 
+single neuron that does not compromise the biological dynamical behavior. We take the 
+position that the dynamical transfer function of a neuron is essential to its computational 
+abstraction, but that the underlying molecular implementation need not be explicitly repre- 
+sented unless it is a target of analysis. We propose that a biological neuron can be viewed 
+as a device that performs a mapping from multidimensional spario-temporal (synaptic) 
+events to unidimensional temporal events (action potentials). This computational abstrac- 
+tion will be called a Spatio-Temporal Event Mapping (STEM) cell. We describe the archi- 
+tecture of the neural net that implements the neural transfer function, and the training 
+procedure required to develop realistic dynamics. Finally, we discuss our preliminary 
+analyses of the performance of the model when compared with the full biophysical repre- 
+sentation. 
+2 STEM ARCHITECTURE 
+The architecture of the STEM cell is similar to that found in neural nets for temporal 
+sequence processing (e.g. review by Mozer, in press). In general, these networks have 2 
+components: (1) a short-term memory mechanism that acts as a preprocessor for (2) a non- 
+linear feedforward network. For example, de Vries & Principe (1992) describe the utility 
+of the gamma net, a real-time neural net for temporal processing, in time series prediction. 
+The preprocessor in the gamma net is the gamma memory structure, implemented as a net- 
+work of adaptive dispersive elements (de Vries & Principe, 1991). The preprocessor in our 
+model (the tau layer, described below) is somewhat simpler, and is inspired by the tem- 
+poral dynamics of membrane conductances found in biological neurons. 
+The STEM architecture (diagrammed in Figure 1) works by building up a vectorial repre- 
+sentation of the state of the neuron as it continuously receives incoming synaptic activa- 
+tions, and then labeling that vector space as either FIRE or DON'T FIRE. This is 
+accomplished with the use of four major components: (1) TAU LAYER: a layer of nodes 
+that continuously maps incoming synaptic activations into a finite-dimensional vector 
+space (2) FEEDBACK TAU NODE: a node that maintains a vectorial representation of 
+the past activity of the cell itself (3) MLP: a multilayer perceptron that functions as a non- 
+linear spatial mapping network that performs the FIRE / NO-FIRE labeling on the tau 
+layer output (4) OUTPUT FILTER: this adds a refractory period and threshold to the MLP 
+output that contrains the format of the output to be discrete-time events. 
+Model of Biological Neuron as a Temporal Neural Network 8 7 
+input (spike train at each synapse) 
+spatio-temporal 
+! 
+to spatial projection layer 
+nonlinear spatial mapping network I 
+I I 
+spike train output 
+Figure 1: Information Flow in The STEM Cell 
+The tau layer (Fig. 2) consists of N + 1 tau nodes, where N is the number of synapses on 
+the cell, and the extra node is used for feedback. Each tau node consists of M tau units. 
+Each tau unit within a single tau node receives an identical input signal. Each tau unit 
+within a tau node calculates a second-order rise-and-decay function with unique time con- 
+stants. The tau units within a tau node translate arbitrary temporal events into a vector 
+form, with each tau-unit corresponding to a different vector component. Taken as a whole, 
+all of the tau unit outputs of the tau node layer comprise a high-dimensional vector that 
+represents the overall state of the neuron. Functionally, the tau layer approximates a one- 
+to-one mapping between the spatio-temporal input and the tau-unit vector space. 
+The output of each tau unit in the tau layer is fed into the input layer of a multilayer per- 
+ceptron (MLP) which, as will be explained in the next section, has been trained to label the 
+tau-layer vector as either FIRE or NO-FIRE. The output of the MLP is then fed into an 
+output filter with a refractory period and threshold. The STEM architecture is illustrated in 
+Fig. 3. 
+(A) 
+synapse # 
+(afferents) 
+(c) 
+(feedback from action potentials) 
+(all outputs go to MLP) aj I 
+TAU-NODE layer 
+TAU-UNIT DYNAMICS 
+pr. esynaptic 
+input 
+d . x{ aJ(t) I II 
+x{ = aJ 'l:i x?(0 k_ 
+(B) 
+TAU NODE 
+U UNITS 
+= - 
+Figure 2: Tau Layer Schematic. (A) the tau layer has an afferent section, with N tau 
+nodes, and a single-node feedback section. (B) Each tau node contains M tau units, and 
+therefore has 1 input and M outputs (C) Each of the M tau units in a tau node has a rise 
+and decay function with different constants. The equations are given for the ith tau unit of 
+the jth tau node. a is input activity, x an internal state variable, and T the output. 
+88 Sean D. Murphy, Edward W. Kairiss 
+afferent inputs (axons) 
+single tau node from output with B 
+internal tau units 
+:sN tau node layer / 
+hidden layer of MLP 
+oo 
+I additional 
+B units 
+in 1st layer 
+from feedback, 
+single output unit of MLP 
+NxM units in axon subset of 
+1st layer of multilayer perceptron I 
+Schematic of output filter i)rocessing 
+output axon 
+= full forward connections 
+between layers 
+Figure 3: STEM Architecture. Afferent activity enters the tau layer, where it is con- 
+verted into a vectorial representation of past spaiotemporal activity. The MLP maps this 
+vector into a FIRE/NO-FIRE output unit, the continuous value of which is converted to 
+a discrete event signal by the refractory period and threshold of the output filter. 
+3 STEM TRAINING 
+There are six phases to training the STEM cell: 
+(1) Biology: anatomical and physiological data are collected on the cell to be modeled. 
+(2) Compartmental Model: a compartmental model of the cell

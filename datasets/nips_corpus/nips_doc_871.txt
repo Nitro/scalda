@@ -1,0 +1,178 @@
+Learning Prototype Models for Tangent 
+Distance 
+Trevor Hastie* 
+Statistics Department 
+Sequoia Hall 
+Stanford University 
+Stanford, CA 94305 
+email: trevor @playfair.st anford.edu 
+Patrice Simard 
+AT&T Bell Laboratories 
+Crawfords Corner Road 
+Holmdel, NJ 07733 
+email: patrice@neural.att.com 
+Eduard Sickinger 
+AT&T Bell Laboratories 
+Crawfords Corner Road 
+Holmdel, NJ 07733 
+email: edi@neural.att.com 
+Abstract 
+Simard, LeCun & Denker (1993) showed that the performance of 
+nearest-neighbor classification schemes for handwritten character 
+recognition can be improved by incorporating invariance to spe- 
+cific transformations in the underlying distance metric -- the so 
+called tangent distance. The resulting classifier, however, can be 
+prohibitively slow and memory intensive due to the large amount of 
+prototypes that need to be stored and used in the distance compar- 
+isons. In this paper we develop rich models for representing large 
+subsets of the prototypes. These models are either used singly per 
+class, or as basic building blocks in conjunction with the K-means 
+clustering algorithm. 
+*This work was performed while Trevor Hastie was a member of the Statistics and Data 
+Analysis Research Group, AT&T Bell Laboratories, Murray Hill, NJ 07974. 
+1000 Trevor Hastie, Patrice Simard, Eduard Siickinger 
+I INTRODUCTION 
+Local algorithms such as K-nearest neighbor (NN) perform well in pattern recogni- 
+tion, even though they often assume the simplest distance on the pattern space. It 
+has recently been shown (Simard et al. 1993) that the performance can be further 
+improved by incorporating invariance to specific transformations in the underlying 
+distance metric -- the so called tangent distance. The resulting classifier, how- 
+ever, can be prohibitively slow and memory intensive due to the large amount of 
+prototypes that need to be stored and used in the distance comparisons. 
+In this paper we address this problem for the tangent distance algorithm, by de- 
+veloping rich models for representing large subsets of the prototypes. Our leading 
+example of prototype model is a low-dimensional (12) hyperplane defined by a point 
+and a set of basis or tangent vectors. The components of these models are learned 
+from the training set, chosen to minimize the average tangent distance from a subset 
+of the training images -- as such they are similar in flavor to the Singular Value De- 
+composition (SVD), which finds closest hyperplanes in Euclidean distance. These 
+models are either used singly per class, or as basic building blocks in conjunction 
+with K-means and LVQ. Our results show that not only are the models effective, 
+but they also have meaningful interpretations. In handwritten character recogni- 
+tion, for instance, the main tangent vector learned for the the digit 2 corresponds 
+to addition/removal of the loop at the bottom left corner of the digit; for the 9 the 
+fatness of the circle. We can therefore think of some of these learned tangent vectors 
+as representing additional invariances derived from the training digits themselves. 
+Each learned prototype model therefore represents very compactly a large number 
+of prototypes of the training set. 
+2 OVERVIEW OF TANGENT DISTANCE 
+When we look at handwritten characters, we are easily able to allow for simple trans- 
+formations such as rotations, small scalings, location shifts, and character thickness 
+when identifying the character. Any reasonable automatic scheme should similarly 
+be insensitive to such changes. 
+Simard et al. (1993) finessed this problem by generating a parametrized 7- 
+dimensional manifold for each image, where each parameter accounts for one 
+such invariance. Consider a single invariance dimension: rotation. If we were 
+to rotate the image by an angle 0 prior to digitization, we would see roughly 
+the same picture, just slightly rotated. Our images are 16 x 16 grey-scale pix- 
+elmaps, which can be thought of as points in a 256-dimensional Euclidean space. 
+The rotation operation traces out a smooth one-dimensional curve Xi(O) with 
+Xi(O) - Xi, the image itself. Instead of measuring the distance between two im- 
+ages as D(x,,xj) = IIx- xjll (for any norm I1'11), the idea is to use instead the 
+rotation-invariant Dr(Xi,Xj) - mino,,o IIXi(0,)- x(o)11. Simard et al. (1993) 
+used 7 dimensions of invariance, accounting for horizontal and vertical location and 
+scale, rotation and shear and character thickness. 
+Computing the manifold exactly is impossible, given a digitized image, and would 
+be impractical anyway. They approximated the manifold instead by its tangent 
+Learning Prototype Models for Tangent Distance I001 
+plane at the image itself, leading to the tangent model i(O) = Xi + TiO, and the 
+tangent distance DT(xi,xj)= min0,,0 II.i(0)- j(oJ)ll. Here we use 0 for the 
+7-dimensional parameter, and for convenience drop the tilde. The approximation 
+is valid locally, and thus permits local transformations. Non-local transformations 
+are not interesting anyway (we don't want to flip 6s into 9s; shrink all digits down 
+to nothing.) See S/ickinger (1992) for further details. If II'll is the Euclidean norm, 
+computing the tangent distance is a simple least-squares problem, with solution the 
+square-root of the residual sum-of-squares of the residuals in the regression with 
+response X - Xj and predictors (-T: Tj). 
+Simard et al. (1993) used D T to drive a 1-NN classification rule, and achieved 
+the best rates so far--2.6%--on the official test set (2007 examples) of the USPS 
+data base. Unfortunately, 1-NN is expensive, especially when the distance function 
+is non-trivial to compute; for each new image classified, one has to compute the 
+tangent distance to each of the training images, and then classify as the class of 
+the closest. Our goal in this paper is to reduce the training set dramatically to a 
+small set of prototype models; classification is then performed by finding the closest 
+prototype. 
+3 PROTOTYPE MODELS 
+In this section we explore some ideas for generalizing the concept of a mean or 
+centroid for a set of images, taking into account the tangent families. Such a 
+centroid model can be used on its own, or else as a building block in a K-means 
+or LVQ algorithm at a higher level. We will interchangeably refer to the images as 
+points (in 256 space). 
+The centroid of a set of N points in d dimensions minimizes the average squared 
+norm from the points: 
+N N 
+M - X, - arg IIX, - MII = (1) 
+i=l i=1 
+3.1 TANGENT CENTROID 
+One could generalize this definition and ask for the point M that minimizes the 
+average squared tangent distance: 
+N 
+MT = argn}n Z DT(Xi, M)2 
+i--1 
+(2) 
+This appears to be a difficult optimization problem, since computation of tangent 
+distance requires not only the image M but also its tangent basis TM. Thus the 
+criterion to be minimized is 
+c(M) = 
+N 
+ min [IM+ T(M)7, - X, - TiO,[I  
+3'i ,Oi 
+i=1 
+1002 Trevor Hastie, Patrice Sirnard, Eduard Sackinger 
+where T(M) produces the tangent basis from M. All but the location tangent 
+vectors are nonlinear functionals of M, and even without this nonlinearity, the 
+problem to be solved is a difficult inverse functional. Fortunately a simple iterative 
+procedure is available where we iteratively average the closest points (in tangent 
+distance) to the current guess. 
+Tangent Centroid Algorithm 
+ 5']= X, let TM = T(M) be the derived 
+Initialize: Set M =  
+set of tangent vectors, and D = 5']i DT(Xi,M) � Denote 
+the current tangent centroid (tangent family) by M(') = 
+M + TM% 
+^ 
+Iterate: 1. For each i find a i and 0i that solves 
+JIM + TM7 -- Xi(O)[[ = min,0 
+2. Set M ,- -- =(Xi(i) - TMi) and compute the 
+new tangent subspace TM = T(M). 
+3. Compute D = Yi DT(Xi, M) 
+Until: D converges. 
+Note that the first step in Iterate is available from the computations in the third 
+step. The algorithm divides the parameters into two sets: M in the one, and then 
+TM, 'i and Oi for each i in the other. It alternates between the two sets, although 
+the computation of TM given M is not the solution of an optimization problem. 
+It seems very hard to say anything precise about the convergence or behavior of 
+this algorithm, since the tangent vectors depend on each iterate in a nonlinear way. 
+Our experience has always been that it converges fairly rapidly ( 6 iterations). A 
+potential drawback of this algorithm is that the TM are not learned, but are implicit 
+in M. 
+3.2 TANGENT SUBSPACE 
+Rather than define the model as a point and have it generate its own tangent 
+subspace, we can include the subspace as part of the parametrization: M(-) = 
+M + V'. Then we define this tangent subspace model as the minimizer of 
+N 
+MS(M, V) =  min IIM + v3,, - x,(o,)11 
+i=1 
+(3) 
+over M and V. Note that V can have an arbitrary number 0 _( r _( 256 of columns, 
+although it does not make sense for r to be too large. An iterative algorithm 
+similar to the tangent centroid algorithm is available, which hinges on the SVD 
+decomposition for fitting affine subspaces to a set of points. We briefly review the 
+SVD in this context. 
+Let A' be the N x 256 matrix with rows the vectors Xi -  where X =  5']= Xi. 
+Then SVD(X) = UDV T is a unique decomposition with UvxR and V256xR the 
+Learning Prototype Models for Tangent Distance 1003 
+orthonormal left and right matrices of singular vectors, and R - rank(X). DRx R 
+is a diagonal matrix of decreasing positive singular values. A pertinent property of 
+the SVD is: 
+Consider finding the closest affine, rank-r subspace to a set of 
+points, or 
+N 
+min i  Xi - M - V()Oi 
+,v(),{0,) .= 
+where V () is 256 x r orthonormal. The solution is given by the 
+SVD above, with M = X and V () the first r columns of V, and 
+the total squared distance yj=x Dj2j. 
+The V () are also the largest r principal components or eigenvectors of the covariance 
+matrix of the Xi. They give in sequence directions of maximum spread, and for a 
+given digit class ca

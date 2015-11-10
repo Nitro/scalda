@@ -1,0 +1,143 @@
+Context-Dependent Multiple 
+Distribution Phonetic Modeling with 
+MLPs 
+Michael Cohen 
+SKI International 
+Menlo Prk, CA 94025 
+Horacio Franco 
+SKI International 
+Nelson Morgan 
+Intl. Computer Science Ins;, 
+Berkeley, CA 94704 
+David Rumelhart 
+Stanford University 
+Stanford, CA 94305 
+Victor Abrash 
+SRI International 
+Abstract 
+A number f hybrid multilayer percepgon (MI.P)fniddon Markov 
+model (HMM) speech recognition systems have been developed in 
+recent years (Morgan and Bourlard, 1990). In this paper, we present 
+a new MI.P architecture and training algorith which allows the 
+modeling of context-dependent phonetic classes in a hybrid 
+gained at different degrees  context dependence in order to obtain 
+a robust estimate of the c(mtext.dependent probabilities. Tests with 
+the DARPA Resource Management database have shown substantial 
+advantages of the context-dependent MLPs over earlier context- 
+independent MLPs, and have shown substantial advantages of thig 
+hybrid approach over a pure  approach. 
+1 INTRODUCTION 
+Hidden Markov models are used in mot curtera state-of-the-art ccfinuous-sT, ch 
+tecogn,.. ition systems. A hidden Markov model (HMM) is a sttr,,hasti� finite State 
+mchir. with two sets (If probability distributions. Associated with each state is a 
+probability distribution over gsmifions to next states and a probability distribution 
+over output symbols (often referred to as observation probabilities). When applied to 
+continuous speech, the observation probabilities are typically used to model local 
+649 
+650 Cohen, Franco, Morgan, Rumelhart, and Abrash 
+speech features such as spectra, and the transition probabilities are used to model the 
+displacement of these features through time. HMMs of individual phonetic segments 
+(phones) can be concatenated to model words and word models can be concatenated, 
+according to a grammar, to model sentences, resulting in a finite state representation 
+of acoustic-phonetic, phonological, and syntactic structure. 
+The HMM approach is limited by the need for strong statistical assumptions that are 
+unlikely to be valid for speech. Previous work by Morgan and Boufiard (1990) has 
+shown both theoretically and practically that some of these limitations can be over- 
+come by using multilayer perceptrons (MLPs) to estimate the HMM state-dependent 
+observation probabilities. In addition to relaxing the restrictive independence assump- 
+tions of traditional HMMs, this approach results in a reduction in the number of 
+parameters needed for detailed phonetic modeling as a result of increased sharing of 
+model parameters between phonetic classes. 
+Recently, this approach was applied to the SRI-DECIPHER TM system, a state-of-the-art 
+continuous speech recognition system (Cohen et al., 1990), using an MLP to provide 
+estimates of context-independent posterior probabilities of phone classes, which were 
+then converted to HMM context-independent state observation likelihoods using 
+Bayes' rule (Renals et al., 1992). In this paper, we describe refinements of the system 
+to model phonetic classes with a sequence of context-dependent probabilities. 
+Context-dependent modeling: The realization of individual phones in continuous 
+speech is highly dependent upon phonetic context. For example, the sound of the 
+vowel /ae/ in the words map and tap is different, due to the influence of the 
+preceding phone. These context effects are referred to as coarticulation. Experience 
+with HMM technology has shown that using context-dependent phonetic models 
+improves recognition accuracy significantly (Schwartz et al., 1985). This is so because 
+acoustic correlates of coarticulatory effects are explicitly modeled, producing sharper 
+and less overlapping probability density functions for the different phone classes. 
+Context-dependent HMMs use different probability distributions for every phone in 
+every different relevant context. This practice causes problems that are due to the 
+reduced amount of data available to train phones in highly specific contexts, resulting 
+in models that are not robust and generalize poorly. The solution to this problem used 
+by many HMM systems is to train models at many different levels of context- 
+specificity, including biphone (conditioned only on the phone immediately to the left 
+or right), generalized biphone (conditioned on the broad class of the phone to the left 
+or right), triphone (conditioned on the phone to the left and the right), generalized tri- 
+phone, and word specific phone. Models conditioned by more specific contexts are 
+linearly smoothed with more general models. The deleted interpolation algorithm 
+(Jelinek and Mercer, 1980) provides linear weighting coefficients for the observation 
+probabilities with different degrees of context dependence by maximizing the likeli- 
+hood of the different models over new, unseen data. This approach cannot be directly 
+extended to MLP-based systems because averaging the weights of two MLPs does not 
+result in an MLP with the average performance. It would be possible to use this 
+approach to average the probabilities that are output from different MLPs; however, 
+since the MLP training algorithm is a discriminant procedure, it would be desirable to 
+use a discriminant or error-based procedure to smooth the MLP probabilities together. 
+An earlier approach to context-dependent phonetic modeling with MLPs was proposed 
+by Boufiard et al. (1992). It is based on factoring the context-dependent likelihood 
+and uses a set of binary inputs to the network to specify context classes. The number 
+Context-Dependent Multiple Distribution Phonetic Modeling with MLPs 651 
+of parameters and the computational load using this approach are not much greater 
+than those for the original context-independent net. 
+The context-dependent modeling approach we present here uses a different factoring 
+of the desired context-dependent likelihoods, a network architecture that shares the 
+input-to-hidden layer among the context-dependent classes to reduce the nnmber of 
+parameters, and a training procedure that smooths networks with different degrees of 
+context-dependence in order to achieve robustness in probability estimates. 
+Multidistribution modeling: Experience with HMM-based systems has shown the 
+importance of modeling phonetic units with a sequence of distributions rather than a 
+single distribution. This allows the model to capture some of the dynamics of 
+phonetic segments. The SRI-DEClPI-IE TM system models most phones with a 
+sequence of three HMM states. Our initial hybrid system used only a single MLP out- 
+put unit for each HMM phonetic class. This output _mit supplied the probability for 
+all the states of the associated phone model. 
+Our initial attempt to extend the hybrid system to the modeling of a sequence of dis- 
+tributions for each phone involved increasing the number of output units from 69 
+(corresponding to phone classes) to 200 (corresponding to the states of the HMM 
+phone models). This resulted in an increase in word-recognition error rate by almost 
+30%. Experiments at ICSI had a similar result (personal communication). The higher 
+error rate seemed to be due to the discriminative nature of the MLP training algo- 
+rithm. The new MLP, with 200 output units, was attempting to discriminate sub- 
+phonetic classes, corresponding to HMM states. As a result, the MLP was attempting 
+to discriminate into separate classes acoustic vectors that corresponded to the same 
+phone and, in many cases, were very similar but were aligned with different HMM 
+states. There were likely to have been many cases in which almost identical acoustic 
+tra'ming vectors were labeled as a positive example in one instance and a negative 
+example in another for the same output class. The appropriate level at which to train 
+discrimination is likely to be the level of the phone (or higher) rather than the sub- 
+phonetic HMM-state level (to which these outputs _mits correspond). The new archi- 
+tecture presented here accomplishes this by training separate output layers for each of 
+the three HMM states, resulting in a network trained to discriminate at the phone 
+level, while allowing three distributions to model each phone. This approach is com- 
+bined with the context-dependent modeling approach, described in Section 3. 
+2 HYBRID MLP/HMM 
+The SRI-DECIPHER TM system is a phone-based, speaker-independent, continuous- 
+speech recognition system, based on semicontinuous (tied Gaussian mixture) HMMs 
+(Cohen et al., 1990). The system extracts four features from the input speech 
+waveform, including 12th-order mel cepstmm, log energy, and their smoothed deriva- 
+tives. The front end produces the 26 coefficients for these four features for each 10- 
+ms frame of speech. 
+Training of the phonetic models is based on maximum-likelihood estimation using the 
+forward-backward algorithm (Levinson et al., 1983). Recognition uses the Viterbi 
+algorithm (Levinson et al., 1983) to find the HMM state sequence (corresponding to a 
+sentence) with the highest probability of generating the observed acoustic sequence. 
+The hybrid MLP/HMM DECIPHER TM system substitutes (scaled) probability estimates 
+computed with MLPs for the tied-mixture HMM state-dependent observation 
+652 Cohen, Franco, Morgan, Rumelhart, and Abrash 
+probability densities. No changes are made in the topology of the HMM system. 
+The initial hybrid system used an MI.P to compute context-independent phonetic pro- 
+babilities for the 69 phone classes in the DECI.R TM system. Separate probabilities 
+were not computed for the different states of phone models. During the Viterbi recog- 
+nition search, the probability of acoustic vector Yt given the phone class qj, P (Yt Iqj), 
+is required for each HMM state. Since MLPs can compute Bayesian posterior proba- 
+bilities, we compute the required HMM probabilities using 
+P (qj lYt )P (Yt ) 
+P(Yttqj) -- p(qj) (1) 
+The factor P (qj I Y

@@ -1,0 +1,143 @@
+Improving Performance in Neural Networks 
+Using a Boosting Algorithm 
+Harris Drucker 
+AT&T Bell Laboratories 
+Holmdel, NJ 07733 
+Robert Schapire 
+AT&T Bell Laboratories 
+Murray Hill, NJ 07974 
+Patrice Simard 
+AT&T Bell Laboratories 
+Holmdel, NJ 07733 
+Abstract 
+A boosting algorithm converts a learning machine with error rate less 
+than 50% to one with an arbitrarily low error rate. However, the 
+algorithm discussed here depends on having a large supply of 
+independent training samples. We show how to circumvent this 
+problem and generate an ensemble of learning machines whose 
+performance in optical character recognition problems is dramatically 
+improved over that of a single network. We report the effect of 
+boosting on four databases (all handwritten) consisting of 12,000 digits 
+from segmented ZIP codes from the United State Postal Service 
+(USPS) and the following from the National Institute of Standards and 
+Testing (NIST): 220,000 digits, 45,000 upper case alphas, and 45,000 
+lower case alphas. We use two performance measures: the raw error 
+rate (no rejects) and the reject rate required to achieve a 1% error rate 
+on the patterns not rejected. Boosting improved performance in some 
+cases by a factor of three. 
+1 INTRODUCTION 
+In this article we summarize a study on the effects of a boosting algorithm on the 
+performance of an ensemble of neural networks used in optical character recognition 
+problems. Full details can be obtained elsewhere (Drucker, Schapire, and Simard, 1993). 
+The boosting by filtering algorithm is based on Schapire's original work (1990) which 
+showed that it is theoretically possible to convert a learning machine with error rate less 
+than 50% into an ensemble of learning machines whose error rate is arbitrarily low. The 
+work detailed here is the first practical implementation of this boosting algorithm. 
+As applied to an ensemble of neural networks using supervised learning, the algorithm 
+proceeds as follows: Assume an oracle that generates a large number of independent 
+42 
+Improving Performance in Neural Networks Using a Boosting Algorithm 43 
+training examples. First, generate a set of training examples and train a first network. 
+After the first network is trained it may be used in combination with the oracle to produce 
+a second training set in the following manner: Flip a fair coin. If the coin is heads, pass 
+outputs from the oracle through the first leaming machine until the first network 
+misclassifies a pattern and add this pattern to a second training set. Otherwise, if the coin 
+is tails pass outputs from the oracle through the first learning machine until the first 
+network finds a pattern that it classifies correctly and add to the training set. This process 
+is repeated until enough patterns have been collected. These patterns, half of which the 
+first machine classifies correctly and half incorrectly, constitute the training set for the 
+second network. The second network may then be trained. 
+The first two networks may then be used to produce a third training set in the following 
+manner: Pass the outputs from the oracle through the first two networks. If the networks 
+disagree on the classification, add this pattern to the training set. Otherwise, toss out the 
+pattern. Continue this until enough patterns are generated to form the third mining set. 
+This third network is then trained. 
+In the final testing phase (of Schapire's original scheme), the test patterns (never 
+previously used for training or validation) are passed through the three networks and 
+labels assigned using the following voting scheme: If the first two networks agree, that is 
+the label. Otherwise, assign the label as classified by the third network. However, we 
+have found that if we add together the three sets of outputs from each of the three 
+networks to obtain one set of ten outputs (for the digits) or one set of twenty-size outputs 
+(for the alphas) we obtain better results. Typically, the error rate is reduced by .5% over 
+straight voting. 
+The rationale for the better performance using addition is as follows: A voting criterion is 
+a hard-decision rule. Each voter in the ensemble has an equal vote whether in fact the 
+voter has high confidence (large difference between the two largest outputs in a particular 
+network) or low confidence (small difference between the two largest outputs). By 
+summing the outputs (a soft-decision rule) we incorporate the confidence of the networks 
+into the total output. As will be seen later, this also allows us to build an ensemble with 
+only two voters rather than three as called for in the original algorithm. 
+Conceptually, this process could be iterated in a recursive manner to produce an ensemble 
+of nine networks, twenty-seven networks, etc. However, we have found significant 
+improvement in going from one network to only three. The penalty paid is potentially an 
+increase by a factor of three in evaluating the performance (we attribute no penalty to the 
+increased training time). However it can show how to reduce this to a factor of 1.75 
+using sieving procedures. 
+2 A DEFORMATION MODEL 
+The proof that boosting works depends on the assumption of three independent training 
+sets. Without a very large training set, this is not possible unless that error rates are large. 
+After training the first network, unless the network has very poor performance, there are 
+not enough remaining samples to generate the second training set. For example, suppose 
+we had 9000 total examples and used the first 3000 to train the first network and that 
+network achieves a 5% error rate. We would like the next training set to consist of 1500 
+patterns that the first network classifies incorrectly and 1500 that the first network 
+44 Drucker, Schapire, and Simard 
+classflies incorrectly. At a 5% error rate, we need approximately 30,000 new images to 
+pass through the first network to find 1500 patterns that the first network classflies 
+incorrectly. These many patterns are not available. Instead we will generate additional 
+patterns by using small deformations around the finite training set based on the 
+techniques of Simard (Simard, et. al., 1992). 
+The image consists of a square pixel array (we use both 16x16 and 20x20). Let the 
+intensity of the image at coordinate location (i,j) be Fii(x,y) where the (x,y) denotes that 
+F is a differentiable and hence continuous function of x and y. i and j take on the discrete 
+values 0,1,...,15 for a 16x16 pixel array. 
+The change in F at location (i,j) due to small x-translation, y-translation, rotation, 
+diagonal deformation, axis deformation, scaling and thickness deformation is given by 
+the following respective matrix inner products: 
+aFo(x,y) 
+a%(x,y) = [. 
+aVo(x,y) 
+x 
+kl I3 -I-k2 I013 q'k3 [-xY3 q'k4 IxY] q'k5 I-;l q'k6 Il q'k7 
+aFo(x,y) 
+aFo(x,y) 
+where the k's are small values and x and y are referenced to the center of the image. This 
+construction depends on obtaining the two partial derivatives. 
+For example, if all the k's except k 1 are zero, then AFq(x,y) = k  ax is the amount 
+by which F#(x,y) at coordinate location (i,j) changes due to an x-translation of value k. 
+The diagonal deformation can be conceived of as pulling on two opposite comers of the 
+image thereby stretching the image along the 45 degree axis (away from the center) while 
+simultaneously shrinking the image towards the center along a - 45 degree axis. If k4 
+changes sign, we push towards the center along the 45 degree axis and pull away along 
+the - 45 degree axis. Axis deformation can be conceived as pulling (or pushing) away 
+from the center along the x-axis while pushing (or pulling) towards the center along the 
+y-axis. 
+If all the k's except k7 are zero, then AFij(x,y) = k7 I I VFij(x,y)[ 12 is the norm squared of 
+the gradient of the intensity. It can be shown that this corresponds to varying the 
+thickness of the image. 
+Typically the original image is very coarsely quantized and not differentiable. Smoothing 
+of the original image is done by numerically convolving the original image with a 5x5 
+square kernel whose elements are values from the Gaussian: exp - (x;+ y2) to give us 
+Improving Performance in Neural Networks Using a Boosting Algorithm 45 
+� a 16x16 or 20x20 square matrix of smoothed values. 
+A matrix of partial derivatives (with respect to x) f6r 'each pixellocation is obtained by 
+convotving the original image with a kernel whose elements are the derivatives with 
+respect to x of the Gaussian function. 'We can similarly form a matrix of partit 
+derivatives with respect to y. A nev image can then be constructed by adding together 
+the smoothed image and a differential matrix whose elements are given by the above 
+equation. 
+Using the above equation, we may simulate an oracle by cycling through a finite sized 
+training set, picking random values (uniformly distributed in some small range) of the 
+constants k for each new image. The choice of the range of k is somewhat critical: too 
+small and the new image is too close to the old image for the neural network to consider 
+it a new pattern. Too large and the image is distorted and nonrepresentative of real 
+data. We will discuss the proper choice of k later. 
+3 NETWORK ARCHITECTURES 
+We use as the basic learning machine a neural network with extensive use of shared 
+weights (LeCun, et. al., 1989, 1990). Typically the number of weights is much less than 
+the number of connections. We believe this leads to a better ability to reject images (i.e., 
+no decision made) and thereby minimizes the number of rejects needed to obtain a given 
+error rate on images not rejected. However, there is conflicting evidence (Martin & 
+Pitman, 1991) that given enough training patterns, fully connected networks give similar 
+performance to networks using weight sharing. For the digits there is a 16 by 16 input 
+surrounded by a six pixel border to give a 28 by 28 input layer. The network has

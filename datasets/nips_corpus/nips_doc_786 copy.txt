@@ -1,0 +1,156 @@
+Resolving motion ambiguities 
+K. I. Diamantaras 
+Siemens Corporate Research 
+755 College Rd East 
+Princeton, NJ 08540 
+D. Geiger* 
+Courant Institute, NYU 
+Mercer Street 
+New York, NY 10012 
+Abstract 
+We address the problem of optical flow reconstruction and in par- 
+ticular the problem of resolving ambiguities near edges. They oc- 
+cur due to (i) the aperture problem and (ii) the occlusion problem, 
+where pixels on both sides of an intensity edge are assigned the same 
+velocity estimates (and confidence). However, these measurements 
+are correct for just one side of the edge (the non occluded one). 
+Our approach is to introduce an uncertmnty field with respect to 
+the estimates and confidence measures. We note that the confi- 
+dence measures are large at intensity edges and larger at the con- 
+vex sides of the edges, i.e. inside corners, than at the concave side. 
+We resolve the ambiguities through local interactions via coupled 
+Markov random fields (MRF) The result is the detection of motion 
+for regions of images with large global convexity 
+I Introduction 
+In this paper we discuss the problem of figure ground separation, via optical flow, for 
+homogeneous images (textured images just provide more information for the disam- 
+biguation of figure-ground). We address the problem of optical flow reconstruction 
+and in particular the problem of resolving ambiguities near intensity edges. We 
+concentrate on a two frames problem, where all the motion ambiguities we discuss 
+can be disambiguiated by the human visual system. 
+*work done when the author was at the Isaac Newton Institute and at Siemens Corpo- 
+rate Research 
+977 
+978 Diamantaras and Geiger 
+Optical flow is a 2D (two dimensional) field defined as to capture the projection 
+of the 3D (three dimensional) motion field into the view plane (retina). The Horn 
+and Schunk[8] formulation of the problem is to impose (i) the brightness constraint 
+a:(,y,t) _ O, where E is the intensity image, and (ii) the smoothness of the velocity 
+dt -- 
+field. The smoothness can be thought of coming from a rigidity or quasi-rigidity 
+assumption (see Ullman [12]). 
+We utilize two improvements which are important for the optical flow computation, 
+(i) the introduction of the confidence measure (Nagel and Enkelman [10], Anandan 
+[1]) and (ii) the application of smoothness while preserving discontinuities (Geman 
+and Geman [6], Blake and Zisserman [2], Mumford and Shah [9]). It is clear that as 
+an object moves with respect to a background not only optical flow discontinuities 
+occur, but also occlusions occur (and revelations). In stereo, occlusions are related 
+to discontinuities (e.g. Geiger et. al 1992 [5]), and for motion a similar relation 
+must exist. We study ambiguities ocuring at motion discontinuities and occlusions 
+in images. 
+The paper is organized as follows: Section 2 describes the problem with examples 
+and a brief discussion on possible approaches, section 3 presents our approach, with 
+the formulation of the model and a method to solve it, section 4 gives the results. 
+2 Motion ambiguities 
+Figure 1 shows two synthetic problems involving a translation and a rotation of 
+simple objects in front of stationary backgrounds. 
+Consider the case of the square translation (see figure la.). Humans perceive the 
+square translating, although block-matching (and any other matching technique) 
+gives translation on both sides of the square edges. Moreover, there are other inter- 
+pretations of the scene, such as the square belonging to the stationary background 
+and the outside being a translating foreground with a square hole. The examples 
+are synthetic, but emphasize the ambiguities. Real images may have more texture, 
+thus many times helping resolve these ambiguities, but not everywhere. 
+(a) (b) 
+Figure 1' Two image sequences of 128 x 128. (a) Square translation of 3 pixels; (b) 
+Eight rotation of 10�o Note that the eight has concave and convex regions. 
+Resolving Motion Ambiguities 979 
+3 A Markov random field model 
+We describe a model capable of solving these ambiguities. It is based on coupled 
+Markov random fields and thus, based on local processes. Our main contribution is 
+to introduce the idea of uncertainty on the estimates and confidence measures. We 
+propose a Markov field that allows the estimates of each pixel to be chosen among 
+a large neighborhood, thus each pixel estimate can be neglected. We show that 
+convex regions of the image do bias the confidence measures such that the final 
+motion solutions are expected to be the ones with global larger convexity Note 
+that locally, one can have concave regions of a shape that give wrong bias (see 
+figure i b). 
+3.1 Block Matching 
+Block matching is the process of correlating a block region of one image, say of size 
+(2WM + 1) x (2WM + 1), with a block region of the other image. Block-matching yields 
+a set of matching errors di ' , where (i, j) is a pixel in the image and v: [ca, n] is 
+a displacement vector in a search window of size (2w$ + 1) x (2w$ + 1) around the 
+pixel. We define the velocity measurements gij and the covariance matrix Cij as the 
+mean and variance of the-vector v - [ca, n] averaged according to the distribution 
+m,n e-kdv m,n e-kd (V -- gij)(V -- gij) T 
+gij -- _kd,, Vii  _kd,, 
+Figure 2 shows the block matching data gij for the two problems discussed above 
+and figure 3 shows the correspondent confidence measurse (inverse of the covariance 
+matrix as defined below). 
+3.2 The aperture problem and confidence 
+The aperture problem [7] occurs where there is a low confidence on the measure- 
+ments (data) in the direction along an edge; In particular we follow the approach 
+by [1]. 
+The eigenvalues A, A2, of Cij correspond to the variance of distribution of v along 
+the directions of the corresponding eigenvectors Vl, v2o The confidence of the esti- 
+mate should be inversely proportional to the variance of the distribution, i.e. the 
+confidence along direction v (v2) is oc 1/A (cr 1/,X2). All this confidence informa- 
+tion can be packaged inside the confidence matrix defined as follows: 
+Rij: (cij + 
+where e is a very small constant that guarantees invertibility. Thus the eigenvalues of 
+lij are values between 0 and 1 corresponding to the confidence along the directions 
+v and v2, whereas v and v2 are still eigenvectors of lij. 
+The confidence measures at straight edges is high perpendincular to the edges and 
+low (zero) along the edges. However, at corners, the confidence is high on both 
+980 Diamantaras and Geiger 
+directions thus through smoothness this result can be propagated through the other 
+parts of the image, then resolving the aperture problem. 
+3.3 The localization problem and a binary decision field 
+The localization problem arises due to the local symmetry at intensity edges, where 
+both sides of an edge give the same correspondences. These cases occur when 
+occluded regions are homogeneous and so, block matching, pixel matching or any 
+matching technique can not distinguish which side of the edge is being occluded or 
+is occluding. Even if one considers edge based methods, the same problem arises in 
+the reconstruction stage, where the edge velocities have to be propagated to the rest 
+of the image. In this cases a localization uncertainty is introduced. More precisely, 
+pixels whose matching block contains a strong feature (e.g. a corner) will obtain a 
+high-confidence motion estimate along the direction in which this feature moved. 
+Pixels on both sides of this feature, and at distances less than half the matching 
+window size, M, will receive roughly the same motion estimates associated with 
+high confidences. However, it could have been just one of the two sides that have 
+moved in this direction. In that case this estimate should not be taken into account 
+on the other side. We note however a bias towards inside of corner regions from the 
+confidence measures. 
+Note that in a corner, despite both sides getting roughly the same velocity estimate 
+and high confidence measures, the inside pixel always get a larger confidence. This 
+bias is due to having more pixels outside the edge of a closed contour than outside, 
+and occurs at the convex regions (e.g. a corner). Thus, in general, the convex 
+regions will have a stronger confidence measure than outside them. Note that at 
+concavities in the eight rotation image, the confidence will be higher outside the 
+eight and correct at convex regions. Thus, a global optimization will be required 
+to decide which confidences to pick up. 
+Our approach to resolve this ambiguity is to allow for the motion estimate at pixel 
+(i, j) to select data from a neighborhood Nij, and its goal is to maximize the total 
+estimates (taking into account the confidence measures). More precisely, let fij be 
+the vector motion field at pixel (i, j). We introduce a binary field cti  that indicates 
+which data gi+m,j+n in a neighborhood Nij of (i, j) should correspond to a motion 
+estimate fij. The size of Nij is given by M -{- 1 to overcome the localization 
+uncertainty. For a given lattice point (i, j) the boolean parameters cti3 should be 
+mutually exclusive, i.e. only one of them, ctj **, should be equal to 1 indicating 
+that fij should correspond to gi+,*,j+,*, while the rest cti , rn - m*, n - n*, 
+should be zero (or Y-rn*n*eN,3 ctir ** ---- 1). The conditional probability reflects 
+both an uncertainty due to noise and an uncertainty due to spatial localization of 
+the data 
+1 
+P(R, glf, a) = 22 exp{- '. 
+(2) 
+where Ilhl12 = hl + for h = [h,hy]. 
+Resolving Motion Ambiguities 981 
+3.4 The piecewise smooth prior 
+The prior probability of the motion field fij is a piecewise smoothness condition, 
+in [6]. 
+as 
+I 
+where hij = 0 (vij = 0) if there is no motion discontinuity separating pixels 
+(i- 1,j) ((i,j),(i,j- 1))9 otherwise hij - 1 (vii - 1). The parameter/ has to 
+be estimated. We have considere

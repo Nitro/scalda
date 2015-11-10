@@ -1,0 +1,169 @@
+A Neural Network Based 
+Head Tracking System 
+D. D. Lee and H. S. Seung 
+Bell Laboratories, Lucent Technologies 
+700 Mountain Ave. 
+Murray Hill, NJ 07974 
+{ddlee [ seung}bell-labs. com 
+Abstract 
+We have constructed an inexpensive, video-based, motorized track- 
+ing system that learns to track a head. It uses real time graphical 
+user inputs or an auxiliary infrared detector as supervisory signals 
+to train a convolutional neural network. The inputs to the neural 
+network consist of normalized luminance and chrominance images 
+and motion information from frame differences. Subsampled im- 
+ages are also used to provide scale invariance. During the online 
+training phase, the neural network rapidly adjusts the input weights 
+depending upon the reliability of the different channels in the sur- 
+rounding environment. This quick adaptation allows the system to 
+robustly track a head even when other objects are moving within 
+a cluttered background. 
+I Introduction 
+With the proliferation of inexpensive multimedia computers and peripheral equip- 
+ment, video conferencing finally appears ready to enter the mainstream. But per- 
+sonal video conferencing systems typically use a stationary camera, tying the user 
+to a fixed location much as a corded telephone tethers one to the telephone jack. A 
+simple solution to this problem is to use a motorized video camera that can track 
+a specific person as he or she moves about. However, this presents the difficulty of 
+having to continually control the movements of the camera while one is communi- 
+cating. In this paper, we present a prototype, neural network based system that 
+learns the characteristics of a person's head in real time and automatically tracks 
+it around the room, thus alleviating the user of much of this burden. 
+The camera movements in this video conferencing system closely resemble the move- 
+ments of human eyes. The task of the biological oculomotor system is to direct 
+A Neural Network Based Head Tracking System 909 
+Color 
+CCD Camera 
+(Eye) 
+Directional 
+Microphones 
+(Ears) 
+Sound 
+PC 
+Sedal 
+Servo Motors. 
+(Oculomotor 
+Muscles) 
+Reinforcement 
+Signals 
+IR Detector 
+GUI Mouse 
+Figure 1: Schematic hardware diagram of Marvin, our head tracking system. 
+interesting parts of the visual world onto the small, high resolution areas of the 
+retinas. For this task, complex neural circuits have evolved in order to control the 
+eye movements. Some examples include the saccadic and smooth pursuit systems 
+that allow the eyes to rapidly acquire and track moving objects [1, 2]. Similarly, 
+an active video conferencing system also needs to determine the appropriate face 
+or feature to follow in the video stream. Then the camera must track that person's 
+movements over time and transmit the image to the other party. 
+In the past few years, the problem of face detection in images and video has attracted 
+considerable attention [3, 4, 5]. Rule-based methods have concentrated on looking 
+for generic characteristics of faces such as oval shapes or skin hue. Since these types 
+of algorithms are fairly simple to implement, they are commonly found in real-time 
+systems [6, 7]. But because other objects have similar shapes and colors as faces, 
+these systems can also be easily fooled. A potentially more robust approach is to 
+use a convolutional neural network to learn the appropriate features of a face [8, 9]. 
+Because most such implementations learn in batch mode, they are beset by the 
+difficulty of constructing a large enough training set of labelled images with and 
+without faces. In this paper, we present a video based system that uses online 
+supervisory signals to train a convolutional neural network. Fast online adaptation 
+of the network's weights allows the neural network to learn how to discriminate an 
+individual head at the beginning of a session. This enables the system to robustly 
+track the head even in the presence of other moving objects. 
+2 Hardware Implementation 
+Figure i shows a schematic of the tracking system we have constructed and have 
+named Marvin because of an early version's similarity to a cartoon character. 
+Marvin's eye consists of a small CCD camera with a 65 � field of view that is attached 
+to a motorized platform. Two RC servo motors give Marvin the ability to rapidly 
+pan and tilt over a wide range of viewing angles, with a typical maximum velocity of 
+300 deg/sec. The system also includes two microphones or ears that give Marvin the 
+ability to locate auditory cues. Integrating auditory information with visual inputs 
+allows the system to find salient objects better than with either sound or video 
+alone. But these proceedings will focus exclusively on how a visual representation 
+is learned. 
+910 D. D. Lee and H. S. Seung 
+RGB Images 
+U 
+V 
+Figure 2: Preprocessing of the video stream. Luminance, chromatic and motion 
+information are separately represented in the Y, U, V, D channels at multiple res- 
+olutions. 
+Marvin is able to learn to track a visual target using two different sources of su- 
+pervisory signals. One method of training uses a small 38 KHz modulated infrared 
+light emitter (A  900nm) attached to the object that needs to be tracked. A 
+heat filter renders the infrared light invisible to Marvin's video camera so that the 
+system does not merely learn to follow this signal. But mounted next to the CCD 
+camera and moving with it is a small infrared detector with a collimating lens that 
+signals when the object is located within a narrow angular cone in the direction 
+that the camera is pointing. This reinforcement signal can then be used to train 
+the weights of the neural network. Another more natural way for the system to 
+learn occurs in an actual video conferencing scenario. In this situation, a user who 
+is actively watching the video stream has manual override control of the camera 
+using graphical user interface inputs. Whenever the user repositions the camera to 
+a new location, the neural network would then adjust its weights to track whatever 
+is in the center portion of the image. 
+Since Marvin was built from readily available commercial components, the cost of 
+the system not including the PC was under $500. The input devices and motors 
+are all controlled by the computer using custom-written Matlab drivers that are 
+available for both Microsoft Windows and the Linux operating system. The image 
+processing computations as well as the graphical user interface are then easily im- 
+plemented as simple Matlab operations and function calls. The following section 
+describes the head tracking neural network in more detail. 
+3 Neural Network Architecture 
+Marvin uses a convolutional neural network architecture to detect a head within its 
+field of view. The video stream from the CCD camera is first digitized with a video 
+capture board into a series of raw 120 x 160 RGB images as shown in Figure 2. Each 
+RGB color image is then converted into its YUV representation, and a difference (D) 
+A Neural Network Based Head Tracla'ng System 911 
+Hidden 
+Y Units 
+U 
+Wy 
+W U 
+Saliency 
+Map 
+V 
+D 
+W D 
+Winner Take All 
+Figure 3: Neural network uses a convolutional architecture to integrate the different 
+sources of information and determine the maximally salient object. 
+image is also computed as the absolute value of the difference from the preceding 
+frame. Of the four resulting images, the Y component represents the luminance or 
+grayscale information while the U and V channels contain the chromatic or color 
+information. Motion information in the video stream is captured by the D image 
+where moving objects appear highlighted. 
+The four YUVD channels are then subsampled successively to yield representations 
+at lower and lower resolutions. The resulting image pyramids allow the network 
+to achieve recognition invariance across many different scales without having to 
+train separate neural networks for each resolution. Instead, a single neural network 
+with the same set weights is run with the different resolutions as inputs, and the 
+maximally active resolution and position is selected. 
+Marvin uses the convolutional neural network architecture shown in Figure 3 to 
+locate salient objects at the different resolutions. The YUVD input images are fil- 
+tered with separate 16 x 16 kernels, denoted by Wr', Wv, Wv, and WD respectively. 
+This results in the filtered images s, fs, 7s,/s: 
+.s(i,j) - WA o A s -- E WA(i',j') AS(i + i',j + j') 
+(1) 
+where s denotes the scale resolution of the inputs, and A is any of the Y, U, V, 
+or D channels. These filtered images represent a single layer of hidden units in the 
+neural network. These hidden units are then combined to form the saliency map 
+X s in the following manner: 
+XS(i,j) - cy g[s(i,j)] -F cv g[OS(i,j)] -F Cv g[S(i,j)] -F CD g[bS(i,j)] -F Co. (2) 
+912 D. D. Lee and H. S. Seung 
+Since g(x) = tanh(x) is sigmoidal, the saliency X 8 is computed as a nonlinear, 
+pixel-by-pixel combination of the hidden units. The scalar variables cv, cv, cv, 
+and cD represent the relative importance of the different luminance, chromatic, and 
+motion channels in the overall saliency of an object. 
+With the bias term co, the function g[XS(i,j)] may then be thought of as the 
+relative probability that a head exists at location (i, j) at input resolution s. The 
+final output of the neural network is then determined in a competitive manner by 
+finding the location (im,jm) and scale sm of the best possible match: 
+g[Xm] = g[XS(im,jm)] = m.axg[XS(i,j)]. (3) 
+After processing the visual inputs in this manner, saccadic camera movements are 
+generated in order to keep the maximally salient object located near the center of 
+the field of view. 
+4 Training and Results 
+Either GUI user inputs or the infrared detector may be used as a supervisory signal 
+to train the kernels WA and scalar weights cA of the neural network. The neu- 
+ral network is updated when the maximally salient location of the neura

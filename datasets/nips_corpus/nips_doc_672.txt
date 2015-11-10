@@ -1,0 +1,204 @@
+Discriminability-Based Transfer between 
+Neural Networks 
+L. Y. Pratt 
+Department of Mathematical and Computer Sciences 
+Colorado School of Mines 
+Golden, CO 80401 
+lpratt@mines.colorado.edu 
+Abstract 
+Previously, ve have introduced the idea of neural network transfer, 
+where learning on a target problem is sped up by using the weights 
+obtained from a network trained for a related source task. Here, 
+we present a new algorithm. called Discriminability-Based Transfer 
+(DBT), which uses an information measure to estimate the utility 
+of hyperplanes defined by source weights in the target network, 
+and rescales transferred weight magnitudes accordingly. Several 
+experiments demonstrate that target networks initialized via DBT 
+learn significantly faster than networks initialized randomly. 
+I INTRODUCTION 
+Neural networks are usually trained from scratch, relying only on the training data 
+for guidance. However, as more and more networks are trained for various tasks, 
+it becomes reasonable to seek out methods that avoid reinventing the wheel, and 
+instead are able to build on previously trained networks' results. For example, con- 
+sider a speech recognition network that was only trained on American English speak- 
+ers. However, for a new application, speakers might have a British accent. Since 
+these tasks are sub-distributions of the same larger distribution (English speakers), 
+they may be related in a way that can be exploited to speed up learning on the 
+British network, compared to when weights are randomly initialized. 
+We have previously introduced the question of how trained neural networks can be 
+204 
+Discriminability-Based Transfer between Neural Networks 205 
+recycled' in this way [Pratt et al., 1991]; we've called this the trans]er problem. 
+The idea of transfer has strong roots in psychology (as discussed in [Sharkey and 
+Sharkey, 1992]), and is a standard paradigm in neurobiology, where synapses almost 
+always come pre-wired. 
+There are many ways to formulate the transfer problem. Retaining performance on 
+the source task may or may not be important. When it is, the problem has been 
+called sequential learning, and has been explored by several authors (cf. [McCloskey 
+and Cohen, 1989]). Our paradigm assumes that source task performance is not 
+important, though when the source task training data is a subset of the target 
+training data, our method may be viewed as addressing sequential learning as well. 
+Transfer knowledge can also be inserted into several different entry points in a 
+back-propagation network (see [Pratt, 1993a]). We focus on changing a network's 
+initial weights; other studies change other aspects, such as the objective function 
+(cf. [Thrun and Mitchell, 1993, Naik et al., 1992]). 
+Transfer methods may or may not use back-propagation for target task training. 
+Our formulation does, because this allows it to degrade, in the worst case of no 
+source task relevance, to back-propagation training on the target task with randomly 
+initialized weights. An alternative approach is described by [Agaxwal et al., 1992]. 
+Several studies have explored literal transfer in back-propagation networks, where 
+the final weights from training on a source task are used as the initial conditions for 
+target training (cf. [Martin. 1988]). However, these studies have shown that often 
+networks will demonstrate worse performance after literal transfer than if they had 
+been randomly initialized. 
+This paper describes the Discriminability-Based Transfer (DBT) algorithm, which 
+overcomes problems with literal transfer. DBT achieves the same asymptotic ac- 
+curacy as randomly initialized networks, and requires substantially fewer training 
+updates. It is also superior to literal transfer, and to just using the source network 
+on the target task. 
+2 ANALYSIS OF LITERAL TRANSFER 
+As mentioned above, several studies have shown that networks initialized via literal 
+transfer give worse asymptotic performance than randomly initialized networks. To 
+understand why. consider the situation when only a subset of the source network 
+input-to-hidden (IH) layer hyperplanes are relevaat to the target problem, as il- 
+lustrated in Figure 1. We've observed that some hyperplanes initialized by source 
+network training don't shift out of their initial positions, despite the fact that they 
+don't help to separate the target training data. The weights defining such hyper- 
+planes often have high magnitudes [Dewan and Sontag, 1990]. Figure 2 (a) shows 
+a simulation of such a situation, where a hyperplane that has a high magnitude, as 
+if it came from a source network, causes learning to be slowed down.  
+Analysis of the back-propagation weight update equations reveals that high source 
+weight magnitudes retard back-propagation learning on the target task because this 
+Neural network visualization will be explored more thoroughly in an upcoming paper. 
+An X-based animator is available from the author via anonymous ftp. Type archie ha. 
+206 Pratt 
+0.9' 
+0,1 - 
+Source training data 
+Target training data 
+: : 
+n,:O/ n 0 
+0 i 1/0  Hyperplanes 0 I 0 
+0 i I : 0 should be 0 I 0 
+ 1 :' g retained 1 
+............. J.../.-o .......................................................... ....... II ............. 
+- q., ,;.____ Hyperplanes need to move 0 
+0.1 0.5 0.9 
+Feature I 
+Figure 1: Problem Illustrating the need for DBT. The source and target tasks are 
+identical, except that the target task has been shifted along one axis, as represented 
+by the training data shown. Because of this shift, two of the source hyperplanes are 
+helpful in separating class-0 from class-1 data in the target task, and two are not. 
+equation is not scaled relative to weight magnitudes. Also, the weight update equa- 
+tion contains the factor y(1 - y) (where y is a unit's activation), which is small 
+for large weights. Considering this analysis, it might at first appear that a simple 
+solution to the problem with literal transfer is to uniformly lower all weight magni- 
+tudes. However, we have also observed that hyperplanes in separating positions will 
+move unless they are given high weight magnitudes. To address both of these prob- 
+lems, we must rescale hyperplanes so that useful ones are defined by high-magnitude 
+weights and less useful hyperplanes receive low magnitudes. To implement such a 
+method, we need a metric for evaluating hyperplane utility. 
+3 EVALUATING CLASSIFIER COMPONENTS 
+We borrow the IM metric for evaluating hyperplanes from decision tree induction 
+[Quinlan, 1983]. Given a set of training data and a hyperplane that crosses through 
+it, the IM function returns a walue between 0 and 1, indicating the amount that the 
+hyperplane helps to separate the data into different classes. 
+The formula for IM, for a decision surface in a multi-class prob- 
+1 
+lem, is: IM = ( xijlogxij-xi. logxi.-x.jlogx.j+NlogN) 
+[Mingers, 1989]. Here, ]V is the number of patterns, i is either 0 or 1, depending 
+on the side of a hyperplane on which a pattern falls, j indexes over all classes, 
+is the count of class j patterns on side i of the hyperplaae, xi. is the count of all 
+patterns on side i, and x.j is the total number of patterns in class j. 
+4 THE DBT ALGORITHM 
+The DBT algorithm is shown in Figure 3. It inputs the target training data and 
+weights from the source network, along with two parameters C and $ (see below). 
+DBT outputs a modified set of xveights, for initializing training on the target task. 
+Figure 2 (b) shows how the problem of Figure 2 (a) was repaired via DBT. 
+DBT modifies the weights defining each source hyperplane to be proportional to the 
+Discriminability-Based Transfer between Neural Networks 207 
+(a) Literal 
+'3 ..........  \ 1 ' 
+0.2 0`4 0.6 0.8 0.2 
+Flum 1 
+,o 
+Epoc lOO 
+........... t 
+0.2 0`4 0.6 0.8 
+Feature 1 
+. \ 0   
+0 ........ 1 ...... II 
+..\ 0 
+ . ,\. 
+ ..... ' o 
+0.2 
+0.2 0.4 0.6 0.8 0.2 0`4 
+Feature I 
+' 1'KJ2'1- ........... 
+o 
+1 
+(b) DBT 
+\ o 
+ \ o 
+0.4 0`6 OJ 
+I:ture 1 
+\ o 
+ \ o 
+0.4 0.6 O.a 
+Fture 1 
+L 
+'. \ o 
+0.6 0`8 
+Feature I 
+0.2 0.4 0.6 0`8 
+Feature 1 
+I l � 
+I I o c,4 
+� o l o 
+...... , ................. ... a. � 
+0.2 0.4 0.6 0. 
+Feature 1 
+F4x 3100 
+..... I \ 0 e 
+ .............  \ o 
+, - ........ ..:  
+u. 
+0`2 0.4 0.6 0`8 
+I:ealu' 1 
+0.2 0.4 0.6 0.8 
+Feature 1 
+....... .,_ ............. \ o 
+0.2 0`4 0.6 0.8 
+Feature 1 
+....... ;. .................... ,i.:.....,..., I 
+0.2 0.4 0.6 0.8 
+Feature 1 
+Figure 2: Hyperplane Movement speed in Literal Transfer. Compared to DBT. 
+Each image in this figure shows the hyperplanes implemented by IH weights at a 
+different epoch of training. Hidden unit 1's hyperplane is a solid line; HU2's is a 
+dotted line, and HU3's hyperplane is shown as a dashed line. In (a) note how HU1 
+seems fixed in place. Its high magnitude causes learning to be slow (taking about 
+3100 epochs to converge). In (b) note how DBT has given HU1 a small magnitude, 
+allowing it to be flexible, so that the training data is separated by epoch 390. A 
+randomly initialized network on this problem takes about 600 epochs. 
+208 Pratt 
+Input: 
+Source network weights 
+Target training data 
+Parameters: C (cutoff factor), S (scaleup factor) 
+Output: 
+Initial weights for target network, assuming same topology as source network 
+Method: 
+For each source network hidden unit i 
+Compare the hyperplane defined . incoming weights to i to the target training data, 
+calculating IM (e [0,1]) 
+Rescale I M, values so that largest has value S. Put result in s,. 
+For [Mti's that are less than C 
+If highest magnitude ratio between weights defining hyperplane i is > 100.0, 
+reset weights for that hyperplane randomly 
+Else uniformly scale down hyperplane to have low-valued weights (max/mum 
+magnitude of 0.5), but to be in the same position. 
+For each remaining IH hidden unit i 
+For each weight wi defining hyperplane i in target network 
+Let u,, = source weight wi x sl 
+Set hidd

@@ -1,0 +1,173 @@
+An Analog VLSI Chip for Radial Basis Functions 
+Janeen Anderson 
+John C. Platt 
+Synaptics, Inc. 
+2698 Orchard Parkway 
+San Jose, CA 95134 
+David B. Kirk* 
+Abstract 
+We have designed, fabricated, and tested an analog VLSI chip 
+which computes radial basis functions in parallel. We have de- 
+veloped a synapse circuit that approximates a quadratic function. 
+We aggregate these circuits to form radial basis functions. These 
+radial basis functions are then averaged together using a follower 
+aggregator. 
+1 INTRODUCTION 
+Radial basis functions (RBFs) are a method for approximating a function from 
+scattered training points [Powell, 1987]. RBFs have been used to solve recognition 
+and prediction problems with a fair amount of success [Lee, 1991] [Moody, 1989] 
+[Platt, 1991]. The first layer of an RBF network computes the distance of the input 
+to the network to a set of stored memories. Each basis function is a non-linear 
+function of a corresponding distance. The basis functions are then added together 
+with second-layer weights to produce the output of the network. The general form 
+of an RBF is 
+where Yi is the output of the network, hij is the second-layer weight, j is the 
+non-linearity, 'j is the jth memory stored in the network and /' is the input to 
+*Current address: CMtech Computer Graphics (.group, Caltech 350-74, Pasadena, CA 
+92115 
+765 
+766 Anderson, Platt, and Kirk 
+quadratic synapse 
+output of network 
+I /1 II I 
+. , I II II I 
+I II II I 
+� . I II II [ 
+[ I II II I 
+[ I II II I 
+.... I I 1 II I 
+N I 
+input to network 
+linear synapse 
+Figure 1: The architecture of a Gaussian RBF network. 
+the network. Many researchers use Gaussians to create basis functions that have 
+localized effect in input space [Poggio, 1990][Moody, 1989]: 
+Yi = Z hij exp 2o.2 . 
+The architecture of a Gaussian RBF network is shown in figure 1. 
+RBFs can be implemented either via software or hardware. If high speed is not nec- 
+essary, then computing all of the basis functions in software is adequate. However, 
+if an application requires many inputs or high speed, then hardware is required. 
+RBFs use a lot of operations more complex than simply multiplication and addition. 
+For example, a Gaussian RBF requires an exponential for every basis function. 
+Using a partition of unity requires a divide for every basis function. Analog VLSI 
+is an attractive way of computing these complex operations w;ry quickly: we can 
+compute all of the basis functions in parallel, using a few transistors per synapse. 
+This paper discusses an analog VI,SI chip that computes radial basis functions. 
+We discuss how we map the mathematical model of an RBF into compact analog 
+hardware. We then present results from a test chip that was fabricated. We discuss 
+possible applications for the hardware architecture and future theoretical work. 
+2 
+MAPPING RADIAL BASIS FUNCTIONS INTO 
+HARDWARE 
+In order to create an analog VLSI chip. we must map the idea of radial basis 
+functions into transistors. In order to create a high-density chip, the mathematics 
+of RBFs must be modified to be computed more naturally by transistor physics. 
+This section discusses the mapping from (]aussian RBFs into CMOS circuitry. 
+An Analog VLSI Chip for Radial Basis Functions 767 
+input to network 
+output to layer 2 
+Figure 2: Circuit diagram for first-layer neuron, sho;ving three Gaussbin synapses 
+and the sense amplifier. 
+2.1 Computing Quadratic Distance 
+Ideally, the first-layer synapses in figure 1 would compute a quadratic distance of 
+the input. to a stored value. Quadratics go to infinity for large values of their input, 
+hence are hard to build in analog hardware and are not robust against outliers in the 
+input data. Therefore, it is much more desirable to use a saturating non-linearity: 
+we will use a Gaussian for a first-layer synapse, which approximates a quadratic 
+near its peak. 
+We implement the first-layer Gaussian synapse using an inverter (see figure 2). The 
+current running through each inverter from the voltage rail to ground is a Gaussian 
+function of the inverter's input, with the peak of the Gaussian occurring halfwav 
+between the voltage rail and ground [Mead, 1980][Mead, 1992]. 
+To adjust the center of the Gaussian, we place a capacitor between the input to the 
+synapse and the input of the inverter. The inverter thus has a floating gate input.. 
+We adjust the charge on the floating gate by using a combination of tunneling and 
+non-avalanche hot electron injection [Anderson, 1990] [Anderson, 1992]. 
+All of the Gaussian synapses for one neurou share a voltage rail. The sense amplifier 
+holds that voltage rail at a particular voltage, l,ef. The output of the sense ampli- 
+tier is a voltage which is linear in the total cnrrent being drawn by the Gaussian 
+synapses. We use a floating gate in the sense amplifier to ensure that the output. 
+of the sense amplifier is known when the input to the network is at a known state. 
+Again, we adjust the floating gate via tunneling and injection. 
+Figure 3 shows the output of the sense amplifier for four different neurons. The 
+data was taken from a real chip, described in section 3. The figure shows that the 
+top of a Gaussian approximates a quadratic reasonably well. Also, the width and 
+heights of the outputs of each first-layer neuron match very well, because the circuit 
+is operated above threshold. 
+768 Anderson, Platt, and Kirk 
+2 
+3 4 5 
+Input Voltage 
+Figure 3: Measured output of set of four first-layer neurons. All of the synapses of 
+each neuron are programmed to peak at the same voltage. The x-axis is the input 
+voltage, and the y-axis is the voltage output of the sense amplifier 
+2.2 Computing the Basis Function 
+To cmnpute a Gaussian basis function, the distance produced by the first layer 
+needs to be exponentiated. Since the output of the sense amplifier is a voltage 
+negatively proportional to the distance, a subthreshold transistor can perform this 
+exponentiation. 
+However, subthreshold circuits can be slow. Also, the choice of a Gaussian basis 
+function is somewhat arbitrary [Poggio, 1990]. Therefore, we choose to adjust the 
+sense amplifier to produce a voltage that is both above and below threshold. The 
+basis function that the chip computes can be expressed as 
+& : Ek Caussian(Ik-cid); (3) 
+{(Si-0) , ifSj >0; 
+�5 = 0, otherwise. (4) 
+where 0 is a threshold that is set by how much current is required by the sense 
+amplifier to produce an output equal to the threshold voltage of a N-type transistor. 
+Equations 3 and 4 have an intuitive explanation. Each first-layer synapse votes on 
+whether its input matched its stored value. The sum of these votes is Sj. If the 
+sum Sj is less than a threshold 0, then the basis function 5 is zero. However, 
+if the number of votes exceeds the threshold, then the basis function turns on. 
+Therefore, one can adjust the dimensionality of the basis function by adjusting 0: 
+the dinensionality is [N- 0- 1], where N is the number of inputs to the network. 
+Figure 4 shows how varying 0 changes the basis function, for A r -- 2. The input to 
+the network is a two-dimensional space, represented by location on the page. The 
+value of the basis function is represented by the darkness of the ink. Setting 0 = 1 
+yields the basis function on the left, which is a fuzzy O-dimensional point. Setting 
+0 - 0 yields the basis function on the right,, which is a union of fitzzy 1-dimensional 
+lines. 
+An Analog VLSI Chip for Radial Basis Functions 769 
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: � :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: 
+:i:i333 :: ::: 3::3:3.:::�33.::3: :!:;:5:i :i:::.::.:: :.:: ::: :3:3 :::::::::::::3:: 
+:: ::. 5:!:i:i:i:i:i:i:!:!:!:i. ::.: 
+Figure 4: Examples of two simulated basis functions with differing dimensionMity. 
+Having an adjustable dimension for basis fimctions is useful, because it increases the 
+robustness of the basis function. A Gaussian radial basis function is non-zero only 
+wheu all elements of the input vector roughly match the center of the Gaussian. By 
+using a hardware basis function, we can allow certain inputs not to match, while 
+still turning on the basis function. 
+2.3 Blending the Basis Functions 
+To make the blending of the basis functions easier to implement in anMog VLSI, 
+we decided to use an alternative method for basis function combination, called the 
+partition of unity [Moody, 1989]: 
+The partition of unity suggests that the second layer should compute a weighted 
+average of first-layer outputs, not just a weighted sum. We can compute a weighted 
+average reasonably well with a follower aggregator used in the linear region [Mead, 
+1989]. 
+Equations 4 and 5 can both be implemented by using a wide-range amplifier as a 
+synapse (see figure 5). The bias of the amplifier is the output. of the sense amplifier. 
+That way, the above-threshold non-linearity of the bias transistor is applied to the 
+output of the first layer and implements equation 4. The amplifier then attempts 
+to drag the output of the second-layer neuron towards a stored value hij and im- 
+plements equation 5. We store the value on a floating gate, using tunneling and 
+injection. 
+The follower aggregator does not implement equation 5 perfectly: the amplifiers 
+saturate, hence introduce a non-linearity. A follower aggregator implentents 
+Z tanh(a(hij - Yi))�j = 0. (6) 
+J 
+770 Anderson, Platt, and Kirk 
+I sense 
+amp[ 
+sense ] 
+amp I 
+output of network 
+Figure 5: Circuit diagram for second-layer synapses. 
+We use a capacitive divider to increase the linear range (decrease a) of the amplifiers. 
+However, the non-linearity of the amplifiers may be beneficial, because it reduces 
+the effect of outliers in the stored his values. 
+3 RESULTS 
+We fabricated the chip in 2 micron CMOS. The current version of the chip has 8 
+inputs, 159 basis functions and 4 outputs. The chip size is 2.2 millimeters by 9.6 
+millimeters 
+The core radia

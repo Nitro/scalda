@@ -1,0 +1,157 @@
+Bach in a Box - Real-Time Harmony 
+Randall R. Spangler and Rodney M. Goodman* 
+Computation and Neural Systems 
+California Institute of Technology, 136-93 
+Pasadena, CA 91125 
+Jim Hawkins t 
+88B Milton Grove 
+Stoke Newington, London N16 8QY, UK 
+Abstract 
+We describe a system for learning J. S. Bach's rules of musical har- 
+mony. These rules are learned from examples and are expressed 
+as rule-based neural networks. The rules are then applied in real- 
+time to generate new accompanying harmony for a live performer. 
+Real-time functionality imposes constraints on the learning and 
+harmonizing processes, including limitations on the types of infor- 
+mation the system can use as input and the amount of processing 
+the system can perform. We demonstrate algorithms for gener- 
+ating and refining musical rules from examples which meet these 
+constraints. We describe a method for including a priori knowl- 
+edge into the rules which yields significant performance gains. We 
+then describe techniques for applying these rules to generate new 
+music in real-time. We conclude the paper with an analysis of 
+experimental results. 
+i Introduction 
+The goal of this research is the development of a system to learn musical rules from 
+examples of J.S. Bach's music, and then to apply those rules in real-time to generate 
+new music in a similar style. These algorithms would take as input a melody such 
+*rspangle@micro.caltech.edu, rogo@micro.caltech.edu 
+tj hawkins@cix.compulink.co.uk 
+958 R. R. Spangler, R. M. Goodman and J. Hawkins 
+Figure 1' Melody for Chorale 1 Aus meines Herzens Grunde 
+Figure 2: J. S. Bach's Harmony For Chorale 
+as Figure 1 and produce a complete harmony such as Figure 2. Performance of this 
+harmonization in real-time is a challenging problem. It also provides insight into 
+the nature of composing music. 
+We briefly review the representation of input data and the process of rulebase 
+generation. Then we focus on methods of increasing the performance of rule-based 
+systems. Fina]ly we present our data on learning the style of Bach. 
+1.1 Constraints Imposed by Real-Time Functionality 
+A program which is to provide real-time harmony to accompany musicians at live 
+performances faces two major constraints. 
+First, the algorithms must be fast enough to generate accompaniment without de- 
+tectable delay between the musician playing the melody and the algorithm generat- 
+ing the corresponding harmony. For musical instrument sounds with sharp attacks 
+(plucked and percussive instruments, such as the harp or piano), delays of even a 
+few tens of milliseconds between the start of the melody note and the start of the 
+harmony notes are noticeable and distracting. This limits the complexity of the 
+algorithm and the amount of information it can process for each timestep. 
+Second, the algorithms must base their output only on information from previ- 
+ous timesteps. This differentiates our system from HARMONET (Hild, Feulnzer 
+and Menzel, 1992) which required knowledge of the next note in the future before 
+generating harmony for the current note. 
+1.2 Advantages of a Rule-Based Algorithm 
+A rule-based neural network algorithm was chosen over a recurrent network or a 
+non-linear feed-forward network. Neural networks have been previously used for 
+harmonizing music with some success (Mozer, 1991)(Todd, 1989). However, rule- 
+based algorithms have several advantages when dealing with music. Almost all 
+music has some sort of rhythm and is tonal, meaning both pitch and duration of 
+individual notes are quantized. This presents problems in the use of continuous 
+networks, which must be overtrained to reasonably approximate discrete behavior. 
+Bach in a Box--Real-Time Harmony 959 
+Rule-based systems are inherently discrete, and do not have this problem. 
+Furthermore it is very difficult to determine why a non-linear multi-layer network 
+makes a given decision or to extract the knowledge contained in such a network. 
+However, it is straightforward to determine why a rule-based network produced 
+a given result by examining the rules which fired. This aids development of the 
+algorithm, since it is easier to determine where mistakes are being made. It allows 
+comparison of the results to existing knowledge of music theory as shown below, and 
+may provide insight into the theory of musical composition beyond that currently 
+available. 
+Rule-based neural networks can also be modified via segmentation to take advantage 
+of additional a priori knowledge. 
+2 Background 
+2.1 Representation of Input Data 
+The choice of input representation greatly affects the ability of a learning algorithm 
+to generate meaningful rules. The learning and inferencing algorithms presented 
+here speak an extended form of the classical figured bass representation common 
+in Bach's time. Paired with a melody, figured bass provides a sufficient amount of 
+information to reconstruct the harmonic content of a piece of music. 
+Figured bass has several characteristics which make it well-disposed to learning 
+rules. It is a symbolic format which uses a relatively small alphabet of symbols. 
+It is also hierarchical - it specifies first the chord function that is to be played at 
+the current note/timestep, then the scale step to be played by the bass voice, then 
+additional information as needed to specify the alto and tenor scale steps. This 
+allows our algorithm to fire sets of rules sequentially, to first determine the chord 
+function which should be associated with a new melody note, and then to use that 
+chord function as an input attribute to subsequent rulebases which determine the 
+bass, alto, and tenor scale steps. In this way we can build up the final chord from 
+simpler pieces, each governed by a specialized rulebase. 
+2.2 Generation of Rulebases 
+Our algorithm was trained on a set of 100 harmonized Bach chorales. These were 
+translated from MIDI format into our figured bass format by a preprocessing pro- 
+gram which segmented them into chords at points where any voice changed pitch. 
+Chord function was determined by simple table lookup in a table of 120 common 
+Bach chords based on the scale steps played by each voice in the chord. The algo- 
+rithm was given information on the current timestep (Mel0-Te0), and the previous 
+two timesteps (Mell-Func2). This produced a set of 7630 training examples, a 
+subset of which are shown below: 
+Me10 Func0 So0 Ba0 A10 Te0 Mell Funcl Sol Bal All Tel Me12 Func2 
+D V S2 B1 A2 TO E I S1 B0 A0 T2 C I 
+E I7 S1 B$ A0 T2 D V S2 B1 A2 TO E I 
+F IV SO B1 A2 T1 E I7 S! B$ A0 T2 D V 
+G V SO B0 A1 T2 F IV S0 BI A2 TI E 17 
+960 R. R. $pangler, R. M. Goodman and J. Hawkins 
+A rulebase is a collection of rules which predict the same right hand side (RHS) 
+attribute (for example, Function0). All rules have the form IF Y=y... THEN 
+X--x. A rule's order is the number of terms on its left hand side (LHS). 
+Rules are generated from examples using a modified version of the ITRULE algo- 
+rithm. (Goodman et al., 1992) A]I possible rules are considered and ranked by a 
+measure of the information contained in each rule defined as 
+[p (p(xly)) (1-p(xly)) ] 
+J(X;Y = y) = p(y) (xly)log , p- + (1 - p(xly))log 1 - p(x) 
+(1) 
+This measure trades off the amount of information a rule contains against the prob- 
+ability of being able to use the rule. Rules are less valuable if they contains little 
+information. Thus, the J-measure is low when p(xly ) is not much higher than p(x). 
+Rules are also less valuable if they fire only rarely (p(y) is small) since those rules 
+are unlikely to be useful in generalizing to new data. 
+A rulebase generated to predict the current chord's function might start with the 
+following rules: 
+p(corr) J-meas 
+1. IF Melody0 E THEN Function0 I 0.621 0.095 
+2. IF Functionl V THEN Function0 V? 0.624 0.051 
+AND Melodyl D 
+AND Melody0 D 
+$. IF Funcionl V THEN FuncionO V7 0.662 0.049 
+AND MelodyO D 
+2.3 Inferencing Using Rulebases 
+Rule based nets are a form of probabilistic graph model. When a rulebase is used 
+to infer a value, each rule in the rulebase is checked in order of decreasing rule 
+J-measure. A rule can fire if it has not been inhibited and all the clauses on its LHS 
+are true. When a rule fires, its weight is added to the weight of the value which it 
+predicts, After all rules have had a chance to fire, the result is an array of weights 
+for all predicted values. 
+2.4 Process of Harmonizing a Melody 
+Input is received a note at a time as a musician plays a melody on a MIDI keyboard. 
+The algorithm initially knows the current melody note and the data for the last two 
+timesteps. The system first uses a rulebase to determine the chord function which 
+should be played for the current melody note. For example, given the melody note 
+C, 'it might play a chord function IV, corresponding to an F-Major chord. The 
+program then uses additional rulebases to specify how the chord will be voiced. 
+In the example, the bass, alto, and tenor notes might be set to B0, AI, and 
+T2, corresponding to the notes F, A, and C. The harmony notes are then 
+converted to MIDI data and sent to a synthesizer, which plays them in real-time to 
+accompany the melody. 
+Bach in a Box--Real-Time Harmony 961 
+3 Improvement of Rulebases 
+The J-measure is a good measure for determining the information-theoretic worth of 
+rules. However, it is unable to take into account any additional a priori knowledge 
+about the nature of the problem - for example, that harmony rules which use the 
+current melody note as input are more desirable because they avoid dissonance 
+between the melody and harmony. 
+3.1 Segmentation 
+A priori knowledge of this nature is incorporated by segmenting rulebases into more- 
+and less-desirable rules based on the presence or absence of a desired LHS attribute 
+such as the current melody note (Melody0). Rules lacking the attribute are removed 
+from the primary set of rules and placed in a second fallback set.

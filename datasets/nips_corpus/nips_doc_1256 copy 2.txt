@@ -1,0 +1,146 @@
+Local Bandit Approximation 
+for Optimal Learning Problems 
+Michael O. Duff Andrew G. Barto 
+Department of Computer Science 
+University of Massachusetts 
+Amherst, MA 01003 
+{duff, bari; o}c s. umass. edu 
+Abstract 
+In general, procedures for determining Bayes-optimal adaptive 
+controls for Markov decision processes (MDP's) require a pro- 
+hibitive amount of computation--the optimal learning problem 
+is intractable. This paper proposes an approximate approach in 
+which bandit processes are used to model, in a certain local sense, 
+a given MDP. Bandit processes constitute an important subclass of 
+MDP's, and have optimal learning strategies (defined in terms of 
+Gittins indices) that can be computed relatively efficiently. Thus, 
+one scheme for achieving approximately-optimal learning for gen- 
+eral MDP's proceeds by taking actions suggested by strategies that 
+are optimal with respect to local bandit models. 
+1 INTRODUCTION 
+Watkins [1989] has defined optimal learning as: ... the process of collecting and 
+using information during learning in an optimal manner, so that the learner makes 
+the best possible decisions at all stages of learning: learning itseft is regarded as a 
+multistage decision process, and learning is optimal if the learner adopts a strategy 
+that will yield the highest possible return from actions over the whole course of 
+learning. 
+For example, suppose a decision-maker is presented with two biased coins (the 
+decision-maker does not know precisely how the coins are biased) and asked to al- 
+locate twenty flips between them so as to maximize the number of observed heads. 
+Although the decision-maker is certainly interested in determining which coin has 
+a higher probability of heads, his principle concern is with optimizing performance 
+en route to this determination. An optimal learning strategy typically intersperses 
+exploitation steps, in which the coin currently thought to have the highest proba- 
+1020 M. O. Duff and A. G. Burro 
+1- Pll 
+(a) ,, 
+1-p 
+l_p 2 
+1;(1,1)(1,1):(1,1)(1,1) 
+1-p 2 
+22 
+(c) 
+Figure 1: A simple example: dynamics/rewards under (a) acl;�on 
+2. (c) The decision problem in hyperstate space. 
+and (b) action 
+bility of heads is flipped, with explorationsteps in which, on the basis of observed 
+flips, a coin that would be deemed inferior is flipped anyway to further resolve its 
+true potential for turning up heads. The coin-flip problem is a simple example of a 
+(two-armed) bandit problem. A key feature of these problems, and of adaptive con- 
+trol processes in general, is the so-called exploration-versus-exploitation trade-off (or problem or dual control [Fel'dbaum, 1965]). 
+As an another example, consider the MVP depicted in Figures l(a) and (b). is 
+a 2-state/2-action process; transition probabilities label arcs, and quantities within 
+circles denote expected rewards for taking particular actions in particular states. 
+The goal is to assign actions to states so as to maximize, say, the expected infinite 
+horizon discounted sum of rewards (the value function) over all states. For the case 
+considered in this paper, the transition probabilites are not known. Given that 
+the process is in some state, one action may be optimal with respect to currently- 
+perceived point-estimates of unknown parameters, while another action may result 
+in greater information gain. Optimal learning is concerned with striking a balance 
+between these two criteria. 
+While reinforcement learning approaches have recognized the dual-effects of con- 
+trol, at least in the sense that one must occasionally deviate from a greedy policy 
+to ensure a search of sufficient breadth, many exploration procedures appear not 
+to be motivated by real notions of optimal learning; rather, they aspire to be prac- 
+tical schemes for avoiding unrealistic levels of sampling and search that would be 
+required if one were to strictly adhere to the theoretical sufficient conditions for 
+convergence--that all state-action pairs must be considered infinitely many times. 
+If one is willing to adopt a Bayesian perspective, then the exploration-versus- 
+exploitation issue has already been resolved, in principle. A solution was recognized 
+by Bellman and Kalaba nearly forty years ago [Bellman & Kalaba, 1959]; their 
+dynamic programming algorithm for computing Bayes-optimal policies begins by 
+regarding state as an ordered pair, or hyperstate, (z,;Z), where z is a point 
+in phase-space (Markov-chain state) and ;Z is the information pattern, which 
+summarizes past history as it relates to modeling the transitional dynamics of z. 
+Computation grows increasingly burdensome with problem size, however, so one is 
+compelled to seek approximate solutions, some of which ignore the effects of infor- 
+mation gain entirely. In contrast, the approach suggested in this paper explicitly 
+acknowledges that there is an information-gain component to the optimal learn- 
+Local Bandit Approximation for Optimal Learning Problems 1021 
+ing problem; if certain salient aspects of the value of information can be captured, 
+even approximately, then one may be led to a reasonable method for approximating 
+optimal learning policies. 
+Here is the basic idea behind the approach suggested in this paper: First note that 
+there exists a special class of problems, namely multi-armed bandit problems, in 
+which the information pattern is the sole component of the hyperstate. These special 
+problems have the important feature that their optimal policies can be defined 
+concisely in terms of Gittins indices,and these indices can be computed in a 
+relatively efficient way. This paper is an attempt to make use of the fact that this 
+special subclass of MDP's has tractably-computable optimal learning strategies. 
+Actions for general MDP's are derived by, first, attaching to a given general MDP 
+in a given state a local n-armed bandit process that captures some aspect of the 
+value of information gain as well as explicit reward. Indices for the local bandit 
+model can be computed relatively efficiently; the largest index suggests the best 
+action in an optimal-learning sense. The resulting algorithm has a receding-horizon 
+flavor in that a new local-bandit process is constructed after each transition; it 
+makes use of a mean-process model as in some previously-suggested approximation 
+schemes, but here the value of information gain is explicitly taken into account, in 
+part, through index calculations. 
+2 
+THE BAYES-BELLMAN APPROACH FOR 
+ADAPTIVE MDP'S 
+Consider the two-state, two-action process shown in Figure 1, and suppose that 
+one is uncertain about the transition probabilities. If the process is in a given 
+state and an action is taken, then the result is that the process either stays in the 
+state it is in or jumps to the other state--one observes a Bernoulli process with 
+unknown parameter--just as in the coin-flip example. But in this case one observes 
+four Bernoulli processes: the result of taking action 1 in state 1, action 1 in 
+state 2, action 2 in state 1, action 2 in state 2. So if the prior probability 
+for staying in the current state, for each of these state-action pairs, is represented by 
+a beta distribution (the appropriate conjugate family of distributions with regard 
+to Bernoulli sampling; Le., a Bayesian update of a beta prior remains beta), then 
+one may perform dynamic programming in a space of hyperstates, in which the 
+components are four pairs of parameters specifying the beta distributions describ- 
+ing the uncertainty in the transition probabilities, along with the Markov chain 
+state: (,   
+where for example denotes 
+the parmeters specifying the beta distribution that represents uncertainty in the 
+transition probability pxX. Figure 1(c) shows part of the associated decision tree; an 
+optimality equation may be written in terms of the hyperstates. MDP's with more 
+than two states pose no special problem (there exists an appropriate generalization 
+of the beta distribution). What is a problem is what Bellman calls the problem 
+of the expanding grid: the number of hyperstates that must be examined grows 
+exponentially with the horizon. 
+How does one proceed if one is constrained to practical amounts of computation and 
+is willing to settle for an approximate solution? One could truncate the decision 
+tree at some shorter and more manageable horizon, compute approximate terminal 
+values by replacing the distributions with their means, and proceed with a receding- 
+horizon approach: Starting from the approximate terminal values at the horizon, 
+perform a backward sweep of dynamic programming, computing an optimal policy. 
+Take the initial action of the policy, then shift the entire computational window 
+forward one level and repeat. One can imagine a sort of limiting, degenerate version 
+1022 M. O. Duff and A. G. Barto 
+of this receding horizon approach in which the horizon is zero; that is, use the means 
+of the current distributions to calculate an optimal policy, take an optimal action, 
+observe a transition, perform a Bayesian modification of the prior, and repeat. 
+This (certainty-equivalence) heuristic was suggested by [Cozzolino et al., 1965], and 
+has recently reappeared in [Dayan & Sejnowski, 1996]. However, as was noted in 
+[Cozzolino et al., 1965] ...the trade-off between immmediate gain and information 
+does not exist in this heuristic. There is no mechanism which explicitly forces 
+unexplored policies to be observed in early stages. Therefore, if it should happen 
+that there is some very good policy which a priori seemed quite bad, it is entirely 
+possible that this heuristic will never provide the information needed to recognize 
+the policy as being better than originally thought... This comment and others seem 
+to refer to what is now regarded as a problem of identifiability associated with 
+certainty-equivalence controllers in which a closed-loop system evolves identically for 
+both 

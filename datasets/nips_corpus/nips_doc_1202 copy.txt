@@ -1,0 +1,182 @@
+A 
+Constructive RBF Network 
+for Writer Adaptation 
+John C. Platt and Nada P. Matid 
+Synaptics, Inc. 
+2698 Orchard Parkway 
+San Jose, CA 95134 
+platt@synaptics.com, nada@synaptics.com 
+Abstract 
+This paper discusses a fairly general adaptation algorithm which 
+augments a standard neural network to increase its recognition ac- 
+curacy for a specific user. The basis for the algorithm is that the 
+output of a neural network is characteristic of the input, even when 
+the output is incorrect. We exploit this characteristic output by 
+using an Output Adaptation Module (OAM) which maps this out- 
+put into the correct user-dependent confidence vector. The OAM 
+is a simplified Resource Allocating Network which constructs ra- 
+dial basis functions on-line. We applied the OAM to construct 
+a writer-adaptive character recognition system for on-line hand- 
+printed characters. The OAM decreases the word error rate on a 
+test set by an average of 45%, while creating only 3 to 25 basis 
+functions for each writer in the test set. 
+I Introduction 
+One of the major difficulties in creating any statistical pattern recognition system 
+is that the statistics of the training set is often different from the statistics in 
+actual use. The creation of a statistical pattern recognizer is often considered as 
+a regression problem, where class probabilities are estimated from a fixed training 
+set. Statistical pattern recognizers tend to work well for typical data that is similar 
+to the training set data, but do not work well for atypical data that is not well 
+represented in the training set. Poor performance on atypical data is a problem for 
+human interfaces, because people tend to provide drastically non-typical data (for 
+example, see figure 1). 
+The solution to this difficulty is to create an adaptive recognizer, instead of treat- 
+ing recognition as a static regression problem. The recognizer must adapt to new 
+statistics during use. As applied to on-line handwriting recognition, an adaptive 
+766 J, C. Platt and N. P. Mati6 
+atypical r 
+typical r 
+abc ... 
+consistent (incorrect) 
+neural network 
+response 
+OAM 
+abc ... r 
+correct 
+neural network 
+response 
+Figure 1' When given atypical input data, the neural network produces a consistent 
+incorrect output pattern. The OAM recognizes the consistent pattern and produces 
+a corrected user-adaptive output. 
+recognizer improves the accuracy for a particular user by adapting the recognizer 
+to that user. 
+This paper proposes a novel method for creating an adaptive recognizer, which 
+we call the Output Adaptation Module or OAM. The OAM was inspired by the 
+development of a writer-independent neural network handwriting recognizer. We 
+noticed that the output of this neural network was characteristic of the input: if 
+a specific style of character was shown to the network, the network's output was 
+almost always consistent for that specific style, even when the output was incorrect. 
+To exploit the consistency of the incorrect outputs, we decided to add an OAM 
+on top of the network. The OAM learns to recognize these consistent incorrect 
+output vectors, and produces a more correct output vector (see figure 1). The 
+units of the OAM are radial basis functions (RBF) [5]. Adaptation of these RBF 
+units is performed using a simplified version of the Resource Allocating Network 
+(RAN) algorithm of Platt [4][2]. The number of units that RAN allocates scales 
+sub-linearly with the number of presented learning examples, in contrast to other 
+algorithms which allocate a new unit for every learned example. 
+The OAM has the following properties, which are useful for a user-adaptive recog- 
+nizer: 
+� The adaptation is very fast: the user need only provide a few additional 
+examples of his own data. 
+� There is very little recognition speed degradation. 
+� A modest amount of additional memory per user is required. 
+� The OAM is not limited to neural network recognizers. 
+� The output of the OAM is a corrected vector of confidences, which is more 
+useful for contextual post-processing than a single label. 
+A Constructive RBF Network for Writer Adaptation 767 
+1.1 Relationship to Previous Work 
+The OAM is related to previous work in user adaptation of neural recognizers for 
+both speech and handwriting. 
+A previous example of user adaptation of a neural handwriting recognizer employed 
+a Time Delay Neural Network (TDNN), where the last layer ofa TDNN was replaced 
+with a tunable classifier that is more appropriate for adaptation [1][3]. In Guyon, 
+et al. [1], the last layer of a TDNN was replaced by a k-nearest neighbor classifier. 
+This work was further extended in Matid, et al. [3], where the last layer of the 
+TDNN was replaced with an optimal hyperplane classifier which is retrained for 
+adaptation purposes. The optimal hyperplane classifier retained the same accuracy 
+as the k-nearest neighbor classifier, while reducing the amount of computation and 
+memory required for adaptation. 
+The present work improves upon these previous user-adaptive handwriting systems 
+in three ways. First, the OAM does not require the retraining and storage of the 
+entire last layer of the network. The OAM thus further reduces both CPU and 
+memory requirements. Second, the OAM produces an output vector of confidences, 
+instead of simply an output label. This vector of confidences can be used effectively 
+by a contextual post-processing step, while a label cannot. Third, our adaptation 
+experiments are performed on a neural network which recognizes a full character 
+set. These previous papers only experimented with neural networks that recognized 
+character subsets, which is a less difficult adaptation problem. 
+The OAM is related to stacking [6]. In stacking, outputs of multiple recognizers 
+are combined via training on partitions of the training set. With the OAM, the 
+multiple outputs of a recognizer are combined using memory-based learning. The 
+OAM is trained on the idiosyncratic statistics of actual use, not on a pre-defined 
+training set partition. 
+2 The Output Adaptation Module (OAM) 
+Section 2 of this paper describes the OAM in detail, while section 3 describes its 
+application to create a user-adaptive handwriting recognizer. 
+The OAM maps the output of a neural network V/ into a user-adapted output Oi, 
+by adding an adaptation vector Ai' 
+Oi = � + Ai. (1) 
+Depending on the neural network training algorithm used, both the output of the 
+neural network 1, and the user-adapted output Oi can estimate a posterJori class 
+probabilities, suitable for further post-processing. 
+The goal of the OAM is to bring the output Oi closer to an ideal response T/. In 
+our experiments, the target 7} is 0.9 for the neuron corresponding to the correct 
+character and 0.1 for all other neurons. 
+The adaptation vector Ai is computed by a radial basis function network that takes 
+� as an input: 
+Oi =  q- Ai =  q- y. Cijj(), (2) 
+�I>j(l) = f(d(,/0j)) (3) 
+where/0j is the center of the jth radial basis function, d is a distance metric between 
+ and lOj, Rj is a parameter that controls the width of the jth basis function, f is 
+768 J. C. Platt and N. P. Matid 
+A 
+() Desired = max 
+I 10.551 10.41 
+C RBF M 
+J J 
+I ' I o.71 I Io.k . 
+RITER INDEPENDENT 
+NEURAL NETWORK 
+INPUT 
+Figure 2: The architecture of the OAM. 
+a decreasing function that controls the shape of the basis functions, and Cid is the 
+amount of correction that the jth basis function adds to the output. We call 3j 
+the memories in the adaptation module, and we call (j the correction vectors (see 
+figure 2). 
+The function f is a decreasing polynomial function: 
+(l-x2) ifx< 1; 
+f(z) = 0, otherwise. (4) 
+The distance function d is a Euclidean distance metric that first clips both of its 
+input vectors to the range [0.1, 0.9] in order to reduce spurious noise. 
+The algorithm for constructing the radial basis functions is a simplification of the 
+RAN algorithm [4][2]. The OAM starts with no memories or corrections. When the 
+user corrects a recognition error, the OAM finds the distance dmin from the nearest 
+memory to the vector �. If the distance dmin is greater than a threshold 6, then a 
+new RBF unit is allocated, with a new memory that is set to the vector �, and a 
+corresponding correction vector that is set to correct the error with a step size a: 
+cik: - oi). (5) 
+If the distance dmin is less than 6, no new unit is allocated: the correction vector of 
+the nearest memory to � is updated to correct the error by a step size b. 
+ACik - b( - Oi)(I)k(). (6) 
+For our experiments, we set 6 = 0.1, a = 0.25, and b = 0.2. The values a and b are 
+chosen to be less than 1 to sacrifice learning speed to gain learning stability. 
+The number of radial basis functions grows sub-linearly with the number of errors, 
+because units are only allocated for novel errors that the OAM has not seen before. 
+A Constructive RBF Network for Writer Adaptation 769 
+For errors similar to those the OAM has seen before, the algorithm updates one of 
+the correction vectors using a simplified LMS rule (eq. 6). 
+In the computation of the nearest memory, we always consider an additional phan- 
+tom memory: the target ) that corresponds to the highest output in . This phan- 
+tom memory is considered in order to prevent the OAM from allocating memories 
+when the neural network output is unambiguous. The phantom memory prevents 
+the OAM from affecting the output for neatly written characters. 
+The adaptation algorithm used is described as pseudo-code, below: 
+For every character shown to the network { 
+If the user indicates an error { 
+2F = target vector of the correct character 
+) = target vector of the highest element in 
+dmin -- min(minj d(, ]Oj), d(, )) 
+If dmin > (5 { //allocate a new memory 
+k = index of the new memory 
+= 
+= V 
+/lj __ dmin 
+} 
+} 
+} 
+else 
+if memories exist and mini d(17,/Oj') < d(, ) { 
+k = arg mini d(17, ]Oj ) 
+= + t,(T - 
+3 Experiments and Results 
+To test the effe

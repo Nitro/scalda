@@ -1,0 +1,138 @@
+A Connectionist Technique for Accelerated 
+Textual Input: Letting a Network Do the Typing 
+Dean A. Pomerleau 
+pomerlea@cs.cmu.edu 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+Each year people spend a huge amount of time typing. The text people type 
+typically contains a tremendous amount of redundancy due to predictable 
+word usage patterns and the text's structure. This paper describes a 
+neural network system call AutoTypist that monitors a person's typing and 
+predicts what will be entered next. AutoTypist displays the most likely 
+subsequent word to the typist, who can accept it with a single keystroke, 
+instead of typing it in its entirety. The multi-layer perceptron at the heart 
+of AutoTypist adapts its predictions of likely subsequent text to the user's 
+word usage pattern, and to the characteristics of the text currently being 
+typed. Increases in typing speed of 2-3% when typing English prose and 
+10-20% when typing C code have been demonstrated using the system, 
+suggesting a potential time savings of more than 20 hours per user per year. 
+In addition to increasing typing speed, AutoTypist reduces the number of 
+keystrokes a user must type by a similar amount (2-3% for English, 10- 
+20% for computer programs). This keystroke savings has the potential to 
+significantly reduce the frequency and severity of repeated stress injuries 
+caused by typing, which are the most common injury suffered in today's 
+office environment. 
+1 Introduction 
+People in general, and computer professionals in particular, spend a huge amount of time 
+typing. Most of this typing is done sitting in front of a computer display using a keyboard as 
+the primary input device. There are a number of efforts using artificial neural networks and 
+other techniques to improve the comfort and efficiency of human-computer communication 
+using alternative modalities. Speech recognition [Waibel et al., 1988], handwritten character 
+recognition [LeCun et al., 1989], and even gaze tracking [Baluja & Pomerleau, 1993] have 
+104 0 Dean Pomerleau 
+the potential to facilitate this communication. But these technologies are still in their infancy, 
+and at this point cannot approach the speed and accuracy of even a moderately skilled typist 
+for textual input. 
+Is there some way to improve the efficiency of standard keyboard-based human-computer 
+communication? The answer is yes, there are several ways to make typing more efficient. 
+The first, called the Dvorak keyboard, has been around for over 60 years. The Dvorak 
+keyboard has a different arrangement of keys, in which the most common letters, E, T, S, 
+etc., are on the home row right under the typist's fingers. This improved layout requires the 
+typist's fingers to travel 1/16th as far, resulting in an average of 20% increase in typing speed. 
+Unfortunately, the de facto standard in keyboards is the inefficient QWERTY configuration, 
+and people are reluctant to learn a new layout. 
+This paper describes another approach to improving typing efficiency, which can be used 
+with either the QWERTY or DVORAK keyboards. It takes advantage of the hundreds of 
+thousands of computer cycles between the typist's keystrokes which are typically wasted 
+while the computer idly waits for additional input. By spending those cycles trying to predict 
+what the user will type next, and allowing the typist to accept the prediction with a single 
+keystroke, substantial time and effort can be saved over typing the entire text manually. 
+There are actually several such systems available today, including a package called Au- 
+tocompletion developed for gnu-emacs by the author, and an application called Magic 
+Typist developed for the Apple Macintosh by Olduvai Software. Each of these maintains 
+a database of previously typed words, and suggests completions for the word the user is 
+currently in the middle of typing, which can be accepted with a single keystroke. While rea- 
+sonable useful, both have substantial drawbacks. These systems use a very naive technique 
+for calculating the best completion, simply the one that was typed most recently. In fact, 
+experiments conducted for this paper indicated that this most recently used heuristic is 
+correct only about 40% of the time. In addition, these two systems are annoyingly verbose, 
+always suggesting a completion if a word has been typed previously which matches the 
+prefix typed so far. They interrupt the user's typing to suggest a completion even if the 
+word they suggest hasn't been typed in many days, and there are many other alternative 
+completions for the prefix, making it unlikely that the suggestion will be correct. These 
+drawbacks are so severe that these systems frequently decrease the user's typing speed, 
+rather than increase it. 
+The AutoTypist system described in this paper employs an artificial neural network during the 
+spare cycles between keystrokes to make more intelligent decisions about which completions 
+to display, and when to display them. 
+2 The Prediction Task 
+To operationalize the goal of making more intelligent decisions about which completions 
+to display, we have defined the neural networks task to be the following: Given a list of 
+candidate completions for the word currently being typed, estimate the likelihood that the 
+user is actually typing each of them. For example, if the user has already types the prefix 
+aut, the word he is trying to typing could any one of a large number of possibilities, 
+including autonomous, automatic, automobile etc. Given a list of these possibilities 
+taken from a dictionary, the neural network's task is to estimate the probability that each of 
+these is the word the user will type. 
+A neural network cannot be expected to accurately estimate the probability for a particular 
+completion based on a unique representation for each word, since there are so many words 
+A Connectionist Technique for Accelerated Textual Input 1041 
+ATTRIBUTE DESCRIPTION 
+absolute age time since word was last typed 
+relative age ratio of the words age to age of the 
+most recently typed alternative 
+absolute frequency number of times word has been typed 
+in the past 
+relative frequency ratio of the words frequency to that 
+of the most often typed alternative 
+typed previous 1 if user has typed word previously, 
+0 otherwise 
+total length the word's length, in characters 
+remaining length the number of characters left after the 
+prefix to be typed for this word 
+special character match the percentage of special characters 
+(i.e. not a-z) in this word relative to the 
+percentage of special characters typed 
+recently 
+capitalization match 1 if the capitalization of the prefix the 
+user has already typed matches the word's 
+usual capitalization, 0 otherwise. 
+Table 1: Word attributes used as input to the neural network for predicting word probabilities. 
+in the English language, and there is only very sparse data available to characterize an 
+individual's usage pattern for any single word. Instead, we have chosen to use an input 
+representation that contains only those characteristics of a word that could conceivably have 
+an impact on its probability of being typed. The attributes we employed to characterize each 
+completion are listed in Table 1. 
+These are not the only possible attributes that could be used to estimate the probability of 
+the user typing a particular word. An additional characteristic that could be helpful is the 
+word's part of speech (i.e. noun, verb, adjective, etc.). However this attribute is not typically 
+available or even meaningful in many typing situations, for instance when typing computer 
+programs. Also, to effectively exploit information regarding a word's part of speech would 
+require the network to have knowledge about the context of the current text. In effect, it 
+would require at least an approximate parse tree of the current sentence. While there are 
+techniques, including connectionist methods [Jain, 1991], for generating parse trees, they 
+are prone to errors and computationally expensive. Since word probability predictions in 
+our system must occur many times between each key the user types, we have chosen to 
+utilize only the easy to compute attributes shown in Table 1 to characterize each completion. 
+3 Network Processing 
+The network architecture employed for this system is a feedforward multi-layer perceptron. 
+Each of the networks investigated has nine input units, one for each of the attributes listed 
+in Table 1, and a single output unit. As the user is typing a word, the prefix he has typed so 
+far is used to find candidate completions from a dictionary, which contains 20,000 English 
+words plus all words the user has typed previously. For each of these candidate completions, 
+the nine attributes in Table 1 are calculated, and scaled to the range of 0.0 to 1.0. These 
+values become the activations of the nine units in the input layer. Activation is propagated 
+through the network to produce an activation for the single output unit, representing the 
+1042 Dean Pomerleau 
+probability that this particular candidate completion is the one the user is actually typing. 
+These candidate probabilities are then used to determine which (if any) of the candidates 
+should be displayed to the typist, using a technique described in a later section. 
+To train the network, the user's typing is again monitored. After the user finishes typing a 
+word, for each prefix of the word a list of candidate completions, and their corresponding 
+attributes, is calculated. These form the input training patterns. The target activation for 
+the single output unit on a pattern is set to 1.0 if the candidate completion represented by 
+that pattern is the word the user was actually typing, and 0.0 if the candidate is incorrect. 
+Note that the target output activation is binary. As will be seen below, the actual output the 
+network learns to produce is an accurate 

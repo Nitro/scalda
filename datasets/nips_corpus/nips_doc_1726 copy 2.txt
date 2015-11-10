@@ -1,0 +1,153 @@
+State Abstraction in MAXQ Hierarchical 
+Reinforcement Learning 
+Thomas G. Dietterich 
+Department of Computer Science 
+Oregon State University 
+Corvallis, Oregon 97331-3202 
+tgd@cs. orst. edu 
+Abstract 
+Many researchers have explored methods for hierarchical reinforce- 
+ment learning (RL) with temporal abstractions, in which abstract 
+actions are defined that can perform many primitive actions before 
+terminating. However, little is known about learning with state ab- 
+stractions, in which aspects of the state space are ignored. In previ- 
+ous work, we developed the MAXQ method for hierarchical RL. In 
+this paper, we define five conditions under which state abstraction 
+can be combined with the MAXQ value function decomposition. 
+We prove that the MAXQ-Q learning algorithm converges under 
+these conditions and show experimentally that state abstraction is 
+important for the successful application of MAXQ-Q learning. 
+1 Introduction 
+Most work on hierarchical reinforcement learning has focused on temporal abstrac- 
+tion. For example, in the Options framework [1, 2], the programmer defines a set of 
+macro actions (options) and provides a policy for each. Learning algorithms (such 
+as semi-Markov Q learning) can then treat these temporally abstract actions as if 
+they were primitives and learn a policy for selecting among them. Closely related 
+is the HAM framework, in which the programmer constructs a hierarchy of finite- 
+state controllers [3]. Each controller can include non-deterministic states (where the 
+programmer was not sure what action to perform). The HAMQ learning algorithm 
+can then be applied to learn a policy for making choices in the non-deterministic 
+states. In both of these approaches--and in other studies of hierarchical RL (e.g., 
+[4, 5, 6])--each option or finite state controller must have access to the entire state 
+space. The one exception to this--the Feudal-Q method of Dayan and Hinton [7]-- 
+introduced state abstractions in an unsafe way, such that the resulting learning 
+problem was only partially observable. Hence, they could not provide any formal 
+results for the convergence or performance of their method. 
+Even a brief consideration of human-level intelligence shows that such methods can- 
+not scale. When deciding how to walk from the bedroom to the kitchen, we do not 
+need to think about the location of our car. Without state abstractions, any RL 
+method that learns value functions must learn a separate value for each state of the 
+State Abstraction in MAXQ Hierarchical Reinforcement Learning 995 
+world. Some argue that this can be solved by clever value function approximation 
+methods--and there is some merit in this view. In this paper, however, we explore 
+a different approach in which we identify aspects of the MDP that permit state ab- 
+stractions to be safely incorporated in a hierarchical reinforcement learning method 
+without introducing function approximations. This permits us to obtain the first 
+proof of the convergence of hierarchical RL to an optimal policy in the presence of 
+state abstraction. 
+We introduce these state abstractions within the MAXQ flamework [8], but the 
+basic ideas are general. In our previous work with MAXQ, we briefly discussed state 
+abstractions, and we employed them in our experiments. However, we could not 
+prove that our algorithm (MAXQ-Q) converged with state abstractions, and we did 
+not have a usable characterization of the situations in which state abstraction could 
+be safely employed. This paper solves these problems and in addition compares the 
+effectiveness of MAXQ-Q learning with and without state abstractions. The results 
+show that state abstraction is very important, and in most cases essential, to the 
+effective application of MAXQ-Q learning. 
+2 The MAXQ Framework 
+Let M be a Markov decision problem with states S, actions A, reward function 
+R(sl s, a) and probability transition function P(sls, a). Our results apply in both 
+the finite-horizon undiscounted case and the infinite-horizon discounted case. Let 
+{M0,...,Mn} be a set of subtasks of M, where each subtask Mi is defined by a 
+termination predicate Ti and a set of actions Ai (which may be other subtasks or 
+primitive actions from A). The goal of subtask Mi is to move the environment into 
+a state such that Ti is satisfied. (This can be refined using a local reward function 
+to express preferences among the different states satisfying Ti [8], but we omit this 
+refinement in this paper.) The subtasks of M must form a DAG with a single root 
+node--no subtask may invoke itself directly or indirectly. A hierarchical policy is 
+a set of policies r - {r0,...,rn}, one for each subtask. A hierarchical policy 
+is executed using standard procedure-call-and-return semantics, starting with the 
+root task M0 and unfolding recursively until primitive actions are executed. When 
+the policy for Mi is invoked in state s, let P(s,NIs,i) be the probability that it 
+terminates in state s  after executing N primitive actions. A hierarchical policy is 
+recursively optimal if each policy 7ri is optimal given the policies of its descendants 
+in the DAG. 
+Let V(i, s) be the value function for subtask i in state s (i.e., the value of following 
+some policy starting in s until we reach a state s  satisfying Ti(s)). Similarly, let 
+Q(i,s,j) be the Q value for subtask i of executing child action j in state s and 
+then executing the current policy until termination. The MAXQ value function 
+decomposition is based on the observation that each subtask Mi can be viewed as a 
+Semi-Markov Decision problem in which the reward for performing action j in state 
+s is equal to V(j, s), the value function for subtask j in state s. To see this, consider 
+the sequence of rewards rt that will be received when we execute child action j and 
+then continue with subsequent actions according to hierarchical policy r: 
+Q(i,s,j) = E{rt + /rt+l + /2rt+2 +...[st -- s,7r} 
+The macro action j will execute for some number of steps N and then return. Hence, 
+we can partition this sum into two terms: 
+Q(i,s,j) = E 3' t+ + 3'rt+ st = s,7r 
+u----0 u----N 
+996 T. G. Dietterich 
+The first term is the discounted sum of rewards until subtask j terminates--V(j, s). 
+The second term is the cost of finishing subtask i after j is executed (discounted 
+to the time when j is initiated). We call this second term the completion function, 
+and denote it C(i, s, j). We can then write the Bellman equation as 
+Q(i,s,j) = y P(s',N[s,j) . [V(j,s) +'V maxQ(i,s',j')] 
+j, 
+s',N 
+= V(j,s) +C(i,s,j) 
+To terminate this recursion, define V(a, s) for a primitive action a to be the expected 
+reward of performing action a in state s. 
+The MAXQ-Q learning algorithm is a simple variation of Q learning in which at 
+subtask Mi, state s, we choose a child action j and invoke its (current) policy. When 
+it returns, we observe the resulting state s  and the number of elapsed time steps 
+N and update C(i, s, j) according to 
+C(i, s,j) := (1- (t)C(i, s,j) + (t ' 'N[ma,ax V(a', s') + C(i, s',a')]. 
+To prove convergence, we require that the exploration policy executed during learn- 
+ing be an ordered GLIE policy. An ordered policy is a policy that breaks Q-value 
+ties among actions by preferring the action that comes first in some fixed ordering. 
+A GLIE policy [9] is a policy that (a) executes each action infinitely often in every 
+state that is visited infinitely often and (b) converges with probability 1 to a greedy 
+policy. The ordering condition is required to ensure that the recursively optimal 
+policy is unique. Without this condition, there are potentially many different re- 
+cursively optimal policies with different values, depending on how ties are broken 
+within subtasks, subsubtasks, and so on. 
+Theorem I Let M = (S, A, P, R) be either an episodic MDP for which all de- 
+terministic policies are proper or a discounted infinite horizon MDP with discount 
+factor '. Let H be a DAG defined over subtasks (Mo,... ,Mk). Let (t(i)  0 be a 
+sequence of constants for each subtask Mi such that 
+T T 
+lim y (t(i) = o and lim y (t2(i) ( oe (1) 
+T- T- 
+t=l 
+Let rx (i, s) be an ordered GLIE policy at each subtask Mi and state s and assume 
+that [Vt(i, s)[ and ICt(i,s,a)[ are bounded for all t, i, s, and a. Then with probability 
+1, algorithm MAXQ-Q converges to the unique recursively optimal policy for M 
+consistent with H and rx. 
+Proof.' (sketch) The proof is based on Proposition 4.5 from Bertsekas and Tsit- 
+siklis [10] and follows the standard stochastic approximation argument due to [11] 
+generalized to the case of non-stationary noise. There are two key points in the 
+proof. Define Pt (d, Nls, j) to be the probability transition function that describes 
+the behavior of executing the current policy for subtask j at time t. By an inductive 
+argument, we show that this probability transition function converges (w.p. 1) to 
+the probability transition function of the recursively optimal policy for j. Second, 
+we show how to convert the usual weighted max norm contraction for Q into a 
+weighted max norm contraction for C. This is straightforward, and completes the 
+proof. 
+What is notable about MAXQ-Q is that it can learn the value functions of all 
+subtasks simultaneously--it does not need to wait for the value function for subtask 
+j to converge before beginning to learn the value function for its parent task i. This 
+gives a completely online learning algorithm with wide applicability. 
+State Abstraction in MAXQ Hierarchical Reinforcement Learning 997 
+4 
+3 
+2 
+1 
+0 
+R G 
+0 1 2 3 4 
+own J 
+Figure 1: Left: The Taxi Domain (taxi at row 3 column 0). Right: Task Graph. 
+3 Conditions for Safe State Abstraction 
+To motivate state abstraction, consider the simple Taxi Task shown in Figure 1. 
+There are four special locations in this world, marked as R(ed), B(lue), G(reen), 
+and Y(ellow). In each episode, the taxi starts in a randomly-chose

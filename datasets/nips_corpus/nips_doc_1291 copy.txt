@@ -1,0 +1,163 @@
+A Revolution: Belief Propagation in 
+Graphs With Cycles 
+Brendan J. Frey* 
+http://n. cs. utoronto. ca/frey 
+Department of Computer Science 
+University of Toronto 
+David J. C. MacKay 
+http://wol. ra. phy. cam. ac. uk/mackay 
+Department of Physics, Carendish Laboratory 
+Cambridge University 
+Abstract 
+Until recently, artificial intelligence researchers have frowned upon 
+the application of probability propagation in Bayesian belief net- 
+works that have cycles. The probability propagation algorithm is 
+only exact in networks that are cycle-free. However, it has recently 
+been discovered that the two best error-correcting decoding algo- 
+rithms are actually performing probability propagation in belief 
+networks with cycles. 
+I Communicating over a noisy channel 
+Our increasingly wired world demands efficient methods for communicating bits of 
+information over physical channels that introduce errors. Examples of real-world 
+channels include twisted-pair telephone wires, shielded cable-TV wire, fiber-optic 
+cable, deep-space radio, terrestrial radio, and indoor radio. Engineers attempt 
+to correct the errors introduced by the noise in these channels through the use 
+of channel coding which adds protection to the information source, so that some 
+channel errors can be corrected. A popular model of a physical channel is shown 
+in Fig. 1. A vector of K information bits u = (u,... ,UK), uk  {0, 1} is encoded, 
+and a vector of N codeword bits x = (x,..., XN) is transmitted into the channel. 
+Independent Gaussian noise with variance a ' is then added to each codeword bit, 
+* Brendan rey is currently a Beckman Fellow at the Beckman Institute for Advanced 
+Science and Technology, University of Illinois at Urbana-Champaign. 
+480 B. J. Frey and D. J. C. MacKay 
+u 
+Gaussian noise 
+with variance er 
+Decoder 
+Figure 1: A communication system with a channel that adds Gaussian noise to the 
+transmitted discrete-time sequence. 
+producing the real-valued channel output vector y -- (Yl,..., YN). The decoder 
+must then use this received vector to make a guess fi at the original information 
+vector. The probability Pb(e) of bit error is minimized by choosing the uk that 
+maximizes P(ukly ) for k - 1,...,K. The rate KIN of a code is the number of 
+information bits communicated per codeword bit. We will consider rate ~ 1/2 
+systems in this paper, where N = 2K. 
+The simplest rate 1/2 encoder duplicates each information bit: x9._l = x2 - u, 
+k = 1,..., K. The optimal decoder for this repetition code simply averages together 
+pairs of noisy channel outputs and then applies a threshold: 
+ - I if (Y9k-1 q- y9.)/2  0.5, 0 otherwise. (1) 
+Clearly, this procedure has the effect of reducing the noise variance by a factor of 
+1/2. The resulting probability Pb(e) that an information bit will be erroneously 
+decoded is given by the area under the tail of the noise Gaussian: 
+-0.5 
+where (0 is the cumulative standard normal distribution. A plot of P(e) versus a 
+for this repetition code is shown in Fig. 2, along with a thumbnail picture that shows 
+the distribution of noisy received signals at the noise level where the repetition code 
+gives Po(e) = 10-*. 
+More sophisticated channel encoders and decoders can be used to increase the toler- 
+able noise level without increasing the probability of a bit error. This approach can 
+in principle improve performance up to a bound determined by Shannon (1948). For 
+a given probability of bit error P0 (e), this limit gives the maximum noise level that 
+can be tolerated, no matter what channel code is used. Shannon's proof was non- 
+constructive, meaning that he showed that there exist channel codes that achieve his 
+limit, but did not present practical encoders and decoders. The curve for Shannon's 
+limit is also shown in Fig. 2. 
+The two curves described above define the region of interest for practical channel 
+coding systems. For a given Po(e), if a system requires a lower noise level than the 
+repetition code, then it is not very interesting. At the other extreme, it is impossible 
+for a system to tolerate a higher noise level than Shannon's limit. 
+2 Decoding Hamming codes by probability propagation 
+One way to detect errors in a string of bits is to add a parity-check bit that is 
+chosen so that the sum modulo 2 of all the bits is 0. If the channel flips one bit, 
+the receiver will find that the sum modulo 2 is 1, and can detect than an error 
+occurred. In a simple Hamming code, the codeword x consists of the original vector 
+A Revolution: Belief Propagation in Graphs with Cycles 481 
+le-1 
+le-5 
+0.2 
+Repetiti�n  T 
+Shannon 
+1 / H-PP// Concatenated 
+0.3 0.4 0.5 0.6 0.7 0.8 
+Standard deviation of Gaussian noise, a 
+Figure 2: Probability of bit error Pb(e) versus noise level a for several codes with 
+rates near 1/2, using 0/1 signalling. It is impossible to obtain a Pb(e) below Shan- 
+non's limit (shown on the far right for rate 1/2). H-PP = Hamming code (rate 
+4/7) decoded by probability propagation (5 iterations); H-Exact = Hamming 
+code decoded exactly; LDPCC-PP = low-density parity-check coded decoded by 
+probability propagation; TC-PP = turbocode decoded by probability propaga- 
+tion. The thumbnail pictures show the distribution of noisy received signals at the 
+noise levels where the repetition code and the Shannon limit give P(e) - 10 -5. 
+u in addition to several parity-check bits, each of which depends on a different 
+subset of the information bits. In this way, the Hamming code can not only detect 
+errors but also correct them. 
+The code can be cast in the form of the conditional probabilities that specify a 
+Bayesian network. The Bayesian network for a K = 4, N -- 7 rate 4/7 Hamming 
+code is shown in Fig. 3a. Assuming the information bits are uniformly random, 
+we have P(uk) = 0.5, uk  {0,1}, k = 1,2,3,4. Codeword bits I to 4 are di- 
+rect copies of the information bits: P(xJu) = 5(x,u), k = 1,2,3,4, where 
+5(a, b) = I if a = b and 0 otherwise. Codeword bits 5 to 7 are parity-check 
+bits: P(xs[ul, u2, us) = 5(x5, Ul ( u2 ( u3), P(x6lZtl, u2, u4)  ((x6, 1 ( u2 ( u4), 
+P(x7[uo., us, u4) = 5(x7, u2 )us )u4), where ) indicates addition modulo 2 (XOR). 
+Finally, the conditional channel probability densities are 
+P(YnIXn)= I e_(y,,_x,,)2/.,2 (3) 
+X/2.a. ' 
+forn- 1,...,7. 
+The probabilities P(uk]y) can be computed exactly in this belief network, using 
+Lauritzen and Spiegelhalter's algorithm (1988) or just brute force computation. 
+However, for the more powerful codes discussed below, exact computations are 
+intractable. Instead, one way the decoder can approximate the probabilities P(u lY) 
+is by applying the probability propagation algorithm (Pearl 1988) to the Bayesian 
+network. Probability propagation is only approximate in this case because the 
+482 B. J. Frey and D. J. C. MacKay 
+(a) 
+(c) 
+(b) 
+54 
+(d) 
+Permuter I 
+Figure 3: (a) The Bayesian network for a K = 4, N -- 7 Hamming code. (b) The 
+Bayesian network for a K = 4, N = 8 low-density parity-check code. (c) A block 
+diagram for the turbocode linear feedback shift register. (d) The Bayesian network 
+for a K = 6, N = 12 turbocode. 
+network contains cycles (ignoring edge directions), e.g., 1-lrs-u2-1r6-u1. Once a 
+channel output vector y is observed, propagation begins by sending a message from 
+Yn to Xn for n = 1,..., 7. Then, a message is sent from xk to uk for k = 1, 2, 3, 4. 
+An iteration now begins by sending messages from the information variables u, 
+us, u4 to the parity-check variables xs, x6, x7 in parallel. The iteration finishes by 
+sending messages from the parity-check variables back to the information variables 
+in parallel. Each time an iteration is completed, new estimates of P(uly ) for 
+k - 1, 2, 3, 4 are obtained. 
+The Pb (e) -- a curve for optimal decoding and the curve for the probability propaga- 
+tion decoder (5 iterations) are shown in Fig. 2. Quite surprisingly, the performance 
+of the iterative decoder is quite close to that of the optimal decoder. Our expec- 
+tation was that short cycles would confound the probability propagation decoder. 
+However, it seems that good performance can be obtained even when there are short 
+cycles in the code network. 
+For this simple Hanuning code, the complexities of the probability propagation de- 
+coder and the exact decoder are comparable. However, the similarity in performance 
+between these two decoders prompts the question: Can probability propagation 
+decoders give performances comparable to exact decoding in cases where exact de- 
+coding is computationally intractable? 
+A Revolution: Belief Propagation in Graphs with Cydes 483 
+3 A leap towards the limit: Low-density parity-check codes 
+Recently, there has been an explosion of interest in the channel coding community in 
+two new coding systems that have brought us a leap closer to Shannon's limit. Both 
+of these codes can be described by Bayesian networks with cycles, and it turns out 
+that the corresponding iterative decoders are performing probability propagation 
+in these networks. 
+Fig. 3b shows the Bayesian network for a simple low-density parity-check code (Gal- 
+lager 1963). In this network, the information bits are not represented explicitly. 
+Instead, the network defines a set of allowed configurations for the codewords. Each 
+parity-check vertex qi requires that the codeword bits {x,},eQ  to which qi is con- 
+nected have even parity: 
+P(qil{xn}nQ,) = 5(qi, {]) 
+nQi 
+(4) 
+where q is clamped to 0 to ensure even parity. Here, Qi is the set of indices of 
+the codeword bits to which parity-check vertex qi is connected. The conditional 
+probability densities for the channel outputs are the same as in Eq. 3. 
+One way to view the above code is as N binary codeword variables along with a 
+set of linear (modulo 2) equations. If in the end we want there to be K degrees 
+of freedom, then the number of linearly independent parity-check equations should 
+be N - K. In the ab

@@ -1,0 +1,154 @@
+Combining Neural and Symbolic 
+Learning to Revise Probabilistic Rule 
+Bases 
+J. Jeffrey Mahoney and Raymond J. Mooney 
+Dept. of Computer Sciences 
+University of Texas 
+Austin, TX 78712 
+mahoney@cs.utexas.edu, mooney@cs.utexas.edu 
+Abstract 
+This paper describes R,PTURE -- a system for revising probabilis- 
+tic knowledge bases that combines neural and symbolic learning 
+methods. RAPTU}tE uses a modified version of backpropagation 
+to refine the certainty factors of a MYClN-style rule base and uses 
+ID3's information gain heuristic to add new rules. Results on re- 
+fining two actual expert knowledge bases demonstrate that this 
+combined approach performs better than previous methods. 
+I Introduction 
+In complex domains, learning needs to be biased with prior knowledge in order to 
+produce satisfactory results from limited training data. Recently, both connectionist 
+and symbolic methods have been developed for biasing learning with prior knowl- 
+edge [Fu, 1989; Towell et al., 1990; Ourston and Mooney, 1990]. Most of these meth- 
+ods revise an imperfect knowledge base (usually obtained from a domain expert) to 
+fit a set of empirical data. Some of these methods have been successfully applied to 
+real-world tasks, such as recognizing promoter sequences in DNA [Towell et al., 1990; 
+Ourston and Mooney, 1990]. The results demonstrate that revising an expert-given 
+knowledge base produces more accurate results than learning from training data 
+alone. 
+In this paper, we describe the R,PTUItE system (Revising Approximate 
+107 
+108 Mahoney and Mooney 
+Probabilistic Theories Using Repositories of Examples), which combines connec- 
+tionist and symbolic methods to revise both the parameters and structure of a 
+certainty-factor rule base. 
+2 The Rapture Algorithm 
+The RAPTURE algorithm breaks down into three main phases. First, an initial 
+rule-base (created by a human expert) is converted into a RAPTURE network. The 
+result is then trained using :ertainty-factor backpropagation (CFBP). The theory 
+is further revised through network architecture modification. Once the network is 
+fully trained, the solution is at hand--there is no need for retranslation. Each of 
+these steps is outlined in full below. 
+2.1 The Initial Rule-Base 
+RAPTURE uses propositional certainty factor rules to represent its theories. These 
+rules have the form A 0 D, which expresses the idea that belief in proposition A 
+gives a 0.8 measure of belief in proposition D [Shafer and Pearl, 1990]. Certainty 
+factors can range in value from -1 to d-l, and indicate a degree of confidence in a 
+particular proposition. Certainty factor rules allow updating of these beliefs based 
+upon new observed evidence. 
+Rules combine evidence via probabilistic sum, which is defined as a ) b -=- a + b - ab. 
+In general, all positive evidence is combined to determine the measure of belief(MB) 
+for a given proposition, and all negative evidence is combined to obtain a measure 
+of disbelief (MD). The certainty factor is then calculated using CF = MB + MD. 
+RAPTURE uses this formalism to represent its rule base for a variety of reasons. 
+First, it is perhaps the simplest method that retains the desired evidence-summing 
+aspect of uncertain reasoning. As each rule fires, additional evidence is contributed 
+towards belief in the rule's consequent. The use of probabilistic sum enables many 
+small pieces of evidence to add up to significant evidence. This is lacking in for- 
+malisms that use only MIN or MAX for combining evidence [Valtorta, 1988]. Sec- 
+ond, probabilistic sum is a simple, differentiable, non-linear function. This is cru- 
+cial for implementing gradient descent using backpropagation. Finally, and perhaps 
+most significantly, is the widespread use of certainty factors. Numerous knowledge- 
+bases have been implemented using this formalism, which immediately gives our 
+approach a large base of applicability. 
+2.2 Converting the Rule Base into a Network 
+Once the initial theory is obtained, it is converted into a RAPTURE -network. Build- 
+ing the network begins by mapping all identical propositions in the rule-base to the 
+same node in the network. Input features (those only appearing as rule-antecedents) 
+become input nodes, and output symbols (those only appearing as rule-consequents) 
+become output nodes. The certainty factors of the rules become the weights on the 
+links that connect nodes. Networks for classification problems contain one output 
+for each category. When an example is presented, the certainty factor for each of 
+the categories is computed and the example is assigned to the category with the 
+Combining Neural and Symbolic Learning to Revise Probabilistic Rule Bases 109 
+Figure 1: A RAPTURE NETWORK 
+highest value. Figure 1 illustrates the following set of rules. 
+A B C A D E- D c- a E F- G H I A C I- E 
+As shown in the network, conjuncts must first pass through a MIN node before 
+any activation reaches the consequent node. Note that each of the conjuncts is 
+connected to the corresponding MIN mode with a solid line. This represents the 
+fact that the link is non-adjustable, and simply passes its full activation value onto 
+the MIN node. The standard (certainty-factor) links are drawn as dotted lines 
+indicating that their values are adjustable. 
+This construction shows how easily a RAPTURE-network can model a MYCIN rule- 
+base. Each representation can be converted into the other, without loss or cor- 
+ruption of information. They are two equivalent representations of the same set of 
+rules. 
+2.3 Certainty Factor Backpropagation 
+Using the constructed RAPTURE-network, we desire to maximize its predictive ac- 
+curacy over a set of training examples. Cycling through the examples one at a time, 
+and slightly adjusting all relevant network weights in a direction that will minimize 
+the output error, results in hill-climbing to a local minimum. This is the idea be- 
+hind gradient descent [Rumelhart e! al., 1986], which RAPTURE accomplishes with 
+Certainty Factor Backpropagation (CFBP), using the following equations. 
+If uj is an output unit 
+110 Mahoney and Mooney 
+If uj is not an output unit 
+5pj = (tpj - 
+(2) 
+k ,r, i ,, 
+The Sigma with circle notation is meant to represent probabilistic sum over the 
+index, and the :t: notation is shorthand for two separate cases. If wjiopi __ O, then 
+- is used, otherwise + is used. The kmin subscript refers to the fact that we do 
+not perform this summation for every unit k (as in standard backpropagation), but 
+only those units that received some contribution from unit j. Since a unit j may 
+be required to pass through a min or max-node before reaching the next layer (k), 
+it is possible that its value may not reach k. 
+RAPTURE deems a classification correct when the output value for the correct cate- 
+gory is greater than that of any other category. No error propagation takes place in 
+this case (Spj = 0). CFBP terminates when overall error reaches a minimal value. 
+2.4 Changing the Network Architecture 
+Whenever training accuracy fails to reach 100% through CFBP, it may be an indi- 
+cation that the network architecture is inappropriate for the current classification 
+task. To date, RAPTURE has been given two ways of changing network architecture. 
+First, whenever the weight of a link in the network approaches zero, it is removed 
+from the network along with all of the nodes and links that become detached due 
+to this removal. Further, whenever an intermediate node loses all of its input links 
+due to link deletion, it too is removed from the network, along with its output link. 
+This link/node deletion is performed immediately after CFBP, and before anything 
+new is introduced into the network. 
+RAPTURE also has a method for adding new nodes into the network. Specific nodes 
+are added in an attempt to maximize the number of training examples that are clas- 
+sifted correctly. The simple solution employed by RAPTURE is to create new input 
+nodes that connect directly, either positively or negatively, to one or more output 
+nodes. These new nodes are created in a way that will best help the network distin- 
+guish among training examples that are being misclassified. Specifically, RAPTURE 
+attempts to distinguish for each output category, those examples of that category 
+that are being misclassified (i.e. being classified into a different output category), 
+from those examples that do belong in these different output categories. Quinlan's 
+ID3 information gain metric [Quinlan, 1986] has been adopted by RAPTURE to se- 
+lect this new node, which becomes positive evidence for the correct category, and 
+negative evidence for mistaken categories. 
+With these new nodes in place, we can now return to CFBP, where hopefully more 
+training examples will be successfully classified. This entire process (CFBP followed 
+by deleting links and adding new nodes) repeats until all training examples are 
+correctly classified. Once this has occurred, the network is considered trained, and 
+testing may begin. 
+Combining Neural and Symbolic Learning to Revise Probabilistic Rule Bases 111 
+DNA-PROMOTER Test Accuracy 
+;, 
+Soybean Test Accuracy 
+qt 
+o.oo o.oo H]O.00 15o.0o 
+Figure 2: RAPTURE Testing Accuracy 
+3 Experimental Results 
+To date, RAPTURE has been tested on two real-world domains. The first of these 
+is a domain for recognizing promoter sequences in strings of DNA-nucleotides. The 
+second uses a theory for diagnosing soybean diseases. These datasets are discussed 
+in detail in the following sections. 
+3.1 Promoter Recognition Results 
+A prokaryotic promoter is a short DNA sequence that precedes the beginnings of 
+genes, and are locations where the protein RNA polymerase binds to the DNA 
+structure [Towell et al., 1990]. A set of propositional Horn-clause rules for recogniz- 
+ing promoters, along with 106 labelled examples (53 promoters, 53 non-promoters) 
+was provided as the initial theory. 
+In order for this theory to use

@@ -1,0 +1,151 @@
+A Reinforcement Learning Variant for Control 
+Scheduling 
+Aloke Guha 
+Honeywell Sensor and System Development Center 
+3660 Technology Drive 
+Minneapolis, MN 55417 
+Abstract 
+We present an algorithm based on reinforcement and state recurrence 
+learning techniques to solve control scheduling problems. In particular, we 
+have devised a simple learning scheme called handicapped learning, in 
+which the weights of the associative search element are reinforced, either 
+positively or negatively, such that the system is forced to move towards the 
+desired setpoint in the shortest possible trajectory. To improve the learning 
+rate, a variable reinforcement scheme is employed: negative reinforcement 
+values are varied depending on whether the failure occurs in handicapped or 
+normal mode of operation. Furthermore, to realize a simulated annealing 
+scheme for accelerated learning, if the system visits the same failed state 
+successively, the negative reinforcement value is increased. In examples 
+studied, these learning schemes have demonstrated high learning rates, and 
+therefore may prove useful for in-situ learning. 
+1 INTRODUCTION 
+Reinforcement learning techniques have been applied successfully for simple control 
+problems, such as the pole-cart problem [Barto 83, Michie 68, Rosen 88] where the 
+goal was to maintain the pole in a quasistable region, but not at specific setpoints. 
+However, a large class of continuous control problems require maintaining the 
+system at a desired operating point, or setpoint, at a given time. We refer to this 
+problem as the basic setpoint control problem [Guha 90], and have shown that 
+reinforcement learning can be used, not surprisingly, quite well for such control tasks. 
+A more general version of the same problem requires steering the system from some 
+479 
+480 Guha 
+initial or starting state to a desired state or setpoint at specific times without 
+knowledge of the dynamics of the system. We therefore wish to examine how 
+control scheduling tasks, where the system must be steered through a sequence of 
+setpoints at specific times, can be learned. Solving such a control problem without 
+explicit modeling of the system or plant can prove to be beneficial in many adaptive 
+control tasks. 
+To address the control scheduling problem, we have derived a learning algorithm 
+called handicapped learning. Handicapped learning uses a nonlinear encoding of the 
+state of the system, a new associative reinforcement learning algorithm, and a novel 
+reinforcement scheme to explore the control space to meet the scheduling 
+constraints. The goal of handicapped learning is to learn the control law necessary to 
+steer the system from one setpoint to another. We provide a description of the state 
+encoding and associative learning in Section 2, the reinforcement scheme in Section 
+3, the experimental results in Section 4, and the conclusions in Section 5. 
+2 REINFORCEMENT LEARNING STRATEGY: 
+HANDICAPPED LEARNING 
+Our earlier work on regulatory control using reinforcement learning [Guha 90] used a 
+simple linear coded state representation of the system. However, when considering 
+multiple setpoints in a schedule, a linear coding of high-resolution results in a 
+combinatorial explosion of states. To avoid this curse of dimensionality, we have 
+adopted a simple nonlinear encoding of the state space. We describe this first. 
+2.1 STATE ENCODING 
+To define the states in which reinforcement must be provided to the controller, we 
+set tolerance limits around the desired setpoint, say Xd. If the tolerance of operation 
+defined by the level of control sophistication required in the problem is T, then the 
+controller is defined to fail if IX(t) - Xdl > T as described in our earlier work in [Guha 
+90]. 
+The controller must learn to maintain the system within this tolerance window. If the 
+range, R, of possible values of the setpoint or control variable X(t) is significantly 
+greater than the tolerance window, then the number of states required to define the 
+setpoint will be large. We therefore use a nonlinear coding of the control variable. 
+Thus, if the level of discrimination within the tolerance window is 2T/n, then the 
+number of states required to represent the control variable is (n + 2) where the two 
+added states represent the states, (X(t) - Xd) > T and (X(t) - Xd) < -T. With this 
+representation scheme, any continuous range of setpoints can be represented with 
+very high resolution but without the explosion in state space. 
+The above state encoding will be used in our associative reinforcement learning 
+algorithm, handicapped learning, which we describe next. 
+A Reinforcement Learning Variant for Control Scheduling 481 
+2.2 HANDICAPPED LEARNING ALGORITHM 
+Our reinforcement learning strategy is derived from the Associative Search 
+Element/Adaptive Heuristic Critic (ASE/AHC) algorithm [Barto 83, Anderson 86]. 
+We have considered a binary control output, y(t): 
+y(t) = f(Z wi(t)xi(t) + noise(t)) (1) 
+i 
+where f is the thresholding step function, and xi(t), 0 < i < N, is the current decoded 
+state, that is, xi(t)= 1 when the system is in the ith state and 0 otherwise. As in 
+ASE, the added term noise(t) facilitates stochastic learning. Note that the learning 
+algorithm can be easily extended to continuous valued outputs, the nature of the 
+continuity is determined by the thresholding function. 
+We incorporate two learning heuristics: state recurrence [Rosen 88] and a newly 
+introduced heuristic called handicapped learning. The controller is in the 
+handicapped learning mode if a flag, H, is set high. H is defined as follows: 
+H=0, ifIX(0-Xdl<T 
+= 1, otherwise (2) 
+The handicap mode provides a mechanism to modify the reinforcement scheme. In 
+this mode the controller is allowed to explore the search space of action sequences, 
+to steer to a new setpoint, without punishment (negative reinforcement). The mode 
+is invoked when the system is at a valid setpoint Xl(tl) at time tl, but must be 
+steered to the new setpoint X2 outside the tolerance window, that is, IX1 - X21 > T, 
+at time t2. Since both setpoints are valid operating points, these setpoints as well as 
+all points within the possible optimal trajectories from X1 to X2 cannot be deemed to 
+be failure states. Further, by following a special reinforcement scheme during the 
+handicapped mode, one can enable learning and facilitate the controller to find the 
+optimal trajectory to steer the system from one setpoint to another. 
+The weight updating rule used during setpoint schedule learning is given by equation 
+(3): 
+wi(t+l) = wi(t) + c rl(t) ei(t) + c2 r2(t) e2i(t) + c3 r3(t) e3i(t) (3) 
+where the term ot rl(t)ei(t) is the basic associative learning component, rl(t) the 
+heuristic reinforcement, and ei(t) the eligibility trace of the state xi(t) [Barto 83]. 
+The third term in equation (3) is the state recurrence component for reinforcing short 
+cycles [Rosen 88]. Here or2 is a constant gain, r2(t) is a positive constant reward, 
+and e2i the state recurrence eligibility is defined as follows: 
+e2i(t) = [2 xi(t)y(ti,last)/([2 + t- ti,last), 
+= 0, otherwise 
+if (t - ti,last) > 1 and H = 0 
+(4) 
+482 Guha 
+where [52 is a positive constant, and ti,last is the last time the system visited the ith 
+state. The eligibility function in equation (4) reinforces shorter cycles more than 
+longer cycles, and improve control when the system is within a tolerance window. 
+The fourth term in equation (3) is the handicapped learning component. Here z3 is a 
+constant gain, r3(t) is a positive constant reward and e3i the handicapped learning 
+eligibility is defined as follows: 
+e3i(t) = - [53 xi(t)y(ti,last)/([53 + t- ti,last), if H = 1 
+= 0, otherwise (5) 
+where [53 is a positive constant. While state recurrence promotes short cycles around 
+a desired operating point, handicapped learning forces the controller to move away 
+from the current operating point X(t). The system enters the handicapped mode 
+whenever it is outside the tolerance window around the desired setpoint. If the initial 
+operating point Xi (= X(0)) is outside the tolerance window of the desired setpoint 
+Xd, IXi - Xdl > T, the basic AHC network will always register a failure. This failure 
+situation is avoided by invoking the handicapped learning described above. By 
+setting absolute upper and lower limits to operating point values, the controller based 
+on handicapped learning can learn the correct sequence of actions necessary to steer 
+the system to the desired operating point Xd. 
+The weight update equations for the critic in the AHC are unchanged from the 
+original AHC and we do not list them here. 
+3 REINFORCEMENT SCHEMES 
+Unlike in previous experiments by other researchers, we have constructed the 
+reinforcement values used during learning to be multivalued, and not binary. The 
+reinforcement to the critic is negative-both positive and negative reinforcements are 
+used. There are two forms of failure that can occur during setpoint control. First, the 
+controller can reach the absolute upper or lower limits. Second, there may be a 
+timeout failure in the handicapped mode. By design, when the controller is in 
+handicapped mode, it is allowed to remain there for only TL, determined by the 
+average control step Ay and the error between the current operating point and the 
+desired setpoint: 
+TL = k Ay (X 0 - Xd) (6) 
+where X 0 is the initial setpoint, and k some constant. The negative reinforcement 
+provided to the controller is higher if the absolute limits of the operating point is 
+reached. 
+We have implemented a more interesting reinforcement scheme that is somewhat 
+similar to simulated annealing. If the system fails in the same state on two 
+successive trials, the negative reinforcement is increased. The primary 
+reinforcement function can be defined as follows: 
+A Reinforcement Learning Variant for Control Scheduling 483 
+rj0c + 1) = ri0c) - r0, if i = j 
+= rl, if i  j (7) 
+where ri(k) 

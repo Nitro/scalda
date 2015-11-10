@@ -1,0 +1,145 @@
+An Object-Oriented Framework for the 
+Simulation of Neural Nets 
+A. Linden Th. Sudbrak Ch. Tietz F. Weber 
+German National Research Center for Computer Science 
+D-5205 Sankt Augustin 1, Germany 
+Abstract 
+The field of software simulators for neural networks has been ex- 
+panding very rapidly in the last years but their importance is still 
+being underestimated. They must provide increasing levels of as- 
+sistance for the design, simulation and analysis of neural networks. 
+With our object-oriented framework (SESAME) we intend to show 
+that very high degrees of transparency, manageability and flexibil- 
+ity for complex experiments can be obtained. SESAME's basic de- 
+sign philosophy is inspired by the natural way in which researchers 
+explain their computational models. Experiments are performed 
+with networks of building blocks, which can be extended very eas- 
+ily. Mechanisms have been integrated to facilitate the construction 
+and analysis of very complex architectures. Among these mech- 
+anisms are the automatic configuration of building blocks for an 
+experiment and multiple inheritance at run-time. 
+1 Introduction 
+In recent years a lot of work has been put into the development of simulation 
+systems for neural networks [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12]. Unfortunately their 
+importance has been largely underestimated. In future, software environments will 
+provide increasing levels of assistance for the design, simulation and analysis of 
+neural networks as well as for other pattern and signal processing architectures. Yet 
+large improvements are still necessary in order to fulfill the growing demands of the 
+research community. Despite the existence of at least 100 software simulators, only 
+very few of them can deal with, e.g. multiple learning paradigms and applications, 
+797 
+798 Linden, Sudbrak, Tietz, and Weber 
+very large experiments. 
+In this paper we describe an object oriented framework for the simulation of neural 
+networks and try to illustrate its flexibility, transparency and extendability. The 
+prototype called SESAME has been implemented using C++ (on UNIX workstations 
+running X-Windows) and currently consists of about 39.000 lines of code, imple- 
+menting over 80 classes for neural network algorithms, pattern handling, graphical 
+output and other utilities. 
+2 Philosophy of Design 
+The main objective of SESAME is to allow for arbitrary combinations of different 
+learning and pattern processing paradigms (e.g. supervised, unsupervised, self- 
+supervised or reinforcement learning) and different application domains (e.g. pat- 
+tern recognition, vision, speech or control). To some degree the design of SESAME 
+has been based on the observation that many researchers explain their neural in- 
+formation processing systems (NIPS) with block-diagrams. Such a block diagram 
+consists of a group of primitive elements (building blocks). Each building block has 
+inputs and outputs and a functional relationship between them. Connections de- 
+scribe the flow of data between the building blocks. Scripts related to the building 
+blocks specify the flow of control. Complex NIPS are constructed from a library 
+of building blocks (possibly themselves whole NIPS), which are interconnected via 
+uniform communication links. 
+3 SESAME Design and Features 
+All building blocks share a list of common components. They all have insires and 
+outsites that build the endpoints of communication links. Datafields contain the 
+data (e.g. weight matrices or activation vectors) which is sent over the links. Ac- 
+tion functions process input from the insites, update the internal state and compute 
+appropriate outputs, e.g. performing weight updates and propagating activation or 
+error vectors. Command funclions provide a uniform user interface for all build- 
+ing blocks. Scripts control the execution of action or command functions or other 
+scripts. They may contain conditional statements and loops as control structures. 
+Furthermore a symbol table allows run-time access to parameters of the building 
+block as learning rates, sizes, data ranges etc. Many other internal data struc- 
+tures and routines are provided for the administration and maintainance of building 
+blocks. 
+The description of an experiment may be divided into the functional description 
+of the building blocks (which can be done either in C++ or in the high-level de- 
+scription language, see below), the connection topology of the building blocks used, 
+the control flow defined by scripts and a set of parameters for each of the building 
+blocks. 
+An Object-Oriented Framework for the Simulation of Neural Nets 799 
+Design Highlights 
+3.1 User Interface 
+The user interface is text oriented and may be used interactively as well as script 
+driven. This implies that any command that the user may choose interactively can 
+also be used in a command file that is called non-interactively. This allows the easy 
+adaption of arbitrary user interface structures from a primitive batch interface for 
+large offline simulatiors to a fancy graphical user interface for online experiments. 
+Another consequence is that experiments are specified in the same command lan- 
+guage that is used for the user interface. The user may thus easily switch from 
+description files from previously saved experiments to the interactive manipulation 
+of already loaded ones. Since the complete structure of an experiment is accessible 
+at runtime, this not only means manipulation of parameters but also includes any 
+imaginable modification of the experiment topology. The experienced user can, for 
+example, include new building blocks for experiment observation or statistical eval- 
+uation and connect them to any point of the communication structure. Deletion of 
+building blocks is possible, as well as modifying control scripts. The complete state 
+of the experiment (i. e. the current values of all relevant data) can be saved for later 
+experiments. 
+3.2 Hierarchies 
+In SESAME we distinguish two kinds of building blocks: terminal and non-terminal 
+blocks. Non-terminal building blocks are used to structure a complex experiment 
+into hierarchies of abstract building blocks containing substructures of an experi- 
+ment that may themselves contain hierarchies of substructures. Terminal building 
+blocks provide the data structures and primitive functions that are used in scripts 
+(of non-terminal blocks) to compose the network algorithms. A non-terminal build- 
+ing block hides its internal structure and provides abstract sites and scripts as an 
+interface to its internals. Therefore it appears as a terminal building block to the 
+outside and may be used as such for the construction of an experiment. This con- 
+struction is equivalent, to the building of a single non-terminal building block (the 
+Ezperiment) that encloses the complete experiment structure. 
+3.3 Construction of New Building Blocks 
+The functionality of SESAME can be extended using two different approaches. New 
+terminal building blocks can be programmed deriving from existing C++ classes or 
+new non-terminal building blocks may be assembled by using previously defined 
+building blocks: 
+3.3.1 Programming New Terminal Building Blocks 
+Terminal building blocks can be designed by derivation from already existing C++ 
+classes. The complete administration structure and possible predefined properties 
+are inherited from the parent classes. In order to add new properties -- e.g. new 
+action functions, symbols, datafields, insites or outsites -- a set of basic opera- 
+tions is being provided by the framework. One should note that new algorithms 
+800 Linden, Sudbrak, Tietz, and Weber 
+and structures can be added to a class without any changes to the framework of 
+SESAME. 
+3.3.2 Composing New Non-Terminal Building Blocks 
+Non-terminal building blocks can be combined from libraries of already designed 
+terminal or non-terminal blocks. See for an example fig. ??, where a set of building 
+blocks build a multilayer net which can be collapsed into one building block and 
+reused in other contexts. Here insites and outsites define an interface between 
+building blocks on adjacent levels of the experiment hierarchy. The flow of data 
+inside the new building block is controlled by scripts that call action functions or 
+scripts of its components. Such an abstract building block may be saved in a library 
+for reuse. Even whole experiments can be collapsed to one building block leaving 
+a lot of possibilities for the experimenter to cope with very large and complicated 
+experiments. 
+3.3.3 Deriving New Non-Terminal Building Blocks 
+A powerful mechanism for organizing very complex experiments and allowing high 
+degrees of flexibility and reuse is offered by the concept of inheritance. The basic 
+mechanism executes the description of the parent building block and thereafter 
+the description of the refinements for the derived block. All this may be done 
+interactively, thus additional refinements can be added at runtime. Even the set of 
+formal parameters of a block may be inherited and/or refined. Multiple inheritance 
+is also possible. 
+For an example consider a general function approximator which may be used at 
+many points in a more complex architecture. It can be implemented as an abstract 
+base building block, only supplying basic structure as input and output and basic 
+operations as propagate input and train. Derivations of it then implement the 
+algorithm and structure actually used. Statistical routines, visualization facilities, 
+pattern handling and other utilities can be added as further specializations to a 
+basic function approximator. 
+3.3.4 Parameters and Generic Building Blocks 
+A building block may also define formal parameters that allow the user to con- 
+figure it at the time of its instantiation or inclusion into some other non-terminal 
+building block. Thus non-terminal building blocks can be generic. They may be 
+parameterized with types 

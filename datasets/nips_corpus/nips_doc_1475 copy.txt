@@ -1,0 +1,160 @@
+Learning Mixture Hierarchies 
+Nuno Vasconcelos Andrew Lippman 
+MIT Media Laboratory, 20 Ames St, E 15-320M, Cambridge, MA 02139, 
+{nuno, lip} @media.mit.edu, http://www. media.mit. edu/-nuno 
+Abstract 
+The hierarchical representation of data has various applications in do- 
+mains such as data mining, machine vision, or information retrieval. In 
+this paper we inlxoduce an extension of the Expectation-Maximization 
+(EM) algorithm that learns mixture hierarchies in a computationally ef- 
+ficient manner. Efficiency is achieved by progressing in a bottom-up 
+fashion, i.e. by clustering the mixture components of a given level in the 
+hierarchy to obtain those of the level above. This clustering requires only 
+knowledge of the mixture parameters, there being no need to resort to 
+intermediate samples. In addition to practical applications, the algorithm 
+allows a new interpretation of EM that makes clear the relationship with 
+non-parametric kernel-based estimation methods, provides explicit con- 
+Ixol over the trade-off between the bias and variance of EM estimates, and 
+offers new insights about the behavior of deterministic annealing methods 
+commonly used with EM to escape local minima of the likelihood. 
+1 Introduction 
+There are many practical applications of statistical learning where it is useful to characterize 
+data hierarchically. Such characterization can be done according to either top-down or 
+bottom-up slxategies. While the former start by generating a coarse model that roughly 
+describes the entire space, and then successively refine the description by partitioning the 
+space and generating sub-models for each of the regions in the partition; the later start 
+from a fine description, and successively agglomerate sub-models to generate the coarser 
+descriptions at the higher levels in the hierarchy. 
+Bottom-up strategies are particularly useful when not all the data is available at once, or 
+when the dataset is so big that processing it as whole is computationally infeasible. This 
+is the case of machine vision tasks such as object recognition, or the indexing of video 
+databases. In object recognition, it is many times convenient to determine not only which 
+object is present in the scene but also its pose [2], a goal that can be attained by a hierarchical, 
+description where at the lowest level a model is learned for each object pose and all pose 
+models are then combined into a generic model at the top level of the hierarchy. Similarly, 
+Learning Mixture Hierarchies 607 
+for video indexing, one may be interested in learning a description for each frame and 
+then combine these into shot descriptions or descriptions for some other sort of high level 
+temporal unit [61. 
+In this paper we present an extension of the EM algorithm [ 1 ] for the estimation of hierar- 
+chical mixture models in a bottom-up fashion. It tums out that the attainment of this goal 
+has far more reaching consequences than the practical applications above. In particular, 
+because a kernel density estimate can be seen as a limiting case of a mixture model (where 
+a mixture component is superimposed on each sample), this extension establishes a direct 
+connection between so-called parametric and non-parametric density estimation methods 
+making it possible to exploit results from the vast non-parametric smoothing literature [4] 
+to improve the accuracy of parametric estimates. Furthermore, the original EM algorithm 
+becomes a particular case of the one now presented, and a new intuitive interpretation be- 
+comes available for an important variation of EM (known as deterministic annealing) that 
+had previously been derived from statistical physics. With regards to practical applications, 
+the algorithm leads to computationally efficient methods for estimating density hierarchies 
+capable of describing data at different resolutions. 
+2 Hierarchical mixture density estimation 
+Our model consists of a hierarchy of mixture densities, where the data at a given level is 
+described by 
+C t 
+P(X): Z r[p(Xlz = I,.M,), (1) 
+k=l 
+where I is the level in the hierarchy (l = 0 providing the coarsest characterization of the 
+data), .Mr the mixture model at this level, C t the number of mixture components that 
+compose it, r[ the prior probability of the k th component, and z a binary variable that 
+takes the value 1 if and only if the sample X was drawn from this component. The only 
+restriction on the model is that if node j of level 1 + 1 is a child of node i of level l, then 
+1.1+1 --. 71-1+17i-1 
+J lt t, (2) 
+where k is the parent of j in the hierarchy of hidden variables. 
+The basic problem is to compute the mixture parameters of the description at level I given 
+the knowledge of the parameters at level I + 1. This can also be seen as a problem of 
+clustering mixture components. A straightforward solution would be to draw a sample 
+from the mixture density at level l + 1 and simply run EM with the number of classes of 
+the level 1 to estimate the corresponding parameters. Such a solution would have at least 
+two major limitations. First, there would be no guarantee that the constraint of equation (2) 
+would be enforced, i.e. there would be no guarantee of structure in the resulting mixture 
+hierarchy, and second it would be computationally expensive, as all the models in the 
+hierarchy would have to be learned from a large sample. In the next section, we show that 
+this is really not necessary. 
+3 Estimating mixture hierarchies 
+The basic idea behind our approach is, instead of generating a real sample from the mixture 
+model at level I + 1, to consider a virtual sample generated from the same model, use EM 
+to find the expressions for the parameters of the mixture model of level I that best explain 
+this virtual sample, and establish a closed-form relationship between these parameters and 
+those of the model at level 1 + 1. For this, we start by considering a virtual sample 
+X = {Xl .... , Xct+, } from ,9//+t, where each of the Xi is a virtual sample from one of 
+608 N. Vasconcelos and A. Lippman 
+the C t+ t components of this model, with size Mi t 
+- riN, where N is the total number of 
+virtual points. 
+We next establish the likelihood for the virtual sample under the model ./Mr. For this, as is 
+usual in the EM literature, we assume that samples from different blocks are independent, 
+i.e. 
+P(XIMt) = II P(XiIMt)' (3) 
+but, to ensure that the constraint of equation (2) is enforced, samples within the same block 
+are assigned to the same component of ./Mr. Assuming further that, given the knowledge 
+of the assignment the samples are drawn independently from the corresponding mixture 
+component, the likelihood of each block is given by 
+l 
+*P(X,lz,j: l,M,) = H ax?lz,j 1 M,), (4) 
+P(X, IMt) - y.'j = , 
+j=l j:l m=l 
+~l+t ~l is a binary variable with value one if and only if the block Xi is assigned 
+where Zij -- :i 
+to the jth component of Mr, and x? is the rn th data point in Xi. Combining equations (3) 
+and (4) we obtain the incomplete data likelihood, under Mr, for the whole sample 
+G 't+l C 'z M, 
+I __ 
+P(XIMt) = H YrJ H P(x[nlzi I,M,). (5) 
+i=1 j:l m----I 
+This equation is similar to the incomplete data likelihood of standard EM, the main differ- 
+ence being that instead of having an hidden variable for each sample point, we now have 
+one for each sample block. The likelihood of the complete data is given by 
+ax, zl,) = H H lz, = (6) 
+where Z is a vector containing all the zi:, and the log-likelihood becomes 
+i=l j:l 
+Relying on EM to estimate the parameters of Mt leads to the the following E-step 
+hij - E[zijIXi,Mt] P(zij I[Xi,Mt) P(Xilzij = 1,M/)'} 
+- = = = (8) 
+The key quantity to compute is erefore P(Xi [zij = 1, l). Taking its logarithm 
+M, 
+1ogP(Xi[z 0 = 1,t) = Mi[logP(x?lz o = l,t)] 
+= MiE,+,.,[log P(xlzij: 1,t)], (9) 
+where we have used e law of lge numbers, and E,+,., [x] is the expecmd value of x 
+according the ita mixe component of t+t (e one from which Xi was awn). This 
+is  sy computation for most densities commonly used in mixture meling. It can  
+shown [5] that for the Gaussian case it leads to 
+Learning Mixture Hierarchies 609 
+where 6(x,/, E) is the expression for a Gaussian with mean/ and covariance 
+The M-step consists of maximizing 
+Q = E E hijl�g(r} P(xilzO: I,.M,)) (11) 
+i:1 j--I 
+subject to the constraint j rr} = 1. Once again, this is a relatively simple task for 
+common mixture models and in [5] we show that for the Gaussian case it leads to the 
+following parameter update equations 
+I Ei hij 
+:n'j - Ct+t 
+Ei hij Mi[li +1 
+I _ 
+laj -- 
+Eihijmi 
+-]J -- Ei hij Mi 
+(12) 
+(13) 
+hijMi-]'i+l q- E hijMi(]gli+l .,\[. l+' ] 
+__ Ijikli __ ]glj)T . (14) 
+i 
+Notice that neither equation (10) nor equations (12) to (14) depend explicitly on the un- 
+derlying sample Xi and can be computed directly from the parameters of dMl+t. The 
+algorithm is thus very efficient from a computational standpoint as the number of mixture 
+components in .Mr+ t is typically much smaller than the size of the sample at the bottom of 
+the hierarchy. 
+4 Relationships with standard EM 
+There are interesting relationships between the algorithm derived above and the standard 
+EM procedure. The first thing to notice is that by making Mi = 1 and Eti+t = 0, the E and 
+M-steps become those obtained by applying standard EM to the sample composed of the 
+points tli + ! 
+Thus, standard EM can be seen as a particular case of the new algorithm, that learns a two 
+level mixture hierarchy. An initial estimate is first obtained at the bottom of this hierarchy 
+by placing a Gaussian with zero covariance on top of each data point, the model at the 
+second level being then computed from this estimate. The fact that the estimate at the 
+bottom level is nothing more than a kernel estimate with zero bandwidth suggests that other 
+choices of the kernel bandwidth may lead to better overall EM estimates. 
+Under this interpretation,

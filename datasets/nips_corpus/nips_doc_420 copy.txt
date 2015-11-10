@@ -1,0 +1,146 @@
+Discovering Viewpoint-Invariant Relationships 
+That Characterize Objects 
+Richard S. Zemel and Geoffrey E. Hinton 
+Department of Computer Science 
+University of Toronto 
+Toronto, ONT M5S 1A4 
+Abstract 
+Using an unsupervised learning procedure, a network is trained on an en- 
+semble of images of the same two-dimensional object at different positions, 
+orientations and sizes. Each half of the network sees one fragment of 
+the object, and tries to produce as output a set of 4 parameters that have 
+high mutual information with the 4 parameters output by the other half of 
+the network. Given the ensemble of training patterns, the 4 parameters on 
+which the two halves of the network can agree are the position, orientation, 
+and size of the whole object, or some recoding of them. After training, 
+the network can reject instances of other shapes by using the fact that the 
+predictions made by its two halves disagree. If two competing networks 
+are trained on an unlabelled mixture of images of two objects, they cluster 
+the training cases on the basis of the objects' shapes, independently of the 
+position, orientation, and size. 
+1 INTRODUCTION 
+A difficult problem for neural networks is to recognize objects independently of 
+their position, orientation, or size. Models addressing this problem have generally 
+achieved viewpoint-invariance either through a separate normalization procedure 
+or by building translation- or rotation-invariance into the structure of the network. 
+This problem becomes even more difficult if the network must learn to perform 
+viewpoint-invariant recognition without any supervision signal that indicates the 
+correct viewpoint, or which object is which during training. 
+In this paper, we describe a model that is trained on an ensemble of instances of the 
+same object, in a variety of positions, orientations and sizes, and can then recognize 
+299 
+300 Zemel and Hinton 
+new instances of that object. We also describe an extension to the model that allows 
+it to learn to recognize two different objects through unsupervised training on an 
+unlabelled mixture of images of the objects. 
+2 THE VIEWPOINT CONSISTENCY CONSTRAINT 
+An important invariant in object recognition is the fixed spatial relationship between 
+a rigid object and each of its component features. We assume that each feature has 
+an intrinsic reference frame, which can be specified by its instantiation parameters, 
+i.e., its position, orientation and size with respect to the image. For a rigid object 
+and a particular feature of that object, there is a ficed viewpoint-independent trans- 
+formation from the feature's reference frame to the object's. Given the instantiation 
+parameters of the feature in an image, we can use the transformation to predict 
+the object's instantiation parameters. The viewpoint consistency constraint (Lowe, 
+1987) states that all of the features belonging to the same rigid object should make 
+consistent predictions of the object's instantiation parameters. This constraint has 
+been played an important role in many shape recognition systems (Roberts, 1965; 
+Ballard, 1981; Hinton, 1981; Lowe, 1985). 
+2.1 LEARNING THE CONSTRAINT: SUPERVISED 
+A recognition system that learns this constraint is TRAFFIC (Zemel, Mozer and 
+Hinton, 1989). In TRAFFIC, the constraints on the spatial relations between fea- 
+tures of an object are directly expressed in a connectionist network. For two- 
+dimensional shapes, an object instantiation contains 4 degrees of freedom: (x,y)- 
+position, orientation, and size. These parameter values, or some recoding of them, 
+can be represented in a set of 4 real-valued instantiation units. The network has 
+a modular structure, with units devoted to each object or object fragment to be 
+recognized. In a recognition module, one layer of instantiation units represents the 
+instantiation parameters of each of an object's features; these units connect to a set 
+of units that represent the object's instantiation parameters as predicted by this 
+feature; and these predictions are combined into a single object instantiation in an- 
+other set of instantiation units. The set of weights connecting the instantiation units 
+of the feature and its predicted instantiation for the object are meant to capture 
+the fixed, linear reference frame transformation between the feature and the object. 
+These weights are trained by showing various instantiations of the object, and the 
+object's instantiation parameters act as the training signal for each of the features' 
+predictions. Through this supervised procedure, the features of an object learn to 
+predict the instantiation parameters for the object. Thus, when the features of the 
+object are present in the image in the appropriate relationship, the predictions are 
+consistent and this consistency can be used to decide that the object is present. Our 
+simulations showed that TRAFFIC was able to learn to recognize constellations in 
+realistic star-plot images. 
+2.2 LEARNING THE CONSTRAINT: UNSUPERVISED 
+The goal of the current work is to use au unsupervised procedure to discover and 
+use the consistency constraint. 
+Discovering Viewpoint-Invariant Relationships That Characterize Objects 301 
+a information b 
+I ooooi 
+Jo0 .... 0 oJ 
+J ooooJ 
+Output units 
+J o 0 .... 00J RBF units 
+Input 
+Figure 1: A module with two halves that try to agree on their predictions. The 
+input to each half is 100 intensity values (indicated by the areas of the black circles). 
+Each half has 200 Gaussian radial basis units (constrained to be the same for the 
+two halves) connected to 4 output units. 
+We explore this idea using a framework similar to that of TRAFFIC, in which 
+different features of an object are represcnted in different parts of the recognition 
+module, and each part generates a prediction for the object's instantiation param- 
+eters. Figure I presents an example of the kind of task we would like to solve. The 
+module has two halves. The rigid object in the image is very simple - it has two 
+ends, each of which is composed of two Gaussian blobs of intensity. Each image 
+in the training set contains one instance of the object. For now, we constrain the 
+instantiation parameters of the object so that the left half of the image always con- 
+tains one end of the object, and the right half the other end. This way, just based 
+on the end of the object in the input iinage that it sees, each half of the module 
+can always specify the position, orientation and size of the whole object. The goal 
+is that, after training, for any image containing this object, the output vectors of 
+both halves of the module, a and b, should both represent the same instantiation 
+parameters for the object. 
+In TRAFFIC, we could use the object's instantiation parameters as a training signal 
+for both module halves, and the features would learn their relation to the object. 
+Now, without providing a training signal, we would like the module to learn that 
+what is consistent across the ensemble of images is the relation between the position, 
+orientation, and size of each end of that object. The two halves of a module trained 
+on a particular shape should produce consistent instantiation parameters for any 
+instance of this object. If the features are related in a different way, then these 
+302 Zemel and Hinton 
+predictions should disagree. If the module learns to do this through an unsupervised 
+procedure, it has found a viewpoint-invariant spatial relationship that characterizes 
+the object, and can be used to recognize it. 
+3 THE IMAX LEARNING PROCEDURE 
+We describe a version of the IMAX learning procedure (Hinton and Becker, 1990) 
+that allows a module to discover the 4 parameters that are consistent between 
+the two halves of each image when it is presented with many different images of 
+the same, rigid object in different positions, orientations and sizes. Because the 
+training cases are all positive examples of the object, each half of the module tries 
+to extract a vector of 4 parameters that significantly agrees with the 4 parameters 
+extracted by the other half. Note that the two halves can agree on each instance 
+by outputting zero on each case, but this agreement would not be significant. To 
+agree significantly, each output vector must vary from image to image, but the 
+two output vectors must nevertheless be the same for each image. Under suitable 
+Gaussian assumptions, the significance of the agreement between the two output 
+vectors can be computed by comparing the variances across training cases of the 
+parameters produced by the individual halves of the module with the variances of 
+the differences of these parameters. 
+We assume that the two output vectors, a and b, are both noisy versions of the same 
+underlying signal, the correct object instantiation parameters. If we assume that 
+the noise is independent, additive, and Gaussian, the mutual information between 
+the presumed underlying signal and the average of the noisy versions of that signal 
+represented by a and b is: 
+1 [ -'(a + b) [ 
+I(a; b) =  log (1) 
+where I -](a+b) I is the determinant of the covariance matrix of the sum of a and 
+b (see (Becker and Hinton, 1989) for details). We train a recognition module by 
+setting its weights so as to maximize this objective function. By maximizing the 
+determinant, we are discouraging the components of the vector a + b from being 
+linearly dependent on one another, and thus assure that the network does not 
+discover the same parameter four times. 
+4 EXPERIMENTAL RESULTS 
+Using this objective function, we have experimented with different training sets, 
+input representations and network architectures. We discuss two examples here. 
+In all of the experiments described, we fix the number of output units in each mod- 
+ule to be 4, matching the underlying degrees of freedom in the object instantiation 
+parameters. We are in effect telling the recognition module that there are 4 pa- 
+r

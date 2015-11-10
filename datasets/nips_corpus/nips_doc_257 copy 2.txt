@@ -1,0 +1,154 @@
+Rule Representations in a Connectionist Chunker 431 
+Rule Representations in a Connectionist Chunker 
+David S. Touretzky Gillette Elvgren III 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+ABSTRACT 
+We present two connectionist architectures for chunking of symbolic 
+rewrite rules. One uses backpropagation learning, the other competitive 
+learning. Although they were developed for chunking the same sorts 
+of rules, the two differ in their representational abilities and learning 
+behaviors. 
+1 INTRODUCTION 
+Chunking is a process for generating, from a sequence of if-then rules, a more complex 
+rule that accomplishes the same task in a single step. It has been used to explain incre- 
+mental human performance improvement in a wide variety of cognitive, perceptual, and 
+motor tasks (Newell, 1987). The SOAR production system (Laird, Newell, & Rosen- 
+bloom, 1987) is a classical AI computer program that implements a unified theory of 
+cognition based on chunking. 
+SOAR's version of chunking is a symbolic process that examines the working memory 
+trace of rules contributing to the chunk. In this paper we present two connectionist 
+rule-following architectures that generate chunks a different way: they use incremental 
+learning procedures to infer the environment in which the chunk should fire. The first 
+connectionist architecture uses backpropagation learning, and has been described pre- 
+viously in (Touretzky, 1989a). The second architecture uses competitive leaming. It 
+exhibits more robust behavior than the previous one, at the cost of some limitations on 
+the types of rules it can learn. 
+The knowledge to be chunked consists of context-sensitive rewrite rules on strings. For 
+example, given the two rules 
+432 Touretzky and Elvgren 
+R l: D -- B / _ E change D to B when followed by E 
+R2: A - C / _ B change A to C when followed by B 
+the model would go through the following derivation: ADE - (Rule R 1) ABE - (Rule 
+R2) CBE. Rule Rl's firing is what enables rule R2 to fire. The model detects this and 
+formulates a chunkeri rule (R1-R2) that can accomplish the same task in a single step: 
+R1-R2: AD ---. CB / _ E 
+Once this chunk becomes active, the derivation will be handled in a single step, this way: 
+ADE - (Chunk R1-R2) CBE. The chunk can also contribute to the formation of larger 
+chunks. 
+2 CHUNKING VIA BACKPROPAGATION 
+Our first experiment, a three-layer backpropagation chunker, is shown in Figure 1. The 
+input layer is a string buffer into which symbols are shifted one at a time, from the right. 
+The output layer is a change buffer that describes changes to be made to the string. 
+The changes supported are deletion of a segment, mutation of a segment, and insertion 
+of a new segment. Combinations of these changes are also permitted. 
+Rules are implemented by hidden layer units that read the input buffer and write changes 
+(via their c connections) into the change buffer. Then separate circuitry, not shown in 
+the figure, applies the specified changes to the input string to update the state of the input 
+buffer. The details of this string manipulation circuitry are given in (Touretzky, 1989b; 
+Touretzky & Wheeler, 1990). 
+We will now go through the ADE derivation in detail. The model starts with an empty 
+input buffer and two rules: R1 and R2.  After shifting the symbol A into the input buffer, 
+no rule fires the change buffer is all zeros. After shifting in the D, the input buffer 
+contains AD, and again no rule fires. After shifting in the E the input buffer contains 
+ADE, and rule R 1 fires, writing a request in the change buffer to mutate input segment 2 
+(counting from the right edge of the buffer) to a B. The input buffer and change buffer 
+states are saved in temporary buffers, and the string manipulation circuitry derives a new 
+input buffer state, ABE. This now causes rule R2 to fire. 2 It writes a request into the 
+change buffer to mutate segment 3 to a C. Since it was Rl's firing that triggered R2, 
+the conditions exist for chunk formation. The model combines Rl's requested change 
+with that of R2, placing the result in the chunked change buffer shown on the right in 
+Figure 1. Backpropagation is used to teach the hidden layer that when it sees the input 
+buffer pattern that triggered R1 (ADE in this case) it should produce via its fl connections 
+the combined change pattern shown in the chunkeri change buffer. 
+The model's training is self-supervised: its own behavior (its history of rule firings) 
+is the source of the chunks it acquires. It is therefore important that the chunking 
+! The initial role set is installed by an external teacher using backpropagation. 
+2Note that R1 applies to positions 1 and 2 of the buffer (counting from the right edge), while R2 applies to 
+positions 2 and 3. Rules are represented in a position-independent manner, allowing them to apply anywhere 
+in the buffer that their environment is satisfied. The mechanism for achieving this is explained in (Touretzky, 
+1989a). 
+Rule Representations in a Connectionist Chunker 433 
+Change Buffer: 
+cur: [ change seg. 3 to C ] 
+prev: [ change seg. 2 to B ] 
+Chunked Change: 
+[ change seg. 2 to B and 
+change seg. 3 to C ] 
+next: 
+cur': 
+prev: 
+Rule 
+Module 
+c B E 
+A D E 
+Figure 1: Architecture of the backpropagation chunker. 
+process not introduce any behavioral errors during the intermediate stages of learning, 
+since no external teacher is present to force the model back on track should its rule 
+representations become corrupted. The original rules are represented in the a connections 
+and the chunkeri rules are trained using the fl connections, but the two rule sets share the 
+same hidden units and input connections, so interference can indeed occur. The model 
+must actively preserve its a rules by continuous rehearsal: after each input presentation, 
+backpropagation learning on a contrast-enhanced version of the a change pattern is used 
+to counteract any interference caused by training on the fl patterns. Eventually, when the 
+fl weights have been learned correctly, they can replace the a weights. 
+The parameters of the model were adjusted so that the initial rules had a distributed 
+representation in the hidden layer, i.e., several units were responsible for implementing 
+each rule. Analysis of the hidden layer representations after chunking revealed that the 
+model had split off some of the R1 units to represent the R1-R2 chunk; the remainder 
+were used to maintain the original R1 rule. 
+The primary flaw of this model is fragility. Constant rehearsal of the original rule set, and 
+low learning rates, are required to prevent the  rules from being corrupted before the/3 
+rules have been completely learned. Furthermore, it is difficult to form long rule chains, 
+because each chunk further splits up the hidden unit population. Repeated splitting and 
+retraining of hidden units proved difficult, but the model did manage to learn an R1-R2- 
+R3 chunk that supersedes the R1-R2 chunk, so that ADE mutates directly to CFE. The 
+third rule was: 
+R3: B  F / C _ E change B to F when between C and E 
+434 Touretzky and Elvgren 
+Output Change Pattern I 
+Competitive 
+Rule Units 
+Input String Buffer 
+Input Change Pattern 
+(Training Only) 
+Figure 2: Architecture of the competitive learning chunker. 
+3 CHUNKING VIA COMPETITIVE LEARNING 
+Our second chunker, shown in Figure 2, minimizes interference between rules by using 
+competitive learning to assign each rule a dedicated unit. As in the previous case, the 
+model is taught its initial rules by showing it input buffer states and desired change buffer 
+states. Chunks are then formed by running strings through the input buffer and watching 
+for pairs of rules that fire sequentially. The model recruits new units for the chunks 
+and teaches them to produce the new change buffer patterns (formed by composing the 
+changes of the two original rules) in appropriate environments. 
+A number of technical problems had to be resolved in order to make this scheme work. 
+First, we want to assign a separate unit to each rule, but not to each training example; 
+otherwise the model will use too many units and not generalize well. Second, the 
+encoding for letters we chose (see Table 1) is based on a Cartesian product, and so input 
+patterns are highly overlapping and close together in Hamming space. This makes the 
+job of the competitive learning algorithm more difficult. Third, there must be some way 
+for chunks to take priority over the component rules from which they were formed, so 
+that an input sequence like ADE fires the chunk R1-R2 rather than the original rule R1. 
+As we trace through the operation of the chunker we will describe our solutions to these 
+problems. 
+Rule units in the competitive layer are in one of three states: inactive (waiting to be 
+recruited), plastic (currently undergoing learning), and active (weights finalized; ready to 
+compete and fire.) They also contain a simple integrator (a counter) that is used to move 
+them from the plastic to the active state. Initially all units are inactive and the counter 
+Rule Representations in a Connectionist Chunker 435 
+Table 1: Input code for both chunking models. 
+A 1 0 1 0 0 
+B 1 0 0 1 0 
+C 1 0 0 0 1 
+D 0 1 1 0 0 
+E 0 1 0 1 0 
+F 0 1 0 0 1 
+is zero. As in any competitive learning scheme, the rule units' input weights are kept 
+normalized to unit vectors (Rumelhart & Zipser, 1986). 
+When the teacher presents a novel instance, we must determine if there is already some 
+partially-trained rule unit whose weights should be shaped by this instance. Due to our 
+choice of input code, it is not possible to reliably assign training instances to rule units 
+based solely on the input pattern, because similar inputs (close in Hamming space) 
+may invoke entirely different rules. Our solution is to use the desired change pattern as 
+the primary index for selecting a pool of plastic rule units; the

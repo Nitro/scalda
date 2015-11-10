@@ -1,0 +1,129 @@
+Approximate Learning of Dynamic Models 
+Xavier Boyen 
+Computer Science Dept. 1A 
+Stanford, CA 94305-9010 
+xb @ cs. stanford. edu 
+Daphne Ko!!er 
+Computer Science Dept. 1A 
+Stanford, CA 94305-9010 
+koller@ cs. stanford. edu 
+Abstract 
+Inference is a key component in learning probabilistic models from par- 
+tially observable data. When learning temporal models, each of the 
+many inference phases requires a traversal over an entire long data se- 
+quence; furthermore, the data structures manipulated are exponentially 
+large, making this process computationally expensive. In [2], we describe 
+an approximate inference algorithm for monitoring stochastic processes, 
+and prove bounds on its approximation error. In this paper, we apply this 
+algorithm as an approximate forward propagation step in an EM algorithm 
+for learning temporal Bayesian networks. We provide a related approxi- 
+mation for the backward step, and prove error bounds for the combined 
+algorithm. We show empirically that, for a real-life domain, EM using 
+our inference algorithm is much faster than EM using exact inference, 
+with almost no degradation in quality of the learned model. We extend 
+our analysis to the online learning task, showing a bound on the error 
+resulting from restricting attention to a small window of observations. 
+We present an online EM learning algorithm for dynamic systems, and 
+show that it learns much faster than standard offiine EM. 
+1 Introduction 
+In many real-life situations, we are faced with the task of inducing the dynamics of a 
+complex stochastic process from limited observations about its state over time. Until now, 
+hidden Markov models (HMMs) [12] have played the largest role as a representation for 
+learning models of stochastic processes. Recently, however, there has been increasing 
+use of more structured models of stochastic processes, such as factorial HMMs [8] or 
+dynamic Bayesian networks (DBNs) [4]. Such structured decomposed representations 
+allow complex processes over a large number of states to be encoded using a much smaller 
+number of parameters, thereby allowing better generalization from limited data [8, 7, 13]. 
+Furthermore, the natural structure of such processes makes it easier for a human expert to 
+incorporate prior knowledge about the domain structure into the model, thereby improving 
+its inductive bias. 
+Approximate Learning of Dynamic Models 397 
+Both parameter and structure learning algorithms for dynamic models [ 12, 7] use proba- 
+bilistic inference as a crucial component. An inference routine is called multiple times in 
+order to fill in missing data with its expected value according to the current hypothesis; 
+the resulting expected sufficient statistics are then used to construct a new hypothesis. The 
+inference step is used many times, each of which iterates over the entire sequence. This 
+behavior is problematic in two important respects. First, in many settings, we may not 
+have access to the entire sequence in advance. Second, the various structured representa- 
+tions of stochastic processes do not admit an effective inference procedure. The messages 
+propagated by exact inference algorithms include an entry for each possible state of the 
+system; the number of states is exponential in the size of our model, rendering this type of 
+computation infeasible in all but the smallest of problems. In this paper, we describe and 
+analyze an approach that helps us address both of these problems. 
+In [2], we proposed a new approach to approximate inference in stochastic processes, where 
+approximate distributions that admit compact representation are maintained and propagated. 
+Our approach can achieve exponential savings over exact inference for DBNs. We showed 
+empirically that, for a practical DBN [6], our approach results in a factor 15-20 reduction 
+in running time at only a small cost in accuracy. We also proved that the accumulated 
+error arising from the repeated approximations remains bounded indefinitely over time. 
+This result relied on an analysis showing that transition through a stochastic process is a 
+contraction for relative entropy (KL-divergence) [3]. 
+Here, we apply this approach to the parameter learning task. This application is not 
+completely straightforward, since our algorithm of [2] and the associated analysis only 
+applied to the forward propagation of messages, whereas the inference used in learning 
+algorithms require propagation of information from the entire sequence. In this paper, 
+we provide an analysis of the error accumulated by an approximate inference process in 
+the backward propagation phase of inference. This analysis is quite different from the 
+contraction analysis for the forward phase. We combine these two results to prove bounds 
+on the error of the expected sufficient statistics relayed to the learning algorithm at each 
+stage. We then present empirical results for a practical DBN, illustrating the performance 
+of this approximate learning algorithm. We show that speedups of 15-20 can be obtained 
+easily, with no discernable loss in the quality of the learned hypothesis. 
+Our theoretical analysis also suggests a way of dealing with the problematic need to reason 
+about the entire sequence of temporal observations at once. Our contraction results show 
+that it is legitimate to ignore observations that are very far in the future. Thus, we can 
+compute a very accurate approximation to the backward message by considering only a 
+small window of observations in the future. This idea leads to an efficient online learning 
+algorithm. We show that it converges to a good hypothesis much faster than the standard 
+offiine EM algorithm, even in settings favorable to the latter. 
+2 Preliminaries 
+A model for a dynamic system is specified as a tuple (B, �) where /3 represents the 
+qualitative structure of the model, and 13 the appropriate parameterization. In a DBN, the 
+instantaneous state of a process is specified in terms of a set of variables Xi, ..., X,. Here, 
+�(t) the set of 
+/3 encodes a network fragment which specifies, for each time t variable ,,k , 
+parents Parents(X} )); an example fragment is shown in Figure l(a). The parameters 13 
+define for each X t) a conditional probability table P[X} t) I Parents(X?))] � For simplicity, 
+we assume that the variables are partitioned into state variables, which are never observed, 
+and observation variables, which are always observed. We also assume that the observation 
+variables at time t depend only on state variables at time t. We use T to denote the transition 
+matrix over the state variables in the stochastic process; i.e., T//,j is the transition probability 
+398 X. Boyen and D. Koller 
+from state si to state sj. Note that this concept is well-defined even for a DBN, although in 
+that case, the matrix is represented implicitly via the other parameters. We use (.9 to denote 
+the observation matrix; i.e., Oi,j is the probability of observing response rj in state si. 
+Our goal is to learn the model for stochastic process from partially observable data. To 
+simplify our discussion, we focus on the problem of learning parameters for a known 
+structure using the EM (Expectation Maximization) algorithm [5]; most of our discussion 
+applies equally to other contexts (e.g., [7]). EM is an iterative procedure that searches over 
+the space of parameter vectors for one which is a local maximum of the likelihood function-- 
+the probability of the observed data D given 13. We describe the EM algorithm for the task 
+of learning HMMs; the extension to DBNs is straightforward. The EM algorithm starts with 
+some initial (often random) parameter vector 13, which specifies a current estimate of the 
+transition and observation matrices of the process ' and O. The EM algorithm computes 
+the expected sufficient statistics (ESS) for D, using ' and O to compute the expectation. 
+In the case of HMMs, the ESS are an average, over t, of the joint distributions. s ' p(t) over the 
+variables at time t - 1 and the variables at time t. A new parameter vector 13t can then be 
+computed from the ESS by a simple maximum likelihood step. These two steps are iterated 
+until an appropriate stopping condition is met. 
+The p(t) for the entire sequence can be computed by a simple forward-backward algorithm. 
+Let r (t) be the response observed at time t, and let (.9.(t) be its likelihood vector ((.9.j (i) 
+Oi,j). The forward messages ot (t) are propagated as follows: ot (t) oc (or(t-). T) x 
+where x is the outer product. The backward messages /5 (t) are propagated as 
+(T- (/5 (t+) x (.9.(t+,))')'. The estimated belief at time t is now simply ot (t) x/5 (t) (suitably 
+renormalized); similarly, the joint belief p(t) is proportional to (a (t- ) x 15 (t) x 7- x Or(t ) ). 
+This message passing algorithm has an obvious extension to DBNs. Unfortunately, it is 
+feasible only for very small DBNs. Essentially, the messages passed in this algorithm have 
+an entry for every possible state at time t; in a DBN, the number of states is exponential 
+in the number of state variables, rendering such an explicit representation infeasible in 
+most cases. Furthermore even highly structured processes do not admit a more compact 
+representation of these messages [8, 2]. 
+3 Belief state approximation 
+In [2], we described a new approach to approximate inference in dynamic systems, which 
+avoids the problem of explicitly maintaining distributions over large spaces. We maintain 
+our belief state (distribution over the current state) using some computationally tractable 
+representation of a distribution. We propagate the time t approximate belief state through 
+the transition model and condition it on our evidence at time t + 1. We then approximate the 
+resulting time t + 1 distribution using one that admits a compact representation, allowing 
+the algorithm to continue. We also showed that the errors arising from the repeated 
+approximation do not ac

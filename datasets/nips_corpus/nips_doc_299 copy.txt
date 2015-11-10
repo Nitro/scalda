@@ -1,0 +1,177 @@
+A Connectionist Learning Control 
+Architecture for Navigation 
+Jonathan R. Bachrach 
+Department of Computer and Information Science 
+University of Massachusetts 
+Amherst, MA 01003 
+Abstract 
+A novel learning control architecture is used for navigation. A sophisti- 
+cated test-bed is used to simulate a cylindrical robot with a sonar belt 
+in a planar environment. The task is short-range homin 8 in the pres- 
+ence of obstacles. The robot receives no global information and assumes 
+no comprehensive world model. Instead the robot receives only sensory 
+information which is inherently limited. A connectionist architecture is 
+presented which incorporates a large amount of a priori knowledge in the 
+form of hard-wired networks, architectural constraints, and initial weights. 
+Instead of hard-wiring static potential fields from object models, my archi- 
+tecture learns sensor-based potential fields, automatically adjustin 8 them 
+to avoid local minima and to produce efficient homing trajectories. It does 
+this without object models using only sensory information. This research 
+demonstrates the use of a large modular architecture on a difficult task. 
+I OVERVIEW 
+I present a connectionist learning control architecture tailored for simulated short- 
+range homing in the presence of obstacles. The kinematics of a cylindrical robot 
+(shown in Figure 1) moving in a planar environment is simulated. The robot has 
+wheels that propel it independently and simultaneously in both the x and y direc- 
+tions with respect to a fixed orientation. It can move up to one radius per discrete 
+time step. The robot has a 360 degree sensor belt with 16 distance sensors and 
+16 grey-scale sensors evenly placed around its perimeter. These 32 values form the 
+robot's view. 
+Figure 2 is a display created by the navigation simulator. The bottom portion of 
+457 
+458 Bachrach 
+Figure 1: Simulated robot. 
+Figure 2: Navigation simulator. 
+the figure shows a bird's-eye view of the robot's environment. In this display, the 
+bold circle represents the robot's home position, with the radius line indicating 
+the home orientation. The other circle with radius line represents the robot's cur- 
+rent position and orientation. The top panel shows the grey-scale view from the 
+home position, and the next panel down shows the grey-scale view from the robot's 
+current position. For better viewing, the distance and grey-scale sensor values are 
+superimposed, and the height of the profile is 1/distance instead of distance. Thus 
+as the robot gets closer to objects they get taller, and when the robot gets farther 
+away from objects they get shorter in the display. 
+The robot cannot move through nor see through obstacles (i.e., obstacles are 
+opaque). The task is for the robot to align itself with the home position from 
+arbitrary starting positions in the environment while not colliding with obstacles. 
+This task is performed using only the sensory information--the robot does not have 
+access to the bird's-eye view. 
+This is a difficult control task. The sensory information forms a high-dimensional 
+A Connectionist Learning Control Architecture for Navigation 459 
+Figure 3: The potential field method. This figure shows a contour plot of a terrain 
+created using potential fields generated from object models. The contour diagram 
+shows level curves where the grey level of the line depicts the height of the line: the 
+maximum height is depicted in black, and the minimum height is depicted in white. 
+continuous space, and successful homing generally requires a nonlinear mapping 
+from this space to the space of real-valued actions. Further, training networks 
+is not easily achieved on this space. The robot assumes no comprehensive world 
+model and receives no global information, but receives only sensory information 
+that is inherently limited. Furthermore, it is difficult to reach home using random 
+exploration thereby making simple trial-and-error learning intractable. In order to 
+handle this task an architecture was designed that facilitates the coding of domain 
+knowledge in the form of hard-wired networks, architectural constraints, and initial 
+weights. 
+1.1 POTENTIAL FIELDS 
+Before I describe the architecture, I briefly discuss a more traditional technique for 
+navigation that uses potential fields. This technique involves building explicit object 
+models representing the extent and position of objects in the robot's environment. 
+Repelling potential fields are then placed around obstacles using the object models, 
+and an attracting potential field is placed on the goal. This can be visualized as 
+a terrain where the global minimum is located at the goal, and where there are 
+bumps around the obstacles. The robot goes home by descending the terrain. The 
+contour diagram in Figure 3 shows such a terrain. The task is to go from the top 
+room to the bottom through the door. Unfortunately, there can be local minima. 
+In this environment there are two prime examples of minima: the right-hand wall 
+between the home location and the upper room--opposing forces exactly counteract 
+each other to produce a local minimum in the right-hand side of the upper room, 
+and the doorway--the repelling fields on the door frame create an insurmountable 
+bump in the center of the door. 
+In contrast, my technique learns a sensor-based potential field model. Instead of 
+hard-wiring static potential fields from the object models, the proposed architecture 
+460 Bachrach 
+Evaluation 
+I 
+Critic I 
+I I Actio n 
+I Controller I 
+I 
+Evaluation 
+I 
+Critic I 
+Next State I 
+J Forward 
+Model J 
+I I Actio n 
+I Controller I 
+I 
+State State 
+2 -Net 3 -Net 
+Figure 4: Control architectures. 
+learns potential fields, automatically adjusting them to both avoid local minima 
+and produce efficient trajectories. Furthermore, it does this without object models, 
+using only sensory information. 
+1.2 2-NET/3-NET ARCHITECTURES 
+I shall begin by introducing two existing architectures: the 2-net and 3-net architec- 
+tures. These architectures were proposed by Werbos [91 and Jordan and Jacobs [41 
+and are also based on the ideas of Barto, Sutton, Watkins [2, 1, 8], and Jordan 
+and Rumelhart [31. The basic idea is to learn an evaluation function and then 
+train the controller by differentiating this function with respect to the controller 
+weights. These derivatives indicate how to change the controller's weights in order 
+to minimize or maximize the evaluation function. The 2-net architecture consists 
+of a controller and a critic. The controller maps states to actions, and the 2-net 
+critic maps state/action pairs to evaluations. The 3-net architecture consists of a 
+controller, a forward model, and a critic. The controller maps states to actions, the 
+forward model maps state/action pairs to next states, and the 3-net critic maps 
+states to evaluations. 
+It has been said that it is easier to train a 2-net architecture because there is no 
+forward model [5]. The forward model might be very complicated and difficult to 
+train. With a 2-net architecture, only a 2-net critic is trained based on state/action 
+input pairs. But what if a forward model already exists or even a priori knowledge 
+exists to aid in explicit coding of a forward model? Then it might be simpler to 
+use the 3-net architecture because the 3-net critic would be easier to train. It is 
+based on state-only input and not state/action pairs, and it includes more domain 
+knowledge. 
+A Connectionist Learning Control Architecture for Navigation 461 
+$tralght-Une 
+Path Length I 
+I Homing 
+Cdttc 
+I 
+Next View 
+Total Path Length Home 
+r. Avoidance 
+, [ Path Length 
+i 
+Avoidance 
+C, dttc 
+I 
+I 
+I'--dl 
+Model 
+I Action 
+I Controller 
+J 
+Current View 
+Figure 5: My architecture. 
+2 THE NAVIGATION ARCHITECTURE 
+The navigation architecture is a version of a 3-net architecture tailored for naviga- 
+tion, where the state is the robot's view and the evaluation is an estimate of the 
+length of the shortest path for the robot's current location to home. It consists of a 
+controller, a forward model, and two adaptive critics. The controller maps views to 
+actions, the forward model maps view/action pairs to next views, the homing critic 
+maps views to path length home using a straight line trajectory, and the obstacle 
+avoidance critic maps views to additional path length needed to avoid obstacles. The 
+sum of the outputs of the homing critic and the obstacle avoidance critic equals the 
+total path length home. The forward model is a hard-wired differentiable network 
+incorporating geometrical knowledge about the sensors and space. Both critics and 
+the controUer are radial basis networks using Gaussian hidden units. 
+2.1 TRAINING 
+Initially the controller is trained to produce straight-line trajectories home. With 
+the forward model fixed, the homing critic and the cobtroller are trained using dead- 
+reckoning. Dead-reckoning is a technique for keeping track of the distance home 
+by accumulating the incremental displacements. This distance provides a training 
+signal for training the homing critic via supervised learning. 
+Next, the controller is further trained to avoid obstacles. In this phase, the obstacle 
+avoidance critic is added while the weights of the homing critic and forward model 
+are frozen. Using the method of temporal differences [7] the controller and obstacle 
+avoidance cr. itic are adjusted so that the expected path length decreases by one 
+radius per time step. After training, the robot takes successive one-radius steps 
+462 Bachrach 
+Figure 6: An example. 
+toward its home location. 
+3 AN EXAMPLE 
+I applied this architecture to the environment shown in Figure 2. Figure 6 shows 
+the results of training. The left panel is a contour plot of the output of the homing 
+critic and reflects only the straight-line distance to the home location. The right 
+panel is a contour plot of the combined output of the homing critic and the obstacle 
+avoidance c

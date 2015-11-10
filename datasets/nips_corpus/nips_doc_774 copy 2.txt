@@ -1,0 +1,144 @@
+Classifying Hand Gestures with a View-based 
+Distributed Representation 
+Trevor J. Darrell 
+Perceptual Computing Group 
+MIT Media Lab 
+Alex P. Pentland 
+Perceptual Computing Group 
+MIT Media Lab 
+Abstract 
+We present a method for learning, tracking, and recognizing human hand 
+gestures recorded by a conventional CCD camera without any special 
+gloves or other sensors. A view-based representation is used to model 
+aspects of the hand relevant to the trained gestures, and is found using an 
+unsupervised clustering technique. We use normalized correlation net- 
+works, with dynamic time warping in the temporal domain, as a distance 
+function for unsupervised clustering. Views are computed separably for 
+space and time dimensions; the distributed response of the combination 
+of these units characterizes the input data with a low dimensional repre- 
+sentation. A supervised classification stage uses labeled outputs of the 
+spatio-temporal units as training data. Our system can correctly classify 
+gestures in real time with a low-cost image processing accelerator. 
+1 INTRODUCTION 
+Gesture recognition is an important aspect of human interaction, either interpersonally or 
+in the context of man-machine interfaces. In general, there are many facets to the gesture 
+recognition problem. Gestures can be made by hands, faces, or one's entire body; they 
+can be static or dynamic, person-specific or cross-cultural. Here we focus on a subset of 
+the general task, and develop a method for interpreting dynamic hand gestures generated 
+by a specific user. We pose the problem as one of spotting instances of a set of known 
+(previously trained) gestures. In this context, a gesture can be thought of as a set of hand 
+views observed over time, or simply as a sequence of images of hands over time. These 
+images may occur at different temporal rates, and the hand may have different spatial 
+945 
+946 Darrell and Pentland 
+offset or gross illumination condition. We would like to achieve real- or near real-time 
+performance with our system, so that it can be used interactively by users. 
+To achieve this level of performance, we take advantage of the principle of using only 
+as much representation as needed to perform the task. Hands are complex, 3D articu- 
+lated structures, whose kinematics and dynamics are difficult to fully model. Instead of 
+performing explicit model-based reconstruction, and attempting to extract these 3D model 
+parameters (for example see [4, 5, 6]), we use a simpler approach which uses a set of 2D 
+views to represent the object. Using this approach we can perform recognition on objects 
+which are either too difficult to model or for which a model recovery method is not feasible. 
+As we shall see below, the view-based approach affords several advantages, such as the 
+ability to form a sparse representation that only models the poses of the hands that are 
+relevant to the desired recognition tasks, and the ability to learn the relevant model directly 
+from the data using unsupervised clustering. 
+2 VIEW-BASED REPRESENTATION 
+Our task is to recognize spatio-temporal sequences of hand images. To reduce the dimen- 
+sionality of the matching involved, we find a set of view images and a matching function 
+such that the set of match scores of a new image with the view images is adequate for recog- 
+nition. The matching function we use is the normalized correlation between the image and 
+the set of learned spatial views. 
+Each view represents a different pose of the object being tracked or recognized. We 
+construct a set of views that spans the set of images seen in the training sequences, in 
+the sense that at least one view matches every frame in the sequence (given a distance 
+metric and threshold value). We can then use the view with the maximum score (minimum 
+distance) to localize the position of the object during gesture performance, and use the 
+ensemble response of the view units (at the location of maximal response) to characterize 
+the actual pose of the object. Each model is based on one or more example images of a 
+view of an object, from which mean and variance statistics about each pixel in the view are 
+computed. 
+The general idea of view-based representation has been advocated by Ullman [12] and 
+Poggio [9] for representing 3-D objects by interpolating between a small set of 2-D views. 
+Recognition using views was analyzed by Breuel, who established bounds on the number 
+of views needed for a given error rate [3]. However the view-based models used in these 
+approaches rely on a feature-based representation of an image, in which a view is the 
+list of vertex locations of semantically relevant features. The automatic extraction of these 
+features is not a fully solved problem. (See [2] for a nearly automated system of finding 
+corresponding points and extracting views.) 
+Most similar to our work is that of Murase and Nayar[8] and Turk[11] which use low- 
+order eigenvectors to reduce the dimensionality of the signal and perform recognition. Our 
+work differs from theirs in that we use normalized-correlation model images instead of 
+eigenfunctions and can thus localize the hand position more directly, and we extend into 
+the temporal domain, recognizing image sequences of gestures rather than static poses. 
+A particular view model will have a range of parameter values of a given transformation 
+(e.g., rotation, scale, articulation) for which the correlation score shows a roughly convex 
+tuning curve. If we have a set of view models which sample the transformation parameter 
+Classifying Hand Gestures with a View-Based Distributed Representation 947 
+(a) 
+(b) 
+(c) 
+(d) 
+Figure 1: (a) Three views of an eyeball: +30, 0, and -30 of gaze angle. (a) Normalized 
+correlation scores of the +30 degree view model when tracking a eyeball rotating from 
+approximately -30 to +30 degrees of gaze angle. (b) Score for 0 degree view model. (c) 
+Score for -30 degree model. 
+finely enough, it is possible to infer the actual transform parameters for new views by 
+examining the set of model correlation scores. For example, Figure I a shows three views 
+of an eyeball that could be used for gaze tracking; one looking 30 degrees left, one looking 
+center-on, and one looking 30 degrees to the right. The three views span a -t-30 degree 
+subspace of the gaze direction parameter. Figure 1 (b,c,d) shows the normalized correlation 
+score for each view model when tracking a rotating eyeball. Since the tuning curves 
+produced by these models are fairly broad with respect to gaze angle, one could interpolate 
+from their responses to obtain a good estimate of the true angle. 
+When objects are non-rigid, either constructed out of flexible materials or an articulated 
+collection of rigid parts (like a hand), then the dimensionality of the space of possible 
+views becomes much larger. Full coverage of the view space in these cases is usually 
+not possible since enumerating it even with very coarse sampling would be prohibitively 
+expensive in terms of storage and search computation required. However, many parts of a 
+high dimensional view space may never be encountered when processing real sequences, 
+due to unforeseen additional constraints. These may be physical (some joints may not 
+be completely independent), or behavioral (some views may never be used in the actual 
+communication between user and machine). A major advantage of our adaptive scheme is 
+that it has no difficulty with sparse view spaces, and derives from the data which regions of 
+the space are full. 
+948 Darrell and Pentland 
+Figure 2: (a) Models automatically acquired from a sequence of images of a rotating box. 
+(b) Normalized correlation scores for each model as a function of image sequence frame 
+number. 
+3 UNSUPERVISED LEARNING OF VIEW UNITS 
+To derive a set of new view models, we use a simple form of unsupervised clustering 
+in which the first example forms a new view, and subsequent examples that are below a 
+distance threshold are merged into the nearest existing view. A new view is created when 
+an example is below the threshold distance for all views in the current set, but is above a 
+base threshold which establishes that the object is still (roughly) being tracked. Over time, 
+this follow-the-leader algorithm results in a family of view models that sample the space 
+of object poses in the training data. This method is similar to those commonly used in 
+vector quantization [7]. Variance statistics are updated for each model pixel, and can be 
+used to exclude unreliable points from the correlation computation. 
+For simple objects and transformations, this adaptive scheme can build a model which 
+adequately covers the entire space of possible views. For example, for a convex rigid body 
+undergoing a 1D rotation with fixed relative illumination, a relatively small number of view 
+models can suffice to track and interpolate the position of the object at any rotation. Figures 
+2 illustrates this with a simple example of a rotating box. The adaptive tracking scheme 
+was run with a camera viewing a box rotating about a fixed axis. Figure 2a shows the view 
+models in use when the algorithm converged, and all possible rotations were matched with 
+score greater than 01. To demonstrate the tuning properties of each model under rotation, 
+Figure 2b shows the correlation scores for each model plotted as a function of input frame 
+Classifying Hand Gestures with a View-Based Distributed Representation 949 
+::: :' ,!'.. -::::.<::.: 
+:-': ... :4':'. 
+-.: '? 
+Figure 3: Four spatial views found by unsupervised clustering method on sequence con- 
+taining two hand-waving gestures: side-to-side and up-down. 
+I 
+I 
+I 
+spatial 
+views 
+temporal 
+views 
+Figure 4: Overview of unsupervised clustering stage to learn spatial and temporal views. An 
+input image sequence is reduced to sequence of feature vectors which record the maximum 
+value in a normalized correlation network corr

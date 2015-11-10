@@ -1,0 +1,166 @@
+ARC-LH: A New Adaptive Resampling 
+Algorithm for Improving ANN Classifiers 
+Friedrich Leisch 
+Friedrich.Leisch@ci.tuwien.as. at 
+Kurt Hornik 
+Kurt.Hornik@ci.tuwien.ac.at 
+Institut fiir Statistik und Wahrscheinlichkeitstheorie 
+Technische Universitit Wien 
+A-1040 Wien, Austria 
+Abstract 
+We introduce arc-lh, a new algorithm for improvement of ANN clas- 
+sifter performance, which measures the importance of patterns by 
+aggregated network output errors. On several artificial benchmark 
+problems, this algorithm compares favorably with other resample 
+and combine techniques. 
+I Introduction 
+The training of artificial neural networks (ANNs) is usually a stochastic and unsta- 
+ble process. As the weights of the network are initialized at random and training 
+patterns are presented in random order, ANNs trained on the same data will typ- 
+ically be different in value and performance. In addition, small changes in the 
+training set can lead to two completely different trained networks with different 
+performance even if the nets had the same initial weights. 
+Roughly speaking, ANNs have a low bias because of their approximation capabili- 
+ties, but a rather high variance because of the instability. Recently, several resample 
+and combine techniques for improving ANN performance have been proposed. In 
+this paper we introduce an new arcing (_adaptive r_esample and c_ombine) method 
+called arc-lh. Contrary to the arc-fs method by Freund g; Schapire (1995), which 
+uses misclassification rates for adapting the resampling probabilities, arc-lb uses the 
+aggregated network output error. The performance of arc-lb is compared with other 
+techniques on several popular artificial benchmark problems. 
+ARC-LH: A New Adaptive Resampling Algorithm for ANN Classifiers 523 
+2 Bias-Variance Decomposition of 0-1 Loss 
+Consider the task of classifying a random vector  taking values in ,Y into one of c 
+classes C1,... , Co, and let g(-) be a classification function mapping the input space 
+on the finite set {1,..., c}. 
+The classification task is to find an optimal function g minimizing the risk 
+ag = rLgff) =/x Lg(z)dF(z) (1) 
+where F denotes the (typically unknown) distribution function of , and L is a 
+loss function. In this paper, we consider 0-1 loss only, i.e., the loss is 1 for all 
+misclassified patterns and zero otherwise. 
+It is well known that the optimal classifier, i.e., the classifier with minimum risk, is 
+the Bayes classifier g* assigning to each input x the class with maximum posterior 
+probability IP(Clx). These posterior probabilities are typically unknown, hence 
+the Bayes classifier cannot be used directly. Note that Rg* = 0 for disjoint classes 
+and Rg* > 0 otherwise. 
+Let X N = {z,..., ZN} be a set of independent input vectors for which the true 
+class is known, available for training the classifier. Further, let gxr(') denote a 
+classifier trained using set X N. The risk RgxN > Rg* of classifier gxN is a random 
+variable depending on the training sample X N. In the case of ANN classifiers it 
+also depends on the network training, i.e., even for fixed X N the performance of a 
+trained ANN is a random variable depending on the initialization of weights and 
+the (often random) presentation of the patterns [z] during training. 
+Following Breiman (1996a) we decompose the risk of a classifier into the (minimum 
+possible) Bayes error, a systematic bias term of the model class and the variance of 
+the classifier within its model class. We call a classifier model unbiased for input z 
+if, over replications of all possible training sets X N of size N, network initializations 
+and pattern presentations, g picks the correct class more often than any other class. 
+Let H = Li(g) denote the set of all z  ,Y where g is unbiased; and B = B(g) = 2d\Li 
+the set of all points where g is biased. The risk of classifier g can be decomposed as 
+Rg = Rg* + Bias(g) + Var(g) 
+(2) 
+where Rg* is the risk of the Bayes classifier, 
+Bias(g) = Rrg-Rrg* 
+Var(g) = Rug- Rug* 
+and Rls and R u denote the risk on set B and H, respectively, i.e., the integration in 
+Equation I is over B or H instead of ,Y, repectively. 
+A simpler bias-variance decomposition has been proposed by Kong g; Dietterich 
+(1995): 
+Bias(g) : IP{B} 
+Var(g) : Rg-Bias(g) 
+524 E Leisch and K. Hornik 
+The size of the bias set is seen as the bias of the model (i.e., the error the model 
+class typically makes). The variance is simply the difference between the actual 
+risk and this bias term. This decompostion yields negative variance if the current 
+classifier performs better than the average classifier. 
+In both decompositions, the bias gives the systematic risk of the model, whereas 
+the variance measures how good the current realization is compared to the best 
+possible realization of the model. Neural networks are very powerful but rather 
+unstable approximators, hence their bias should be low, but the variance may be 
+high. 
+3 Resample and Combine 
+Suppose we had k independent training sets XN, , . .., XNk and corresponding clas- 
+sifters gl,.-., gk trained using these sets, respectively. We can then combine these 
+single classifiers into a joint voting classifier g by assigning to each input x the class 
+the majority of the gi votes for. If the gi have low bias, then g should have low 
+bias, too. If the model is unbiased for an input x, then the variance of g[ vanishes 
+as k --> �x, and gV = limk_e� g is optimal for x. Hence, by resampling training sets 
+from the original training set and combining the resulting classifiers into a voting 
+classifier it might be possible to reduce the high variance of unstable classification 
+algorithms. 
+Training sets 
+XN 
+XNx  #1 
+XNa  g2 
+XNk ' gk 
+ANN classifiers 
+resample combine 
+adapt 
+3.1 Bagging 
+Breiman (1994, 1996a) introduced a procedure called bagging (bootstrap aggre- 
+gating) for tree classifiers that may also be used for ANNs. The bagging algorithm 
+starts with a training set X N of size N. Several bootstrap replica X/,..., Xv are 
+constructed and a neural network is trained on each. These networks are finally 
+combined by majority voting. The bootstrap sets X/N consist of N patterns drawn 
+with replacement from the original training set (see Efron &; Tibshirani (1993) for 
+more information on the bootstrap). 
+ARC-LH: A New Adaptive Resampling Algorithm for ANN Classifiers 525 
+3.2 Arcing 
+3.2.1 Arcing Based on Misclassification Rates 
+Arcing, which is a more sophisticated version of bagging, was first introduced by 
+Freund &: Schapire (1995) and called boosting. The new training sets are not con- 
+structed by uniformly sampling from the empirical distribution of the training set 
+XN , but from a distribution over X N that includes information about previous 
+misclassifications. 
+Let p denote the probability that pattern z n is included into the i-th training set 
+Xv and initialize with p - 1IN. Freund and Schapire's arcing algorithm, called 
+arcds as in Breiman (1996a), works as follows: 
+1. Construct a pattern set Xv by sampling with replacement with probabili- 
+ties p from X N and train a classifier gi using set Xv. 
+2. Set d n - I for all patterns that are misclassified by gi and zero otherwise. 
+N 
+With e i En--1 i 
+= Pndn and/i = (1 - ei)/e i update the probabilities by 
+i d, 
+p+l ._ N i d, 
+3. Set i := i + 1 and repeat. 
+After k steps, gl,', gk are combined with weighted voting were each gi's vote has 
+weight log &. Breiman (1996a) and Quinlan (1996)compare bagging and arcing for 
+CART and C4.5 classifiers, respectively. Both bagging and zrc-fs are very effective 
+in reducing the high variance component of tree classifiers, with adaptive resampling 
+being a bit better than simple bagging. 
+3.2.2 Arcing Based on Network Error 
+Independently from the arcing and bagging procedures described above, adaptive 
+resampling has been introduced for active pattern selection in leave-k-out cross- 
+validation CV/APS (Leisch &: Jain, 1996; Leisch et al., 1995). Whereas zm-fs (or 
+Breiman's zm-x4) uses only the information whether a pattern is misclassified or 
+not, in CV/APS the fact that MLPs approximate the posterior probabilities of the 
+classes (Kanaya &: Miyake, 1991) is utilized, too. We introduce a simple new arcing 
+method based on the main idea of CV/APS that the importance of a pattern for 
+the learning process can be measured by the aggregated output error of an MLP 
+for the pattern over several training runs. 
+Let the classifier g be an ANN using 1-of-c coding, i.e., one output node per class, 
+the target t(x) for each input x is one at the node corresponding to the class of 
+x and zero at the remaining output nodes. Let e(x) = It(z)- g(z))[ 2 be the 
+squared error of the network for input x. Patterns that repeatedly have high output 
+errors are somewhat harder to learn for the network and therefore their resampling 
+probabilities are increased proportionally to the error. Error-dependent resampling 
+526 E Leisch and K. Hornik 
+introduces a grey-scale of pattern-importance as opposed to the black and white 
+paradigm of misclassification dependent resampling. 
+Again let p/ denote the probability that pattern x n is included into the i-th training 
+set Xv and initialize with p -- 1IN. Our new arcing algorithm, called arc-lh, works 
+as follows: 
+Construct a pattern set Xv by sampling with replacement with probabili- 
+ties p/ from X N and train a classifier gi using set Xv. 
+Add the network output error of each pattern to the resampling probabili- 
+ties: 
+� + e,(xn) ei(x) - It(x) - 2 
+p+l __ N i ' 
+3. Set i := i + 1 and repeat. 
+After k steps, g,..., g, are combined by majority voting. 
+3.3 Jittering 
+In our experiments, we also compare the above resample and combine methods with 
+jittering, which resamples the training set by contaminating the inputs by artificial 
+noise. No voting is done, but the size of the training set is increased by creation of 
+artificial inputs aroun

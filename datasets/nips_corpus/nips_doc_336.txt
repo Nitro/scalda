@@ -1,0 +1,140 @@
+Bumptrees for Efficient Function, Constraint, and 
+Classification ing 
+Stephen M. Omohundro 
+International Computer Science Institute 
+1947 Center Su'eet, Suite 600 
+Berkeley, California 94704 
+Abstract 
+A new class of data structures called bumptrees is described. These 
+structures are useful for efficiently implementing a number of neural 
+network related operations. An empirical comparison with radial basis 
+functions is presented on a robot arm mapping learning task. Applica- 
+tions to density estimation, classification, and constraint representation 
+and learning are also outlined. 
+1 WHAT IS A BUMPTREE? 
+A bumptree is a new geometric data structure which is useful for efficiently learning, rep- 
+resenting, and evaluating geometric relationships in a variety of contexts. They are a natural 
+generalization of several hierarchical geometric data structures including oct-trees, k-d 
+trees, balltrees and boxtrees. They are useful for many geometric learning tasks including 
+approximating functions, constraint surfaces, classification regions, and probability densi- 
+ties from samples. In the function approximation case, the approach is related to radial basis 
+function neural networks, but supports faster construction, faster access, and more flexible 
+modification. We provide empirical data comparing bumptrees with radial basis functions 
+in section 2. 
+A bumptree is used to provide efficient access to a collection of functions on a Euclidean 
+space of interest. It is a complete binary tree in which a leaf corresponds to each function 
+of interest. There are also functions associated with each internal node and the defining 
+constraint is that each interior node's function must be everwhere larger than each of the 
+693 
+694 Omohundro 
+functions associated with the leaves beneath it. In many cases the leaf functions will be 
+peaked in 1ocalize, d regions, which is the origin of fie name. A simple kind of bump func- 
+tion is spherically symmetric about a center and vanishes outside of a specified ball. Figure 
+1 shows the structure of a two-dimensional bumptree in is setting. 
+Ball supported bump 
+2-d leaf functions 
+C 
+A 
+B 
+E 
+E 
+a b c d e f 
+tree structure tree functions 
+Figure 1: A two-dimensional bumptree. 
+A particularly important special case of bumptrees is used to access collections of Gaussian 
+functions on multi-dimensional spaces. Such collections are used, for example, in repre- 
+senting smooth probability distribution functions as a Gaussian mixture and arises in many 
+adaptive kernel estimation schemes. It is convenient to represent the quadratic exponents 
+of the Gaussians in the tree rather than the Gaussians themselves. The simplest approach is 
+to use quadratic functions for the internal nodes as well as the leaves as shown in Figure 2, 
+though other classes of internal node functions can sometimes provide faster access. 
+A 
+a b c d 
+Figure 2: A bumptree for holding Gaussians. 
+Many of the other hierarchical geometric data structures may be seen as special cases of 
+bumptrees by choosing appropriate internal node functions as shown in Figure 3. Regions 
+may be represented by functions which take the value 1 inside the region and which vanish 
+outside of it. The function shown in Figure 3D is aligned along a coordinate axis and is con- 
+stant on one side of a specified value and decreases quadratically on the other side. It is rep- 
+resented by specifying the coordinate which is cut, the cut location, the constant value (0 in 
+some situations), and the coefficient of quadratic decrease. Such a function may be evalu- 
+ated extremely efficiently on a data point and so is useful for fast pruning operations. Such 
+evaluations are effectively what is used in (Sproull, 1990) to implement fast nearest neigh- 
+bor computation. The bumptree structure generalizes this kind of query to allow for differ- 
+ent scales for different points and directions. The empirical results presented in the next 
+section are based on bumptrees with this kind of internal node function. 
+Bumptrees for Efficient Function, Constraint, and Classification Learning 695 
+A. B. C. D. 
+Figure 3: Internal bump functions for A) oct-trees, kd-trees, boxtrees (Omohundro, 
+1987), B) and C) for balltrees (Omohundro, 1989), and D) for Sproull's higher 
+performance kd-tree (Sproull, 1990). 
+There are several approaches to choosing a tree structure to build over given leaf data. Each 
+of the algorithms studied for balltree construction in (Omohundro, 1989) may be applied to 
+the more general task of bumptree construction. The fastest approach is analogous to the 
+basic k-d tree construction technique (Friedman, et. al, 1977) and is top down and recur- 
+sively splits the functions into two sets of almost the same size. This is what is used in the 
+simulations described in the next section. The slowest but most effective approach builds 
+the tree bottom up, greedily deciding on the best pair of functions to join under a single par- 
+ent node. Intermediate in speed and quality are incremental approaches which allow one to 
+dynamically insert and delete leaf functions. 
+Bumptrees may be used to efficiently support many important queries. The simplest kind 
+of query presents a point in the space and asks for all leaf functions which have a value at 
+that point which is larger than a specified value. The bumptree allows a search from the root 
+to prune any subtrees whose root function is smaller than the specified value at the point. 
+More interesting queries are based on branch and bound and generalize the nearest neigh- 
+bar queries that k-d trees support. A typical example in the case of a collection of Gaussians 
+is to request all Gaussians in the set whose value at a specified point is within a specified 
+factor (say .001) of the Gaussian whose value is largest at that point. The search proceeds 
+down the most promising branches first, continually maintains the largest value found at 
+any point, and prunes away subtrees which are not within the given factor of the current 
+largest function value. 
+2 THE ROBOT MAPPING LEARNING TASK 
+Kinematic space  Visual space 
+R 3  R 6 
+Figure 4: Robot arm mapping task. 
+696 Omohundro 
+Figure 4 shows the setup which defines the mapping learning task we used to study the ef- 
+fectiveness of the balltree data structure. This setup was investigated extensively by (Mel, 
+1990) and involves a camera looking at a robot arm. The kinematic state of the arm is de- 
+freed by three angle control coordinates and the visual state by six visual coordinates of 
+highlighted spots on the arm. The mapping from kinematic to visnal space is a nonlinear 
+map from three dimensions to six. The system attempts to learn this mapping by flailing the 
+arm around and observing the visuol state for a variety of randomly chosen kinematic 
+states. From such a set of random input/output pairs, the system must generalize the map- 
+ping to inputs it has not seen before. This mapping task was chosen as fairly representative 
+of typical problems arising in vision and robotics. 
+The radial basis function approach to mapping learning is to represent a function as a linear 
+combination of functions which are spherically symmetric around chosen centers 
+f(x) = Ewigi (x - xi). In the simplest form, which we use here, the basis functions are 
+i 
+centered on the input points. More recent variations have fewer basis functions than sample 
+points and choose centers by clustering. The timing results given here would be in terms of 
+the number of basis functions rather than the number of sample points for a variation of this 
+type. Many forms for the basis functions themselves have been suggested. In our study both 
+Gaussian and linearly increasing functions gave similar results. The coefficients of the ra- 
+dial basis functions are chosen so that the sum forms a least squares best fit to the data. Such 
+fits require a time proportional to the cube of the number of parameters in general. The ex- 
+periments reported here were done using the singular value decomposition to compute the 
+best fit coefficients. 
+The approach to mapping learning based on bumptrees builds local models of the mapping 
+in each region of the space using data associated with only the training samples which are 
+nearest that region. These local models are combined in a convex way according to influ- 
+ence functions which are associated with each model. Each influence function is peaked 
+in the region for which it is most salient. The bumptree structure organizes the local models 
+so that only the few models which have a great influence on a query sample need to be eval- 
+thated. If the influence functions vanish outside of a compact region, then the tree is used to 
+prune the branches which have no influence. If a model's influence merely dies off with 
+distance, then the branch and bound technique is used to determine contributions that are 
+greater than a specified error bound. 
+If a set of bump functions sum to one at each point in a region of interest, they are called a 
+partition of unity. We form influence bumps by dividing a set of smooth bumps (either 
+Gaussians or smooth bumps that vanish outside a sphere) by their sum to form an easily 
+computed pattiton of unity. Our local models are affine functions determined by a least 
+squares fit to local samples. When these are combined according to the partition of unity, 
+the value at each point is a convex combination of the local model values. The error of the 
+full model is therefore bounded by the errors of the local models and yet the full approxi- 
+marion is as smooth as the local bump functions. These results may be used to give precise 
+bounds on the average number of samples needed to achieve a given approximation error 
+for functions with a bounded second derivative. In this approach, linear fits are only done 
+on a small set of local samples, avoiding the computationally expensive fits over the whole 
+dat

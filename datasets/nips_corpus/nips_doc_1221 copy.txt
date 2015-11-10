@@ -1,0 +1,151 @@
+Continuous sigmoidal belief networks 
+trained using slice sampling 
+Brendan J. Frey 
+Department of Computer Science, University of Toronto 
+6 King's College Road, Toronto, Canada M5S 1A4 
+Abstract 
+Real-valued random hidden variables can be useful for modelling 
+latent structure that explains correlations among observed vari- 
+ables. I propose a simple unit that adds zero-mean Gaussian noise 
+to its input before passing it through a sigmoidal squashing func- 
+tion. Such units can produce a variety of useful behaviors, ranging 
+from deterministic to binary stochastic to continuous stochastic. I 
+show how slice sampling can be used for inference and learning 
+in top-down networks of these units and demonstrate learning on 
+two simple problems. 
+I Introduction 
+A variety of unsupervised connectionist models containing discrete-valued hidden 
+units have been developed. These include Boltzmann machines (Hinton and Se- 
+jnowski 1986), binary sigmoidal belief networks (Neal 1992) and Helmholtz ma- 
+chines (Hinton et al. 1995; Dayan et al. 1995). However, some hidden variables, 
+such as translation or scaling in images of shapes, are best represented using continu- 
+ous values. Continuous-valued Boltzmann machines have been developed (Movellan 
+and McClelland 1993), but these suffer from long simulation settling times and the 
+requirement of a negative phase during learning. Tibshirani (1992) and Bishop et 
+al. (1996) consider learning mappings from a continuous latent variable space to a 
+higher-dimensional input space. MacKay (1995) has developed density networks 
+that can model both continuous and categorical latent spaces using stochasticity at 
+the top-most network layer. In this paper I consider a new hierarchical top-down 
+connectionist model that has stochastic hidden variables at all layers; moreover, 
+these variables can adapt to be continuous or categorical. 
+The proposed top-down model can be viewed as a continuous-valued belief net- 
+work, which can be simulated by performing a quick top-down pass (Pearl 1988). 
+Work done on continuous-valued belief networks has focussed mainly on Gaussian 
+random variables that are linked linearly such that the joint distribution over all 
+Continuous Sigmoidal Belief Networks Trained using Slice Sampling 453 
+(a) (b) ()p()p(y)[ (c) ()p()p(y)__ 
+--4 x 4 0 y i --4 x 4 0 y i 
+Zero-mean 
+Gaussian 
+noise with 
+variance a 
+-- (z) 
+(d) 
+-4 x 4 0 y i 
+-400 x 400 0 y i 
+Figure 1: (a) shows the inner workings of the proposed unit. (b) to (e) illustrate 
+four quite different modes of behavior: (b) deterministic mode; (c) stochastic linear 
+mode; (d) stochastic nonlinear mode; and (e) stochastic binary mode (note the 
+different horizontal scale). For the sake of graphical clarity, the density functions 
+are normalized to have equal maxima and the subscripts are left off the variables. 
+variables is also Gaussian (Pearl 1988; Heckerman and Geiger 1995). Lauritzen 
+et al. (1990) have included discrete random variables within the linear Gaussian 
+framework. These approaches infer the distribution over unobserved unit activities 
+given observed ones by probability propagation (Pearl 1988). However, this pro- 
+cedure is highly suboptimal for the richly connected networks that I am interested 
+in. Also, these approaches tend to assume that all the conditional Gaussian distri- 
+butions represented by the belief network can be easily derived using information 
+elicited from experts. Hofmann and Tresp (1996) consider the case of inference 
+and learning in continuous belief networks that may be richly connected. They use 
+mixture models and Parzen windows to implement conditional densities. 
+My main contribution is a simple, but versatile, continuous random unit that can 
+operate in several different modes ranging from deterministic to binary stochastic 
+to continuous stochastic. This spectrum of behaviors is controlled by only two 
+parameters. Whereas the above approaches assume a particular mode for each 
+unit (Gaussian or discrete), the proposed units are capable of adapting in order to 
+operate in whatever mode is most appropriate. 
+2 Description of the unit 
+The proposed unit is shown in Figure la. It is similar to the deterministic sigmoidal 
+unit used in multilayer perceptrons, except that Gaussian noise is added to the total 
+input, /i, before the sigmoidal squashing function is applied. x The probability 
+density over presigraoid activity xi for unit i is 
+p(xi[i, eye) -- exp[-(xi - i)2/2a]/, (1) 
+where/i and a i are the mean and variance for unit i. A postsigmoid activity, yi, is 
+obtained by passing the presigmoid activity through a sigmoidal squashing function: 
+-- (2) 
+Including the transformation Jacobian, the postsigmoid distribution for unit i is 
+P(YiIPi, eye) -- exp[-(/I - (Yi) -- Ii) 2 /2a/] (3) 
+Geoffrey Hinton suggested this unit as a way to make factor analysis nonlinear. 
+454 B. J. Frey 
+I use the cumulative Gaussian squashing function: 
+� (x) -- f_oe-Z2/21v/ dz '(x) = (}(x) _= e-2/2lv/. (4) 
+Both/I() and -10 are nonanalytic, so I use the C-library erf() function to imple- 
+ment � () and table lookup with quadratic interpolation to implement/I - (). 
+Networks of these units can represent a broad range of structures, including deter- 
+ministic multilayer perceptrons, binary sigmoidal belief networks (aka. stochastic 
+multilayer perceptrons), mixture models, mixture of expert models, hierarchical 
+mixture of expert models, and factor analysis models. This versatility is brought 
+about by a range of significantly different modes of behavior available to each unit. 
+Figures lb to le illustrate these modes. 
+Deterministic mode: If the noise variance of a unit is very small, the postsigmoid 
+activity will be a practically deterministic sigmoidal function of the mean. This 
+mode is useful for representing deterministic nonlinear mappings such as those found 
+in deterministic multilayer perceptrons and mixture of expert models. 
+Stochastic linear mode: For a given mean, if the squashing function is approx- 
+imately linear over the span of the added noise, the postsigmoid distribution will 
+be approximately Gaussian with the mean and standard deviation linearly trans- 
+formed. This mode is useful for representing Gaussian noise effects such as those 
+found in mixture models, the outputs of mixture of expert models, and factor anal- 
+ysis models. 
+Stochastic nonlinear mode: If the variance of a unit in the stochastic linear 
+mode is increased so that the squashing function is used in its nonlinear region, a 
+variety of distributions are producible that range from skewed Gaussian to uniform 
+to bimodal. 
+Stochastic binary mode: This is an extreme case of the stochastic nonlinear 
+mode. If the variance of a unit is very large, then nearly all of the probability mass 
+will lie near the ends of the interval (0, 1) (see figure le). Using the cumulative 
+Gaussian squashing function and a standard deviation of 150, less than 1% of the 
+mass lies in (0.1, 0.9). In this mode, the postsigmoid activity of unit i appears to 
+be binary with probability of being on (ie., yi  0.5 or, equivalently, xi  0): 
+JO �� f:c exp[-x2/2�'] 
+p(i onlm, - exp[-(x-Ii)e/2er] dx - 
+This sort of stochastic activation is found in binary sigmoidal belief networks 
+(Jaakkola et al. 1996) and in the decision-making components of mixture of ex- 
+pert models and hierarchical mixture of expert models. 
+3 Continuous sigmoidal belief networks 
+If the mean of each unit depends on the activities of other units and there are 
+feedback connections, it is difficult to relate the density in equation 3 to a joint 
+distribution over all unit activities, and simulating the model would require a great 
+deal of computational effort. However, when a top-down topology is imposed on 
+the network (making it a directed acyclic graph), the densities given in equations 1 
+and 3 can be interpreted as conditional distributions and the joint distribution over 
+all units can be expressed as 
+p({xi)) N N 
+= I-[i=lP(Yi[{Yj}j<i) 
+=IIi=p(xi[{xj)y<,) or P({Yi)) , (6) 
+where N is the number of units. p(xi[{xj }j<i) and p(yi[{yj}j<i) are the presigmoid 
+and postsigmoid densities of unit i conditioned on the activities of units with lower 
+Continuous Sigmoidal Belief Networks Trained using Slice Sampling 455 
+indices. This ordered arrangement is the foundation of belief networks (Pearl, 1988). 
+I let the mean of each unit be determined by a linear combination of the postsigmoid 
+activities of preceding units: 
+m = j<woyj, (7) 
+where Yo --- 1 is used to implement biases. The variance for each unit is independent 
+of unit activities. A single sample from the joint distribution can be obtained by 
+using the bias as the mean for unit 1, randomly picking a noise value for unit 1, 
+applying the squashing function, computing the mean for unit 2, picking a noise 
+value for unit 2, and so on in a simple top-down pass. 
+Inference by slice sampling 
+Given the activities of a set of visible (observed) units, V, inferring the distribution 
+over the remaining set of hidden (unobserved) units, H, is in general a difficult task. 
+The brute force procedure proceeds by obtaining the posterior density using Bayes 
+theorem: 
+P({Yi}iHI{Yi}iV) -- P({Yi}iH,{Yi}iv)/f{y,}iesP({Yi}iH,{Yi}iv)l--IiHdyi. (8) 
+However, computing the integral in the denominator exactly is computationally 
+intractable for any more than a few hidden units. The combinatorial explosion 
+encountered in the corresponding sum for discrete-valued belief networks pales in 
+comparison to this integral; not only is it combinatorial, but it is a continuous 
+integral with a multimodal integrand whose peaks may be broad in some dimensions 
+but narrow in others, depending on what modes the units are in. 
+An alternative to explicit integration is to sample from the posterior distribution 
+using Markov chain Monte Carlo. Given a set of observed activities, 

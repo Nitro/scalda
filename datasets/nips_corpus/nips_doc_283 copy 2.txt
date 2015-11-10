@@ -1,0 +1,145 @@
+686 Barto, Sutton and Watkins 
+Sequential Decision Problems 
+and Neural Networks 
+A. G. Barto 
+Dept. of Computer and 
+Information Science 
+Univ. of Massachusetts 
+Amherst, MA 01003 
+R. S. Sutton 
+GTE Laboratories Inc. 
+Waltham, MA 02254 
+C. J. C. H. Watkins 
+25B Framfield 
+Highbury, London 
+N5 1UU 
+ABSTRACT 
+Decision making tasks that involve delayed consequences are very 
+common yet difficult to address with supervised learning methods. 
+If there is an accurate model of the underlying dynamical system, 
+then these tasks can be formulated as sequential decision problems 
+and solved by Dynamic Programming. This paper discusses rein- 
+forcement learning in terms of the sequential decision framework 
+and shows how a learning algorithm similar to the one implemented 
+by the Adaptive Critic Element used in the pole-balancer of Barto, 
+Sutton, and Anderson (1983), and further developed by Sutton 
+(1984), fits into this framework. Adaptive neural networks can 
+play significant roles as modules for approximating the functions 
+required for solving sequential decision problems. 
+1 INTRODUCTION 
+Most neural network research on learning assumes the existence of a supervisor or 
+teacher knowledgeable enough to supply desired, or target, network outputs during 
+training. These network learning algorithms are function approximation methods 
+having various useful properties. Other neural network research addresses the ques- 
+tion of where the training information might come from. Typical of this research 
+is that into reinforcement learning systems; these systems learn without detailed 
+Sequential Decision Problems and Neural Networks 687 
+instruction about how to interact successfully with reactive environments. Learn- 
+ing tasks involving delays between actions and their consequences are particularly 
+difficult to address with supervised learning methods, and special reinforcement 
+learning algorithms have been developed to handle them. In this paper, reinforce- 
+ment learning is related to the theory of sequential decision problems and to the 
+computational methods known as Dynamic Programming (DP). DP methods are 
+not learning methods because they rely on complete prior knowledge of the task, 
+but their theory is nevertheless relevant for understanding and developing learning 
+methods. 
+An example of a sequential decision problem invloving delayed consequences is the 
+version of the pole-balancing problem studied by Barto, Sutton, and Anderson 
+(1983). In this problem the consequences of control decisions are not immediately 
+available because training information comes only in the form of a failure signal 
+occurring when the pole falls past a critical angle or when the cart hits an end of 
+the track. The learning system used by Barto et al. (1983), and subsequently sys- 
+tematically explored by Sutton (1984), consists of two different neuron-like adaptive 
+elements: an Associative Search Element (ASE), which implemented and adjusted 
+the control rule, or decision policy, and an Adaptive Critic Element (ACE), which 
+used the failure signal to learn how to provide useful moment-to-moment evaluation 
+of control decisions. The focus of this paper is the algorithm implemented by the 
+ACE: What computational task does this algorithm solve, and how does it solve it? 
+Sutton (1988) analyzed a class of learning rules which includes the algorithm used 
+by the ACE, calling them Temporal Difference, or TD, algorithms. Although Sut- 
+ton briefly discussed the relationship between TD algorithms and DP, he did not 
+develop this perspective. Here, we discuss an algorithm slightly different from the 
+one implemented by the ACE and call it simply the TD algorithm (although the 
+class of TD algorithms includes others as well). The earliest use of a TD algorithm 
+that we know of was by Samuel (1959) in his checkers player. Werbos (1977) was 
+the first we know of to suggest such algorithms in the context of DP, calling them 
+heuristic dynamic programming methods. The connection to dynamic program- 
+ming has recently been extensively explored by Watkins (1989), who uses the term 
+incremental dynamic programming. Also related is the bucket brigade used 
+in classifier systems (see Liepins et al., 1989), the adaptive controller developed by 
+Witten (1977), and certain animal learning models (see Sutton and Barto, to ap- 
+pear). Barto, Sutton, and Watkins (to appear) discuss the relationship between TD 
+algorithms and DP more extensively than is possible here and provide references to 
+other related research. 
+2 OPTIMIZING DELAYED CONSEQUENCES 
+Many problems require making decisions whose consequences emerge over time peri- 
+ods of variable and uncertain duration. Decision-making strategies must be formed 
+that take into account expectations of both the short-term and long-term conse- 
+quences of decisions. The theory of sequential decision problems is highly developed 
+688 Barto, Sutton and Watkins 
+and includes formulations of both deterministic and stochastic problems (the books 
+by Bertsekas, 1976, and Ross, 1983, are two of the many relevant texts). This the- 
+ory concerns problems such as the following spedial case of a stochastic problem. 
+A decision maker (DM) interacts with a discrete-time stochastic dynamical system 
+in such a way that, at each time step, the DM observes the system's current state 
+and selects an action. After the action is performed, the DM receives (at the next 
+time step) a certain amount of payoff that depends on the action and the current 
+state, and the system makes a transition to a new state determined by the current 
+state, the action, and random disturbances. Upon observing the new state, the DM 
+chooses another action and continues in this manner for a sequence of time steps. 
+The objective of the task is to form a rule for the DM to use in selecting actions, 
+called a policy, that maximizes a measure of the total amount of payoff accumulated 
+over time. The amount of time over which this measure is computed is the horizon 
+of the problem, and a maximizing policy is an optimal policy. One commonly stud- 
+ied measure of cumulative payoff is the expected infinite-horizon discounted return, 
+defined below. Because the objective is to maximize a measure of cumulative payoff, 
+both short- and long-term consequences of decisions are important. Decisions that 
+produce high immediate payoff may prevent high payoff from being received later 
+on, and hence such decisions should not necessarily be included in optimal policies. 
+More formally (following the presentation of Ross, 1983), a policy is a mapping, de- 
+noted r, that assigns an action to each state of the underlying system (for simplicity, 
+here we consider only the special case of deterministic policies). Let xt denote the 
+system state at time step t, and if the DM uses policy r, the action it takes at step 
+t is at = '(xt). After the action is taken, the system makes a transition from state 
+x = xt to state y = xt+l with a probability Pxy(at). At time step t + 1, the DM 
+receives a payoff, rt+l, with expected value R(xt, at). For any policy r and state x, 
+one can define the expected infinite-horizon discounted return (which we simply call 
+the e,cpected return) under the condition that the system begins in state x, the DM 
+continues to use policy r throughout the future, and 7, 0 _ 7 < 1, is the discount 
+factor: 
+E, [E0 7'r,+lxo = x], (1) 
+where x0 is the initial system state, and E, is the expectation assuming the DM uses 
+policy r. The objective of the decision problem is to form a policy that maximizes 
+the expected return defined by Equation 1 for each state x. 
+3 DYNAMIC PROGRAMMING 
+Dynamic Programming (DP) is a collection of computational methods for solving 
+stochastic sequential decision problems. These methods require a model of the 
+dynamical system underlying the decision problem in the form of the state transition 
+probabilities, Pry(a), for all states x and y and actions a, as well as knowledge of the 
+function, R(x, a), giving the payoff expectations for all states x and actions a. There 
+are several different DP methods, all of which are iterative methods for computing 
+optimal policies, and all of which compute sequences of different types of evaluation 
+functions. Most relevant to the TD algorithm is the evaluation function for a given 
+Sequential Decision Problems and Neural Networks 689 
+policy. This function assigns to each state the expected value of the return assuming 
+the problem starts in that state and the given policy is used. Specifically, for policy 
+r and discount factor 7, the evaluation function, V., assigns to each state, x, the 
+expected return given the initial state x: 
+ E oo 
+V (x) - [-t-o 7trt+l[ xo = x]. 
+For each state, the evaluation function provides a prediction of the return that will 
+accrue throughout the future whenever this state is encountered if the given policy 
+is followed. If one can compute the evaluation function for a state merely from 
+observing that state, this prediction is effectively available immediately upon the 
+system entering that state. Evaluation functions provide the means for assessing 
+the temporally extended consequences of decisions in a temporally local manner. 
+It can be shown (e.g., Ross, 1983) that the evaluation function V is the unique 
+function satisfying the following condition for each state x: 
+V.(x) - R(x, '(x)) + 7 '.y Pxy('(x))V(y). 
+DP methods for solving this system of equations (i.e., for determining V) typi- 
+cally proceed through successive approximations. For dynamical systems with large 
+state sets the solution requires considerable computation. For systems with con- 
+tinuous state spaces, DP methods require approximations of evaluation functions 
+(and also of policies). In their simplest form, DP methods rely on lookup-table 
+representations of these functions, based on discretizations of the state space in 
+continuous cases, 

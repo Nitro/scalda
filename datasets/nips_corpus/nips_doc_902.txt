@@ -1,0 +1,159 @@
+An Input Output HMM Architecture 
+Yoshua Bengio* 
+Dept. Informatique et Recherche 
+Opdrationnelle 
+Universitd de Montrdal, Qc H3C-3J7 
+bengioyIRO. UNontreal. CA 
+Paolo Frasconi 
+Dipartimento di Sistemi e Informatica 
+Universitk di Firenze (Italy) 
+paolomcculloch. ing.unifi. it 
+Abstract 
+We introduce a recurrent architecture having a modular structure 
+and we formulate a training procedure based on the EM algorithm. 
+The resulting model has similarities to hidden Markov models, but 
+supports recurrent networks processing style and allows to exploit 
+the supervised learning paradigm while using maximum likelihood 
+estimation. 
+I INTRODUCTION 
+Learning problems involving sequentially structured data cannot be effectively dealt 
+with static models such as feedforward networks. Recurrent networks allow to model 
+complex dynamical systems and can store and retrieve contextual information in 
+a flexible way. Up until the present time, research efforts of supervised learning 
+for recurrent networks have almost exclusively focused on error minimization by 
+gradient descent methods. Although effective for learning short term memories, 
+practical difficulties have been reported in training recurrent neural networks to 
+perform tasks in which the temporal contingencies present in the input/output 
+sequences span long intervals (Bengio et al., 1994; Mozer, 1992). 
+Previous work on alternative training algorithms (Bengio et al., 1994) could suggest 
+that the root of the problem lies in the essentially discrete nature of the process 
+of storing information for an indefinite amount of time. Thus, a potential solution 
+is to propagate, backward in time, targets in a discrete state space rather than 
+differential error information. Extending previous work (Bengio & Frasconi, 1994a), 
+in this paper we propose a statistical approach to target propagation, based on the 
+EM algorithm. We consider a parametric dynamical system with discrete states and 
+we introduce a modular architecture, with subnetworks associated to discrete states. 
+The architecture can be interpreted as a statistical model and can be trained by the 
+EM or generalized EM (GEM) algorithms (Dempster et al., 1977), considering the 
+internal state trajectories as missing data. In this way learning is decoupled into 
+*also, AT&T Bell Labs, Holmdel, NJ 07733 
+428 Yoshua Bengio, Paolo Frasconi 
+a temporal credit assignment subproblem and a static learning subproblem that 
+consists of fitting parameters to the next-state and output mappings defined by the 
+estimated trajectories. In order to iteratively tune parameters with the EM or GEM 
+algorithms, the system propagates forward and backward a discrete distribution over 
+the n states, resulting in a procedure similar to the Baum-Welch algorithm used 
+to train standard hidden Markov models (HMMs) (Levinson et al., 1983). HMMs 
+however adjust their parameters using unsupervised learning, whereas we use EM 
+in a supervised fashion. Furthermore, the model presented here could be called 
+Input/Output HMM, or IOHMM, because it can be used to learn to map input 
+sequences to output sequences (unlike standard HMMs, which learn the output 
+sequence distribution). This model can also be seen as a recurrent version of the 
+Mixture of Experts architecture (Jacobs et al., 1991), related to the model already 
+proposed in (Cacciatore and Nowlan, 1994). Experiments on artificial tasks (Bengio 
+&: Frasconi, 1994a) have shown that EM recurrent learning can deal with long 
+term dependencies more effectively than backpropagation through time and other 
+alternative algorithms. However, the model used in (Bengio & Frasconi, 1994a) has 
+very limited representational capabilities and can only map an input sequence to a 
+final discrete state. In the present paper we describe an extended architecture that 
+allows to fully exploit both input and output portions of the data, as required by 
+the supervised learning paradigm. In this way, general sequence processing tasks, 
+such as production, classification, or prediction, can be dealt with. 
+2 THE PROPOSED ARCHITECTURE 
+We consider a discrete state dynamical system based on the following state space 
+description: xt -- f(xt-i, Ut) 
+Yt = g(xt, ut) (1) 
+where ut  R ' is the input vector at time t, Yt Rr is the output vector, and 
+xt  {1, 2,..., n} is a discrete state. These equations define a generalized Mealy 
+finite state machine, in which inputs and outputs may take on continuous values. In 
+this paper, we consider a probabilistic version of these dynamics, where the current 
+inputs and the current state distribution are used to estimate the state distribution 
+and the output distribution for the next time step. Admissible state transitions will 
+be specified by a directed graph {7 whose vertices correspond to the model's states 
+and the set of successors for state j is ,.qj. 
+The system defined by equations (1) can be modeled by the recurrent architecture 
+depicted in Figure l(a). The architecture is composed by a set of state networks 
+A/'j, j: 1... n and a set of output networks Oj, j = i n. Each one of the state 
+and output networks is uniquely associated to one of'te states,and all networks 
+share the same input ut. Each state network Af' has the task of predicting the next 
+state distribution, based on the current input and given that xt-1: j. Similarly, 
+each output network Oj predicts the output of the system, given the current state 
+and input. All the subnetworks are assumed to be static and they are defined by 
+means of smooth mappings Nj (ut; Oj) and Oj (at; Oj), where Oj and Oj are vectors 
+of adjustable parameters (e.g., connection weights). The ranges of the functions 
+Nj() may be constrained in order to account for the underlying transition graph 
+6. Each output ij,t of the state subnetwork Afj (at time t) is associated to one 
+of the successors i of state j. Thus the last layer of Afj has as many units as the 
+cardinality of ,.qj. For convenience of notation, we suppose that i.i,t are defined for 
+each i, j = 1,..., n and we impose the condition ij,t ' 0 for each i not belonging 
+to 8j. The sofimaxfunction is used in the last layer: ij,t : ea'J'/-],tesj e ', j = 
+1,..., n, i G $j where aij,t are intermediate variables that can be thought of as the 
+An Input Output HMM Architecture 429 
+cun'ent expected output, 
+given piet input #quence current etnte distribution ...... 
+'1,----i[,, iU] ;,---- P(Xt' U} 
+Cil?t _ p (x ,_1i U _ 1 w 
+/T-% /- I .... 
+I xt_.l-'l, LI P(xt I xt_.l.'l, Lit) 
+I ! ! l 
+current Input U I 
+Xt--1 art 
+Yt--1 Yt 
+xt-1 x 
+i  .... HMM 
+_-t-1 
+0/ IOHMM 
+ut-1 ut utq. 1 
+(a) (b) 
+Figure 1' (a): The proposed IOHMM architecture. (b)' Bottom: Bayesian network 
+expressing conditional dependencies for an IOHMM; top: Bayesian network for a 
+standard HMM 
+activations of the output units of subnetwork N'j. In this way Ei=i 9iJ, t - i �j, t. 
+The vector t E R  represents the internal state of the model and it is computed as 
+a linear combination of the outputs of the state networks, gated by the previously 
+computed internal state:  
+where Pj,t : [lj,t,..., 
+output of the system 
+Output networks compete to predict 
+(2) 
+the global 
+j=l 
+where jt E 1: r is the output of subnetwork Oj. 
+At this level, we do not need 
+to further specify the internal architecture of the state and output subnetworks. 
+Depending on the task, the designer may decide whether to include hidden layers 
+and what activation rule to use for the hidden units. 
+This connectionist architecture can be also interpreted as a probability model. Let 
+us assume a multinomial distribution for the state variable xt and let us consider 
+t, the main variable of the temporal recurrence (2). If we initialize the vector C0 
+to positive numbers summing to 1, it can be interpreted as a vector of initial state 
+probabilities. In general, we obtain relation it = P(xt = i l u), having denoted 
+with u[ the subsequence of inputs from time i to t, inclusively. Equation (2) then 
+has the following probabilistic interpretation: 
+P(x t -- i I u) -- E P(xt -- i l xt-i -- j, ut)P(xt-i - j l u -1) (4) 
+j=l 
+i.e., the subnetworks N'j compute transition probabilities conditioned on the input 
+sequence ut : 
+;oij,t = P(xt = i l zt-1 -- j, ut) (5) 
+As in neural networks trained to minimize the output squared error, the output 
+r/t of this architecture can be interpreted as an expected position parameter 
+for the probability distribution of the output Yt. However, in addition to being 
+conditional on an input ut, this expectation is also conditional on the state xt, i.e. 
+430 Yoshua Bengio, Paolo Frasconi 
+ = E[yt I xt, ut]. The actual form of the output density, denoted f�(Yt; /t), will 
+chosen according to the task. For example a multinomial distribution is suitable 
+for sequence classification, or for symbolic mutually exclusive outputs. Instead, a 
+Gaussian distribution is adequate for producing continuous outputs. In the first 
+case we use a softmax function at the output of subnetworks Oj; in the second case 
+we use linear output units for the subnetworks O. 
+In order to reduce the amount of computation, we introduce an independency model 
+among the variables involved in the probabilistic interpretation of the architecture. 
+We shall use a Bayesian network to characterize the probabilistic dependencies 
+among these variables. Specifically, we suppose that the directed acyclic graph 
+6 depicted at the bottom of Figure lb is a Bayesian network for the dependency 
+model associated to the variables u, Xl , yl . One of the most evident consequences 
+of this independency model is that only the previous state and the current input are 
+relevant to determine the next-state. This one-step memory property is analogue 
+to the Markov assumption in hidden Markov models (HMM). In fact, the Bayesian 
+network for HMMs can be obtained by simply removing the ut nodes and arcs from 
+them (see top of

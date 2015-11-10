@@ -1,0 +1,149 @@
+Improving Elevator Performance Using 
+Reinforcement Learning 
+Robert H. Crites 
+Computer Science Department 
+University of Massachusetts 
+Amherst, MA 01003-4610 
+c];tescs. umas s. edu 
+Andrew (3. Barto 
+Computer Science Department 
+University of Massachusetts 
+Amherst, MA 01003-4610 
+baxt oc s. urnass. edu 
+Abstract 
+This paper describes the application of reinforcement learning (RL) 
+to the difficult real world problem of elevator dispatching. The el- 
+evator domain poses a combination of challenges not seen in most 
+RL research to date. Elevator systems operate in continuous state 
+spaces and in continuous time as discrete event dynamic systems. 
+Their states are not fully observable and they are nonstationary 
+due to changing passenger arrival rates. In addition, we use a team 
+of RL agents, each of which is responsible for controlling one ele- 
+vator car. The team receives a global reinforcement signal which 
+appears noisy to each agent due to the effects of the actions of the 
+other agents, the random nature of the arrivals and the incomplete 
+observation of the state. In spite of these complications, we show 
+results that in simulation surpass the best of the heuristic elevator 
+control algorithms of which we are aware. These results demon- 
+strate the power of RL on a very large scale stochastic dynamic 
+optimization problem of practical utility. 
+I INTRODUCTION 
+Recent algorithmic and theoretical advances in reinforcement learning (RL) have 
+attracted widespread interest. RL algorithms have appeared that approximate dy- 
+namic programming (DP) on an incremental basis. Unlike traditional DP algo- 
+rithms, these algorithms can perform with or without models of the system, and 
+they can be used online as well as offiine, focusing computation on areas of state 
+space that are likely to be visited during actual control. On very large problems, 
+they can provide computationally tractable ways of approximating DP. An exam- 
+ple of this is Tesauro's TD-Gammon system (Tesauro, 1992; 1994; 1995), which 
+used RL techniques to learn to play strong masters level backgammon. Even the 
+1018 R.H. CRITES, A. G. BARTO 
+best human experts make poor teachers for this class of problems since they do not 
+always know the best actions. Even if they did, the state space is so large that 
+it would be difficult for experts to provide sufficient training data. RL algorithms 
+are naturally suited to this class of problems, since they learn on the basis of their 
+own experience. This paper describes the application of RL to elevator dispatching, 
+another problem where classical DP is completely intractable. The elevator domain 
+poses a number of difficulties that were not present in backgammon. In spite of 
+these complications, we show results that surpass the best of the heuristic elevator 
+control algorithms of which we are aware. The following sections describe the ele- 
+vator dispatching domain, the RL algorithm and neural network architectures that 
+were used, the results, and some conclusions. 
+2 THE ELEVATOR SYSTEM 
+The particular elevator system we examine is a simulated 10-story building with 
+4 elevator cars (Lewis, 1991; Bao et al, 1994). Passenger arrivals at each floor are 
+assumed to be Poisson, with arrival rates that vary during the course of the day. 
+Our simulations use a traffic profile (Bao et al, 1994) which dictates arrival rates for 
+every 5-minute interval during a typical afternoon down-peak rush hour. Table 1 
+shows the mean number of passengers arriving at each floor (2-10) during each 
+5-minute interval who are headed for the lobby. In addition, there is inter-floor 
+traffic which varies from 0% to 10% of the traffic to the lobby. 
+Time I 00 1 o I 0 1 15 1 .0 1 .5 1 30 1 35 1 0 1 5 1 50 1 55 I 
+ate I 1 I 21414 118112 I 81711815 13121 
+Table 1: The Down-Peak Traffic Profile 
+The system dynamics are approximated by the following parameters: 
+� Floor time (the time to move one floor at the maximum speed): 1.45 secs. 
+� Stop time (the time needed to decelerate, open and close the doors, and 
+accelerate again): 7.19 sees. 
+� Turn time (the time needed for a stopped car to change direction): 1 sec. 
+� Load time (the time for one passenger to enter or exit a car): random 
+variable from a 20th order truncated Erlang distribution with a range from 
+0.6 to 6.0 secs and a mean of 1 sec. 
+� Car capacity: 20 passengers. 
+The state space is continuous because it includes the elapsed times since any hall 
+calls were registered. Even if these real values are approximated as binary values, 
+the sie of the state space is still immense. Its components include 2 zs possible 
+combinations of the 18 hall call buttons (up and down buttons at each landing 
+except the top and bottom), 240 possible combinations of the 40 car buttons, and 
+184 possible combinations of the positions and directions of the cars (rounding off 
+to the nearest floor). Other parts of the state are not fully observable, for example, 
+the desired destinations of the passengers waiting at each floor. Ignoring everything 
+except the configuration of the hall and car call buttons and the approximate posi- 
+tion and direction of the cars, we obtain an extremely conservative estimate of the 
+sie of a discrete approximation to the continuous state space: 
+2 zs � 240. 184 , 1022 states. 
+Improving Elevator Performance Using Reinforcement Learning 1 O19 
+Each car has a small set of primitive actions. If it is stopped at a floor, it must either 
+move up  or move down . If it is in motion between floors, it must either stop 
+at the next floor or continue past the next floor. Due to passenger expectations, 
+there are two constraints on these actions: a car cannot pass a floor if a passenger 
+wants to get off there and cannot turn until it has serviced all the car buttons in its 
+present direction. We have added three additional action constraints in an attempt 
+to build in some primitive prior knowledge: a car cannot stop at a floor unless 
+someone wants to get on or off there, it cannot stop to pick up passengers at a floor 
+if another car is already stopped there, and given a choice between moving up and 
+down, it should prefer to move up (since the down-peak traffic tends to push the 
+cars toward the bottom of the building). Because of this last constraint, the only 
+real choices left to each car are the stop and continue actions. The actions of the 
+elevator cars are executed asynchronously since they may take different amounts of 
+time to complete. 
+The performance objectives of an elevator system can be defined in many ways. One 
+possible objective is to minimize the average wait time, which is the time between 
+the arrival of a passenger and his entry into a car. Another possible objective is 
+to minimize the average system time, which is the sum of the wait time and the 
+travel time. A third possible objective is to minimize the percentage of passengers 
+that wait longer than some dissatisfaction threshold (usually 60 seconds). Another 
+common objective is to minimize the sum of squared wait times. We chose this 
+latter performance objective since it tends to keep the wait times low while also 
+encouraging fair service. 
+3 
+THE ALGORITHM AND NETWORK 
+ARCHITECTURE 
+Elevator systems can be modeled as discrete event systems, where significant events 
+(such as passenger arrivals) occur at discrete times, but the amount of time between 
+events is a real-valued variable. In such systems, the constant discount factor 9' 
+used in most discrete-time reinforcement learning algorithms is inadequate. This 
+problem can be approached using a variable discount factor that depends on the 
+amount of time between events (Bradtke & Duff, 1995). In this case, returns are 
+defined as integrals rather than as infinite sums, as follows: 
+E Ttrt becomes 
+t=0 
+where rt is the immediate cost at discrete time t, rr is the instantaneous cost at 
+continuous time r (e.g., the sum of the squared wait times of all waiting passengers), 
+and/3 controls the rate of exponential decay. 
+Calculating reinforcements here poses a problem in that it seems to require knowl- 
+edge of the waiting times of all waiting passengers. There are two ways of dealing 
+with this problem. The simulator knows how long each passenger has been waiting. 
+It could use this information to determine what could be called omniscient rein- 
+forcements. The other possibility is to use only information that would be available 
+to a real system online. Such online reinforcements assume only that the waiting 
+time of the first passenger in each queue is known (which is the elapsed button 
+time). If the Poisson arrival rate ) for each queue is estimated as the reciprocal of 
+the last inter-button time for that queue, the Gamma distribution can be used to 
+estimate the arrival times of subsequent passengers. The time until the n tt subse- 
+quent arrival follows the Gamma distribution P(n, �). For each queue, subsequent 
+1020 R.H. CRITES, A. G. BARTO 
+arrivals will generate the following expected penalties during the first b seconds after 
+the hall button has been pressed: 
+o s (prob n th arrival occurs at time r) � (penalty given arrival at time r) dr 
+,=x (n - 1)! wa e-S('+') dw dr = wa e-S('+') dw dr. 
+This integral can be solved by parts to yield expected penalties. We found that 
+using online reinforcements actually produced somewhat better results than using 
+omniscient reinforcements, presumably because the algorithm was trying to learn 
+average values anyway. 
+Because elevator system events occur randomly in continuous time, the branching 
+factor is effectively infinite, which complicates the use of algorithms that require 
+explicit lookahead. Therefore, we employed a team of discrete-event Q-learning 
+agents, where each agent is responsible for controlling one elevator car. Q(a:, a) 
+is defined as the expected infinite discounted return obtained by taking action a 
+in state a: and then fol

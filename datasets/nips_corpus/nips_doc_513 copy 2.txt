@@ -1,0 +1,145 @@
+Interpretation of Artificial Neural Networks: 
+Mapping Knowledge-Based Neural Networks into Rules 
+Geoffrey Towell Jude W. Shavlik 
+Computer Sciences Department 
+University of Wisconsin 
+Madison, WI 53706 
+Abstract 
+We propose and empirically evaluate a method for the extraction of expert- 
+comprehensible rules from trained neural networks. Our method operates in 
+the context of a three-step process for learning that uses rule-based domain 
+knowledge in combination with neural networks. Empirical tests using real- 
+worlds problems from molecular biology show that the rules our method extracts 
+from trained neural networks: closely reproduce the accuracy of the network 
+from which they came, are superior to the rules derived by a learning system that 
+directly refines symbolic rules, and are expert-comprehensible. 
+1 Introduction 
+Artificial neural networks (ANNs) have proven to be a powerful and general technique 
+for machine learning [1, 11]. However, ANNs have several well-known shortcomings. 
+Perhaps the most significant of these shortcomings is that determining why a trained ANN 
+makes a particular decision is all but impossible. Without the ability to explain their 
+decisions, it is hard to be confident in the reliability of a network that addresses a real-world 
+problem. Moreover, this shortcoming makes it difficult to transfer the information learned 
+by a network to the solution of related problems. Therefore, methods for the extraction of 
+comprehensible, symbolic rules from trained networks are desirable. 
+Our approach to understanding trained networks uses the three-link chain illustrated by 
+Figure 1. The first link inserts domain knowledge, which need be neither complete nor 
+correct, into a neural network using KBANN [13] -- See Section 2. (Networks created 
+using KBANN are called KNNs.) The second link trains the KNN using a set of classified 
+977 
+978 
+Towell and Shavlik 
+Learning Network 
+Figure 1: Rule refinement using neural networks. 
+training examples and standard neural learning methods [9]. The final link extracts rules 
+from trained KNNs. Rule extraction is an extremely difficult task for arbitrarily-configured 
+networks, but is somewhat less daunting for KNNs due to their initial comprehensibility. 
+Our method (described in Section 3) takes advantage of this property to efficiently extract 
+rules from trained KNNs. 
+Significantly, when evaluated in terms of the ability to correctly classify examples not seen 
+during training, our method produces rules that are equal or superior to the networks from 
+which they came (see Section 4). Moreover, the extracted rules are superior to the rules 
+resulting from methods that act directly on the rules (rather than their re-representation as a 
+neural network). Also, our method is superior to the most widely-published algorithm for 
+the extraction of rules from general neural networks. 
+2 TheKBANN Algorithm 
+The KBANN algorithm translates symbolic domain knowledge into neural networks; defining 
+the topology and connection weights of the networks it creates. It uses a knowledge base of 
+domain-specific inference rules to define what is initially known about a topic. A detailed 
+explanation of this rule-translation appears in [ 13]. 
+As an example of the KBANN method, consider the sample domain knowledge in Figure 2a 
+that defines membership in category A. Figure 2b represents the hierarchical structure 
+of these rules: solid and dotted lines represent necessary and prohibitory dependencies, 
+respectively. Figure 2c represents the KNN that results from the translation into a neural 
+network of this domain knowledge. Units X and Y in Figure 2c are introduced into the 
+KNN to handle the disjunction in the rule set. Otherwise, each unit in the KNN corresponds 
+to a consequent or an antecedent in the domain knowledge. The thick lines in Figure 2c 
+represent heavily-weighted links in the KNN that correspond to dependencies in the domain 
+knowledge. The thin lines represent the links added to the network to allow refinement of 
+the domain knowledge. Weights and biases in the network are set so that, prior to learning, 
+the network's response to inputs is exactly the same as the domain knowledge. 
+This example illustrates the two principal benefits of using KBANN tO initialize KNNs. 
+First, the algorithm indicates the features that are believed to be important to an example's 
+classification. Second, it specifies important derived features, thereby guiding the choice 
+of the number and connectivity of hidden units. 
+3 Rule Extraction 
+Almost every method of rule extraction makes two assumptions about networks. First, that 
+training does not significantly shift the meaning of units. By making this assumption, the 
+methods are able to attach labels to rules that correspond to terms in the domain knowledge 
+Interpretation of Artificial Neural Networks 979 
+A :--B, C. 
+B :-- not H. 
+B :-- not F, G. 
+C :-- I, $. 
+(a) 
+(b) 
+Figure 2: Translation of domain knowledge into a KNN. 
+upon which the network is based. These labels enhance the comprehensibility of the rules. 
+The second assumption is that the units in a trained KNN are always either active (m 1) 
+or inactive (m 0). Under this assumption each non-input unit in a trained KNN can be 
+treated as a Boolean rule. Therefore, the problem for rule extraction is to determine the 
+situations in which the rule is true. Examination of trained KNNs validates both of these 
+assumptions. 
+Given these assumptions, the simplest method for extracting rules we call the SUBSET 
+method. This method operates by exhaustively searching for shbsets of the links into a unit 
+such that the sum of the weights of the links in the subset guarantees that the total input 
+to the unit exceeds its bias. In the limit, SUBSET extracts a set of rules that reproduces the 
+behavior of the network. However, the combinatorics of this method render it impossible 
+to implement. Heuristics can be added to reduce the complexity of the search at some cost 
+in the accuracy of the resulting rules. Using heuristic search, SUBSET tends to produce 
+repetitive rules whose preconditions are difficult to interpret. (See [10] or [2] for more 
+detailed explanations of SUBSET.) 
+Our algorithm, called NOFM, addresses both the combinatorial and presentation problems 
+inherent to the SUBSET algorithm. It differs from SUBSET in that it explicitly searches for 
+rules of the form: ' 'If (N of :hese M an:eceden:s are :rue) ... ' ' 
+This method arose because we noticed that rule sets discovered by the SUBSET method 
+often contain N-of-M style concepts. Further support for this method comes from 
+experiments that indicate neural networks are good at learning N-of-M concepts [1] as well 
+as experiments that show a bias towards N-of-M style concepts is useful [5]. Finally, note 
+that purely conjunctive rules result if N = M, while a set of disjunctive rules results when 
+N = 1; hence, using N-of-M rules does not restrict generality. 
+The idea underlying NOFM (summarized in Table 1) is that individual antecedents (links) 
+do not have unique importance. Rather, groups of antecedents form equivalence classes 
+in which each antecedent has the same importance as, and is interchangeable with, other 
+members of the class. This equivalence-class idea allows NoFM to consider groups of 
+links without worrying about particular links within the group. Unfortunately, training 
+using backpropagation does not naturally bunch links into equivalence classes. Hence, the 
+first step of NoFM groups links into equivalence classes. 
+This grouping can be done using standard clustering methods [3] in which clustering is 
+stopped when no clusters are closer than a user-set distance (we use 0.25). After clustering, 
+the links to the unit in the upper-right comer of Figure 3 form two groups, one of four 
+links with weight near one and one of three links with weight near six. (The effect of this 
+grouping is very similar to the training method suggested by Nowlan and Hinton [7].) 
+980 Towell and Shavlik 
+Table 1: The NoFM algorithm for rule extraction. 
+(1) With each hidden and output unit, form groups of similarly-weighted links. 
+(2) Set link weights of all group members to the average of the group. 
+(3) Eliminate any groups that do not affect whether the unit will be active or inactive. 
+(4) Holding all links weights constant, optimize biases of hidden and output units. 
+(5) Form a single rule for each hidden and output unit. The rule consists of a threshold given by 
+the bias and weighted antecedents specified by remaining links. 
+(6) Where possible, simplify rules to eliminate spperfluous weights and thresholds. 
+6.2 6.0 1.O 1.2 6.1 6.1 1.1 1.1 
+6.1 6.1 6.1 
+1.2 1.O 6.0 6.1 1.1 1.1 
+/l/l\\\ ///l\\\ / \ 
+A B C D E F G A C F D E B G A C F 
+Initial Unit After Steps 1 and 2 After Step 3 
+if 6.1 * NumberTrue (A, C, F) 
+> 10.9 
+then Z. if 2 of { A C F} then Z. 
+NumberTrue returns the number of 
+true antex:edent 
+After Steps 4 and 5 After Step 6 
+Figure 3: Rule extraction using NoFM. 
+Once the groups are formed, the procedure next attempts to identify and eliminate groups 
+that do not contribute to the calculation of the consequent. In the extreme case, this analysis 
+is trivial; clusters can be eliminated solely on the basis of their weight. In Figure 3 no 
+combination of the cluster of links with weight 1.1 can cause the summed weights to exceed 
+the bias on unit Z. Hence, links with weight 1.1 are eliminated from Figure 3 after step 3. 
+More often, the assessment of a cluster's utility uses heuristics. The heuristic we use is to 
+scan each training example and determine which groups can be eliminated while leaving 
+the example correctly categorized. Groups not required by any example are eliminated. 
+With unimportant groups eliminated, the next step of the procedure is to optimize the bias 
+on each unit. Optimization is required to adjust the network so that it accurately reflects 
+the ass

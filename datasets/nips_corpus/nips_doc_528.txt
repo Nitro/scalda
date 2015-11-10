@@ -1,0 +1,171 @@
+Iterative Construction of 
+Sparse Polynomial Approximations 
+Terence D. Sanger 
+Massachusetts Institute 
+of Technology 
+Room E25-534 
+Cambridge, MA 02139 
+tds@ai.mit.edu 
+Richard S. Sutton 
+GTE Laboratories 
+Incorporated 
+40 Sylvan Road 
+Waltham, MA 02254 
+sutton@gte.com 
+Christopher J. Matheus 
+GTE Laboratories 
+Incorporated 
+40 Sylvan Road 
+Waltham, MA 02254 
+matheus@gte.com 
+Abstract 
+We present an iterative algorithm for nonlinear regression based on con- 
+struction of sparse polynomials. Polynomials are built sequentially from 
+lower to higher order. Selection of new terms is accomplished using a novel 
+look-ahead approach that predicts whether a variable contributes to the 
+remaining error. The algorithm is based on the tree-growing heuristic in 
+LMS Trees which we have extended to approximation of arbitrary poly- 
+nonrials of the input features. In addition, we provide a new theoretical 
+justification for this heuristic approach. The algorithm is shown to dis- 
+cover a known polynomial from samples, and to make accurate estimates 
+of pixel values in an image-processing task. 
+1 INTRODUCTION 
+Linear regression attempts to approximate a target function by a model that is a 
+linear combination of the input features. Its approximation ability is thus limited 
+by the available features. We describe a method for adding new features that are 
+products or powers of existing features. Repeated addition of new features leads 
+to the construction of a polynomial in the original inputs, as in (Gabor 1961). 
+Because there is an infinite number of possible product terms, we have developed 
+a new method for predicting the usefulness of entire classes of features before they 
+are included. The resulting nonlinear regression will be useful for approximating 
+functions that can be described by sparse polynomials. 
+1064 
+Iterative Construction of Sparse Polynomial Approximations 1065 
+Figure 1: Network depiction of linear regression on a set of features xi. 
+2 THEORY 
+Let {Xi}in__l be the set of features already included in a model that attempts to 
+predict the function f. The output of the model is a linear combination 
+where the ci's are coefficients determined using linear regression. The model can 
+also be depicted as a single-layer network as in figure 1. The approximation error 
+is e = f - f, and we will attempt to minimize E[e 2] where E is the expectation 
+operator. 
+The algorithm incrementally creates new features that are products of existing 
+features. At each step, the goal is to select two features x r and xq already in the 
+model and create a new feature XpXq (see figure 2). Even if XpXq does not decrease 
+the approximation error, it is still possible that XpXqX r will decrease it for some 
+xr. So in order to decide whether to create a new feature that is a product with 
+xr, the algorithm must look-ahead to determine if there exists any polynomial a 
+in the xi's such that inclusion of ax r would significantly decrease the error. If no 
+such polynomial exists, then we do not need to consider adding any features that 
+are products with 
+Define the inner product between two polynomials a and b as (alb) = E[ab] where 
+the expected value is taken with respect to a probability measure p over the (zero- 
+mean) input values. The induced norm is Ilall - and let P be the set of 
+polynomials with finite norm. {P, (.[.)} is then an infinite-dimensional linear vector 
+space. The Weierstrass approximation theorem proves that P is dense in the set of 
+all square-integrable functions over p, and thus justifies the assumption that any 
+function of interest can be approximated by a member of P. 
+Assume that the error e is a polynomial in P. In order to test whether aXp partic- 
+ipates in e for any polynomial a 6 P, we write 
+e = arx r + b r 
+1066 Sanger, Sutton, and Matheus 
+1.. �/ .) 
+pq 
+Xl Xp 2q n 
+Figure 2: Incorporation of a new product term into the model. 
+where a e and by are polynomials, and a e is chosen to minimize Ilaee- ell' = 
+E[(aez e - e)2]. The orthogonality principle then shows that aez e is the projection 
+of the polynomial e onto the linear subspace of polynomials zeP. Therefore, by is 
+orthogonal to zeP, so that E[beg ] = 0 for all g in zeP. 
+We now write 
+E[e 2] = ' ' 2E[aeebe] [b'] ' ' 
+z[%%] + + = [%] + 
+since E[arxrbr] = 0 by orthogonality. If arxr were included in the model, it would 
+thus reduce E[e =] by E = = = = 
+Z[apxp]. 
+[aexr] , so we wish to choe x r to maxize Un- 
+fortunately, we have no drect meurement of a r. 
+3 METHODS 
+Although E[arxr ] cannot be measured directly, Sanger (1991) suggests choosing x e 
+to maximize E[e2xr 2] instead, which is directly measurable. Moreover, note that 
+'[':'e'e] + + 
+2 4 
+= 
+and thus E[e2x2_] is related to the desired but unknown value 2 2 
+E[aexe]. Perhaps 
+better would be to use 
+E[e,xr2 ] , 4 
+__ E[apxp] 
+which can be thought of as the regression of (ax)x r against x r. 
+More recently, (Sutton and Matheus 1991) suggest using the regression coefficients 
+of e  against x for all i as the bis for comparison. The regression coefficients wi 
+are called potentials, and lead to a linear approximation of the squared error: 
+2 
+i=1 
+Iterative Construction of Sparse Polynomial Approximations 1067 
+If a new term arx r were included in the model of f, then the squared error would 
+2 Thus 
+be bp  which is orthogonal to any polynomial in xrP and in particular to 
+2 in (1) would be zero after inclusion of arx r, and wrE[xr ] is an 
+the coefficient of x r 
+approximation to the decrease in mean-squared error E[e ] - E[b] which we can 
+expect from inclusion of arx r. We thus choose x r by maximizing wrE[x]. 
+This procedure is a form of look-ahead which allows us to predict the utility of a 
+high-order term apXp without actually including it in the regression. This is perhaps 
+most useful when the term is predicted to make only a small contribution for the 
+optimal at, because in this case we can drop from consideration any new features 
+that include x r. 
+We can choose a different variable xq similarly, and test the usefulness of incorporat- 
+ing the product XpXq by computing a joint potential wpq which is the regression of 
+the squared error against the model including a new term  2 
+xpxq. The joint potential 
+attempts to predict the magnitude of the term    
+We now use this method to choose a single new feature xpxq to include in the model. 
+For all pairs xixj such that xi and xj individually have high potentials, we perform 
+a third regression to determine the joint potentials of the product terms xixj. Any 
+term with a high joint potential is likely to participate in f. We choose to include the 
+new term xrx q with the largest joint potential. In the network model, this results in 
+the construction of a new unit that computes the product of x r and xq, as in figure 
+2. The new unit is incorporated into the regression, and the resulting error e will 
+be orthogonal to this unit and all previous units. Iteration of this technique leads 
+to the successive addition of new regression terms and the successive decrease in 
+mean-squared error E[e=]. The process stops when the residual mean-squared error 
+drops below a chosen threshold, and the final model consists of a sparse polynomial 
+in the original inputs. 
+We have implemented this algorithm both in a non-iterative version that computes 
+coefficients and potentials based on a fixed data set, and in an iterative version that 
+uses the LMS algorithm (Widrow and Hoff 1960) to compute both coefficients and 
+potentials incrementally in response to continually arriving data. In the iterative 
+version, new terms are added at fixed intervals and are chosen by maximizing over 
+the potentials approximated by the LMS algorithm. The growing polynomial is 
+efficiently represented as a tree-structure, as in (Sanger 1991a). 
+Although the algorithm involves three separate regressions, each is over only O(n) 
+terms, and thus the iterative version of the algorithm is only of O(n) complexity 
+per input pattern processed. 
+4 RELATION TO OTHER ALGORITHMS 
+Approximation of functions over a fixed monomial basis is not a new technique 
+(Gabor 1961, for example). However, it performs very poorly for high-dimensional 
+input spaces, since the set of all monomials (even of very low order) can be pro- 
+hibitively large. This has led to a search for methods which allow the generation of 
+sparse polynomials. A recent example and bibliography are provided in (Grigoriev 
+e! al. 1990), which describes an algorithm applicable to finite fields (but not to 
+1068 Sanger, Sutton, and Matheus 
+Figure 3: Products of hidden units in a sigmoidal feedforward network lead to a 
+polynomial in the hidden units themselves. 
+real-valued random variables). 
+The GMDH algorithm (Ivakhnenko 1971, Ikeda et al. 1976, Barron et al. 1984) 
+incrementally adds new terms to a polynomial by forming a second (or higher) 
+order polynomial in 2 (or more) of the current terms, and including this polynomial 
+as a new term if it correlates with the error. Since GMDH does not use look-ahead, 
+it risks avoiding terms which would be useful at future steps. For example, if the 
+polynomial to be approximated is xyz where all three variables are independent, 
+then no polynomial in x and y alone will correlate with the error, and thus the 
+term xy may never be included. However, x2y 2 does correlate with x2yz , so 
+the look-ahead algorithm presented here would include this term, even though the 
+error did not decrease until a later step. Although GMDH can be extended to 
+test polynomials of more than 2 variables, it will always be testing a finite-order 
+polynomial in a finite number of variables, so there will always exist target functions 
+which it will not be able to approximate. 
+Although look-ahead avoids this problem, it is not always useful. For practical 
+purposes, we may be interested in the best Nth-order approximation to a function, 
+so it may

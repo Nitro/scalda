@@ -1,0 +1,155 @@
+Multiresolution Tangent Distance for 
+Affine-invariant Classification 
+Nuno Vasconcelos Andrew Lippman 
+MIT Media Laboratory, 20 Ames St, E15-320M, 
+Cambridge, MA 02139, {nuno,lip} @media.mit.edu 
+Abstract 
+The ability to rely on similarity metrics invariant to image transforma- 
+tions is an important issue for image classification tasks such as face or 
+character recognition. We analyze an invariant metric that has performed 
+well for the latter - the tangent distance - and study its limitations when 
+applied to regular images, showing that the most significant among these 
+(convergence to local minima) can be drastically reduced by computing 
+the distance in a multiresolution setting. This leads to the multiresolution 
+tangent distance, which exhibits significantly higher invariance to im- 
+age transformations, and can be easily combined with robust estimation 
+procedures. 
+1 Introduction 
+Image classification algorithms often rely on distance metrics which are too sensitive to 
+variations in the imaging environment or set up (e.g. the Euclidean and Hamming distances), 
+or on metrics which, even though less sensitive to these variations, are application specific 
+or too expensive from a computational point of view (e.g. deformable templates). 
+A solution to this problem, combining invariance to image transformations with computa- 
+tional simplicity and general purpose applicability was introduced by Simard et al in [7]. 
+The key idea is that, when subject to spatial transformations, images describe manifolds in a 
+high dimensional space, and an invariant metric should measure the distance between those 
+manifolds instead of the distance between other properties of (or features extracted from) 
+the images themselves. Because these manifolds are complex, minimizing the distance be- 
+tween them is a difficult optimization problem which can, nevertheless, be made tractable 
+by considering the minimization of the distance between the tangents to the manifolds -the 
+tangent distance (TD) - instead of that between the manifolds themselves. While it has led 
+to impressive results for the problem of character recognition [8], the linear approximation 
+inherent to the TD is too stringent for regular images, leading to invariance over only a very 
+narrow range of transformations. 
+844 N. Vasconcelos and A. Lippman 
+In this work we embed the distance computation in a multiresolution framework [3], 
+leading to the multiresolution tangent distance (MRTD). Multiresolution decompositions 
+are common in the vision literature and have been known to improve the performance of 
+image registration algorithms by extending the range over which linear approximations 
+hold [5, 1]. In particular, the MRTD has several appealing properties: 1) maintains 
+the general purpose nature of the TD; 2) can be easily combined with robust estimation 
+procedures, exhibiting invariance to moderate non-linear image variations (such as caused 
+by slight variations in shape or occlusions); 3) is amenable to computationally efficient 
+screening techniques where bad matches are discarded at low resolutions; and 4) can be 
+combined with several types of classifiers. Face recognition experiments show that the 
+MRTD exhibits a significantly extended invariance to image transformations, originating 
+improvements in recognition accuracy as high as 38%, for the hardest problems considered. 
+2 The tangent distance 
+Consider the manifold described by all the possible linear transformations that a pattern 
+/(x) may be subject to 
+= 
+where x are the spatial coordinates over which the pattern is defined, p is the set of 
+parameters which define the transformation, and b is a function typically linear on p, but 
+not necessarily linear on x. Given two patterns M(x) and N(x), the distance between the 
+associated manifolds - manifold distance (MD) - is 
+T(M,N) - min IlTq[M(x)]- Tp[N(x)]ll 2. (2) 
+P,q 
+For simplicity, we consider a version of the distance in which only one of the patterns is 
+subject to a transformation, i.e. 
+T(M,N) = min [[M(x)- Tp[N(x)][[ 2, (3) 
+P 
+but all results can be extended to the two-sided distance. Using the fact that 
+X7pTp[N(x)] = X7pN((x,p)) = X7p(x,p)X7xN((x,p)), (4) 
+where X7pTp is the gradient of Tp with respect to p, Tp[N(x)] can, for small p, be 
+approximated by a first order Taylor expansion around the identity transformation 
+Tp[N(x)] = N(x) + (p - I)'X7p(x, p)X7xN(x). 
+This is equivalent to approximating the manifold by a tangent hyper-plane, and leads to the 
+TD. Substituting this expression in equation 3, setting the gradient with respect to p to zero, 
+and solving for p leads to 
+-1 
+E D(x)Vpb(x, p)VxN(x) + I, 
+x 
+(5) 
+where D(x) = M(x) - N(x). Given this optimal p, the TD between the two patterns 
+is computed using equations 1 and 3. The main limitation of this formulation is that it 
+relies on a first-order Taylor series approximation, which is valid only over a small range 
+of variation in the parameter vector p. 
+2.1 Manifold distance via Newton's method 
+The minimization of the MD of equation 3 can also be performed through Newton's method, 
+which consists of the iteration 
+p'+ = p' - a [X7)T}p=p,] - X7pT[p_-p (6) 
+Multiresolution Tangent Distance for Affine-invariant Classification 845 
+where X7p 7- and V 7- are, respectively, the gradient and Hessian of the cost function of 
+equation 3 with respect to the parameter p, 
+Vp7- -- 2 E [M(x) - Tp[N(x)]] VpTp[N(x)] 
+x 
+V7-= 2 E [-VPTptN(x)]7Tp IN(x)]+ [M(x)- N(x)] VTp[N(x)]] . 
+x 
+Disregarding the term which contains second-order derivatives (VTp[N(x)]), choosing 
+p0 _ I and a : 1, using 4, and substituting in 6 leads to equation 5. I.e. the TD 
+corresponds to a single iteration of the minimization of the MD by a simplified version of 
+Newton's method, where seCond-order derivatives are disregarded. This reduces the rate of 
+convergence of Newton's method, and a single iteration may not be enough to achieve the 
+local minimum, even for simple functions. It is, therefore, possible to achieve improvement 
+if the iteration described by equation 6 is repeated until convergence. 
+3 The multiresolution tangent distance 
+The iterative minimization of equation 6 suffers from two major drawbacks [2]: 1) it may 
+require a significant number of iterations for convergence and 2), it can easily get trapped 
+in local minima. Both these limitations can be, at least partially, avoided by embedding 
+the computation of the MD in a multiresolution framework, leading to the multiresolution 
+manifold distance (MRMD). For its computation, the patterns to classify are first subject to 
+a multiresolution decomposition, and the MD is then iteratively computed for each layer, 
+using the estimate obtained from the layer above as a starting point, 
+-1 
+t = Pt + o K7pTp?[N(x)]VTp?[N(x)] E D(x)VpTp?[N(x)], (7) 
+x 
+where, D (x) = M (x) - Tp? IN (x)]. If only one iteration is allowed at each image resolu- 
+tion, the MRMD becomes the multiresolution extension of the TD, i.e. the multiresolution 
+tangent distance (MRTD). 
+To illustrate the benefits of minimization over different scales consider the signal f(t) = 
+K 
+Yk=l sin(wkt), and the manifold generated by all its possible translations f(t,d) -- 
+f(t + d). Figure 1 depicts the multiresolution Gaussian decomposition of f(t), together 
+with the Euclidean distance to the points on the manifold as a function of the translation 
+associated with each of them (d). Notice that as the resolution increases, the distance 
+function has more local minima, and the range of translations over which an initial guess 
+is guaranteed to lead to convergence to the global minimum (at d = 0) is smaller. I.e., 
+at higher resolutions, a better initial estimate is necessary to obtain the same performance 
+from the minimization algorithm. 
+Notice also that, since the function to minimize is very smooth at the lowest resolutions, 
+the minimization will require few iterations at these resolutions if a procedure such as 
+Newton's method is employed. Furthermore, since the minimum at one resolution is a good 
+guess for the minimum at the next resolution, the computational effort required to reach 
+that minimum will also be small. Finally, since a minimum at low resolutions is based on 
+coarse, or global, information about the function or patterns to be classified, it is likely to 
+be the global minimum of at least a significant region of the parameter space, if not the true 
+global minimum. 
+846 N. Vaxconcelos and A. Lipproart 
+Figure 1' Top: Three scales of the multiresolution decomposition of f(t). Bottom: Euclidean 
+distance rs. translation for each scale. Resolution decreases from left to fight. 
+4 Affine-invariant classification 
+There are many linear transformations which can be used in equation 1. In this work, we 
+consider manifolds generated by affine transformations 
+Ix y 1 0 0 O] 
+p(x,p)= 0 0 0 x y 1 p=(x)p, (8) 
+where p is the vector of parameters which characterize the transformation. Taking the 
+gradient of equation 8 with respect to p, Vptb(x, p) - ,I(x) T, using equation 4, and 
+substituting in equation 7, 
+p?+' = p? +- 
+Ix 
+x 
+-1 
+(9) 
+where N'(x) = N(b(x,p)), and Dr(x) = M(x) - N'(x). For a given level/of the 
+multiresolution decomposition, the iterative process of equation 9 can be summarized as 
+follows. 
+1. Compute N(x) by warping the pattern to classify N(x) according to the best 
+current estimate of p, and compute its spatial gradient X7xN  (x). 
+2. Update the estimate of Pt according to equation 9. 
+3. Stop if convergence, otherwise go to 1. 
+Once the final Pt is obtained, it is passed to the multiresolution level below (by doubling the 
+translation parameters), where it is used as initial estimate. Given the values of Pi which 
+minimize the MD between a pattern to classify and a set of prototypes in the database, a 
+K-nearest neighbor classifier is used to find the pattern's class. 
+5 Robust classifiers 
+One issue of importanc

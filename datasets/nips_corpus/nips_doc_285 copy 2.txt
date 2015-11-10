@@ -1,0 +1,156 @@
+490 Bell 
+Learning in higher-order 'artificial dendritic trees' 
+Tony Bell 
+Artificial Intelligence Laboratory 
+Vrije Universiteit Brussel 
+Pleinlaan 2, B-1050 Brussels, BELGIUM 
+(tony@ arti.vub.ac.be) 
+ABSTRACT 
+If neurons sum up their inputs in a non-linear way, as some simula- 
+tions suggest, how is this distributed fine-grained non-linearity ex- 
+ploited during learning? How are all the small sigmoids in synapse, 
+spine and dendritic tree lined up in the right areas of their respective 
+input spaces? In this report, I show how an abstract atemporal highly 
+nested tree snucture with a quadratic transfer function associated 
+with each branchpoint, can self organise using only a single global 
+reinforcement scalar, to perform binary classification tasks. The pro- 
+cedure works well, solving the 6-multiplexer and a difficult phoneme 
+classification task as well as back-propagation does, and faster. 
+Furthermore, it does not calculate an error gradient, but uses a statist- 
+ical scheme to build moving models of the reinforcement signal. 
+1. INTRODUCTION 
+The computational territory between the linearly summing McCulloch-Pitts neuron and 
+the non-linear differential equations of Hodgkin & Huxley is relatively sparsely popu- 
+lated. Connectionists use variants of the former and computational neuroscientists 
+snuggle with the exploding parameter spaces provided by the latter. However, evi- 
+dence from biophysical simulations suggests that the voltage transfer properties of 
+synapses, spines and denddtic membranes involve many detailed non-linear interac- 
+tions, not just a squashing function at the cell body. Real neurons may indeed be 
+higher-order nets. 
+For the computationally-minded, higher order interactions means, first of all, quadratic 
+terms. This contribution presents a simple learning principle for a binary tree with a 
+logistic/quadratic transfer function at each node. These functions, though highly 
+nested, are shown to be capable of changing their shape in concert. The resulting tree 
+snucture receives inputs at its leaves, and outputs an estimate of the probability that 
+the input pattern is a member of one of two classes at the top. 
+Learning in Higher-Order 'Artificial Dendritic Trees' 491 
+A number of other schemes exist for learning in higher-order neural nets. Sigma-Pi 
+units, higher-order threshold logic units (Giles & Maxwell, 87) and product units (Dur- 
+bin & Rumelhart, 89) are all examples of units which learn coefficients of non-linear 
+functions. Product unit networks, like Radial Basis Function nets, consist of a layer of 
+non-linear transformations, followed by a normal Perceptron-style layer. The scheme 
+presented here has more in common with the work reviewed in Barron (88) (see also 
+Tenorio 90) on polynomial networks in that it uses low order polynomials in a tree of 
+low degree. The differences lie in a global rather than layer-by-layer learning scheme, 
+and a transfer function derived from a gaussian discriminant function. 
+2. THE ARTIFICIAL DENDRITIC TREE (ADT) 
+The network architecture in Figure l(a) is that of a binary tree which propagates real 
+number values from its leaf nodes (or inputs) to its root node which is the output. In 
+this simple formulation, the tree is construed as a binary classifier. The output node 
+signals a number between 1 and 0 which represents the probability that the pattern 
+presented to the tree was a member of the positive class of patterns or the negative 
+class. Because the input patterns may have extremely high dimension and the tree is, 
+at least initially, constrained to be binary, the depth of the tree may be significant, at 
+least more than one might like to back-propagate through. A transfer function is asso- 
+ciated with each 'hidden' node of the tree and the output node. This will hereafter be 
+referred to as a Z-function, for the simple reason that it takes in two variables X and 
+Y, and outputs Z. A cascade of Z-functions performs the computation of the tree and 
+the learning procedure consists of changing these functions. The tree is referred to as 
+an Artificial Dendritic Tree or ADT with the same degree of licence that one may talk 
+of Artificial Neural Networks, or ANNs. 
+z (x ) z (x,y ) 
+Co) (c) 
+input nodes 
+f 
+Figure 1: (a) an Artificial Dendritic Tree, Co) a 1D Z-node (c) a 2D Z-node (d) 
+A 1D Z-function constructed from2 gaussians (e) approximating a step function 
+2.1. THE TRANSFER FUNCTION 
+The idea behind the Z-function is to allow the two variables arriving at a node to 
+interact locally in a non-linear way which contributes to the global computation of the 
+tree. The transfer function is derived from statistical considerations. To simplify, con- 
+sider the one-dimensional case of a variable X travelling on a wire as in Figure lCo). 
+A statistical estimation procedure could observe the distribution of values of X when 
+the global pattern was positive or negative and derive a decision rule from these. In 
+Figure l(d), the two density functions f+(x) and f-(x) are plotted. Where they meet, 
+the local computation must answer that, based on its information, the global pattern is 
+positively classified with probability 0.5. Assuming that there are equal numbers of 
+positive and negative patterns (ie: that the a priori probability of positive is 0.5), it is 
+easy to see that the conditional probability of being in the positive class given our 
+value for X, is given by equation (1). 
+492 Bell 
+z(x) = P[class=+ve Ix] = f+(x) (1) 
+f + (x )+ f -(x ) 
+This can be also derived from Bayesian reasoning (Therrien, 89). The form of z (x) is 
+shown with the thick line in Figure l(d) for the given f+(x) and f-(x). If f +(x) and 
+f-(x) can be usefully approximated by normal (gaussian) curves as plotted above, 
+then (1) translates into (2): 
+1 input=-(x)-+(x)+ In[ -] (2) 
+z (x) - l+e-i'w't ' 
+This can be obtained by substituting equation (4) overleaf into (1) using the definitions 
+of a and [ given. The exact form a and [ take depends on the number of variables 
+input. The first striking thing is that the form of (2) is exactly that of the back- 
+propagation logistic function. The second is that input is a polynomial quadratic 
+expression. For Z-functions with 2 inputs (x,y) using formulas (4.2) it takes the form: 
+w x2+w2y2+w'y +wnx +wo' +w6 (3) 
+The w's can be thought of as weights just as in backprop, defining a 6D space of 
+transfer functions. However optimising the w's directly through gradient descent may 
+not be the best idea (though this is what Tenorio does), since for any error function E, 
+E/w4 = xE/w = yE/i}w3. That is, the axes of the optimisation are not indepen- 
+dent of each other. There are, however, two sets of 5 independent parameters which 
+the w's in (3) are actually composed from if we calculate input from (4.2). These are 
+g+, c +, g, c and r +, denoting the means, standard deviations and correlation 
+coefficient defining the two-dimensional distribution of (x,y) values which should be 
+positively classified. The other 5 variables define the negative distribution. 
+Thus 2 Gaussians (hereafter referred to as the positive and negative models) define a 
+quadratic transfer function (called the Z-function) which can be interpreted as express- 
+ing conditional probability of positive class membership. The shape of these functions 
+can be altered by changing the statistical parameters defining the distributions which 
+underly them. In Figure l(d), a 1-dimensional Z-function is seen to be sigmoidal 
+though it need not be monotonic at all. Figure 2Co)-(h) shows a selection of 2D Z- 
+functions. In general the Z-function divides its N-dimensional input space with a N-1 
+dimensional hypersurface. In 2D, this will be an ellipse, a parabola, a hyperbola or 
+some combination of the three. Although the dividing surface is quadratic, the Z- 
+function is still a logistic or squashing function. The exponent input is actually 
+equivalent to the log likelihood ratio or ln(f+(x)/f-(x)), commonly used in statistics. 
+In this work, 2-dimensional gaussians are used to generate Z-functions. There are 
+compelling reasons for this. One dimensional Z-functions are of little use since they 
+do not reduce information. Z-functions of dimension higher than 1 perform optimal 
+class-based information reduction by propagating conditional probabilities of class 
+membership. But 2D Z-functions using 2D gaussians are of particular interest because 
+they include in their function space all boolean functions of two variables (or at least 
+analogue versions of these functions). For example the gaussians which would come to 
+represent the positive and negative exemplar patterns for XOR are drawn as ellipses in 
+Figure 2(a). They have equal means and variances but the negative exemplar patterns 
+are correlated while the positive ones are anti-correlated. These models automatically 
+give rise to the XOR surface in Figure 2(1>) if put through equation (2). An interesting 
+Learning in Higher-Order 'Artificial Dendritic Trees' 493 
+observation is that a problem of Nth order (XOR is 2nd order, 3-parity is 3rd order 
+etc) can be solved by a polynomial of degree N (Figure 2d). Since 2nd degree polyno- 
+mials like (3) are used in our system, there is one step up in power from 1st degree 
+systems like the Percepxon. Thus 3-parity is to the Z-function unit what XOR is to the 
+Perceptton (in this case not quadratically separable). 
+A GAUSSIAN IS' f (x)=le -o(x) (4) 
+in one dimension: (x=(2r)mcx (4.1.1) 
+13(x)= 2c 2 (4.1.2) 
+in two dimensions' 
+in n dimensions' 
+--2ox cy (1-r 2)/2 
+1 
+(x,y)- 
+2(1-r 2) cx 2 
+a=(2r)n/21K I m 
+is the expected value or an of x 
+(4.2.1) 
+(x-[t,)2 (y_ 2 ) ] 
++ ) .-2r (4.2.2) 
+is the variance of x 
+(4.n. 1) 
+(4.n. 2) 
+is the correlation coefficient of a bivariate gaussian 
+is the mean vector of a multivariate gaussian 
+is the covariance matrix of a multivariate. gaussian 
+with IKI its determinant 
+(a) 
+(d) 
+(e) 
+--j

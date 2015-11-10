@@ -1,0 +1,161 @@
+A Multiscale Adaptive Network Model of 
+Motion Computation in Primates 
+H. Taichi Wang 
+Science Center, A18 
+Rockwell International 
+1049 Camino Dos Rios 
+Thousand Oaks, CA 91360 
+Bimal Mathur Christof Koch 
+Science Center, A7A Computation & Neural Systems 
+Rockwell International Caltech, 216-76 
+1049 Camino Dos Rios Pasadena, CA 91125 
+Thousand Oaks, CA 91360 
+Abstract 
+We demonstrate a multiscale adaptive network model of motion 
+computation in primate area MT. The model consists of two stages: (1) 
+local velocities are measured across multiple spatio-temporal channels, 
+and (2) the optical flow field is computed by a network of direction- 
+selective neurons at multiple spatial resolutions. This model embeds 
+the computational efficiency of Multigrid algorithms within a parallel 
+network as well as adaptively computes the most reliable estimate of 
+the flow field across different spatial scales. Our model neurons show 
+the same nonclassical receptive field properties as Allman's type I MT 
+neurons. Since local velocities are measured across multiple channels, 
+various channels often provide conflicting measurements to the 
+network. We have incorporated a veto scheme for conflict resolution. 
+This mechanism provides a novel explanation for the spatial frequency 
+dependency of the psychophysical phenomenon called Motion Capture. 
+1 MOTIVATION 
+We previously developed a two-stage model of motion computation in the visual system 
+of primates (i.e. magnocellular pathway from retina to V 1 and MT; Wang, Mathur & 
+Koch, 1989). This algorithm has these deficiencies: (1) the issue of optimal spatial scale 
+for velocity measurement, and (2) the issue optimal spatial scale for the smoothness of 
+motion field. To address these deficiencies, we have implemented a multi-scale motion 
+network based on multigrid algorithms. 
+All methods of estimating optical flow make a basic assumption about the scale of the 
+velocity relative to the spatial neighborhood and to the temporal discretization step of 
+delay. Thus, if the velocity of the pattern is much larger than the ratio of the spatial to 
+temporal sampling step, an incorrect velocity value will be obtained (Battiti, Amaldi & 
+Koch, 1991). Battiti et al. proposed a coarse-to-fine strategy for adaptively determining 
+349 
+350 Wang, Mathur, and Koch 
+the optimal discretization grid by evaluating the local estimate of the relative error in the 
+flow field due to discretization. The optimal spatial grid is the one minimizing this error. 
+This strategy both leads to a superior estimate of the optical flow field as well as 
+achieving the speedups associated with multigrid methods. This is important, given the 
+large number of iterations needed for rela,xm_ion-based algorithms and the remarkable  
+with which humans can reliably estimate velocity (on the order of 10 neuronal time 
+coasmuts). 
+Our previous model was based on the standard regulariz,lion approach, which involves 
+smoothing with weight ,. This parameter controls the smoothness of the computed 
+motion field. The scale over which the velocity field is smooth depends oa the size of the 
+object. The larger the object is, the larger the value of , has to be. Since a real life vision 
+system has to deal with objects of various sizes simultaneously, there does not exist an 
+optimal smoothness parameter. Our nelwork architecture allows us to circumvent this 
+problem by having the same smoothing weight , at different resolution grids. 
+2 NETWORK ARCHITECTURE 
+The overall architecture of the two-stage model is shown in Figure 1. In the first stage, 
+local velocities are measured at multiple spatial resolutions. At each spatial resolution p, 
+the local velocities are represented by a set of direction-selective neurons, u(i,j,k,p), 
+whose preferred direction is in direction O k (the Component cells; Movshon, Arielson, 
+Gizzi & Newsome, 1985). In the second stage, the optical flow field is computed by a 
+network of direction-selective neurons (Pattern cells) at multiple spatial resolutions, 
+v(i,j,k,p). In the following, we briefly summarize the network. 
+We have used a multiresolution population coding: 
+Nor Nrtt-1 1 
+v=y_, y_, H�'.vto,, 
+, 0 t,'=p . (1) 
+where Nor is the number of directions in each grid, Nre$ is the number of resolutions in 
+the network and I is a 2-D linear interpolation operator (Brand, 1982). 
+In our single resolution model, the input source, s0(i,j,k ), to a paltern cell v(i,j,k) was: 
+Ov(id'k) - so(i,j,k) =  cos(O,- Oe) {u(id,k)- (u- V(id))} e(id,k') 
+Ot e (2) 
+where u is the the unit vector in the direction of local velocity and e(ij,k') is the local 
+edge strength. For our multiscale network, we have used a convergent multi-channel 
+source term, S 0, to a pattern cell v(i,j,k,p) is: 
+p 
+p-# , (3) 
+where R is a 2-D restriction operator. We use the full weighting operator instead of the 
+injection operator because of the sparse nalure of the input data. 
+The computational efficiency of the multigrid algorithms chas been embedded in our 
+multiresolution network by a set of spatial-filtering synapses, S1, written as: 
+A Multiscale Adaptive Network Model of Motion Computation in limates 351 
+Pm2 P'm 
+v(I.l,h p) 
+P  moltlre,olotlon 
+i (i,j) U (I, J, k, p), E (i, J, k, p) 
+retina multtcha,nnol normal 
+rolocity measurement 
+Figure l. The nctwofic architecture. 
+0 8 
+I I1 I I 
+0 4 
+I 
+LJ:P= 2 
+Figure 2. A coarse-to-fine veto scheme. 
+352 Wang, Mathur, and Koch 
+P p+l pp 
+, (4) 
+where ot and  are constants. 
+As discussed in the section 1, the scale over which the velocity field is smooth depends 
+on the size of the object. Consider, for example, an object of certain size is moving with 
+a given velocity across the field of view. The multiresolution representation and the 
+spatial frequency filtering connections will force the velocity field to be represented 
+mostly by a few neurons whose resolution grid matches the size of the object. Therefore, 
+the smoothness constraint should be enforced on the individual resolution grids. If 
+membrane potential is used, the source for the smoothness term, S2, at resolution grid p, 
+Sf(id,k) =   cos(Ok- 0e) {v(i-ld,k',p) + v(i+ lddc',p) + v(id-l,k',p) + v(id+ 1,k',p) - 4v(id,k',p)} 
+k' 
+o) 
+where ) is the smoothness parameter. The smoothing weight ) in our formulation is the 
+same for each grid and is independent of object sizes. 
+The network equation becomes, 
+Ov(ijc,o) = + st + 
+t . (6) 
+The multiresolution network architecture has considerably more complicated synaptic 
+connection pattern but only 33% more neurons as compared to the single resolution 
+model, the convergence is improved by about two orders of magnitude (as measured by 
+numbers of iterations needed). 
+3 CONFLICT RESOLUTION 
+The velocity estimated by our -- or any other motion algorithm -- depends on the spatial 
+(Ax) and temporal (AO discrefizafion step used. Battiff et al. derived the following 
+expression for the relative error in velocity due to incorrect derivative estimation: 
+8--1 l _-- 2jr2 [(Zlx)2 - (uAt)2] 
+(7) 
+where u is the velocity,  is the spatial frequency of the moving pattern. As velocity u 
+deviates from Ax=uAt, the velocity measurement become less accurate. The scaling factor 
+in (7) depends on the spatial filtering in the retina. Therefore, the choice of spatial 
+discretization and spatial filtering bandwidth have to satisfy the requirements of both the 
+sampling theorem and the velocity measurement accuracy. Even though (7) was derived 
+based on the gradient model, we believe similar constraint applies to correlation models. 
+We model the receptive field profiles of primate retinal ganglion cells by the Laplacian-of- 
+Gaussian (LOG) operators. If we require that the accuracy of velocity measurement be 
+within 10% within u = 0 to u = 2 (Ax/A0, then the standard deviation, (, of the Gaussian 
+must be greater or equal to 2Ax. 
+What happens if velocity measurement at various scales gives inconsistent results? 
+Consider, for example, an object moving at a speed of 3 pixels/sec across the retina. As 
+A Multiscale Adaptive Network Model of Motion Computation in Primates 353 
+shown in Figure 2, channels p=l and p=2 will give the correct measurement, since it is in 
+the reliable ranges of these channels, as depicted by f'filed circles. The finest channel, p=0, 
+on the other hand will give an erroneous reading. This suggests a coarser-to-fine veto 
+scheme for conflict resolution. We have incorporated this strategy in our network 
+architecture by implementing a shunting term in Eq. (4). In this way, the erroneous input 
+signals from the component cells at grid p=0 are shunted out (the open circles in Figure 
+2) by the component cells (the filled circles) at coarsex grids. 
+4 MOTION CAPTURE 
+How does human visual system deal with the potential conflicts among various spatial 
+channels? Is there any evidence for the use of such a coarse-to-fine conflict resolution 
+scheme? We believe that the well-known psychophysical phenomenon of Motion Capture 
+is the manifestation of this strategy. 
+When human subjects are presented a sequence of randomly moving random dots pattern, 
+we perceive random motion. Ramachanclran and Anstis (1983) found, surprisingly, that 
+our perception of it can be greatly influenced by the movement of a superimposed low 
+conwast, low spatial frequency grating. They found that the human subject has a tendency 
+to perceive the random dots as moving with the spatial grating, as if the random dots 
+adhere to the grating. For a given spatial frequency of the grating, the percentage of 
+capture is highest when the phase shift between frames of the grating is about 90 � . Even 
+more surprisingly, the lower the spatial frequency of the grating, the higher the percentage 
+of capture. 
+Other researchers (e.g. Yuille & Grzywacz, 1988) and we have attempted to explain this 
+phenomenon based on the smoothness constraint on the velocity field. However, 
+smoothness al

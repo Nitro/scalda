@@ -1,0 +1,125 @@
+Best-First Model Merging for 
+Dynamic Learning and Recognition 
+Stephen M. Omohundro 
+International Computer Science Institute 
+1947 Center Street, Suite 600 
+Berkeley, California 94 704 
+Abstract 
+Best-first model merging is a general technique for dynamically 
+choosing the structure of a neural or related architecture while avoid- 
+ing overtilting. It is applicable to both learning and recognition tasks 
+and often generalizes significantly better than fixed structures. We dem- 
+onstrate the approach applied to the tasks of choosing radial basis func- 
+tions for function learning, choosing local affine models for curve and 
+constraint surface modelling, and choosing the structure of a baHtree or 
+bumptree to maximize efficiency of access. 
+1 TOWARD MORE COGNITIVE LEARNING 
+Standard backpropagation neural networks learn in a way which appears to be quite differ- 
+ent from human learning. Viewed as a cognitive system, a standard network always main- 
+tains a complete model of its domain. This model is mostly wrong initially, but gets 
+gradually better and better as data appears. The net deals with all data in much the same 
+way and has no representation for the strength of evidence behind a certain conclusion. The 
+network architecture is usually chosen before any data is seen and the processing is much 
+the same in the early phases of learning as in the late phases. 
+Human and animal learning appears to proceed in quite a different manner. When an organ- 
+ism has not had many experiences in a domain of importance to it, each individual experi- 
+ence is critical. Rather than use such an experience to slightly modify the parameters of a 
+global model, a better strategy is to remember the experience in detail. Early in learning, an 
+organism doesn't know which features of an experience are important unless it has a strong 
+958 
+Best-First Model Merging t-br Dynamic Learning and Recognition 959 
+prior knowledge of the domain. Without such prior knowledge,its best strategy is to gener- 
+alize on the basis of a similarity measure to individual stored experiences. (Shepard, 1987) 
+shows that there is a universal exponentially decaying form for this kind of similarity based 
+generalization over a wide variety of sensory domains in several studied species. As expe- 
+riences accumulate, the organism eventually gets enough data to reliably validate models 
+from complex classes. At this point the animal need no longer remember individual expe- 
+riences, but rather only the discovered generalities (eg. as rules). With such a strategy, it is 
+possible for a system to maintain a measure of confidence in it its predictions while build- 
+ing ever more complex models of its environment. 
+Systems based on these two types of learning have also appeared in the neural network, sta- 
+tistics and machine learning communities. In the learning literature one finds both table- 
+lookup or memory-based methods and parameter-fitting methods. In statistics the dis- 
+tinction is made between non-parametric and parametric methods. Table-lookup meth- 
+ods work by storing examples and generalize to new situations on the basis of similarity to 
+the old ones. Such methods are capable of one-shot learning and have a measure of the ap- 
+plicability of their knowledge to new situations but are limited in their generalization capa- 
+bility. Parameter fitting models choose the parameters of a predetermined model to best fit 
+a set of examples. They usually take longer to train and are susceptible to computational 
+difficulties such as local maxima but can potentially generalize better by extending the in- 
+fluence of examples over the whole space. Aside from computational difficulties, their fun- 
+damental problem is overfitting, ie. having insufficient data to validate a particular 
+parameter setting as useful for generalization. 
+2 OVERFITTING IN LEARNING AND RECOGNITION 
+There have been many recent results (eg. based on the Vapnik-Chervonenkis dimension) 
+which identify the number of examples needed to validate choices made from specific para- 
+metric model families. We would like a learning system to be able to induce extremely 
+complex models of the world but we don't want to have to present it with the enormous 
+amount of data needed to validate such a model unless it is really needed. (Vapnik, 1982) 
+proposes a technique for avoiding overfitting while allowing models of arbitrary complex- 
+ity. The idea is to start with a nested familty of model spaces, whose members contain ever 
+more complex models. When the system has only a small amount of data it can only vali- 
+date models in in the smaller model classes. As more data arrives, however, the more com- 
+plex classes may be considered. If at any point a fit is found to within desired tolerances, 
+however, only the amount of data needed by the smallest class containing the chosen model 
+is needed. Thus there is the potential for choosing complex models without penalizing sit- 
+uations in which the model is simple. The model merging approach may be viewed in these 
+terms except that instead of a single nested family, there is a widely branching tree of model 
+spaces. 
+Like learning, recognition processes (visual, auditory, etc.) aim at constructing models 
+from data. As such they are subject to the same considerations regarding overfitting. Figure 
+1 shows a perceptual example where a simpler model (a single segment) is perceptually 
+chosen to explain the data (4 almost collinear dots) than a more complex model (two seg- 
+ments) which fits the data better. An intuitive explanations is that if the dots were generated 
+by two segments, it would be an amazing coincidence that they are almost collinear, if it 
+were generated by one, that fact is easily explained. Many of the Gestalt phenomena can be 
+960 Omohundro 
+considered in the same terms. Many of the processes used in recognition (eg. segmentation, 
+grouping) have direct analogs in learning and vice versa. 
+Figure 1: An example of Occam's razor in recognition. 
+There has been much recent interest in the network community in Bayesian methods for 
+model selection while avoiding overfilling (eg. Bunfine and Weigend, 1992 and MacKay 
+1992). Learning and recognition fit naturally together in a Bayesian framework. The Baye- 
+sian approach makes explicit the need for a prior distribution. The posterior distribution 
+generated by learning becomes the prior distribution for recognition. The model merging 
+process described in this paper is applicable to both phases and the knowledge representa- 
+tion it suggests may be used for both processes as well. 
+There are at least three properties of the world that may be encoded in a prior distribution 
+and have a dramatic effect on learning and recognition and are essential to the model merg- 
+ing approach. The continuity prior is that the world is geometric and unless there is contrary 
+data a system should prefer continuous models over discontinuous ones. This prior leads to 
+a wide variety of what may be called geometric learning algorithms (Omohundro, 1990). 
+The sparseness prior is that the world is sparsely interacting. This says that probable mod- 
+els naturally decompose into components which only directly affect one another in a sparse 
+manner. The primary origin of this prior is that physical objects usually only directly affect 
+nearby objects in space and time. This prior is responsible for the success of representations 
+such as Markov random fields and Bayesian networks which encode conditional indepen- 
+dence relations. Even if the individual models consist of sparsely interacting components, 
+it still might be that the data we receive for learning or recognition depends in an intricate 
+way on all components. The locality prior prefers models in which the data decomposes 
+into components which are directly affected by only a small number of model components. 
+For example, in the learning setting only a small portion of the knowledge base will be rel- 
+evant to any specific situation. In the recognition setting, an individual pixel is determined 
+by only a small number of objects in the scene. In geometric settings, a localized represen- 
+tation allows only a small number of model parameters to affect any individual prediction. 
+3 MODEL MERGING 
+Based on the above considerations, an ideal learning or recognition system should model 
+the world using a collection of sparsely connected, smoothly parametefized, localized mod- 
+els. This is an apt description of many of the neural network models currently in use. Baye- 
+sian methods provide an optimal means for induction with such a choice of prior over 
+models but are computationally intractable in complex situations. We would therefore like 
+to develop heuristic approaches which approximate the Bayesian solution and avoid over- 
+fitting. Based on the idealization of animal learning in the first section, we would like is a 
+system which smoothly moves between a memory-based regime in which the models are 
+the data into ever more complex parameterized models. Because of the locality prior, model 
+Best-First Model Merging for Dynamic Learning and Recognition 961 
+components only affect a subset of the data. We can therefore choose the complexity of 
+components which are relevant to different portions of the data space according to the data 
+which has been received there. This allows for reliably validated models of extremely high 
+complexity in some regions of the space while other portions are modeled with low com- 
+plexity. If only a small number of examples have been seen in some region, these are simply 
+remembeaval and generalization is based on similarity. As more data arrives, if regularities 
+are found and there is enough data present to justify them, more complex parameterized 
+models are incorpom. 
+There are many possible approaches to implementing such a strategy. We have investigated 
+a particular heuristic which can be ma

@@ -1,0 +1,166 @@
+Semi-Supervised Support Vector 
+Machines 
+Kristin P. Bennett 
+Department of Mathematical Sciences 
+Rensselaer Polytechnic Institute 
+Troy, NY 12180 bennek@rpi.edu 
+Ayhan Demiriz 
+Department of Decision Sciences and Engineering Systems 
+Rensselaer Polytechnic Institute 
+Troy, NY 12180 demira@rpi.edu 
+Abstract 
+We introduce a semi-supervised support vector machine (S3VM) 
+method. Given a training set of labeled data and a working set 
+of unlabeled data, SgVM constructs a support vector machine us- 
+ing both the training and working sets. We use SgVM to solve 
+the transduction problem using overall risk minimization (ORM) 
+posed by Vapnik. The transduction problem is to estimate the 
+value of a classification function at the given points in the working 
+set. This contrasts with the standard inductive learning problem 
+of estimating the classification function at all possible values and 
+then using the fixed function to deduce the classes of the working 
+set data. We propose a general SgVM model that minimizes both 
+the misclassification error and the function capacity based on all 
+the available data. We show how the S3VM model for I-norm lin- 
+ear support vector machines can be converted to a mixed-integer 
+program and then solved exactly using integer programming. Re- 
+suits of SgVM and the standard 1-norm support vector machine 
+approach are compared on ten data sets. Our computational re- 
+sults support the statistical learning theory results showing that 
+incorporating working data improves generalization when insuffi- 
+cient training information is available. In every case, SgVM either 
+improved or showed no significant difference in generalization com- 
+pared to the traditional approach. 
+Semi-Supervised Support Vector Machines 369 
+1 INTRODUCTION 
+In this work we propose a method for semi-supervised support vector machines 
+(SaVM). SaVM are constructed using a mixture of labeled data (the training set) 
+and unlabeled data (the working set). The objective is to assign class labels to the 
+working set such that the best support vector machine (SVM) is constructed. 
+If the working set is empty the method becomes the standard SVM approach to 
+classification [20, 9, 8]. If the training set is empty, then the method becomes a 
+form of unsupervised learning. Semi-supervised learning occurs when both training 
+and working sets are nonempty. Semi-supervised learning for problems with small 
+training sets and large working sets is a form of semi-supervised clustering. There 
+are successful semi-supervised algorithms for k-means and fuzzy c-means clustering 
+[4, 18]. Clustering is a potential application for SaVM as well. When the training 
+set is large relative to the working set, SaVM can be viewed as a method for solving 
+the transduction problem according to the principle of overall risk minimization 
+(aRM) posed by Vapnik at the NIPS 1998 SVM Workshop and in [19, Chapter 10]. 
+S3VM for ORM is the focus of this paper. 
+In classification, the transduction problem is to estimate the class of each given 
+point in the unlabeled working set. The usual support vector machine (SVM) ap- 
+proach estimates the entire classification function using the principle of statistical 
+risk minimization (SRM). In transduction, one estimates the classification func- 
+tion at points within the working set using information from both the training and 
+working set data. Theoretically, if there is adequate training data to estimate the 
+function satisfactorily, then SRM will be sufficient. We would expect transduction 
+to yield no significant improvement over SRM alone. If, however, there is inad- 
+equate training data, then aRM may improve generalization on the working set. 
+Intuitively, we would expect aRM to yield improvements when the training sets are 
+small or when there is a significant deviation between the training and working set 
+subsamples of the total population. Indeed,the theoretical results in [19] support 
+these hypotheses. 
+In Section 2, we briefly review the standard SVM model for structural risk minimiza- 
+tion. According to the principles of structural risk minimization, SVM minimize 
+both the empirical misclassification rate and the capacity of the classification func- 
+tion [19, 20] using the training data. The capacity of the function is determined by 
+margin of separation between the two classes based on the training set. aRM also 
+minimizes the both the empirical misclassification rate and the function capacity. 
+But the capacity of the function is determined using both the training and working 
+sets. In Section 3, we show how SVM can be extended to the semi-supervised case 
+and how mixed integer programming can be used practically to solve the resulting 
+problem. We compare support vector machines constructed by structural risk min- 
+imization and overall risk minimization computationally on ten problems in Section 
+4. Our computational results support past theoretical results that improved gener- 
+alization can be obtained by incorporating working set ihformation during training 
+when there is a deviation between the working set and training set sample distri- 
+butions. In three of ten real-world problems the semi-supervised approach, S3VM , 
+achieved a significant increase in generalization. In no case did S3VM ever obtain a 
+si.nificant decrease in generalization. We conclude with a discussion of more general 
+S VM algorithms. 
+370 K. Bennett and A. Demiriz 
+Class 1 
+--x .....  ............... w.x=b+l 
+o 
+o 
+o o 
+oClass -1 
+Figure 1: Optimal plane maximizes margin. 
+2 SVM using Structural Risk Minimization 
+The basic SRM task is to estimate a classification function f � R S  {+1} using 
+input-output training data from two classes 
+(x,y),..., (xe, ye) c R n x {+1}. (1) 
+The function f should correctly classify unseen examples (x, y), i.e. f(x) = y if (x, y) 
+is generated from the same underlying probability distribution as the training data. 
+In this work we limit discussion to linear classification functions. We will discuss 
+extensions to the nonlinear case in Section 5. If the points are linearly separable, 
+then there exist an n-vector w and scalar b such that 
+w.xi - b k 1 if Yi = 1, and 
+w. xi - b _< -1 if Yi = -1, i = 1,..., � (2) 
+or equivalently 
+y[w. xi - b] k 1, i = 1,...,�. (3) 
+The optimal separating plane, w-x = b, is the one which is furthest from the 
+closest points in the two classes. Geometrically this is equivalent to maximizing the 
+separation margin or distance between the two parallel planes w. x = b + 1 and 
+w. x = b- i (see Figure 1.) 
+The margin of separation in Euclidean distance is 2/Ilwl12 where IlwlI2 = 
+n  is the 2-norm. To maximize the margin, we minimize IIwl]/2 subject 
+Et=I Wi 
+to the constraints (3). According to structural risk minimization, for a fixed em- 
+pirical misclassification rate, larger margins should lead to better generalization 
+and prevent overfitting in high-dimensional attribute spaces. The classifier is called 
+a support vector machine because the solution depends only on the points (called 
+support vectors) located on the two supporting planes w. x = b- 1 and w. x = b + 1. 
+In general the classes will not be separable, so the generalized optimal plane (GOP) 
+problem (4) [9, 20] is used. A slack term r h is added for each point such that if the 
+point is misclassified, ri _> 1. The final GOP formulation is: 
+1 
+min C-rh+ Ilwll 
+(4) 
+s.t. y[w.x-b]+l 
+i0, i = 1,..., 
+where C  0 is a fixed penalty parameter. The capacity control provided by the 
+margin maximization is imperative to achieve good generalization [21, 19]. 
+The Robust Linear Programming (RLP) approach to SVM is identical to GOP 
+tem Ilwll to Ilwll 
+Semi-Supervised Support Vector Machines 3 71 
+-.: Iwjl. The problem becomes the folloxving robust linear program (RLP) [2, 7, 
+1]: 
+min 
+W,b,s,r/ 
+$.t. 
+(5) 
+The RLP formulation is a useful variation of SVM with some nice characteristics. 
+The 1-norm weight reduction still provides capacity control. The results in [13] can 
+be used to show that minimizing Ilwll corresponds to maximizing the separation 
+margin using the infinity norm. Statistical learning theory could potentially be 
+extended to incorporate alternative norms. One major benefit of RLP over GOP 
+is dimensionality reduction. Both RLP and GOP minimize the magnitude of the 
+weights w. But RLP forces more of the weights to be 0 due to the properties of 
+the I-norm. Another benefit of RLP over GOP is that it can be solved using linear 
+programming instead of quadratic programming. Both approaches can be extended 
+to handle nonlinear discrimination using kernel functions [8, 12]. Empirical compar- 
+isons of the approaches have not found any significant difference in generalization 
+between the formulations [5, 7, 3, 12]. 
+3 Semi-supervised support vector machines 
+To formulate the S3VM, we start with either SVM formulation, (4) or (5), and then 
+add two constraints for each point in the working set. One constraint calculates 
+the misclassification error as if the point were in class 1 and the other constraint 
+calculates the misclassification error as if the point were in class -1. The objective 
+function calculates the minimum of the two possible misclassification errors. The 
+final class of the points corresponds to the one that results in the smallest error. 
+Specifically we define the semi-supervised support vector machine problem (SaVM) 
+as: 
+min C t h +  min(.;, zj) + II w II 
+W,b,rl,,z 
+i=1 
+j=�+l (6) 
+subject to yi(W � X + b) + ri > 1 r h _> 0 i = 1,...,  
+w.xj-b+ >1  >0 j=�+ l,...,�+k 
+-(w.x-b)+z > l zj >0 
+where C > 0 is a fixed misclassification penalty. 
+Integer programming can be used to solve this problem. The basic idea is to add 
+a 0 or 1 decision variable, dj, for each point xj in the working set. This variable 
+indicates the class of the point. If dj = 1 then the point is in class 1 and if dj = 0 
+then the point is in class -1. This resu

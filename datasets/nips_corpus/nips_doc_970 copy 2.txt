@@ -1,0 +1,197 @@
+Boosting the Performance 
+of RBF Networks 
+with Dynamic Decay Adjustment 
+Michael R. Berthold 
+Forschungszentrum Informatik 
+Gruppe ACID (Prof. D. Schmid) 
+Haid-und-Neu-Strasse 10--14 
+76131 Karlsruhe, Germany 
+eMail: berthold@fzi.de 
+Jay Diamond 
+Intel Corporation 
+2200 Mission College Blvd. 
+Santa Clara, CA, USA 
+95052 MS:SC9-15 
+eMail: jdiamond@mipos3.intel.com 
+Abstract 
+Radial Basis Function (RBF) Networks, also known as networks 
+of locally-tuned processing units (see [6]) are well known for their 
+ease of use. Most algorithms used to train these types of net- 
+works, however, require a fixed architecture, in which the number 
+of units in the hidden layer must be determined before training 
+starts. The RCE training algorithm, introduced by Reilly, Cooper 
+and Elbaurn (see [8]), and its probabilistic extension, the P-RCE 
+algorithm, take advantage of a growing structure in which hidden 
+units are only introduced when necessary. The nature of these al- 
+gorithms allows training to reach stability much faster than is the 
+case for gradient-descent based methods. Unfortunately P-RCE 
+networks do not adjust the standard deviation of their prototypes 
+individually, using only one global value for this parameter. 
+This paper introduces the Dynamic Decay Adjustment (DDA) al- 
+gorithm which utilizes the constructive nature of the P-RCE al- 
+gorithm together with independent adaptation of each prototype's 
+decay factor. In addition, this radial adjustment is class dependent 
+and distinguishes between different neighbours. It is shown that 
+networks trained with the presented algorithm perform substan- 
+tially better than common RBF networks. 
+522 Michael R. Berthold, Jay Diamond 
+I Introduction 
+Moody and Darken proposed Networks with locally-tuned processing units, which 
+are also known as Radial Basis Functions (RBFs, see [6]). Networks of this type 
+have a single layer of units with a selective response for some range of the input 
+variables. Eacti unit has an overall response function, possibly a Gaussian: 
+=exp( - II- rll2 
+2 ) (1) 
+r i 
+Here  is the input to the network, r- denotes the center of the i-th RBF and eri 
+determines its standard deviation. The second layer computes the output function 
+for each class as follows: 
+m 
+f() = E Ai * Ri() (2) 
+i=l 
+with m indicating the number of RBFs and Ai being the weight for each RBF. 
+Moody and Darken propose a hybrid training, a combination of unsupervised clus- 
+tering for the centers and radii of the RBFs and supervised training of the weights. 
+Unfortunately their algorithm requires a fixed network topology, which means that 
+the number of RBFs must be determined in advance. The same problem applies to 
+the Generalized Radial Basis Functions (GRBF), proposed in [12]. Here a gradient 
+descent technique is used to implement a supervised training of the center locations, 
+which has the disadvantage of long training times. 
+In contrast RCE (Restricted Coulomb Energy) Networks construct their architecture 
+dynamically during training (see [7] for an overview). This algorithm was inspired 
+by systems of charged particles in a three-dimensional space and is analogous to 
+the Liapunov equation: 
+1  
+ = -Z ,.. i1_ r11  (3) 
+where  is the electrostatic potential induced by fixed particles with charges -Qi 
+and locations F/. One variation of this type of networks is the so called P-RCE 
+network, which attempts to classify data using a probabilistic distribution derived 
+from the training set. The underlying training algorithm for P-RCE is identical 
+to RCE training with gaussian activation functions used in the forward pass to 
+resemble a Probabilistic Neural Network (PNN [10]). PNNs are not suitable for 
+large databases because they commit one new prototype for each training pattern 
+they encounter, effectively becoming a referential memory scheme. In contrast, the 
+P-RCE algorithm introduces a new prototype only when necessary. This occurs 
+when the prototype of a conflicting class misclassifies the new pattern during the 
+training phase. The probabilistic extension is modelled by incrementing the a-priori 
+rate of occurrence for prototypes of the same class as the input vector, therefore 
+weights are only connecting RBFs and an output node of the same class. The recall 
+phase of the P-RCE network is similar to RBFs, except that it uses one global 
+radius for all prototypes and scales each gaussian by the a-priori rate of occurrence: 
+mc 
+actc() = E A? � exp( II- r, II  
+R: ) (4) 
+i=l 
+Boosting the Performance of RBF Networks with Dynamic Decay Adjustment 523 
+nput pattern 
+(class B) 
+Figure 1: This picture shows how a new pattern results in a slightly higher activity 
+for a prototype of the right class than for the conflicting prototype. Using only one 
+threshold, no new prototype would be introduced in this case. 
+where c denotes the class for which the activation is computed, mc is the number 
+of prototypes for class c, and R is the constant radius of the gaussian activation 
+functions. The global radius of this method and the inability to recognize areas 
+of conflict, leads to confusion in some areas of the feature space, and therefore 
+non-optimal recognition performance. 
+The Dynamic Decay Adjustment (DDA) algorithm presented in this paper was 
+developed to solve the inherent problems associated with these methods. The con- 
+structive part of the P-RCE algorithm is used to build a network with an ap- 
+propriate number of RBF units, for which the decay factor is computed based on 
+information about neighbours. This technique increases the recognition accuracy 
+in areas of conflict. 
+The following sections explain the algorithm, compare it with others, and examine 
+some simulation results. 
+2 The Algorithm 
+Since the P-RCE training algorithm already uses an independent area of influence 
+for each RBF, it is relatively straightforward to extract an individual radius. This 
+results, however, in the problem illustrated in figure 1. The new pattern/Y of class 
+B is properly covered by the right prototype of the same class. However, the left 
+prototype of conflicting class A results in almost the same activation and this leads 
+to a very low confidence when the network must classify the pattern/Y. 
+To solve this dilemma, two different radii, or thresholds I are introduced: a so-called 
+positive threshold (0+), which must be overtaken by an activation of a prototype of 
+the same class so that no new prototype is added, and a negative threshold (0-), 
+which is the upper limit for the activation of conflicting classes. Figure 2 shows an 
+example in which the new pattern correctly results in activations above the positive 
+threshold for the correct class B and below the negative threshold for conflicting 
+class A. This results in better classification-confidence in areas where training 
+The conversion from the threshold to the radius is straightforward as long as the 
+activation function is invertible. 
+524 Michael R. Berthold, Jay Diamond 
+RB(X) 
+/ 
+RA(X) 
+new input pattern 
+(class B) 
+Figure 2: The proposed algorithm distinguishes between prototypes of correct and 
+conflicting classes and uses different thresholds. Here the level of confidence is 
+higher for the correct classification of the new pattern. 
+patterns did not result in new prototypes. The network is required to hold the 
+following two equations for every pattern  of class c from the training data: 
+i: R?(5) >_ o + 
+Vkc,l_j_mk'R()<0- 
+(6) 
+The algorithm to construct a classifier can be extracted partly from the RCE algo- 
+rithm. The following pseudo code shows what the training for one new pattern  
+of class c looks like: 
+// reset weights: 
+FORALL prototypes p DO 
+A - 0.0 
+ENDFOR 
+ train one complete epoch 
+FORALL training pattern (5, c) DO: 
+IF 3p?: R?(5) > + TIEN 
+A?+ = 1.0 
+ELSE 
+// commit introduce new prototype 
+add new prototype c 
+Pmc+l with: 
+c+1 -- max {o'' Rn+l(r-) < 
+kcAl_ j_mk 
+A+i - 1.0 
+mc+= 1 
+ENDIF 
+// shrink: adjust conflicting prototypes 
+FOR ALLkc,I_<j_mk DO 
+' = max{o'' R(:f) < 0-} 
+ENDFOR 
+First, all weights are set to zero because otherwise they would accumulate duplicate 
+information about training patterns. Next all training patterns are presented to the 
+Boosting the Performance of RBF Networks with Dynamic Decay Adjusttnent 525 
++1- 
+p(x) 
+pattern class A 
+(1) 
+p(x) 
++1 
+pattern class B x 
+(2) 
++2 
++1 
+p(x) 
+pattern class B x 
++2. 
+)attern class A x 
+(3) (4) 
+Figure 3: An example of the DDA-algorithm: (1) a pattern of class A is encountered 
+and a new RBF is created; (2) a training pattern of class B leads to a new prototype 
+for class B and shrinks the radius of the existing RBF of class A; (3) another pattern 
+of class B is classified correctly and shrinks again the prototype of class A; (4) a 
+new pattern of class A introduces another prototype of that class. 
+network. If the new pattern is classified correctly, the weight of the closest prototype 
+is increased; otherwise a new protoype is introduced with the new pattern defining 
+its center. The last step of the algorithm shrinks all prototypes of conflicting classes 
+if their activations are too high for this specific pattern. 
+Running this algorithm over the training data until no further changes are required 
+ensures that equations (5) and (6) hold. 
+The choice of the two new parameters, 0 + and 0- are not as critical as it would 
+initially appear 2. For all of the experiments reported, the settings 0 + -- 0.4 and 
+0- - 0.1 were used, and no major correlations of the results to these values were 
+noted. Note that when choosing 0 + - 0- one ends up with an algorithm having 
+the problem mentioned in figure 1. 
+Figure 3 shows an example that illustrates the first few training steps of the DDA- 
+algorithm. 
+3 Results 
+Several well-known databases were chosen to evaluate this algorithm (some can be 
+found in the CMU Neural Network Benchmark Databases (see [13])). The DDA- 
+2Theoretic

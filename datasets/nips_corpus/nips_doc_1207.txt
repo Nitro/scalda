@@ -1,0 +1,144 @@
+Predicting Lifetimes in Dynamically 
+Allocated Memory 
+David A. Cohn 
+Adaptive Systems Group 
+Harlequin, Inc. 
+Menlo Park, CA 94025 
+cohnharlequin. tom 
+Satinder Singh 
+Department of Computer Science 
+University of Colorado 
+Boulder, CO 80309 
+bavej acs. colorado. edu 
+Abstract 
+Predictions of lifetimes of dynamically allocated objects can be used 
+to improve time and space efficiency of dynamic memory manage- 
+ment in computer programs. Barrett and Zorn [1993] used a simple 
+lifetime predictor and demonstrated this improvement on a variety 
+of computer programs. In this paper, we use decision trees to do 
+lifetime prediction on the same programs and show significantly 
+better prediction. Our method also has the advantage that during 
+training we can use a large number of features and let the decision 
+tree automatically choose the relevant subset. 
+I INTELLIGENT MEMORY ALLOCATION 
+Dynamic memory allocation is used in many computer applications. The appli- 
+cation requests blocks of memory from the operating system or from a memory 
+manager when needed and explicitly frees them up after use. Typically, all of these 
+requests are handled in the same way, without any regard for how or for how long 
+the requested block will be used. Sometimes programmers use runtime profiles to 
+analyze the typical behavior of their program and write special purpose memory 
+management routines specifically tuned to dominant classes of allocation events. 
+Machine learning methods offer the opportunity to automate the process of tuning 
+memory management systems. 
+In a recent study, Barrett and Zorn [1993] used two allocators: a special allocator 
+for objects that are short-lived, and a default allocator for everything else. They 
+tried a simple prediction method on a number of public-domain, allocation-intensive 
+programs and got mixed results on the lifetime prediction problem. Nevertheless, 
+they showed that for all the cases where they were able to predict well, their strategy 
+of assigning objects predicted to be short-lived to the special allocator led to savings 
+940 D. A. Cohn and ,5. Singh 
+in program running times. Their results imply that if we could predict well in all 
+cases we could get similar savings for all programs. We concentrate on the lifetime 
+prediction task in this paper and show that using axis-parallel decision trees does 
+indeed lead to significantly better prediction on all the programs studied by Zorn and 
+Grunwald and some others that we included. Another advantage of our approach 
+is that we can use a large number of features about the allocation requests and let 
+the decision tree decide on their relevance. 
+There are a number of advantages of using lifetime predictions for intelligent mem- 
+ory management. It can improve CPU usage, by using special-purpose allocators, 
+e.g., short-lived objects can be allocated in small spaces by incrementing a pointer 
+and deallocated together when they are all dead. It can decrease memory fragmen- 
+tation, because the short-lived objects do not pollute the address space of long lived 
+objects. Finally, it can improve program locality, and thus program speed, because 
+the short-lived objects are all allocated in a small part of the heap. 
+The advantages of prediction must be weighed against the time required to examine 
+each request and make that prediction about its intended use. It is frequently 
+argued that, as computers and memory become faster and cheaper, we need to 
+be less concerned about the speed and efficiency of machine learning algorithms. 
+When the purpose of the algorithm is to save space and computation, however, 
+these concerns are paramount. 
+1.1 RELATED WORK 
+Traditionally, memory management has been relegated to a single, general-purpose 
+allocator. When performance is critical, software developers will frequently build a 
+custom memory manager which they believe is tuned to optimize the performance 
+of the program. Not only is this hand construction inefficient in terms of the pro- 
+gramming time required, this optimization may seriously degrade the program's 
+performance if it does not accurately reflect the program's use [Wilson et al., 1995]. 
+Customalloc [Grunwald and Zorn, 1992] monitors program runs on benchmark in- 
+puts to determine the most commonly requested block sizes. It then produces a 
+set of memory allocation routines which are customized to efficiently allocate those 
+block sizes. Other memory requests are still handled by a general purpose allocator. 
+Barrett and Zorn [1993] studied lifetime prediction based on benchmark inputs. At 
+each allocation request, the call graph (the list of nested procedure/function calls in 
+effect at the time) and the object size was used to identify an allocation site. If all 
+allocations from a particular site were short-lived on the benchmark inputs, their 
+algorithm predicted that future allocations would also be short-lived. Their method 
+produced mixed results at lifetime prediction, but demonstrated the savings that 
+such predictions could bring. 
+In this paper, we discuss an approach to lifetime prediction which uses learned 
+decision trees. In the next section, we first discuss the identification of relevant 
+state features by a decision tree. Section 3 discusses in greater detail the problem 
+of lifetime prediction. Section 4 describes the empirical results of applying this 
+approach to several benchmark programs, and Section 5 discusses the implications 
+of these results and directions for future work. 
+Predicting Lifetimes in Dynamically Allocated Memory 
+2 FEATURE SELECTION WITH A DECISION TREE 
+Barrett and Zorn's approach captures state information in the form of the program's 
+call graph at the time of an allocation request, which is recorded to a fixed pre- 
+determined depth. This graph, plus the request size, specifies an allocation site; 
+statistics are gathered separately for each site. A drawback of this approach is that 
+it forces a division for each distinct call graph, preventing generalization across ir- 
+relevant features. Computationally, it requires maintaining an explicit call graph 
+(information that the program would not normally provide), as well as storing a 
+potentially large table of call sites from which to make predictions. It also ignores 
+other potentially useful information, such as the parameters of the functions on the 
+call stack, and the contents of heap memory and the program registers at the time 
+of the request. 
+Ideally, we would like to examine as much of the program state as possible at the 
+time of each allocation request, and automatically extract those pieces of informa- 
+tion that best allow predicting how the requested block will be used. Decision tree 
+algorithms are useful for this sort of task. A decision tree divides inputs on basis 
+of how each input feature improves purity of the tree's leaves. Inputs that are 
+statistically irrelevant for prediction are not used in any splits; the tree's final set 
+of decisions examine only input features that improve its predictive performance. 
+Regardless of the parsimony of the final tree however, training a tree with the entire 
+program state as a feature vector is computationally infeasible. In our experiments, 
+detailed below, we arbitrarily used the top 20 words on the stack, along with the 
+request size, as an approximate indicator of program state. On the target machine 
+(a Sparcstation), we found that including program registers in the feature set made 
+no significant difference, and so dropped them from consideration for efficiency. 
+3 LIFETIME PREDICTION 
+The characteristic of memory requests that we would like to predict is the lifetime 
+of the block - how long it will be before the requested memory is returned to the 
+central pool. Accurate lifetime prediction lets one segregate memory into short- 
+term, long-term and permanent storage. To this end, we have used a decision tree 
+learning algorithm to derive rules that distinguish short-lived and permanent 
+allocations from the general pool of allocation requests. 
+For short-lived blocks, one can create a very simple and efficient allocation scheme 
+[Barrett and Zorn, 1993]. For permanent blocks, allocation is also simple and 
+cheap, because the allocator does not need to compute and store any of the infor- 
+mation that would normally be required to keep track of the block and return it to 
+the pool when freed. 
+One complication is that of unequal loss for different types of incorrect predictions. 
+An appropriately routed memory request may save dozens of instruction cycles, but 
+an inappropriately routed one may cost hundreds. The cost in terms of memory 
+may also be unequal: a short-lived block that is incorrectly predicted to be per- 
+manent will permanently tie up the space occupied by the block (if it is allocated 
+via a method that can not be freed). A permanent block, however, that is in- 
+correctly predicted to be short-lived may pollute the allocator's short-term space 
+by preventing a large segment of otherwise free memory from being reclaimed (see 
+Barrett and Zorn for examples). 
+These risks translate into a time-space tradeoff that depends on the properties of 
+942 D. A. Cohn and S. Singh 
+the specific allocators used and the space limitations of the target machine. For our 
+experiments, we arbitrarily defined false positives and false negatives to have equal 
+loss, except where noted otherwise. Other cases may be handled by reweighting 
+the splitting criterion, or by rebalancing the training inputs (as described in the 
+following section). 
+4 EXPERIMENTS 
+We conducted two types of experiments. The first measured the ability of learned 
+decision trees to predict allocation lifetimes. The second incorporated these learned 
+trees into the target applications and measured the change in runtime performance. 
+4.1 PREDICTIVE ACCURACY 
+We used the OC1 decision tree software (designed by Murthy et al. [1994]) and 
+con

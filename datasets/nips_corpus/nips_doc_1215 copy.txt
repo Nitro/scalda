@@ -1,0 +1,166 @@
+A Micropower Analog VLSI 
+HMM State Decoder for Wordspotting 
+John Lazzaro and John Wawrzynek 
+CS Division, UC Berkeley 
+Berkeley, CA 94720-1776 
+lazzarocs. berkeley. edu, j ohnwcs. berkeley. edu 
+Richard Lippmann 
+MIT Lincoln Laboratory 
+Room S4-121,244 Wood Street 
+Lexington, MA 02173-0073 
+rplss. 11. mi. edu 
+Abstract 
+We describe the implementation of a hidden Markov model state 
+decoding system, a component for a wordspotting speech recogni- 
+tion system. The key specification for this state decoder design is 
+microwatt power dissipation; this requirement led to a continuous- 
+time, analog circuit implementation. We characterize the operation 
+of a 10-word (81 state) state decoder test chip. 
+1. INTRODUCTION 
+In this paper, we describe an analog implementation of a common signal processing 
+block in pattern recognition systems: a hidden Markov model (HMM) state decoder. 
+The design is intended for applications such as voice interfaces for portable devices 
+that require micropower operation. In this section, we review HMM state decoding 
+in speech recognition systems. 
+An HMM speech recognition system consists of a probabilistic state machine, and 
+a method for tracing the state transitions of the machine for an input speech wave- 
+form. Figure i shows a state machine for a simple recognition problem: detect- 
+ing the presence of keywords (Yes, No) in conversational speech (non-keyword 
+speech is captured by the Filler state). This type of recognition where keywords 
+are detected in unconstrained speech is called wordspotting (Lippmann et al., 1994). 
+728 J. Lazzaro, J. Wawrzynek and R. Lippmann 
+Filler 
+Figure 1. A two-keyword (Yes, states 1-10, No, states 11-20) HMM. 
+Our goal during speech recognition is to trace out the most likely path through this 
+state machine that could have produced the input speech waveform. This problem 
+can be partially solved in a local fashion, by examining short (80 ms. window) 
+overlapping (15 ms. frame spacing) segments of the speech waveform. We estimate 
+the probability b (n) that the signal in frame n was produced by state i, using static 
+pattern recognition techniques. 
+To improve the accuracy of these local estimates, we need to integrate information 
+over the entire word. We do this by creating a set of state variables for the machine, 
+called likelihoods, that are incrementally updated at every frame. Each state i has 
+a real-valued likelihood bi(n) associated with it. Most states in Figure i have a 
+stereotypical form: a state i that has a self-loop input, an input from state i - 1, 
+and an output to state i + 1, with the self-loop and exit transitions being equally 
+probable. For states in this topology, the update rule 
+log(bi(n)) -- log(b,(n)) -{- log(b,(n - 1) -{- b,_x (n - 1)) 
+(1) 
+lets us estimate the log likelihood value log(b(n)) for the state i; a log encoding 
+is used to cope with the large operating range of bi(n) values. Log likelihoods are 
+negative numbers, whose magnitudes increase with each frame. We limit the range 
+of log likelihood values by using a renormalization technique: if any log likelihood 
+in the system falls below a minimum value, a positive constant is added to all log 
+likelihoods in the machine. 
+Figure 2 shows a complete system which uses HMM state decoding to perform 
+wordspotting. The Feature Generation and Probability Generation blocks com- 
+prise the static pattern recognition system, producing the probabilities bi (n) at each 
+frame. The State Decode block updates the log likelihood variables log(b,(n)). 
+The Word Detect block uses a simple online algorithm to flag the occurrence of a 
+word. Keyword end-state log likelihoods are subtracted by the filler log likelihood, 
+and when this difference exceeds a fixed threshold a keyword is detected. 
+Feature 
+(]eneration 
+Speech Input 
+Probability State 10 
+2O 
+Generation Decode 21 
+21 
+Word Yes r 
+Detect 
+ro 1- 
+Figure 2. Block diagram for the two-keyword spotting system. 
+A Micropower Analog VLSI HMM State Decoder for Wordspotting 729 
+2. ANALOG CIRCUITS FOR STATE DECODING 
+Figure 3a shows an analog discrete-time implementation of Equation 1. The delay 
+element (labeled Z -) acts as a edge-triggered sampled analog delay, with full-scale 
+voltage input and output. The delay element is clocked at the frame rate of the 
+state decoder (15 ms. clock period). The combinatorial analog circuits must 
+settle within the clock period. A clock period of 15 ms. allows a relatively long 
+settling time, which enables us to make extensive use of submicroampere currents 
+in the circuit design. The microwatt power consumption design specification drives 
+us to use such small currents. As a result of submicroampere circuit operation, the 
+MOS transistors in Figure 3a are operating in the weak-inversion regime. 
+(a) 
+I I I 
+v 
+(4) 
+(b) 
+I i i 
+(2) 
+i I 
+(3) 
+vi_(t) 
+v 
+--*v(t) 
+(4) 
+(�) 
+Figure 3. (a) Analog discrete-time single-state decoder. (b) Enhanced version of 
+(a), includes the renormalization system. (c) Continuous-time extension of (b). 
+730 J. Lazzaro, J. Wawrzynek and R. Lippmann 
+Equation i uses two types of variables: probabilities and log likelihoods. In the 
+implementation shown in Figure 3, we choose unidirectional current as the signal 
+type for probability, and large-signal voltage as the signal type for log likelihood. 
+We can understand the dimensional scaling of these signal types by analyzing the 
+floating-well transistor labeled (4) in Figure 3a. The equation 
+V,- log(b,(n)) = V,- log(b,(n)) + g,(n - 1) + V,- log(Io ) 
+(2) 
+describes the behavior of this transistor, where V. = (Vo/r)ln(10), g,(n- 1) is 
+the output of the delay element, and Io,  and Vo are MOS parameters. Both Io 
+and  in Equation 2 are functions of Vb. However, the floating-well topology of the 
+transistor ensures Vb = 0 for this device. 
+The input probability bi(n) is scaled by the unidirectional current Ih, defining the 
+current flowing through the transistor. The current Ih is the largest current that 
+keeps the transistor in the weak-inversion regime. We define It to be the small- 
+est value for Iabi(n) that allows the circuit to settle within the clock period. The 
+ratio Ia/It sets the supported range of hi(n). In the test-chip fabrication process, 
+Ia/It  10,000 is feasible, which is sufficient for accurate wordspotting. Likewise, 
+the unitless log(qS,(n)) is scaled by the voltage V, to form a large-signal voltage 
+encoding of log likelihood. A nominal value for V, is 85mV in the test-chip pro- 
+cess. To support a log likelihood range of 35 (the necessary range for accurate 
+wordspotting) a large-signal voltage range of 3 volts (i.e. 35V,) is required. 
+The term g(n - 1) in Equation 2 is shown as the output of the circuit labeled 
+(1) in Figure 3a. This circuit computes a function that approximates the desired 
+expression V.log(b,(n- 1) q- b,_l(n- 1)), if the transistors in the circuit operate 
+in the weak-inversion regime. 
+The computed log likelihood log(b,(n)) in Equation 1 decreases every frame. The 
+circuit shown in Figure 3a does not behave in this way: the voltage V.log(c),(n)) 
+increases every frame. This difference in behavior is attributable to the constant 
+term V. log(Ia/Io) in Equation 2, which is not present in Equation 1, and is always 
+larger than the negative contribution from V. log(b(n)). Figure 3b adds a new 
+circuit (labeled (2)) to Figure 3a, that allows the constant term in Equation 2 to 
+be altered under control of the binary input V. If V is Vaa, the circuit in Figure 3b 
+is described by 
+V. log(b,(n)) = V. log(b,(n))+ g,(n- 1)+ V.. log(-j- ), 
+where the term V. log((Ihlo)/I) should be less than or equal to zero. 
+grounded, the circuit is described by 
+(3a) 
+If V is 
+V. log(b,(n)) = V. log(b,(n)) + g,(n - 1) + V. log(I), 
+(3b) 
+where the term V,, log(Ia/I,) should have a positive value of at least several hundred 
+millivolts. The goal of this design is to create two different operational modes for 
+the system. One mode, described by Equation 3a, corresponds to the normal state 
+decoder operation described in Equation 1. The other mode, described by Equation 
+A Micropower Analog VLSI HMM State Decoder for Wordspotting 731 
+3b, corresponds to the renormalization procedure, where a positive constant is added 
+to all likelihoods in the system. During operation, a control system alternates 
+between these two modes, to manage the dynamic range of the system. 
+Section 1 formulated HMMs as discrete-time systems. However, there are significant 
+advantages in replacing the Z -1 element in Figure 3b with a continuous-time delay 
+circuit. The switching noise of a sampled delay is eliminated. The power consump- 
+tion and cell area specifications also benefit from continuous-time implementation. 
+Fundamentally, a change from discrete-time to continuous-time is not only an im- 
+plementation change, but also an algorithmic change. Figure 3c shows a continuous- 
+time state decoder whose observed behavior is qualitatively similar to a discrete-time 
+decoder. The delay circuit, labeled (3), uses a linear transconductance amplifier in 
+a follower-integrator configuration. The time constant of this delay circuit should 
+be set to the frame rate of the corresponding discrete-time state decoder. 
+For correct decoder behavior over the full range of input probability values, the 
+transconductance amplifer in the delay circuit must have a wide differential-input- 
+voltage linear range. In the test chip presented in this paper, an amplifier with a 
+small linear range was used. To work around the problem, we restricted the input 
+probability currents in our experiments to a small multiple of I. 
+Figure 4 shows a state decoding system that corresponds to the grammar shown 
+in Figure 1. Each numbered circle corresponds to the circuit shown in Figure 3c. 
+The signal flows of this architecture support a dense layout: a rectangular arr

@@ -1,0 +1,151 @@
+On input selection with reversible jump 
+Markov chain Monte Carlo sampling 
+Peter Sykacek 
+Austrian Research Institute for Artificial Intelligence ()FAI) 
+Schottengasse 3, A-1010 Vienna, Austria 
+peterai. univie. ac. at 
+Abstract 
+In this paper we will treat input selection for a radial basis function 
+(RBF) like classifier within a Bayesian framework. We approximate 
+the a-posteriori distribution over both model coefficients and input 
+subsets by samples drawn with Gibbs updates and reversible jump 
+moves. Using some public datasets, we compare the classification 
+accuracy of the method with a conventional ARD scheme. These 
+datasets are also used to infer the a-posteriori probabilities of dif- 
+ferent input subsets. 
+1 Introduction 
+Methods that aim to determine relevance of inputs have always interested re- 
+searchers in various communities. Classical feature subset selection techniques, as 
+reviewed in [1], use search algorithms and evaluation criteria to determine one opti- 
+mal subset. Although these approaches can improve classification accuracy, they do 
+not explore different equally probable subsets. Automatic relevance determination 
+(ARD) is another approach which determines relevance of inputs. ARD is due to [6] 
+who uses Bayesian techniques, where hierarchical priors penalize irrelevant inputs. 
+Our approach is also Bayesian: Relevance of inputs is measured by a probability 
+distribution over all possible feature subsets. This probability measure is determined 
+by the Bayesian evidence of the corresponding models. The general idea was already 
+used in [7] for variable selection in linear regression models. Though our interest 
+is different as we select inputs for a nonlinear classification model. We want an 
+approximation of the true distribution over all different subsets. As the number of 
+subsets grows exponentially with the total number of inputs, we can not calculate 
+Bayesian model evidence directly. We need a method that samples efficiently across 
+different dimensional parameter spaces. The most general method that can do this 
+is the reversible jump Markov chain Monte Carlo sampler (reversible jump MC) 
+recently proposed in [4]. The approach was successfully applied by [8] to determine 
+a probability distribution in a mixture density model with variable number of kernels 
+and in [5] to sample from the posterior of RBF regression networks with variable 
+number of kernels. A Markov chain that switches between different input subsets is 
+useful for two tasks: Counting how often a particular subset was visited gives us a 
+relevance measure of the corresponding inputs; For classification, we approximate 
+On Input Selection with Reversible Jump MCMC 639 
+the integral over input sets and coefficients by summation over samples from the 
+Markov chain. 
+The next sections will show how to implement such a reversible jump MC and apply 
+the proposed algorithm to classification and input evaluation using some public 
+datasets. Though the approach could not improve the MLP-ARD scheme from 
+[6] in terms of classification accuracy, we still think that it is interesting: We can 
+assess the importance of different feature subsets which is different than importance 
+of single features as estimated by ARD. 
+2 Methods 
+The classifier used in this paper is a RBF like model. Inference is performed within 
+a Bayesian framework. When conditioning on one set of inputs, the posterior over 
+model parameters is already multimodal. Therefore we resort to Markov chain 
+Monte Carlo (MCMC) sampling tchniques to approximate the desired posterior 
+over both model coefficients and feature subsets. In the next subsections we will 
+propose an appropriate architecture for the classifier and a hybrid sampler for model 
+inference. This hybrid sampler consists of two parts: We use Gibbs updates ([2]) to 
+sample when conditioning on a particular set of inputs and reversible jump moves 
+that carry out dimension switching updates. 
+2.1 The classifier 
+In order to allow input relevance determination by Bayesian model selection, the 
+classifier needs at least one coefficient that is associated with each input' Roughly 
+speaking, the probability of each model is proportional to the likelihood of the most 
+probable coefficients, weighted by their posterior width divided by their prior width. 
+The first factor always increases when using more coefficients (or input features). 
+The second will decrease the more inputs we use and together this gives a peak 
+for the most probable model. A classifier that satisfies these constraints is the so 
+called classification in the sampling paradigm. We model class conditional densities 
+and together with class priors express posterior probabilities for classes. In neural 
+network literature this approach was first proposed in [10]. We use a model that 
+allows for overlapping class conditional densities: 
+D K 
+p(x_lk ) =  wkap(x_l_) , p(x_) =  Pkp(x_lk ) (1) 
+d--1 k=l 
+Using P for the K class priors and p(xlk) for the class conditional densities, (1) 
+expresses posterior probabilities for classes as P(klx ) = Pp(xlk)/p(x ). We choose 
+the component densities, p(xld) , to be Gaussian with restricted parametrisation: 
+Each kernel is a multivariate normal distribution with a mean and a diagonal co- 
+variance matrix. For all Gaussian kernels together, we get 2, D, I parameters, with 
+I denoting the current input dimension and D denoting the number of kernels. 
+Apart from kernel coefficients, (I)d, (1) has D coefficients per class, wd, indicat- 
+ing the prior kernel allocation probabilities and K class priors. Model (1) allows to 
+treat labels of patterns as missing data and use labeled as well as unlabeled data for 
+model inference. In this case training is carried out using the likelihood of observing 
+inputs and targets: 
+p(T, XlO__ ) rl= v ppk(x_lO_O)ii=p(x_,10__), (2) 
+where T denotes labeled and X unlabeled training data. In (2) O__ are all coefficients 
+the k-th class conditional density depends on. We further use _O for all model 
+640 P Sykacek 
+coefficients together, nk as number of samples belonging to class k and m as index 
+for unlabeled samples. To make Gibbs updates possible, we further introduce two 
+latent allocation variables. The first one, d, indicates the kernel number each sample 
+was generated from, the second one is the unobserved class label c, introduced for 
+unlabeled data. Typical approaches for training models like (1), e.g. [3] and [9], 
+use the EM algorithm, which is closely related to the Gibbs sampler introduce in 
+the next subsection. 
+2.2 Fixed dimension sampling 
+In this subsection we will formulate Gibbs updates for sampling from the posterior 
+when conditioning on a fixed set of inputs. In order to allow sampling from the full 
+conditional, we have to choose priors over coefficients from their conjugate family: 
+Each component mean, m__a, is given a Gaussian prior: rn d --, Afd(_, _). 
+The inverse variance of input i and kernel d gets a Gamma prior: 
+2 
+All d variances of input i have a common hyperparameter, /?i, that has 
+itself a Gamma hyperprior: /?i ' F(g, hi). 
+The mixing coefficients, __, get a Dirichlet prior: __W& ' D(5o, ..., 5w). 
+Class priors, P, also get a Dirichlet prior: P--, D(Sp, ...,Sp). 
+The quantitative settings are similar to those used in [8]: Values for a are between 
+1 and 2, g is usually between 0.2 and 1 and hi is typically between 1/R and lOIRe, 
+with Ri denoting the i'th input range. The mean gets a Gaussian prior centered 
+at the midpoint, , with diagonal inverse covariance matrix _, with ii = 1/R. 
+The prior counts w and 5, are set to 1 to give the corresponding probabilities 
+non-informative proper Dirichlet priors. 
+The Gibbs sampler uses updates from the full conditional distributions in (3). For 
+notational convenience we use  for the parameters that determine class condi- 
+tional densities. We use m as index over unlabeled data and c, as latent class label. 
+The index for all data is n, d, are the latent kernel allocations and n the number 
+of samples allocated by the d-th component. One distribution does not occur in 
+the prior specification. That is AAn(1, ...) which is a multinomial-one distribution. 
+Finally we need some counters: m ... m: are the counts per class and rnk .. 
+count kernel allocations of class-k-patterns. The full conditional of the d-th kernel 
+variances and the hyper parameter/?i contain i as index of the input dimension. 
+There we express each r -2 separately. In the expression of the d-th kernel mean, 
+i,d 
+On Input Selection with Reversible Jump MCMC 641 
+m__, we use V_ to denote the entire covariance matrix. 
+p(cl...) 
+-2 
+v(, I...) 
+= F gq-Da, hiq-E 
+d 
+=  ((w q- talk,..., (w q- mDk) 
+-' 'D ( d p q- rn l , . . . , d p q- rn K ) 
+= v((ndv 1 +_)-(nd_v:+_,(_v:  +_)-) 
+= r .+-,/,+  (x.,-_,,)  
+�,�nd,-d 
+(3) 
+2.3 Moving between different input subsets 
+The core part of this sampler are reversible jump updates, where we move between 
+different feature subsets. The probability of a feature subset will be determined by 
+the corresponding Bayesian model evidence and by an additional prior over number 
+of inputs. In accordance with [7], we use the truncated Poisson prior: 
+p(I) = l/ ( Im. ) 'k 
+I c., where c is a constant and Im, the total nr. of inputs. 
+Reversible jump updates are generalizations of conventional Metropolis-Hastings 
+updates, where moves are bijections (x, u) 6-> (x', u'). For a thorough treatment we 
+refer to [4]. In order to switch subsets efficiently, we will use two different types of 
+moves. The first consist of a step where we add one input chosen at random and a 
+matching step that removes one randomly chosen input. A second move exchanges 
+two inputs which allows tunneling through low likelihood areas. 
+Adding an input, we have to increase the dimension of all kernel means and diagonal 
+covariances. These coeffi

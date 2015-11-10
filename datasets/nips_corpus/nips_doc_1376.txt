@@ -1,0 +1,166 @@
+Enhancing Q-Learning for 
+Optimal Asset Allocation 
+Ralph Neuneier 
+Siemens AG, Corporate Technology 
+D-81730 M'tinchen, Germany 
+Ralph.Neuneiermchp. siemens. de 
+Abstract 
+This paper enhances the Q-learning algorithm for optimal asset alloca- 
+tion proposed in (Netmeier, 1996 [6]). The new formulation simplifies 
+the approach by using only one value-function for many assets and al- 
+lows model-free policy-iteration. After testing the new algorithm on 
+real data, the possibility of risk management within the framework of 
+Markov decision problems is analyzed. The proposed methods allows 
+the construction of a multi-period portfolio management system which 
+takes into account transaction costs, the risk preferences of the investor, 
+and several constraints on the allocation. 
+1 Introduction 
+Asset allocation and portfolio management deal with the distribution of capital to various 
+investment opportunities like stocks, bonds, foreign exchanges and others. The aim is to 
+construct a portfolio with a maximal expected return for a given risk level and time horizon 
+while simultaneously obeying institutional or legally required constraints. To find such an 
+optimal portfolio the investor has to solve a difficult optimization problem consisting of 
+two phases [4]. First, the expected yields together with a certainty measure has to be pre- 
+dicted. Second, based on these estimates, mean-variance techniques are typically applied 
+to find an appropriate fund allocation. The problem is further complicated if the investor 
+wants to revise her/his decision at every time step and if transaction costs for changing the 
+allocations must be considered. 
+disturbanciel 
+investments 
+financial market 
+return 
+investor 
+rates, prices 
+Markov Decision Problem: 
+xt = (St, I(t)' state: market St 
+and portfolio/�t 
+policy/, actions 
+transition probabilities 
+return function 
+Within the framework of Markov Decision Problems, MDPs, the modeling phase and the 
+search for an optimal portfolio can be combined (fig. above). Furthermore, transaction 
+costs, constraints, and decision revision are naturally integrated. The theory of MDPs for- 
+malizes control problems within stochastic environments [1]. If the discrete state space is 
+small and if an accurate model of the system is available, MDPs can be solved by con- 
+Enhancing Q-Learning for Optimal Asset Allocation 937 
+ventional Dynamic Programming, DE On the other extreme, reinforcement learning meth- 
+ods using function approximator and stochastic approximation for computing the relevant 
+expectation values can be applied to problems with large (continuous) state spaces and 
+without an appropriate model available [2, 10]. 
+In [6], asset allocation is formalized as a MDP under the following assumptions which 
+clarify the relationship between MDP and portfolio optimization: 
+1. The investor may trade at each time step for an infinite time horizon. 
+2. The investor is not able to influence the market by her/his trading. 
+3. There are only two possible assets for investing the capital. 
+4. The investor has no risk aversion and always invests the total amount. 
+The reinforcement algorithm Q-Learning, QL, has been tested on the task to invest liquid 
+capital in the German stock market DAX, using neural networks as value function approx- 
+imators for the Q-values Q(z, a). The resulting allocation strategy generated more profit 
+than a heuristic benchmark policy [6]. 
+Here, a new formulation of the QL algorithm is proposed which allows to relax the third 
+assumption. Furthermore, in section 3 the possibility of risk control within the MDP frame- 
+work is analyzed which relaxes assumption four. 
+2 Q-Learning with uncontrollable state elements 
+This section explains how the QL algorithm can be simplified by the introduction of an 
+artificial deterministic transition step. Using real data, the successful application of the 
+new algorithm is demonstrated. 
+2.1 Q-Learning for asset allocation 
+The situation of an investor is formalized at time step t by the state vector zt = (St, Kt), 
+which consists of elements St describing the financial market (e.g. interest rates, stock 
+indices), and of elements Kt describing the investor's current allocation of the capital 
+(e.g. how much capital is invested in which asset). The investor's decision at for a new allo- 
+cation and the dynamics on the financial market let the state switch to xt+ - (St+i, Kt+l) 
+according to the transition probability p(xt+ 11xt, at). Each transition results in an imme- 
+diate return rt = r(xt, X t+l, at) which incorporates possible transaction costs depending 
+on the decision at and the change of the value of/raft due to the new values of the as- 
+sets at time t + 1. The aim is to maximize the expected discounted sum of the returns, 
+V* (x) -- E(-t__o '/trt]Xo -- x), by following an optimal stationary policy p* (xt) = at. 
+For a discrete finite state space the solution can be stated as the recursive Bellman equation: 
+V*(xt) = maax [ p(xt+tlxt, a)rt + 7  p(xt+ll;rt,a)l/*(xt+t) 1 (1) 
+A more useful formulation defines a Q-function Q* (x, a) of state-action pairs (xt. at ), 
+Q*(ct,at) :-- p(ct+llCt,at)rt q-'/ 
+aEA 
+t+ 
+(2) 
+to allow the application of an iterative stochastic approximation scheme, called Q-Learning 
+[11]. The Q-value Q*(zt, at) quantifies the expected discounted sum of returns if one 
+executes action at in state xt and follows an optimal policy thereafter, i.e. V  (xt) - 
+maxa Q* (xt, a). Observing the tuple (xt, xt+i, at, rt), the tabulated Q-values are updated 
+938 R. Neuneier 
+in the k + 1 iteration step with learning rate r/, according to: 
+QL: Qk+(xt, at) = (1- rlk)Q(xt,at) + rl(rt + 7 amff(Q(xt+,a)) ) � 
+It can be shown, that the sequence of Q, converges under certain assumptions to Q*. If the 
+Q-values Q* (z, a) are approximated by separate neural networks with weight vector w 
+for different actions a, Q* (z, a) m Q(z; w), the adaptations (called NN-QL) are based on 
+the temporal differences dt: 
+NN-QL: a, 
+Note, that although the market dependent part St of the state vector is independent of the 
+investor's decisions, the future wealth Kt+i and the returns rE are not. Therefore, asset 
+allocation is a multi-stage decision problem and may not be reduced to pure prediction 
+if transaction costs must be considered. On the other hand, the attractive feature that the 
+decisions do not influence the market allows to approximate the Q-values using historical 
+data of the financial market. We need not to invest real money during the training phase. 
+2.2 Introduction of an artificial deterministic transition 
+Now, the Q-values are reformulated in order to make them independent of the actions cho- 
+sen at the time step t. Due to assumption 2, which states that the investor can not influence 
+the market by the trading decisions, the stochastic process of the dynamics of St is an un- 
+controllable Markov chain. This allows the introduction of a deterministic intermediate 
+step between the transition from zt to zt+ (see fig. below). After the investor has cho- 
+sen an action at, the capital Kt changes to K[ because he/she may have paid transaction 
+costs ct: c(Kt, at) and K reflects the new allocation whereas the state of the market, 
+St, remains the same. Because the costs ct are known in advance, this transition is deter- 
+ministic and controllable. Then, the market switches stochastically to $t+ and generates 
+' ' The capital changes to 
+' = r ($t,K[ St+I) i.e., rt = ct + ft. 
+the immediate return r t , 
+/xt+l -- r q- K[. This transition is uncontrollable by the investor. V* ($, K) = V* (x) is 
+' (compare also eq. 1) 
+now computed using the costs ct and returns r t 
+V*($,K) = maxE [ ft(c(Kt,at) 
+ao... t--O 
+(St, 
+$o=$ ] 
+Ko =K 
+t determlBific 
+ii  fit ! 
+Ct 
+stoc,,,s t+l 
+t 
+Q($t,K't) 
+Defining Q* (St, K) as the Q-values of the intermediate time step 
+Q*($t,/') :--- E[lJ($t, tt'[,$t+l) q- 7V*($t+l,I't+l)] , 
+E[rE q- 7 max[ct+ q- Q* ( $t +  , K[ +  ) ]] , 
+at+x 
+Enhancing Q-Learning for Optimal Asset Allocation 939 
+gives rise to the optimal value function and policy (time indices are suppressed), 
+V*($, K) = max[c(ix', a)+ Q*($, K')], 
+a 
+y* ($, K) = arg max[c(K, a) + Q* ($, K')]. 
+Defining the temporal differences dt for the approximation Qk as 
+d, := r'(St,Ix';, St+i) + '7 max[c(Kt+l, a) + Q(k)($t+l, K[+l) ] - Q(k)($t, K[) 
+leads to the update equations for the Q-values represented by tables or networks: 
+QLU: 
+NN-QLU: w (k+l) 
+= w � + rldtVQ($, K'; w (t:)) . 
+The simplification is now obvious, because (NN-)QLU only needs one table or neural net- 
+work no matter how many assets are concerned. This may lead to a faster convergence and 
+better results. The training algorithm boils down to the iteration of the following steps: 
+QLU for optimal investment decisions 
+1. draw randomly patterns St, $t+l from the data set, 
+draw randomly an asset allocation K[ 
+2. for all possible actions a: 
+compute r, c(ix'+l,a), Q(k)($t+l, K+i) 
+3. compute temporal difference dt 
+4. compute new value Q('+l)($t, K) resp. Q($t, K; w (+1)) 
+5. stop, if Q-values have converged, otherwise go to 1 
+Since QLU is equivalent to Q-Learning, QLU converges to the optimal Q-values under the 
+same conditions as QL (e. g [2]). The main advantage of (NN-)QLU is that this algorithm 
+only needs one value function no matter how many assets are concerned and how fine the 
+grid of actions are: 
+Q*(($, '), a): c(I',a) + Q*($, Ix). 
+Interestingly, the convergence to an optimal policy of QLU does not rely on an explicit 
+exploration strategy because the randomly chosen capital K in step 1 simulates a random 
+action which was responsible for the transition from Kt. In combination with the randomly 
+chosen market state St, a sufficient exploration of the action and state space is guaranteed. 
+2.3 Model-free policy-iteration 
+The reformulation also allows the design of a policy iteration algorithm by alt

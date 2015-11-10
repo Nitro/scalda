@@ -1,0 +1,170 @@
+Bayesian Model Comparison 
+by Monte Carlo Chaining 
+David Barber 
+D. Barberas;on. ac. uk 
+Christopher M. Bishop 
+C. It. B �shopqlas;on. ac. uk 
+Neural Computing Research Group 
+Aston University, Birmingham, B4 7ET, U.K. 
+h;;p://. ncrg. ash;on. ac. uk/ 
+Abstract 
+The techniques of Bayesian inference have been applied with great 
+success to many problems in neural computing including evaluation 
+of regression functions, determination of error bars on predictions, 
+and the treatment of hyper-parameters. However, the problem of 
+model comparison is a much more challenging one for which current 
+techniques have significant limitations. In this paper we show how 
+an extended form of Markov chain Monte Carlo, called chaining, 
+is able to provide effective estimates of the relative probabilities of 
+different models. We present results from the robot arm problem 
+and compare them with the corresponding results obtained using 
+the standard Gaussian approximation framework. 
+1 Bayesian Model Comparison 
+In a Bayesian treatment of statistical inference, our state of knowledge of the values 
+of the parameters w in a model :M is described in terms of a probability distribution 
+function. Initially this is chosen to be some prior distribution p(wl:M), which can 
+be combined with a likelihood function p(DIw,.M) using Bayes' theorem to give a 
+posterior distribution p(wlD,.M ) in the form 
+p(wlD,)- p(DIw,)p(wl) 
+p(91) 
+where D is the data set. Predictions of the model are obtained by performing 
+integrations weighted by the posterior distribution. 
+334 D. Barber and C. M. Bishop 
+The comparison of different models Ji is based on their relative probabilities, which 
+can be expressed, again using Bayes' theorem, in terms of prior probabilities p(./Mi) 
+to give 
+p(JMi{D) p(DI./Mi)p(.A4i ) 
+= (2) 
+p(A: IO) p(Ol4)p(J4) 
+and so requires that we be able to evaluate the model evidence p(DlJMi), which 
+corresponds to the denominator in (1). The relative probabilities of different models 
+can be used to select the single most probable model, or to form a committee of 
+models, weighed by their probabilities. 
+It is convenient to write the numerator of (1)in the form exp{-E(w)}, where E(w) 
+is an error function. Normalization of the posterior distribution then requires that 
+p(DlJM ) = f exp{-E(w)} dw. 
+(3) 
+Generally, it is straightforward to evaluate E(w) for a given value of w, although 
+it is extremely difficult to evaluate the corresponding model evidence using (3) 
+since the posterior distribution is typically very small except in narrow regions 
+of the high-dimensional parameter space, which are unknown a-priori. Standard 
+numerical integration techniques are therefore inapplicable. 
+One approach is based on a local Gaussian approximation around a mode of the 
+posterior (MacKay, 1992). Unfortunately, this approximation is expected to be 
+accurate only when the number of data points is large in relation to the number of 
+parameters in the model. In fact it is for relatively complex models, or problems for 
+which data is scarce, that Bayesian methods have the most to offer. Indeed, Neal 
+(1996) has argued that, from a Bayesian perspective, there is no reason to limit 
+the number of parameters in a model, other than for computational reasons. We 
+therefore consider an approach to the evaluation of model evidence which overcomes 
+the limitations of the Gaussian framework. For additional techniques and references 
+to Bayesian model comparison, see Gilks et al. (1995) and Kass and Raftery (1995). 
+2 Chaining 
+Suppose we have a simple model A0 for which we can evaluate the evidence an- 
+alytically, and for which we can easily generate a sample w 1 (where I = 1,..., L) 
+from the corresponding distribution p(wlD , .M0). Then the evidence for some other 
+model .M can be expressed in the form 
+p(Ol4) 
+p(DlM0) 
+= /exp{-E(w)+E0(w)}p(wlD,10)dw 
+L 
+1 
+-  Y exp{-E(w t) + E0(wt)}. 
+/=1 
+(4) 
+Unfortunately, the Monte Carlo approximation in (4) will be poor if the two error 
+functions are significantly different, since the exponent is dominated by regions 
+where E is relatively small, for which there will be few samples unless E0 is also small 
+in those regions. A simple Monte Carlo approach will therefore yield poor results. 
+This problem is equivalent to the evaluation of free energies in statistical physics, 
+Bayesian Model Comparison by Monte Carlo Chaining 335 
+which is known to be a challenging problem, and where a number of approaches 
+have been developed Neal (1993). 
+Here we discuss one such approach to this problem based on a chain of K successive 
+models Ai which interpolate between A0 and A4, so that the required evidence 
+can be written as 
+p(O[.M) -- p(OlA0)pP ) p(DIA.) p(O[.M) 
+( { )p(DI./M1)'P(DIA4:)' (5) 
+Each of the ratios in (5) can be evaluated using (4). The goal is to devise a chain 
+of models such that each successive pair of models has probability distributions 
+which are reasonably close, so that each of the ratios in (5) can be evaluated accu- 
+rately, while keeping the total number of links in the chain fairly small to limit the 
+computational costs. 
+We have chosen the technique of hybrid Monte Carlo (Duane et al., 1987; Neal, 
+1993) to sample from the various distributions, since this has been shown to be 
+effective for sampling from the complex distributions arising with neural network 
+models (Neal, 1996). This involves introducing Hamiltonian equations of motion in 
+which the parameters w are augmented by a set of fictitious 'momentum' variables, 
+which are then integrated using the leapfrog method. At the end of each trajectory 
+the new parameter vector is accepted with a probability governed by the Metropolis 
+criterion, and the momenta are replaced using Gibbs sampling. As a check on our 
+software implementation of chaining, we have evaluated the evidence for a mixture 
+of two non-isotropic Gaussian distributions, and obtained a result which was within 
+10% of the analytical solution. 
+3 Application to Neural Networks 
+We now consider the application of the chaining method to regression problems 
+involving neural network models. The network corresponds to a function y(x, w), 
+and the data set consists of N pairs of input vectors xn and corresponding targets 
+tn where n - 1,..., N. Assuming Gaussian noise on the target data, the likelihood 
+function takes the form 
+p(Olw, M)-- exp- 2 (6) 
+where / is a hyper-parameter representing the inverse of the noise variance. We 
+consider networks with a single hidden layer of 'tanh' units, and linear output 
+units. Following Neal (1996) we use a diagonal Gaussian prior in which the weights 
+are divided into groups w}, where k = 1,..., 4 corresponding to input-to-hidden 
+weights, hidden-unit biases, hidden-to-output weights, and output biases. Each 
+group is governed by a separate 'precision' hyper-parameter a}, so that the prior 
+takes the form 
+1 exp { 1 } 
+k 
+where Zw is the normalization coefficient. The hyper-parameters {a}} and/ are 
+themselves each governed by hyper-priors given by Gamma distributions of the form 
+p(a) c a' exp(-as/2w) (8) 
+336 D. Barber and C. M. Bishop 
+in which the mean w and variance 2w2/s are chosen to give very broad hyper-priors 
+in reflection of our limited prior knowledge of the values of the hyper-parameters. 
+We use the hybrid Monte Carlo algorithm to sample from the joint distribution of 
+parameters and hyper-parameters. For the evaluation of evidence ratios, however, 
+we consider only the parameter samples, and perform the integrals over hyper- 
+parameters analytically, using the fact that the gamma distribution is conjugate to 
+the Gaussian. 
+In order to apply chaining to this problem, we choose the prior as our reference dis- 
+tribution, and then define a set of intermediate distributions based on a parameter 
+A which governs the effective contribution from the data term, so that 
+E(A, w) = Aq(w) + E0(w) (9) 
+where q(w) arises from the likelihood term (6) while E0(w) corresponds to the 
+prior (7). We select a set of 18 values of A which interpolate between the reference 
+distribution (A = 0) and the desired model distribution (A = 1). The evidence for 
+the prior alone is easily evaluated analytically. 
+4 Gaussian Approximation 
+As a comparison against the method of chaining, we consider the framework of 
+MacKay (1992) based on a local Gaussian approximation to the posterior distri- 
+bution. This approach makes use of the evidence approximation in which the inte- 
+gration over hyper-parameters is approximated by setting them to specific values 
+which are themselves determined by maximizing their evidence functions. 
+This leads to a hierarchical treatment as follows. At the lowest level, the maximum 
+' of the posterior distribution over weights is found for fixed values of the hyper- 
+parameters by minimizing the error function. Periodically the hyper-parameters are 
+re-estimated by evidence maximization, where the evidence is obtained analytically 
+using the Gaussian approximation. This gives the following re-estimation formulae 
+N 
+- .- � 
+1 1 Ilu(x., r) - trill 2 a :: '-T 
+/ '- N-7 ww 
+where 7 = W, - a,Tr,(A-i), W, is the total number of parameters in group 
+k, A = VVE('), 7 = Y], 7,, and Tr,(.) denotes the trace over the kth gronp 
+of parameters. The weights are updated in an inner loop by minimizing the er- 
+ror function using a conjugate gradient optimizer, while the hyper-parameters are 
+periodically re-estimated using (10)l. 
+Once training is complete, the model evidence is evaluated by making a Gaussian 
+approximation around the converged values of the hyper-parameters, and integrat- 
+ing over this distribution analytically. This gives the model log evidence as 
+1 1 
+lnp(DlA/) = -E(-) - lnlAl+ yWlna + 
+k 
+i 1 
+-- ln + In h! + 21nh + 5  In (2/7,) + 5 In (2/(N - )). (11) 
+2 
+k 
+Note that we are assuming that the hyper-priors (8) are sufficiently broad that they 
+have no effect on the locati

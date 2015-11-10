@@ -1,0 +1,157 @@
+The Use of Dynamic Writing Information 
+in a Connectionist On-Line Cursive 
+Handwriting Recognition System 
+Stefan Manke Michael Finke Alex Waibel 
+University of Karlsruhe 
+Computer Science Department 
+D-76128 Karlsruhe, Germany 
+manke(ira.uka.de, finkem(ira.uka.de 
+Carnegie Mellon University 
+School of Computer Science 
+Pittsburgh, PA 15213-3890, U.S.A. 
+waibelCcs.cmu.edu 
+Abstract 
+In this paper we present NPen ++, a connectionist system for 
+writer independent, large vocabulary on-line cursive handwriting 
+recognition. This system combines a robust input representation, 
+which preserves the dynamic writing information, with a neural 
+network architecture, a so called Multi-State Time Delay Neural 
+Network (MS-TDNN), which integrates recognition and segmen- 
+tation in a single framework. Our preprocessing transforms the 
+original coordinate sequence into a (still temporal) sequence of fea- 
+ture vectors, which combine strictly local features, like curvature 
+or writing direction, with a bitmap-like representation of the co- 
+ordinate's proximity. The MS-TDNN architecture is well suited 
+for handling temporal sequences as provided by this input rep- 
+resentation. Our system is tested both on writer dependent and 
+writer independent tasks with vocabulary sizes ranging from 400 
+up to 20,000 words. For example, on a 20,000 word vocabulary we 
+achieve word recognition rates up to 88.9% (writer dependent) and 
+84.1% (writer independent) without using any language models. 
+1094 Stefan Manke, Michael Finke, Alex Waibel 
+1 INTRODUCTION 
+Several preprocessing and recognition approaches for on-line handwriting recog- 
+nition have been developed during the past years. The main advantage of on-line 
+handwriting recognition in comparison to optical character recognition (OCR) is the 
+temporal information of handwriting, which can be recorded and used for recogni- 
+tion. In general this dynamic writing information (i.e. the time-ordered sequence of 
+coordinates) is not available in OCR, where input consists of scanned text. In this 
+paper we present the NPen ++ system, which is designed to preserve the dynamic 
+writing information as long as possible in the preprocessing and recognition process. 
+During preprocessing a temporal sequence of N-dimensional feature vectors is com- 
+puted from the original coordinate sequence, which is recorded on the digitizer. 
+These feature vectors combine strictly local features, like curvature and writing di- 
+rection [4], with so-called context bitmaps, which are bitmap-like representations of 
+a coordinate's proximity. 
+The recognition component of NPen ++ is well suited for handling temporal se- 
+quences of patterns, as provided by this kind of input representation. The rec- 
+ognizer, a so-called Multi-State Time Delay Neural Network (MS-TDNN), inte- 
+grates recognition and segmentation of words into a single network architecture. 
+The MS-TDNN, which was originally proposed for continuous speech recognition 
+tasks [6, 7], combines shift-invariant, high accuracy pattern recognition capabilities 
+of a TDNN [8, 4] with a non-linear alignment procedure for aligning strokes into 
+character sequences. 
+Our system is applied both to different writer dependent and writer independent, 
+large vocabulary handwriting recognition tasks with vocabulary sizes up to 20,000 
+words. Writer independent word recognition rates range from 92.9% with a 400 
+word vocabulary to 84.1% with a 20,000 word vocabulary. For the writer dependent 
+system, word recognition rates for the same tasks range from 98.6% to 88.9% [1]. 
+In the following section we give a description of our preprocessing performed on the 
+raw coordinate sequence, provided by the digitizer. In section 3 the architecture and 
+training of the recognizer is presented. A description of the experiments to evaluate 
+the system and the results we have achieved on different tasks can be found in 
+section 4. Conclusions and future work is described in section 5. 
+2 PREPROCESSING 
+The dynamic writing information, i.e. the temporal order of the data points, is 
+preserved throughout all preprocessing steps. The original coordinate sequence 
+{((t),O(t))}te(o...T,) recorded on the digitizer is transformed into a new temporal 
+sequence 0 T - 0... T, where each frame t consists of an N-dimensional real- 
+valued feature vect6r (f(t), ...,fN(t)) E [--1, 1] N. 
+Several normalization methods are applied to remove undesired variability from 
+the original coordinate sequence. To compensate for different sampling rates and 
+varying writing speeds the coordinates originally sampled to be equidistant in time 
+are resampled yielding a new sequence {((t),.(t))}e(o...T) which is equidistant in 
+Dynamic Writing Information in Cursive Handwriting Recognition 1095 
+� thee 
+final input representation ..... 
+- (a) context bitma s 
+normalized 
+coordinate 
+sequence: 
+t.2 t-I t t+l 
+(b) writing direction curvature 
+x(t-2),y(t-2) 4 ,'] x(t-2),y(t-2)  , ,' 
+ ,* x(t+2),y(t+2) x(t+2),y(t+2) 
+x(t+l),y(t+l) 1),y(t+l) 
+x(t),y(t) x(t),y(t) 
+Figure 1: Feature extraction for the normalized word able. The final input rep- 
+resentation is derived by calculating a 15-dimensional feature vector for each data 
+point, which consists of a context bitmap (a) and information about the curvature 
+and writing direction (b). 
+space. This resampled trajectory is smoothed using a moving average window in 
+order to remove sampling noise. In a final normalization step the goal is to find 
+a representation of the trajectory that is reasonably invariant against rotation and 
+scaling of the input. The idea is to determine the words' baseline using an EM 
+approach similar to that described in [5] and rescale the word such that the center 
+region of the word is assigned to a fixed size. 
+From the normalized coordinate sequence {(x(t),y(t))},elo...t ) the temporal se- 
+quence a:0 T of N-dimensional feature vectors a = (f(t),...,fN(t)) is computed 
+(Figure 1). C, urrently the system uses N = 15 features for each data point. The 
+first two features fi(t) = x(t)-x(t- l) and f2(t) = y(t)-b describe the relative X 
+movement and the Y position relative to the baseline b. The features fa(t) to f6(t) 
+are used to describe the curvature and writing direction in the trajectory [4] (Fig- 
+ure l(b)). Since all these features are strictly local in the sense that they are local 
+both in time and in space they were shown to be inadequate for modeling temporal 
+long range context dependencies typically observed in pen trajectories [2]. There- 
+fore, nine additional features f7(t) to f(t) representing 3 x 3 bitmaps were included 
+in each feature vector (Figure l(a)). These so-called context bitmaps are basically 
+low resolution, bitmap-like descriptions of the coordinate's proximity, which were 
+originally described in [2]. 
+Thus, the input representation as shown in Figure 1 combines strictly local features 
+like writing direction and curvature with the context bitmaps, which are still local 
+1096 Stefan Manke, Michael Finke, Alex Waibel 
+in space but global in time. That means, each point of the trajectory is visible from 
+each other point of the trajectory in a small neighbourhood. By using these context 
+bitmaps in addition to the local features, important information about other parts 
+of the trajectory, which are in a limited neighbourhood of a coordinate, are encoded. 
+3 THE NPen ++ RECOGNIZER 
+The NPen ++ recognizer integrates recognition and segmentation of words into 
+a single network architecture, the Multi-State Time Delay Neural Network (MS- 
+TDNN). The MS-TDNN, which was originally proposed for continuous speech 
+recognition tasks [6, 7], combines the high accuracy single character recognition 
+capabilities of a TDNN [8, 4] with a non-linear time alignment algorithm (dynamic 
+time warping) for finding stroke and character boundaries in isolated handwritten 
+words. 
+3.1 MODELING ASSUMPTIONS 
+Let W = {w,... w-} be a vocabulary consisting of K words. Each of these words 
+wi is represented as a sequence of characters wi --- ci ci:.. � cid, where each character 
+cj itself is modelled by a three state hidden markov model cj = q9q.q 2. The 
+idea of using three states per character is to model explicitly the initial, middle 
+and final section of the characters. Thus, wi is modelled by a sequence of states 
+wi ---- qioqix.. 'qj3,. In these word HMMs the self-loop probabilities P(qijlqij) and 
+ while all other 
+the transition probabilities P(qijlqij-1) are both defined to be  
+transition probabilities are set to zero. 
+During recognition of an unknown sequence of feature vectors r0 T = a0... aT we 
+have to find the word wi E W in the dictionary that maximizes the a-posteriori 
+probability p(wi la% T, 0) given a fixed set of parameters 0 and the observed coordinate 
+sequence. That means, a written word will be recognized such that 
+Wj -- argmax,,ewp(wilro ', 0). 
+In our Multi-State Time Delay Neural Network approach the problem of modeling 
+the word posterior probability p(wila% T, 0) is simplified by using Bayes' rule which 
+expresses that probability as 
+p(ao lW, O)P(w, lO) 
+p(wilao, O) - p(aolO) 
+Instead of approximating p(wilao , 0) directly we define in the following section a 
+network that is supposed to model the likelihood of the feature vector sequence 
+lw, O). 
+3.2 THE MS-TDNN ARCHITECTURE 
+In Figure 2 the basic MS-TDNN architecture for handwriting recognition is shown. 
+The first three layers constitute a standard TDNN with sliding input windows in 
+each layer. In the current implementation of the system, a TDNN with 15 input 
+Dynamic Writing Info.nation in Cursive Handwriting Recognition 1097 
+Figure 2: The Multi-State TDNN architecttire, consisting of a 3-layer TDNN to 
+estimate the a posteriori probabilities of the character states combined with word 
+units, whose scores are derived from the word models by a Viterbi approximation 
+of the likelihoods p(xolwi). 
+units, 40 uni

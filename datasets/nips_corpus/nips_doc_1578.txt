@@ -1,0 +1,168 @@
+SMEM Algorithm for Mixture Models 
+Naonori Ueda Ryohei Nakano 
+{ueda, nakano} @cslab.kecl.ntt.co.jp 
+NTT Communication Science Laboratories 
+Hikaridai, Seika-cho, Soraku-gun, Kyoto 619-0237 Japan 
+Zoubin Ghahramani Geoffrey E. Hinton 
+zoubin@gatsby. ucl.ac.uk g.hinton@ucl.ac.uk 
+Gatsby Computational Neuroscience Unit, University College London 
+17 Queen Square, London WC1N 3AR, UK 
+Abstract 
+We present a split and merge EM (SMEM) algorithm to overcome the local 
+maximum problem in parameter estimation of finite mixture models. In the 
+case of mixture models, non-global maxima often involve having too many 
+components of a mixture model in one part of the space and too few in an- 
+other, widely separated part of the space. To escape from such configurations 
+we repeatedly perform simultaneous split and merge operations using a new 
+criterion for efficiently selecting the split and merge candidates. We apply 
+the proposed algorithm to the training of Gaussian mixtures and mixtures of 
+factor analyzers using synthetic and real data and show the effectiveness of 
+using the split and merge operations to improve the likelihood of both the 
+training data and of held-out test data. 
+1 INTRODUCTION 
+Mixture density models, in particular normal mixtures, have been extensively used 
+in the field of statistical pattern recognition [1]. Recently, more sophisticated mix- 
+ture density models such as mixtures of latent variable models (e.g., probabilistic 
+PCA or factor analysis) have been proposed to approximate the underlying data 
+manifold [2]-[4]. The parameter of these mixture models can be estimated using the 
+EM algorithm [5] based on the maximum likelihood framework [3][4]. A common 
+and serious problem associated with these EM algorithm is the local maxima prob- 
+lem. Although this problem has been pointed out by many researchers, the best 
+way to solve it in practice is still an open question. 
+Two of the authors have proposed the deterministic annealing EM (DAEM) algo- 
+rithm [6], where a modified posterior probability parameterized by temperature is 
+derived to avoid local maxima. However, in the case of mixture density models, 
+local maxima arise when there are too many components of a mixture models in 
+one part of the space and too few in another. It is not possible to move a compo- 
+nent from the overpopulated region to the underpopulated region without passing 
+600 N. Ueda, R. Nakano, Z Ghahramani and G. E. Hinton 
+through positions that give lower likelihood. We therefore introduce a discrete move 
+that simultaneously merges two components in an overpopulated region and splits 
+a component in an underpopulated region. 
+The idea of split and merge operations has been successfully applied to clustering 
+or vector quantization (e.g., [7]). To our knowledge, this is the first time that 
+simultaneous split and merge operations have been applied to improve mixture 
+density estimation. New criteria presented in this paper can efficiently select the 
+split and merge candidates. Although the proposed method, unlike the DAEM 
+algorithm, is limited to mixture models, we have experimentally comfirmed that our 
+split and merge EM algorithm obtains better solutions than the DAEM algorithm. 
+2 Split and Merge EM (SMEM) Algorithm 
+The probability density function (pdf) of a mixture of M density models is given by 
+M M 
+p(x;O) =  amp(XlWm;Om), where am _> 0 and  am = 1. (1) 
+The p(x I wm; Ore) is a d-dimensional density model corresponding to the component 
+win. The EM algorithm, as is well known, iteratively estimates the parameters O = 
+{(am, Ore), m = 1,..., M} using two steps. The E-step computes the expectation 
+of the complete data log-likelihood. 
+log ap(xl; 
+(2) 
+where P(cmlx; O (t)) is the posterior probability which can be computed by 
+P(WmIX;O (t)) = 
+) ) 
+M 
+Em'=l , 
+(a) 
+Next, the M-step maximizes this Q function with respect to O to estimate the new 
+parameter values O (t+). 
+Looking at (2) carefully, one can see that the Q function can be represented in 
+the form of a direct sum; i.e., Q(OIO (t)) M 
+---- Ym=l qm(OlO(t)), where = 
+Yxea: P(wm[X; 0 (t)) logamp(xlwm; Ore) and depends only on am and Om. Let O* 
+denote the parameter values estimated by the usual EM algorithm. Then after the 
+EM algorithm has converged, the Q function can be rewritten as 
+Q*=q' +q +q +  * 
+qm' 
+m,mi,j,k 
+(4) 
+We then try to increase the first three terms of the right-hand side of (4) by merging 
+two components wi and wj to produce a component wi,, and splitting the component 
+wk into two components w j, and wk,. To reestimate the parameters of these new 
+components, we have to initialize the parameters corresponding to them using 0*. 
+The initial parameter values for the merged component wi, can be set as a linear 
+combination of the original ones before merge: 
+and 0i, 
+= ExP(jI;O*) (5) 
+SMEM Algorithm for Mixture Models 601 
+On the other hand, as for two components coj, and wk,, we set 
+cj, =ck, =0;/2 0j, =0+e and Ok, =O+e', 
+(6) 
+where e is some small random perturbation vector or matrix (i.e., II e ll<<ll ]l) 1. 
+The parameter reestimation for rn = i,j  and k  can be done by using EM steps, 
+but note that the posterior probability (3) should be replaced with (7) so that this 
+reestimation does not affect the other components. 
+P(mlX; eft)) = 
+O(mt)p(x ICOm; 0(m t) ) 
+m  =i  ,j' 
+x P(m, lz;e*), m =i',5',k'. 
+(7) 
+Clearly Y',,-i,,',k' P(om, Ix; 13�)) = Y'-m--,,k P(mlm; O*) always holds during 
+the reestimari process. For convenienceS-we call this EM procedure the partial 
+EM procedure. After this partial EM procedure, the usual EM steps, called the full 
+EM procedure, are performed as a post processing. After these procedures, if (2 
+is improved, then we accept the new estimate and repeat the above after setting 
+the new paramters to 13'. Otherwise reject and go back to 13' and try another 
+candidate. We summarize these procedures as follows: 
+[SMEM Algorithm] 
+1. Perform the usual EM updates. Let 13' and Q* denote the estimated parameters 
+and corresponding Q function value, respectively. 
+2. Sort the split and merge candidates by computing split and merge criteria (de- 
+scribed in the next section) based on *. Let {i, j, k}c denote the cth candidate. 
+3. For c = 1,..., G'max, perform the following: After initial parameter settings 
+based on *, perform the partial EM procedure for {i, j, k}c and then perform 
+the full EM procedure. Let ** be the obtained parameters and (2** be the 
+corresponding Q function value. If Q** > Q*, then set Q* -- (2**, * -- ** 
+and go to Step 2. 
+4. Halt with * as the final parameters. 
+Note that when a certain split and merge candidate which improves the (2 function 
+value is found at Step 3, the other successive candidates are ignored. There is 
+therefore no guarantee that the split and the merge candidates that are chosen will 
+give the largest possible improvement in (2. This is not a major problem, however, 
+because the split and merge operations are performed repeatedly. Strictly speaking, 
+C'max = M(M - 1)(M- 2)/2, but experimentally we have confirmed that Cma  5 
+may be enough. 
+3 Split and Merge Criteria 
+Each of the split and merge candidates can be evaluated by its Q function value 
+after Step 3 of the SMEM algorithm mentioned in Sec.2. However, since there 
+are so many candidates, some reasonable criteria for ordering the split and merge 
+candidates should be utilized to accelerate the SMEM algorithm. 
+In general, when there are many data points each of which has almost equal posterior 
+probabilities for any two components, it can be thought that these two components 
+1In the case of mixture Gaussians, covariance matrices , and , should be positive 
+definite. In this case, we can initialize them as , = , = det()/ala indtead of (6). 
+602 N. Ueda, R. Nakano, Z Ghahramani and G. E. Hinton 
+might be merged. To numerically evaluate this, we define the following merge 
+criterion: 
+Jmerge(i,j;(*) = Pi(I*)TPj((*), (8) 
+where Pi(O*) = (P(wjx;O*),...,P(w[xN;O*)) T e 7  is the N-dimensional 
+vector consisting of posterior probabilities for the component w. Clearly, two com- 
+ponents wi and wj with larger Jmerge(i,j; 0') should be merged. 
+As a split criterion (Jsplit), we define the local Kullback divergence as: 
+Jsput(k;O*) = f pk(x;O*)log pk(x;O*) dx, 
+p(x[w;O) 
+(9) 
+which is the distance between two distributions: the local data density p (x) around 
+the component w/ and the density of the component w specified by the current 
+parameter estimate/ and E. The local data density is defined as: 
+pk(x; e*) = 'nN=l '( - 
+N 
+) 
+(10) 
+This is a modified empirical distribution weighted by the posterior probability so 
+that the data around the component w are focused. Note that when the weights 
+are equal, i.e., P(w[x; 6)*) = l/M, (10) is the usual empirical distribution, i.e., 
+N 
+pk(x; 0') = (l/N) Yn=l 6(x - xn). Since it can be thought that the component 
+with the largest Jsplit (k; ()*) has the worst estimate of the local density, we should 
+try to split it. Using Jmerge and Jsptu, we sort the split and merge candidates as 
+follows. First, merge candidates are sorted based on Jmerge. Then, for each sorted 
+merge.candidate {i,j}c, split candidates excluding {i,j}c are sorted as {k}c. By 
+combining these results and tenumbering them, we obtain {i, j, k}c. 
+4 Experiments 
+4.1 Gaussian mixtures 
+First, we show the results of two-dimensional synthetic data in Fig. 1 to visually 
+demonstrate the usefulness of the split and merge operations. Initial mean vectors 
+and covariance matrices were set to near mean of all data and unit matrix, respec- 
+tively. The usual EM algorithm converged to the local maximum solution shown in 
+Fig. 1 (b), whereas the SMEM algorithm converged to the superior solution shown 
+in Fig. l(d) very close to the true one. The split of the 1st Gaussian shown in 
+Fig. l(c) seems to be redundant, but as shown in Fig. l(d) 

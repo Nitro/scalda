@@ -1,0 +1,159 @@
+Analysis of Drifting Dynamics with 
+Neural Network Hidden Markov Models 
+J. Kohlmorgen 
+GMD FIRST 
+Rudower Chaussee 5 
+12489 Berlin, Germany 
+K.-R. M'dller 
+GMD FIRST 
+Rudower Chaussee 5 
+12489 Berlin, Germany 
+K. Pawelzik 
+MPI f. StrSmungsforschung 
+Bunsenstr. 10 
+37073 GSttingen, Germany 
+Abstract 
+We present a method for the analysis of nonstationary time se- 
+ries with multiple operating modes. In particular, it is possible to 
+detect and to model both a switching of the dynamics and a less 
+abrupt, time consuming drift from one mode to another. This is 
+achieved in two steps. First, an unsupervised training method pro- 
+vides prediction experts for the inherent dynamical modes. Then, 
+the trained experts are used in a hidden Markov model that allows 
+to model drifts. An application to physiological wake/sleep data 
+demonstrates that analysis and modeling of real-world time series 
+can be improved when the drift paradigm is taken into account. 
+I Introduction 
+Modeling dynamical systems through a measured time series is commonly done by 
+reconstructing the state space with time-delay coordinates [10]. The prediction of 
+the time series can then be accomplished by training neural networks [11]. If, how- 
+ever, a system operates in multiple modes and the dynamics is drifting or switching, 
+standard approaches like multi-layer perceptrons are likely to fail to represent the 
+underlying input-output relations. Moreover, they do not reveal the dynamical 
+structure of the system. Time series from alternating dynamics of this type can 
+originate from many kinds of systems in physics, biology and engineering. 
+In [2, 6, 8], we have described a framework for time series from switching dynamics, 
+in which an ensemble of neural network predictors specializes on the respective 
+operating modes. We now extend the ability to describe a mode change not only 
+as a switching but - if appropriate - also as a drift from one predictor to another. 
+Our results indicate that physiological signals contain drifting dynamics, which 
+736 J. Kohlmorgen, K-R. Mtlller and K. Pawelzik 
+underlines the potential relevance of our method in time series analysis. 
+2 Detection of Drifts 
+The detection and analysis of drifts is performed in two steps. First, an unsupervised 
+(hard-)segmentation method is applied. In this approach, an ensemble of competing 
+prediction experts .fi, i = 1, ..., N, is trained on a given time series. The optimal 
+choice of function approximators .fi depends on the specific application. In general, 
+however, neural networks are a good choice for the prediction of time series [11]. In 
+this paper, we use radial basis function (RBF) networks of the Moody-Darken type 
+[5] as predictors, because they offer a fast and robust learning method. 
+Under a gaussian assumption, the probability that a particular predictor i would 
+have produced the observed data y is given by 
+p(y l i) = Ke -(y-f), (1) 
+where K is the normalization term for the gaussian distribution. If we assume that 
+the experts are mutually exclusive and exhaustive, we have p(y) - i P(Y I i)p(i). 
+We further assume that the experts are - a priori - equally probable, 
+p(i) = 1IN. (2) 
+In order to train the experts, we want to maximize the likelihood that the ensemble 
+would have generated the time series. This can be done by a gradient method. For 
+the derivative of the log-likelihood log L = log(p(y)) with respect to the output of 
+an expert, we get 
+log L 
+e-(Y-f)  ] 
+cx L.e_) 2 (y- fi). (S) 
+This learning rule can be interpreted as a weighting of the learning rate of each 
+expert by the expert's relative prediction performance. It is a special case of the 
+Mixtures of Experts [1] learning rule, with the gating network being omitted. Note 
+that according to Bayes' rule the term in brackets is the posterior probability that 
+expert i is the correct choice for the given data y, i.e. p(i I Y). Therefore, we can 
+simply write 
+0 log L 
+oc p(i l y)(y - fi). (4) 
+Furthermore, we imposed a low-pass filter on the prediction errors ei = (y - fi) 2 
+and used deterministic annealing of/ in the training process (see [2, 8] for details). 
+We found that these modifications can be essential for a successful segmentation 
+and prediction of time series from switching dynamics. 
+As a prerequisite of this method, mode changes should occur infrequent, i.e. be- 
+tween two mode changes the dynamics should operate stationary in one mode for a 
+certain number of time steps. Applying this method to a time series yields a (hard) 
+segmentation of the series into different operating modes together with prediction 
+experts for each mode. In case of a drift between two modes, the respective segment 
+tends to be subdivided into several parts, because a single predictor is not able to 
+handle the nonstationarity. 
+Analysis of Dring Dynamics with Neural Network Hidden Markov Models 737 
+The second step takes the drift into account. A segmentation algorithm is applied 
+that allows to model drifts between two stationary modes by combining the two 
+respective predictors, fi and fj. The drift is modeled by a weighted superposition 
+ a(t) _ 
+f(�t) = a(t) fi(�t) + (1 -a(t)) fj( t), 0_ 1, 
+(5) 
+where a(t) is a mixing coefficient and t = (xt,xt-,... ,xt_(,_)) T is the vector 
+of time-delay coordinates of a (scalar) time series {xt}. Furthermore, m is the 
+embedding dimension and w is the delay parameter of the embedding. Note that 
+the use of multivariate time series is straightforward. 
+3 A Hidden Markov Model for Drift Segmentation 
+In the following, we will set up a hidden Markov model (HMM) that allows us 
+to use the Viterbi algorithm for the analysis of drifting dynamics. For a detailed 
+description of HMMs, see [9] and the references therein. An HMM consists of (1) 
+a set S of states, (2) a matrix A = (p,s) of state transition probabilities, (3) an 
+observation probability distribution p(yls) for each state s, which is a continuous 
+density in our case, and (4) the initial state distribution r - 
+Let us first consider the construction of S, the set of states, which is the crucial 
+point of this approach. Consider a set P of 'pure' states (dynamical modes). Each 
+state s � P represents one of the neural network predictors fk(s) trained in the first 
+step. The predictor of each state performs the predictions autonomously. Next, 
+consider a set M of mixture states, where each state s � M represents a linear 
+mixture of two nets fi(s) and fj(s). Then, given a state s � S, S = P U M, the 
+prediction of the overall system is performed by 
+ { fk(s)(:) ;if s � P 
+gs( ) = a(s)f()(t) + b(s)f()(:) ;if s � M (6) 
+For each mixture state s � M, the coefficients a(s) and b(s) have to be set together 
+with the respective network indices i(s) and j(s). For computational feasibility, the 
+number of mixture states has to be restricted. Our intention is to allow for drifts 
+between any two network outputs of the previously trained ensemble. We choose 
+a(s) and b(s) such that 0 < a(s) < 1 and b(s) = 1 - a(s). Moreover, a discrete set 
+of a(s) values has to be defined. For simplicity, we use equally distant steps, 
+a-- R+I ' r--1,...,R. (7) 
+R is the number of intermediate mixture levels. A given resolution R between any 
+two out of N nets yields a total number of mixed states ]M] - R. N. (N - 1)/2. 
+If, for example, the resolution R -- 32 is used and we assume N - 8, then there are 
+]M I -- 896 mixture states, plus IPI -- N = 8 pure states. 
+Next, the transition matrix A - {p,s) has to be chosen. It determines the tran- 
+sition probability for each pair of states. In principle, this matrix can be found 
+using a training procedure, as e.g. the Baum-Welch method [9]. However, this is 
+hardly feasible in this case, because of the immense size of the matrix. In the above 
+example, the matrix A has (896 + 8) 2 -- 817216 elements that would have to be 
+estimated. Such an exceeding number of free parameters is prohibitive for any adap- 
+tive method. Therefore, we use a fixed matrix. In this way, prior knowledge about 
+738 J. Kohlmorgen, K-R. Mtlller and K. Paelzik 
+the dynamical system can be incorporated. In our applications either switches or 
+smooth drifts between two nets are allowed, in such a way that a (monotonous) drift 
+from one net to another is a priori as likely as a switch. All the other transitions are 
+disabled by setting P,s - 0. Defining p(y I s) and r is straightforward. Following 
+eq.(1) and eq.(2), we assume gaussian noise 
+p(y [ s) - Ke -(y-g'?, (8) 
+and equally probable initial states, r8 - IS[ -x. 
+The Viterbi algorithm [9] can then be applied to the above stated HMM, without 
+any further training of the HMM parameters. It yields the drift segmentation of a 
+given time series, i.e. the most likely state sequence (the sequence of predictors or 
+linear mixtures of two predictors) that could have generated the time series, in our 
+case with the assumption that mode changes occur either as (smooth) drifts or as 
+infrequent switches. 
+4 Drifting Mackey-Glass Dynamics 
+As an example, consider a high-dimensional chaotic system generated by the 
+Mackey-Glass delay differential equation 
+d(t) 
+dt 
+0.2x(t - td) 
+-- = --0.1x(t) + 1 + x(t -- td) �' (9) 
+It was originally introduced as a model of blood cell regulation [4]. Two stationary 
+operating modes, A and B, are established by using different delays, td = 17 and 
+23, respectively. After operating 100 time steps in mode A (with respect to a 
+subsampling step size r = 6), the dynamics is drifting to mode B. The drift takes 
+another 100 time steps. It is performed by mixing the equations for td = 17 and 
+23 during the integration of eq.(9). The mixture is generated according to eq. (5), 
+using an exponential drift 
+-4t 
+a(t) = exp(-), t= 1,...,100. (10) 
+Then, the system runs stationary in mode B for the following 100 time steps, where- 
+upon it is switching back to mode A at t = 300, and the loop starts again (Fig

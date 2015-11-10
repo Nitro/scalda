@@ -1,0 +1,141 @@
+Practical Issues in Temporal Difference Learning 
+Gerald Tesauro 
+IBM Thomas J. Watson Research Center 
+P. O. Box 704 
+Yorktown Heights, NY 10598 
+tesaurowatson.ibm.com 
+Abstract 
+This paper examines whether temporal difference methods for training 
+connectionist networks, such as Suttons's TD() algorithm, cn be suc- 
+cessfully applied to complex real-world problems. A number of important 
+practical issues are identified and discussed from a general theoretical per- 
+spective. These practical issues are then examined in the context of a case 
+study in which TD() is applied to learning the game of backgammon 
+from the outcome of self-play. This is apparently the first application of 
+this algorithm to a complex nontrivial task. It is found that, with zero 
+knowledge built in, the network is able to learn from scratch to play the 
+entire game at a fairly strong intermediate level of performance, which is 
+clearly better than conventional commercial programs, and which in fact 
+surpasses comparable networks trained on a massive human expert data 
+set. The hidden units in these network have apparently discovered useful 
+features, a longstanding goal of computer games research. Furthermore, 
+when a set of hand-crafted features is added to the input representation, 
+the resulting networks reach a near-expert level of performance, and have 
+achieved good results against world-class human play. 
+I INTRODUCTION 
+We consider the prospects for applications of the TD() algorithm for delayed re- 
+inforcement learning, proposed in (Sutton, 1988), to complex real-world problems. 
+TD() is an algorithm for adjusting the weights in a connectionist network which 
+259 
+260 Tesauro 
+has the following form: 
+Aw, = a(P,+i- P,)  I'-V..P (1) 
+=1 
+where Pt is the network's output upon observation of input pattern zt at time t, w 
+is the vector of weights that parameterizes the network, nd VPk is the gradient 
+of network output with respect to weights. Equation 1 basically couples a temporal 
+difference method for temporal credit assignment with a gradient-descent method 
+for structural credit assigment; thus it provides a way to adapt supervised learning 
+procedures such as back-propagation to solve temporal credit assignment problems. 
+The  parameter interpolates between two limiting cases:  = 1 corresponds to an 
+explicit supervised pairing of each input pattern zt with the final reward signal, 
+while  = 0 corresponds to an explicit pairing of zt with the next prediction Pt+x. 
+Little theoretical guidance is available for practical uses of this algorithm. For exam- 
+ple, one of the most important issues in applications of network learning procedures 
+is the choice of a good representation scheme. However, the existing theoretical 
+analysis of TD() applies primarily to look-up table representations in which the 
+network has enough adjustable parameters to explicitly store the value of every 
+possible state in the state space. This will clearly be intractable for reM-world 
+problems, and the theoretical results may be completely inappropriate, as they in- 
+dicate, for example, that every possible state in the state space has to be visited 
+infinitely many times in order to guarantee convergence. 
+Another important class of practical issues has to do with the nature of the task 
+being learned, e.g., whether it is noisy or deterministic. In volatile environments 
+with a high step-to-step variance in expected reward, TD learning is likely to be 
+difficult. This is because the value of Pt+x, which is used as a heuristic teacher 
+signal for Pt, may have nothing to do with the true value of the state zt. In such 
+cases it may be necessary to modify TD() by including a lookahead process which 
+averages over the step-to-step noise. 
+Additional difficulties must also be expected if the task is a combined prediction- 
+control task, in which the predictor network is used to make control decisions, as 
+opposed to a prediction only task. As the network's predictions change, its control 
+strategies also change, and this changes the target predictions that the network is 
+trying to learn. In this case, theory does not say whether the combined learning 
+system would converge at all, and if so, whether it would converge to the optimal 
+predictor-controller. It might be possible for the system to get stuck in a self- 
+consistent but non-optimal predictor-controller. 
+A final set of practical issues are algorithmic in nature, such as convergence, scaling, 
+and the possibility of overtraining or overfitting. TD() has been proven to converge 
+only for a linear network and a linearly independent set of input patterns (Sutton, 
+1988; Dayan, 1992). In the more general case, the algorithm may not converge even 
+to a locally optimal solution, let alone to a globally optimal solution. 
+Regarding scaling, no results are available to indicate how the speed and quality 
+of TD learning will scale with the temporal length of sequences to be learned, the 
+dimensionality of the input space, the complexity of the task, or the size of the 
+network. Intuitively it seems likely that the required training time might increase 
+Practical Issues in Temporal Difference Learning 261 
+dramatically with the sequence length. The training time might also scale poorly 
+with the network or input space dimension, e.g., due to increased sensitivity to 
+noise in the teacher signal. Another potential problem is that the quality of solution 
+found by gradient-descent learning relative to the globally optimal solution might 
+get progressively worse with increasing network size. 
+Overtraining occurs when continued training of the network results in poorer per- 
+formance. Overfitting occurs when a larger network does not do as well on a task 
+as a smaller network. In supervised learning, both of these problems are believed 
+to be due to a limited data set. In the TD approach, training takes place on-line 
+using patterns generated de novo, thus one might hope that these problems would 
+not occur. But both overtraining and overfitting may occur if the error function 
+minimized during training does not correspond to the performance function that 
+the user cares about. For example, in a combined prediction-control task, the user 
+may care only about the quality of control signals, not the absolute accuracy of the 
+predictions. 
+2 
+A CASE STUDY: TD LEARNING OF 
+BACKGAMMON STRATEGY 
+We have seen that existing theory provides little indication of how TD(;) will behave 
+in practical applications. In the absence of theory, we now examine empirically the 
+above-mentioned issues in the context of a specific application: learning to play the 
+game of backgammon from the outcome of self-play. This application was selected 
+because of its complexity and stochastic nature, and because a detailed comparison 
+can be made with the alternative approach of supervised learning from human 
+expert examples (Tesauro, 1989; Tesauro, 1990). 
+It seems reasonable that, by watching two fixed opponents play out a large number 
+of games, a network could learn by TD methods to predict the expected outcome of 
+any given board position. However, the experiments presented here study the more 
+interesting question of whether a network can learn from its own play. The learning 
+system is set up as follows: the network observes a sequence of board positions 
+zl, z2, ..., z! leading to a final reward signal z. In the simplest case, z = 1 if White 
+wins and z = 0 if Black wins. In this case the network's output Pt is an estimate 
+of White's probability of winning from board position zt. The sequence of board 
+positions is generated by setting up an initial configuration, and making plays for 
+both sides using the network's output as an evaluation function. In other words, 
+the move which is selected at each time step is the move which maximizes Pt when 
+White is to play and minimizes Pt when Black is to play. 
+The representation scheme used here contained only a simple encoding of the raw'' 
+board description (explained in detail in figure 2), and did not utilize any additional 
+pre-computed features'' relevant to good play. Since the input encoding scheme 
+contains no built-in knowledge about useful features, and since the network only 
+observes its own play, we may say that this is a knowledge-free approach to 
+learning backgammon. While it's not clear that this approach can make any progress 
+beyond a random starting state, it at least provides a baseline for judging other 
+approaches using various forms of built-in knowledge. 
+262 Tesauro 
+The approach described above is similar in spirit to Sarnuel's scheme for learning 
+checkers from self-play (Samuel, 1959), but in several ways it is a more challenging 
+learning task. Unlike the raw board description used here, Samuel's board descrip- 
+tion used a number of hand-crafted features which were designed in consultation 
+with human checkers experts. The evaluation function learned in Sarnuel's study 
+was a linear function of the input variables, whereas multilayer networks learn more 
+complex nonlinear functions. Finally, Samuel found that it was necessary to give 
+the learning system at least one fixed intermediate goal, material advantage, as well 
+as the ultimate goal of the game. The proposed backgammon learning system has 
+no such intermediate goals. 
+The networks had a feedforward fully-connected architecture with either no hidden 
+units, or a single hidden layer with between 10 and 40 hidden units. The learning 
+algorithm parameters were set, after a certain amount of parameter tuning, at 
+a = 0.1 and  = 0.7. 
+The average sequence length appeared to depend strongly on the quality of play. 
+With decent play on both sides, the average game length is about 50-60 time steps, 
+whereas for the random initial networks, games often last several hundred or even 
+several thousand time steps. This is one of the reasons why the proposed self- 
+learning scheme 

@@ -1,0 +1,157 @@
+An entropic estimator for structure discovery 
+Matthew Brand 
+Mitsubishi Electric Research Laboratories, 201 Broadway, Cambridge MA 02139 
+brand@merl.com 
+Abstract 
+We introduce a novel framework for simultaneous structure and parameter learning in 
+hidden-variable conditional probability models, based on an entropic prior and a solution 
+for its maximum a posteriori (MAP) estimator. The MAP estimate minimizes uncertainty 
+in all respects: cross-entropy between model and data; entropy of the model; entropy 
+of the data's descriptive statistics. Iterative estimation extinguishes weakly supported 
+parameters, compressing and sparsifying the model. Trimming operators accelerate this 
+process by removing excess parameters and, unlike most pruning schemes, guarantee 
+an increase in posterior probability. Entropic estimation takes a overcomplete random 
+model and simplifies it, inducing the structure of relations between hidden and observed 
+variables. Applied to hidden Markov models (HMMs), it finds a concise finite-state 
+machine representing the hidden structure of a signal. We entropically model music, 
+handwriting, and video time-series, and show that the resulting models are highly concise, 
+structured, predictive, and interpretable: Surviving states tend to be highly correlated 
+with meaningful partitions of the data, while surviving transitions provide a low-perplexity 
+model of the signal dynamics. 
+1 'An entropic prior 
+In entropic estimation we seek to maximize the information content of parameters. For 
+conditional probabilities, parameters values near chance add virtually no information 
+to the model, and are therefore wasted degrees of freedom. In contrast, parameters 
+near the extrema {0, 1} are informative because they impose strong constraints on the 
+class of signals accepted by the model. In Bayesian terms, our prior should assert that 
+parameters that do not reduce uncertainty are improbable. We can capture this intuition in 
+a surprisingly simple form: For a model of N conditional probabilities 0 - {8, ..., ON) 
+we write 
+XPe(O) '-- O0 = H 0/0 : exp Oi 10gOi = e -H(O) (1) 
+whence we can see that the prior measures a model's freedom from ambiguity (H(O) is an 
+entropy measure). Applying Pe (') to a multinomial yields the posterior 
+P(wlO)Pe(O) [II/ ] P(0) o+ 
+i 
+where wi is evidence for event type i. With extensive evidence this distribution converges 
+to fair(ML) odds for co, but with scant evidence it skews to stronger odds. 
+724 M. Brand 
+1.1 MAP estimator 
+To obtain MAP estimates we set the derivative of log-posterior to zero, using Lagrange 
+multipliers to ensure -i Oi = 1, 
+O= 00i log . � +,X Oi-1 
+: Z i (wi + Oi)log0/+ A Z Oi 
+i i 
+= 1+7 +l�g0i+'x (3) 
+We obtain Oi by working backward from the Lambert W function, a multi-valued inverse 
+function satisfying W(x)e W(x) = x. Taking logarithms and setting y -- log x, 
+0 = -W(x) - logW(x) + logx 
+= -W(e y) - logW(eU) + y 
+-1 
+--Z 
+z/W(ey) 
++ log 1/W(e y) + log z + y - log z 
++ log z/W(e y) + y - log z (4) 
+Setting Oi = z/W(e), y = 1 +,X+log z, and z =-wi, eqn. 4 simplifies to eqn. 3, implying 
+W(_wiel+X) (5) 
+Equations 3 and 5 together yield a quickly converging fix-point equation for ,X and therefore 
+for the entropic MAP estimate. Solutions lie in the W-i branch of Lambert's function. See 
+[Brand, 1997] for methods we developed to calculate the little-known W function. 
+1.2 Interpretation 
+The negated log-posterior is equivalent to a sum of entropies: 
+- log H 
+i 
+= -Z(Oi +wi) logO/ 
+i 
+: --Z(OilogOi+wilogOi--wi10gwi+wilogwi) 
+i 
+: -ZOilogOi+ Zwilog wi 
+i i Oi 
+= H(O) + D(wllO ) + H(w) 
+-- -  wi log wi 
+(6) 
+Maximizing Pe(Olw ) minimizes entropy in all respects: the parameter entropy H(0); the 
+cross-entropy D(wll0) between the parameters 0 and the data's descriptive statistics w; 
+and the entropy of those statistics H(w), which are calculated relative to the structure 
+of the model. Equivalently, the MAP estimator minimizes the expected coding length, 
+making it a maximally efficient compressor of messages consisting of the model and the 
+data coded relative to the model. Since compression involves separating essential from 
+accidental structure, this can be understood as a form of noise removal. Noise inflates the 
+apparent entropy of a sampled process; this systematically biases maximum likelihood 
+(ML) estimates toward weaker odds, more so in smaller samples. Consequently, the 
+entropic prior is a countervailing bias toward stronger odds. 
+An Entropic Estimator for Structure Discovery 725 
+1.3 Model trimming 
+Because the prior rewards sparse models, it is possible to remove weakly supported 
+parameters from the model while improving its posterior probability, such that 
+Pe(OOil X) > Pe(OIX). This stands in contrast to most pruning schemes, which typically 
+try to minimize damage to the posterior. Expanding via Bayes rule and taking logarithms 
+we obtain 
+hi(Oi)- > log P(XlO)-logP(XlO\Oi ) (7) 
+where hi(Oi) is the entropy due to Oi. For small Oi, we can approximate via differentials: 
+oiOH(O) OlogP(XlO) 
+> (8) 
+OOi OOi 
+By mixing the left- and right-hand sides of equations 7 and 8, we can easily identify 
+trimmable parameters--those that contribute more to the entropy than the log-likelihood. 
+E.g., for multinomials we set hi (Oi) - -Oi log Oi against r.h.s. eqn. 8 and simplify to obtain 
+Oi < exp-  J (9) 
+Parameters can be trimmed at any time during training; at convergence trimming can 
+bump the model out of a local probability maximum, allowing further training in a lower- 
+dimensional and possibly smoother parameter subspace. 
+2 Entropic HMM training and trimming 
+In entropic estimation of HMM transition probabilities, we follow the conventional E-step, 
+calculating the probability mass for each transition to be used as evidence co: 
+Yj,i : E J(t) Pil jpi(xt+l)/3i(t q- 1) (10) 
+t 
+where Pilj is the current estimate of the transition probability from state j to state i; 
+Pi (at+l) is the output probability of observation a:t+ given state i, and a,  are obtained 
+from forward-backward analysis and follow the notation of Rabiner [1989]. For the M- 
+step, we calculate new estimates {/5lj}i=0 by applying the MAP estimator in �1.1 to 
+each co -- {j,i}i- That is, co is a vector of the evidence for each kind of transition out of 
+a single state; from this evidence the MAP estimator calculates probabilities 0. (In Baum- 
+Welch re-estimation, the maximum-likelihood estimator simply sets/5i1 j: 3',i/-i 7i,i-) 
+In iterative estimation, e.g., expectation-maximization (EM), the entropic estimator drives 
+weakly supported parameters toward zero, skeletonizing the model and concentrating 
+evidence on surviving parameters until their estimates converge to near the ML estimate. 
+Trimming appears to accelerate this process by allowing slowly dying parameters to 
+leapfrog to extinction. It also averts numerical underflow errors. 
+For HMM transition parameters, the trimming criterion of eqn. 9 becomes 
+Pil j < Qxp --Etr'-}l J(t)p(xt+xlsi)/3i(t + 1) = exp -Z j(t) 
+(11) 
+where % (t) is the probability of state j at time t. The multinomial output distributions of a 
+discrete-output HMM can be entropically re-estimated and trimmed in the same manner. 
+726 M. Brand 
+Entropic versus ML HMM models of Bach chorales 
+# states at initialization 
+Figure 1: Left: Sparsification, classification, and prediction superiority of entropically 
+estimated HMMs modeling Bach chorales. Lines indicate mean performance over 10 
+trials; error bars are 2 standard deviations. Right: High-probability states and subgraphs of 
+interest from an entropically estimated 35-state chorale HMM. Tones output by each state 
+are listed in order of probability. Extraneous arcs have been removed for clarity. 
+3 Structure learning experiments 
+To explore the practical utility of this framework, we will use entropically estimated HMMs 
+as a window into the hidden structure of some human-generated time-series. 
+Bach Chorales: We obtained a dataset of melodic lines from 100 of J.S. Bach's 371 
+surviving chorales from the UCI repository [Merz and Murphy, 1998], and transposed all 
+into the key of C. We compared entropically and conventionally estimated HMMs in 
+prediction and classification tasks, training both from identical random initial conditions 
+and trying a variety of different initial state-counts. We trained with 90 chorales and 
+testing with the remaining 10. In ten trials, all chorales were rotated into the test 
+set. Figure 1 illustrates that despite substantial loss of parameters to sparsification, the 
+entropically estimated HMMs were, on average, better predictors of notes. (Each test 
+sequence was truncated to a random length and the HMMs were used to predict the first 
+missing note.) They also were better at discriminating between test chorales and temporally 
+reversed test chorales--challenging because Bach famously employed melodic reversal as a 
+compositional device. With larger models, parameter-trimming became state-trimming: An 
+average of 1.6 states were pinched off the 35-state models when all incoming transitions 
+were deleted. 
+While the conventionally estimated HMMs were wholly uninterpretable, in the entropically 
+estimated HMMs one can discern several basic musical structures (figure 1, right), 
+including self-transitioning states that output only tonic (C-E-G) or dominant (G-B-D) 
+triads, lower- or upper-register diatonic tones (C-D-E or F-G-A-B), and mordents (A-G- 
+A). We also found chordal state sequences (F-A-C) and states that lead to the tonic (C) via 
+the mediant (E) or the leading tone (B). 
+Handwriting: We used 2D Gaussian-output HMMs to analyze handwriting data. Training 
+data, obtained from the UNIPEN web site [Reynolds, 1992], consisted of sequences of 
+normalized pen-position coordinates taken at 5msec intervals from 10 different individuals 
+writing the digits 0-9. The HMMs were estimated from identical data and initial cond

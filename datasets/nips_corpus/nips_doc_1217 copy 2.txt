@@ -1,0 +1,165 @@
+Training Algorithms for Hidden Markov Models 
+Using Entropy Based Distance Functions 
+Yoram Singer 
+AT&T Laboratories 
+600 Mountain Avenue 
+Murray Hill, NJ 07974 
+singer @ research.att.com 
+Manfred K. Warmuth 
+Computer Science Department 
+University of California 
+Santa Cruz, CA 95064 
+manfred @ cse.ucsc .edu 
+Abstract 
+We present new algorithms for parameter estimation of HMMs. By 
+adapting a framework used for supervised learning, we construct iterative 
+algorithms that maximize the likelihood of the observations while also 
+attempting to stay close to the current estimated parameters. We use a 
+bound on the relative entropy between the two HMMs as a distance mea- 
+sure between them. The result is new iterative training algorithms which 
+are similar to the EM (Baum-Welch) algorithm for training HMMs. The 
+proposed algorithms are composed of a step similar to the expectation 
+step of Baum-Welch and a new update of the parameters which replaces 
+the maximization (re-estimation) step. The algorithm takes only negligi- 
+bly more time per iteration and an approximated version uses the same 
+expectation step as Baum-Welch. We evaluate experimentally the new 
+algorithms on synthetic and natural speech pronunciation data. For sparse 
+models, i.e. models with relatively small number of non-zero parameters, 
+the proposed algorithms require significantly fewer iterations. 
+1 Preliminaries 
+We use the numbers from 0 to N to name the states of an HMM. State 0 is a special initial 
+state and state N is a special final state. Any state sequence, denoted by s, starts with the 
+initial state but never returns to it and ends in the final state. Observations symbols are also 
+numbers in { 1,..., M} and observation sequences are denoted by x. A discrete output 
+hidden Markov model (HMM) is parameterized by two matrices A and B. The first matrix 
+is of dimension [N, N] and ai,j (0 _< i _< N - 1,1 _< j _< N) denotes the probability of 
+moving from state i to state j. The second matrix is of dimension [N + 1, M] and bi,l is the 
+probability of outputting symbol k at state i. The set of parameters of an HMM is denoted 
+by t9 = (A, B). (The initial state distribution vector is represented by the first row of A.) 
+An HMM is a probabilistic generator of sequences. It starts in the initial state 0. It then 
+iteratively does the following until the final state is reached. If i is the current state then a 
+next state j is chosen according to the transition probabilities out of the current state (row i of 
+matrix A). After arriving at state j a symbol is output according to the output probabilities 
+of that state (row j of matrix B). Let P(x, s 119) denote the probability (likelihood) that an 
+HMM 19 generates the observation sequence x on the path s starting at state 0 and ending 
+at state N: P(x, slls I: Ixl + 1,s0 -- 0, Sis I - N, 19) de=f i-i[x__llast_t,stbst,xt. For the 
+sake of brevity we omit the conditions on s and x. Throughout the paper we assume that 
+the HMMs are absorbing, that is from every state there is a path to the final state with a 
+642 Y. Singer and M. K. Warmuth 
+non-zero probability. Similar parameter estimation algorithms can be derived for ergodic 
+HMMs. Absorbing HMMs induce a probability over all state-observation sequences, 
+i.e. Ex,s P(x, s119 ) -- 1. The likelihood of an observation sequence x is obtained by 
+summing over all possible hidden paths (state sequences), P(x119 ) -- Es P(x, s119 ). To 
+obtain the likelihood for a set R' of observations we simply multiply the likelihood values 
+for the individual sequences. We seek an HMM t9 that maximizes the likelihood for a 
+given set of observations R', or equivalently, maximizes the log-likelihood, LL(XI19 ) = 
+1 
+IXl --xx In P(x[O). 
+To simplify our notation we denote the generic parameter in O by Oi, where i ranges 
+from 1 to the total number of parameters in A and B (There might be less if some are 
+clamped to zero). We denote the total number of parameters of O by 27 and leave the (fixed) 
+correspondence between the Oi and the entries of A and B unspecified. The indices are 
+naturally partitioned into classes corresponding to the rows of the matrices. We denote by 
+[i] the class of parameters to which 0i belongs and by 0ill the vector of all Oj s.t. j  [i]. If 
+j G [i] then both Oi and Oj are parameters from the same row of one of the two matrices. 
+Whenever it is clear from the context, we will use [i] to denote both a class of parameters 
+and the row number (i.e. state) associated with the class. We now can rewrite P(x, s[O) as 
+I-I/Z= 0 '(x's), where rti(x, s) is the number of times parameter i is used along the path s 
+with observation sequence x. (Note that this value does not depend on the actual parameters 
+19.) We next compute partial derivatives of the likelihood and the log-likelihood using this 
+notation. 
+0 
+OOgP(x, sl O) 
+0LL(XI19) 
+OOi 
+= n(x,)o7 � 
+i=1 
+1 o p(x, slO) 
+xx s P(xlO) 
+1 ng(x, s) P(slx, 19) 
+X6X S 
+: n(x,s) P(x, s119). (1) 
+1 hi(X, P(x, s10) 
+IXl   0g P(x119) 
+XX S 
+= Exx (xI0) (2) 
+Here fii(x10 ) de__f ES m(x,s)P(slx, 0) is the expected number of occurrences of the 
+transition/output that corresponds to Oi over all paths that produce x in 19. These val- 
+ues are calculated in the expectation step of the Expectation-Maximization (EM) train- 
+ing algorithm for HMMs [7], also known as the Baum-Welch [2] or the Forward- 
+Backward algorithm. In the next sections we use the additional following expectations, 
+i(O) dej EX,S ni(x,s)P(x, slO) and fi[i](O) dej Ej6[i] j(O). Note that the summation 
+here is over all legal x and s of arbitrary length and fiji] (19) is the expected number of times 
+the state [i] was visited. 
+2 Entropic distance functions for HMMs 
+Our training algorithms are based on the following framework of Kivinen and Warmuth 
+for motivating iterative updates [6]. Assume we have already done a number of iterations 
+and our current parameters are 19. Assume further that R' is the set of observations to 
+be processed in the current iteration. In the batch case this set never changes and in the 
+on-line case X is typically a single observation. The new parameters 19 should stay close 
+to 19, which incorporates all the knowledge obtained in past iterations, but it should also 
+maximize the log-likelihood on the current date set R'. Thus, instead of maximizing the log- 
+likelihood we maximize, U() -- r/LL(R'I ) - d(, 19) (see [6, 51 for further motivation). 
+Training Algorithms for Hidden Markov Models 643 
+Here d measures the distance between the old and new parameters and r/> 0 is a trade-off 
+factor. Maximizing U(_) is usually difficult since both the distance function and the log- 
+likelihood depend on t9. As in [6, 5], we approximate the log-likelihood by a first order 
+Taylor expansion around  -- 19 and add Lagrange multipliers for the constraints that the 
+parameters of each class must sum to one: 
+[i] 5 6 [i] 
+A commonly used distance function is the relative entropy. To calculate the relative entropy 
+between two HMMs we need to sum over all possible hidden state sequence which leads to 
+the following definition, 
+dRE(O, 19) deal E P(xl0) In p(--l) = E P(x, sl0) In Es P(x, slY)) 
+x x 
+However, the above divergence is very difficult to calculate and is not a convex function in 
+19. To avoid the computational difficulties and the non-convexity of dRE we upper bound 
+the relative entropy using the log sum inequality [3]: 
+P(x, s10) 
+da(O,O) _< ':t(O,o) de=f E P(x, sIO) lnp(x,s-  
+= E P(x, sl ) ,n f I-I/z=l 0:'(x's)) z 
+x,s I-I/Z= 07 '(x's--- =  P(x, sl)  ni(x,s) In 0 
+X,S i--1 
+-- Eln //E P(x, slO ) ni(x,s): Ehi(0) ln 
+i=1 X,S i--1 
+Note that for the distance function E(O, 19) an HMM is viewed as a joint distribution 
+between observation sequences and hidden state sequences. We can further simplify the 
+bound on the relative entropy using the following lemma (proof omitted). 
+Lemma 1 For any absorbing HMM, O, andany parameterOi  O, (0) = Oifi[il(O). 
+This gives the following new formula, E(,0) = -4Z=l [i]()[0i In 0], which can 
+be rewritten as, &E(0, 0) = -[i] [i1(0)d(b[q, 0[1) = E[q In  
+Equation (3) is still difficult to solve since the vmables [i]() depend on the new set of 
+pmeters (which e not known). We therefore fuher approximate (, 0) by the 
+distance function, &(, 0) = [i1 fi[i](0) [i10i In . 
+3 New Parameter Updates 
+We now would like to use the distce functions discuss in previous section in U(). We 
+first derive our mn update using this distce function. is is done by replacing d(, 0) 
+in U () with d(b, 0) and setting the derivatives of the resulting U () w.r.t i to 0. s 
+gives the following set of equations (i E { 1,..., Z}), 
+mxm0 - h[i](o)(ln 1) + = 0 
+ - A[i] , 
+which e equivent to 
+v , 
+I10g - in  +A[i] = 0 . 
+644 Y. Singer and M. K. Warmuth 
+! 
+We now can solve for ti and replace A[i] by a normalization factor which ensures that the 
+sum of the parameters in [i] is 1' 
+The above re-estimation rule is the entropic update for HMMs.  
+We now derive an alternate to the update of (4). The mixture weights fi[i] (0) (which approx- 
+imate the original mixture weights [i1 (b) in 'j:(, 0)) lead to a state dependent learning 
+rate of ' for the parameters of class [i]. If computation time is limited (see discussion 
+below) then the expectations fiji] (19) can be approximated by values that are readily available. 
+One possible choice is to use the sample based expectations j 
+an approximation for fi[il (19)- These weights are needed for calculating the gradient and are 
+evaluated in the expectation step of Baum-Welch. Let, [il(xl0) dej Zje[i] hj(xl0)' then 
+this approximation leads to the following distance function 
+E Ex,v fi[i](x119) E J In J (5) 
+[q IX I ' 
+which results in an update which we call the approximated entropic update for HMMs: 
+, 
+Oi exp xEx'/'l (x119) 
+= ) 
+-]j[i] Oj eocp -]XEx,ul(Xi19) 
+(6) 
+Given 

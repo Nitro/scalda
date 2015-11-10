@@ -1,0 +1,140 @@
+USING COLLECTIVE INTELLIGENCE 
+TO ROUTE INTERNET TRAFFIC 
+David H. Wolpert 
+NASA Ames Research Center 
+Moffett Field, CA 94035 
+dhw@ptolemy. arc.nasa.gov 
+Kagan Turner 
+NASA Ames Research Center 
+Moffett Field, CA 94035 
+kagan@ptolemy. arc. nasa. gov 
+Jeremy Frank 
+NASA Ames Research Center 
+Moffett Field, CA 94035 
+flank @ptolemy. arc. nasa. gov 
+Abstract 
+A COllective INtelligence (COIN) is a set of interacting reinforce- 
+ment learning (RL) algorithms designed in an automated fashion 
+so that their collective behavior optimizes a global utility function. 
+We summarize the theory of COINs, then present experiments us- 
+ing that theory to design COINs to control internet traffic routing. 
+These experiments indicate that COINs outperform all previously 
+investigated RL-based, shortest path routing algorithms. 
+I INTRODUCTION 
+COllective INtelligences (COINs) are large, sparsely connected recurrent neural 
+networks, whose neurons are reinforcement learning (RL) algorithms. The dis- 
+tinguishing feature of COINs is that their dynamics involves no centralized control, 
+but only the collective effects of the individual neurons each modifying their be- 
+havior via their individual RL algorithms. This restriction holds even though the 
+goal of the COIN concerns the system's global behavior. One naturally-occurring 
+COIN is a human economy, where the neurons consist of individual humans try- 
+ing to maximize their reward, and the goal, for example, can be viewed as having 
+the overall system achieve high gross domestic product. This paper presents a 
+preliminary investigation of designing and using artificial COINs as controllers of 
+distributed systems. The domain we consider is routing of internet traffic. 
+The design of a COIN starts with a global utility function specifying the desired 
+global behavior. Our task is to initialize and then update the neurons' local utility 
+Using Collective Intelligence to Route Internet Traffic 953 
+fnctions, without centralized control, so that as the neurons improve their utilities, 
+global utility also improves. (We may also wish to update the local topology of the 
+COIN.) In particular, we need to ensure that the neurons do not frustrate each 
+other as they attempt to increase their utilities. The RL algorithms at each neuron 
+that aim to optimize that neuron's local utility are microlearners. The learning 
+algorithms that update the neuron's utility functions are macrolearners. 
+For robustness and breadth of applicability, we assume essentially no knowledge con- 
+cerning the dynamics of the full system, i.e., the macrolearning and/or microlearning 
+must learn that dynamics, implicitly or otherwise. This rules out any approach 
+that models the full system. It also means that rather than use domain knowledge 
+to hand-craft the local utilities as is done in multi-agent systems, in COINs the 
+local utility functions must be automatically initialized and updated using only the 
+provided global utility and (locally) observed dynamics. 
+The problem of designing a COIN has never previously been addressed in full -- 
+hence the need for the new formalism described below. Nonetheless, this prob- 
+lem is related to previous work in many fields: distributed artificial intelligence, 
+multi-agent systems, computational ecologies, adaptive control, game theory [6], 
+computational markets [2], Markov decision theory, and ant-based optimization. 
+For the particular problem of routing, examples of relevant work include [4, 5, 8, 9, 
+10]. Most of that previous work uses microlearning to set the internal parameters 
+of routers running conventional shortest path algorithms (SPAs). However the mi- 
+crolearning occurs, they do not address the problem of ensuring that the associated 
+local utilities do not cause the microlearners to work at cross purposes. 
+This paper concentrates on COIN-based setting of local utilities rather than 
+macrolearning. We used simulations to compare three algorithms. The first two 
+are an SPA and a COIN. Both had full knowledge (FK) of the true reward- 
+maximizing path, with reward being the routing time of the associated router's 
+packets for the SPAs, but set by COIN theory for the COINs. The third algorithm 
+was a COIN using a memory-based (MB) microlearner [1] whose knowledge was 
+limited to local observations. 
+The performance of the FK COIN was the theoretical optimum. The performance 
+of the FK SPA was 12.5 q- 3 % worse than optimum. Despite limited knowledge, 
+the MB COIN outperformed the FK SPA, achieving performance 36 q- 8 % closer 
+to optimum. Note that the performance of the FK SPA is an upper bound on the 
+performance of any RL-based SPA. Accordingly, the performance of the MB COIN 
+is at least 36% superior to that of any RL-based SPA. 
+Section 2 below presents a cursory overview of the mathematics behind COINs. 
+Section 3 discusses how the network routing problem is mapped into the COIN 
+formalism, and introduces our experiments. Section 4 presents results of those 
+experiments, which establish the power of COINs in the context of routing problems. 
+Finally, Section 5 presents conclusions and summarizes future research directions. 
+2 MATHEMATICS OF COINS 
+The mathematical framework for COINs is quite extensive [11, 12]. This paper 
+concentrates on four of the concepts from that framework: subworlds, factored 
+systems, constraint-alignment, and the wonderful-life utility function. 
+We consider the state of the system across a set of discrete, time steps, t E {0, 1,...}. 
+All characteristics of a neuron at time t -- including its internal parameters at that 
+954 D. H. Wolpert, K. Turner and d. Frank 
+time as well as its externally visible actions -- are encapsulated in a real-valued 
+vector _v,t. We call this the state of neuron q at time t, and let _ be the state 
+of all neurons across all time. World utility, G((), is a function of the state of all 
+neurons across all time, potentially not expressible as a discounted sum. 
+A subworld is a set of neurons. All neurons in the same subworld v share the same 
+subworld utility function go (_). So when each subworld is a set of neurons that have 
+the most effect on each other, neurons are unlikely to work at cross-purposes -- all 
+neurons that affect each other substantially share the same local utility. 
+Associated with subworlds is the concept of a (perfectly) constraint-aligned system. 
+In such systems any change to the neurons in subworld v at time 0 will have no 
+effects on the neurons outside of w at times later than 0. Intuitively, a system 
+is constraint-aligned if the neurons in separate subworlds do not affect each other 
+directly, so that the rationale behind the use of subworlds holds. 
+A subworld-factored system is one where for each subworld w considered by itself, a 
+change at time 0 to the states of the neurons in that subworld results in an increased 
+value for g (_) if and only if it results in an increased value for G(_). For a subworld- 
+factored system, the side effects on the rest of the system of v's increasing its own 
+utility (which perhaps decrease other subworlds' utilities) do not end up decreasing 
+world utility. For these systems, the separate subworlds successfully pursuing their 
+separate goals do not frustrate each other as far as world utility is concerned. 
+The desideratum of subworld-factored is carefully crafted. In particular, it does not 
+concern changes in the value of the utility of subworlds other than the one changing 
+its actions. Nor does it concern changes to the states of neurons in more than 
+one subworld at once. Indeed, consider the following alternative desideratum: any 
+change to the t = 0 state of the entire system that improves all subworld utilities 
+simultaneously also improves world utility. Reasonable as it may appear, one can 
+construct examples of systems that obey this desideratum and yet quickly evolve 
+to a minimum of world utility [12]. 
+It can be proven that for a subworld-factored system, when each of the neurons' 
+reinforcement learning algorithms are performing as well as they can, given each 
+others' behavior, world utility is at a critical point. Correct global behavior corre- 
+sponds to learners reaching a (Nash) equilibrium [8, 13]. There can be no tragedy 
+of the commons for a subworld-factored system [7, 11, 12]. 
+Let CL (() be defined as the vector ( modified by clamping the states of all neurons 
+in subwod v, across all time, to aft-arbitrary fixed value, here taken to be 0. The 
+wonderful life subworld utility (WLU) is: 
+g(_) _-- G(_) - G(CL(_)) (1) 
+When the system is constraint-aligned, so that, loosely speaking, subworld v's ab- 
+sence would not affect the rest of the system, we can view the WLU as analogous 
+to the change in world utility that would have arisen if subworld v had never ex- 
+isted. (Hence the name of this utility - cf. the Frank Capra movie.) Note however, 
+that CL is a purely mathematical operation. Indeed, no assumption is even being 
+made that CL (_) is consistent with the dynamics of the system. The sequence of 
+states the neurons in v are clamped to in the definition of the WLU need not be 
+consistent with the dynamical laws of the system. 
+This dynamics-independence is a crucial strength of the WLU. It means that to 
+evaluate the WLU we do not try to infer how the system would have evolved if all 
+neurons in v were set to 0 at time 0 and the system evolved from there. So long as 
+Using Collective Intelligence to Route Internet Traffic 955 
+we know ( extending over all time, and so long as we know G, we know the value 
+of WLU. This is true even if we know nothing of the dynamics of the system. 
+In addition to assuring the correct equilibrium behavior, there exist many other 
+theoretical advantages to having a system be subworld-factored. In particular, the 
+experiments in this paper revolve around the following fact: a constraint-aligned 
+system with wonderful life sub

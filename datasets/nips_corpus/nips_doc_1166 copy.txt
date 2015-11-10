@@ -1,0 +1,202 @@
+Early Brain Damage 
+Volker Tresp Ralph Neuneier and Hans Georg Zimmermann* 
+Siemens AG, Corporate Technologies 
+Otto-Hahn-Ring 6 
+81730 Miinchen, Germany 
+Abstract 
+Optimal Brain Damage (OBD) is a method for reducing the num- 
+ber of weights in a neural network. OBD estimates the increase in 
+cost function if weights are pruned and is a valid approximation 
+if the learning algorithm has converged into a local minimum. On 
+the other hand it is often desirable to terminate the learning pro- 
+cess before a local minimum is reached (early stopping). In this 
+paper we show that OBD estimates the increase in cost function 
+incorrectly if the network is not in a local minimum. We also show 
+how OBD can be extended such that it can be used in connec- 
+tion with early stopping. We call this new approach Early Brain 
+Damage, EBD. EBD also allows to revive already pruned weights. 
+We demonstrate the improvements achieved by EBD using three 
+publicly available data sets. 
+I Introduction 
+Optimal Brain Damage (OBD) was introduced by Le Cun et al. (1990) as a method 
+to significantly reduce the number of weights in a neural network. By reducing the 
+number of free parameters, the variance in the prediction of the network is often 
+reduced considerably which --in some cases-- leads to an improvement in general- 
+ization performance of the neural network. OBD might be considered a realization 
+of the principle of Occam's razor which states that the simplest explanation (of the 
+training data) should be preferred to more complex explanations (requiring more 
+weights). 
+If E is the cost function which is minimized during training, OBD calculates the 
+Volker. Tresp, Ralph.Neuneier, Georg. Zimmermarm)@mchp.siemens.de. 
+670 V. Tresp, R. Neuneier and H. G. Zimmermann 
+saliency of each parameter wi defined as 
+102E 2 
+OBD(wi) = A(wi) = 20w wi' 
+Weights with a small OBD(wi) are candidates for removal. OBD(wi) has the 
+intuitive meaning of being the increase in cost function if weight wi is set to zero 
+under the assumptions 
+� that the cost function is quadratic, 
+� that the cost function is diagonal which means it can be written as E - 
+Bias + 1/2-.ihi(w i -- w?) 2 where where I- ,w 
+t'wi ;i= are the weights in a 
+(local) optimum of the cost function (Figure 1) and the hi and BIAS are 
+parameters which are dependent on the training data set. 
+� and that wi  w. 
+In practice, all three assumptions are often violated but experiments have demon- 
+strated that OBD is a useful method for weight removal. 
+In this paper we want to take a closer look at the third assumption, i.e. the assump- 
+tion that weights are close to optimum. The motivation is that theory and practice 
+have shown that it is often advantageous to perform early stopping which means 
+that training is terminated before convergence. Early stopping can be thought of 
+as a form of regularization: since training typically starts with small weights, with 
+early stopping weights are biased towards small weights analogously to other reg- 
+ularization methods such as ridge regression and weight decay. According to the 
+assumptions in OBD we might be able to apply OBD only in heavily overtrained 
+networks where we loose the benefits of early stopping. In this paper we show that 
+OBD can be extended such that it can work together with early stopping. We call 
+the new criterion Early Brain Damage (EBD). As in OBD, EBD contains a num- 
+ber of simplifying assumptions which are typically invalid in practice. Therefore, 
+experimental results have to demonstrate that EBD has benefits. We validate EBD 
+using three publicly available data sets. 
+2 Theory 
+As in OBD we approximate the cost function locally by a quadratic function and 
+assume a diagonal form. Figure 1 illustrates that OBD(wi) for wi = w? calculates 
+the increase in cost function if wi is set to zero. In early stopping where wi  w, 
+OBD(wi) calculates the quantity denoted as Ai in Figure 1. Consider 
+OE 
+Si  -w i. 
+The saliency of weights wi in Early Stopping Pruning 
+ESP(wi) -- Ai q- Bi 
+is an estimate of how much the cost function increases if the current wi (i.e. wi in 
+early stopping) is set to zero. Finally, consider 
+1 fO2E-l(OE) 2 
+Early Brain Damage 671 
+I 
+I 
+I 
+W. W.* 
+1 1 
+! 
+! 
+! 
+! 
+I 
+I 
+I 
+I 
+I 
+I 
+I 
+I 
+! 
+I 
+I 
+Figure 1: The figure shows the cost function E as a function of one weight wi 
+in the network. w? is the optimal weight. wi is the weight at an early stopping 
+point. If OBD is applied at wi, it estimates the quantity Ai. ESP(wi): Ai q- 
+Bi = E(wi) - E(wi = 0) estimate the increase in cost function if wi is pruned. 
+EBD(wi) -- Ai + Bi + Ci = E(w?) - E(wi = 0) is the difference in cost function 
+if we would train to convergence and if we would set wi = 0. In other words 
+= 
+672 V. Tresp, R. Neuneier and H. G. Zimmermann 
+The saliency of weight wi in EBD is 
+EBO(wi) = OBO(w) = Ai + 
+which estimates the increase in cost function if wi is pruned after convergence (i.e. 
+EBD(wi) = OBD(w?)) but based on local information around the current value 
+of wi. In this sense EBD evaluates the potential of wi. Weights with a small 
+EBD(wi) are candidates for pruning. 
+Note, that all terms required for EBD are easily calculated. With a quadratic cost 
+function E = -]k=(. -NN(xk)) 20BD approximates (OBD-approximation) 
+02E K ( ONN(x) ) 2 
+Ow---.   2 Z Owi (1) 
+k----1 
+where (x , y,)K= are the training data and NN(x ) is the network response. 
+3 Extensions 
+3.1 Revival of Weights 
+In some cases, it is beneficial to revive weights which are already pruned. Note, that 
+Ci exactly estimate the decrease in cost function if weight wi is revived. Weights 
+with a large Ci(wi = 0) are candidates for revival. 
+3.2 Early Brain Surgeon (EBS) 
+After OBD or EBD is performed, the network needs to be retrained since the 
+diagonal approximation is typically violated and there are dependencies between 
+weights. Optimal Brain Surgeon (OBS, Hassibi and Storck, 1993) does not use 
+the diagonal approximation and recalculates the new weights without explicit 
+retraining. OBS still assumes a quadratic approximation of the cost function. The 
+saliency in OBS is 
+2[Z-1]ii 
+where [H-]ii is i-th diagonal element of the inverse of the Hessian. Li estimates the 
+increase in cost if the i-th weight is set to zero and all other weights are retrained. 
+To recalculate all weights after weight wi is removed apply 
+wi H- ei 
+Whew -- Wold [H- 1]i i 
+where ei is the unit vector in the i-th direction. 
+Analogously to OBS, Early Brain Surgeon EBS would first calculate the optimal 
+weight vector using a second order approximation of the cost function 
+b* = w - H-  OE 
+Ow 
+and then apply OBS using b*. We did not pursue this idea any further since our 
+initial experiments indicated that w* was not estimated very accurately in praxis. 
+Hassibi et al. (1994) achieved good performance with OBS even when weights were 
+far from optimal. 
+Early Brain Damage 673 
+3.3 Approximations to the Hessian ad the Gradient 
+Finnoff et aI. (1993) have introduced the interesting idea that the relevant quantities 
+for OBD can be estimated from the statistics of the weight changes. 
+Consider the update in pattern by pattern gradient descent learning and a quadratic 
+cost function 
+OEk 
+zx. = -70w = 2yk - NN(x)) ONSet) 
+with E = (y - NN(xk)) 2 where r/is the learning rate. 
+We assume that x  and y are drawn online from a fixed distribution (which is 
+strictly not true since in pattern by pattern learning we draw samples from a fixed 
+training data set). Then, using the quadratic and diagonal approximation of the 
+cost function and assuming that the noise e in the model 
+y = NN(x ) + e  
+is additive uncorrelated with variance 
+10E 
+c(zXw)  , Ow (2) 
+and 
+cgNN(xk) ) 
+VAR(ZXw) = VAR 2Vy  - mm(x)) &., 
+cgNN(x) ( fONN(x) 2) 
+= 4rl2VAR ((y - NN'(xk))  ) + 4rl2VAR (w' - wi) , w i ) 
+=4a2� k  ] +42(w- w')2VAR ONN(x,) 2 
+where NN*(x ') is the network output with optimal weights {w}x. Note, that 
+in the OBD approximation (Equation 1) 
+f ONN(xi) ) 2 1 02E 
+and 
+w--w,  
+l/?�(Awi) 
+2 g (NN(x') 
+If we make the further assumption that ONN(xl)/Owi is Gaussian distributed with 
+zero mean 2 
+2 
+VAR OWl 
+stands for the expected value. With wi kept at a fixed value. 
+The zero mean assumption is typically violated but might 
+renormalization. 
+be enforced by 
+674 V. Tresp, R. Neuneier and H. G. Zimmermann 
+we obtain 
+VAR(Awi) = 2 _  
+ + 2, 2. 
+The first term in Equation 3 is a result of the residual error which is translated 
+into weight fluctuations. But note, that weights with a small variance with a large 
+c92E/cgw fluctuate the most. The first term is only active when there is a residual 
+error, i.e. r 2 > 0. The second term is non-zero independent of r a and is due to the 
+fact that in sample-by-sample learning, weight updates have a random component. 
+From Equation 2 and Equation 3 all terms needed in EBD (i.e. OE/Ow, and 
+c92E/Ow) are easily estimated. 
+4 Experimental Results 
+In our experiments we studied the performance of OBD, ESP and EBD in connec- 
+tion with early stopping. Although theory tells us that EBD should provide the best 
+estimate of the the increase in cost function by the removal of weight wi, it is not 
+obvious how reliable that estimate is when the assumptions (diagonal quadratic 
+cost function) are violated. Also we are not really interested in the correct estimate 
+of the increase in cost function but in a ranking of the weights. Since the assump- 
+tions which go into OBD, EBD, ESP (and also OBS and EBS) are questionable, the 
+usefulness of the new methods have to be demonstrated using practical experiments. 
+We used three different data sets: Breast Cancer Data, Diabetes Data, and Boston 
+Housing Data. All three data sets can be obtained from the UCI repository 
+(ftp:ics.uci.edu/pub/machine-learning-databases). The Breast Cancer Data con- 
+tains 699 samples with 9 input variables consi

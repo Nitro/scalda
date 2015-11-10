@@ -1,0 +1,143 @@
+Churn Reduction in the Wireless Industry 
+Michael C. Mozer *+, Richard Wolniewicz*, David B. Grimes *+, 
+Eric Johnson*, Howard Kaushansky* 
+* Athene Software + Department of Computer Science 
+2060 Broadway, Suite 300 University of Colorado 
+BouMer, CO 80302 Boulder, CO 80309-0430 
+Abstract 
+Competition in the wireless telecommunications industry is rampant. To main- 
+tain profitability, wireless carriers must control churn, the loss of subscribers 
+who switch from one carder to another. We explore statistical techniques for 
+chum prediction and, based on these predictions, an optimal policy for identify- 
+ing customers to whom incentives should be offered to increase retention. Our 
+experiments are based on a data base of nearly 47,000 U.S. domestic subscrib- 
+ers, and includes information about their usage, billing, credit, application, and 
+complaint history. We show that under a wide variety of assumptions concerning 
+the cost of intervention and the retention rate resulting from intervention, chum 
+prediction and remediation can yield significant savings to a carrier. We also 
+show the importance of a data representation crafted by domain experts. 
+Competition in the wireless telecommunications industry is rampant. As many as seven 
+competing carders operate in each market. The industry is extremely dynamic, with new 
+services, technologies, and carriers constantly altering the landscape. Carriers announce 
+new rates and incentives weekly, hoping to entice new subscribers and to lure subscribers 
+away from the competition. The extent of rivalry is reflected in the deluge of advertise- 
+ments for wireless service in the daily newspaper and other mass media. 
+The United States had 69 million wireless subscribers in 1998, roughly 25% of the 
+population. Some markets are further developed; for example, the subscription rate in Fin- 
+land is 53%. Industry forecasts are for a U.S. penetration rate of 48% by 2003. Although 
+there is significant room for growth in most markets, the industry growth rate is declining 
+and competition is rising. Consequently, it has become crucial for wireless carriers to con- 
+trol churn--the loss of customers who switch from one carrier to another. At present, 
+domestic monthly chum rates are 2-3% of the customer base. At an average cost of $400 
+to acquire a subscriber, churn cost the industry nearly $6.3 billion in 1998; the total annual 
+loss rose to nearly $9.6 billion when lost monthly revenue from subscriber cancellations is 
+considered (Luna, 1998). It costs roughly five times as much to sign on a new subscriber 
+as to retain an existing one. Consequently, for a carrier with 1.5 million subscribers, reduc- 
+ing the monthly churn' rate from 2% to 1% would yield an increase in annual earnings of at 
+least $54 million, and an increase in shareholder value of approximately $150 million. 
+(Estimates are even higher when lost monthly revenue is considered; see Fowlkes, Madan, 
+Andrew, & Jensen, 1999; Luna, 1998.) 
+The goal of our research is to evaluate the benefits of predicting churn using tech- 
+niques from statistical machine learning. We designed models that predict the probability 
+936 M. C. Mozer, R. Wolniewicz, D. B. Grimes, E. Johnson and H. Kaushansky 
+of a subscriber churning within a short time window, and we evaluated how well these pre- 
+dictions could be used for decision making by estimating potential cost savings to the 
+wireless carrier under a variety of assumptions concerning subscriber behavior. 
+1 THE FRAMEWORK 
+Figure 1 shows a framework for churn prediction and profitability maximization. 
+Data from a subscriber--on which we elaborate in the next section--is fed into three com- 
+ponents which estimate: the likelihood that the subscriber will churn, the profitability 
+(expected monthly revenue) of the subscriber, and the subscriber's credit risk. Profitability 
+and credit risk determine how valuable the subscriber is to the carrier, and hence influ- 
+ences how much the carrier should be willing to spend to retain the subscriber. Based on 
+the predictions of subscriber behavior, a decision making component determines an inter- 
+vention strategy--whether a subscriber should be contacted, and if so, what incentives 
+should be offered to appease them. We adopt a decision-theoretic approach which aims to 
+maximize the expected profit to the carrier. 
+In the present work, we focus on chum prediction and utilize simple measures of 
+subscriber profitability and credit risk. However, current modeling efforts are directed at 
+more intelligent models of profitability and credit risk. 
+2 DATA SET 
+The subscriber data used for our experiments was provided by a major wireless car- 
+rier. The carder does not want to be identified, as churn rates are confidential. The carrier 
+provided a data base of 46,744 primarily business subscribers, all of whom had multiple 
+services. (Each service corresponds to a cellular telephone or to some other service, such 
+as voice messaging or beeper capability.) All subscribers were from the same region of the 
+United States, about 20% in major metropolitan areas and 80% more geographically dis- 
+tributed. The total revenue for all subscribers in the data base was $14 million in October 
+1998. The average revenue per subscriber was $234. We focused on multi-service sub- 
+scribers, because they provide significantly more revenue than do typical single-service 
+subscribers. 
+When subscribers are on extended contracts, churn prediction is relatively easy: it 
+seldom occurs during the contract period, and often occurs when the contract comes to an 
+end. Consequently, all subscribers in our data base were month-to-month, requiring the 
+use of more subtle features than contract termination date to anticipate churn. 
+The subscriber data was extracted from the time interval October through December, 
+1998. Based on these data, the task was to predict whether a subscriber would churn in 
+January or February 1999. The carder provided their internal definition of churn, which 
+was based on the closing of all services held by a subscriber. From this definition, 2,876 of 
+the subscribers active in October through December churned--6.2% of the data base. 
+subscriber__ 
+'! subscriber 
+churn 
+prediction 
+. subscriber 
+profitability 
+estimation 
+ subscriber 
+credit risk 
+estimation 
+decision 
+making 
+ intervention 
+strategy 
+FIGURE 1. The framework for churn prediction and profitability maximization 
+Churn Reduction in the Wireless Industry 93 7 
+2.1 INPUT FEATURES 
+Ultimately, churn occurs because subscribers are dissatisfied with the price or quality of 
+service, usually as compared to a competing carrier. The main reasons for subscriber dis- 
+satisfaction vary by region and over time. Table 1 lists important factors that influence 
+subscriber satisfaction, as well as the relative importance of the factors (J. D. Power and 
+Associates, 1998). In the third column, we list the type of information required for deter- 
+mining whether a particular factor is likely to be influencing a subscriber. We categorize 
+the types of information as follows. 
+Network. Call detail records (date, time, duration, and location of all calls), dropped 
+calls (calls lost due to lack of coverage or available bandwidth), and quality of ser- 
+vice data (interference, poor coverage). 
+Billing. Financial information appearing on a subscriber's bill (monthly fee, addi- 
+tional charges for roaming and additional minutes beyond monthly prepaid limit). 
+Customer Service. Calls to the customer service department and their resolutions. 
+Application for Service. Information from the initial application for service, includ- 
+ing contract details, rate plan, handset type, and credit report. 
+Market. Details of rate plans offered by carrier and its competitors, recent entry of 
+competitors into market, advertising campaigns, etc. 
+Demographics. Geographic and population data of a given region. 
+A subset of these information sources were used in the present study. Most notably, we did 
+not utilize market information, because the study was conducted over a fairly short time 
+interval during which the market did not change significantly. More important, the market 
+forces were fairly uniform in the various geographic regions from which our subscribers 
+were selected. Also, we were unable to obtain information about the subscriber equipment 
+(age and type of handset used). 
+The information sources listed above were distributed over three distinct data bases 
+maintained by the carrier. The data bases contained thousands of fields, from which we 
+identified 134 variables associated with each subscriber which we conjectured might be 
+linked to churn. The variables included: subscriber location, credit classification, customer 
+classification (e.g., corporate versus retail), number of active services of various types, 
+beginning and termination dates of various services, avenue through which services were 
+activated, monthly charges and usage, number, dates and nature of customer service calls, 
+number of calls made, and number of abnormally terminated calls. 
+2.2 DATA REPRESENTATION 
+As all statisticians and artificial intelligence researchers appreciate, representation is key. 
+A significant portion of our effort involved working with domain experts in the wireless 
+telecommunications industry to develop a representation of the data that highlights and 
+makes explicit those features which--in the expert's judgement--were highly related to 
+churn. To evaluate the benefit of carefully constructing the representation, we performed 
+TABLE 1. Factors influencing subscriber satisfaction 
+Factor Importance Nature of data required for prediction 
+call quality 21% network 
+pricing options 18% market, billing 
+corporate capability 17% market, customer service 
+customer service 17% customer service 
+credibility / customer communications 10% market, customer service 
+roaming / coverage 7% network 
+handset

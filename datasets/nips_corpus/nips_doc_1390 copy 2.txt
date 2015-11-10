@@ -1,0 +1,162 @@
+Monotonic Networks 
+Joseph Sill 
+Computation and Neural Systems program 
+California Institute of Technology 
+MC 136-93, Pasadena, CA 91125 
+email: joe@cs.caltech.edu 
+Abstract 
+Monotonicity is a constraint which arises in many application do- 
+mains. We present a machine learning model, the monotonic net- 
+work, for which monotonicity can be enforced exactly, i.e., by virtue 
+of functional form. A straightforward method for implementing and 
+training a monotonic network is described. Monotonic networks 
+are proven to be universal approximators of continuous, differen- 
+tiable monotonic functions. We apply monotonic networks to a 
+real-world task in corporate bond rating prediction and compare 
+them to other approaches. 
+I Introduction 
+Several recent papers in machine learning have emphasized the importance of pri- 
+ors and domain-specific knowledge. In their well-known presentation of the bias- 
+variance tradeoff (Geman and Bienenstock, 1992), Geman and Bienenstock conclude 
+by arguing that the crucial issue in learning is the determination of the right 
+ases which constrain the model in the appropriate way given the task at hand. 
+The No-Free-Lunch theorem of Wolpert (Wolpert, 1996) shows, under the 0-1 error 
+measure, that if all target functions are equally likely a priori, then all possible 
+learning methods do equally well in terms of average performance over all targets. 
+One is led to the conclusion that consistently good performance is possible only 
+with some agreement between the modeler's biases and the true (non-fiat) prior. 
+Finally, the work of Abu-Mostafa on learning from hints (Abu-Mostafa, 1990) has 
+shown both theoretically (Abu-Mostafa, 1993) and experimentally (Abu-Mostafa, 
+1995) that the use of prior knowledge can be highly beneficial to learning systems. 
+One piece of prior information that arises in many applications is the monotonicity 
+constraint, which asserts that an increase in a particular input cannot result in a 
+decrease in the output. A method was presented in (Sill and Abu~Mostafa, 1996) 
+which enforces monotonicity approximately by adding a second term measuring 
+662 J. Sill 
+monotonicity error to the usual error measure. This technique was shown to 
+yield improved error rates on real-world applications. Unfortunately, the method 
+can be quite expensive computationally. It would be useful to have a model which 
+obeys monotonicity exactly, i.e., by virtue of functional form. 
+We present here such a model, which we will refer to as a monotonic network. 
+A monotonic network implements a piecewise-linear surface by taking maximum 
+and minimum operations on groups of hyperplanes. Monotonicity constraints are 
+enforced by constraining the signs of the hyperplane weights. Monotonic networks 
+can be trained using the usual gradient-based optimization methods typically used 
+with other models such as feedforward neural networks. Armstrong (Armstrong et. 
+al. 1996) has developed a model called the adaptive logic network which is capable 
+of enforcing monotonicity and appears to have some similarities to the approach 
+presented here. The adaptive logic network, however, is available only through a 
+commercial software package. The training algorithms are proprietary and have 
+not been fully disclosed in academic journals. The monotonic network therefore 
+represents (to the best of our knowledge) the first model to be presented in an 
+academic setting which has the ability to enforce monotonicity. 
+Section II describes the architecture and training procedure for monotonic networks. 
+Section III presents a proof that monotonic networks can uniformly approximate 
+any continuous monotonic function with bounded partial derivatives to an arbitrary 
+level of accuracy. Monotonic networks are applied to a real-world problem in bond 
+rating prediction in Section IV. In Section V, we discuss the results and consider 
+future directions. 
+2 Architecture and Training Procedure 
+A monotonic network has a feedforward, three-layer (two hidden-layer) architecture 
+(Fig. 1). The first layer of units compute different linear combinations of the input 
+vector. If increasing monotonicity is desired for a particular input, then all the 
+weights connected to that input are constrained to be positive. Similarly, weights 
+connected to an input where decreasing monotonicity is required are constrained to 
+be negative. The first layer units are partitioned into several groups (the number 
+of units in each group is not necessarily the same). Corresponding to each group is 
+a second layer unit, which computes the maximum over all first-layer units within 
+the group. The final output unit computes the minimum over all groups. 
+More formally, if we have K groups with outputs g,g2,...g:, and if group k 
+consists of hk hyperplanes w(k,x), w(k,2),... w(k,hk), then 
+gk(x) -- maxw (k'j) � x - t �, i _ j _ h 
+J 
+Let y be the final output of the network. Then 
+or, for classification problems, 
+y- ming(x) 
+k 
+y - r(nmg (x)) 
+where rr(u) - e.g. 
+Mo noto nic Netwo r 663 
+Output 
+// ( linear units 
+/J ( All .weights 
+posltive 
+Input Vector 
+Figure 1' This monotonic network obeys increasing monotonicity in all 3 inputs 
+because all weights in the first layer are constrained to be positive. 
+In the discussions which follow, it will be useful to define the term active. We will 
+call a group 1 ax:tive at x if 
+gt(x) = mingk(x) 
+k 
+, i.e., if the group determines the output of the network at that point. Similarly, we 
+will say that a hyperplane is active at x if its group is active at x and the hyperplane 
+is the maximum over all hyperplanes in the group. 
+As will be shown in the following section, the three-layer architecture allows a mono- 
+tonic network to approximate any continuous, differentiable monotonic function 
+arbitrarily well, given sufficiently many groups and sufficiently many hyperplanes 
+within each group. The maximum operation within each group allows the network 
+to approximate convex (positive second derivative) surfaces, while the minimum op- 
+eration over groups enables the network to implement the concave (negative second 
+derivative) areas of the target function (Figure 2). 
+network 
+output 
+group 1 
+active 
+input 
+group 2 
+active 
+group 3 
+active 
+Figure 2: This surface is implemented by a monotonic network consisting of three 
+groups. The first and third groups consist of three hyperplanes, while the second 
+group has only two. 
+Monotonic networks can be trained using many of the standard gradient-based 
+optimization techniques commonly used in machine learning. The gradient for 
+664 J. Sill 
+each hyperplane is found by computing the error over all examples for which the 
+hyperplane is active. After the parameter update is made according to the rule of 
+the optimization technique, each training example is reassigned to the hyperplane 
+that is now active at that point. The set of examples for which a hyperplane is 
+active can therefore change during the course of training. 
+The constraints on the signs of the weights are enforced using an exponential 
+transformation. If increasing monotonicity is desired in input variable i, then 
+Vj, k the weights corresponding to the input are represented as wi (j,k) -e z 
+The optimization algorithm can modify z j') freely during training while main- 
+taining the constraint. If decreasing monotonicity is required, then Vj, k we take 
+wi(J,k) -- _ezs (j,k) ' 
+3 Universal Approximation Capability 
+In this section, we demonstrate that monotonic networks have the capacity to ap- 
+proximate uniformly to an arbitrary degree of accuracy any continuous, bounded, 
+differentiable function on the unit hypercube [0, 1If) which is monotonic in all vari- 
+ables and has bounded partial derivatives. We will say that x  dominates x if 
+V1 _< d < D, x _> xa. A function m is monotonic in all variables if it satisfies the 
+constraint that Vx, x , if x  dominates x then rn(x ) > re(x). 
+Theorem 3.1 Let re(x) be any continuous, bounded monotonic function with 
+bounded partial derivatives, mapping [0, 1If) to R. Then there exists a function 
+rnr, et(x) which can be implemented by a monotonic network and is such that, for 
+any and any x � [0, ,Ira(x) - .et(x)l < 
+Proof: 
+Let b be the maximum value and a be the minimum value which m takes on [0, 1If). 
+Let a bound the magnitude of all partial first derivatives of m on [0, 1If). Define 
+1 
+an equispaced grid of points on [0, 1] D, where 5 -  is the spacing between grid 
+points along each dimension. I.e., the grid is the set $ of points (i5, i5,... if)5) 
+where 1 < il _< n, 1 _< i2 _ n,... 1 < if) _ n. Corresponding to each grid point 
+x  = (x, x,...xJ9), assign a group consisting of D+ 1 hyperplanes. One hyperplane 
+in the group is the constant output plane y = m(x). In addition, for each dimension 
+&- This construction 
+d, place a hyperplane y = 7(xa - x) + m(x ) , where 7 >  
+ensures that the group associated with x  cannot be active at any point x* where 
+there exists a d such that x - x[ > 5, since the group's output at such a point 
+must be greater than b and hence greater than the output of a group associated 
+with another grid point. 
+Now consider any point x � [0, 1] D. Let s () be the unique grid point in $ such that 
+Vd, 0 _< x - s(x) < 5, i.e., s(x) is the closest grid point to x which x dominates. 
+Then we can show that rnnt(x) _> rn(s()). Consider an arbitrary grid point s   
+s (). By the monotonicity of rn, if s  dominates s(), then m(s ) > m(s()), and 
+hence, the group associated with s  has a constant output hyperplane y = m(s ) > 
+m(s()).and therefore outputs a value > rn(s()) at x. If s' does not dominate s (), 
+then there exists a d such that s(1) > s. Therefore, x - s > 5, meaning that 
+the output of the group associated with s  is at least b > rn(s()). All groups have 
+output at least as large as rn(s()), so we have indeed shown that rnnet(x) > rn(s()). 
+Now cons

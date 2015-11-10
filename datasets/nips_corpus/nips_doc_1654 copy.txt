@@ -1,0 +1,163 @@
+Local probability propagation for factor 
+analysis 
+Brendan J. Frey 
+Computer Science, University of Waterloo, Waterloo, Ontario, Canada 
+Abstract 
+Ever since Pearl's probability propagation algorithm in graphs with 
+cycles was shown to produce excellent results for error-correcting 
+decoding a few years ago, we have been curious about whether 
+local probability propagation could be used successfully for ma- 
+chine learning. One of the simplest adaptive models is the factor 
+analyzer, which is a two-layer network that models bottom layer 
+sensory inputs as a linear combination of top layer factors plus in- 
+dependent Gaussian sensor noise. We show that local probability 
+propagation in the factor analyzer network usually takes just a few 
+iterations to perform accurate inference, even in networks with 320 
+sensors and 80 factors. We derive an expression for the algorithm's 
+fixed point and show that this fixed point matches the exact solu- 
+tion in a variety of networks, even when the fixed point is unstable. 
+We also show that this method can be used successfully to perform 
+inference for approximate EM and we give results on an online face 
+recognition task. 
+I Factor analysis 
+A simple way to encode input patterns is to suppose that each input can be well- 
+approximated by a linear combination of component vectors, where the amplitudes 
+of the vectors are modulated to match the input. For a given training set, the most 
+appropriate set of component vectors will depend on how we expect the modula- 
+tion levels to behave emd how we measure the distance between the input and its 
+approximation. These effects can be captured by a generative probability model 
+that specifies a distribution p(z) over modulation levels z = (z,... , ZK) T and a 
+distribution p(xlz ) over sensors x = (x,... ,xv) T given the modulation levels. 
+Principal component analysis, independent component analysis and factor analysis 
+can be viewed as maximum likelihood learning in a model of this type, where we as- 
+sume that over the training set, the appropriate modulation levels are independent 
+and the overall distortion is given by the sum of the individual sensor distortions. 
+In factor analysis, the modulation levels are called factors and the distributions 
+have the following form: 
+p(z ) = ./V'(z; O, 1), 
+p(xnlz) 2V(xn; K 
+---- Ek=l/nkZk, )n), 
+p(z) K 
+= I-[k:lp(zk) = A/(z;0, I), 
+p(xlz) N 
+- - 2V(x; Az, 
+(1) 
+The parameters of this model are the factor loading matrix A, with elements 
+emd the diagonal sensor noise covariance matrix , with diagonal elements Pn- A 
+belief network for the factor analyzer is shown in Fig. la. The likelihood is 
+p(x) = .hf(z; 0, I).hf(x; Az, I')dz = .hf(x; 0, AA T + I'), (2) 
+Local Probability Propagation for Factor Analysis 443 
+Figure 1: (a) A belief network for factor analysis. (b) High-dimensional data (N = 560). 
+and online factor analysis consists of adapting A and � to increase the likelihood 
+of the current input, such as a vector of pixels from an image in Fig. lb. 
+Probabilistic inference - computing or estimating p(zlx ) - is needed to do dimen- 
+sionality reduction and to fill in the unobserved factors for online EM-type learning. 
+In this paper, we focus on methods that infer independent factors. p(zlx ) is Gaus- 
+sian and it turns out that the posterior means and variances of the factors are 
+E[zlx ] -- (AT,It-IA q- I)-IAT,It-Ix, 
+diag(COV(zlx)) = diag((AT-lA + 1)-1). (3) 
+Given A and , computing these values exactly takes O(K2N) computations, 
+mainly because of the time needed to compute AT-IA. Since there are only KN 
+connections in the network, exact inference takes at least O(K) bottom-up/top 
+down iterations. 
+Of course, if the same network is going to be applied more than K times for inference 
+(e.g., for batch EM), then the matrices in (3) can be computed once and reused. 
+However, this is not directly applicable in online learning and in biological models. 
+One way to circumvent computing the matrices is to keep a separate recognition 
+network, which approximates E[zlx] with Rx (Dayan et al., 1995). The optimal 
+recognition network, R = (A T - 1A + I) - 1A T - 1, can be approximated by jointly 
+estimating the generative network and the recognition network using online wake- 
+sleep learning (Hinton et al., 1995). 
+2 Probability propagation in the factor analyzer network 
+Recent results on error-correcting coding show that in some cases Pearl's prob- 
+ability propagation algorithm, which does exact probabilistic inference in graphs 
+that are trees, gives excellent performance even i[ the network contains so many 
+cycles that its minimal cut set is exponential (Prey and MacKay, 1998; Prey, 1998; 
+MacKay, 1999). In fact, the probability propagation algorithm for decoding low- 
+density parity-check codes (MacKay, 1999) and turbocodes (Berrou and Glavieux, 
+1996) is widely considered to be a major breakthrough in the information theory 
+community. 
+When the network contains cycles, the local computations give rise to an iterative 
+algorithm, which hopefully converges to a good answer. Little is known about the 
+convergence properties of the algorithm. Networks containing a single cycle have 
+been successfully analyzed by Weiss (1999) and Smyth et al. (1997), but results for 
+networks containing many cycles are much less revealing. 
+The probability messages produced by probability propagation in the factor analyzer 
+network of Fig. la are Gaussians. Each iteration of propagation consists of passing 
+a mean and a variance along each edge in a bottom-up pass, followed by passing 
+a mean and a variance along each edge in a top-down pass. At any instant, the 
+444 B. J. Fre 
+bottom-up means and variances can be combined to form estimates of the means 
+and variances of the modulation levels given the input. 
+Initially, the variance and mean sent from the kth top layer unit to the nth sensor 
+is set to k(�n ) - 1 ad (o) _ O. The bottom-up pass begins by computing a noise 
+'lkn 
+level and an error signal at each sensor using the top-down variances and means 
+from the previous iteration: 
+-K 2 , (i--1) e(n/) _ -K , _(i--1) 
+8( ) -- )n -[- /.k.l'nkkn , -- Xn Z-k----1 nk'l/kn ' (4) 
+These are used to compute bottom-up variances and means as follows: 
+(i) o(i)/2 . (i-1) , (i) = �(ni)/,knk + _(i-1) 
+nk = on - , . (5) 
+The bottom-up variances and means are then combined to form the current esti- 
+mates of the modulation vriances and means: 
+N (i) (i) (i) -v (i) ,.(i) 
+v? 1/(1 -]- Zn=I 1/bnk), � (6) 
+-- __-- V k ,n_--l nk/(Pnk 
+The top-down pass proceeds by computing top-down variances and means as follows: 
+, (i) 1/(l/v?) (i) (i) , (i) /(i) 
+-- - 1/bn), _-- (,i)lv?) , (i) 
+- (7) 
+'lkn 'kn 
+Notice that the variance updates are independent of the mean updates, whereas the 
+mean updates depend on the variance updates. 
+2.1 Performance of local probability propagation. We created a total of 
+200,000 factor analysis networks with 20 different sizes ranging from K - 5, N -- 10 
+to K - 80, N - 320 and for each size of network we measured the inference error as 
+a function of the number of iterations of propagation. Each of the 10,000 networks of 
+a given size was produced by drawing the AnS from standard normal distributions 
+and then drawing each sensor variance n from an exponential distribution with 
+K 2 . (A similar procedure was used by Neal and Dayan (1997).) 
+mean ']= 
+For each random network, a pattern was simulated from the network and probabil- 
+ity propagation was applied using the simulated pattern as input. We measured the 
+error between the estimate (i) and the correct value E[zlx ] by computing the dif- 
+ference between their coding costs under the exact posterior distribution and then 
+normalizing by K to get an average number of nats per top layer unit. 
+Fig. 2a shows the inference error on a logarithmic scale versus the number of iter- 
+ations (maximum of 20) in the 20 different network sizes. In all cases, the median 
+error is reduced below .01 hats within 6 iterations. The rate of convergence of the 
+error improves for larger N, as indicated by a general trend for the error curves to 
+drop when N is increased. In contrast, the rate of convergence of the error appears 
+to worsen for larger K, as shown by a general slight trend for the error curves to 
+rise when K is increased. 
+For K _ N/8, 0.1% of the networks actually diverge. To better understand the di- 
+vergent cases, we studied the means and variances for all of the divergent networks. 
+In all cases, the variances converge within a few iterations whereas the means oscil- 
+late and diverge. For K = 5, N = 10, 54 of the 10,000 networks diverged and 5 of 
+these are shown in Fig. 2b. This observation suggests that in general the dynamics 
+are determined by the dynamics of the mean updates. 
+2.2 Fixed points and a condition for global convergence. When the vari- 
+ance updates converge, the dynamics of probability propagation in factor analysis 
+networks become linear. This allows us to derive the fixed point of propagation in 
+closed form and write an eigenvalue condition for global convergence. 
+Local Probability Propagation for Factor Analysis 445 
+(a) 
+K=5 K=10 K=20 
+100 
+:- 
+o lo 
+II 
+0 10 
+o lO 20 
+K = 4O K = 8O 
+o 'o 20 
+o lO 
+Figure 2: (a) Performance of probability propagation. Median inference error (bold curve) 
+on a logarithmic scale as a function of the number of iterations for different sizes of network 
+parameterized by K and N. The two curves adjacent to the bold curve show the range within 
+which 98% of the errors lie. 99.9% of the errors were below the fourth, topmost curve. (b) 
+The error, bottom-up variances and top-down means as a function of the number of iterations 
+(maximum of 20) for 5 divergent networks of size K = 5, N = 10. 
+To analyze the system of mean updates, we define the following length KN vec- 
+tors of means and the input: o(i) = (r/[?,r/?,... ,r

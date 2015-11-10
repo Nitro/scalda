@@ -1,0 +1,152 @@
+Discovering Discrete Distributed Representations 
+with Iterative Competitive Learning 
+Michael C. Mozer 
+Department of Computer Science 
+and Institute of Cognitive Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+Abstract 
+Competitive learning is an unsupervised algorithm that classifies input pat- 
+terns into mutually exclusive clusters. In a neural net framework, each clus- 
+ter is represented by a processing unit that competes with others in a winner- 
+take-all pool for an input pattern. I present a simple extension to the algo- 
+rithm that allows it to construct discrete, distributed representations. Discrete 
+representations are useful because they are relatively easy to analyze and 
+their information content can readily be measured. Distributed representa- 
+tions are useful because they explicitly encode similarity. The basic idea is 
+to apply competitive learning iteratively to an input pattern, and after each 
+stage to subtract from the input pattern the component that was captured in 
+the representation at that stage. This component is simply the weight vector 
+of the winning unit of the competitive pool. The subtraction procedure forces 
+competitive pools at different stages to encode different aspects of the input. 
+The algorithm is essentially the same as a traditional data compression tech- 
+nique known as multistep vector quantization, although the neural net per- 
+spective suggests potentially powerful extensions to that approach. 
+1 INTRODUCTION 
+Competitive learning (Grossberg, 1976; Kohonen, 1982; Rumelhart & Zipset, 1985; von 
+der Malsburg, 1973) is an unsupervised algorithm that classifies input patterns into mutu- 
+ally exclusive clusters. In a neural net framework, each cluster is represented by a pro- 
+cessing unit that competes with others in a winner-take-all pool for each input pattern. 
+Competitive learning thus constructs a local representation in which a single unit is ac- 
+tivated in response to an input. I present a simple extension to the algorithm that allows 
+it to construct discrete, distributed representations. Discrete representations are useful 
+because they are relatively easy to analyze and their information content can readily be 
+measured. Distributed representations are useful because they explicitly encode similari- 
+ty. I begin by describing the standard competitive learning algorithm. 
+627 
+628 Mozer 
+2 COMPETITIVE LEARNING 
+Consider a two layer network with at input units and I competitive units. Each competi- 
+tive unit represents a different classification of the input. The competitive units are ac- 
+tivated by the input units and are connected in a winner-take-all pool such that a single 
+competitive unit becomes active. Formally, 
+.. 1 if Iwi-xllw]-xl for all j 
+Yi L 0 otherwise, 
+where Yi is the activity of competitive unit i, x is the input activity vector, w i is the vec- 
+tor of connection strengths from the input units to competitive unit i, and I' I denotes the 
+L2 vector norm. The conventional weight update rule is: 
+Awi '= � Yi (X-W/), 
+where e is the step size. This algorithm moves each weight vector toward the center of a 
+cluster of input patterns. 
+The algorithm attempts to develop the best possible representation of the input with only 
+I discrete alternatives. This representation is simply the weight vector of the winning 
+competitive unit, w,ie,. What does it mean to develop the best representation? Follow- 
+ing Durbin (1990), competitive learning can be viewed as performing gradient descent in 
+the error measure 
+''  I'/r (1) 
+E .--  ln e 
+p-1 i-1 
+as T---O, where p is an index over patterns. T is a parameter in a soft competitive learn- 
+ing model (Bridle, 1989; Rumelhart, in press) which specifies the degree of competition; 
+the winner-take-all version of competitive learning is obtained at the limit of T .- 0. 
+3 EXTENDING COMPETITIVE LEARNING 
+Competitive learning constructs a local representation of the input. How might competi- 
+tive learning be extended to construct distributed representations? One idea is to have 
+several independent competitive pools, each of which may form its own partition of the 
+input space. This often fails because all pools will discover the same partitioning if this 
+partitioning is unequivocally better than others. Thus, we must force different pools to 
+encode different components of the input. 
+In the one-pool competitive learning network, the component of the input not encoded is 
+simply 
+X t t X -- Wwinner. 
+If competitive learning is reapplied with x' instead of x, the algorithm is guaranteed to 
+extract information not captured by the first pool of competitive units because this infor- 
+mation has been subtracted out. This procedure can be invoked iteratively to capture dif- 
+ferent aspects of the input in an arbitrary number of competitive pools, hence the name 
+iterative competitive learning or ICL. The same idea is at the heart of Sanger's (1989) 
+and Hrycej's (1989) algorithms for performing principal components analysis. Whereas 
+these algorithms discover continuous-valued feature dimensions, ICL is concerned with 
+Discovering Discrete Distributed Representations 629 
+the discovery of discrete-valued features. Of course, the continuous features can be 
+quantized to form discrete features, an idea that both Sanger and Hrycej explore, but 
+there is a cost to this, as I elaborate later. 
+To formalize the ICL model, consider a network composed of an arbitrary number of 
+stages (Figure 1). Each stage, s, consists of ot input units and j3 ') competitive units. Both 
+the input and competitive units at a given stage feed activity to the input units at the next 
+(0 . . . 
+higher stage. The activity of the input units at stage 1, x , is given by the external input. 
+At subsequent stages, s, 
+X(',= X,- _ iW(,-'iTy( ,-', 
+where W and y are as before with an additional index for the stage number. 
+X (2)  ;', / ..o ( 
+X (1) I � � � ( 
+Figure 1' The Iterative Competitive Learning Model 
+To reconstruct the original input pattern from the activities of the competitive units, the 
+components captured by the winning unit at each stage are simply summed together: 
+.  !W's'lTy ( (2) 
+$ 
+A variant of ICL has been independently proposed by Ambros-Ingerson, Granger, and 
+Lynch (1990).  Their algorithm, inspired by a neurobiological model, is the same as ICL 
+except for the competitive unit activation rule which uses an inner product instead of dis- 
+tance measure: 
+thank Todd Leen and Steve Rehfuss for bringing this work to my attention. 
+630 Mozer 
+I 1 if xTwi > 0 and xTwi > xTwj for all j 
+Yi =5 0 otherwise. 
+The problem with this rule is that it is difficult to interpret what exactly the network is 
+computing, e.g., what aspect of the input is captured by the winning unit, whether the in- 
+put can be reconstructed from the resulting activity pattern, and what information is dis- 
+carded. The ICL activation rule, in combination with the learning rule, has a clear com- 
+putational justification by virtue of the underlying objective measure (Equation 1) that is 
+being optimized. 
+It also turns out, much to my dismay, that ICL is virtually identical to a conventional 
+technique in data compression known as multistep vector quantization (Gray, 1984). 
+More on this later. 
+4 A SIMPLE EXAMPLE 
+Consider a set of four input patterns forming a rectangle in 2D space, located at (-1,-.5), 
+(-1,.5), (1,-.5), and (1,.5), and an ICL network with two stages each containing two com- 
+petitive units. The first stage discovers the primary dimension of variation -- along the 
+x-axis. That is, the units develop weight vectors (-1,0) and (1,0). Removing this com- 
+ponent from the input, the four points become (0,-.5), (0,.5), (0,-.5), (0,.5). Thus, the 
+two points on the left side of the rectangle are collapsed together with the two points on 
+the right side. The second stage of the network then discovers the secondary dimension 
+of variation w along the y-axis. 
+The response of the ICL network to each input pattern can be summarized by the set of 
+competitive units, one per stage, that are activated. If the two units at each stage are 
+numbered 0 and 1, four response patterns will be generated: {0,0}, {0,1}, {1,0}, {1,1}. 
+Thus, ICL has discovered a two-bit code to represent the four inputs. The result will be 
+the same if instead of just four inputs, the input environment consists of four clusters of 
+points centered on the corners of the rectangle. In this case, the two-bit code will not 
+describe each input uniquely, but it will distinguish the clusters. 
+5 IMAGE COMPRESSION 
+Because ICL discovers compact and discrete codes, the algorithm should be useful for 
+data and image compression. In such problems, a set of raw data must be transformed 
+into a compact representation which can then be used to reconstruct the original data. 
+ICL performs such a transformation, with the resulting code consisting of the competitive 
+unit response pattern. The reconstruction is achieved by Equation 2. 
+I experimented with a 600x460 pixel image having 8 bits of gray level information per 
+pixel. ICL was trained on random 8x8 patches of the image for a total of 125,000 train- 
+ing trials. The network had 64 input units and 80 stages, each with two competitive units. 
+The initial weights were random, selected from a Normal distribution with mean zero and 
+standard deviation .0001. A fixed e of .01 was used. Figure 2 shows incoming connec- 
+tion strengths to the competitive units in the first nine stages. The connection strengths 
+are depicted as an 8x8 grid of cells whose shading indicates the weight from the 
+corresponding position in the image patch to the competitive unit. 
+Discovering Discrete Distributed Representations 631 
+Stage 1 
+Stage 2 
+Stage 3 
+Stage 4 Stage 5 Stage 6 
+Stage 7 Stage 8 Stage 9 
+Figure 2: Input-to-Competitive Unit Connection Strengths at Stages 1-9 
+Following training, the image is compressed by dividi

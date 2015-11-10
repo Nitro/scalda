@@ -1,0 +1,141 @@
+Explanation-Based Neural Network Learning 
+for Robot Control 
+Tom M. Mitchell 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+E-mail: mitchell@cs.cmu.edu 
+Sebastian B. Thrun 
+University of Bonn 
+Institut f'fir Informatik III 
+R6merstr. 164, D-5300 Bonn, Germany 
+thrun@ uran .informatik.uni -bonn .de 
+Abstract 
+How can artificial neural nets generalize better from fewer examples? In order 
+to generalize successfully, neural network learning methods typically require 
+large training data sets. We introduce a neural network learning method that 
+generalizes rationally from many fewer data points, relying instead on prior 
+knowledge encoded in previously learned neural networks. For example, in robot 
+control learning tasks reported here, previously learned networks that model the 
+effects of robot actions are used to guide subsequent learning of robot control 
+functions. For each observed training example of the target function (e.g. the 
+robot control policy), the learner explains the observed example in terms of its 
+prior knowledge, then analyzes this explanation to infer additional information 
+about the shape, or slope, of the target function. This shape knowledge is used 
+to bias generalization when learning the target function. Results are presented 
+applying this approach to a simulated robot task based on reinforcement learning. 
+1 Introduction 
+Neural network learning methods generalize from observed training data to new cases based 
+on an inductive bias that is similar to smoothly interpolating between observed training 
+points. Theoretical results [Valiant, 1984], [Baum and Haussler, 1989] on learnability, as 
+well as practical experience, show that such purely inductive methods require significantly 
+larger training data sets to learn functions of increasing complexity. This paper introduces 
+explanation-based neural network learning (EBNN), a method that generalizes successfully 
+from fewer training examples, relying instead on prior knowledge encoded in previously 
+learned neural networks. 
+EBNN is a neural network analogue to symbolic explanation-based learning methods (EBL) 
+[De, Jong and Mooney, 1986], [Mitchell et al., 1986]. Symbolic EBL methods generalize 
+based upon pre-specified domain knowledge represented by collections of symbolic rules. 
+287 
+288 Mitchell and Thrun 
+For example, in the task of learning general rules for robot control EBL can use prior 
+knowledge about the effects of robot actions to analytically generalize from specific training 
+examples of successful control actions. This is achieved by a. observing a sequence of states 
+and actions leading to some goal, b. explaining (i.e., post-facto predicting) the outcome 
+of this sequence using the domain theory, then c. analyzing this explanation in order 
+to determine which features of the initial state are relevant to achieving the goal of the 
+sequence, and which are not. In previous approaches to EBL, the initial domain knowledge 
+has been represented symbolically, typically by propositional rules or horn clauses, and has 
+typically been assumed to be complete and correct. 
+2 EBNN: Integrating inductive and analytical learning 
+EBNN extends explanation-based learning to cover situations in which prior knowledge 
+(also called the domain theory) is approximate and is itself learned from scratch. In EBNN, 
+this domain theory is represented by real-valued neural networks. By using neural network 
+representations, it becomes possible to learn the domain theory using training algorithms 
+such as the Backpropagation algorithm [Rumelhart et al., 1986]. In the robot domains 
+addressed in this paper, such domain theory networks correspond to action models, i.e., 
+networks that model the effect of actions on the state of the world M:s x a , s' (here 
+a denotes an action, s a state, and s' the successor state). This domain theory is used by 
+EBNN to bias the learning of the'robot control function. Because the action models may be 
+only approximately correct, we require that EBNN be robust with respect to severe errors 
+in the domain theory. 
+The remainder of this section describes the EBNN learning algorithm. Assume that the 
+robot agent's action space is discrete, and that its domain knowledge is represented by a 
+collection of pre-trained action models Mi:s  s', one for each discrete action i. The 
+learning task of the robot is to learn a policy for action selection that maximizes the reward, 
+denoted by R, which defines the task. More specifically, the agent has to learn an evaluation 
+function Q( s, a), which measures the cumulative future expected reward when action a is 
+executed at state s. Once learned, the function Q(s, a) allows the agent to select actions 
+that maximize the reward R (greedy policy). Hence learning control reduces to learning 
+the evaluation function QJ 
+How can the agent use its previously learned action models to focus its learning of Q? 
+To illustrate, consider the episode shown in Figure 1. The EBNN learning algorithm for 
+learning the target function Q consists of two components, an inductive learning component 
+and an analytical learning component. 
+2.1 The inductive component of EBNN 
+The observed episode is used by the agent to construct training examples, denoted by , 
+for the evaluation function Q: 
+($1,al) := R ($2, a2):--' R ($3,a3) .'= R 
+Q could for example be realized by a monolithic neural network, or by a collection of net- 
+works trained with the Backpropagation training procedure. As observed training episodes 
+are accumulated, Q will become increasingly accurate. Such pure inductive learning typ- 
+XThis approach to learning a policy is adopted from recent research on reinforcement learning 
+[Barto et al., 1991]. 
+Explanation-Based Neural Network Learning for Robot Control 289 
+Figure 1: Episode: Starting with the initial state s, the action sequence am, a2, a3 was observed to 
+produce the final reward R. The domain knowledge represented by neural network action models is 
+used to post-facto predict and analyze each step of the observed episode. 
+ically requires large amounts of training data (which will be costly in the case of robot 
+leaming). 
+2.2 The analytical component of EBNN 
+In EBNN, the agent exploits its domain knowledge to extract additional shape knowledge 
+about the target function Q, to speed convergence and reduce the number of training 
+examples required. This shape knowledge, represented by the estimated slope of the target 
+function Q, is then used to guide the generalization process. More specifically, EBNN 
+combines the above inductive learning component with an analytical learning component 
+that performs the following three steps for each observed training episode: 
+1. Explain: Post-facto predict the observed episode (states and final reward), using the 
+action models Ms (c.f. Fig. 1). Note that there may be a deviation between predicted 
+and observed states, since the domain knowledge is only approximately correct. 
+2. Analyze: Analyze the explanation to estimate the slope of the target function for 
+each observed state-action pair (sk, ak) (k = 1..3), i.e., extract the derivative of the 
+final reward R with respect to the features of the states s, according to the action 
+models Ms. For instance, consider the explanation of the episode shown in Fig. 1. 
+The domain theory networks Ms represent differentiable functions. Therefore it is 
+possible to extract the derivative of the final reward R with respect to the preceding 
+state 83, denoted by V, R. Using the chain rule of differentiation, the derivatives of 
+the final reward R with respect to all states s can be extracted. These derivatives 
+V, k R describe the dependence of the final reward upon features of the previous states. 
+A 
+They provide the target slopes, denoted by V,k Q, for the target function Q: 
+A 
+V ,, Q( 83 , a3 ) = V ,, R = 
+V,,Q(82,a2) = XZ,,R = 
+0s3 0s2 
+3. Learn: Update the learned target function to better fit both the target values and target 
+slopes. Fig. 2 illustrates training information extracted by both the inductive (values) 
+and the analytical (slopes) components of EBNN. Assume that the true Q-function 
+290 Mitchell and Thrun 
+h 
+Figure 2: Fitting slopes: Let f be a target function for which three examples ( 
+and (z3, f(z3)} are known. Based on these points the learner might generate the hypothesis g. If the 
+slopes are also known, the learner can do much better: 
+is shown in Fig. 2a, and that three training instances at zl, z2 and z3 are given. When 
+only values are used for learning, i.e., as in standard inductive learning, the learner 
+might conclude the hypothesis g depicted in Fig. 2b. If the slopes are known as well, 
+the learner can better estimate the target function (Fig. 2c). From this example it is 
+clear that the analysis in EBNN may reduce the need for training data, provided that 
+the estimated slopes extracted from the explanations are sufficiently accurate. 
+In EBNN, the function Q is learned by a real-valued function approximator that fits both 
+the target values and target slopes. If this approximatoris a neural network, an extended 
+version of the Backpropagation algorithm can be employed to fit these slope constraints 
+as well, as originally shown by [Simard et al., 1992]. Their algorithm Tangent Prop 
+extends the Backpropagation error function by a second term measuring the mean 
+square error of the slopes. Gradient descent in slope space is then combined with 
+Backpropagation to minimize both error functions. In the experiments reported here, 
+however, we used an instance-based function approximation technique described in 
+Sect. 3. 
+2.3 Accommodating imperfect domain theories 
+Notice that the slopes extracted from explanations will be only approximately correct, since 
+they are derived from the approximate action models Mi. If this domain knowledge is 
+weak, the slopes can be arbitrarily poor, which may mislead generaliza

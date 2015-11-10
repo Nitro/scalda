@@ -1,0 +1,141 @@
+Onset-based Sound Segmentation 
+Leslie S. Smith 
+CCCN/Department of Computer Science 
+University of Stirling 
+Stirling FK9 4LA 
+Scotland 
+Abstract 
+A technique for segmenting sounds using processing based on mam- 
+malian early auditory processing is presented. The technique is 
+based on features in sound which neuron spike recording suggests 
+are detected in the cochlear nucleus. The sound signal is band- 
+passed and each signal processed to enhance onsets and offsets. 
+The onset and offset signals are compressed, then clustered both in 
+time and across frequency channels using a network of integrate- 
+and-fire neurons. Onsets and offsets are signalled by spikes, and 
+the timing of these spikes used to segment the sound. 
+I Background 
+Traditional speech interpretation techniques based on Fourier transforms, spectrum 
+rccoding, and a hidden Markov model or neural network interpretation stage have 
+limitations both in continuous speech and in interpreting speech in the presence 
+of noise, and this has led to interest in front ends modelling biological auditory 
+systems for speech interpretation systems (Ainsworth and Meyer 92; Cosi 93: Cole 
+et al 95). 
+Auditory modelling systems use similar early auditory processing to that used in 
+biological systems. Mammalian auditory processing uses two ears, and the incoming 
+signal is filtered first by the pinna (external car) and the anditory canal before it 
+causes the tympanic membrane (eardrum) to vibrate. This vibration is then passed 
+on through the bones of the middle ear to the oval window on the cochlea. Inside 
+the cochlea, the pressure wave causes a pattern of vibration to occur on the basilar 
+membrane. This appears to be an active process using both the inner and outer hair 
+cells of the organ of Corti. The movement is detected by the inner hair cells and 
+turned into neural impulses by the neurons of the spiral ganglion. These pass down 
+the auditory nerve, and arrive at various parts of the cochlear nucleus. From there, 
+nerve fibres innervate other areas: the lateral and medial nuclei of the superior olive 
+73 0 L.S. SMITH 
+and the inferior colliculus, for example. (See (Pickles 88)). 
+Virtually all modern sound or speech interpretation systems use some form of band- 
+pass filtering, following the biology as far as the cochlea. Most use Fourier trans- 
+forms to perform a calculation of the energy in each band over some time period, 
+usually between 25 and 75 ms. This is not what the cochlea does. Auditory mod- 
+elling front ends differ in the extent and length to which they follow animal early 
+auditory processing, but the term generally implies at least that wideband filters 
+are used, and that high temporal resolution is maintained in the initial stages. This 
+means the use of filtering techniques, rather than Fourier transforms in the bandpass 
+stage. Such filtering systems have been implemented by Patterson and Holdsworth 
+(Patterson and Holdsworth 90; Slaney 93), and placed directly in silicon (Lazzaro 
+and Mead 89; Lazzaro et al 93; Liu et al 93; Fragniere and van Schaik 94). 
+Some auditory models have moved beyond cochlear filtering. The inner hair cell 
+has been modelled by either simple rectification (Smith 94) or has been based on 
+the work of (Meddis 88) for example (Patterson and Holdsworth 90; Cosi 93; Brown 
+92). Lazzaro has experimented with a silicon version of Licklider's autocorrelation 
+processing (Licklider 51; Lazzaro and Mead 89). Others such as (Wu ct al 1989: 
+Blackwood et al 1990; Ainsworth and Meyer 92; Brown 92: Berthommier 93; Smith 
+94) have considered the early brainstem nuclei, and their possible contribution, 
+based on the neurophysiology of the different cell types (Pickles 88; Blackburn and 
+Sachs 1989; Kim et al 90). 
+Auditory model-based systems have yet to find their way into mainstream speech 
+recognition systems (Cosi 93). The work presented here uses auditory modelling 
+up to onset cells in the cochlear nucleus. It adds a temporal neural network to 
+clean up the segmentation produced. This part has been filed as a patent (Smith 
+95). Though the system has some biological plausibility, the aim is an effective 
+data-driven segmentation technique implement able in silicon. 
+2 Techniques used 
+Digitized sound was applied to an auditory front end, (Patterson and Holdsworth 
+90), which bandpassed the sound into channels each with bandwidth 24.7(4.37F: + 
+1)Hz, where Fc is the centre frequency (in KHz) of the band (Moore and Glasberg 
+83). These were rectified, modelling the effect of the inner hair cells. The signals 
+produced bear some resemblance to that in the auditory nerve. The real system 
+has far more channels and each nerve channel carries spike-coded information. The 
+coding here models the signal in a population of neighboring auditory nerve fibres. 
+2.1 The onset-offset filter 
+The signal present in the auditory nerve is stronger near the onset of a tone than 
+later (Pickles 88). This effect is much more pronounced in certain cell types of the 
+cochlear nucleus. These fire strongly just after the onset of a sound in the band to 
+which they are sensitive, and are then silent. This emphasis on onsets was modelled 
+by convolving the signal in each band with a filter which computes two averages, a 
+more recent one, and a less recent one, and subtracts the less recent one from the 
+more recent one. One biologically possible justification for this is to consider that 
+a neuron is receiving the same driving input twice, one excitatorily, and the other 
+inhibitorily; the excitatory input has a shorter time-constant than the inhibitory 
+input. Both exponentially weighted averages, and averages formed using a Ganssian 
+filter have been tried (Smith 94), but the former place too much emphasis on the 
+most recent part of the signal, making the latter more effective. 
+Onset-based Sound Segmentation 731 
+The filter output for input signal s(x) is 
+j0 t 
+O(t, k, r) = (f(t - x,k)- f(t- x,k/r))s(x)dx 
+(1) 
+where f(x,y) - vexp(-yx2). k and r determine the rise and fall times of the 
+pulses of sotmd that the system is sensitive to. We used k - 1000, r - 1.2, so 
+that the SD of the Gaussians are 24.49ms and 22.36ms. The convolving filter has 
+a positive peak at 0 crosses 0 at 22.39ms. and is then negative. With these values, 
+the system is sensitive to energy rises and falls which occur in the envelopes of 
+everyday sounds. A positive onset-offset signal implies that the bandpassed signal is 
+increasing in intensity, and a negative onset-offset signal implies that it is decreasing 
+in intensity. The convolution used is a sound analog of the difference of Gaussians 
+operator used to extract black/white and white/black edges in monochrome images 
+(Marr and Hildreth 80). In (Smith 94) we performed smmd segmentation directly 
+on this signal. 
+2.2 Compressing the onset-offset signal 
+The onset-offset signal was divided into two positive-going signals, an onset signal 
+consisting of the positive-going part, and an offset signal consisting of the inverted 
+negative-going part. Both were compressed logarithmically (where log(x) was taken 
+as 0 for 0 _< x _< 1). This increases the dynamical rmge of the system, and models 
+comprcssivc biological effects. The compressed onset signal models the output of a 
+population of onset cells. This technique for producing an onset signal is related to 
+that of (Wu et al 1989: Cosi 93). 
+2.3 The integrate-and-fire neural network 
+To segment the sound using the onset and offset signals, they need to be integrated 
+across frequency bands and across time. This temporal and tonotopic clustering 
+was achieved using a network of integrate-and-fire units. An integrate-and-fire unit 
+accumulates its weighted input over time. The activity of the mit A, is initially 0, 
+and alters according to 
+dA 
+= - vA (2) 
+where I(t) is the input to the neuron and 7, the dissipation, describes the leakiness 
+of the integration. When A reaches a threshold, the unit fires (i.e. emits a pulse), 
+and A is reset to 0. After firing, there is a period of insensitivity to input, called the 
+refractory period. Such neurons are discussed in, e.g. (Mirolla and Strogatz 90). 
+One integrate-and-fire neuron was used per channeh this neuron received input ei- 
+ther from a single chamel, or from a set of adjacent channels, all with equal positive 
+weighting. The output of each neuron was fed back to a set of adjacent neurons, 
+again with a fixed positive weight, one time step (here 0.5ms) later. Because of the 
+leaky nature of the accumulation of activity, excitatory input to the neuron arriving 
+when its activation is neax threshold has a laxger effect on the next firing time than 
+excitatory input arriving when activation is lower. Thus, if similar input is applied 
+to a set of neurons in adjacent channels. the effect of the inter-neuron connections 
+is that when the first one fires, its neighbors fire almost immediately. This allows 
+a network of such neurons to cluster the onset or offset signals, producing a sharp 
+burst of spikes across a number of channels providing unambiguous onsets or offsets. 
+The external and internal weights of the network were adjusted so that onset or 
+offset input alone allowed neurons to fire, while internal input alone was not enough 
+732 L.S. SMITH 
+to cause firing. The refractory period used was set to 50ms for the onset system, 
+and 5ms for the offset system. For the onset system, the effect was to produce sharp 
+onset firing responses across adjacent, channels in response to a sudden increase in 
+energy in some channels, thus grouping onsets both tonotopically and temporally. 
+This is appropriate for onsets, as these are generally brief and clearly marked. The 
+output of this stage we call the onset map. Offsets tend to be more gradual. This 
+is due to physical effects: for example, a percussive sound will start suddenly, as 
+the vibrating element starts to move, but die away slowly as the vibr

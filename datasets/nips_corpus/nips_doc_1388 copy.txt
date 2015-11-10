@@ -1,0 +1,153 @@
+Nonparametric Model-Based 
+Reinforcement Learning 
+Christopher G. Atkeson 
+College of Computing, Georgia Institute of Technology, 
+Atlanta, GA 30332-0280, USA 
+ATR Human Information Processing, 
+2-2 Hikaridai, Seiko-cho, Soraku-gun, 619-02 Kyoto, Japan 
+cga@cc.gatech.edu 
+http://www.cc.gatech.edu/fac/Chris.Atkeson/ 
+Abstract 
+This paper describes some of the interactions of model learning 
+algorithms and planning algorithms we have found in exploring 
+model-based reinforcement learning. The paper focuses on how lo- 
+cal trajectory optimizers can be used effectively with learned non- 
+parametric models. We find that trajectory planners that are fully 
+consistent with the learned model often have difficulty finding rea- 
+sonable plans in the early stages of learning. Trajectory planners 
+that balance obeying the learned model with minimizing cost (or 
+maximizing reward) often do better, even if the plan is not fully 
+consistent with the learned model. 
+1 INTRODUCTION 
+We are exploring the use of nonparametric models in robot learning (Atkeson et al., 
+1997b; Atkeson and Schaal, 1997). This paper describes the interaction of model 
+learning algorithms and planning algorithms, focusing on how local trajectory opti- 
+mization can be used effectively with nonparametric models in reinforcement learn- 
+ing. We find that trajectory optimizers that are fully consistent with the learned 
+model often have difficulty finding reasonable plans in the early stages of learning. 
+The message of this paper is that a planner should not be entirely consistent with 
+the learned model during model-based reinforcement learning. Trajectory optimiz- 
+ers that balance obeying the learned model with minimizing cost (or maximizing 
+reward) often do better, even if the plan is not fully consistent with the learned 
+model: 
+Nonparametric Model-Based Reinforcement Learning 1009 
+Figure 
+trajectories all the way to a goal point. 
+1' A: Planning in terms of trajectory segments. B: Planning in terms of 
+Two kinds of reinforcement learning algorithms are direct (non-model-based) and 
+indirect (model-based). Direct reinforcement learning algorithms learn a policy or 
+value function without explicitly representing a model of the controlled system (Sut- 
+ton et al., 1992). Model-based approaches learn an explicit model of the system si- 
+multaneously with a value function and policy (Sutton, 1990, 1991a,b; Barto et al., 
+1995; Kaelbling et al., 1996). We will focus on model-based reinforcement learning, 
+in which the learner uses a planner to derive a policy from a learned model and an 
+optimization criterion. 
+2 CONSISTENT LOCAL PLANNING 
+An efficient approach to dynamic programming, a form of global planning, is to use 
+local trajectory optimizers (Atkeson, 1994). These local planners find a plan for 
+each starting point in a grid in the state space. Figure 1 compares the output of 
+a traditional cell based dynamic programming process with the output of a plan- 
+ner based on integrating local plans. Traditional dynamic programming generates 
+trajectory segments from each cell to neighboring cells, while the planner we use 
+generates entire trajectories. These locally optimal trajectories have local policies 
+and local models of the value function along the trajectories (Dyer and McReynolds, 
+1970; Jacobson and Mayne, 1970). The locally optimal trajectories are made con- 
+sistent with their neighbors by using the local value function to predict the value 
+of a neighboring trajectory. If all the local value functions are consistent with their 
+neighbors the aggregate value function is a unique solution to the Bellman equation 
+and the corresponding trajectories and policy are globally optimal. We would like 
+any local planning algorithm to produce a local model of the value function so we 
+can perform this type of consistency checking. We would also like a local policy 
+from the local planner, so we can respond to disturbances and modeling errors. 
+Differential dynamic programming is a local planner that has these characteris- 
+tics (Dyer and McReynolds, 1970; Jacobson and Mayne, 1970). Differential dy- 
+namic programming maintains a local quadratic model of the value function along 
+the current best trajectory x* (t): 
+V(x,t) = v0(t) + vx(t)(x - x*(t)) T + 0.5(x- x*(t))Tvx(t)(x - x*(t)) (1) 
+1010 C. G. Atkeson 
+as well as a local linear model of the corresponding policy: 
+u(x,t) = u*(t)+ I<(t)(x - x*(t)) (2) 
+u(x, t) is the local policy at time t, the control signal u as a function of state x. 
+u*(t) is the model's estimate of the control signal necessary to follow the current 
+best trajectory x*(t). K(t) are the feedback gains that alter the control signals in 
+response to deviations from the current best trajectory. These gains are also the 
+first derivative of the policy along the current best trajectory. 
+The first phase of each optimization iteration is to apply the current local policy 
+to the learned model, integrating the modeled dynamics forward in time and seeing 
+where the simulated trajectory goes. The second phase of the differential dynamic 
+programming approach is to calculate the components of the local quadratic model 
+of the value function at each point along the trajectory: the constant term Vo(t), the 
+gradient Vx (t), and the Hessian V:x(t). These terms are constructed by integrating 
+backwards in time along the trajectory. The value function is used to produce a 
+new policy, which is represented using a new x*(t), u*(t), and K(t). 
+The availability of a local value function and policy is an attractive feature of 
+differential dynamic programming. However, we have found several problems when 
+applying this method to model-based reinforcement learning with nonparametric 
+models: 
+1. Methods that enforce consistency with the learned model need an initial 
+trajectory that obeys that model, which is often difficult to produce. 
+2. The integration of the learned model forward in time often blows up when 
+the learned model is inaccurate or when the plant is unstable and the cur- 
+rent policy fails to stabilize it. 
+3. The backward integration to produce the value function and a correspond- 
+ing policy uses derivatives of the learned model, which are often quite inac- 
+curate in the early stages of learning, producing inaccurate value function 
+estimates and ineffective policies. 
+3 INCONSISTENT LOCAL PLANNING 
+To avoid the problems of consistent local planners, we developed a trajectory opti- 
+mization approach that does not integrate the learned model and does not require 
+full consistency with the learned model. Unfortunately, the price of these modifi- 
+cations is that the method does not produce a value function or a policy, just a 
+trajectory (x(t), u(t)). To allow inconsistency with the learned model, we represent 
+the state history x(t) and the control history u(t) separately, rather than calculate 
+x(t) from the learned model and u(t). We also modify the original optimization 
+criterion C - -k c(xk, u) by changing the hard constraint that X+l - f(x, u) 
+on each time step into a soft constraint: 
+C'new --' E [�(Xk' uk) -Jr- /lXk+l -- f(Xk, Uk)l 2] 
+k 
+(3) 
+c(xk, u) is the one step cost in the original optimization criterion. A is the penalty 
+on the trajectory being inconsistent with the learned model +1 = f(x,u). 
+IXk+l - f(x, u)l is the magnitude of the mismatch of the trajectory and the model 
+prediction at time step k in the trajectory. A provides a way to control the amount 
+of inconsistency. A small A reflects lack of confidence in the model, and allows 
+Nonparametric Model-Based Reinf o rcement Learning 1011 
+Figure 2: The 
+SAltCOS robot 
+arm with a pen- 
+dulum gripped in 
+the hand. The 
+pendulum axis 
+is aligned with 
+the fingers and 
+with the fore- 
+arm in this arm 
+configuration. 
+the optimized trajectory to be inconsistent with the model in favor of reducing 
+c(xk, uk). A large A reflects confidence in the model, and forces the optimized tra- 
+jectory to be more consistent with the model. A can increase with time or with the 
+number of learning trials. If we use a model that estimates the confidence level of 
+a prediction, we can vary A for each lookup based on x and u. Locally weighted 
+learning techniques provide exactly this type of local confidence estimate (Atkeson 
+et al., 1997a). 
+Now that we are not integrating the trajectory we can use more compact repre- 
+sentations of the trajectory, such as splines (Cohen, 1992) or wavelets (Liu et al., 
+1994). We no longer require that x+ = f(x,uk), which is a condition difficult to 
+fulfill without having x and u represented as independent values on each time step. 
+We can now parameterize the trajectory using the spline knot points, for example. 
+In this work we used B splines (Cohen, 1992) to represent the trajectory. Other 
+choices for spline basis functions would probably work just as well. We can use any 
+nonlinear programming or function optimization method to minimize the criterion 
+in Eq. 3. In this work we used Powell's method (Press et al., 1988) to optimize the 
+knot points, a method which is convenient to use but not particularly efficient. 
+4 IMPLEMENTATION ON AN ACTUAL ROBOT 
+Both local planning methods work well with learned parametric models. However, 
+differential dynamic programming did not work at all with learned nonparametric 
+models, for reasons already discussed. This section describes how the inconsistent 
+local planning method was used in an application of model-based reinforcement 
+learning: robot learning from demonstration using a pendulum swing up task (Atke- 
+son and Schaal, 1997). The pendulum swing up task is a more complex version of 
+the pole or broom balancing task (Spong, 1995). The hand holds the axis of the 
+pendulum, and the pendulum rotates about this hinge in an angular movement 
+(Figure 2). Instead of starting with the pendulum vertical and above its rotational 
+joint, the pendulum is hanging down from the 

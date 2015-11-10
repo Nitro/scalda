@@ -1,0 +1,169 @@
+Clustering with a Domain-Specific 
+Distance Measure 
+Steven Gold, Eric Mjolsness and Anand Rangarajan 
+Department of Computer Science 
+Yale University 
+New Haven, CT 06520-8285 
+Abstract 
+With a point matching distance measure which is invariant under 
+translation, rotation and permutation, we learn 2-D point-set ob- 
+jects, by clustering noisy point-set images. Unlike traditional clus- 
+tering methods which use distance measures that operate on feature 
+vectors - a representation common to most problem domains - this 
+object-based clustering technique employs a distance measure spe- 
+cific to a type of object within a problem domain. Formulating 
+the clustering problem as two nested objective functions, we derive 
+optimization dynamics similar to the Expectation-Maximization 
+algorithm used in mixture models. 
+I Introduction 
+Clustering and related unsupervised learning techniques such as competitive learn- 
+ing and self-organizing maps have traditionally relied on measures of distance, like 
+Euclidean or Mahalanobis distance, which are generic across most problem domains. 
+Consequently, when working in complex domains like vision, extensive preprocess- 
+ing is required to produce feature sets which reflect properties critical to the domain, 
+such as invariance to translation and rotation. Not only does such preprocessing 
+increase the architectural complexity of these systems but it may fail to preserve 
+some properties inherent in the domain. For example in vision, while Fourier de- 
+composition may be adequate to handle reconstructions invariant under translation 
+and rotation, it is unlikely that distortion invariance will be as amenable to this 
+technique (von der Malsburg, 1988). 
+Clustering with a Domain-Specific Distance Measure 97 
+These problems may be avoided with the help of more powerful, domain-specific 
+distance measures, including some which have been applied successfully to visual 
+recognition tasks (Simard, Le Cun, and Denker, 1993; Huttenlocher el al., 1993). 
+Such measures can contain domain critical properties; for example, the distance 
+measure used here to cluster 2-D point images is invariant under translation, rota- 
+tion and labeling permutation. Moreover, new distance measures may constructed, 
+as this was, using Bayesian inference on a model of the visual domain given by a 
+probabilistic grammar (Mjolsness, 1992). Distortion invariant or graph matching 
+measures, so formulated, can then be applied to other domains which may not be 
+amenable to description in terms of features. 
+Objective functions can describe the distance measures constructed from a proba- 
+bilistic grammar, as well as learning problems that use them. The clustering prob- 
+lem in the present paper is formulated as two nested objective functions: the inner 
+objective computes the distance measures and the outer objective computes the 
+cluster centers and cluster memberships. A clocked objective function is used, with 
+separate optimizations occurring in distinct clock phases (Mjolsness and Miranker, 
+1993). The optimization is carried out with coordinate ascent/descent and deter- 
+ministic annealing and the resulting dynamics is a generalization of the Expectation- 
+Maximization (EM) algorithm commonly used in mixture models. 
+2 Theory 
+2.1 The Distance Measure 
+Our distance measure quantifies the degree of similarity between two unlabeled 
+2-D point images, irrespective of their position and orientation. It is calculated 
+with an objective that can be used in an image registration problem. Given two 
+sets of points {Xj } and {Yk }, one can minimize the following objective to find the 
+translation, rotation and permutation which best maps Y onto X � 
+E,a(m, t, O) - mjkllX j - t - R(O). 
+with constraints: �j : rnj = 1 , �k j rnjk = 1. 
+Such a registration permits the matching of two sparse feature images in the presence 
+of noise (Lu and Mjolsness, 1994). In the above objective, m is a permutation matrix 
+which matches one point in one image with a corresponding point in the other image. 
+The constraints on m ensure that each point in each image corresponds to one and 
+only one point in the other image (though note later remarks regarding fuzziness). 
+Then given two sets of points {Xj} and {Y} the distance between them is defined 
+as: 
+D({Xj}, {Y})= min(E,.,a(m,t,O) l constraints on m) (1) 
+m,t,O 
+This measure is an example of a more general image distance measure derived in 
+(Mjolsness, 1992): 
+d(x,y) = mind(x,T(y)) e [0, 
+T 
+where T is a set of transformation parameters introduced by a visual grammar. In 
+(1) translation, rotation and permutation are the transformations, however scaling 
+98 Gold, Mjolsness, and Rangarajan 
+or distortion could also have been included, with consequent changes in the objective 
+function. 
+The constraints are enforced by applying the Potts glass mean field theory ap- 
+proximations (Peterson and Soderberg,1989) and then using an equivalent form of 
+the resulting objective, which employs Lagrange multipliers and an x log x barrier 
+function (as in Yuille and Kosowsky, 1991): 
+1 1) 
+Ereg(m, t, O) = E mJk[[XJ -- t-- R(O) o yk[}2 +  E mjk(log mjk -- 
+jk jk 
+j k k j 
+In this objective we are looking for a saddle point. (2) is minimized with respect to 
+m, t, and , which are the correspondence matrix, translation,and rotation, and is 
+maximized with respect to  and , the Lagrange multipliers tat enforce te row 
+and column constrMnts for m. 
+2.2 The Clustering Objective 
+The learning problem is formulated as follows: Given a set of I images, {Xi), with 
+each image consisting of J points, find a set of A cluster centers {Ya) and match 
+variables {Mia) defined as 
+1 ifXi is in Y.'s cluster 
+Mia = 0 otherwise, 
+such that each image is in only one cluster, and the total distance of all the images 
+from their respective cluster centers is minimized. To find {Ya) and {Mia) minimize 
+the cost function, 
+with the constraint that Vi . Mi = 1. D(Xi,Y), the distance function, is 
+defined by (1). 
+The constraints on M are enforced in a manner similar to that described for the 
+distance measure, except that now only the rows of the matrix M need to add to 
+one, instead of both the rows and the columns� The Potts glass mean field theory 
+method is applied and an equivalent form of the resulting objective is used: 
+1 
+Eca,.t,.(Y,M) = Z Mi.D(Xi,Y.) +  Z Mi.(logMi. - 1)+ Z Ai(Z Mi. - 1) 
+ia ia i a 
+(3) 
+Replacing the distance measure by (2), we derive: 
+Edu.,er(Y, M, t, O,m) - Z Mi. E m'llXq - t,. - R(O,.) . 
+ia jk 
+jk j k 
+. 1 
+) ,Viak(E miajk -- 1)] +   Mi.(logMi. - 1)+ ' Ai(y. Mi. - 1) 
+k j za i a 
+Clustering with a Domain-Specific Distance Measure 99 
+A saddle point is required. The objective is minimized with respect to Y, M, m, 
+t, O, which are respectively the cluster centers, the cluster membership matrix, the 
+correspondence matrices, the rotations, and the translations. It is maximized with 
+respect to A, which enforces the row constraint for M, and tt and v which enforce 
+the column and row constraints for m. M is a cluster membership matrix indicating 
+for each image i, which cluster a it falls within, and mia is a permutation matrix 
+which assigns to each point in cluster center Ya a corresponding point in image Xi. 
+Oia gives the rotation between image i and cluster center a. Both M and m are 
+fuzzy, so a given image may partially fall within several clusters, with the degree of 
+fuzziness depending upon/, and/M. 
+Therefore, given a set of images, X, we construct E�ust,. and upon finding the 
+appropriate saddle point of that objective, we will have Y, their cluster centers, 
+and M, their cluster memberships. 
+3 The Algorithm 
+3.1 Overview- A Clocked Objective Function 
+The algorithm to minimize the above objective consists of two loops - an inner 
+loop to minimize the distance measure objective (2) and an outer loop to minimize 
+the clustering objective (3). Using coordinate descent in the outer loop results 
+in dynamics similar to the EM algorithm for clustering (Hathaway, 1986). (The 
+EM algorithm has been similarly used in supervised learning [Jordan and Jacobs, 
+1993].) All variables occurring in the distance measure objective are held fixed 
+during this phase. The inner loop uses coordinate ascent/descent which results in 
+repeated row and column projections for m. The minimization of m, t and O occurs 
+in an incremental fashion, that is their values are saved after each inner loop call 
+from within the outer loop and are then used as initial values for the next call to 
+the inner loop. This tracking of the values of m, t, and O in the inner loop is 
+essential to the efficiency of the algorithm since it greatly speeds up each inner loop 
+optimization. Each coordinate ascent/descent phase can be computed analytically, 
+further speeding up the algorithm. Local minima are avoided, by deterministic 
+annealing in both the outer and inner loops. 
+The resulting dynamics can be concisely expressed by formulating the objective as 
+a clocked objective function, which is optimized over distinct sets of variables in 
+phases, 
+Eclockecl -- Ectuser( ( ((la, m)A, (v, m)A), oA, tA)b, (.,, M)A, yA) b 
+with this special notation employed recursively: 
+E(x, y), � coordinate descent on x, then y, iterated (if necessary) 
+x A � use analytic solution for x phase 
+The algorithm can be expressed less concisely in English, as follows: 
+Initialize t, 13 to zero, Y to random values 
+Begin Outer Loop 
+Begin Inner Loop 
+Initialize t, 13 with previous values 
+100 Gold, Mjolsness, and Rangarajan 
+Find m, t, 13 for each ia pair: 
+Find m by softmax, projecting across j, then k, iteratively 
+Find 13 by coordinate descent 
+Find t by coordinate descent 
+End Inner Loop 
+If first time through outer loop T/- and repeat inner loop 
+Find M,Y using fixed values of m, t, 13 determined in inner loop: 
+Find M by softmax, across i 
+Find Y by coordinate descent 
+End Outer Loop 
+When the distances are c

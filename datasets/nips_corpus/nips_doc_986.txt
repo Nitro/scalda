@@ -1,0 +1,163 @@
+Boosting Decision Trees 
+Harris Drucker 
+AT&T Bell Laboratories 
+Holmdel, New Jersey 07733 
+Corinna Cortes 
+AT&T Bell Laboratories 
+Murray Hill, New Jersey 07974 
+Abstract 
+A new boosting algorithm of Freund and Schapire is used to improve 
+the performance of decision trees which are constructed using the 
+information ratio criterion of Quinlan's C4.5 algorithm. This boosting 
+algorithm iteratively constructs a series of decision trees, each decision 
+tree being trained and pruned on examples that have been filtered by 
+previously trained trees. Examples that have been incorrectly classified 
+by the previous trees in the ensemble are resampled with higher 
+probability to give a new probability distribution for the next tree in the 
+ensemble to train on. Results from optical character recognition 
+(OCR), and knowledge discovery and data mining problems show that 
+in comparison to single trees, or to trees trained independently, or to 
+trees trained on subsets of the feature space, the boosting ensemble is 
+much better. 
+1 INTRODUCTION 
+A new boosting algorithm termed AdaBoost by their inventors (Freund and Schapire, 
+1995) has advantages over the original boosting algorithm (Schapire, 1990) and a second 
+version (Freund, 1990). The implications of a boosting algorithm is that one can take a 
+series of learning machines (termed weak learners) each having a poor error rate (but no 
+worse than .5-),, where y is some small positive number) and combine them to give an 
+ensemble that has very good performance (termed a strong learner). The first practical 
+implementation of boosting was in OCR (Drucker, 1993, 1994) using neural networks as 
+the weak learners. In a series of comparisons (Bottou, 1994) boosting was shown to be 
+superior to other techniques on a large OCR problem. 
+The general configuration of AdaBoost is shown in Figure 1. Each box is a decision tree 
+built using Quinlans C4.5 algorithm (Quinlan, 1993) The key idea is that each weak 
+leamer is trained sequentially. The first weak learner is trained on a set of patterns picked 
+randomly (with replacement) from a training set. After training and pruning, the training 
+patterns are passed through this first decision tree. In the two class case the hypothesis h  
+is either class 0 or class 1. Some of the patterns will be in error. The training set for the 
+480 H. DRUCKER, C. CORTES 
+INPUT FEATURES 
+1 
+! 
+h 
+2 
+h 
+FIGURE 1. 
+h T 
+t log (1/It) 
+BOOSTING ENSEMBLE 
+,5 
+LU 
+ENSEMBLE 
+TRAINING 
+ERROR RATE 
+WEAK LEARNER WEIGHTED 
+TRAINING ERROR RATE 
+ENSEMBLE TEST ERROR RATE 
+NUMBER OF WEAK LEARNERS 
+FIGURE 2. INDIVIDUAL WEAK LEARNER ERROR RATE 
+AND ENSEMBLE TRAINING AND TEST ERROR RATES 
+Boosting Decision Trees 481 
+second weak leamer will consist of patterns picked from the training set with higher 
+probability assigned to those patterns the first weak learner classifies incorrectly. Since 
+patterns are picked with replacement, difficult patterns are more likely to occur multiple 
+times in the training set. Thus as we proceed to build each member of the ensemble, 
+patterns which are more difficult to classify correctly appear more and more likely. The 
+training error rate of an individual weak learner tends to grow as we increase the number 
+of weak learners because each weak leamer is asked to classify progressively more 
+difficult patterns. However the boosting algorithm shows us that the ensemble training 
+and test error rate decrease as we increase the number of weak leamers. The ensemble 
+output is determined by weighting the hypotheses with the log of (1/[i) where [ is 
+proportional to the weak learner error rate. If the weak learner has good error rate 
+performance, it will contribute significantly to the output, because then 1 /[ will be large. 
+Figure 2 shows the general shape of the curves we would expect. Say we have 
+constructed N weak learners where N is a large number (right hand side of the graph). 
+The N'th weak learner (top curve) will have a training error rate that approaches .5 
+because it is trained on difficult patterns and can do only sightly better than guessing. 
+The bottom two curves show the test and training error rates of the ensemble using all N 
+weak learners. which decrease as weak learners are added to the ensemble. 
+2 BOOSTING 
+Boosting arises from the PAC (probably approximately correct) learning model which 
+has as one of its primary interests the efficiency of learning. Schapire was the first one to 
+show that a series of weak learners could be converted to a strong learner. The detailed 
+algorithm is show in Figure 3. Let us call the set of N distinct examples the original 
+training set. We distinguish the original training set from what we will call the filtered 
+training set which consists of N examples picked with replacement from the original 
+training set. Basically each of N original examples is assigned a weight which is 
+proportional to the probability that the example will appear in the filtered training set 
+(these weights have nothing to do with the weights usually associated with neural 
+networks). Initially all examples are assigned a weight of unity so that all the examples 
+are equally likely to show up in the initial set of training examples. However, the weights 
+are altered at each state of boosting (Step 5 of Figure 3) and if the weights are high we 
+may have multiple copies of some of the original examples appearing in the filtered 
+training set. In step three of this algorithm, we calculate what is called the weighted 
+training error and this is the error rate over all the original N training examples 
+weighted by their current respective probabilities. The algorithms terminates if this error 
+rate is .5 (no better than guessing) or zero (then the weights of step 5 do not change). 
+Although not called for in the original C4.5 algorithm, we also have an original set of 
+pruning examples which also are assigned weights to form a filtered pruning set and used 
+to prune the classification trees constructed using the filtered training set. It is known 
+(Mingers, 1989a) that reducing the size of the tree (pruning) improves generalization. 
+3 DECISION TREES 
+For our implementation of decision trees, we have a set of features (attributes) that 
+specifies an example along with their classification (we discuss the two-class problem 
+primarily). We pick a feature that based on some criterion, best splits the examples into 
+two subsets. Each of these two subsets will usually not contain examples of just one 
+class, so we recursively divide the subsets until the final subsets each contain examples of 
+just one class. Thus, each internal node specifies a feature and a value for that feature that 
+determines whether one should take the left or right branch emanating from that node. At 
+terminal nodes, we make the final decision, class 0 or 1. Thus, in decision trees one 
+starts at a root node and progressively traverses the tree from the root node to one of the 
+482 H. DRUCKER, C. CORTES 
+Inputs: N training paUems, N2 pruning paUems, N3 test paUems 
+IMtiai the weight vector of the N, training patterns: w = 1 for i= 1,...,N, 
+IMtialiae the weight vector of the N2 pruning patterns: si  = 1 for i = 1 ,...,N2 
+Initialize the number of trees in the ensemble to t = 1 
+Do Until weighted training error rate is 0 or .5 or ensemble test error rate asymptotes 
+1. For the training set and pruning sets 
+pt wt It 
+_-- ! ,t  
+N, N, 
+Zwl 
+i'=l i'=l 
+Pick N, samples flora original training set with probability P(0 to form filtered training set. 
+Pick N2 samples from original pruning set with tnubability r(i) to form filtered pruning set. 
+2. Train tree t using filtered training set and prune using fillered pruning set 
+3. Pass the N, original training examples through the pruned tree whose output ht(i) is 
+either 0 or 1 and classification c(i) is either 0 or 1. Calculate the weighted training en'or 
+N, 
+rate: -- Z pll ht (i) - c(i) { 
+i=l 
+4. Setlt = 1- t 
+5. Set the new training weight vector to be 
+wl +' = wl {[t**(1-lht(i) - c(i)l) } i = 1,...,N, 
+Pass the N2 original pruning patterns through the pruned tree and calculate new pruning 
+weight vector: 
+st+, sl { {t**(1-lht(i) c(i) l) } i 1,...,N2 
+6. For each tree t in the ensemble (total trees T), pass the j'th test pattern through and 
+obtain ht (j) for each t. The final hypothesis hf(j) for this pallem: 
+T 1 . 1 T 1 
+t---1 Pt 
+othcm 
+Do for each test pattern and calculate the ensemble test error rate: 
+7. t=t+ 1 
+End Until 
+Figure 3: Boosting Algorithm 
+Boosting Decision Trees 483 
+terminal nodes where a final decision is made. CART (Breiman, 1984) and C4.5 
+(Quinlan 1993) are perhaps the two most popular tree building algorithms. Here, C4.5 is 
+used. The attraction of trees is that the simplest decision tree can be respecified as a 
+series of rules and for certain potential users this is more appealing than a nonlinear 
+black box such as a neural network. That is not to say that one can not design trees 
+where the decision at each node depends on some nonlinear combination of features, but 
+this will not be our implementation. 
+Other attractions of decision trees are speed of learning and evaluation. Whether trees are 
+more accurate than other techniques depends on the application domain and the 
+effectiveness of the particular implementation. In OCR, our neural networks are more 
+accurate than trees but the penalty is in training and evaluation times. In other 
+applications which we will discuss later a boosting network of trees is more accurate. As 
+an initial example of the power of boosting, we will use trees for OCR of hand written 
+digits. The main rationale for using OCR applications to evaluate AdaBoost is that we 
+have experience in the use of a competing technology (neural networks) and we have 
+from the National Institute of Standards and Technology (NIST) a large database of 
+120,000 digits, large enough so we can run multiple experiments. Howeve

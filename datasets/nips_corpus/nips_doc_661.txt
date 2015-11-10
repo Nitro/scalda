@@ -1,0 +1,132 @@
+Global Regularization of Inverse Kinematics for Redundant 
+Manipulators 
+David DeMers 
+Dept. of Computer Science & Engr. 
+Institute for Neural Computation 
+University of California, San Diego 
+La Jolla, CA 92093-0114 
+Kenneth Kreutz-Delgado 
+Dept. of Electrical & Computer Engr. 
+Institute for Neural Computation 
+University of California, San Diego 
+La Jolla, CA 92093-0407 
+Abstract 
+The inverse kinematics problem for redundant manipulators is ill-posed and 
+nonlinear. There are two fundamentally different issues which result in the need 
+for some form of regularization; the existence of multiple solution branches 
+(global ill-posedness) and the existence of excess degrees of freedom (local ill- 
+posedness). For certain classes of manipulators, learning methods applied to 
+input-output data generated from the forward function can be used to globally 
+regularize the problem by partitioning the domain of the forward mapping into 
+a finite set of regions over which the inverse problem is well-posed. Local 
+regularization can be accomplished by an appropriate parameterization of the 
+redundancy consistently over each region. As a result, the ill-posed problem can 
+be transformed into a finite set of well-posed problems. Each can then be solved 
+separately to construct approximate direct inverse functions. 
+1 INTRODUCTION 
+The robot forward kinematics function maps a vector of joint variables to the end-effector 
+configuration space, or workspace, here assumed to be Euclidean. We denote this mapping 
+by f(.): O ' --, V  C_ ', f(O) - x, for 0 60 ' (the input space or joint space) 
+and x  W m (the workspace). When m < n, we say that the manipulator has redundant 
+degrees-of-freedom (doO. 
+The inverse kinematics problem is the following: given a desired workspace location x, 
+find joint variables 0 such that f(O) = x. Even when the forward kinematics is known, 
+255 
+256 DeMers and Kreutz-Delgado 
+the inverse kinematics for a manipulator is not generically solvable in closed form (Craig, 
+1986). This problem is ill-posed  due to two separate phenomena. First, multiple solution 
+branches can exist (for both non-redundant as well as redundant manipulators). The second 
+source of ill-posedness arises because of the redundant dofs. Each of the inverse solution 
+branches consists of a submanifold of dimensionality equal to the number of redundant 
+dofs. Thus the inverse solution requires two regularizations; global regularization to select 
+a solution branch, and local regularization, to resolve the redundancy. In this paper the 
+existence of at least one solution is assumed; that is, inverses will be sought only for points 
+in the reachable workspace, i.e. desired x in the image of f(.). 
+Given input-output data generated from the kinematics mapping (pairs consisting of joint 
+variable values & corresponding end-effector location), can the inverse mapping be learned 
+without making any a priori regularizing assumptions or restrictions? We show that the 
+answer can be yes. The approach taken towards the solution is based on the use of 
+learning methods to partition the data into groups such that the inverse kinematics problem, 
+when restricted to each group, is well-posed, after which a direct inverse function can be 
+approximated on each group. 
+A direct inverse function is desireable. For instance, a direct inverse is computable quickly; 
+if implemented by a feedforward network were used, one function evaluation is equivalent to 
+a single forward propagation. More importantly, theoretical results show that an algorithm 
+for tracking a cyclic path in the workspace will produce a cyclic trajectory of joint angles 
+if and only if it is equivalent to a direct inverse function (Baker, 1990). That is, inverse 
+functions are necessary to ensure that when following a closed loop the ann configurations 
+which result in the same end-effector location will be the same. 
+Unfortunately, topological results show that a single global inverse function does not exist 
+for generic robot manipulators. However, a global topological analysis of the kinematics 
+function and the nature of the manifolds induced in the input space and workspace show 
+that for certain robot geometries the mapping may be expressed as the union of a finite set 
+of well-behaved local regions (Burdick, 1991). In this case, the redundancy takes the form 
+of a submanifold which can be parameterized (locally) consistently by, for example, the 
+use of topology preserving neural networks. 
+2 TOPOLOGY AND ROBOT KINEMATICS 
+It is known that for certain robot geometries the input space can be partitioned into disjoint 
+regions which have the property that no more than one inverse solution branch lies within 
+any one of the regions (Burdick, 1988). We assume in the following that the manipulator in 
+question has such a geometry, and has all revolutejoints. Thus O ' - T n, the n-torus. The 
+redundancy manifolds in this case have the topology of T n-m, n - m-dimensional torii. 
+For O ' a compact manifold of dimensionality n, W m a compact manifold of dimensionality 
+m, and f a smooth map from O ' to W , let the differential de f be the map from the tangent 
+space of O ' at 0 60 ' to the tangent space of W  at f(O). The set of points in O ' which 
+]Ill-posedness can arise from having either too many or too few constraints to result in a unique 
+and valid solution. That is, an overconstrained system may be ill-posed and have no solutions; such 
+systems are typically solved by finding a least-squares or some such minimum cost solution. An 
+underconstrained system may have multiple (possibly infinite) solutions. The inverse kinematics 
+problem for redundant manipulators is underconstrained. 
+Global Regularization of Inverse Kinematics for Redundant Manipulators 257 
+map to x 6 YV  is the pre-image of x, denoted by f- (x). The differential der has a 
+natural representation given by an m by n Jacobian matrix whose elements consist of the 
+first partial derivatives of f w.r.t. a basis of 0 '. Define 3 as the set of critical points of f, 
+which are the set of all 0 6 0 ' such that der(o) has rank less than the dimensionality of 
+)4, '. Elements of the image of 3, f(3) are called the critical values. The set 7Ea=YV\3 
+are the regular values of f. For 0  0 ', if 30*  f-(f(O)), O*  3, we call 0 a 
+co-regular point of f. 
+The kinematic mapping of certain classes of manipulators (with the geometry herein as- 
+sumed) can be decomposed based on the co-regular surfaces which divide O into a finite 
+number of disjoint, connected regions, Ci. The image of each Ci under f is a connected 
+region in the workspace, )V. We denote the kinematics mapping restricted to Cto be f; 
+Locally, one inverse solution branch for a region in the workspace has the structure of 
+a product space. We conjecture that (Wi,7-n-m,Ci, fICi) forms a locally trivial fiber 
+bundle 2 and that the �i, therefore, form regions where the inverse is unique modulo the 
+redundancy. 
+Given a point in the workspace, x, for which a configuration is sought, global regular- 
+izafion requires choosing from among the multiple pre-image tofii. Local regularizafion 
+(redundancy resolution) requires finding a location on the chosen torus. We would like to 
+effectively rood out the redundancy manifolds by constructing an indexed one-to-one, 
+invertible mapping from each pre-image manifold to a point in A 'm, and to obtain a con- 
+sistent representation of the manifold by constructing an invertible mapping from itself to 
+a set of n - m location parameters. 
+3 GLOBAL REGULARIZATION 
+The existence of multiple solutions for even non-redundant manipulators poses difficult 
+problems. Usually (and often for plausible reasons) the manipulator's allowable configura- 
+tions or task space is effectively constrained so that there exists only a single inverse solution 
+(Martinetz et al., 1990; Kuperstein, 1991). This approach regularizes the problem by al- 
+lowing the existence of only one-to-one data. We seek to generalize to the multi-solution 
+case and to learn all of the possible solutions. 
+For an all revolute manipulator there typically will be multiple pre-image torii for a particu- 
+lar point in the workspace. The topology of the pre-image solution branches will generally 
+be known from the type of geometry, although their number may not be obvious by inspec- 
+tion, and will usually be different for different regions of the workspace. An upper bound on 
+the number of inverse solutions is known (Burdick, 1988); consequently, the determination 
+of the number could be made by search for the best fit among the possibilities. 
+The sampling and clustering approach described in (DeMers & Kreutz-Delgado, 1992) 
+can be used to partition input-output data into disjoint pre-image sets. This approach 
+uses samples of the forward behavior to identify the sets in the input space which map to 
+-A fiber bundle is a four-tuple consisting of a base space, a fiber (here, 7-'), a total space and 
+a projection p mapping the total space to the base space with certain properties (here, the projection 
+is equivalent to fi restricted to the total space). A locally trivial fiber bundle is one for which a 
+consistent parameterization of the fibers is possible. 
+258 DeMers and Kreutz-Delgado 
+oin 3 
+Figure 1' The two pre-image manifolds for positioning the end-effector of the 3-R planar 
+manipulator at a specific (x, y) location. 
+within a small distance of a specific location in the workspace. The pre-image points will 
+lie on the disjoint pre-image manifolds. These manifolds will typically be separable by 
+clustering 3. Figures 1 shows two views of the two redundancy, or self-motion manifolds 
+for a particular end-effector location of the 3-R planar ann. All of the input space points 
+shown position the ann's end-effector near the same (x,y) location. Note that the input 
+space is the 3-torus, T 3. In order to visualize th

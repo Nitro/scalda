@@ -1,0 +1,155 @@
+The Parallel Problems Server: an Interactive Tool 
+for Large Scale Machine Learning 
+Charles Lee Isbell, Jr. 
+isbell @research.att.com 
+AT&T Labs 
+180 Park Avenue Room A255 
+Florham Park, NJ 07932-0971 
+Parry Husbands 
+PJRHusbands@lbl.gov 
+Lawrence Berkeley National Laboratory/NERSC 
+1 Cyclotron Road, MS 50F 
+Berkeley, CA 94720 
+Abstract 
+Imagine that you wish to classify data consisting of tens of thousands of ex- 
+amples residing in a twenty thousand dimensional space. How can one ap- 
+ply standard machine learning algorithms? We describe the Parallel Prob- 
+lems Server (PPServer) and MATLAB*P. In tandem they allow users of 
+networked computers to work transparently on large data sets from within 
+Matlab. This work is motivated by the desire to bring the many benefits 
+of scientific computing algorithms and computational power to machine 
+learning researchers. 
+We demonstrate the usefulness of the system on a number of tasks. For 
+example, we perform independent components analysis on very large text 
+corpora consisting of tens of thousands of documents, making minimal 
+changes to the original Bell and Sejnowski Matlab source (Bell and Se- 
+jnowski, 1995). Applying ML techniques to data previously beyond their 
+reach leads to interesting analyses of both data and algorithms. 
+1 Introduction 
+Real-world data sets are extremely large by the standards of the machine learning community. 
+In text retrieval, for example, we often wish to process collections consisting of tens or 
+hundreds of thousands of documents and easily as many different words. Naturally, we 
+would like to apply machine learning techniques to this problem; however, the sheer size of 
+the data makes this difficult. 
+This paper describes the Parallel Problems Server (PPServer) and MATLAB*P. The PPServer 
+is a linear algebra server that executes distributed memory algorithms on large data sets. 
+Together with MATLAB*P, users can manipulate large data sets within Matlab transpar- 
+ently. This system brings the efficiency and power of highly-optimized parallel computation 
+to researchers using networked machines but maintain the many benefits of interactive envi- 
+ronments. 
+We demonstrate the usefulness of the PPServer on a number of tasks. For example, we 
+perform independent components analysis on very large text corpora consisting of tens of 
+thousands of documents with minimal changes to the original Bell and Sejnowski Matlab 
+source (Bell and Sejnowski, 1995). Applying ML techniques to datasets previously beyond 
+704 C. L. Isbell, Jr. and P. Husbands 
+MATLAB 5 
+Libraries 
+Computational & 
+Interface Routines 
+Packages 
+Machinel Machinea 
+Matlab 5 Server Workers Workers 
+.-'-  ............. 
+, I_ ............. 
+Server variables 
+Figure 1: Use of the PPServer by Matlab is almost completely transparent. PPServer vari- 
+ables are tied to the PPServer itself while Matlab maintains handles to the data. Using Mat- 
+lab's object system, functions using PPServer variables invoke PPServer commands implic- 
+itly. 
+their reach, we discover interesting analyses of both data and algorithms. 
+2 The Parallel Problems Server 
+The Parallel Problems Server (PPServer) is the foundation of this work. The PPServer is a 
+realization of a novel client-server model for computation on very large matrices. It is com- 
+patible with any Unix-like platform supporting the Message Passing Interface (MPI) library 
+(Gropp, Lusk and Skjellum, 1994). MPI is the standard for multi-processor communication 
+and is the most portable way for writing parallel code. 
+The PPServer implements functions for creating and removing distributed matrices, loading 
+and storing them from/to disk using a portable format, and performing elementary matrix 
+operations. Matrices are two-dimensional single or double precision arrays created on the 
+PPServer itself (functions are provided for transferring matrix sections to and from a client). 
+The PPServer supports both dense and sparse matrices. 
+The PPServer communicates with clients using a simple request-response protocol. A client 
+requests an action by issuing a command with the appropriate arguments, the server executes 
+that command, and then notifies the client that the command is complete. 
+The PPServer is directly extensible via compiled libraries called packages. The PPServer im- 
+plements a robust protocol for communicating with packages. Clients (and other packages) 
+can load and remove packages on-the-fly, as well as execute commands within packages. 
+Package programmers have direct access to information about the PPServer and its matrices. 
+Each package represents its own namespace, defining a set of visible function names. This 
+supports data encapsulation and allows users to hide a subset of functions in one package by 
+loading another that defines the same function names. Finally, packages support common 
+parallel idioms (eg applying a function to every element of a matrix), making it easier to add 
+common functionality. 
+All but a few PPServer commands are implemented in packages, including basic matrix 
+operations. Many highly-optimized public libraries have been realized as packages using ap- 
+propriate wrapper functions. These packages include ScaLAPACK (Blackford et al., 1997), 
+S3L (Sun's optimized version of ScaLAPACK), PARPACK (Maschhoff and Sorensen, 1996), 
+and PETSc (PETSc,). 
+Large Scale Machine Learning Using The Parallel Problems Server 705 
+1 function H=hilb(n) 
+2 J = l:n; 
+3 J = J(ones(n,1),:); 
+4 I = J'; 
+5 E = ones (n,n); 
+6 H = E./(I+J-1); 
+Figure 2: Matlab code for producing Hilbert matrices. When n is influenced by P, each of 
+the constructors creates a PPServer object instead of a Matlab object. 
+3 MATLAB*P 
+By directly using the PPServer's client communication interface, it is possible for other ap- 
+plications to use the PPServer's functionality. We have implemented a client interface for 
+Matlab, called MATLAB*P. MATLAB*P is a collection of Matlab 5 objects, Matlab m-files 
+(Matlab's scripting language) and Matlab MEX programs (Matlab's external language API) 
+that allows for the transparent integration of Matlab as a front end for the Parallel Problems 
+Server. 
+The choice of Matlab was influenced by several factors. It is the de facto standard for sci- 
+entific computing, enjoying wide use in industry and academia. In the machine learning 
+community, for example, algorithms are often written as Matlab scripts and made freely 
+available. In the scientific computing community, algorithms are often first prototyped in 
+Matlab before being optimized for languages such as Fortran. 
+We endeavor to make interaction with the PPServer as transparent as possible for the user. 
+In principle, a typical Matlab user should never have to make explicit calls to the PPServer. 
+Further, current Matlab programs should not have to be rewritten to take advantage of the 
+PPServer. 
+Space does not permit a complete discussion of MATLAB*P (we refer the reader to (Hus- 
+bands and Isbell, 1999)); however, we will briefly discuss how to use prewritten Matlab 
+scripts without modification. This is accomplished through the simple but innovative ? nota- 
+tion. 
+We use Matlab 5's object oriented features to create PPServer objects automatically. ? is 
+a special object we introduce in Matlab that acts just like the integer 1. A user typing 
+a=ones ( 1000*?, 1000 ) or b=rand (1000,1000*?) obtains two 1000-by-1000 ma- 
+trices distributed in parallel. The reader can guess the use of P here: it indicates that a is 
+distributed by rows and b by columns. 
+To a user, a and b are matrices, but within Matlab, they are handles to special distributed 
+types that exist on the PPServer. Any further references to these variables (e.g. via such 
+commands as eig, svd, inv, *, +, -) are recognized as a call to the PPServer rather than as a 
+traditional Matlab command. 
+Figure 2 shows the code for Matlab's built in function h�lb. The call h�lb (n) produces 
+the n x n Hilbert matrix (Hij - 1 
+-- i+]-  )' When n is influenced by ?, a parallel array results: 
+� J=l: n in line 2 creates the PPServer vector 1, 2, � �., n and places a handle to it in 
+J. Note that this behavior does not interfere with the semantics of for loops (for 
+�=l:n) as Matlab assigns to � the value of each column of l:n: the numbers 
+1,2,...,n. 
+� ones (n, 1) in line 3 produces a PPServer matrix. 
+� Emulation of Matlab's indexing functions results in the correct execution of line 3. 
+706 C L. Isbell, Jr. and P. Husbands 
+� Overloading of ' (the transpose operator) executes line 4 on the PPServer. 
+� In line 5, lg is generated on the PPServer because of the overloading of ones. 
+� Overloading elementary matrix operations makes H a PPServer matrix (line 6). 
+The Parallel Problems Server and MATLAB*P have been tested extensively on a variety of 
+platforms. They currently run on Cray supercomputers , clusters of symmetric multiproces- 
+sors from Sun Microsystems and DEC as well as on clusters of networked Intel PCs. The 
+PPServer has also been tested with other clients, including Common LISP. 
+Although computational performance varies depending upon the platform, it is clear that 
+the system provides distinct computational advantages. Communication overhead (in our 
+experiments, roughly two milliseconds per PPServer command) is negligible compared to 
+the computational and space advantage afforded by transparent access to highly-optimized 
+linear algebra algorithms. 
+4 Applications in Text Retrieval 
+In this section we demonstrate the efficacy of the PPServer on real-world machine learning 
+problems. In particular we explore the use of the PPServer and MATLAB*P in the text 
+retrieval domain. 
+The task in text retrieval is to find the subset of a collection of documents relevant to a user's 
+information request. Standard approaches are based on the Vector Space Model (VSM). 
+A document is a vector where each dimension is a count of the occurrence of a different 
+word. A collect

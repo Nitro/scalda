@@ -1,0 +1,134 @@
+Generalized Prioritized Sweeping 
+David Andre Nir Friedman Ronald Parr 
+Computer Science Division, 387 Soda Hall 
+University of California, Berkeley, CA 94720 
+{dandre, nir, parr}Ocs. berkeley. edu 
+Abstract 
+Prioritized sweeping is a model-based reinforcement learning method 
+that attempts to focus an agent's limited computational resources to 
+achieve a good estimate of the value of environment states. To choose ef- 
+fectively where to spend a costly planning step, classic prioritized sweep- 
+ing uses a simple heuristic to focus computation on the states that are 
+likely to have the largest errors. In this paper, we introduce generalized 
+prioritized sweeping, a principled method for generating such estimates 
+in a representation-specific manner. This allows us to extend prioritized 
+sweeping beyond an explicit, state-based representation to deal with com- 
+pact representations that are necessary for dealing with large state spaces. 
+We apply this method for generalized model approximators (such as 
+Bayesian networks), and describe preliminary experiments that compare 
+our approach with classical prioritized sweeping. 
+1 Introduction 
+In reinforcement learning, there is a tradeoff between spending time acting in the envi- 
+ronment and spending time planning what actions are best. Model-free methods take one 
+extreme on this question-- the agent updates only the state most recently visited. On the 
+other end of the spectrum lie classical dynamic programming methods that reevaluate the 
+utility of every state in the environment after every experiment. Prioritized sweeping (PS) 
+[6] provides a middle ground in that only the most important states are updated, according 
+to a priority metric that attempts to measure the anticipated size of the update for each state. 
+Roughly speaking, PS interleaves performing actions in the environment with propagating 
+the values of states. After updating the value of state s, PS examines all states t from which 
+the agent might reach s in one step and assigns them priority based on the expected size of 
+the change in their value. 
+A crucial desideratum for reinforcement learning is the ability to scale-up to complex 
+domains. For this, we need to use compact(or generalizing) representations of the model and 
+the value function. While it is possible to apply PS in the presence of such representations 
+(e.g., see [1]), we claim that classic PS is ill-suited in this case. With a generalizing model, 
+a single experience may affect our estimation of the dynamics of many other states. Thus, 
+we might want to update the value of states that are similar, in some appropriate sense, to 
+s since we have a new estimate of the system dynamics at these states. Note that some of 
+these states might never have been reached before and standard PS will not assign them a 
+priority at all. 
+1002 D. Andre, N. Friedman and R. Parr 
+In this paper, we present generalizedprioritized sweeping (GenPS), a method that utilizes 
+a formal principle to understand and extend PS and extend it to deal with parametric 
+representations for both the model and the value function. If GenPS is used with an explicit 
+state-space model and value function representation, an algorithm similar to the original 
+(classic) PS results. When a model approximator (such as a dynamic Bayesian network 
+[2]) is used, the resulting algorithm prioritizes the states of the environment using the 
+generalizations inherent in the model representation. 
+2 The Basic Principle 
+We assume the reader is familiar with the basic concepts of Markov Decision Processes 
+(MDPs); see, for example, [5]. We use the following notation: A MDP is a 4-tuple, 
+(8, .A,p, r) where 8 is a set of states, .A is a set of actions, p(t I s, a) is a transition 
+model that captures the probability of reaching state t after we execute action a at state 
+s, and r(s) is a reward function mapping 8 into real-valued rewards. In this paper, we 
+focus on infinite-horizon MDPs with a discount factor ?. The agent's aim is to maximize 
+the expected discounted total reward it will receive. Reinforcement learning procedures 
+attempt to achieve this objective when the agent does not know p and r. 
+A standard problem in model-based reinforcement learning is one of balancing between 
+planning (i.e., choosing a policy) and execution. Ideally, the agent would compute the 
+optimal value function for its model of the environment each time the model changes. This 
+scheme is unrealistic since finding the optimal policy for a given model is computationally 
+non-trivial. Fortunately, we can approximate this scheme if we notice that the approximate 
+model changes only slightly at each step. Thus, we can assume that the value function 
+from the previous model can be easily repaired to reflect these changes. This approach 
+was pursued in the DYNA [7] framework, where after the execution of an action, the 
+agent updates its model of the environment, and then performs some bounded number 
+of value propagation steps to update its approximation of the value function. Each vaiue- 
+propagation step locally enforces the Bellman equation by setting (s) -- maxa.A Q(s, a), 
+where O(s,a) = ?(s) + ? 5'8,$t5(s' [ s,a)fr(d), t5(s  [ s,a) and (s) are the agent's 
+approximation of the MDP, and  is the agent's approximation of the value function. 
+This raises the question of which states should be updated. In this paper we propose the 
+following general principle: 
+GenPS Principle: Update states where the approximation of the value 
+function will change the most. That is, update the states with the largest 
+Bellman error, E(s) = IP'(s) - maxaA O(s, a)l. 
+The motivation for this principle is straightforward. The maximum Bellman error can be 
+used to bound the maximum difference between the current value function, P'(s) and the 
+optimal value function, V*(s) [9]. This difference bounds the policy loss, the difference 
+between the expected discounted reward received under the agent's current policy and the 
+expected discounted reward received under the optimal policy. 
+To carry out this principle we have to recognize when the Bellman error at a state changes. 
+This can happen at two different stages. First, after the agent updates its model of the world, 
+new discrepancies between (s) and max O(s, a) might be introduced, which can increase 
+the Bellman error at s. Second, after the agent performs some value propagations,  is 
+changed, which may introduce new discrepancies. 
+We assume that the agent maintains a value function and a model that are parameterized 
+by Ov and OM. (We will sometimes refer to the vector that concatenates these vectors 
+together into a single, larger vector simply as 0.) When the agent observes a transition from 
+state s to s t under action a, the agent updates its environment model by adjusting some 
+of the parameters in OM. When performing value-propagations, the agent updates f; by 
+updating parameters in Or. A change in any of these parameters may change the Bellman 
+error at other states in the model. We want to recognize these states without explicitly 
+Generalized Prioritized Sweeping 1003 
+computing the Bellman error at each one. Formally, we wish to estimate the change in 
+error, IAE(8)I, due to the most recent change A0 in the parameters. 
+We propose approximating IAE(8)I by using the gradient of the right hand side of the 
+Bellman equation (i.e. maxa O(s,a)). Thus, we have:  IVmaxa O(s,a). Aol 
+which estimates the change in the Bellman error at state s as a function of the change in 
+0(s, a). The above still requires us to differentiate over a max, which is not differentiable. 
+In general, we want to to overestimate the change, to avoid starving states with non- 
+negligible error. Thus, we use the following upper bound: [V(max O(,a))' Ao[ _< 
+We now define the generalized prioritized sweeping procedure. The procedure maintains 
+a priority queue that assigns to each state s a priority,pri(s). After making some changes, we 
+can reassign priorities by computing an approximation of the change in the value function. 
+Ideally, this is done using a procedure that implements the following steps: 
+procedure update-priorities (&) 
+tor all s  $ pri(s) - pri(s) + max, IV0(s, a). A0 I. 
+Note that when the above procedure updates the priority for a state that has an existing 
+priority, the priorities are added together. This ensures that the priority being kept is an 
+overestimate of the priority of each state, and thus, the procedure will eventually visit all 
+states that require updating. 
+Also, in practice we would not want to reconsider the priority of all states after an update 
+(we return to this issue below). 
+Using this procedure, we can now state the general learning procedure: 
+procedure GenPS 0 
+loop 
+perform an action in the environment 
+update the model; let be be the change in 0 
+call update-priorities(A) 
+while there is available computation time 
+let $max -_- arg max, pri(s) 
+perform value-propagation for f/(sm'); let Ao be the change in 0 
+call update-priorities(A) 
+pF/($ max) --- 1('/($ max) -- max, 0($max, tz)l ' 
+Note that the GenPS procedure does not determine how actions are selected. This issue, 
+which involves the problem of exploration, is orthogonal to the our main topic. Standard 
+approaches, such as those described in [5, 6, 7], can be used with our procedure. 
+This abstract description specifies neither how to update the model, nor how to update the 
+value function in the value-propagation steps. Both of these depend on the choices made 
+in the corresponding representation of the model and the value function. Moreover, it is 
+clear that in problems that involve a large state space, we cannot afford to recompute the 
+priority of every state in updato-prioritios. However, we can simplify this computation 
+by exploiting sparseness in the model and in the worst case we may resort to approximate 
+methods for finding the states that rece

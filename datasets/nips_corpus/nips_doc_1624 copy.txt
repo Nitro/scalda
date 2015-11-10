@@ -1,0 +1,151 @@
+A Variational Bayesian Framework for 
+Graphical Models 
+Hagai Attias 
+hagai@gatsby. ucl.ac.uk 
+Gatsby Unit, University College London 
+17 Queen Square 
+London WCIN 3AR, U.K. 
+Abstract 
+This paper presents a novel practical framework for Bayesian model 
+averaging and model selection in probabilistic graphical models. 
+Our approach approximates full posterior distributions over model 
+parameters and structures, as well as latent variables, in an analyt- 
+ical manner. These posteriors fall out of a free-form optimization 
+procedure, which naturally incorporates conjugate priors. Unlike 
+in large sample approximations, the posteriors are generally non- 
+Gaussian and no Hessian needs to be computed. Predictive quanti- 
+ties are obtained analytically. The resulting algorithm generalizes 
+the standard Expectation Maximization algorithm, and its conver- 
+gence is guaranteed. We demonstrate that this approach can be 
+applied to a large class of models in several domains, including 
+mixture models and source separation. 
+I Introduction 
+A standard method to learn a graphical model 1 from data is maximum likelihood 
+(ML). Given a training dataset, ML estimates a single optimal value for the model 
+parameters within a fixed graph structure. However, NIL is well known for its ten- 
+dency to overfit the data. Overfitting becomes more severe for complex models 
+involving high-dimensional real-world data such as images, speech, and text. An- 
+other problem is that NIL prefers complex models, since they have more parameters 
+and fit the data better. Hence, NIL cannot optimize model structure. 
+The Bayesian framework provides, in principle, a solution to these problems. Rather 
+than focusing on a single model, a Bayesian considers a whole (finite or infinite) class 
+of models. For each model, its posterior probability given the dataset is computed. 
+Predictions for test data are made by averaging the predictions of all the individ- 
+ual models, weighted by their posteriors. Thus, the Bayesian framework avoids 
+overfitting by integrating out the parameters. In addition, complex models are 
+automatically penalized by being assigned a lower posterior probability, therefore 
+optimal structures can be identified. 
+Unfortunately, computations in the Bayesian framework are intractable even for 
+We use the term 'model' to refer collectively to parameters and structure. 
+210 H. Attias 
+very simple cases (e.g. factor analysis; see [2]). Most existing approximation meth- 
+ods fall into two classes [3]: Markov chain Monte Carlo methods and large sample 
+methods (e.g., Laplace approximation). MCMC methods attempt to achieve exact 
+results but typically require vast computational resources, and become impractical 
+for complex models in high data dimensions. Large sample methods are tractable, 
+but typically make a drastic approximation by modeling the 'posteriors over all 
+parameters as Normal, even for parameters that are not positive definite (e.g., co- 
+variance matrices). In addition, they require the computation of the Hessian, which 
+may become quite intensive. 
+In this paper I present Variational Bayes (VB), a practical framework for Bayesian 
+computations in graphical models. VB draws together variational ideas from in- 
+tractable latent variables models [8] and from Bayesian inference [4,5,9], which, in 
+turn, draw on the work of [6]. This framework facilitates analytical calculations of 
+posterior distributions over the hidden variables, parameters and structures. The 
+posteriors fall out of a free-form optimization procedure which naturally incorpo- 
+rates conjugate priors, and emerge in standard forms, only one of which is Normal. 
+They are computed via an iterative algorithm that is closely related to Expectation 
+Maximization (EM) and whose convergence is guaranteed. No Hessian needs to 
+be computed. In addition, averaging over models to compute predictive quantities 
+can be performed analytically. Model selection is done using the posterior over 
+structure; in particular, the BIC/MDL criteria emerge as a limiting case. 
+2 General Framework 
+We restrict our attention in this paper to directed acyclic graphs (DAGs, a.k.a. 
+Bayesian networks). Let Y = {Yl, ..., yv) denote the visible (data) nodes, where 
+n - 1,...,N runs over the data instances, and let X = {xx,...,xv) denote the 
+hidden nodes. Let O denote the parameters, which are simply additional hidden 
+nodes with their own distributions. A model with a fixed structure m is fully defined 
+by the joint distribution p(Y, X, 0 Im). In a DAG, this joint factorizes over the 
+nodes, i.e. p(Y,X I O,m) = IiP(Ui I pai,Oi,m), where ui  Y U X, Pai is the set 
+of parents of ui, and Oi  0 parametrize the edges directed toward ui. In addition, 
+we usually assume independent instances, p(Y, X l O, m ) = InP(yn,xn I O, m). 
+We shall also consider a set of structures m & M, where m controls the number 
+of hidden nodes and the functional forms of the dependencies p(ui I Pai,0i,m), 
+including the range of values assumed by each node (e.g., the number of components 
+in a mixture model). Associated with the set of structures is a structure prior p(m). 
+Marginal likelihood and posterior over parameters. For a fixed structure m, 
+we are interested in two quantities. The first is the parameter posterior distribution 
+p(O I Y, m). The second is the marginal likelihood p(Y Im), also known as the 
+evidence assigned to structure m by the data. In the following, the reference to m is 
+usually omitted but is always implied. Both quantities are obtained from the joint 
+p(Y, X, 0 [m). For models with no hidden nodes the required computations can 
+often be performed analytically. However, in the presence of hidden nodes, these 
+quantities become computationally intractable. We shall approximate them using 
+a variational approach as follows. 
+Consider the joint posterior p(X, 0 [ Y) over hidden nodes and parameters. Since 
+it is intractable, consider a variational posterior q(X, 0 [ Y), which is restricted to 
+the factorized form 
+q(X, O[ Y) = q(XlY)q(O IF), (1) 
+where given the data, the parameters and hidden nodes are independent. This 
+A Variational BaysJan Framework for Graphical Models 211 
+restriction is the key: It makes q approximate but tractable. Notice that we do 
+not require complete factorization, as the parameters and hidden nodes may still 
+be correlated amongst themselves. 
+We compute q by optimizing a cost function rm[q] defined by 
+.T'm[q] = / dO q(X)q(O) log 
+p(Y,X, O) 
+q(X)q(O) 
+_ logp(Y I m) , 
+(2) 
+Penalizing complex models. To see that the VB objective function r, penalizes 
+complexity, it is useful to rewrite it as 
+.T', = {logP(Y'X l O))x,o - KL[q(O) II p(O)] 
+q(X) 
+where the average in the first term on the r.h.s. is taken w.r.t. 
+term corresponds to the (averaged) likelihood. The second term is the KL distance 
+between the prior and posterior over the parameters. As the number of parameters 
+increases, the KL distance follows and consequently reduces r,. 
+This penalized likelihood interpretation becomes transparent in the large sample 
+limit N - oe, where the parameter posterior is sharply peaked about the most 
+probable value O = O0. It can then be shown that the KL penalty reduces to 
+(I 0 I/2) log N, which is linear in the number of parameters I 0 I of structure m. 
+rm then corresponds precisely the Bayesian information criterion (BIC) and the 
+minimum description length criterion (MDL) (see [3]). Thus, these popular model 
+selection criteria follow as a limiting case of the VB framework. 
+Free-form optimization and an EM-like algorithm. Rather than assuming a 
+specific parametric form for the posteriors, we let them fall out of free-form opti- 
+mization of the VB objective function. This results in an iterative algorithm directly 
+analogous to ordinary EM. In the E-step, we compute the posterior over the hidden 
+nodes by solving 5.T'm/Sq(X ) = 0 to get 
+q(X) or �(1ogp(Y, XIO))o , (4) 
+where the average is taken w.r.t. q(O). 
+In the M-step, rather than the 'optimal' parameters, we compute the posterior 
+distribution over the parameters by solving 6m/6q(O) - 0 to get 
+q(O) or e(l�gp(Y'Xl�))Xp(O) , 
+(5) 
+where the average is taken w.r.t. q(X). 
+This is where the concept of conjugate priors becomes useful. Denoting the expo- 
+nential term on the r.h.s. of (5) by f(O), we choose the prior p(O) from a family of 
+distributions such that q(O) c f (O)p(O) belongs to that same family. p(O) is then 
+said to be conjugate to f(O). This procedure allows us to select a prior from a fairly 
+large family of distributions (which includes non-informative ones as limiting cases) 
+(3) 
+q(X, 0). The first 
+where the inequality holds for an arbitrary q and follows from Jensen's inequality 
+(see [6]); it becomes an equality when q is the true posterior. Note that q is always 
+understood to include conditioning on Y as in (1). Since r is bounded from above 
+by the marginal likelihood, we can obtain the optimal posteriors by maximizing it 
+w.r.t.q. This can be shown to be equivalent to minimizing the KL distance between 
+q and the true posterior. Thus, optimizing m produces the best approximation to 
+the true posterior within the space of distributions satisfying (1), as well as the 
+tightest lower bound on the true marginal likelihood. 
+212 H. Attias 
+and thus not compromise generality, while facilitating mathematical simplicity and 
+elegance. In particular, learning in the VB framework simply amounts to updat- 
+ing the hyperparameters, i.e., transforming the prior parameters to the posterior 
+parameters. We point out that, while the use of conjugate priors is widespread in 
+statistics, so far they could only be applied to models where all nodes were visible. 
+Structure posterior. To compute q(m) we exploit Jensen's inequal- 
+ity once again to define a more general objective function, r[q] = 
+meMq(m)['m +1ogp(m)/q(m)] _< logp(Y), where now q = q(X [ m,Y)q(O I 
+m, Y)q(m I Y). 

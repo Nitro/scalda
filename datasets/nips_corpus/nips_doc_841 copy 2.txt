@@ -1,0 +1,199 @@
+Packet Routing in Dynamically 
+Changing Networks: 
+A Reinforcement Learning Approach 
+Justin A. Boyan 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Michael L. Littman* 
+Cognitive Science Research Group 
+Bellcore 
+Morristown, NJ 07962 
+Abstract 
+This paper describes the Q-routing algorithm for packet routing, 
+in which a reinforcement learning module is embedded into each 
+node of a switching network. Only local communication is used 
+by each node to keep accurate statistics on which routing decisions 
+lead to minimal delivery times. In simple experiments involving 
+a 36-node, irregularly connected network, Q-routing proves supe- 
+rior to a nonadaptive algorithm based on precomputed shortest 
+paths and is able to route efficiently even when critical aspects of 
+the simulation, such as the network load, are allowed to vary dy- 
+namically. The paper concludes with a discussion of the tradeoff 
+between discovering shortcuts and maintaining stable policies. 
+1 INTRODUCTION 
+The field of reinforcement learning has grown dramatically over the past several 
+years, but with the exception of backgammon [8, 2], has had few successful appli- 
+cations to large-scale, practical tasks. This paper demonstrates that the practical 
+task of routing packets through a communication network is a natural application 
+for reinforcement learning algorithms. 
+*Now at Brown University, Department of Computer Science 
+671 
+672 Boyan and Littman 
+Our Q-routing algorithm, related to certain distributed packet routing algorithms 
+[6, 7], learns a routing policy which balances minimizing the number of hops a 
+packet will take with the possibility of congestion along popular routes. It does 
+this by experimenting with different routing policies and gathering statistics about 
+which decisions minimize total delivery time. The learning is continual and online, 
+uses only local information, and is robust in the face of irregular and dynamically 
+changing network connection patterns and load. 
+The experiments in this paper were carried out using a discrete event simulator to 
+model the transmission of packets through a local area network and are described 
+in detail in [5]. 
+2 
+ROUTING AS A REINFORCEMENT LEARNING 
+TASK 
+A packet routing policy answers the question: to which adjacent node should the 
+current node send its packet to get it as quickly as possible to its eventual destina- 
+tion? Since the policy's performance is measured by the total time taken to deliver 
+a packet, there is no training signal for directly evaluating or improving the policy 
+until a packet finally reaches its destination. However, using reinforcement learning, 
+the policy can be updated more quickly and using only local information. 
+Let Qx(d, y) be the time that a node x estimates it takes to deliver a packet P 
+bound for node d by way of x's neighbor node y, including any time that P would 
+have to spend in node x's queue.  Upon sending P to y, x immediately gets back 
+y's estimate for the time remaining in the trip, namely 
+t -- min Qy(d,z) 
+zEneighbors of y 
+If the packet spent q units of time in x's queue and s units of time in transmission 
+between nodes x and y, then x can revise its estimate as follows: 
+AQx(d,y) - rl ( 
+new estimate old estimate 
+q+s+' - Q(d,y) ) 
+where r/ is a learning rate parameter (usually 0.5 in our experiments). The re- 
+sulting algorithm can bc characterized as a version of the Bellman-Ford shortest 
+paths algorithm [1, 3] that (1) performs its path relaxation steps asynchronously 
+and online; and (2) measures path length not merely by number of hops but rather 
+by total delivery time. 
+We call our algorithm Q-routing and represent the Q-function Q(d, y) by a large 
+table. We also tried approximating Q with a neural network (as in e.g. [8, 4]), which 
+allowed the learner to incorporate diverse parameters of the system, including local 
+queue size and time of day, into its distance estimates. However, the results of these 
+experiments were inconclusive. 
+We denote the function by Q because it corresponds to the Q function used in the 
+reinforcement learning technique of Q-learning [10]. 
+Packet Routing in Dynamically Changing Networks: A Reinforcement Learning Approach 673 
+Figure 1: The irregular 6 x 6 grid topology 
+3 RESULTS 
+We tested the Q-routing algorithm on a variety of network topologies, including 
+the 7-hypercube, a 116-node LATA telephone network, and an irregular 6 x 6 grid. 
+Varying the network load, we measured the average delivery time for packets in the 
+system after learning had settled on a routing policy, and compared these delivery 
+times with those given by a static routing scheme based on shortest paths. The 
+result was that in all cases, Q-routing is able to sustain a higher level of network 
+load than could shortest paths. 
+This section presents detailed results for the irregular grid network pictured in 
+Figure 1. Under conditions of low load, the network learns fairly quickly to route 
+packets along shortest paths to their destinations. The performance vs. time curve 
+plotted in the left part of Figure 2 demonstrates that the Q-routing algorithm, 
+after an initial period of inefficiency during which it learns the network topology, 
+performs about as well as the shortest path router, which is optimal under low load. 
+As network load increases, however, the shortest path routing scheme ceases to be 
+optimal: it ignores the rising levels of congestion and soon floods the network with 
+packets. The right part of Figure 2 plots performance vs. time for the two routing 
+schemes under high load conditions: while shortest path is unable to tolerate the 
+packet load, Q-routing learns an efficient routing policy. The reason for the learning 
+algorithm's success is apparent in the policy summary diagrams in Figure 3. 
+These diagrams indicate, for each node under a given policy, how many of the 
+36 x 35 point-to-point routes go through that node. In the left part of Figure 3, 
+which summarizes the shortest path routing policy, two nodes in the center of 
+the network (labeled 570 and 573) are on many shortest paths and thus become 
+congested when network load is high. By contrast, the diagram on the right shows 
+that Q-routing, under conditions of high load, has learned a policy which routes 
+674 Boyan and Littman 
+5OO 
+400 
+3OO 
+200 
+1 O0 
+Q-routing 
+Shortest paths ..... 
+0 2000 4000 6000 8000 10000 
+Simulator Time 
+5OO 
+4OO 
+300 
+200 
+lOO 
+0 2000 
+Q-routing -- 
+Shortestpaths ..... 
+4000 6000 8000 10000 
+SimulatorTime 
+Figure 2: Performance under low load and high load 
+164---1-3-1---1-t-7 ........... -1-t6---1-25---155 
+207 45 .... 5,4 
+,, 
+', 
+,, ,, 
+286-34-4--50 ........... 573-3 
+,, 
+140496-249 
+5,4 .... -,k3, 199 
+K)--278 
+255---185--140 
+95--t4-3--t46 
+45 .... 75 .... ,58 
+384-392396 ........... -396393387 
+375 le2---5,9 54 .... 62 377 
+394-292-258 ........... -2{ ;9--246-383 
+227-201-2!7 
+154---14-9--108 160---14--1---162 
+,, 
+262-24-8---144 
+,, 
+170--14-8---3 
+Figure 3: Policy summaries: shortest path and Q-routing under high load 
+Packet Routing in Dynamically Changing Networks: A Reinforcement Learning Approach 675 
+some traffic over a longer than necessary path (across the top of the network) so as 
+to avoid congestion in the center of the network. 
+The basic result is captured in Figure 4, which compares the performances of the 
+shortest path policy and Q-routing learned policy at various levels of network load. 
+Each point represents the median (over 19 trials) of the mean packet delivery time 
+after learning has settled. When the load is very low, the Q-routing algorithm routes 
+nearly as efficiently as the shortest path policy. As load increases, the shortest 
+path policy leads to exploding levels of network congestion, whereas the learning 
+algorithm continues to route efficiently. Only after a further significant increase in 
+load does the Q-routing algorithm, too, succumb to congestion. 
+18 
+16 
+14 
+12 
+10 
+4 
+0.5 
+Q-routing -- 
+Shortest paths ..... 
+/ 
+I I [ I I I I 
+1 1.5 2 2.5 3 3.5 4 
+Network Load Level 
+4.5 
+Figure 4: Delivery time at various loads for Q-routing and shortest paths 
+3.1 DYNAMICALLY CHANGING NETWORKS 
+One advantage a learning algorithm has over a static routing policy is the potential 
+for adapting to changes in crucial system parameters during network operation. We 
+tested the Q-routing algorithm, unmodified, on networks whose topology, traffic 
+patterns, and load level were changing dynamically: 
+Topology We manually disconnected links from the network during simulation. 
+Qualitatively, Q-routing reacted quickly to such changes and was able to 
+continue routing traffic efficiently. 
+Traffic patterns We caused the simulation to oscillate periodically between two 
+very different request patterns in the irregular grid: one in which all traffic 
+was directed between the upper and lower halves of the network, and one 
+in which all traffic was directed between the left and right halves. Again, 
+676 Boyan and Littman 
+after only a brief period of inefficient routing each time the request pattern 
+switched, the Q-routing algorithm adapted successfully. 
+Load level When the overall level of network traffic was raised during simula- 
+tion, Q-routing quickly adapted its policy to route packets around new 
+bottlenecks. However, when network traffic levels were then lowered again, 
+adaptation was much slower, and never converged on the optimal shortest 
+paths. This effect is discussed in the next section. 
+3.2 EXPLORATION 
+Given the similarity between the Q-routing update equation and the Bellman-Ford 
+recurrence for shortest paths, it seems surprising that there is any difference what- 
+soever between the performance of Q-routing and shortest paths routing at low 
+load, as is visible in Figure 4. However, a close look at the algorithm reveals that 
+Q-routing cannot fine-tune a policy to discover shortcuts, since only the best neigh- 
+bor'

@@ -1,0 +1,142 @@
+LSTM CAN SOLVE HARD 
+LONG TIME LAG PROBLEMS 
+Sepp Hochreiter 
+Fakult/it fiir Informatik 
+Technische Universit/it Mfinchen 
+80290 Miinchen, Germany 
+Jiirgen Schmidhuber 
+IDSIA 
+Corso Elvezia 36 
+6900 Lugano, Switzerland 
+Abstract 
+Standard recurrent nets cannot deal with long minimal time lags 
+between relevant signals. Several recent NIPS papers propose alter- 
+native methods. We first show: problems used to promote various 
+previous algorithms can be solved more quickly by random weight 
+guessing than by the proposed algorithms. We then use LSTM, 
+our own recent algorithm, to solve a hard problem that can neither 
+be quickly solved by random search nor by any other recurrent net 
+algorithm we are aware of. 
+1 TRIVIAL PREVIOUS LONG TIME LAG PROBLEMS 
+Traditional recurrent nets fail in case of long minimal time lags between input sig- 
+nals and corresponding error signals [7, 3]. Many recent papers propose alternative 
+methods, e.g., [16, 12, 1, 5, 9]. For instance, Bengio et al. investigate methods such 
+as simulated annealing, multi-grid random search, time-weighted pseudo-Newton 
+optimization, and discrete error propagation [3]. They also propose an EM ap- 
+proach [1]. Quite a few papers use variants of the 2-sequence problem (and latch 
+problem ) to show the proposed algorithm's superiority, e.g. [3, 1, 5, 9]. Some pa- 
+pers also use the parity problem, e.g., [3, 1]. Some of Tomita's [18] grammars are 
+also often used as benchmark problems for recurrent nets [2, 19, 14, 11]. 
+Trivial versus non-trivial tasks. By our definition, a trivial task is one that 
+can be solved quickly by random search (RS) in weight space. RS works as follows: 
+REPEAT randomly initialize the weights and test the resulting net on a training set 
+UNTIL solution found. 
+474 S. Hochreiter and J. Schmidhuber 
+Random search (RS) details. In all our RS experiments, we randomly initialize 
+weights in [-100.0,100.0]. Binary inputs are -1.0 (for 0) and 1.0 (for 1). Targets are 
+either 1.0 or 0.0. All activation functions are logistic sigmoid in [0.0,1.0]. We use two 
+architectures (A1, A2) suitable for many widely used benchmark problems: A1 is 
+a fully connected net with I input, I output, and n biased hidden units. A2 is like 
+A1 with n = 10, but less densely connected: each hidden unit sees the input unit, 
+the output unit, and itself; the output unit sees all other units; all units are biased. 
+All activations are set to 0 at each sequence begin. We will indicate where we 
+also use different architectures of other authors. All sequence lengths are randomly 
+chosen between 500 and 600 (most other authors facilitate their problems by using 
+much shorter training/test sequences). The benchmark problems always require 
+to classify two types of sequences. Our training set consists of 100 sequences, 50 
+from class 1 (target 0) and 50 from class 2 (target 1). Correct sequence classification 
+is defined as absolute error at sequence end below 0.1. We stop the search once 
+a random weight matrix correctly classifies all training sequences. Then we test on 
+the test set (100 sequences). All results below are averages of 10 trials. In all our 
+simulations below, RS finally classified all test set sequences correctly; 
+average final absolute test set errors were always below 0.001 in most 
+cases below 0.0001. 
+2-sequence problem (and latch problem) [3, 1, 9]. The task is to observe and 
+classify input sequences. There are two classes. There is only one input unit or input 
+line. Only the first N real-valued sequence elements convey relevant information 
+about the class. Sequence elements at positions t > N (we use N = 1) are generated 
+by a Gaussian with mean zero and variance 0.2. The first sequence element is 1.0 
+(-1.0) for class 1 (2). Target at sequence end is 1.0 (0.0) for class 1 (2) (the latch 
+problem is a simple version of the 2-sequence problem that allows for input tuning 
+instead of weight tuning). 
+Bengio et al.'s results. For the 2-sequence problem, the best method among the 
+six tested by Bengio et al. [3] was multigrid random search (sequence lengths 50 
+-- 100; N and stopping criterion undefined), which solved the problem after 6,400 
+sequence presentations, with final classification error 0.06. In more recent work, 
+Bengio and Frasconi reported that an EM-approach [1] solves the problem within 
+2,900 trials. 
+RS results. RS with architecture A2 (A1, n = 1) solves the problem within only 
+718 (1247) trials on average. Using an architecture with only 3 parameters (as 
+in Bengio et al.'s architecture for the latch problem [3]), the problem was solved 
+within only 22 trials on average, due to tiny parameter space. According to our 
+definition above, the problem is trivial. RS outperforms Bengio et al.'s methods in 
+every respect: (1) many fewer trials required, (2) much less computation time per 
+trial. Also, in most cases (3) the solution quality is better (less error). 
+It should be mentioned, however, that different input representations and differ- 
+ent types of noise may lead to worse RS performance (Yoshua Bengio, personal 
+communication, 1996). 
+Parity problem. The parity task [3, 1] requires to classify sequences with 
+several 100 elements (only 1's or -1's) according to whether the number of 1's is 
+even or odd. The target at sequence end is 1.0 for odd and 0.0 for even. 
+LSTM can Solve Hard Long Time Lag Problems 475 
+Bengio et al.'s results. For sequences with only 25-50 steps, among the six 
+methods tested in [3] only simulated annealing was reported to achieve final classi- 
+fication error of 0.000 (within about 810,000 trials -- the authors did not mention 
+the precise stopping criterion). A method called discrete error BP took about 
+54,000 trials to achieve final classification error 0.05. In more recent work [1], for 
+sequences with 250-500 steps, their EM-approach took about 3,400 trials to achieve 
+final classification error 0.12. 
+RS results. RS with A1 (n = 1) solves the problem within only 2906 trials on 
+average. RS with A2 solves it within 2797 trials. We also ran another experiment 
+with architecture A2, but without self-connections for hidden units. RS solved the 
+problem within 250 trials on average. 
+Again it should be mentioned that different input representations and noise types 
+may lead to worse RS performance (Yoshua Bengio, personal communication, 1996). 
+Tomira grammars. Many authors also use Tomita's grammars [18] to test their 
+algorithms. See, e.g., [2, 19, 14, 11, 10]. Since we already tested parity problems 
+above, we now focus on a few parity-free Tomira grammars (nr.s #1, #2, #4). 
+Previous work facilitated the problems by restricting sequence length. E.g., in 
+[11], maximal test (training) sequence length is 15 (10). Reference [11] reports the 
+number of sequences required for convergence (for various first and second order 
+nets with 3 to 9 units): Tomita #1:23,000 - 46,000; Tomita #2:77,000 - 200,000; 
+Tomita #4:46,000 - 210,000. RS, however, clearly outperforms the methods in 
+[11]. The average results are: Tomita #1:182 (A1, n = 1) and 288 (A2), Tomita 
+#2:1,511 (A1, n = 3) and 17,953 (A2), Tomita #4:13,833 (A1, n = 2) and 35,610 
+(A2). 
+Non-trivial tasks / Outline of remainder. Solutions of non-trivial tasks are 
+sparse in weight space. They require either many free parameters (e.g., input 
+weights) or high weight precision, such that RS becomes infeasible. To solve such 
+tasks we need a novel method called Long Short-Term Memory, or LSTM for 
+short [8]. Section 2 will briefly review LSTM. Section 3 will show results on a task 
+that cannot be solved at all by any other recurrent net learning algorithm we are 
+aware of. The task involves distributed, high-precision, continuous-valued represen- 
+tations and long minimal time lags -- there are no short time lag training exemplars 
+facilitating learning. 
+2 LONG SHORT-TERM MEMORY 
+Memory cells and gate units: basic ideas. LSTM's basic unit is called a 
+memory cell. Within each memory cell, there is a linear unit with a fixed-weight 
+self-connection (compare Mozer's time constants [12]). This enforces constant, non- 
+exploding, non-vanishing error flow within the memory cell. A multiplicative input 
+gate unit learns to protect the constant error flow within the memory cell from 
+perturbation by irrelevant inputs. Likewise, a multiplicative output gate unit learns 
+to protect other units from perturbation by currently irrelevant memory contents 
+stored in the memory cell. The gates learn to open and close access to constant error 
+flow. Why is constant error flow important? For instance, with conventional back- 
+prop through time (BPTT, e.g., [20]) or RTRL (e.g., [15]), error signals flowing 
+backwards in time tend to vanish: the temporal evolution of the backpropagated 
+476 S. Hochreiter and J. Schmidhuber 
+error exponentially depends on the size of the weights. For the first theoretical error 
+flow analysis see [7]. See [3] for a more recent, independent, essentially identical 
+analysis. 
+LSTM details. In what follows, w, denotes the weight on the connection from 
+unit v to unit u. netu(t), yU(t) are net input and activation of unit u (with activation 
+function fu) at time t. For all non-input units that aren't memory cells (e.g. output 
+units), we have yU(t) = f(net(t)), where nets(t) = Y']v wvY( t - 1). The j- 
+th memory cell is denoted c i . Each memory cell is built around a central linear 
+unit with a fixed self-connection (weight 1.0) and identity function as activation 
+function (see definition of scj below). In addition to netcj(t) = Y']u wiuYU( t - 1), 
+c i also gets input from a special unit out i (the output gate), and from another 
+special unit in i (the input gate). inj's activation at time t is denoted by 
+outj's activation at time t is denoted by yOU, (t). inj, outj are viewed as ordinary 
+hidden units. We have y�Ut(t) = foutj(netout(t)),yinJ(t) -- fin(netinj(t)), where 
+netouch(t) 

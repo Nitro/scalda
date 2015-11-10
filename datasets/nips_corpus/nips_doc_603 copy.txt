@@ -1,0 +1,178 @@
+A Note on Learning Vector Quantization 
+Virginia R. de Sa 
+Department of Computer Science 
+University of Rochester 
+Rochester, NY 14627 
+Dana H. Ballard 
+Department of Computer Science 
+University of Rochester 
+Rochester, NY 14627 
+Abstract 
+Vector Quantization is useful for data compression. Competitive Learn- 
+ing which minimizes reconstruction error is an appropriate algorithm for 
+vector quantization of unlabelled data. Vector quantization of labelled 
+data for classification has a different objective, to minimize the number 
+of misclassificafions, and a different algorithm is appropriate. We show 
+that a variant of Kohonen's LVQ2.1 algorithm can be seen as a multi- 
+class extension of an algorithm which in a restricted 2 class case can 
+be proven to converge to the Bayes optimal classification boundary. We 
+compare the performance of the LVQ2.1 algorithm to that of a modified 
+version having a decreasing window and normalized step size, on a ten 
+class vowel classification problem. 
+1 Introduction 
+Vector quantization is a form of data compression that represents data vectors by a smaller 
+set of codebook vectors. Each data vector is then represented by its nearest codebook 
+vector. The goal of vector quantization is to represent the data with the fewest codebook 
+vectors while losing as little information as possible. 
+Vector quantization of unlabelled data seeks to minimize the reconstruction error. This can 
+be accomplished with Competitive learning[Grossberg, 1976; Kohonen, 1982], an itemfive 
+learning algorithm for vector quantization that has been shown to perform gradient descent 
+on the following energy function [Kohonen, 1991] 
+f llx- w.()l12p(x)ax. 
+22O 
+A Note on Learning Vector Quantization 
+221 
+where p(x) is the probability distribution of the input patterns and ws are the reference or 
+codebook vectors and s*(x) is defined by IIx - ws,<>ll -< IIx - will (for all O. This mini- 
+mizes the square reconstruction error of unlabelled data and may work reasonably well for 
+classification tasks if the patterns in the different classes are segregated. 
+In many classification tasks, however, the different member patterns may not be segregated 
+into separate clusters for each class. In these cases it is more important that members of the 
+same class be represented by the same codebook vector than that the reconstruction error 
+is minimized. To do this, the quantizer can make use of the labelled data to encourage 
+appropriate quantization. 
+2 Previous approaches to Supervised Vector Quantization 
+The first use of labelled data (or a teaching signal) with Competitive Learning by Rumelhart 
+and Zipser [Rumelhart and Zipser, 1986] can be thought of as assigning a class to each 
+codebook vector and only allowing patterns from the appropriate class to influence each 
+reference vector. 
+This simple approach is far from optimal though as it fails to take into account interactions 
+between the classes. Kohonen addressed this in his LVQ(1) algorithm[Kohonen, 1986]. He 
+argues that the reference vectors resulting from LVQ(1) tend to approximate for a particular 
+class r, 
+P(xlCr )P( Cr) - Z_,.P(xICs )P( Us). 
+where P(Ci) is the a priori probability of Class i and P(xICO is the conditional density of 
+Class i. 
+This approach is also not optimal for classification, as it addresses optimal places to put 
+the codebook vectors instead of optimal placement of the borders of the vector quantizer 
+which arise from the Voronoi tessellation induced by the codebook vectors.  
+3 Minimizing Misclassifications 
+In classification tasks the goal is to minimize the numbers of misclassifications of the 
+resultant quantizer. That is we want to minimize: 
+E = E fo E P(Classi)P(xlClassi)dx 
+j ._Rj i,ij 
+(1) 
+where, P(Classi) is the a priori probability of Classi and P(xlClassi) is the conditional 
+density of Classi and D.Rj is the decision region for class j (which in this case is all x such 
+that Itx- wkll < Itx - will (for all i) and wk is a codebook vector for class j). 
+Consider a One-Dimensional problem of two classes and two codebook vectors wl and w2 
+defining a class boundary b = (wl + w2)/2 as shown in Figure 1. In this case Equation 1 
+reduces to: 
+ Kohonen [1986] showed this by showing that the use of a weighted Voronoi tessellation (where 
+the relative distances of the borders from the reference vectors was changed) worked better. However 
+no principled way to calculate the relative weights was given and the application to real data used 
+the unweighted tessellation. 
+222 de Sa and Ballard 
+P(Class i)P(xElass i) 
+w2 b* b wl x 
+Figure 1: Codebook vectors Wl alld w 2 define a border b. The optimal place for the border 
+is at b* where P(C1)P(xIC1) = P(C2)P(xIC2). The extra misclassification errors incurred by 
+placing the border at b is shown by the shaded region. 
+E(b)=/_ P(C2)P(xlC2)dx + f**P(C)P(xlC1)dx. 
+The derivative of Equation 2 with respect to b is 
+(2) 
+dE/db = P(Classl)P(blClass) - P(Class2)P(blClass2) 
+That is, the minimum number of misclassifications occurs at b* where 
+P(Class)P(b* IClass) = P(Class2)P(b* IClass2). 
+If �(x) = (Class)P(xlClass)- P(Class2)P(xIClass2) was a regression function then we 
+could use stochastic approximation [Robbins and Monro, 1951] to estimate b* iteratively 
+b(n+ 1) = b(n)+ a(n)Z 
+where Z, is a sample of the random variable Z whose expected value is 
+P(Class)P(b(n)lClassO - P(Class2)P(b(n)lClass2)) and 
+lim a(n) = 0 
+2; 7a(n) = oo 
+E*a2(n) < oo 
+However, we do not have immediate access to an appropriate random variable Z but can 
+express P(Class)P(xlClass)-P(Class2)P(xlClass2) as the limit of a sequence of regression 
+functions using the Parzen Window technique. In the Parzen window technique, probability 
+density functions are estimated as the sum of appropriately normalized pulses centered at 
+A Note on Learning Vector Quantization 223 
+the observed values. More formally, we can estimate P(xlClassi) as [Sklansky and Wassel, 
+1981] 
+b?(x) = 
+n 
+where Xj is the sample data point at time j, and 5'(x- z, c(n)) is a Parzen window function 
+centred at z with width parameter c(n) that satisfies the following conditions 
+ul(x - z, c(n)) > O, Vx, z 
+jS ul(x- z, c(n))dx = 1 
+lim 1 j ul2(x - z, c(n))dx 0 
+__ -.. 
+lim ul(x - z, c(n)) = 5(x- z) 
+We can estimate f(x) = P(Class)P(xlClass ) -P(Class2)P(xlClass2) as 
+1 
+j=l 
+where S(Xj) is +1 if Xj is from Class and -1 if Xj is from Class2. 
+Then 
+lim (x) = P( Classl )P(xlClass ) - P( Class2)P(xIClass2) 
+and 
+lim E[S(X)(x - X, c(n)] = P(Class)P(xlClass) - P(Class2)P(xlClass2) 
+Wassel and Sklansky [1972] have extended the stochastic approximation method of Rob- 
+bins and Monro [1951] to find the zero of a function that is the limit of a sequence of 
+regression functions and show rigourously that for the above case (where the distribution 
+of Class is to the left of that of Class2 and there is only one crossing point) the stochastic 
+approximation procedure 
+b(n + 1) = b(n) + a(n)Z(x, Class(n),b(n), c(n)) 
+(3) 
+using 
+( 2c(n)Ul(X - b(n), c(n)) for X  Classl 
+Z = -2c(n)Ul(X - b(n), c(n)) for X  Class2 
+converges to the Bayes optimal border with probability one where (x - b, c) is a Parzen 
+window function. The following standard conditions for stochastic approximation conver- 
+gence are needed in their proof 
+a(n), c(n) > 0, lim c(n) = 0 lim a(n) = O, 
+E'a(n)c(n) = oo, E' a(n)2c(n) 2 < oo 
+224 de Sa and Ballard 
+as well as a condition that for rectangular Parzen functions reduces to a requirement that 
+P(Class)P(xIClass ) -P(Class2)P(xIClass2) be strictly positive to the left of b* and strictly 
+negative to the right of b* (for full details of the proof and conditions see [Wassel and 
+Sklansky, 1972]). 
+The above argument has only addressed the motion of the border. But b is defined as 
+b = (wl + w2)/2, thus we can move the codebook vectors according to 
+dE/dw l = dE/dw2 = .5dE/db. 
+We could now write Equation 3 as 
+wi(n+ 1) = wi(n)+ o2(n) 
+(Xn- wi(rt- 1)) 
+[Xn -- wi(rt -- 1)l 
+wj(n + 1) = wj(n) - cz2(n) 
+(X, - wj(n- 1)) 
+IX - wj( n - 
+if X,, lies in window of width 2c(n) centred at b(n), otherwise 
+wi(n + 1) = wi(n), 
+wj(n + 1) = wj(n) 
+where we have used rectangular Parzen window functions and Xn is from Classi. This 
+holds if Class is to the right or left of Class2 as long as w and w2 are relatively ordered 
+appropriately. 
+Expanding the problem to more dimensions, and more classes with more codebook vec- 
+tors per class, complicates the analysis as a change in two codebook vectors to better adjust 
+their border affects more than just the border between the two codebook vectors. How- 
+ever ignoring these effects for a first order approximation suggests the following update 
+procedure: 
+. . . . 1)) 
+wi(n ) = wi(n- 1)+ 1)ll 
+w;(n) = w;(n - 1) - a(n) 
+(X,-wf(n- 1)) 
+where a(n) obeys the constraints above, X,, is from Classi, and w, w; are the two nearest 
+codebook vectors, one each from class i and j (j e i) and x,, lies within c(n) of the border 
+between them. (No changes are made if all the above conditions are not true). As above 
+this algorithm assumes that the initial positions of the codebook vectors are such that they 
+will not have to cross during the algorithm. 
+The above algorithm is similar to Kohonen's LVQ2.1 algorithm (which is performed after 
+appropriate initialization of the codebook vectors) except for the normalization of the step 
+size, the decreasing size of the window width c(n) and constraints on the learning rate 
+A Note on Learning Vector Quantization 225 
+4 Simulations 
+Motivated by the theory above, we decided to modify Kohonen's LVQ2.1 algorithm to 
+add normalization of the step size and a decreasing window. In order to allow closer 
+comparison with LVQ2.1, all other parts of the algorithm were kept the same. Thus a 
+decreased linearly. We used a linear decrease on the window size and defined it as in 
+LVQ2.1 for easier parameter matching. For a window size of w al

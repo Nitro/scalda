@@ -1,0 +1,148 @@
+Optimal Kernel Shapes for Local Linear 
+Regression 
+Dirk Ormoneit Trevor Hastie 
+Department of Statistics 
+Stanford University 
+Stanford, CA 94305-4065 
+ormoneit@stat. stanford. edu 
+Abstract 
+Local linear regression performs very well in many low-dimensional 
+forecasting problems. In high-dimensional spaces, its performance 
+typically decays due to the well-known curse-of-dimensionality. 
+A possible way to approach this problem is by varying the shape 
+of the weighting kernel. In this work we suggest a new, data-driven 
+method to estimating the optimal kernel shape. Experiments us- 
+ing an artificially generated data set and data from the UC Irvine 
+repository show the benefits of kernel shaping. 
+I Introduction 
+Local linear regression has attracted considerable attention in both statistical and 
+machine learning literature as a flexible tool for nonparametric regression analysis 
+[Cle79, FG96, AMS97]. Like most statistical smoothing approaches, local modeling 
+suffers from the so-called curse-of-dimensionality, the well-known fact that the 
+proportion of the training data that lie in a fixed-radius neighborhood of a point 
+decreases to zero at an exponential rate with increasing dimension of the input 
+space. Due to this problem, the bandwidth of a weighting kernel must be chosen 
+very big so as to contain a reasonable sample fraction. As a result, the estimates 
+produced are typically highly biased. One possible way to reduce the bias of local 
+linear estimates is to vary the shape of the weighting kernel. In this work, we 
+suggest a method for estimating the optimal kernel shape using the training data. 
+For this purpose, we parameterize the kernel in terms of a suitable shape matrix, 
+L, and minimize the mean squared forecasting error with respect to L. For such an 
+approach to be meaningful, the size of the weighting kernel must be constrained 
+during the minimization to avoid overfitting. We propose a new, entropy-based 
+measure of the kernel size as a constraint. By analogy to the nearest neighbor 
+approach to bandwidth selection [FG96], the suggested measure is adaptive with 
+regard to the local data density. In addition, it leads to an efficient gradient descent 
+algorithm for the computation of the optimal kernel shape. Experiments using an 
+artificially generated data set and data from the UC Irvine repository show that 
+kernel shaping can improve the performance of local linear estimates substantially. 
+The remainder of this work is organized as follows. In Section 2 we briefly review 
+Optimal Kernel Shapes for Local Linear Regression 541 
+local linear models and introduce our notation. In Section 3 we formulate an objec- 
+tive function for kernel shaping, and in Section 4 we discuss entropic neighborhoods. 
+Section 5 describes our experimental results and Section 6 presents conclusions. 
+2 Local Linear Models 
+Consider a nonlinear regression problem where a continuous response y E JR is to 
+be predicted based on a d-dimensional predictor x E JRa. Let D -- ((xt,yt),t = 
+1,...,T) denote a set of training data. To estimate the conditional expectation 
+f(xo)  E[y[xo], we consider the local linear expansion f(x)  ao + (x - Xo)t/o in 
+the neighborhood of Xo. In detail, we minimize the weighted least squares criterion 
+T 
+c(s, a; xo) = - s - (x, - 
+(1) 
+to determine estimates of the parameters so and/o. Here k (xt, xo) is a non-negative 
+weighting kernel that assigns more weight to residuals in the neighborhood of xo 
+than to residuals distant from xo. In multivariate problems, a standard way of 
+defining k(xt, xo) is by applying a univariate, noranegative mother kernel b(z) to 
+the distance measure I[xt - Xol[ =- V/(Xt - Xo)'ft(xt - Xo): 
+(2) 
+T ' 
+- o11) 
+Here  is a positive definite d x d matrix determining the relative importance 
+assigned to different directions of the input space. For example, if b(z) is a stan- 
+dard normal density, k(xt,xo) is a normalized multivariate Gaussian with mean 
+xo and covariance matrix -1. Note that k(xt, xo) is normalized so as to satisfy 
+Y.tT= k(xt,xo) - 1. Even though this restriction is not relevant directly with re- 
+gard to the estimation of so and/o, it will be needed in our discussion of entropic 
+neighborhoods in Section 4. 
+Using the shorthand notation (xo, ) = (&o,/), the solution of the minimization 
+problem (1) may be written conveniently as 
+(X0,)-- (XtWX)-lxtwr, 
+where X is the T x (d+ 1) design matrix with rows (1,x - x))', Y is the vector of 
+response values, and W is a T x T diagonal matrix with entries Wt,t = k(xt, xo). 
+The resulting local linear fit at xo using the inverse covariance matrix f is simply 
+f(Xo; f) = &o. Obviously, ](xo; f) depends on f through the definition of the 
+weighting kernel (2). In the discussion below, our focus is on choices of f that lead 
+to favorable estimates of the unknown function value f(xo). 
+3 Kernel Shaping 
+The local linear estimates resulting from different choices of f vary considerably 
+in practice. A common strategy is to choose f proportional to the inverse sample 
+covariance matrix. The remaining problem of finding the optimal scaling factor is 
+equivalent to the problem of bandwidth selection in univariate smoothing [FG96, 
+BBB99]. For example, the bandwidth is frequently chosen as a function of the 
+distance between xo and its kth nearest neighbor in practical applications [FG96]. 
+In this paper, we take a different viewpoint and argue that optimizing the shape 
+542 D. Ormoneit and T. Hastie 
+of the weighting kernel is at least as important as optimizing the bandwidth. More 
+specifically, for a fixed volume of the weighting kernel, the bias of the estimate 
+can be reduced drastically by shrinking the kernel in directions of large nonlinear 
+variation of f (x), and stretching it in directions of small nonlinear variation. This 
+idea is illustrated using the example shown in Figure 1. The plotted function 
+is sigmoidal along an index vector n and constant in directions orthogonal to n. 
+Therefore, a shaped weighting kernel is shrunk in the direction n and stretched 
+orthogonally to n, minimizing the exposure of the kernel to the nonlinear variation. 
+Figure 1: Left: Example of a single index model of the form y = g(x'n) with n -- (1, 1) 
+and g(z) = tanh(3z). Right: The contours of g(z) are straight lines orthogonal to n. 
+To distinguish formally the metric and the bandwidth of the weighting kernel, we 
+rewrite f/as follows: 
+f _= A. (LL' + I). (4) 
+Here A corresponds to the inverse bandwidth, and L may be interpreted as a metric- 
+or shape-matrix. Below we suggest an algorithm which is designed to minimize 
+the bias with respect to the kernel metric. Clearly, for such an approach to be 
+meaningful, we need to restrict the volume of the weighting kernel; otherwise, the 
+bias of the estimate could be minimized trivially by choosing a zero bandwidth. For 
+example, we might define A contingent on L so as to satisfy [f[ - c for some constant 
+c. A serious disadvantage of this idea is that, by contrast to the nearest neighbor 
+approach, ]ft[ is independent of the design. As a more appropriate alternative, we 
+define A in terms of a measure of the number of neighboring observations. In detail, 
+we fix the volume of k(xt, xo) in terms of the entropy of the weighting kernel. 
+Then, we choose A so as to satisfy the resulting entropy constraint. Given this 
+definition of the bandwidth, we determine the metric of k(xt, Xo) by minimizing the 
+mean squared prediction error: 
+T 
+C(L;D) -- -(Yt- f(xt; f)) 2 (5) 
+t----1 
+with respect to L. In this way, we obtain an approximation of the optimal kernel 
+shape because the expectation of C(L; D) differs from the bias only by a variance 
+term which is independent of L. Details of the entropic neighborhood criterion and 
+of the numerical minimization procedure are described next. 
+4 Entropic Neighborhoods 
+We mentioned previously that, for a given shape matrix L, we choose the bandwidth 
+parameter A in (4) so as to fulfill a volume constraint on the weighting kernel. For 
+this purpose, we interpret the kernel weights k(xt, xo) as probabilities. In particular, 
+Optimal Kernel Shapes for Local Linear Regression 543 
+as k(xt, Xo) > 0 and -.t k(xt, xo) = 1 by definition (2), we can formulate the local 
+entropy of k(xt, x0): 
+T 
+H() -- -  k(xt,xo) log k(xt,xo). (6) 
+The entropy of a probability distribution is typically thought of as a measure of 
+uncertainty. In the context of the weighting kernel k(xt,xo), H() can be used 
+as a smooth measure of the size of the neighborhood that is used for averaging. 
+To see this, note that in the extreme case where equal weights are placed on all 
+observations in D, the entropy is maximized. At the other extreme, if the single 
+nearest neighbor of Xo is assigned the entire weight of one, the entropy attains its 
+minimum value zero. Thus, fixing the entropy at a constant value c is similar to 
+fixing the number k in the nearest neighbor approach. Besides justifying (6), the 
+correspondence between k and c can also be used to derive a more intuitive volume 
+parameter than the entropy level c. We specify c in terms of a hypothetical weighting 
+kernel that places equal weight on the k nearest neighbors of x0 and zero weight 
+on the remaining observations. Note that the entropy of this hypothetical kernel 
+is log k. Thus, it is natural to characterize the size of an entropic neighborhood in 
+terms of k, and then to determine A by numerically solving the nonlinear equation 
+system (for details, see [OH99]) 
+H(fi) = logk. (7) 
+More precisely, we report the number of neighbors in terms of the equivalent sample 
+fraction p  kit to further intuition. This idea is illustrated in Figure 2 using a 
+one- and a two-dimensional example. The equivalent sample fractions are p = 30% 
+and p - 50%, respectively. Note that in both cases the weighting kernel is wider 
+in regions with few observations, 

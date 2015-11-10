@@ -1,0 +1,173 @@
+Fast Network Pruning and Feature 
+Extraction Using the Unit-OBS Algorithm 
+Achim Stahlberger and Martin Riedmiller 
+Institut fiir Logik, Komplexitit und Deduktionssysteme 
+Universitit Karlsruhe, 76128 Karlsruhe, Germany 
+email: stahlb@ira.uka.de, riedml@ira.uka.de 
+Abstract 
+The algorithm described in this article is based on the OBS algo- 
+rithm by Hassibi, Stork and Wolff ([1] and [2]). The main disad- 
+vantage of OBS is its high complexity. OBS needs to calculate the 
+inverse Hessian to delete only one weight (thus needing much time 
+to prune a big net). A better algorithm should use this matrix to 
+remove more than only one weight, because calculating the inverse 
+Hessian takes the most time in the OBS algorithm. 
+The algorithm, called Unit-OBS, described in this article is a 
+method to overcome this disadvantage. This algorithm only needs 
+to calculate the inverse Hessian once to remove one whole unit thus 
+drastically reducing the time to prune big nets. 
+A further advantage of Unit-OBS is that it can be used to do a 
+feature extraction on the input data. This can be helpful on the 
+understanding of unknown problems. 
+I Introduction 
+This article is based on the technical report [3] about speeding up the OBS algo- 
+rithm. The main target of this work was to reduce the high complexity O(n2p) of 
+the OBS algorithm in order to use it for big nets in a reasonable time. Two ex- 
+act algorithms were developed which lead to exactly the same results as OBS but 
+using less time. The first with time O(n'Sp) makes use of Strassens' fast matrix 
+multiplication algorithm. The second algorithm uses algebraic transformations to 
+speed up calculation and needs time O(np2). This algorithm is faster than OBS in 
+the special case of p < n. 
+656 A. Stahlberger and M. Riedmiller 
+To get a much higher speedup than these exact algorithms can do, an improved 
+OBS algorithm was developed which reduces the runtime needed to prune a big 
+network drastically. The basic idea is to use the inverse Hessian to remove a group 
+of weights instead of only one, because the calculation of this matrix takes the most 
+time in the OBS algorithm. This idea leads to an algorithm called Unit-OBS that 
+is able to remove whole units. 
+Unit-OBS has two main advantages: First it is a fast algorithm to prune big nets, 
+because whole units are removed in every step instead of slow pruning weight by 
+weight. On the other side it can be used to do a feature extraction on the input 
+data by removing unimportant input units. This is helpful for the understanding 
+of unknown problems. 
+2 Optimal Brain Surgeon 
+This section gives a small summary of the OBS algorithm described by Hassibi, 
+Stork and Wolff in [1] and [2]. As they showed the increase in error (when changing 
+weights by Aw) is 
+AE = iAw'HAw (1) 
+where H is the Hessian matrix. The goal is to eliminate weight wq and minimize the 
+increase in error given by Eq. 1. Eliminating wq can be expressed by wq + Awq - 0 
+which is equivalent to (w+Aw)Teq ---- 0 where eq is the unit vector corresponding to 
+weight wq (wTcq -- Wq). Solving this extremum problem with side condition using 
+Lagrange's method leads to the solution 
+2 
+h. --- Wq (2) 
+2H-lqq 
+Wq 
+Aw= H - H-eq (3) 
+qq 
+H-lqq denotes the element (q, q) of matrix H -. For every weight wq the minimal 
+increase in error AE(wq) is calculated and the weight which leads to overall mini- 
+mum will be removed and all other weights be adapted referring to Eq. 3. Hassibi, 
+Stork and Wolff also showed how to calculate H - using time O(n2p) where n is 
+the number of weights and p the number of pattern. 
+The main disadvantage of the OBS algorithm is that it needs time O(n2p) to remove 
+only one weight thus needing much time to prune big nets. The basic idea to 
+soften this disadvantage is to use H - to remove more than only one weight! This 
+generalized OBS algorithm is described in the next section. 
+3 Generalized OBS (G-OBS) 
+This section shows a generalized OBS algorithm (G-OBS) which can be used to 
+delete rn weights in one step with minimal increase in error. Like in the OBS 
+algorithm the increase in error is given by AE = �AwTHAw. But the condition 
+Wq q- Awq -- 0 is replaced by the generalized condition 
+(w q- hw) TM = 0 with M = (�q �qa ... �qm) (4) 
+Fast Network Pruning by using the Unit-OBS Algorithm 657 
+where M is the selection matrix (selecting the weights to be removed) and 
+ql, q2,..., qm are the indices of the weights that will be removed. Solving this 
+extremum problem with side condition using bagrange's method leads to the solu- 
+tion 
+/XE= lwTM(MT-M)-MTw �) 
+2 
+Aw = -H - M(M'H -  M) - MTw 
+(6) 
+Choosing M = eq Eq. 5 and 6 reduce to Eq. 2 and 3. This shows that OBS is (as 
+expected) a special case of G-OBS. The problem of calculating H-  was already 
+solved by Hassibi, Stork and Wolff ([1] and [2]). 
+4 Analysis of G-OBS 
+Hassibi, Stork and Wolff ([1] and [2]) showed that the time to calculate H - is in 
+O(n2p). The calculation of AE referring to Eq. 5 needs time O(rna) 1 where m is 
+the number of weights to be removed. The calculation of Aw (Eq. 6) needs time 
+O(nm + ma). 
+The problem within this solution consists of not knowing which weights should be 
+deleted and thus AE has to be calculated for all possible combinations to find 
+the global minimum in error increase. Choosing m weights out of n can be done 
+with () possible combinations. This takes time ()O(rn a) to find the minimum. 
+Therefore the total runtime of the generalized OBS algorithm to remove rn weights 
+(with minimal increase in error) is 
+TG-OBS -- 0(122p q- 
+The problem is that for rn > 3 the term (mn)m a dominates and TG-OBS is in (n4). 
+In other words G-0BS can be used only to remove a maximum of three weights in 
+one step. But this means little advantage over 0BS. 
+To overcome this problem the set of possible combinations has to be restricted 
+to a small subset of combinations that seem to be good combinations. This 
+reduces the term ()rn a to a reasonable amount. One way to do this is that a good 
+combination exists of all outgoing connections of a unit. This reduces the number 
+of combinations to the number of units! The basic idea for that subset is: If all 
+outgoing connections of a unit can be removed then the whole unit can be deleted 
+because it can not influence the net output anymore. Therefore choosing this subset 
+leads to an algorithm called Unit-OBS that is able to remove whole units without 
+the need to recalculate H - 
+5 Special Case of G-OBS: Unit-OBS 
+With the results of the last sections we can now describe an algorithm called Unit- 
+OBS to remove whole units. 
+1. Train a network to minimum error. 
+IM is a matrix of special type and thus the calculation of (M:rH-M) needs only 
+O(m 2) operations! 
+658 A. Stahlberger and M. Riedmiller 
+2. Compute H- 
+3. For each unit 
+(a) Compute the indices q, q2,..., q,() of the outgoing connections of 
+unit u where rn(u) is the number of outgoing connections of unit u. 
+(c) 
+4. Find the u0 that gives the smallest increde in error AE(u0). 
+5. M := M(uo) (refer to steps 3.(a) and 3.(b)) 
+6. Aw := -H-M(MTH-M)-MTw 
+7. Remove unit u0 and use Aw to update all weights. 
+8. Repeat steps 2 to 7 until a break criteria is reached. 
+Following the analysis of G-OBS the time to remove one unit is 
+Tunit-OBS -- O(n2p q- urn s) 
+(7) 
+where u is the number of units in the network and rn is the maximum number of 
+outgoing connections. If rn is much smaller than n we can neglect the term urn s 
+and the main problem is to calculate H -. Therefore, if rn is small, we can say that 
+Unit-OBS needs the same time to remove a whole unit as OBS needs to remove 
+a single weight. The speedup when removing units with an average of s outgoing 
+connections should then be s. 
+6 Simulation results 
+6.1 The Monk-1 benchmark 
+Unit-OBS was applied to the MONK's problems because the underlying logical 
+rules are well known and it is easy to say which input units are important to the 
+problem and which input units can be removed. The simulations showed that in 
+no case Unit-OBS removed a wrong unit and that it has the ability to remove all 
+unimportant input units. 
+Figure i shows a MONK-l-net pruned with Unit-OBS. This net is the minimal 
+network that can be found by Unit-OBS. Table i shows the speedup of Unit-OBS 
+compared to OBS to find an equal-size network for the MONK-1 problem. 
+The network shown in Fig. 1 is only minimal in the number of units but not minimal 
+with respect to the number of weights. Hassibi, Stork and Wolff ([1] and [2]) found a 
+network with only 14 weights by applying OBS (Fig. 3). In the framework of Unit- 
+OBS, OBS can be used to do further pruning on the network after all possible units 
+have been pruned. The advantage lies in the fact that now the time consuming 
+OBS-algorithm is applied to a much smaller network (22 weights instead of 58). 
+The result of this combination of Unit-OBS and OBS is a network with only 14 
+weights (Fig. 2) which has also 100 % accuracy like the minimal net found by OBS 
+(see Table 1). 
+Fast Network Pruning by using the Unit-OBS Algorithm 659 
+Attribute I Attribute 2 Attribute 3 Attribute 4 
+Attribute 5 Attribute 6 
+Figure 1: MONK-l-net pruned with Unit-OBS, 22 weights. All unimportant units 
+are removed and this net needs less units than the minimal network found by OBS! 
+Attribute I Attribute 2 Attribute 3 Attribute 4 
+Attribute 5 Attribute 6 
+Figure 2: Minimal network (14 weights) for the MONK-1 problem found by the 
+combination of Unit-OBS with OBS. The logical rule for the MONK-1 problem is 
+more evident in this network than in the minimal network found by OBS (comp. 
+Fig. 3). 
+Attribute I Attribute 2 Attribute 3 Attribute 4 
+Attribute 5 Attribute 6 
+Figure 3: Minimal network (14 weights) for the MONK-1 problem found by OBS 
+(see [1] and [2]). 
+660 A. Stahlberger and M. Riedmiller 
+algorithm  weights topology speedup* perf. perf. 
+train test 
+no pruning 58 17

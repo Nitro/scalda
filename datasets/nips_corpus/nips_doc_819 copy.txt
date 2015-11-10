@@ -1,0 +1,151 @@
+Non-Intrusive Gaze Tracking Using Artificial 
+Neural Networks 
+Shumeet Baluja 
+baluja@cs.cmu.edu 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Dean Pomerleau 
+pomerleau@cs.cmu.edu 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+We have developed an artificial neural network based gaze tracking system 
+which can be customized to individual users. Unlike other gaze trackers, 
+which normally require the user to wear cumbersome headgear, or to use a 
+chin rest to ensure head immobility, our system is entirely non-intrusive. 
+Currently, the best intrusive gaze tracking systems are accurate to approxi- 
+mately 0.75 degrees. In our experiments, we have been able to achieve an 
+accuracy of 1.5 degrees, while allowing head mobility. In this paper we 
+present an empirical analysis of the performance of a large number of artifi- 
+cial neural network architectures for this task. 
+1 INTRODUCTION 
+The goal of gaze tracking is to determine where a subject is looking from the appearance 
+of the subject's eye. The interest in gaze tracking exists because of the large number of 
+potential applications. Three of the most common uses of a gaze tracker are as an alterna- 
+tive to the mouse as an input modality [Ware & Mikaelian, 1987], as an analysis tool for 
+human-computer interaction (HCI) studies [Nodine et. al, 1992], and as an aid for the 
+handicapped [Ware & Mikaelian, 1987]. 
+Viewed in the context of machine vision, successful gaze tracking requires techniques to 
+handle imprecise data, noisy images, and a potentially infinitely large image set. The most 
+accurate gaze tracking has come from intrusive systems. These systems either use devices 
+such as chin rests to restrict head motion, or require the user to wear cumbersome equip- 
+ment, ranging from special contact lenses to a camera placed on the user's head. The sys- 
+tem described here attempts to perform non-intrusive gaze tracking, in which the user is 
+neither required to wear any special equipment, nor required to keep his/her head still. 
+753 
+754 Baluja and Pomerleau 
+2 GAZE TRACKING 
+2.1 TRADITIONAL GAZE TRACKING 
+In standard gaze trackers, an image of the eye is processed in three basic steps. First, the 
+specular reflection of a stationary light source is found in the eye's image. Second, the 
+pupil's center is found. Finally, the relative position of the light's reflection to the pupil's 
+center is calculated. The gaze direction is determined from information about the relative 
+positions, as shown in Figure 1. In many of the current gaze tracker systems, the user is 
+required to remain motionless, or wear special headgear to maintain a constant offset 
+between the position of the camera and the eye. 
+Specular 
+Reflection 
+Looking at Looking Above Looking Below Looking Left of 
+Light Light Light Light 
+Figure 1: Relative position of specular reflection and pupil. This diagram assumes that 
+the light is placed in the same location as the observer (or camera). 
+2.2 ARTIFICIAL NEURAL NETWORK BASED GAZE TRACKING 
+One of the primary benefits of an artificial neural network based gaze tracker is that it is 
+non-intrusive; the user is allowed to move his head freely. In order to account for the shifts 
+in the relative positions of the camera and the eye, the eye must be located in each image 
+frame. In the current system, the right eye is located by searching for the specular reflec- 
+tion of a stationary light in the image of the user's face. This can usually be distinguished 
+by a small bright region surrounded by a very dark region. The reflection's location is used 
+to limit the search for the eye in the next frame. A window surrounding the reflection is 
+extracted; the image of the eye is located within this window. 
+To determine the coordinates of the point the user is looking at, the pixels of the extracted 
+window are used as the inputs to the artificial neural network. The forward pass is simu- 
+lated in the ANN, and the coordinates of the gaze are determined by reading the output 
+units. The output units are organized with 50 output units for specifying the X coordinate, 
+and 50 units for the Y coordinate. A gaussian output representation, similar to that used in 
+the ALVINN autonomous road following system [Pomerleau, 1993], is used for the X and 
+Y axis output units. Gaussian encoding represents the network's response by a Gaussian 
+shaped activation peak in a vector of output units. The position of the peak within the vec- 
+tor represents the gaze location along either the X or Y axis. The number of hidden units 
+and the structure of the hidden layer necessary for this task are explored in section 3. 
+The training data is collected by instructing the user to visually track a moving cursor. The 
+cursor moves in a predefined path. The image of the eye is digitized, and paired with the 
+(X,Y) coordinates of the cursor. A total of 2000 image/position pairs are gathered. All of 
+the networks described in this paper are trained with the same parameters for 260 epochs, 
+using standard error back propagation. The training procedure is described in greater 
+Non-Intrusive Gaze Tracking Using Artificial Neural Networks 755 
+detail in the next section. 
+3 THE ARTIFICIAL NEURAL NETWORK IMPLEMENTATION 
+In designing a gaze tracker, the most important attributes are accuracy and speed. The 
+need for balancing these attributes arises in deciding the number of connections in the 
+ANN, the number of hidden units needed, and the resolution of the input image. This sec- 
+tion describes several architectures tested, and their respective performances. 
+3.1 EXAMINING ONLY THE PUPIL AND CORNEA 
+Many of the traditional gaze trackers look only at a high resolution picture of the subject's 
+pupil and cornea. Although we use low resolution images, our first attempt also only used 
+an image of the pupil and cornea as the input to the ANN. Some typical input images are 
+shown below, in Figure 2(a). The size of the images is 15xl 5 pixels. The ANN architec- 
+ture used is shown in Figure 2(b). This architecture was used with varying numbers of hid- 
+den units in the single, divided, hidden layer; experiments with 10, 16 and 20 hidden units 
+were performed. 
+As mentioned before, 2000 image/position pairs were gathered for training. The cursor 
+automatically moved in a zig-zag motion horizontally across the screen, while the user 
+visually tracked the cursor. In addition, 2000 image/position pairs were also gathered for 
+testing. These pairs were gathered while the user tracked the cursor as it followed a verti- 
+cal zig-zag path across the screen. The results reported in this paper, unless noted other- 
+wise, were all measured on the 2000 testing points. The results for training the ANN on 
+the three architectures mentioned above as a function of epochs is shown in Figure 3. Each 
+line in Figure 3 represents the average of three ANN training trials (with random initial 
+weights) for each of the two users tested. 
+Using this system, we were able to reduce the average error to approximately 2.1 degrees, 
+which corresponds to 0.6 inches at a comfortable sitting distance of approximately 17 
+inches. In addition to these initial attempts, we have also attempted to use the position of 
+the cornea within the eye socket to aid in making finer discriminations. These experiments 
+are described in the next section. 
+50 X Output Units 
+50 Y Output Units 
+15 x 15 
+Input 
+Retina 
+Figure 2: (a-left) 15 x 15 Input to the ANN. Target outputs also shown. (b-right) 
+the ANN architecture used. A single divided hidden layer is used. 
+756 Baluja and Pomerleau 
+Figure 3: Error vs. Epochs for the 15x15 
+images. Errors shown for the 2000 
+image test set. Each line represents 
+three ANN trainings per user; two 
+users are tested. 
+15xl5 Images 
+i i i p 
+3.2 USING THE EYE SOCKET FOR ADDITIONAL INFORMATION 
+20 Hidden 
+Epochs 
+In addition to using the information present from the pupil and cornea, it is possible to 
+gain information about the subject's gaze by analyzing the position of the pupil and cornea 
+within the eye socket. Two sets of experiments were performed using the expanded eye 
+image. The first set used the network described in the next section. The second set of 
+experiments used the same architecture shown in Figure 2(b), with a larger input image 
+size. A sample image used for training is shown below, in Figure 4. 
+Figure 4: Image of the pupil and the 
+eye socket, and the corresponding 
+target outputs. 15 x 40 input image 
+shown. 
+3.2.1. Using a Single Continuous Hidden Layer 
+One of the remaining issues in creating the ANN to be used for analyzing the position of 
+the gaze is the structure of the hidden unit layer. In this study, we have limited our explo- 
+ration of ANN architectures to simple 3 layer feed-forward networks. In the previous 
+architecture (using 15 x 15 images) the hidden layer was divided into 2 separate parts, one 
+for predicting the x-axis, and the other for the y-axis. Selecting this architecture over a 
+fully connected hidden layer makes the assumption that the features needed for accurate 
+prediction of the x-axis are not related to the features needed for predicting the y-axis. In 
+this section, this assumption is tested. This section explores a network architecture in 
+which the hidden layer is fully connected to the inputs and the outputs. 
+In addition to deciding the architecture of the ANN, ii is necessary to decide on the size of 
+the input images. Several input sizes were attempted, 15x30, 15x40 and 20x40. Surpris- 
+ingly, the 20x40 input image did not provide the most accuracy. Rather, it was the 15x40 
+image which gave the best results. Figure 5 provides two charts showing the performance 
+of the 15x40 and 20x40 image sizes as a function of the number of hidden units and 
+epochs. The 15x30 graph is not shown due to space restrictions, it can be found in [Baluja 
+& Pomerleau, 1994]. The accurac

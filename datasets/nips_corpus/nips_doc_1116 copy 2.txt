@@ -1,0 +1,152 @@
+Beating a Defender in Robotic Soccer: 
+Memory-Based Learning of a Continuous 
+Function 
+Peter Stone 
+Department of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Manuela Veloso 
+Department of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+Learning how to adjust to an opponent's position is critical to 
+the success of having intelligent agents collaborating towards the 
+achievement of specific tasks in unfriendly environments. This pa- 
+per describes our work on a Memory-based technique for to choose 
+an action based on a continuous-valued state attribute indicating 
+the position of an opponent. We investigate the question of how an 
+agent performs in nondeterministic variations of the training situ- 
+ations. Our experiments indicate that when the random variations 
+fall within some bound of the initial training, the agent performs 
+better with some initial training rather than from a tabula-rasa. 
+1 Introduction 
+One of the ultimate goals subjacent to the development of intelligent agents is to 
+have multiple agents collaborating in the achievement of tasks in the presence of 
+hostile opponents. Our research works towards this broad goal from a Machine 
+Learning perspective. We are particularly interested in investigating how an intel- 
+ligent agent can choose an action in an adversarial environment. We assume that 
+the agent has a specific goal to achieve. We conduct this investigation in a frame- 
+work where teams of agents compete in a game of robotic soccer. The real system 
+of model cars remotely controlled from off-board computers is under development. 
+Our research is currently conducted in a simulator of the physical system. 
+Both the simulator and the real-world system are based closely on systems de- 
+signed by the Laboratory for Computational Intelligence at the University of British 
+Columbia [Sahota et al., 1995, Sahota, 1993]. The simulator facilitates the control 
+of any number of cars and a ball within a designated playing area. Care has been 
+taken to ensure that the simulator models real-world responses (friction, conserva- 
+Memory-based Learning of a Continuous Function 897 
+tion of momentum, etc.) as closely as possible. Figure l(a) shows the simulator 
+graphics. 
+I 
+I 
+\ 
+(a) (b) 
+Figure 1: (a) the graphic view of our simulator. (b) The initial position for all 
+of the experiments in this paper. The teammate (black) remains stationary, the 
+defender (white) moves in a small circle at different speeds, and the ball can move 
+either directly towards the goal or towards the teammate. The position of the ball 
+represents the position of the learning agent. 
+We focus on the question of learning to choose among actions in the presence of 
+an adversary. This paper describes our work on applying memory-based supervised 
+learning to acquire strategy knowledge that enables an agent to decide how to 
+achieve a goal. For other work in the same domain, please see [Stone and Veloso, 
+1995b]. For an extended discussion of other work on incremental and memory- 
+based learning [Aha and Salzberg, 1994, Kanazawa, 1994, Kuh et al., 1991, Moore, 
+1991, Salganicoff, 1993, Schlimmer and Granger, 1986, Sutton and Whitehead, 1993, 
+Wettschereck and Dietterich, 1994, Winstead and Christiansen, 1994], particularly 
+as it relates to this paper, please see [Stone and Veloso, 1995a]. 
+The input to our learning task includes a continuous-valued range of the position 
+of the adversary. This raises the question of how to discretize the space of values 
+into a set of learned features. Due to the cost of learning and reusing a large set of 
+specialized instances, we notice a clear advantage to having an appropriate degree 
+of generalization. For more details please see [Stone and Veloso, 1995a]. 
+Here, we address the issue of the effect of differences between past episodes and the 
+current situation. We performed extensive experiments, training the system under 
+particular conditions and then testing it (with learning continuing incrementally) in 
+nondeterministic variations of the training situation. Our results show that when 
+the random variations fall within some bound of the initial training, the agent 
+performs better with some initial training rather than from a tabula-rasa. This 
+intuitive fact is interestingly well- supported by our empirical results. 
+2 Learning Method 
+The learning method we develop here applies to an agent trying to learn a function 
+with a continuous domain. We situate the method in the game of robotic soccer. 
+We begin each trial by placing a ball and a stationary car acting as the teammate 
+in specific places on the field. Then we place another car, the defender, in front of 
+the goal. The defender moves in a small circle in front of the goal at some speed and 
+begins at some random point along this circle. The learning agent must take one 
+of two possible actions: shoot straight towards the goal, or pass to the teammate so 
+898 P. STONE, M. VELOSO 
+that the ball will rebound towards the goal. A snapshot of the experimental setup 
+is shown graphically in Figure l(b). 
+The task is essentially to learn two functions, each with one continuous input vari- 
+able, namely the defender's position. Based on this position, which can be repre- 
+sented unambiguously as the angle at which the defender is facing, q, the agent tries 
+to learn the probability of scoring when shooting, P; (q), and the probability of scor- 
+ing when passing, P;(q). If these functions were learned completely, which would 
+only be possible if t-he defender's motion were deterministic, then both functions 
+would be binary partitions: P,P : [0.0,360.0)  {-1,1}. 2 That is, the agent 
+would know without doubt for any given  whether a shot, a pass, both, or neither 
+would achieve its goal. However, since the agent cannot have had experience for 
+every possible q, and since the defender may not move at the same speed each time, 
+the learned functions must be approximations: Ps,Pp: [0.0,360.0) [-1.0,1.0]. 
+In order to enable the agent to learn approximations to the functions P; and P;, 
+we gave it a memory in which it could store its experiences and from which it could 
+retrieve its current approximations Ps(q) and Pp(c)). We explored and developed 
+appropriate methods of storing to and retrieving from memory and an algorithm 
+for deciding what action to take based on the retrieved values. 
+2.1 Memory Model 
+Storing every individual experience in memory would be inefficient both in terms 
+of amount of memory required and in terms of generalization time. Therefore, we 
+store Ps and Pp only at discrete, evenly-spaced values of . That is, for a memory 
+of size M (with M dividing evenly into 360 for simplicity), we keep values of Pp(O) 
+and Ps(O) for 0 E {360n/MlO _< n < M}. We store memory as an array Mem 
+of size M such that Mem[n] has values for both Pp(360n/M) and Ps(360n/M). 
+Using a fixed memory size precludes using memory-based techniques such as K- 
+Nearest-Neighbors (kNN) and kernel regression which require that every experience 
+be stored, choosing the most relevant only at decision time. Most of our experiments 
+were conducted with memories of size 360 (low generalization) or of size 18 (high 
+generalization), i.e. M = 18 or M = 360. The memory size had a large effect on 
+the rate of learning [Stone and Veloso, 1995a]. 
+2.1.1 Storing to Memory 
+With M discrete memory storage slots, the problem then arises as to how a specific 
+training example should be generalized. Training examples are represented here as 
+E,a,r, consisting of an angle q, an action a, and a result r where q is the initial 
+position of the defender, a is s or p for shoot or pass, and r is 1 or 
+-1 for goal or miss respectively. For instance, E72.345,p,1 represents a pass 
+resulting in a goal for which the defender started at position 72.345 o on its circle. 
+Each experience with O- 360/2M _< q < O + 360/2M affects Mem[O] in propor- 
+tion to the distance ]0- ql. In particular, Mem[0] keeps running sums of the 
+magnitudes of scaled results, Mem[O].total-a-results, and of scaled positive results, 
+Mem[O].positive-a-results, affecting Pa(O), where a stands for s or p as be- 
+positive--a-results The -1 is for 
+fore. Then at any given time, Pa(O) = -1 + 2 * tota--a-resuts ' 
+1As per convention, P* represents the target (optimal) function. 
+2Although we think of P* and P; as functions from angles to probabilities, we will use 
+-1 rather than 0 as the lower bound of the range. This representation simplifies many of 
+our illustrative calculations. 
+Memory-based Learning of a Continuous Function 899 
+the lower bound of our probability range, and the 2. is to scale the result to this 
+range. Call this our adaptive memory storage technique: 
+Adaptive Memory Storage of E4,a, in Mere[0] 
+' (1- 
+� T T* ). 
+360/M 
+� Mem[O].total-a-results += r'. 
+� If r  > 0 Then Mem[O].positive-a-results += r . 
+positive--a--results 
+� Pa(O) = -1 + 2 � 
+For example, E110,p,1 woruld set both total-p-results and positive-p-results for 
+Mere[120] (and Mem[100]) to 0.5 and consequently Pp(120) (and Pp(100)) to 1.0. 
+But then E125,p,-1 would increment total-p-results for Mem[120] by .75, while leav- 
+.5 .2. 
+ing positive-p-results unchanged. Thus Pp(120) becomes -1 + 2 � .25 - 
+This method of storing to memory is effective both for time-varying concepts and 
+for concepts involving random noise. It is able to deal with conflicting examples 
+within the range of the same memory slot. 
+Notice that each example influences 2 different memory locations. This memory 
+storage technique is similar to the kNN and kernel regression function approximation 
+techniques which estimate f(b) based on f(O) possibly scaled by the distance from 
+0 to q for the k nearest values of 0. In our linear continuum of defender position, 
+our memory generalizes training examples to the 2 nearest memory locations. a 
+2

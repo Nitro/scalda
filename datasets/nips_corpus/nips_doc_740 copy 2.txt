@@ -1,0 +1,183 @@
+Training Neural Networks with 
+Deficient Data 
+Volker Tresp 
+Siemens AG 
+Central Research 
+81730 Miinchen 
+Germany 
+tresp@zfe.siemens.de 
+Subutai Ahmad 
+Interval Research Corporation 
+1801-C Page Mill Rd. 
+Palo Alto, CA 94304 
+ahmad@interval.com 
+Ralph Neuneier 
+Siemens AG 
+Central Research 
+81730 Miinchen 
+Germany 
+ralph@zfe.siemens. de 
+Abstract 
+We analyze how data with uncertain or missing input features can 
+be incorporated into the training of a neural network. The gen- 
+eral solution requires a weighted integration over the unknown or 
+uncertain input although computationally cheaper closed-form so- 
+lutions can be found for certain Gaussian Basis Function (GBF) 
+networks. We also discuss cases in which heuristical solutions such 
+as substituting the mean of an unknown input can be harmful. 
+I INTRODUCTION 
+The ability to learn from data with uncertain and missing information is a funda- 
+mental requirement for learning systems. In the real world, features are missing 
+due to unrecorded information or due to occlusion in vision, and measurements are 
+affected by noise. In some cases the experimenter might want to assign varying 
+degrees of reliability to the data. 
+In regression, uncertainty is typically attributed to the dependent variable which is 
+assumed to be disturbed by additive noise. But there is no reason to assume that 
+input features might not be uncertain as well or even missing competely. 
+In some cases, we can ignore the problem: instead of trying to model the rela- 
+tionship between the true input and the output we are satisfied with modeling the 
+relationship between the uncertain input and the output. But there are at least two 
+128 
+Training Neural Networks with Deficient Data 129 
+reasons why we might want to explicitly deal with uncertain inputs. First, we might 
+be interested in the underlying relationship between the true input and the output 
+(e.g. the relationship has some physical meaning). Second, the problem might be 
+non-stationary in the sense that for different samples different inputs are uncertain 
+or missing or the levels of uncertainty vary. The naive strategy of training networks 
+for all possible input combinations explodes in complexity and would require suffi- 
+cient data for all relevant cases. It makes more sense to define one underlying true 
+model and relate all data to this one model. Ahmad and Tresp (1993) have shown 
+how to include uncertainty during recall under the assumption that the network 
+approximates the true underlying function. In this paper, we first show how in- 
+put uncertainty can be taken into account in the training of a feedforward neural 
+network. Then we show that for networks of Gaussian basis functions it is possible 
+to obtain closed-form solutions. We validate the solutions on two applications. 
+2 THE CONSEQUENCES OF INPUT UNCERTAINTY 
+Consider the task of predicting the dependent variable  y  R from the input 
+vector x  M consisting of M random variables. We assume that the input 
+data {(xkl k -- 1,2,...,K} are selected independently and that P(x) is the joint 
+probability distribution of x. Outputs {(yk I k = 1, 2, ..., K} are generated following 
+the standard signal-plus-noise model 
+y} = f(x }) + (} 
+where {(} I k = 1, 2, ..., K} denote zero-mean random variables with probability den- 
+sity P(�). The best predictor (in the mean-squared sense) of y given the input x 
+is the regressor defined by E(ylx ) = f y P(yIx) dx = f(x), where E denotes the 
+expectation. Unbied neural networks ymptotically (K  ) converge to the 
+regreor. 
+To account for uncertainty in the independent variable we sume that we do not 
+have access to x but can only obtain samples from another random vector z  M 
+with 
+z  = x  + 5  
+where {5 } k = 1, 2, ..., K} denote independent random vectors containing M random 
+variables with joint density P, (). 
+A neural network trained with data {(z},y})lk = 1,2,..., K} approximates 
+E(ylz) = P[z) y P(ylx) P(zlx) P(x) dydx = P(z) f(x) P,(z- x) P(x) dx. 
+(1) 
+thu, in general (ylz)  (z) nd we obtain  bied olution. Conide the 
+ce that the noise processes can be described by Gaussians P(e) = G(e; 0, a) and 
+P(6) = (,; 0, ) where, in ou notation, (; , ,) tnd 
+I 1 
+(; ,,) = (2) H= * ep[- 
+j=l 
+Our notation does not stinguh between a random variable and its rezation. 
+2At this point, we sume that P, is independent of z. 
+130 Tresp, Ahmad, and Neuneier 
+� 
+f(x) Y 
+E (yl x) 
+E (yl z) 
+Figure 1: The top half of the figure shows the probabilistic model. In an example, 
+the bottom half shows E(ylz ) = f(z) (continuous), the input noise distribution 
+(dotted) and E(ulz) (dashed). 
+where m, s are vectors with the same dimensionality as z (here M). Let us take a 
+closer look at four special cases. 
+Certain input. If a = 0 (no input noise), the integral collapses and E(ylz ) = f(z). 
+fincertain input. If P(z) varies much more slowly than P(zlz), Equation 1 de- 
+scribed the convolution of f(z) with the noise process P6(z- z). Typical noise 
+processes will therefore blur or smooth the original mapping (Figures 1). It is 
+somewhat surprising that the error on the input results in a (linear) convolution 
+integral. In some special cases we might be able to recover f(z) from an network 
+trained on deficient data by deconvolution, although one should use caution since 
+deconvolution is very error sensitive. 
+finknown input. If aj - o then the knowledge of zj does not give us any infor- 
+mation about zi and we can consider the jth input to be unknown. Our formalism 
+therefore includes the case of missing inputs as special case. Equation 1 becomes 
+an integral over the unknown dimensions weighted by P(z) (Figure 2). 
+Linear approzimation. If the approximation 
+= f(z - + + 
+is valid, the input noise can be transformed into output noise and E(ylz ) = f(z). 
+This results can also be derived using Equation 1 if we consider that a convolution of 
+a linear function with a symmetrical kernel does not change the function. This result 
+tells us that if f(x) is approximately linear over the range where P6() has significant 
+Training Neural Networks with Deficient Data 131 
+Figure 2: Left: samples y' = f(x, x) are shown (no output noise). Right: with 
+one input missing, P(ylxl) appears noisy. 
+amplitude we can substitute the noisy input and the network will still approximate 
+f(x). Similarly, the mean mean(x1) of an unknown variable can be substituted 
+for an unknown input, if f(x) is linear and xj is independent of the remaining 
+input variables. But in all those cases, one should be aware of the potentially large 
+additional variance (Equation 2). 
+3 MAXIMUM LIKELIHOOD LEARNING 
+In this section, we demonstrate how deficient data can be incorporated into the 
+training of feedforward networks. In a typical setting, we might have a number of 
+complete data, a number of incomplete data and a number of data with uncertain 
+features. Assuming independent samples and Gaussian noise, the log-likelihood l 
+for a neural network NN, with weight vector w becomes 
+K K 
+i= ElogP(zk,yk) = log/G(yk;NNtox),o 'v) G(z};x,o ') P(x) dx. 
+k=l k=l 
+Note that now, the input noise variance is allowed to depend on the sample k. The 
+gradient of the log-likelihood with respect to an arbitrary weight wi becomes 3 
+c91 K K 
+Owi= Z Ol�gP(z'Y) --   1 
+= c9wi - (o.V)2 = p(z,y) 
+x 
+ONN,,(x) a(z;x,o.k ) P(x) dz. 
+- NNw(z)) Owi 
+(3) 
+First, realize that for a certain sample k (a  - 0)' OlogP(za,ya)/Owi = 
+(yk - NNw(za))/(o'V)  c9NNw(za)/c9wi which is the gradient used in normal back- 
+propagation. For uncertain data, this gradient is replaced by an averaged gra- 
+dient. The integral averages the gradient over possible true inputs x weighted 
+by the probability of P(xlz,y ) = P(zklx) P(ylx) P(x)/P(z,y). The term 
+SThis equation can also be obtained via the EM formalism. A similar equation was 
+obtained by Buntine and Weigend (1991) for binary inputs. 
+132 Tresp, Ahmad, and Neuneier 
+P(y}l x) = G(y}; NNox),a ) is of special importance since it weights the gradi- 
+ent higher when the network prediction NNo(x) agrees with the target y}. This 
+term is also the main reason why heuristics such as substituting the mean value 
+for a missing variable can be harmful: if, at the substituted input, the difference 
+between network prediction and target is large, the error is also large and the data 
+point contributes significantly to the gradient although it is very unlikely that the 
+substitutes value was the true input. 
+In an implementation, the integral needs to be approximated by a finite sum (i. e. 
+Monte-Carlo integration, finite-difference approximation etc.). In the experiment 
+described in Figure 3, we had a 2-D input vector and the data set consisted of both 
+complete data and data with one missing input. We used the following procedure 
+Train the network using the complete data. Estimate (a) . We used (a)   
+(Ec/(K- H)), where Zc is the training error after the network was trained with 
+only the complete data, and H is the number of hidden units in the network. 
+Estimate the input density P(z) using Gaussian mixtures (see next section). 
+Include the incomplete training patterns in the training. 
+For every incomplete training pattern 
+k be the certain input and let z be the missing input, and z k (z, z). 
+� Let zc = 
+� Approximate (assuming -1/2 < zj < 1/2, the hat stands for estimate) 
+0log P(z, y) 1 1 1 
+where 
+ONN(z,j/J) 
+9w, 
+J/ 
+1 
+j=--Z/2 
+' 
+4 GAUSSIAN BASIS FUNCTIONS 
+The required integration in Equation I is computationally expensive and one would 
+prefer closed form solutions. Closed form solutions can be found for networks which 
+are based on Gaussian mixture densities. 4 Let's assume that the joint density is 
+given by 
+N 
+= 
+i=1 
+where ci is the location of the center of the ith Gaussian and and sij corresponds to 
+the width of the ith Gaussian in the jth dimension and P(wi) is the pri

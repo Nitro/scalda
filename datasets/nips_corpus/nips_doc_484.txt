@@ -1,0 +1,146 @@
+Image Segmentation with Networks of Variable Scales 
+Hans P. Graf Craig R. Nohl Jan Ben 
+AT&T Bell Laboratories 
+Crawfords Comer Road 
+Holmdel, NJ 07733, USA 
+ABSTRACT 
+We developed a neural net architecture for segmenting complex 
+images, i.e., to localize two-dimensional geometrical shapes in a scene, 
+without prior knowledge of the objects' positions and sizes. A scale 
+variation is built into the network to deal with varying sizes. This algo- 
+rithm has been applied to video images of railroad cars, to find their 
+identification numbers. Over 95% of the characters were located 
+correctly in a data base of 300 images, despite a large variation in light- 
+ing conditions and often a poor quality of the characters. A part of the 
+network is executed on a processor board containing an analog neural 
+net chip (Graf et al. 1991), while the rest is implemented as a software 
+model on a workstation or a digital signal processor. 
+1 INTRODUCTION 
+Neural nets have been applied successfully to the classification of shapes, such as charac- 
+ters. However, typically, these networks do not tolerate large variations of an object's 
+size. Rather, a normalization of the size has to be done before the network is able to per- 
+form a reliable classification. But in many machine vision applications an object's size is 
+not known in advance and may vary over a wide range. If the objects are pan of a com- 
+plex image, finding their positions plus their sizes becomes a very difficult problem. 
+Traditional techniques to locate objects of variable scale include the generalized Hough 
+transform (Ballard 1981) and constraint search techniques through a feature space (Grim- 
+son 1990), possibly with some relaxation mechanisms. These techniques start with a 
+feature representation and then try to sort featur into groups that may represent an 
+object. Searches through feature maps tend to be very time consuming, since the number 
+of comparisons that need to be made grows fast, typically exponentionally, with the 
+number of features. Therefore, practical techniques must focus on ways to minimize the 
+time required for this search. 
+480 
+Image Segmentation with Networks of Variable Scales 481 
+Our solution can be viewed as a large network, divided into two pans. The first layer of 
+the network provides a feature representation of the image, while the second layer locates 
+the objects. The key element for this network to be practical, is a neural net chip (Graf et 
+at. 1991) which executes the first layer. The high compute power of this chip makes it 
+possible to extract a large number of features. Hence features specific to the objects to be 
+found can be extracted, reducing drastically the amount of computation required in the 
+second layer. 
+The output of our network is not necessarily the final solution of a problem. Rather, its 
+intended use is as part of a modular system, combined with other functional elements. 
+Figure 1 shows an example of such a system that was used to read the identification 
+numbers on railroad cars. In this system the network's outputs are the positions and sizes 
+of characters. These are then classified in an additional network (LeCun et al. 1990), spe- 
+cialized for reading characters. 
+The net described here is not limited to finding characters. It can be combined with other 
+classifiers and is applicable to a wide variety of object recognition tasks. Details of the 
+network, for example the types of features that are extracted, are task specific and have to 
+be optimized for the problem to be solved. But the overall architecture of the network 
+and the data flow remains the same for many problems. Beside the application described 
+here, we used this network for reading the license plates of cars, locating the address 
+blocks on mail pieces, and for page layout analysis of printed documents. 
+Camera 
+ Preprocessing Segmentation 
+'*'!i?i::'::.:':'::ii:!i], F in d characters 
+::::!::':'':!!:':i�'?::::: scale size 
+Classification 
+I :.. ::-. 
+Digital Signal Neural Ne{ Digital Signal 
+Processor Processor Processor 
+Figure 1: Schematic of the recognition system for reading the identification numbers on 
+railroad cars. The network described here performs the part in the middle box, segment- 
+ing the image into characters and background. 
+2 THE NETWORK 
+2.1 THE ARCHITECTURE 
+The network consists of two parts, the input layer extracting features and the second 
+layer, which locates the objects. The second layer is not rigidly coupled through connec- 
+tions to the first one. Before data move from the first layer to the second, the input fields 
+of the neurons in the second layer are scaled to an appropriate size. This size depends on 
+482 Graf, Nohl, and Ben 
+the data and is dynamically adjusted. 
+FEATURE REPRESENTATION 
+OF THE MODEL 
+MATCH MODEL WITH IMAGE 
+MODEL 
+FEATURE MAPS 
+SIMPLE FEATURES 
+(EDGES, CORNERS) 
+INPUT IMAGE 
+Figure 2: Schematic of the network. 
+Figure 2 shows a schematic of this whole network. The input data pass through the first 
+layer of connections. From the other end of the net the model of the object is entered, and 
+in the middle model and image are matched by scaling the input fields of the neurons in 
+the second layer. In this way a network architecture is obtained that can handle a large 
+variation of sizes. In the present paper we consider only scale variations, but other 
+transformations, such as rotations can be integrated into this architecture as well. 
+And how can a model representation be scaled to the proper size before one knows an 
+object's size? With a proper feature representation of the image, this can be done in a 
+straight-forward and time-efficient way. Distances between pairs of features are meas- 
+ured and used to scale the input fields. In section 4 it is described in detail how the dis- 
+tances between comers provide a robust estimate of the sizes of characters. There is no 
+need to determine an object's size with absolute certainty here. The goal is to limit the 
+further search to just a few possible sizes, in order to reduce the amount of computation. 
+The time to evaluate the second layer of the network is reduced further by determining 
+areas-of-interest and searching only these. Areas without any features, or without 
+characteristic combinations of features, are excluded from the search. In this way, the 
+neurons of the second layer have to analyze only a small part of the whole image. The 
+key for the size estimates and the area-of-interest algorithm to work reliably, is a good 
+feature representation. Thanks to the neural net chip, we can search an image for a large 
+number of geometric features and have great freedom in choosing their shapes. 
+Image Segmentation with Networks of Variable Scales 483 
+2.2 KERNELS FOR EXTRACTING FEATURES 
+The features extracted in the first layer have to be detectable regardless of an object's 
+size. Many features, for example corners, are in principle independent of size. In practice 
+however, one uses two-dimensional detectors of a finite extent. These detectors introduce 
+a scale and tend to work best for a certain range of sizes. Hence, it may be necessary to 
+use several detectors of different sizes for one feature. Simple features tend to be less 
+sensitive to scale than complex ones. In the application described below, a variation of a 
+factor of five in the characters' sizes is covered with just a single set of edge and corner 
+detectors. Figure 3 shows a few of the convolution kernels used to extract these features. 
+Figure 3: Examples of kernels for detecting edges and comers. Each of the kernels is 
+stored as the connection weights of a neuron. These are ternary kernels with a size of 16 
+x 16 pixels. The values of the pixels are: black = -1, white = 0, hatched = +1. A total of 
+32 kernels of this size can be scanned simultaneously over an image with the neural net 
+chip. 
+These kernels are scanned over an image with the neural net chip and wherever an edge 
+or a corner of the proper orientation is located, the neuron tied to this kernel tums on. In 
+this way, the neural net chip scans 32 kernels simultaneously over an image, creating 32 
+feature maps. The kernels containing the feature detectors have a size of 16 x 16 pixels. 
+With kernels of such a large size, it is possible to create highly selective detectors. More- 
+over, a high noise immunity is obtained. 
+484 Graf, Nohl, and Ben 
+2.3 THE SECOND LAYER 
+The neurons of the second layer have a rectangular receptive field with 72 inputs, 3 x 3 
+inputs from eight feature maps. These neurons are mined with feature representations of 
+shapes, normalized in size. The 3 x 3 input field of a neuron does not mean that only an 
+area of 9 pixels in a feature map is used as input. Before a neuron is scanned over a part 
+of a feature map, its input field is scaled to the size indicated by the size estimator. 
+Therefore, each input corresponds to a rectangular area in a feature map. For finding 
+objects in an image, the input fields, scaled to the proper size, are then scanned over the 
+areas marked by the area-of-interest algorithm. If an output of a neuron is high, the 
+area is marked as position of an object and is passed along to the classifier. 
+The second layer of the network does require only relatively few computations, typically 
+a few hundred evaluations of neurons with 72 inputs. Therefore, this can be handled 
+easily by a workstation or a digital signal processor. The same is true for the area-of- 
+interest algorithm. The computationally expensive part is the feature extraction. On an 
+image with 512 x 512 pixels this requires over 2 billion connection updates. In fact, on a 
+workstation this takes typically about half an hour. Therefore, here a special purpose chip 
+is crucial to provide a speed-up to make this approach useful for practical applications. 
+3 THE HARDWARE 
+ADDRESS BUS 
+DATA BtJ 
+VME BUS 
+Figure 4: Schematic of the neural

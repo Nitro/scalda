@@ -1,0 +1,160 @@
+A Mixture Model System for Medical and 
+Machine Diagnosis 
+Magnus Stensmo 
+Terrence J. Sejnowski 
+Computational Neurobiology Laboratory 
+The Salk Institute for Biological Studies 
+10010 North Torrey Pines Road 
+La Jolla, CA 92037, U.S.A. 
+{magnus, t erry}salk. edu 
+Abstract 
+Diagnosis of human disease or machine fault is a missing data problem 
+since many variables are initially unknown. Additional information needs 
+to be obtained. The joint probability distribution of the data can be used to 
+solve this problem. We model this with mixture models whose parameters 
+are estimated by the EM algorithm. This gives the benefit that missing 
+data in the database itself can also be handled correctly. The request for 
+new information to refine the diagnosis is performed using the maximum 
+utility principle. Since the system is based on learning it is domain 
+independent and less labor intensive than expert systems or probabilistic 
+networks. An example using a heart disease database is presented. 
+1 INTRODUCTION 
+Diagnosis is the process of identifying diseases in patients or disorders in machines by 
+considering history, symptoms and other signs through examination. Diagnosis is a common 
+and important problem that has proven hard to automate and formalize. A procedural 
+description is often hard to attain since experts do not know exactly how they solve a 
+problem. 
+In this paper we use the information about a specific problem that exists in a database 
+1078 Magnus Stensmo, Terrence J. Sejnowski 
+of cases. The disorders or diseases are determined by variables from observations and 
+the goal is to find the probability distribution over the disorders, conditioned on what has 
+been observed. The diagnosis is strong when one or a few of the possible outcomes are 
+differentiated from the others. More information is needed if it is inconclusive. Initially 
+there are only a few clues and the rest of the variables are unknown. Additional information 
+is obtained by asking questions and doing tests. Since tests may be dangerous, time 
+consuming and expensive, it is generally not possible or desirable to find the answer to 
+every question. Unnecessary tests should be avoided. 
+� There have been many attempts to automate diagnosis. Early work [Ledley & Lusted, 1959] 
+realized that the problem is not always tractable due to the large number of influences that 
+can exist between symptoms and diseases. Expert systems, e.g. the INTERNIST system 
+for internal medicine [Miller et al., 1982], have rule-bases which are very hard and time 
+consuming to build. Inconsistencies may arise when new rules are added to an existing 
+database. There is also a strong domain dependence so knowledge bases can rarely be 
+reused for new applications. 
+Bayesian or probabilistic networks [Pearl, 1988] are a way to model a joint probability 
+distribution by factoring using the chain rule in probability theory. Although the models 
+are very powerful when built, there are presently no general learning methods for their 
+construction. A considerable effort is needed. In the Pathfinder system for lymph node 
+pathology [Heckerman et al., 1992] about 14,000 conditional probabilities had to be assessed 
+by an expert pathologist. It is inevitable that errors will occur when such large numbers of 
+manual assessments are involved. 
+Approaches to diagnosis that are based on domain-independent machine learning alleviate 
+some of the problems with knowledge engineering. For decision trees [Quinlan, 1986], a 
+piece of information can only be used if the appropriate question comes up when traversing 
+the tree. This means that irrelevant questions can not be avoided. Feedforward multilayer 
+perceptrons for diagnosis [Baxt, 1990] can classify very well, but they need full information 
+about a case. None of these these methods have adequate ways to handle missing data during 
+learning or classification. 
+The exponentially growing number of probabilities involved can make exact diagnosis 
+intractable. Simple approximations such as independence between all variables and condi- 
+tional independence given the disease (naive Bayes) introduce errors since there usually are 
+dependencies between the symptoms. Even though systems based on these assumptions 
+work surprisingly well, correct diagnosis is not guaranteed. This paper will avoid these 
+assumptions by using mixture models. 
+2 MIXTURE MODELS 
+Diagnosis can be formulated as a probability estimation problem with missing inputs. The 
+probabilities of the disorders are conditioned on what has currently been observed. If we 
+model the joint probability distribution it is easy to marginalize to get any conditional 
+probability. This is necessary in order to be able to handle missing data in a principled 
+way [Ahmad & Tresp, 1993]. Using mixture models [McLachlan & Basford, 1988], a 
+simple closed form solution to optimal regression with missing data can be formulated. The 
+EM algorithm, a method from parametric statistics for parameter estimation, is especially 
+interesting in this context since it can also be formulated to handle missing data in the 
+A Mixture Model System for Medical and Machine Diagnosis 1079 
+training examples [Dempster et al., 1977; Ghahramani & Jordan, 1994]. 
+2.1 THE EM ALGORITHM 
+The data underlying the model is assumed to be a set of N D-dimensional vectors X = 
+{a:l,..., a:N}. Each data point is assumed to have been generated independently from a 
+mixture density with M components 
+M 
+p(:r)- E p(:r,w/; 01)- 
+j=l 
+M 
+' p(wi)p(z Iwi; Oj), 
+j=l 
+(1) 
+where each mixture component is denoted by wj. p(wj), the a priori probability for 
+mixture wj, and 0 = (0 , . . . , OM ) are the model parameters. 
+To estimate the parameters for the different mixtures so that it is likely that the linear com- 
+bination of them generated the set of data points, we use maximum likelihood estimation. A 
+good method is the iterative Expectation-Maximization, or EM, algorithm [Dempster et al., 
+1977]. 
+Two steps are repeated. First a likelihood is formulated and its expectation is computed in 
+the E-step. For the type of models that we will use, this step will calculate the probability 
+that a certain mixture component generated the data point in question. The second step 
+is the M-step where the parameters that maximize the expectation are found. This can be 
+found analytically for models that can be written in an exponential form, e.g. Gaussian 
+functions. Equations can be derived for both batch and on-line learning. Update equations 
+for Gaussian distributions with and without missing data will be given here, other distribu- 
+tions are possible, e.g. binomial or multinomial [Stensmo & Sejnowski, 1994]. Details and 
+derivations can be found in [Dempster et al., 1977; Nowlan, 1991; Ghahramani & Jordan, 
+1994; Stensmo & Sejnowski, 1994]. 
+From (1) we form the log likelihood of the data 
+N N M 
+L(OIX) = Elogp(zi;Oj) = Elog Ep(wj)p(zilwj; Oj). 
+i--1 i=1 j=l 
+There is unfortunately no analytic solution to the logarithm of the sum in the right hand side 
+of the equation. However, if we were to know which of the mixtures generated which data 
+point we could compute it. The EM algorithm solves this by introducing a set of binary 
+indicator variables Z = {zij }. zij = 1 if and only if the data point ai was generated by 
+mixture component j. The log likelihood can then be manipulated to a form that does not 
+contain the log of a sum. 
+The expectation of zi using the current parameter values Oh is used since zi is not known 
+directly. This is the E-step of the EM algorithm. The expected value is then maximized in 
+the M-step. The two steps are iterated until convergence. The likelihood will never decrease 
+after an iteration [Dempster et al., 1977]. Convergence is fast compared to gradient descent. 
+One of the main motivations for the EM-algorithm was to be able to handle missing values 
+for variables in a data set in a principled way. In the complete data case we introduced 
+missing indicator variables that helped us solve the problem. With missing data we add 
+the missing components to the Z already missing [Dempster et al., 1977; Ghahramani & 
+Jordan, 1994]. 
+1080 Magnus Stensmo, Terrence J. Sejnowski 
+2.2 GAUSSIAN MIXTURES 
+We specialize here the EM algorithm to the case where the mixture components are radial 
+Gaussian distributions. For mixture component j with mean/j and covariance matrix Ej 
+this is 
+p(zl/) Gj(:r) (2�) D [ l (;r -- ltj)TE-l(;r -- ltj) ] 
+_ _ II:l-� exp � 
+The form of the covariance matrix is often constrained to be diagonal or to have the 
+same values on the diagonal, Ej - a.2I This corresponds to axis-parallel oval-shaped 
+and radially symmetric GausslanS, respectively. Radial and diagonal basis functions can 
+function well in applications [Nowlan, 1991], since several Gaussians together can form 
+complex shapes in the space. With fewer parameters over-fitting is minimized. In the radial 
+case, with variance a] 
+Gj(a:) = v/-r  exp rr ' 
+In the E-step the expected value of the likelihood is computed. For the Gaussian case this 
+becomes the probability that Gaussian j generated the data point 
+The M-step finds the parameters that maximize the likelihood from the E-step. For complete 
+data the new estimates are 
+N 
+I5() Sj tij 1 Zpj(ai)a, (2) 
+N' SJ i=l 
+N 
+&< i II 
+DSi 
+N 
+where Si = Zpj(a,). 
+i=1 
+When input variables are missing the Gj(z) is only evaluated over the set of observed 
+dimensions O. Missing (unobserved) dimensions are denoted by U. The update equation 
+for/5(wj) is unchanged. 
+becomes 
+To estimate bj we set z/U = b7 and use (2). 
+N 
+1 
+i--1 
+The variance 
+A least squares regression was used to fill in missing data values during classification. For 
+missing variables and Gaussian mixtures this becomes the same approach used by [Ahmad & 
+Tresp, 1993]. The result of the regression when the outcome variables are missing is a 
+probability distribution over the disorders. This can 

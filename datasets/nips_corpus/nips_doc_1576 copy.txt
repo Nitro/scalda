@@ -1,0 +1,164 @@
+Learning Macro-Actions in Reinforcement 
+Learning 
+Jette Rand!Ov 
+Niels Bohr Inst., Blegdamsvej 17, 
+University of Copenhagen, 
+DK-2100 Copenhagen 0, Denmark 
+randlov@nbi. dk 
+Abstract 
+We present a method for automatically constructing macro-actions from 
+scratch from primitive actions during the reinforcement learning process. 
+The overall idea is to reinforce the tendency to perform action b after 
+action a if such a pattern of actions has been rewarded. We test the 
+method on a bicycle task, the car-on-the-hill task, the race-track task and 
+some grid-world tasks. For the bicycle and race-track tasks the use of 
+macro-actions approximately halves the learning time, while for one of 
+the grid-world tasks the learning time is reduced by a factor of 5. The 
+method did not work for the car-on-the-hill task for reasons we discuss 
+in the conclusion. 
+1 INTRODUCTION 
+A macro-action is a sequence of actions chosen from the primitive actions of the prob- 
+lem} Lureping actions together as macros can be of great help for solving large prob- 
+lems (Korf, 1985a,b; Gullapalli, 1992) and can sometimes greatly speed up learning (Iba, 
+1989; McGovern, Sutton & Fagg, 1997; McGovern & Sutton, 1998; Sutton, Precup & 
+Singh, 1998; Sutton, Singh, Precup & Ravindran, 1999). Macro-actions might be essen- 
+tial for scaling up reinforcement learning to very large problems. Construction of macro- 
+actions by hand requires insight into the problem at hand. It would be more elegant and 
+useful if the agent itself could decide what actions to lump together (Iba, 1989; McGovern 
+& Sutton, 1998; Sutton, Precup & Singh, 1998; Hauskrecht et al., 1998). (Iba, 1989; Mc- 
+Govern & Sutton, 1998; Sutton, Precup & Singh, 1998; Hauskrecht et al., 1998). 
+1This is a special case of definitions of macro-actions seen elsewhere. Some researchers take 
+macro-actions to consist of a policy, terminal conditions and an input set (Precup & Sutton, 1998; 
+Sutton, Precup & Singh, 1998; Sutton, Singh, Precup & Ravindran, 1999) while others define it as a 
+local policy (Hauskrecht et al., 1998). 
+1046 J. Randlov 
+2 ACTION-TO-ACTION MAPPING 
+In reinforcement learning we want to learn a mapping from states to actions, s  a that 
+maximizes the total expected reward (Sutton & Barto, 1998). Sometimes it might be of use 
+to learn a mapping from actions to actions as well. We believe that acting according to an 
+action-to-action mapping can be useful for three reasons: 
+1. During the early stages of learning the agent will enter areas of the state space it has 
+never visited before. If the agent acts according to an action-to-action mapping it might 
+be guided through such areas where there is yet no clear choice of action otherwise. In 
+other words it is much more likely that an action-to-action mapping could guide the agent 
+to perform almost optimally in states never visited than a random policy. 
+2. In some situations, for instance in an emergency, it can be useful to perform a certain 
+open-loop sequence of actions, without being guided by state information. Consider for in- 
+stance an agent learning to balance on a bicycle (Randlv & Alstrom, 1998). If the bicycle 
+is in an unbalanced state, the agent must forget about the position of the bicycle and carry 
+out a sequence of actions to balance the bicycle again. Some of the state information the 
+position of the bicycle relative to some goal does not matter, and might actually distract 
+the agent, while the history of the most recent actions might contain just the needed infor- 
+mation to pick the next action. 
+3. An action-to-action mapping might lead the agent to explore the relevant areas of the 
+state space in an efficient way instead of just hitting them by chance. 
+We therefore expect that learning an action-to-action mapping in addition to a state-action 
+mapping can lead to faster overall learning. Even though the system has the Markov prop- 
+erty, it may be useful to remember a bit of the action history. We want the agent to perform 
+a sequence of actions while being aware of the development of the states, but not only being 
+controlled by the states. 
+Many people have tried to deal with imperfect state information by adding memory of 
+previous states and actions to the information the agent receives (Andreae & Cashin, 1969; 
+McCallum, 1995; Hansen, Barto & Zilberstein, 1997; Burgard et al., 1998). In this work 
+we are not specially concerned with non-Markov problems. However the results in this 
+paper suggest that some methods for partially observable MDP could be applied to MDPs 
+and result in faster learning. 
+The difficult part is how to combine the suggestion made by the action-to-action mapping 
+with the conventional state-to-action mapping. Obviously we do not want to learn the 
+mapping (st, at-x) --+ at on tabular form, since that would destroy the possibility of using 
+the action-to-action mapping generalisation over the state space. 
+In our approach we decided to learn two value mappings. The mapping Qs is the conven- 
+tional Q-value normally used for state-to-action mapping, while the mapping Qa represents 
+the value belonging to the action-to-action mapping. When making a choice, we add the 
+Q-values of the suggestions made by the two mappings, normalize and use the new values 
+to pick an action in the usual way: 
+Here  is the Q-value that we actually use to pick the next action. The parameter/3 deter- 
+mines the influence of the action-to-action mapping. For/3 - 0 we are back with the usual 
+Q-values. The idea is to reinforce the tendency to perform action b after action a if such a 
+pattern of actions is rewarded. In this way the agent forms habits or macro-actions and it 
+will sometimes act according to them. 
+Learning Macro-Actions in Reinforcement Learning 1047 
+3 RESULTS 
+How do we implement an action-to-action mapping 
+and the O-values? Many algorithms have been de- 
+veloped to find near optimal state-to-action mappings 
+on a trial-and-error basis. An example of such a 
+algorithm is Sarsa00, developed by Rummery and 
+Niranjan (Rummery & Niranjan, 1994; Rummery, 
+1995). We use Sarsa()0 with replacing eligibility 
+traces (Singh & Sutton, 1996) and table look-up. El- 
+igibility traces are attached to the Qa-values one 
+for each action-action pair. 2 During learning the Qs 
+and Qa-values are both adjusted according to the 
+overall TD error 6t = rt+ + 7t(st+,at+) - 
+t (st, at). The update for the Qa-values has the form 
+A Q c, ( at- , at ) -/3 6 e ( at- , at). For description of 
+Action-action  
+weight /State-action weight 
+Neurons in input layer 
+Figure 1: One can think of 
+the action-to-action mapping in 
+terms of weights between output 
+neurons in a network calculating 
+the Q-value. 
+the Sarsa()0-algorithm see Rummery (1995) or Sutton & Barto (1998). Figure 1 shows the 
+idea in terms of a neural network with no hidden layers. The new Qa-values correspond to 
+weights from output neurons to output neurons. 
+3.1 THE BICYCLE 
+We first tested the new -values on a bicycle system. To solve this problem the agent has 
+to learn to balance a bicycle for 1000 seconds and thereby ride 2.8 km. At each time step 
+the agent receives information about the state of the bicycle: the angle and angular velocity 
+of the handlebars, the angle, angular velocity and angular acceleration of the angle of the 
+bicycle from vertical. 
+The agent chooses two basic actions: the torque 
+that should be applied to the handle bars, and 
+how much the centre of mass should be displaced 
+from the bicycle's plan--a total of 9 possible ac- 
+tions (Randlrv & Alstmm, 1998). The reward at 
+each time step is 0 unless the bicycle has fallen, 
+in which case it is -1. The agent uses a = 0.5, 
+7 = 0.99 and ,X = 0.95. For further descrip- 
+tion and the equations for the system we refer the 
+reader to the original paper. Figure 2 shows how 
+the learning time varies with the value of/3. The 
+error bars show the standard error in all graphs. 
+For small values of/3 (-, 0.03) the agent learns 
+the task faster than with usual Sarsa(A) (/3 = 0). 
+As expected, large values of/3 slow down learn- 
+ing. 
+2500 
+2000 
+5001 .... 
+0 0.02 0.04 0.06 0.08 
+Figure 2: Learning time as a function 
+of the parameter/3 for the bicycle ex- 
+periment. Each point is an average of 
+200 runs. 
+3.2 THE CAR ON THE HILL 
+The second example is Boyan and Moore's mountain-car task (Boyan & Moore, 1995; 
+Singh & Sutton, 1996; Sutton, 1996). Consider driving an under-powered car up a steep 
+mountain road. The problem is that gravity is stronger than the car's engine, and the car 
+cannot accelerate up the slope. The agent must first move the car away from the goal and 
+2If one action is taken in a state, we allow the traces for the other actions to continue decaying 
+instead of cutting them to 0, contrary to Singh and Sutton (Singh & Sutton, 1996). 
+1048 J. Randlov 
+up the opposite slope, and then apply full throttle and build up enough momentum to reach 
+the goal. The reward at each time step is -1 until the agent reaches the goal, where it 
+receives reward 0. The agent must choose one of three possible actions at each time step: 
+full thrust forward, no thrust, or full thrust backwards. Refer to Singh & Sutton (1996) for 
+the equations of the task. 
+We used one of the Sarsa-agents with five 9 x 9 
+CMAC tilings that have been thoroughly exam- 
+ined by Singh & Sutton (1996). The agent's 
+parameters are ) = 0.9, a = 0.7, 7 = 1, and 
+a greedy selection of actions. (These are the 
+best values found by Singh and Sutton.) As in 
+Singh and Sutton's treatment of the problem, all 
+agents were tried for 20 trials, where a trial is 
+one run from a randomly selected starting state 
+to the goal. All the agents used the same set of 
+starting states. The performance measure is the 
+average trial time over the first 20 trials. Figure 3 
+shows results for two of our simulations. Obvi- 
+ously the action-to-action weights are of no use 
+to the agent, since the lowest poi

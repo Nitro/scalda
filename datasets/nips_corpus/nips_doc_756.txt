@@ -1,0 +1,151 @@
+Globally Trained Handwritten Word 
+Recognizer using Spatial Representation 
+Convolutional Neural Networks and 
+Hidden Markov Models 
+Yoshua Bengio * 
+Dept. Informatique et Recherche Opdrationnelle 
+Universit6 de Montr6al 
+Montreal, Qc H3C-3J7 
+Yann Le Cun 
+AT&T Bell Labs 
+Holmdel NJ 07733 
+Donnie Henderson 
+AT&T Bell Labs 
+Holmdel NJ 07733 
+Abstract 
+We introduce a new approach for on-line recognition of handwrit- 
+ten words written in unconstrained mixed style. The preprocessor 
+performs a word-level normalization by fitting a model of the word 
+structure using the EM algorithm. Words are then coded into low 
+resolution annotated images where each pixel contains informa- 
+tion about trajectory direction and curvature. The recognizer is a 
+convolution network which can be spatially replicated. From the 
+network output, a hidden Markov model produces word scores. The 
+entire system is globally trained to minimize word-level errors. 
+I Introduction 
+Natural handwriting is often a mixture of different styles, lower case printed, 
+upper case, and cursive. A reliable recognizer for such handwriting would greatly 
+improve interaction with pen-based devices, but its implementation presents new 
+*also, AT&T Bell Labs, Holmdel NJ 07733 
+937 
+938 Bengio, Le Cun, and Henderson 
+technical challenges. Characters taken in isolation can be very ambiguous, but con- 
+siderable information is available from the context of the whole word. We propose 
+a word recognition system for pen-based devices based on four main modules: a 
+preprocessor that normalizes a word, or word group, by fitting a geometrical model 
+to the word structure using the EM algorithm; a module that produces an anno- 
+tated image from the normalized pen trajectory; a replicated convolutional neural 
+network that spots and recognizes characters; and a Hidden Markov Model (I-IMM) 
+that interprets the networks output by taking word-level constraints into account. 
+The network and the HMM are jointl!l trained to minimize an error measure defined 
+at the word level. 
+Many on-line handwriting recognizers exploit the sequential nature of pen trajec- 
+tories by representing the input in the time domain. While these representations 
+are compact and computationally advantageous, they tend to be sensitive to stroke 
+order, writing speed, and other irrelevant parameters. In addition, global geometric 
+features, such as whether a stroke crosses another stroke drawn at a different time, 
+are not readily available in temporal representations. To avoid this problem we 
+designed a representation, called AMAP, that preserves the pictorial nature of the 
+handwriting. 
+In addition to recognizing characters, the system must also correctly segment the 
+characters within the words. One approach, that we call INSEG, is to recognize 
+a large number of heuristically segmented candidate characters and combine them 
+optimally with a postprocessor (Burges et al 92, Schenkel et al 93). Another ap- 
+proach, that we call OUTSEG, is to delay all segmentation decisions until after the 
+recognition, as is often done in speech recognition. An OUTSEG recognizer must 
+accept entire words as input and produce a sequence of scores for each character at 
+each location on the input. Since the word normalization cannot be done perfectly, 
+the recognizer must be robust with respect to relatively large distortions, size van- 
+ations, and translations. An elastic word model -e.g., an HMM- can extract word 
+candidates from the network output. The HMM models the long-range sequential 
+structure while the neural network spots and classifies characters, using local spatial 
+structure. 
+2 Word Normalization 
+Input normalization reduces intra-character variability, simplifying character recog- 
+nition. This is particularly important when recognizing entire words. We propose a 
+new word normalization scheme, based on fitting a geometrical model of the word 
+structure. Our model has four flexible lines representing respectively the ascen- 
+ders line, the core line, the base line and the descenders line (see Figure 1). Points 
+on the lines are parameterized as follows: 
+y: fk(x) = k(x- zo) 2 + s(x - zo)+ yok 
+(1) 
+where k controls curvature, s is the skew, and (z0,l/0) is a translation vector. The 
+parameters k, s, and z0 are shared among all four curves, whereas each curve has 
+its own vertical translation parameter i/ok. First the set of local maxima U and 
+minima L of the vertical displacement are found. z0 is determined by taking the 
+average abscissa of extrema points. The lines of the model are then fitted to the 
+extrema: the upper two lines to the maxima, and the lower two to the minima. 
+The fit is performed using a probabilistic model for the extrema points given the 
+lines. The idea is to find the line parameters 0* that maximize the probability of 
+Globally Trained Handwritten Word Recognizer 939 
+Figure 1' Word Normalization Model: Ascenders and core curves fit y-maxima 
+whereas descenders and baseline curves fit !/-minima. There are 6 parameters: a 
+(ascenders curve height relative to baseline), b (baseline absolute vertical position), 
+c (core line position), d (descenders curve position), k (curvature), s (angle). 
+generating the observed points. 
+/9* = argmax log P(X I D) q- log 
+(2) 
+The above conditional distribution is chosen to be a mixture of Gaussians (one 
+per curve) whose means are the y-positions obtained from the actual x-positions 
+through equation 1: 
+3 
+r(xi, Yi I 0) -- log  Wk N(yi; fk(xi), try) (3) 
+k=0 
+where N(x; it, rr) is a univariate Normal distribution of mean tt and standard devi- 
+ation rr. The wk arc the mixture parameters, some of which are set to 0 in order to 
+constrain the upper (lower) points to be fitted to the upper (lower) curves. They are 
+computed a-priori using measured frequencies of associations of extrema to curves 
+on a large set of words. The priors P(O) on the parameters are required to prevent 
+the collapse of the curves. They can be used to incorporate a-priori information 
+about the word geometry, such as the expected position of the baseline, or the 
+height of the word. These priors for each parameter are chosen to be independent 
+normal distributions whose standard deviations control the strength of the prior. 
+The variables that associate each point with one of the curves arc taken as hidden 
+variables of the EM algorithm. One can thus derive an auxiliary function which can 
+be analytically (and cheaply) solved for the 6 free parameters 0. Convergence of 
+the EM algorithm was typically obtained within 2 to 4 iterations (of maximization 
+of the auxiliary function). 
+3 AMAP 
+The recognition of handwritten characters from a pen trajectory on a digitizing 
+surface is often done in the time domain. Trajectories are normalized, and local 
+940 Bengio, Le Cun, and Henderson 
+geometrical or dynamical features are sometimes extracted. The recognition is 
+performed using curve matching (Tappert 90), or other classification techniques such 
+as Neural Networks (Guyon et al 91). While, as stated earlier, these representations 
+have several advantages, their dependence on stroke ordering and individual writing 
+styles makes them difficult to use in high accuracy, writer independent systems that 
+integrate the segmentation with the recognition. 
+Since the intent of the writer is to produce a legible ima#e, it seems natural to 
+preserve as much of the pictorial nature of the signal as possible, while at the same 
+time exploit the sequential information in the trajectory. We propose a representa- 
+tion scheme, called AMAP, where pen trajectories are represented by low-resolution 
+images in which each picture element contains information about the local proper- 
+ties of the trajectory. More generally, an AMAP can be viewed as a function in a 
+multidimensional space where each dimension is associated with a local property of 
+the trajectory, say the direction of motion 0, the X position, and the Y position of 
+the pen. The value of the function at a particular location (0, X, Y) in the space 
+represents a smooth version of the density of features in the trajectory that have 
+values (0, X, Y) (in the spirit of the generalized Hough transform). An AMAP is a 
+multidimensional array (say 4x10x10) obtained by discretizing the feature density 
+space into boxes. Each array element is assigned a value equal to the integral of 
+the feature density function over the corresponding box. In practice, an AMAP is 
+computed as follows. At each sample on the trajectory, one computes the position 
+of the pen (X, Y) and orientation of the motion 0 (and possibly other features, such 
+as the local curvature c). Each element in the AMAP is then incremented by the 
+amount of the integral over the corresponding box of a predetermined point-spread 
+function centered on the coordinates of the feature vector. The use of a smooth 
+point-spread function (say a Gaussian) ensures that smooth deformations of the 
+trajectory will correspond to smooth transformations of the AMAP. An AMAP can 
+be viewed as an annotated image in which each pixel is a feature vector. 
+A particularly useful feature of the AMAP representation is that it makes very few 
+assumptions about the nature of the input trajectory. It does not depend on stroke 
+ordering or writing speed, and it can be used with all types of handwriting (capital, 
+lower case, cursive, punctuation, symbols). Unlike many other representations (such 
+as global features), AMAPs can be computed for complete words without requiring 
+segmentation. 
+4 Convolutional Neural Networks 
+Image-like representations such as AMAPs are particularly well suited for use in 
+combination with Multi-Layer Convolutional Neural Networks (MLCNN) (Le Cun 
+89, Le Cun et al 90). MLCNNs are feed-forward neural networks whose architectures 
+are tailored for minimizing the sensitivity to translations, rotations, or distortions 
+of the input image. They are trained wi

@@ -1,0 +1,158 @@
+Phase-Space Learning 
+Fu-Sheng Tsung 
+Chung Tai Ch'an Temple 
+56, Yuon-fon Road, Yi-hsin Li, Pu-li 
+Nan-tou County, Taiwan 545 
+Republic of China 
+Garrison W. Cottrell* 
+Institute for Neural Computation 
+Computer Science/z Engineering 
+University of California, San Diego 
+La Jolla, California 92093 
+Abstract 
+Existing recurrent net learning algorithms are inadequate. We in- 
+troduce the conceptual framework of viewing recurrent training as 
+matching vector fields of dynamical systems in phase space. Phase- 
+space reconstruction techniques make the hidden states explicit, 
+reducing temporal learning to a feed-forward problem. In short, 
+we propose viewing iterated prediction [LF88] as the best way of 
+training recurrent networks on deterministic signals. Using this 
+framework, we can train multiple trajectories, insure their stabil- 
+ity, and design arbitrary dynamical systems. 
+1 INTRODUCTION 
+Existing general-purpose recurrent algorithms are capable of rich dynamical be- 
+havior. Unfortunately, straightforward applications of these algorithms to training 
+fully-recurrent networks on complex temporal tasks have had much less success 
+than their feedforward counterparts. For example, to train a recurrent network 
+to oscillate like a sine wave (the hydrogen atom of recurrent learning), existing 
+techniques such as Real Time Recurrent Learning (RTRL) [WZ89] perform sub- 
+optimally. Williams & Zipser trained a two-unit network with RTRL, with one 
+teacher signal. One unit of the resulting network showed a distorted waveform, the 
+other only half the desired amplitude. [Pea89] needed four hidden units. However, 
+our work demonstrates that a two-unit recurrent network with no hidden units can 
+learn the sine wave very well [Tsu94]. Existing methods also have several other 
+*Correspondence should be addressed to the second author: gary@cs.ucsd.edu 
+482 Fu-Sheng Tsung, Garrison W. Cottrell 
+limitations. For example, networks often fail to converge even though a solution 
+is known to exist; teacher forcing is usually necessary to learn periodic signals; it 
+is not clear how to train multiple trajectories at once, or how to insure that the 
+trained trajectory is stable (an attractor). 
+In this paper, we briefly analyze the algorithms to discover why they have such 
+difficulties, and propose a general solution to the problem. Our solution is based on 
+the simple idea of using the techniques of time series prediction as a methodology 
+for recurrent network training. 
+First, by way of introducing the appropriate concepts, consider a system of coupled 
+autonomous 1 first order network equations: 
+dxl/dt 
+dx2/dt 
+dxn/dt 
+= 
+= 
+= 
+or, in vector notation, 
+X(t)=F(X) where X(t)=(x(t),x(t),...,xn(t)) 
+The phase space is the space of the dependent variables (X), it does not include t, 
+while the state space incorporates t. The evolution of a trajectory X(t) traces out 
+a phase curve, or orbit, in the n-dimensional phase space of X. For low dimensional 
+systems (2- or 3-D), it is easy to visualize the limit sets in the phase space: a fixed 
+point and a limit cycle become a single point and a closed orbit (closed curve), 
+respectively. In the state space they become an infinite straight line and a spiral. 
+F(X) defines the vector field of X, because it associates a vector with each point 
+in the phase space of X whose direction and magnitude determines the movement 
+of that point in the next instant of time (by definition, the tangent vector). 
+2 ANALYSIS OF CURRENT APPROACHES 
+To get a better understanding of why recurrent algorithms have not been very effec- 
+tive, we look at what happens during training with two popular recurrent learning 
+techniques: RTRL and back propagation through time (BPTT). With each, we il- 
+lustrate a different problem, although the problems apply equally to each technique. 
+RTRL is a forward-gradient algorithm that keeps a matrix of partial derivatives 
+of the network activation values with respect to every weight. To train a periodic 
+trajectory, it is necessary to teacher-force the visible units [WZ89], i.e., on every 
+iteration, after the gradient has been calculated, the activations of the visible units 
+are replaced by the teacher. To see why, consider learning a pair of sine waves offset 
+by 90 �. In phase space, this becomes a circle (Figure la). Initially the network 
+ Autonomous means the right hand side of a differential equation does not explicitly ref- 
+erence t, e.g. dx/dt = 2x is autonomous, even though � is a function of t, but d/dt = 2-{-t 
+is not. Continuous neural networks without inputs are autonomous. A nonautonomous 
+system can always be turned into an autonomous system in a higher dimension. 
+Phase-Space Learning 483 
+a b 
+Figure 1: Learning a pair of sine waves with RTRL learning. (a) without teacher 
+forcing, the network dynamics (solid arrows) take it far from where the teacher 
+(dotted arrows) assumes it is, so the gradient is incorrect. (b) With teacher forcing, 
+the network's visible units are returned to the trajectory. 
+(thick arrows) is at position X0 and has arbitrary dynamics. After a few iterations, 
+it wanders far away from where the teacher (dashed arrows) assumes it to be. The 
+teacher then provides an incorrect next target from the network's current position. 
+Teacher-forcing (Figure lb), resets the network back on the circle, where the teacher 
+again provides useful information. 
+However, if the network has hidden units, then the phase space of the visible units 
+is just a projection of the actual phase space of the network, and the teaching 
+signal gives no information as to where the hidden units should be in this higher- 
+dimensional phase space. Hence the hidden unit states, unaltered by teacher forcing, 
+may be entirely unrelated to what they should be. This leads to the moving targets 
+problem. During training, every time the visible units re-visit a point, the hidden 
+unit activations will differ, Thus the mapping changes during learning. (See [Pin88, 
+WZ89] for other discussions of teacher forcing.) 
+With BPTT, the network is unrolled in time (Figure 2). This unrolling reveals 
+another problem: Suppose in the teaching signal, the visible units' next state is a 
+non-linearly separable function of their current state. Then hidden units are needed 
+between the visible unit layers, but there are no intermediate hidden units in the 
+unrolled network. The network must thus take two time steps to get to the hidden 
+units and back. One can deal with this by giving the teaching signal every other 
+iteration, but clearly, this is not optimal (consider that the hidden units must bide 
+their time on the alternate steps). 9' 
+The trajectories trained by RTRL and BPTT tend to be stable in simulations of 
+simple tasks [Pea89, TCS90], but this stability is paradoxical. Using teacher forc- 
+ing, the networks are trained to go from a point on the trajectory, to a point within 
+the ball defined by the error criterion � (see Figure 4 (a)). However, after learning, 
+the networks behave such that from a place near the trajectory, they head for the 
+trajectory (Figure 4 (b)). Hence the paradox. Possible reasons are: 1) the hid- 
+den unit moving targets provide training off the desired trajectory, so that if the 
+training is successful, the desired trajectory is stable; 2) we would never consider 
+the training successful if the network learns an unstable trajectory; 3) the stable 
+dynamics in typical situations have simpler equations than the unstable dynam- 
+ics [Nak93]. To create an unstable periodic trajectory would imply the existence of 
+stable regions both inside and outside the unstable trajectory; dynamically this is 
+2At NIPS, 0 delay connections to the hidden units were suggested, which is essentially 
+part of the solution given here. 
+484 Fu-Sheng Tsung, Garrison W. Cottrell 
+Figure 2: A nonlinearly separable 
+mapping must be computed by the 
+hidden units (the leftmost unit here) 
+every other time step. 
+Figure 3: The network used for iter- 
+ated prediction training. Dashed con- 
+nections are used after learning. 
+a b 
+Figure 4: The paradox of attractor learning with teacher forcing. (a) During learn- 
+ing, the network learns to move from the trajectory to a point near the trajectory. 
+(b) After learning, the network moves from nearby points towards the trajectory. 
+more complicated than a simple periodic attractor. In dynamically complex tasks, 
+a stable trajectory may no longer be the simplest solution, and stability could be a 
+problem. 
+In summary, we have pointed out several problems in the RTRL (forward-gradient) 
+and BPTT (backward-gradient) classes of training algorithms: 
+1. Teacher forcing with hidden units is at best an approximation, and leads 
+to the moving targets problem. 
+2. Hidden units are not placed properly for some tasks. 
+3. Stability is paradoxical. 
+3 PHASE-SPACE LEARNING 
+The inspiration for our approach is prediction training [LF88], which at first appears 
+similar to BPTT, but is subtly different. In the standard scheme, a feedforward 
+network is given a time window, a set of previous points on the trajectory to be 
+learned, as inputs. The output is the next point on the trajectory. Then, the inputs 
+are shifted left and the network is trained on the next point (see Figure 3). Once 
+the network has learned, it can be treated as recurrent by iterating on its own 
+predictions. 
+The prediction network differs from BPTT in two important ways. First, the vis- 
+ible units encode a selected temporal history of the trajectory (the time window). 
+The point of this delay space embedding is to reconstruct the phase space of the 
+underlying system. [Tak81] has shown that this can always be done for a deter- 
+ministic system. Note that in the reconstructed phase space, the mapping from one 
+Phase-Space Learning 485 
+Yt+l 
+Yt It 
+b 
+Figure 5: Phase-space learning. (a) The training set is a sample of the vector field. 
+(b) Phase-space learning n

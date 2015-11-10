@@ -1,0 +1,153 @@
+Learning Temporal Dependencies in 
+Connectionist Speech Recognition 
+Steve Renals Mike Hochberg Tony Robinson 
+Cambridge University Engineering Department 
+Cambridge CB2 1PZ, UK 
+{S5 r,mmh, a5 r}@en. cam. ac.uk 
+Abstract 
+Hybrid connectionist/HMM systems model time both using a Markov 
+chain and through properties of a connectionist network. In this paper, 
+we discuss the nature of the time dependence currently employed in our 
+systems using recurrent networks (RNs) and feed-forward multi-layer 
+perceptrons (MLPs). In particular, we introduce local recurrences into a 
+MLP to produce an enhanced input representation. This is in the form 
+of an adaptive gamma filter and incorporates an automatic approach for 
+learning temporal dependencies. We have experimented on a speaker- 
+independent phone recognition task using the TIMIT database. Results 
+using the gamma filtered input representation have shown improvement 
+over the baseline MLP system. Improvements have also been obtained 
+through merging the baseline and gamma filter models. 
+1 INTRODUCTION 
+The most common approach to large-vocabulary, talker-independent speech recognition 
+has been statistical modelling with hidden Markov models (HMMs). The HMM has an 
+explicit model for time specified by the Markov chain parameters. This temporal model 
+is governed by the grammar and phonology of the language being modelled. The acoustic 
+signal is modelled as a random process of the Markov chain and adjoining local temporal 
+information is assumed to be independent. This assumption is certainly not the case and a 
+great deal of research has addressed the problem of modelling acoustic context. 
+Standard HMM techniques for handling the context dependencies of the signal have ex- 
+1051 
+1052 Renals, Hochberg, and Robinson 
+plicitly modelled all the n-tuples of acoustic segments (e.g., context-dependent triphone 
+models). Typically, these systems employ a great number of parameters and, subsequently, 
+require massive amounts of training data and/or care in smoothing of the parameters. Where 
+the context of the model is greater than two segments, an additional problem is that it is 
+very likely that contexts found in testing data are never observed in the training data. 
+Recently, we have developed state-of-the-art continuous speech recognition systems using 
+hybrid connectionist/HMM methods (Robinson, 1994; Renals et al., 1994). These hybrid 
+connectionist/HMM systems model context at two levels (although these levels are not 
+necessarily at distinct scales). As in the traditional HMM, a Markov process is used to 
+specify the duration and lexical constraints on the model. The connectionist framework 
+provides a conditional likelihood estimate of the local (in time) acoustic waveform given 
+the Markov process. Acoustic context is handled by either expanding the network input to 
+include multiple, adjacent input frames, or using recurrent connections in the network to 
+provide some memory of the previous acoustic inputs. 
+2 DEPTH AND RESOLUTION 
+Following Principe et al. (1993), we may characterise the time dependence displayed by a 
+particular model in terms of depth and resolution. Loosely speaking, the depth tells us how 
+far back in time a model is able to look I , and the resolution tells us how accurately the past 
+to a given depth may be reconstructed. The baseline models that we currently use are very 
+different in terms of these characteristics. 
+Multi-layer Perceptron 
+The feed-forward multi-layer perceptron (MLP) does not naturally model time, but simply 
+maps an input to an output. Crude temporal dependence may be imparted into the system by 
+using a delay-lined input (figure la); an extension of this approach is the time-delay neural 
+network (TDNN). The MLP may be interpreted as acting as a FIR filter. A delay-lined 
+input representation may be characterised as having low depth (limited by the delay line 
+length) and high resolution (no smoothing). 
+Recurrent Network 
+The recurrent network (RN) models time dependencies of the acoustic signal via a fully- 
+connected, recurrent hidden layer (figure lb). The RN has a potentially infinite depth 
+(although in practice this is limited by available training algorithms) and low resolution, 
+and may be regarded as analogous to an IIR filter. A small amount of future context is 
+available to the RN, through a four frame target delay. 
+Experiments 
+Experiments on the DARPA Resource Management (RM) database have indicated that 
+the tradeoff between depth and resolution is important. In Robinson et al. (1993), we 
+compared different acoustic front ends using a MLP and a RN. Both networks used 68 
+In the language of section 3, the depth may be expressed as the mean duration, relative to the 
+target, of the last kernel in a filter that is convolved with the input. 
+Learning Temporal Dependencies in Connectionist Speech Recognition 1053 
+P(qk I X n+c' Vk = 1, K 
+-- ii_C,, �.., 
+Output Layer 
+Hidden Layer 
+512 - 1,024 hidden units 
+(a) Multi-layer Perceptron 
+(b) Recurrent Network 
+Figure 1: Connectionist architectures used for speech recognition. 
+outputs (corresponding to phones); the MLP used 1000 hidden units and the RN used 
+256 hidden units. Both architectures were trained using a training set containing 3990 
+sentences spoken by 109 speakers. Two different resolutions were used in the front-end 
+computation of mel-frequency cepstral coefficients (MFCCs): one with a 20ms Hamming 
+window and a 10ms frame step (referred to as 20/10), the other with a 32ms Hamming 
+window and a 16ms frame step (referred to as 32/16). A priori, we expected the higher 
+resolution frame rate (20/10) to produce a higher performance recogniser because rapid 
+speech events would be more accurately modelled. While this was the case for the MLP, 
+the RN showed better results using the lower resolution front end (32/16) (see table 1). For 
+the higher resolution front-end, both models require a greater depth (in frames) for the same 
+context (in milliseconds). In these experiments the network architectures were constant so 
+increasing the resolution of the front end results in a loss of depth. 
+Word Error Rate % 
+Net Front End feb89 oct89 feb91 sep92 
+RN 20/10 6.1 7.6 7.4 12.1 
+RN 32/16 5.9 6.3 6.1 11.5 
+MLP 20/10 5.7 7.1 7.6 12.0 
+MLP 32/16 6.6 7.8 8.5 15.0 
+Table 1: Comparison of acoustic front ends using a RN and a MLP for continuous speech 
+recognition on the RM task, using a wordpair grammar of perplexity 60. The four test sets 
+(feb89, oct89, feb91 and sep92, labelled according to their date of release by DARPA) each 
+contain 300 sentences spoken by 10 new speakers. 
+In the case of the MLP we were able to explicitly set the memory depth. Previous experi- 
+ments had determined that a memory depth of 6 frames (together with a target delayed by 3 
+frames) was adequate for problems relating to this database. In the case of the RN, memory 
+1054 Renals, Hochberg, and Robinson 
+P(qlx) 
+I Output Layer 
+P(qlx) 
+I Output Layer 
+Hidden Layer (1000 hidden units) 1 I Hidden Layer (1000 hidden units) 
+x(t) x(t+2) 
+(a) Gamma Filtered Input (b) Gamma Filter + Future Context 
+Figure 2: Gamma memory applied to the network input. The simple gamma memory in (a) 
+does not incorporate any information about the future, unless the target is delayed. In (b) 
+there is an explicit delay line to incorporate some future context. 
+depth is not determined directly, but results from the interaction between the network archi- 
+tecture (i.e., number of state units) and the training process (in this case, back-propagation 
+through time). We hypothesise that the RN failed to make use of the higher resolution front 
+end because it did not adapt to the required depth. 
+3 GAMMA MEMORY STRUCTURE 
+The tradeoff between depth and resolution has led us to investigate other network archi- 
+tectures. The gamma filter, introduced by de Vries and Principe (1992) and Principe et al. 
+(1993), is a memory structure designed to automatically determine the appropriate depth 
+and resolution (figure 2). This locally recurrent architecture enables lowpass and bandpass 
+filters to be learned from data (using back-propagation through time or real-time recurrent 
+learning) with only a few additional parameters. 
+We may regard the gamma memory as a generalisation of a delay line (Mozer, 1993) in 
+which the kth tap at time t is obtained by convolving the input time series with a kernel 
+function, g(t), and where fi parametrises the Kth order gamma filter, 
+g(t) = rS(t) 
+I -tk t k-le-t 1 < k < K 
+g(t) = 
+�:- - 
+This family of kernels is attractive, since it may be computed incrementally by 
+dxk(t) 
+- -fix(t) + I. tx_ l (t) . 
+dt 
+This is in contrast to some other kernels that have been proposed (e.g., Gaussian kernels 
+proposed by Bodenhausen and Waibel (1991) in which the convolutions must be performed 
+Learning Temporal Dependencies in Connectionist Speech Recognition 1055 
+explicitly). In the discrete time case the filter becomes: 
+x(t)= (1-I)X(t- 1)+xk-l(t-- 1) . 
+This recursive filter is guaranteed to be stable when 0 < kt < 2. 
+In the experiments reported below we have replaced the input delay line of a MLP with a 
+gamma memory structure, using one gamma filter for each input feature. This structure is 
+referred to as a focused gamma net by de Vries and Principe (1992). 
+Owing to the effects of anticipatory coarticulation, information about the future is as 
+important as past context in speech recognition. A simple gamma filtered input (figure 2a) 
+does not include any future context. There are various ways in which this may be remedied; 
+� Use the same architecture, but delay the target (similar to figure lb); 
+� Explicitly specify future context by adding a delay line from the future (figure 2b); 
+� Use two gamma filters per feature: one forward, one backward in time. 
+A drawback of the first approach is that the central frame corresponding to the delayed target 
+will have been s

@@ -1,0 +1,144 @@
+Minimizing Statistical Bias with Queries 
+David A. Cohn 
+Adaptive Systems Group 
+Harlequin, Inc. 
+One Cambridge Center 
+Cambridge, MA 02142 
+cohnharlequin. corn 
+Abstract 
+I describe a querying criterion that attempts to minimize the error 
+of a learner by minimizing its estimated squared bias. I describe 
+experiments with locally-weighted regression on two simple prob- 
+lems, and observe that this bias-only approach outperforms the 
+more common variance-only exploration approach, even in the 
+presence of noise. 
+1 INTRODUCTION 
+In recent years, there has been an explosion of interest in active machine learning 
+systems. These are learning systems that make queries, or perform experiments 
+to gather data that are expected to maximize performance. When compared with 
+passive learning systems, which accept given, or randomly drawn data, active 
+learners have demonstrated significant decreases in the amount of data required to 
+achieve equivalent performance. In industrial applications, where each experiment 
+may take days to perform and cost thousands of dollars, a method for optimally 
+selecting these points would offer enormous savings in time and money. 
+An active learning system will typically attempt to select data that will minimize 
+its predictive error. This error can be decomposed into bias and variance terms. 
+Most research in selecting optimal actions or queries has assumed that the learner 
+is approximately unbiased, and that to minimize learner error, variance is the only 
+thing to minimize (e.g. Fedorov [1972], MacKay [1992], Cohn [1996], Cohn et al., 
+[1996], Paass [1995]). In practice, however, there are very few problems for which 
+we have unbiased learners. Frequently, bias constitutes a large portion of a learner's 
+error; if the learner is deterministic and the data are noise-free, then bias is the only 
+source of error. Note that the bias term here is a statistical bias, distinct from the 
+inductive bias discussed in some machine learning research [Dietterich and Kong, 
+418 D.A. Cohn 
+In this paper I describe an algorithm which selects actions/queries designed to mini- 
+mize the bias of a locally weighted regression-based learner. Empirically, variance- 
+minimizing strategies which ignore bias seem to perform well, even in cases where, 
+strictly speaking, there is no variance to minimize. In the tasks considered in this 
+paper, the bias-minimizing strategy consistently outperforms variance minimiza- 
+tion, even in the presence of noise. 
+1.1 BIAS AND VARIANCE 
+Let us begin by defining P(x, y) to be the unknown joint distribution over x and y, 
+and P(x) to be the known marginal distribution of x (commonly called the input 
+distribution). We denote the learner's output on input x, given training set 79 as 
+(x;79). We can then write the expected error of the learner as 
+E[((x;79)-y(x))21x]P(x)dx, (1) 
+where E[.] denotes the expectation over P and over training sets 79. The expectation 
+inside the integral may be decomposed as follows (Geman et al., 1992): 
+E [((x; 79) - y(x)) ]x] 
++ (By [y(x; 79)] - Z[ylx]) 2 
+v) - v)l) 
+where Ev [.] denotes the expectation over training sets. The first term in Equation 2 
+is the variance of y given x - it is the noise in the distribution, and does not depend 
+on our learner or how the training data are chosen. The second term is the learner's 
+squared bias, and the third is its variance; these last two terms comprise the expected 
+squared error of the learner with respect to the regression function E[ylx ]. 
+Most research in active learning assumes that the second term of Equation 2 is 
+approximately zero, that is, that the learner is unbiased. If this is the case, then 
+one may concentrate on selecting data so as to minimize the variance of the learner. 
+Although this all-variance approach is optimal when the learner is unbiased, truly 
+unbiased learners are rare. Even when the learner's representation class is able 
+to match the target function exactly, bias is generally introduced by the learning 
+algorithm and learning parameters. From the Bayesian perspective, a learner is 
+only unbiased if its priors are exactly correct. 
+The optimal choice of query would, of course, minimize both bias and variance, but 
+I leave that for future work. For the purposes of this paper, I will only be concerned 
+with selecting queries that are expected to minimize learner bias. This approach 
+is justified in cases where noise is believed to be only a small component of the 
+learner's error. If the learner is deterministic and there is no noise, then strictly 
+speaking, there is no error due to variance -- all the error must be due to learner 
+bias. In cases with non-determinism or noise, all-bias minimization, like all-variance 
+minimization, becomes an approximation of the optimal approach. 
+The learning model discussed in this paper is a form of locally weighted regression 
+(LWR) [Cleveland et al., 1988], which has been used in difficult machine learning 
+tasks, notably the robot juggler of Schaal and Atkeson [1994]. Previous work 
+[Cohn et al., 1996] discussed all-variance query selection for LWR; in the remainder 
+of this paper, I describe a method for performing all-bias query selection. Section 2 
+describes the criterion that must be optimized for all-bias query selection. Section 3 
+describes the locally weighted regression learner used in this paper and describes 
+Minimizing Statistical Bias with Queries 419 
+how the all-bias criterion may be computed for it. Section 4 describes the results 
+of experiments using this criterion on several simple domains. Directions for future 
+work are discussed in Section 5. 
+2 ALL-BIAS QUERY SELECTION 
+Let us assume for the moment that we have a source of noise-free examples (zi, Yi) 
+and a deterministic learner which, given input z, outputs estimate 9(z). 1 Let us 
+also assume that we have an accurate estimate of the bias of 9 which can be used 
+to estimate the true function y(z) = 9(z) - bias(z). We will break these rather 
+strong assumptions of noise-free examples and accurate bias estimates in Section 4, 
+but they are useful for deriving the theoretical approach described below. 
+Given an accurate bias estimate, we must force the biased estimator into the best 
+approximation of y(z) with the fewest number of examples. This, in effect, trans- 
+forms the query selection problem into an example filter problem similar to that 
+studied by Plutowski and White [1993] for neural networks. Below, I derive this 
+criterion for estimating the change in error at z given a new queried example at 
+Since we have (temporarily) assumed a deterministic learner and noise-free data, 
+the expected error in Equation 2 simplifies to: 
+: 
+We want to select a new  such that when we add (, 9), the resulting squared bias 
+is minimized: 
+(9' - y)2 __ (9(z; V U (i, 9)) - Y(Z)) . (4) 
+I will, for the remainder of the paper, use the ' to indicate estimates based on the 
+initial training set plus the additional example (, 9). To minimize Expression 4, 
+we need to compute how a query at  will change the learner's bias at z. If we 
+assume that we know the input distribution,  then we can integrate this change 
+over the entire domain (using Monte Carlo procedures) to estimate the resulting 
+average change, and select a  such that the expected squared bias is minimized. 
+Defining bias -- 9 - Y and A 9 _---- 9 t - 9, we can write the new squared bias as: 
+bias = (9' - = (9 + zX9 - 
+= A92 + 2A9' bias + bias 2 (5) 
+Note that since bias as defined here is independent of , minimizing the bias is 
+equivalent to minimizing A9  + 2A9. bias. 
+The estimate of biag tells us how much our bias will change for a given . We may 
+optimize this value over  in one of a number of ways. In low dimensional spaces, it 
+is often sufficient to consider a set of candidate  and select the one promising the 
+smallest resulting error. In higher dimensional spaces, it is often more efficient to 
+search for an optimal  with a response surface technique [Box and Draper, 1987], 
+or hillclimb on Obiag/O '. 
+Estimates of bias and A9 depend on the specific learning model being used. In 
+Section 3, I describe a locally weighted regression model, and show how differentiable 
+estimates of bias and A9 may be computed for it. 
+For clarity, I will drop the argument x except where required for disambiguation. I 
+will also denote only the univariate case; the results apply in higher dimensions as well. 
+2This assumption is contrary to the assumption normaJly made in some forms of learn- 
+ing, e.g. PAC-learning, but it is appropriate in many domains. 
+420 D.A. Cohn 
+2.1 AN ASIDE: WHY NOT JUST USE -blas? 
+If we have an accurate bias estimate, it is reasonable to ask why we do not simply 
+use the corrected 0 - bias as our predictor. The answer has two parts, the first 
+of which is that for most learners, there are no perfect bias estimators -- they 
+introduce their own bias and variance, which must be addressed in data selection. 
+Second, we can define a composite learner )c = 0 - bias. Given a random training 
+sample then, we would expect )c to outperform 0. However, there is no obvious 
+way to select data for this composite learner other than selecting to maximize the 
+performance of its two components. In our case, the second component (the bias 
+estimate) is non-analytic, which leaves us selecting data so as to maximize the 
+performance of the first component (the uncorrected estimator). We are now back 
+to our original problem: we can select data so as to minimize either the bias or 
+variance of the uncorrected LWR-based learner. Since the purpose of the correction 
+is to give an unbiased estimator, intuition suggests that variance minimization would 
+be the more sensible route in this case. Empirically, this approach does not appear 
+to yield any benefit over uncorrected variance minimization (see Figure 1). 
+3 LOCALLY WEIGHTED REGRESSION 
+The type of learner

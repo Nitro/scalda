@@ -1,0 +1,156 @@
+Robust Recognition of Noisy and Superimposed 
+Patterns via Selective Attention 
+Soo-Young Lee 
+Brain Science Research Center 
+Korea Advanced Institute of Science & Technology 
+Yusong-gu, Taejon 305-701 Korea 
+sylee@ee. kaist. ac. kr 
+Michael C. Mozer 
+Department of Computer Science 
+University of Colorado at Boulder 
+Boulder, CO 80309 USA 
+mozer@cs. colorado. edu 
+Abstract 
+In many classification tasks, recognition accuracy is low because input 
+patrems are corrupted by noise or are spatially or temporally 
+overlapping. We propose an approach to overcoming these limitations 
+based on a model of human selective attention. The model, an early 
+selection filter guided by top-down attentional control, entertains each 
+candidate output class in sequence and adjusts attentional gain 
+coefficients in order to produce a strong response for that class. The 
+chosen class is then the one that obtains the strongest response with the 
+least modulation of attention. We present simulation results on 
+classification of corrupted and superimposed handwritten digit pattems, 
+showing a significant improvement in recognition rates. The algorithm 
+has also been applied in the domain of speech recognition, with 
+comparable results. 
+1 Introduction 
+In many classification tasks, recognition accuracy is low because input patterns are 
+corrupted by noise or are spatially or temporally overlapping. Approaches have been 
+proposed to make classifiers more robust to such perturbations, e.g., by requiring 
+classifiers to have low input-to-output mapping sensitivity [1 ]. We propose an approach 
+that is based on human selective attention. People use selective attention to focus on 
+critical features of a stimulus and to suppress irrelevant features. It seems natural to 
+incorporate a selective-attention mechanism into pattern recognition systems for noisy 
+real world applications. 
+Psychologists have for many years studied the mechanisms of selective attention (e.g., 
+[2]-[4]). However, controversy still exists among competing theories, and only a few 
+models are sufficiently well defined to apply to engineering pattem recognition problems. 
+Fukushima [5] has incorporated selective attention and attention-switching algorithms 
+into his Neocognitron model, and has demonstrated good recognition performance on 
+superimposed digits. However, the Neocognitron model has many unknown parameters 
+which must be determined heuristically, and its performance is sensitive to the parameter 
+values. Also, its computational requirements are prohibitively expensive for many real- 
+time applications. Rao [6] has also recently introduced a selective attention model based 
+32 S.- Y. Lee and M. C. Mozer 
+on Kalman filters and demonstrated classifications of superimposed patterns. However, 
+his model is based on linear systems, and a nonlinear extension is not straightforward. 
+There being no definitive approach to incorporating selective attention into pattern 
+recognition, we propose a novel approach and show it can improve recognition accuracy. 
+2 Psychological Views of Selective Attention 
+The modern study of selective attention began with Broadbent [7]. Broadbent presented 
+two auditory channels to subjects, one to each ear, and asked subjects to shadow one 
+channel. He observed that although subjects could not recall most of what took place in 
+the unshadowed channel, they could often recall the last few seconds of input on that 
+channel. Therefore, he suggested that the brain briefly stores incoming stimuli but the 
+stimulus information fades and is neither admitted to the conscious mind nor is encoded in 
+a way that would permit later recollection, unless attention is directed toward it. This view 
+is known as an early filtering or early selection model. Treisman [8] proposed a 
+modification to this view in which the filter merely attenuates the input rather than 
+absolutely preventing further analysis. Although late-selection and hybrid views of 
+attention have been proposed, it is clear that early selection plays a significant role in 
+human information processing [3]. 
+The question about where attention acts in the stream of processing is independent of 
+another important issue: what factors drive attention to select one ear or one location 
+instead of another. Attention may be directed based on low-level stimulus features, such 
+as the amplitude of a sound or the color of a visual stimulus. This type of attentional 
+control is often called bottom up. Attention may also be directed based on expectations 
+and object knowledge, e.g., to a location where critical task-relevant information is 
+expected. This type of attentional control is often called top down. 
+3 A Multilayer Perceptron Architecture for Selective Attention 
+We borrow the notion of an early selection filter with top-down control and integrate it 
+into a multilayer perceptron (MLP) classifier, as depicted in Figure 1. The dotted box is a 
+standard MLP classifier, and an attention layer with one-to-one connectivity is added in 
+front of the input layer. Although we have depicted an MLP with a single hidden layer, 
+our approach is applicable to general MLP architectures. The kth element of the input 
+vector, denoted x k, is gated to the kth input of the MLP by an attention gain or filtering 
+coefficient ak. Previously, the first author has shown a benefit of treating the ak's like 
+ordinary adaptive parameters during training [9]-[12]. 
+In the present work, we fix the attention gains at 1 during training, causing the architecture 
+to behave as an ordinary MLP. However, we allow the gains to be adjusted during 
+classification of test patterns. Our basic conjecture is that recognition accuracy may be 
+improved if attention can suppress noise along irrelevant dimensions and enhance a weak 
+signal along relevant dimensions. Relevant and irrelevant are determined by top- 
+down control of attention. Essentially, we use knowledge in the trained MLP to determine 
+which input dimensions are critical for classifying a test pattern. To be concrete, consider 
+an MLP trained to classify handwritten digits. When a test pattern is presented, we can 
+adjust the attentional gains via gradient descent so as to make the input as good an example 
+of the class 0 as possible. We do this for each of the different output classes, 0 through 
+9, and choose the class for which the strongest response is obtained with the smallest 
+Robust Pattern Recognition via Selective Attention 33 
+attentional modulation (the exact quantitative rule is presented below). The conjecture is 
+that if the net can achieve a strong response for a class by making a small attentional 
+modulation, that class is more likely to be correct than whichever class would have been 
+selected without applying selective anention. 
+X10 
+x2 0 
+x3 0 
+XN O 
+al 
+a2 
+A 
+A 
+Yl 
+Y2 
+Y3 
+YM 
+ W (1) h t2) y 
+Figure 1: MLP architecture for selective anention 
+The process of adjusting the attentional gains to achieve a strong response from a 
+particular class call it the attention class proceeds as follows. First, a target output 
+vector t s = [ts ts: ... tsM ]T is defined. For bipolar binary output representations, t,  = 1 is for 
+the anention class and -1 for the others. Second, the anention gain ak's are set to 1. Third, 
+E s )2 
+the anention gain ak's are adapted to minimize error --  Z (t,  - Y, with the given 
+input x -- [x x,... xN ]T and pre-trained and frozen synaptic weights W. The update rule is 
+based on a gradient-descent algorithm with error back-propagation. At the (n+l)'th 
+iterative epoch, the anention gain ak is updated as 
+ak[n+ l] = a[n]-rl(c?E / ca)[n]= a[n]+ r I :,,,, [n] 
+(la) 
+8(0) = l (1) (1) 
+(lb) 
+where E denotes the anention output error, 8J l) thej'th attribute of the back-propagated 
+W(1) 
+error at the first hidden-layer, and - j the synaptic weight between the input  and the 
+j'th neuron at the first hidden layer. Finally, r/ is a step size. The anention gains are 
+thresholded to lie in [0, 1]. The application of selective anention to a test example is 
+summarized as follows: 
+Step 1: Apply a test input pattern to the trained MLP and compute output values. 
+Step 2: For each of the classes with top m activation values, 
+(1) Initialize all anention gain ak's to 1 and set the target vector t s. 
+(2) Apply the test pattern and anention gains to network and compute output. 
+(3) Apply the selective anention algorithm in Eqs.(1) to adapt the anention gains. 
+(4) Repeat steps (2) and (3) until the anention process converges. 
+(5) Compute an anention measure M on the asymptotic network state. 
+34 S.- Y. Lee and M. C. Mozer 
+Step 3: Select the class with a minimum attention measure M as the recognized class. 
+The attention measure is defined as 
+M --DtE o, (2a) 
+D I 
+--  (x k -.k )2/2N 
+--  Xk2 (1-ak )2 / 2N 
+(2b) 
+E o - .[t i -yi(:i)] 2/2M, (2c) 
+where Di is the square of Euclidean distance between two input patterns before and after 
+the application of selective attention and Eo is the output error after the application of 
+selective attention. Here, Di and Eo are normalized with the number of input pixels and 
+number of output classes, respectively. The superscript s for attention classes is omitted 
+for simplicity. To make the measure M a dimensionless quantity, one may normalize the 
+D and Eo with the input energy (,x) and the training output error, respectively. 
+However, it does not affect the selection process in Step 3. 
+One can think of the attended input :i as the minimal deformation of the test input needed 
+to trigger the attended class, and therefore the Euclidean distance between x and  is a 
+good measure for the classification confidence. In fact, D is basically the same quantity 
+minimized by Rao [6]. However, the MLP classifier in our model is capable of nonlinear 
+mapping between the input and output patterns. A nearest-neighbor classifier, with the 
+training data as examples, could al

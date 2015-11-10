@@ -1,0 +1,149 @@
+Modeling Consistency in a Speaker Independent 
+Continuous Speech Recognition System 
+Yochai Konig, Nelson Morgan, Chuck Wooters 
+International Computer Science Institute 
+1947 Center Street, Suite 600 
+Berkeley, CA 94704, USA. 
+Victor Abrash, Michael Cohen, Horacio Franco 
+SRI International 
+333 Ravenswood Ave. 
+Menlo Park, CA 94025, USA 
+Abstract 
+We would like to incorporate speaker-dependent consistencies, such as 
+gender, in an otherwise speaker-independent speech recognition system. 
+In this paper we discuss a Gender Dependent Neural Network (GDNN) 
+which can be tuned for each gender, while sharing most of the speaker 
+independent parameters. We use a classification network to help generate 
+gender-dependent phonetic probabilities for a statistical (HMM) recogni- 
+tion system. The gender classification net predicts the gender with high 
+accuracy, 98.3% on a Resource Management test set. However, the in- 
+tegration of the GDNN into our hybrid HMM-neural network recognizer 
+provided an improvement in the recognition score that is not statistically 
+significant on a Resource Management test set. 
+1 INTRODUCTION 
+Earlier work [Bourlard and Morgan, 1991] has shown the ability of Multilayer Perceptrons 
+(MLPs) to estimate emission probabilities for Hidden Markov Models (HMM). As shown 
+in their report, with a few assumptions, an MLP may be viewed as estimating the probability 
+P (q Ix) where q is a subword model (or a state of a subword model) and x is the input acoustic 
+682 
+Modeling Consistency in a Speaker Independent Continuous Speech Recognition System 683 
+speech data. In this hybrid HMM/MLP recognizer, it was shown that these estimates 
+led to improved performance over standard estimation techniques when a fairly simple 
+HMM was used. More recent results have shown improvements using hybrid HMM/MLP 
+probability estimation over a state-of-the-art pure HMM-based system[Cohen et al., 1993; 
+Renals et al., 1992]. 
+Some speaker dependencies exist in common parametric representations of speech, and it 
+is possible that making the dependencies explicit may improve performance for a given 
+speaker (essentially enabling the recognizer to soften the influence of the speaker depen- 
+dency). The basic problem with modeling and estimating explicitly speaker dependent 
+pt rameters is the lack of training data. In the limit, the only available information about a 
+new speaker is the utterance to be recognized. This limit is our starting point for this study. 
+Even with this limited information, we can incorporate constraints on analysis that rely on 
+the same speaker producing all the frames in an utterance, thus ensuring consistency. As 
+has been observed for some mainstream Hidden Markov Models (HMM) systems [Murveit 
+et al., 1990], given enough training data, separate phonetic models for male and female 
+speakers can be used to improve performance. Our first attack on consistency, then, is to 
+incorporate gender consistency in the recognition process. In contrast to non-connectionist 
+HMM systems, our proposed architecture attempts to share the gender-independent param- 
+eters. 
+Our study had two steps: first we trained an MLP to estimate the probability of gender. 
+Then, we investigated ways to integrate the gender consistency constraint into our existing 
+MLP-HMM hybrid recognizer, resulting in our GDNN architecture. We will give a short 
+description of some related work, followed by an explanation of the two steps described 
+above. We conclude with some discussion and thoughts about future work. 
+2 RELATED AND PREVIOUS WORK 
+Our previous experiments with the Gender-Dependent Neural Network (GDNN) are de- 
+scribed in [Abrash et al., 1992; Konig and Morgan, 1992]. Other researchers have worked 
+on related problems. For example Hampshire and Waibel presented the Meta-Pi archi- 
+tecture [Hampshire and Waibel, 1990]. The building blocks for the Meta-Pi architecture 
+are multiple TDNN's that are trained to recognize the speech of an individual speaker. 
+These building blocks are integrated by another multiple TDNN trained in a Bayesian 
+MAP scheme to maximize the phoneme recognition rate of the overall architecture. The 
+performance of the Meta-Pi architecture on a six speaker/b,d,g/task was comparable to 
+a speaker dependent system on the same task. 
+Another example of related work is speaker normalization, which attempts to minimize 
+between-speaker variations by transforming the data of a new speaker to that of a reference 
+speaker, and then applying the speaker dependent system for the reference speaker [Huang 
+et al., 1991]. 
+3 THE CLASSIFICATION NET 
+In order to classify the gender of a new speaker we need features that distinguish between 
+speakers, in contrast to the features that are used for phoneme recognition that are chosen 
+to suppress speaker variations. Given our constraint that the only available information 
+684 Konig, Morgan, Wooters, Abrash, Cohen, and Franco 
+about the new speaker is the sentence to be recognized, we chose features that are a 
+rough estimate of the vocal tract properties and the fundamental frequency of the new 
+speaker. Furthermore, we tried to suppress the linguistic information in our estimate. More 
+specifically, the goal was to build a net that estimates the probability P(GenderlData ). 
+After some experimentation, the first twelve LPC cepstral coefficients were calculated over 
+a 20 msec window every 10 msec (50% overlap) and averaged along each sentence. The 
+sampling rate was 16khz. These features were augmented by an estimate of the fundamental 
+frequency for a total of 13 features per sentence. The MLP had one hidden layer with 24 
+hidden units. There were two output units, one for each gender. The training set was the 
+109-speaker DARPA Resource Management corpus. 3500 sentences were used for the 
+training set and 490 in the cross validation set. The size of the test set was 600 sentences, 
+and it was a combination of the DARPA Resource Management speaker-independent Feb89 
+and Oct89 test sets. The trained MLP predicts the gender for the test set with less than 1.7% 
+error on the sentence level. 
+4 
+INCORPORATING GENDER CONSISTENCY INTO OUR 
+HYBRID HMM/MLP RECOGNIZER 
+4.1 DISCUSSION 
+Our goal is to find an architecture that shares the gender independent parameters and 
+models the gender dependent parameters. Given our gender consistency constraint we 
+estimate a probability that is explicitly conditioned on gender, as if the phonetic models 
+were simply doubled to permit male and female forms of each phoneme. We can ex- 
+press P(male, phone [data) (which is then divided by priors to get the corresponding data 
+likelihood) by expansion to P(phone[male, data) x P(male[data). This factorization 
+is realized by two separate MLP's: P(male[data) is estimated by the classification net 
+described above, and P(phone[male, data) is realized by our GDNN described below. 
+For further description on how to factorize probabilities by neural networks see [Morgan 
+and Bourlard, 1992]. The final likelihood for the male case can be expressed as: 
+P(data[phone, male)= P(ph�nelmale'data) x P(male[data) x P(data) 
+P(phonelmale) x P(male) 
+(1) 
+Note that during recognition, P(data) can be ignored. Similarly, a female-assumed prob- 
+ability can be computed for each hypothesized phone. These male and female-assumed 
+probabilities can then be used in separate Viterbi calculations (since we do not permit any 
+hypothesis to switch gender in the midst of an utterance). In other words, dynamic pro- 
+gramming is used with the framewise network outputs to evaluate the best hypothesized 
+utterance assuming male gender, and then the same is done for the female case. The case 
+with the lowest cost (highest probability) is then chosen. Note that the output of the clas- 
+siftcation net only helps in choosing between the sentence recognized according to female 
+gender or male gender. 
+The critical question is how to estimate P(phone[gender, data). A possible answer is to 
+have two separate nets, one trained only on males, and the other trained only on females. 
+This approach has the potential disadvantages of doubling the number of parameters in the 
+system, and of not sharing the gender independent parameters. We have experimented with 
+a such a net [Konig and Morgan, 1992] and it improved our result over the baseline system. 
+Modeling Consistency in a Speaker Independent Continuous Speech Recognition System 685 
+P(phonelgender, data) 
+69 
+units 
+1000 units 
+if(gender == Male) 
+{M=I,F=0} 
+otherwise 
+{M=0,F=I} 
+9 x (12 mel cepstral + log energy + 
+first derivatives) = 234 
+Figure 1: A Gender Dependent Neural Network(GDNN) 
+We present here a hybrid GDNN architecture that has the flexibility to tune itself to each 
+gender. The idea is to have extra binary inputs that specify the gender of the speaker and 
+then the probabilities that the network estimates will be conditioned on the gender. The 
+architecture is shown in figure 1. 
+4.2 EXPERIMENTS AND RESULTS 
+We have compared four different architectures. The first architecture is our baseline system, 
+namely, one large net that was trained on all the sentences in the training set. The second 
+uses two separate nets, for males and females. The third is the hybrid GDNN architecture 
+described in figure 1. The fourth architecture is a variant of the third architecture, the 
+difference being that the binary units are connected to the output units instead of to the 
+hidden units. All the nets have 1000 hidden units and 69 output units, including the totally 
+separate male and female nets. While one might think that the consequent doubling of 
+686 Konig, Morgan, Wooters, Abrash, Cohen, and Franco 
+Table 1: Result Summary 
+Architecture Test Set Word Error 
+Baseline 10.6% 
+Two Separate Nets 10.9% 
+Hybrid Architecture - Variant(Binary to Output) 10.9% 
+GDNN Binary to hidden 10.2% 
+the number of parameters in the system might explain the observed degradation for

@@ -1,0 +1,138 @@
+Learning from user feedback in image retrieval 
+systems 
+Nuno Vasconcelos Andrew Lippman 
+MIT Media Laboratory, 20 Ames St, E 15-354, Cambridge, MA 02139, 
+{nuno,lip} @media.mit.edu, http ://www. media.mit.edu/-nuno 
+Abstract 
+We formulate the problem of retrieving images from visual databases 
+as a problem of Bayesian inference. This leads to natural and effective 
+solutions for two of the most challenging issues in the design of a retrieval 
+system: providing support for region-based queries without requiring 
+prior image segmentation, and accounting for user-feedback during a 
+retrieval session. We present a new learning algorithm that relies on 
+belief propagation to account for both positive and negative examples of 
+the user's interests. 
+1 Introduction 
+Due to the large amounts of imagery that can now be accessed and managed via comput- 
+ers, the problem of content-based image retrieval (CBIR) has recently attracted significant 
+interest among the vision community [ 1, 2, 5]. Unlike most traditional vision applications, 
+very few assumptions about the content of the images to be analyzed are allowable in the 
+context of CBIR. This implies that the space of valid image representations is restricted to 
+those of a generic nature (and typically of low-level) and consequently the image under- 
+standing problem becomes even more complex. On the other hand, CBIR systems have 
+access to feedback from their users that can be exploited to simplify the task of finding the 
+desired images. There are, therefore, two fundamental problems to be addressed. First, the 
+design of the image representation itself and, second, the design of learning mechanisms to 
+facilitate the interaction. The two problems cannot, however, be solved/in isolation as the 
+careless selection of the representation will make learning more difficult and vice-versa. 
+The impact of a poor image representation on the difficulty of the learning problem is visible 
+in CBIR systems that rely on holistic metrics of image similarity, forcing user-feedback to 
+be relative to entire images. In response to a query, the CBIl system suggests a few images 
+and the user rates those images according to how well they satisfy the goals of the search. 
+Because each image usually contains several different objects or visual concepts, this rating 
+is both difficult and inefficient. How can the user rate an image that contains the concept 
+of interest, but in which this concept only occupies 30% of the field of view, the remaining 
+70% being filled with completely unrelated stuff? Andhow many example images will the 
+CBIR system have to see, in order to figure out what the concept of interest is? 
+A much better interaction paradigm is to let the user explicitly select the regions of the 
+image that are relevant to the search, i.e. user-feedback at the region level. However, 
+region-based feedback requires sophisticated image representations. The problem is that 
+the most obvious choice, object-based representations, is difficult to implement because 
+it is still too hard to segment arbitrary images in a meaningful way. We have argued 
+978 N. Vasconcelos and A. Lippman 
+that a better formulation is to view the problem as one of Bayesian inference and rely on 
+probabilistic image representations. In this paper we show that this formulation naturally 
+leads to 1) representations with support for region-based interaction without segmentation 
+and 2) intuitive mechanisms to account for both positive and negative user feedback. 
+2 Retrieval as Bayesian inference 
+The standard interaction paradigm for CBIR is the so-called query by example, where the 
+user provides the system with a few examples, and the system retrieves from the database 
+images that are visually similar to these examples. The problem is naturally formulated 
+as one of statistical classification: given a representation (or feature) space Y' the goal is 
+to find a map #: Y' -+ M = {1,..., K} from Y' to the set M of image classes in the 
+database. K, the cardinality of M, can be as large as the number of items in the database 
+(in which case each item is a class by itself), or smaller. If the goal of the retrieval system 
+is to minimize the probability of error, it is well known that the optimal map is the Bayes 
+classifier [3] 
+g*(x) = argmaxP(Si = llx ) = argmaxP(xlSi = 1)P(Si = 1) (1) 
+ i 
+where x are the example features provided by the user and $i is a binary variable indicating 
+the selection of class i. In the absence of any prior information about which class is most 
+suited for the query, an uninformative prior can be used and the optimal decision is the 
+maximum likelihood criteria 
+#*(x) = argmaxP(xISi = 1). (2) 
+i 
+Besides theoretical soundness, Bayesian retrieval has two distinguishing properties of prac- 
+tical relevance. First, because the features x in equation (1) can be any subset of a given 
+query image, the retrieval criteria is valid for both region-based and image-based queries. 
+Second, due to its probabilistic nature, the criteria also provides a basis for designing 
+retrieval systems that can account for user-feedback through belief propagation. 
+3 Bayesian relevance feedback 
+Suppose that instead of a single query x we have a sequence of t queries {x,..., xt }, 
+where t is a time stamp. By simple application of Bayes rule 
+P(Si = 7tP(xtlSi = 1)P(Si = (3) 
+where 3't is a normalizing constant and we have assumed that, given the knowledge of the 
+correct image class, the current query xt is independent of the previous ones. This basically 
+means that the user provides the retrieval system with new information at each iteration of 
+the interaction. Equation (3) is a simple but intuitive mechanism to integrate information 
+over time. It states that the system's beliefs about the user's interests at time t - 1 simply 
+become the prior beliefs for iteration t. New data provided by the user at time t is then 
+used to update these beliefs, which in turn become the priors for iteration t + 1. From 
+a computational standpoint the procedure is very efficient since the only quantity that has 
+to be computed at each time step is the likelihood of the data in the corresponding query. 
+Notice that this is exactly equation (2) and would have to be computed even in the absence 
+of any learning. 
+By taking logarithms and solving for the recursion, equation (3) can also be written as 
+t-1 t-1 
+logP(Si = l[Xl,...,xt)- y'. log')'t-k + ZlogP(xt-klSi = 1)+1ogP(Si = 1), 
+k=0 k=0 
+(4) 
+Learning from User Feedback in Image Retrieval Systems 979 
+exposing the main limitation of the belief propagation mechanism: for large t the con- 
+tribution, to the right-hand side of the equation, of the new data provided by the user is 
+very small, and the posterior probabilities tend to remain constant. This can be avoided by 
+penalizing older terms with a decay factor 
+t--1 t--1 
+1ogV($i = llx,...,xt ) = ) m-k 1og7t-t + E rt-t logV(xt_lS, = 1) + 
+k=O k=O 
+rologP($i = 1), 
+where rt is a monotonically decreasing sequence. In particular, if 
+(0, 1] we have 
+logP(Si = llx,...,xt ) = 1og? + alogP(xtlS = 1)+ 
+(1-a)logP(Si = llx,,...,xt_ ). 
+Because ? does not depend on i, the optimal class is 
+$=argm.ax{logP(xtlSi= 1)+(1-)1ogP(Si= 11x,...,xt_)}. (5) 
+4 Negative feedback 
+In addition to positive feedback, there are many situations in CBIR where it is useful to 
+rely on negative user-feedback. One example is the case of image classes characterized by 
+overlapping densities. This is illustrated in Figure 1 a) where we have two classes with 
+a common attribute (e.g. regions of blue sky) but different in other aspects (class A also 
+contains regions of grass while class B contains regions of white snow). If the user starts 
+with an image of class B (e.g. a picture of a snowy mountain), using regions of sky as 
+positive examples is not likely to quickly take him/her to the images of class A. In fact, all 
+other factors being equal, there is an equal likelihood that the retrieval system will return 
+images from the two classes. On the other hand, if the user can explicitly indicate interest 
+in regions of sky but not in regions of snow, the likelihood that only images from class A 
+will be returned increases drastically. 
+d) 
+Figure 1: a) two overlapping image classes. b) and c) two images in the tile database. d) three 
+examples of pairs of visually similar images that appear in different classes. 
+Another example of the importance of negative feedback are local minima of the search 
+space. These happen when in response to user feedback, the system returns exactly the 
+same images as in a previous iteration. Assuming that the user has already given the system 
+all the possible positive feedback, the only way to escape from such minima is to choose 
+some regions that are not desirable and use them as negative feedback. In the case of the 
+example above, if the user gets stuck with a screen full of pictures of white mountains, 
+he/she can simply select some regions of snow to escape the local minima. 
+In order to account for negative examples, we must penalize the classes under which these 
+score well while favoring the classes that assign a high score to the positive examples. 
+980 N. Vasconcelos and A. Lippman 
+Unlike positive examples, for which the likelihood is known, it is not straightforward to 
+estimate the likelihood of a particular negative example given that the user is searching for a 
+certain image class. We assume that the likelihood with which y will be used as a negative 
+example given that the target is class i, is equal to the likelihood with which it will be used 
+as a positive example given that the target is any other class. Denoting the use of y as a 
+negative example by y, this can be written as 
+P(YISi = 1) = P(yISi = 0). (6) 
+This assumption captures the intuition that a good negative example when searching for 
+class i, is one that would be a good positive example if the user were looki

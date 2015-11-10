@@ -1,0 +1,163 @@
+Transient Signal Detection with Neural Networks: 
+The Search for the Desired Signal 
+Jose C. Principe and Abir Zahalka 
+Computational NeuroEngineering Laboratory 
+Department of Electrical Engineering 
+University of Florida, CSE 447 
+Gainesville, FL 32611 
+principe @ synapse.ee.ufl.edu 
+Abstract 
+Matched filtering has been one of the most powerful techniques 
+employed for transient detection. Here we will show that a dynamic 
+neural network outperforms the conventional approach. When the 
+artificial neural network (ANN) is trained with supervised learning 
+schemes there is a need to supply the desired signal for all time, 
+although we are only interested in detecting the transient. In this 
+paper we also show the effects on the detection agreement of 
+different strategies to construct the desired signal. The extension of 
+the Bayes decision rule (0/1 desired signal), optimal in static 
+classification, performs worse than desired signals constructed by 
+random noise or prediction during the background. 
+INTRODUCTION 
+Detection of poorly defined waveshapes in a nonstationary high noise background is 
+an important and difficult problem in signal processing. The matched filter is the 
+optimal linear filter assuming stationary noise [Thomas, 1969]. The application area 
+that we are going to discuss is epileptic spike detection in the electrocorticogram 
+(ECoG), where the matched filtering produce poor results [Barlow and Dubinsky, 
+1976], [Pola and Romagnoli, 1979] due to the variability of the spike shape and the 
+ever changing background (the brain electric activity). Recently artificial neural 
+networks have been applied to spike detection [Eberhart et al, 1989], [Gabor and 
+688 
+Transient Signal Detection with Neural Networks: The Search for the Desired Signal 689 
+Seydal, 1992], but static neural network architectures were chosen. Here a static 
+multilayer perceptron (MLP) will be augmented with a short term memory 
+mechanism to detect spikes. In the way we utilized the dynamic neural net, the ANN 
+can be thought of as an extension of the matched filter to nonlinear models, which 
+we will refer to as a neural template matcher. In our implementation, the ANN looks 
+directly at the input signal with a time window larger than the longest spike for the 
+sampling frequency utilized. The input layer of the dynamic network is a delay line, 
+and the data is clocked one sample at a time through the network. The desired signal 
+is 1 following the occurrence of a spike. With this strategy we teach the ANN to 
+produce an output of 1 when a waveform similar to the spike is present within the 
+time window. A spike will be recognized when the ANN output is above a given 
+threshold. 
+Unlike the matched filter, the ANN does not require a single, explicit waveform for 
+the template (due to the spike shape variability some form of averaging is needed to 
+create the average spike shape which is normally a poor compromise). Rather, the 
+ANN will learn the important features of the transient class by training on many 
+sample spikes, refining its approximation with each presentation. Moreover, the 
+ANN using the sigmoid nonlinearity will have to necessarily represent the 
+background activity, since the discriminant function in pattern space is established 
+from information pertaining to all input classes. Therefore, the nonstationary nature 
+of the background can be accommodated during network training and we can expect 
+that the performance of the neural template matcher will be improved with respect to 
+the matched filter. 
+We will not address here the normalization of the ECoG, nor the issues associated 
+with the learning criterion [Zahalka, 1992]. The purpose of this paper is to delve on 
+the design of the desired signal, and quantify the effect on performance. What should 
+be the shape of the desired sinal for transient detection, when on-line supervised 
+learning is employed? In our approach we decided to construct a desired signal that 
+exists for all time. We shall point out that the existence of a desired signal for every 
+sample will simplify supervised learning, since in principle the conventional 
+backpropagation algorithm [Rumelhart et al, 1986] can be utilized instead of the 
+more time consuming backpropagation through time [Werbos, 1990] or real-time 
+recurrent learning [Williams and Zipzer, 1989]. The simplified learning algorithm 
+may very well be one of the factors which will make ANNs learn on-line as adaptive 
+linear filters do. The main decision regarding the desired signal for spike detection is 
+to decide the value of the desired signal during the background (which for spikes 
+represent 99% of the time), since we decided already that it should be 1 following 
+the spike. Similar problems have been found in speech recognition, when patterns 
+that exist in time need to be learned [Unnikrishnan et al, 1991] [Watrous et al, 1990]. 
+Here we will experimentally compare three desired signals (Figure 1): 
+Desired signal I- Extrapolating the Bayes rule for static patterns [Makhoul], we will 
+create a target of zero during the background, and a value of 1 following the spike, 
+with a duration equal to the amount of time the spike is in the input window. 
+Desired signal II- During the background, a random, uniformly distributed (between 
+-0.5 and 0.5), zero mean target signal. Same target as above following the spike. 
+690 Principe and Zahalka 
+Desired signal III- During the background the network will be trained as a one step 
+predictor. Same targeot as above following the spike. 
++ ! .input 
+o 
+ired 
+- 1 output 
+(i). 
+desired output 
+input 
++! / 
+o 
+-1 
+(II). Random noise signal 
+Hardlimited 0/+1 signal 
++ 1 1] .desired 
+_ ll output 
+input IV/ 
+(III). Prediction signal 
+Figure 1. Desired signals considered. 
+2 
+NEURAL NETWORK ARCHITECTURE AND TRAINING 
+One ECoG channel was sampled at 500 Hz (12 bit A/D converter) and was pre- 
+processed for normalization between -1 and 0.4, and DC removal before being 
+presented to the ANN [Zahalka, 1992]. An epileptic spike has a duration between 20 
+and 70 msec. 
+The dynamic network used for this application is a time delay neural network 
+(TDNN) consisting of an input layer with 45 taps, 12 hidden processing elements 
+(PEs) and one linear output PE. The input window corresponds to 90 msec, so even 
+the longest spike is fully present in the window during at least 10 samples. 
+The training set consists of 60 hand picked 2 sec. segments containing one spike 
+each, embedded in 6,860 points of background activity. In principle the data could be 
+streamed on-line to the ANN, provided that we could create also on-line the desired 
+signal. But at this point of the research we preferred to control the segment length 
+and choose well defined spikes to study training issues. The test data set consists of 
+another set (belonging to the same individual) of 49 spikes embedded in 6,970 
+samples. A spike was defined when the ANN output was above 0.9. 
+The ANN was trained with the backpropagation algorithm [Rumelhart et al 1986]. 
+The weights were updated after every sample (real-time mode). A momentum term 
+(ct=0.9) was used, and 0.1 was added to the sigmoid derivative to speedup learning 
+[Fahlman, 1988]. The training was stopped when the test set performance decreased. 
+The network typically learned in less than 50 presentations of the training set. All the 
+Transient Signal Detection with Neural Networks: The Search for the Desired Signal 691 
+results presented next use the same training/test sets, the same learning and stop 
+criterion and the same network topology. 
+3 RESULTS 
+Desired Signal I. 
+We begin with the most commonly used desired signal for static classification, the 
+hardlimited 0/+1 signal of Figure l(I), but now extended in time (0 during the 
+background,  after the occurrence of the spike). This desired signal has been shown 
+to be optimal in the sense that it is a least square approximation of the Bayes decision 
+rule [Makhoul, 1991]. However it performs poorly for transient detection (73% of 
+correct detections and 8% of false positives). We suspect that the problem lies in the 
+different waveshapes present in the background. When an explicit 0 value is given as 
+the desired signal for the background, the network has difficulties extracting common 
+features to all the waves and biases the decision rule. Samples of the network input 
+and the corresponding output are shown in Figure 2(I). Notice that the ANN output 
+gets close to 1 during high amplitude background, and fails to be above 0.9 during 
+small amplitude spikes. In Table 1, the test set performance is better than the training 
+set due to the fact that the spikes chosen for training happen to include more difficult 
+cases. 
+Table 1. Performance Results. 
+Desired 
+Signal 
+Training Set 
+detections 
+Training Set 
+false positives 
+Test Set 
+detections 
+Test Set 
+false positives 
+0 <--> +1 38/60 = 63% 2/38 = 5% 36/49 = 73% 3/36 = 8% 
+noise 54/60 = 90% 0/54 = 0% 46/49 = 94% 1/47 = 2% 
+prediction 50/60 = 83% 1/50 = 2% 45/49 = 92% 2/45 = 4% 
+Detections mean number of events in agreement between the human expert 
+and the ANN (normalized by the number of spikes in the set). 
+False positives tnean the nutnber of events picked by the ANN, but not considered 
+spikes by the human expert (normalized by the number of ANN detections) 
+The random noise desired signal is shown in Figure 1(II). This signal consists 
+simply of uniformly distributed random values bounded between -0.5 and +0.5 for 
+the nonspike regions and again a value of +1 after the spikes. This approach is 
+based on the fact that the random number generator will have a zero mean 
+distribution. Therefore, during training over the nonspike regions, the errors 
+backpropagated through the network will normally average out to zero, yielding in 
+practice a don't care target for the background. This effectively should give the 
+least bias to the decision rule. The

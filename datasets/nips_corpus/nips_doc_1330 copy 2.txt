@@ -1,0 +1,204 @@
+Hybrid reinforcement learning and its 
+application to biped robot control 
+Satoshi Yamada, Akira Watanabe, Michio Nak__.hima 
+yamada, watanabe, naka}bio. crl.melco. co. jp 
+Advanced Technology ID Center 
+Mitsubishi Electric Corporation 
+Amagasaki, Hyogo 661-0001, Japan 
+Abstract 
+A learning system composed of linear control modules, reinforce- 
+ment learning modules and selection modules (a hybrid reinforce- 
+ment learning system) is proposed for the fast learning of real-world 
+control problems. The selection modules choose one appropriate 
+control module dependent on the state. This hybrid learning sys- 
+tem was applied to the control of a stilt-type biped robot. It learned 
+the control on a sloped floor more quickly than the usual reinforce- 
+ment learning because it did not need to learn the control on a 
+fiat floor, where the linear control module can control the robot. 
+When it was trained by a 2-step learning (during the first learning 
+step, the selection module was trained by a training procedure con- 
+trolled only by the linear controller), it learned the control more 
+quickly. The average number of trials (about 50) is so small that 
+the learning system is applicable to real robot control. 
+1 Introduction 
+Reinforcement learning has the ability to solve general control problems because it 
+learns behavior through trial-and-error interactions with a dynamic environment. 
+It has been applied to many problems, e.g., pole-balance [1], back-gammon [2], 
+manipulator [3], and biped robot [4]. However, reinforcement learning has rarely 
+been applied to real robot control because it requires too many trials to learn the 
+control even for simple problems. 
+For the fast learning of real-world control problems, we propose a new learning sys- 
+tem which is a combination of a known controller and reinforcement learning. It is 
+called the hybrid reinforcement learning system. One example of a known controller 
+is a linea controller obtained by linear approximation. The hybrid learning system 
+1072 S. Yamada, A. Watanabe and M. Nakashima 
+will learn the control more quickly than usual reinforcement learning because it does 
+not need to learn the control in the state where the known controller can control 
+the object. 
+A stilt-type biped walking robot was used to test the hybrid reinforcement learning 
+system. A real robot walked stably on a flat floor when controlled by a linear 
+controller [5]. Robot motions could be approximated by linear differential equations. 
+In this study, we will describe hybrid reinforcement learning of the control of the 
+biped robot model on a sloped floor, where the linear controller cannot control the 
+robot. 
+2 Biped Robot 
+a) b) 
+roll axis pitch axis 
+Figure 1: Stilt-type biped robot. a) a photograph of a real biped robot, b) a model 
+structure of the biped robot. u,u2,u3 denote torques. 
+Figure 1-a shows a stilt-type biped robot [5]. It has no knee or ankle, has 1 m 
+legs and weighs 33 kg. It is modeled by 3 rigid bodies as shown in Figure 1-b. 
+By assuming that motions around a roll axis and those around a pitch axis are 
+independent, 5-dimensional differential equations in a single supporting phase were 
+obtained. Motions of the real biped robot were simulated by the combination of 
+these equations and conditions at a leg exchange period. If angles are approximately 
+zero, these equations can be approximated by linear equations. The following linear 
+controller is obtained from the linear equations. The biped robot will walk if the 
+angles of the free leg are controlled by a position-derivative (PD) controller whose 
+desired angles are calculated as follows: 
+= 
+A -- /-, 
+(1) 
+where ,/, 5, and g are a desired angle between the body and the leg (7�), a constant 
+to make up a loss caused by a leg exchange (1.3�), a constant corresponding to 
+walking speed, and gravitational acceleration (9.8 ms-2), respectively. 
+The linear controller controlled walking of the real biped robot on a fiat floor [5]. 
+However, it failed to control walking on a slope (Figure 2). In this study, the 
+objective of the learning system was to control walking on the sloped floor shown 
+in Figure 2-a. 
+Hybrid Reinforcement Learning for Biped Robot Control 1073 
+a) 10cm-n 
+Ocm-2 
+b) 
+fall down I 
+10 
+Height of 10cm l _...-- fall down t 
+Free Leg's Tip ('/�,(''- ' 
+-2cm 0 Time(s) 10 
+5m 
+Robot Position 
+-Ira 0 Time(s) 10 
+3'm 
+Figure 2: Biped robot motion on a sloped floor controlled by the linear controller. 
+a) a shape of a floor, b) changes in angular velocity, height of free leg's tip, and 
+robot position 
+3 Hybrid Reinforcement Learning 
+I 
+state I 
+inputsi 
+7,0,0 
+reinforcement: r(t) 
+  module 
+.J reinforcement ! 
+llearining c(X,a) IQs(x, s) 
+[module ] ,,  
+ mear. j--sionof robot 
+control I -  i 
+module [ 
+Figure 3: Hybrid reinforcement learning system. 
+We propose a hybrid reinforcement learning system to learn control quickly. The 
+hybrid reinforcement learning system shown in Figure 3 is composed of a linear 
+control module, a reinforcement learning module, and a selection module. The 
+reinforcement learning module and the selection module select an action and a 
+module dependent on their respective Q-values. This learning system is similar to 
+the modular reinforcement learning system proposed by Tham [6] which was based 
+on hierarchical mixtures of the experts (HME) [7]. In the hybrid learning system, 
+the selection module is trained by Q-learning. 
+To combine the reinforcement learning with the linear controller described in (1), 
+the output of the reinforcement learning module is set to k in the adaptable equation 
+for (, ( = -k//+ 5. The angle and the angular velocity of the supporting leg at the 
+leg exchange period (/,//, t) are used as inputs. The k values are kept constant until 
+the next leg exchange. The reinforcement learning module is trained by Q-sarsa 
+learning [8]. Q values are calculated by CMAC neural networks [9], [101. 
+The Q values for action k (Qc(x, k)) and those for module s selection (Q(x, s)) are 
+1074 $. Yamada, A. Watanabe and M. Nakashima 
+calculated as follows: 
+Qc(x,k) = Ew�(k'm,i,t)y(m,i,t) 
+Qs(x,s) = Ews(s'm,i,t)y(m,i,t), (2) 
+where wc(k, m, i, t) and w(s, m, i, t) denote synaptic strengths and y(m, i, t) repre- 
+sents neurons' outputs in CMAC networks at time t. 
+Modules were selected and actions performed according to the e-greedy policy [8] 
+with e = 0. 
+The temporal difference (TD) error for the reinforcement learning module (� (t)) is 
+calculated by 
+0 sel(t) = lin 
+r(t) + Q�(x(t + 1),per(t -]- 1)) - Q�(x(t),per(t)) sel(t + 1) = rein 
+(t) = sel(t) = rein 
+r(t) + Q(x(t + 1),sel(t + 1)) - Q�(x(t),per(t)), sel(t) = rein 
+sel(t + 1) = lin 
+(3) 
+where r(t), per(t), sel(t), lin and rein denote reinforcement signals (r(t) = -1 if 
+the robot falls down, 0 otherwise), performed actions, selected modules, the linear 
+control module and the reinforcement learning module, respectively. 
+TD error (t (t)) calculated by Q (x, s) is considered to be a sum of TD error caused 
+by the reinforcement learning module and that by the selection module. TD error 
+( (t)) used in the selection-module's learning is calculated as follows: 
+is(t) = t(t)-(t) 
+= r(t)+?Q(x(t+ 1),sel(t+ 1))-Q(x(t),sel(t))-c(t), (4) 
+where ? denotes a discount factor. 
+The reinforcement learning module used replacing eligibility traces (ec(k,m,i,t)) 
+[11]. Synaptic strengths are updated as follows: 
+w(k,m,i,t + 1) 
+w(s,m,i,t + l) 
+w�(k, m,i, t) -]- e(t)ec(k, m, i, t) /n 
+= {w(s,m,i,t)-l-e8(t)y(m,i,t)/n s=sel(t) 
+w (s, m, i, t) otherwise 
+1 k = per(t),y(m,i,t)= 1 
+=  0 k per(t),y(m,i,t) = 1 
+Ae(k, re, i, t - 1) otherwise 
+ec(k,m,i,t) 
+(5) 
+where e�, c, A and n are a learning constant for the reinforcement learning module, 
+that for the selection module, decay rates and the number of tilings, respectively. 
+In this study, the CMAC used 10 tilings. Each of the three dimensions was di- 
+vided into 12 intervals. The reinforcement learning module had 5 actions (k - 
+O,A/2, A, 3A/2,2A). The parameter values were a = 0.2, ac = 0.4, A = 0.3, 
+? - 0.9 and 5 = 0.05. Each run consisted of a sequence of trials, where each 
+trial began with robot state of position=O, -5 � < t) < -2.5 �, 1.5 � < r/< 3 �, o = 
+t + �,  = o + �, ( = r/+ 2 �, t = b =  - /=  = 0, and ended with a failure signals 
+indicating robot's falling down. Runs were terminated if the number of walking 
+steps of three consecutive trials exceeded 100. All results reported are an average 
+of 50 runs. 
+Hybrid Reinforcement Learning for Biped Robot Control 1075 
+lO0 
+ so 
+Il 60 
+4O 
+6 
+Z 2o 
+o 
+o 
+50 1oo 15o 200 
+Trials 
+Figure 4: Learning profiles for control of walking on the sloped floor. (0) hybrid 
+reinforcement learning, ([3) 2-step hybrid reinforcement learning, (V) reinforcement 
+learning and (A) HME-type modular reinforcement learning 
+4 Results 
+Walking control on the sloped floor (Figure 2-a) was first trained by the usual re- 
+inforcement learning. The usual reinforcement learning system needed many trials 
+for successful termination (about 800, see Figure 4(V)). Because the usual rein- 
+forcement learning system must learn the control for each input, it requires many 
+trials. 
+Figure 4(0 ) also shows the learning curve for the hybrid reinforcement learning. 
+The hybrid system learned the control more quickly than the usual reinforcement 
+learning (about 190 trials). Because it has a higher probability of succeeding on the 
+fiat floor, it learned the control quickly. On the other hand, HME-type modular 
+reinforcement learning [6] required many trials to learn the control (Figure 4(A)). 
+45 �/s 
+Angular 
+Velocity 
+0 45O/s 
+ V V V vvvvwvvvvvvvvv V V V V V V V V V t 
+0 Time(s) 20 
+10cm  
+Height of 
+Free Leg's Tip 
+-2cm 0 20 
+5m l 
+Robot Position 
+-lm 0 
+Time(s) 
+Time(s) 
+2O 
+Figure 5: Biped robot motion controlled by the network trained by the 2-step hybrid 
+reinforcement le

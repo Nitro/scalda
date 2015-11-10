@@ -1,0 +1,140 @@
+Propagation Filters in PDS Networks for 
+Sequencing and Ambiguity Resolution 
+Ronald A. Sumida 
+Michael G. Dyer 
+Artificial Intelligence Laboratory 
+Computer Science Department 
+University of California 
+Los Angeles, CA, 90024 
+sumida@cs.ucla.edu 
+Abstract 
+We present a Parallel Distributed Semantic (PDS) Network architecture 
+that addresses the problems of sequencing and ambiguity resolution in 
+natural language understanding. A PDS Network stores phrases and their 
+meanings using multiple PDP networks, structured in the form of a se- 
+mantic net. A mechanism called Propagation Filters is employed: (1) to 
+control communication between networks, (2) to properly sequence the 
+components of a phrase, and (3) to resolve ambiguities. Simulation results 
+indicate that PDS Networks and Propagation Filters can successfully rep- 
+resent high-level knowledge, can be trained relatively quickly, and provide 
+for parallel inferencing at the knowledge level. 
+1 INTRODUCTION 
+Backpropagation has shown considerable potential for addressing problems in nat- 
+ural language processing (NLP). However, the traditional PDP [Rumelhart and 
+McClelland, 1986] approach of using one (or a small number) of backprop networks 
+for NLP has been plagued by a number of problems: (1) it has been largely unsuc- 
+cessful at representing high-level knowledge, (2) the networks are slow to train, and 
+(3) they are sequential at the knowledge level. A solution to these problems is to 
+represent high-level knowledge structures over a large number of smaller PDP net- 
+233 
+234 Sumida and Dyer 
+works. Reducing the size of each network allows for much faster training, and since 
+the different networks can operate in parallel, more than one knowledge structure 
+can be stored or accessed at a time. 
+In using multiple networks, however, a number of important issues must be ad- 
+dressed: how the individual networks communicate with one another, how patterns 
+are routed from one network to another, and how sequencing is accomplished as 
+patterns are propagated. In previous papers [Sumida and Dyer, 1989] [Sumida, 
+1991], we have demonstrated how to represent high-level semantic knowledge and 
+generate dynamic inferences using Parallel Distributed Semantic (PDS) Networks, 
+which structure multiple PDP networks in the form of a semantic network. This 
+paper discusses how Propagation Filters address communication and sequencing 
+issues in using multiple PDP networks for NLP. 
+2 PROPAGATION FILTERS 
+Propagation Filters are inspired by the idea of skeleton filters, proposed by [Se- 
+jnowski, 1981, Hinton, 1981]. They are composed of: (1) sets of filter ensembles 
+that gate the connection from a source to a destination and (2) a selector ensemble 
+that decides which filter group to enable. Each filter group is sensitive to a par- 
+ticular pattern over the selector. When the particular pattern occurs, the source 
+pattern is propagated to its destination. Figure i is an example of a propagation fil- 
+ter where the 01 pattern over units 2 and 3 of the selector opens up filter group1, 
+thus permitting the pattern to be copied from source1 to destination1. The units 
+of filter group2 do not respond to the 01 pattern and remain well below thresold, 
+so the activation pattern over the source2 ensemble is not propagated. 
+Figure 1: A Propagation Filter architecture. The small circles indicate PDP units 
+within an ensemble (oval), the black arrows represent full connectivity between two 
+ensembles, and the dotted lines connecting units 2 and 3 of the selector to each 
+filter group oval indicate total connectivity from selector units to filter units. The 
+jagged lines are suggestive of temporary patterns of activation over an ensemble. 
+The units in a filter group receive input from units in the selector. The weights 
+on these input connections are set so that when a specific pattern occurs over the 
+Propagation Filters in PDS Networks 235 
+selector, every unit in the filter group is driven above threshold. The filter units 
+also receive input from the source units and provide output to the destination units. 
+The weights on both these i/o connections can be set so that the filter merely copies 
+the pattern from the source to the destination when its units exceed threshold (as 
+in Figure 1). Alternatively, these weights can be set (e.g. using backpropagation) 
+so that the filter transforms the source pattern to a desired destination pattern. 
+3 PDS NETWORKS 
+PDS Networks store syntactic and semantic information over multiple PDP net- 
+works, with each network representing a class of concepts and with related net- 
+works connected in the general manner of a semantic net. For example, Figure 2 
+shows a network for encoding a basic sentence consisting of a subject, verb and 
+direct object. The network is connected to other PDP networks, such as HUMAN, 
+VERB and ANIMAL, that store information about the content of the subject role 
+(s-content), the filler for the verb role, and the content of the direct-object role 
+(do-content). Each network functions as a type of encoder net, where: (1) the input 
+and output layers have the same number of units and are presented with exactly the 
+same pattern, (2) the weights of the network are modified so that the input pattern 
+will recreate itself as output, and (3) the resulting hidden unit pattern represents 
+a reduced description of the input. In the networks that we use, a single set of 
+units is used for both the input and output layers. The net can thus be viewed as 
+an encoder with the output layer folded back onto the input layer and with two 
+sets of connections: one from the single input/output layer to the hidden layer, 
+and one from the hidden layer back to the i/o layer. In Figure 2 for example, the 
+subject-content, verb, and direct-object-content role-groups collectively represent 
+the input/output layer, and the BASIC-S ensemble represents the hidden layer. 
+� BASIC-S 
+MAN-hit-DO-- O.. 
+= MAN =it = DO(3 
+Figure 2: The network that stores information about a basic sentence. The black 
+arrows represent links from the input layer to the hidden layer and the grey arrows 
+indicate links from the hidden layer to the output layer. The thick lines represent 
+links between networks that propagate a pattern without changing it. 
+A network stores information by learning to encode the items in its training set. 
+236 Sumida and Dyer 
+For each item, the patterns that represent its features are presented to the input 
+role groups, and the weights are modified so that the patterns recreate themselves 
+as output. For example, in Figure 2, the MAN-hit-DOG pattern is presented to 
+the BASIC-S network by propagating the MAN pattern from the HUMAN network 
+to the s-content role, the hit pattern from the VERB network to the verb-content 
+role, and the DOG pattern from the ANIMAL network to the do-content role. 
+The BASIC-S network is then trained on this pattern by modifying the weights 
+between the input/output role groups and the BASIC-S hidden units so that the 
+MAN-hit-DOG pattern recreates itself as output. The network automatically 
+generalizes by having the hidden units become sensitive to common features of the 
+training patterns. When the network is tested on a new concept (i.e., one that is 
+not in the training set), the pattern over the hidden units reflects its similarity to 
+the items seen during training. 
+3.1 SEQUENCING PHRASES 
+To illustrate how Propagation Filters sequence the components of a phrase, consider 
+the following sentence, whose constituents occur in the standard subject-verb-object 
+order: S1. The man hit the dog. We would like to recognize that the BASIC-S 
+network of Figure 2 is applicable to the input by binding the roles of the network to 
+the correct components. In order to generate the proper role bindings, the system 
+must: (1) recognize the components of the sentence in the correct order (e.g. the 
+man should be recognized as the subject, hit as the verb, and the dog as 
+the direct object), and (2) associate each phrase of the input with its meaning 
+(e.g. reading the phrase the man should cause the pattern for the concept MAN 
+to appear over the HUMAN units). Figure 3 illustrates how Propagation Filters 
+properly sequence the components of the sentence. 
+First, the phrase the man is read by placing the pattern for the over the deter- 
+miner network (Step 1) and the pattern for man over the noun network (Step 2). 
+The the pattern is then propagated to the np-determiner input role units of 
+the NP network (Step 3) and the man pattern to the np-noun role input units 
+(Step 4). The pattern that results over the hidden NP units is then used to repre- 
+sent the entire phrase the man (Step 5). The filters connecting the NP units with 
+the subject and direct object roles are not enabled, so the pattern is not yet bound 
+to any role. Next, the word hit is read and a pattern for it is generated over 
+the VERB units (Step 6). The BASIC-S network is now applicable to the input 
+(for simplicity of exposition, we ignore passive constructions here). Since there are 
+no restrictions (i.e., no filter) on the connection between the VERB units and the 
+verb role of BASIC-S, the hit pattern is bound to the verb role (Step 7). The 
+verb role units act as the selector of the Propagation Filter that connects the NP 
+units to the subject units. The filter is constructed so that whenever any of the 
+verb role units receive non-zero input (i.e., whenever the role is bound) it opens up 
+the filter group connecting NP with the subject role (Step 8). Thus, the pattern 
+for the man is copied from NP to the subject (Step 9) and deleted from the NP 
+units. Similarly, the subject units act as the selector of a filter that connects NP 
+with the direct object. Since the subject was just bound, the connection from the 
+NP to direct object is enabled (Step 10). At this point, the system has generated 

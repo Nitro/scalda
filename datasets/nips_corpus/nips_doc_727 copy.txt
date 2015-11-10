@@ -1,0 +1,160 @@
+Segmental Neural Net Optimization for Continuous Speech 
+Recognition 
+Ying Zhao 
+Richard Schwartz John Makhoul 
+BBN System and Technologies 
+70 Fawcett Street 
+Cambridge MA 02138 
+George Zavaliagkos 
+Abstract 
+Previously, we had developed the concept of a Segmental Neural Net (SNN) for 
+phonetic modeling in continuous speech recognition (CSR). This kind of neu- 
+ral network technology advanced the state-of-the-art of large-vocabulary CSR, 
+which employs Hidden Markov Models (HMM), for the ARPA 1000-word Re- 
+source Management corpus. More Recently, we started porting the neural net 
+system to a larger, more challenging corpus - the ARPA 20,000-word Wall Street 
+Journal (WSJ) corpus. During the porting, we explored the following research 
+directions to refine the system: i) training context-dependent models with a reg- 
+ularization method; ii) training SNN with projection pursuit; and ii) combining 
+different models into a hybrid system. When tested on both a development set 
+and an independent test set, the resulting neural net system alone yielded a per- 
+formance at the level of the HMM system, and the hybrid SNN/HMM system 
+achieved a consistent 10-15% word error reduction over the HMM system. This 
+paper describes our hybrid system, with emphasis on the optimization methods 
+employed. 
+1 INTRODUCTION 
+Hidden Mafi.ov Models (HMM) represent the state-of-the-art for large-vocabulary con- 
+tinuous speech recognition (CSR). Recently, neural network technology has been shown 
+to advance the state-of-the-art for CSR by integrating neural nets and HMMs [1,2]. In 
+principle, the advance is based on the fact that neural network modeling can avoid some 
+limitations of the HMM modeling, for example, the conditional-independence assumption 
+of HMMs and the fact that segmental features are hard to incorporate. Our work has been 
+based on the concept of a Segmental Neural Net (SNN) [2]. 
+1059 
+1060 Zhao, Schwartz, Makhoul, and Zavaliagkos 
+A segmental neural network is a neural network that attempts to recognize a complete 
+phoneme segment as a single unit. Its basic structure is shown in Figure 1. The input 
+to the network is a fixed length representation of the speech segment, which is obtained 
+from the warping (quasi-linear sampling) of a variable length phoneme segment. If the 
+network is trained to minimize a least squares error or a cross entropy distortion measure, 
+the output of the network can be shown to be an estimate of the posterior probability of 
+the phoneme class given the input segment [3,4]. 
+segment score 
+neural 
+network 
+warping 
+phonetic segment 
+Figure 1- The SNN model samples the frames and produces a single segment score. 
+Our initial SNN system comprised a set of one-layer sigmoidal nets. This system is trained 
+to minimize a cross entropy distortion measure by a quasi-Newton error minimization 
+algorithm. A variable length segment is warped into a fixed length of 5 input frames. 
+Since each frame includes 16 features, 14 mel cepstrum, power and difference of power, 
+an input to the neural network forms a 16 x 5 = 80 dimensional vector. 
+Previously, our experimental domain was the ARPA 1000-word Resource Management 
+(RM) Corpus, where we used 53 output phoneme classes. When tested on three independent 
+evaluation sets (Oct 89, Feb 91 and Sep 92), our system achieved a consistent 10-20% 
+word error rate reduction over the state-of-the-art HMM system [2]. 
+2 THE WALL STREET JOURNAL CORPUS 
+After the final September 92 RM corpus evaluation, we ported our neural network system 
+to a larger corpus -- the Wall Street Joumal (WSJ) Corpus. The WSJ corpus consists 
+primarily of read speech, with a 5,000- to 20,000-word vocabulary. It is the current ARPA 
+speech recognition research corpus. Compared to the RM corpus, it is a more challenging 
+corpus for the neural net system due to the greater length of WSJ utterances and the 
+higher perplexity of the WSJ task. So we would expect greater difficulty in improving 
+performance on the WSJ corpus. 
+Segmental Neural Net Optimization for Continuous Speech Recognition 1061 
+3 TRAINING CONTEXT-DEPENDENT MODELS WITH 
+REGULARIZATION 
+3.1 WHY REGULARIZATION 
+In contrast to the context-independent modeling for the RM corpus, we are concentrating on 
+context-dependent modeling for the WSJ corpus. In context-dependent modeling, instead 
+of using a single neural net to recognize phonemes in all contexts, different neural networks 
+are used to recognize phonemes in different contexts. Because of the paucity of training 
+data for some context models, we found that we had an overfitting problem. 
+Regularization provides a class of smoothing techniques to ameliorate the overfitting prob- 
+lem [5]. We started using regularization in our initial one-layer sigmoidal neural network 
+system. The regularization term added here is to regulate how far the context-dependent 
+parameters can move away from their initial estimates, which are context-independent pa- 
+rameters. Tiffs is different from the usual weight decay technique in neural net literature, 
+and it is designed specifically for our problem. The objective function is shown below: 
+I  [,log(l f,)+'logf, + [,lg r lgr0 [ [ 2 (1) 
+Na i  c Regularization Term 
+� � 
+v 
+Distortion measure Er(W) 
+where fi is the net output for class i, [[W[] is the Euclidean norm of all weights in all 
+the networks, []W0[[ is the initial estimate of weights from a context-independent neural 
+network, Na is the number of data points. X is the regularization parameter which controls 
+the tradeoff between the smoothness of the solution, as measured by ]]lg r - lgro]] 2, and 
+the deviation from the data as measured by the distortion. 
+The optimal ,, which gives the best generalization to a test set, can be estimated by 
+generalized cross-validation [5]. If the distortion measure as shown in (2) 
+1 
+Na. IIAW- bll 2 + AllWI[ 2 (2) 
+is a qu3dratic function in terms of network weights W, the optimal ) is that which gives 
+the minin,mn of a generalized cross-validation index V()0 [6]: 
+' iiAO)_ bll 2 
+V(X = 
+I - Ttr(A(,X)) (3) 
+where A(X) = A(AWA+Na,XI)A w. V(,X) is an easily calculated function based on singular 
+value decomposition (SVD): 
+d 2 
+V() = ' (4) 
+where A = UDV T, singular decomposition of A, z = UTb. Figure 2 shows an example 
+plot of V(X). A typical optimal X has an inverse relation to the number of samples in each 
+class, indicating that  is gradually reduced with the presence of more data. 
+1062 Zhao, Schwartz, Makhoul, and Zavaliagkos 
+o 
+o o 
+o oo c�� o 
+oOOO o c 
+0 5'10-7 10^-6 1.5'10^-6 2.5'10^-6 
+lambda 
+Figure 2: A typical V() 
+Just as the linear least squares method can be generalized to a nonlinear least squares 
+problem by an itemfive procedure, so selecting the optimal value of the regularization 
+parameter in a quadratic error criterion can be generalized to a non-quadratic error criterion 
+itemfively. We developed an itemfive procedure to apply the cross-validation technique to 
+a non-quadratic error function, for example, the cross-entropy criterion Er(W) in (1) as 
+follows: 
+1. Compute distortion Er(W.) for an estimate W.. 
+2. Compute gradient g, and Hessian H. of the distortion Er(W.). 
+3. Compute the singular value decomposition of H, = V D,, V,. Set z,, = 
+4. Evaluate a generalized cross-validation index V,(;) similar to (2) as follows, for a 
+range of 's and select the . that gives the minimum V.. 
+Segmental Neural Net Optimization for Continuous Speech Recognition 1063 
+Na [Er(W.)-  (a.r? ,q 
+v. (:) = 2 (5) 
+dy 
+[Nd -- Ej d+NaA ] 
+5. Set W,+ = W, - (H, + Na,X,)-g,. 
+6. Go to I and iterate. 
+Note that ) is adjusted at each iteration. The final value of ), is taken as the optimal ). 
+Iterative regularization parameter selection shows that ) converges, for example, to o-' 
+from one of our experiments. 
+3.2 A TWO-LAYER NEURAL NETWORK SYSTEM WITH REGULARIZATION 
+We then extended our regularization work from the one-layer sigmoidal network system to 
+a two-layer sigmoidal network system. The first layer of the network works as a feature 
+extractor and is shared by all phonetic classes. Theoretically, in order to benefit from 
+its larger capability of representing phonetic segments, the number of hidden units of a 
+two-layer network should be much greater than the number of input dimensions. However, 
+a large number of hidden units can cause serious overfitting problems when the number of 
+training samples is less than the number of parameters for some context models. Therefore, 
+regularizatioo is more useful here. Because the second layer can be trained as a one-layer 
+net, the regularization techrdques we developed for a one-layer net can be applied here to 
+train the second layer. 
+In our implementation, a weighted least squares error measure was used at the output layer. 
+First, the weights for the two-layer system were initialized with random numbers between 
+-1 and 1. Fixing the weights for the second layer, we trained the first layer by using 
+gradient descent; then fixing the weights for the first layer, we trained the second layer by 
+linear least squares with a regularization term, without the sigmoidal function at the output. 
+We stopped after one iteration for our initial experiment. 
+4 TRAINING SNN WITH PROJECTION PURSUIT 
+4.1 WHY PROJECTION PURSUIT 
+As we described in the previous section, regularization is especially useful in training the 
+second layer of a two-layer network. In order to take advantage of the two-layer layer 
+structure, we want to train the first layer as well. However, once the number of the hidden 
+units is large, the number of weights in the first layer is huge, which makes the first layer 
+very difficult to train. Projection pursuit presents a useful technique to use a large hidden 
+layer but still keep the number of weights in the first layer as small as possible. 
+The original pojection prosuit is a nonparametric statistical technique to f

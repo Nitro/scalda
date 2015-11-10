@@ -1,0 +1,146 @@
+Learning Continuous Attractors in 
+Recurrent Networks 
+H. Sebastian Seung 
+Bell Labs, Lucent Technologies 
+Murray Hill, NJ 07974 
+seungbell-labs. com 
+Abstract 
+One approach to invariant object recognition employs a recurrent neu- 
+ral network as an associative memory. In the standard depiction of the 
+network's state space, memories of objects are stored as attractive fixed 
+points of the dynamics. I argue for a modification of this picture: if an 
+object has a continuous family of instantiations, it should be represented 
+by a continuous attractor. This idea is illustrated with a network that 
+learns to complete patterns. To perform the task of filling in missing in- 
+formation, the network develops a continuous attractor that models the 
+manifold from which the patterns are drawn. From a statistical view- 
+point, the pattern completion task allows a formulation of unsupervised 
+learning in terms of regression rather than density estimation. 
+A classic approach to invariant object recognition is to use a recurrent neural net- 
+work as an associative memory[1]. In spite of the intuitive appeal and biological 
+plausibility of this approach, it has largely been abandoned in practical applications. 
+This paper introduces two new concepts that could help resurrect it: object repre- 
+sentation by continuous attractors, and learning attractors by pattern completion. 
+In most models of associative memory, memories are stored as attractive fixed points 
+at discrete locations in state space[1]. Discrete attractors may not be appropriate for 
+patterns with continuous variability, like the images of a three-dimensional object 
+from different viewpoints. When the instantiations of an object lie on a continuous 
+pattern manifold, it is more appropriate to represent objects by attractive manifolds 
+of fixed points, or continuous attractors. 
+To make this idea practical, it is important to find methods for learning attractors 
+from examples. A naive method is to train the network to retain examples in short- 
+term memory. This method is deficient because it does not prevent the network 
+from storing spurious fixed points that are unrelated to the examples. A superior 
+method is to train the network to restore examples that have been corrupted, so 
+that it learns to complete patterns by filling in missing information. 
+Learning Continuous Attractors in Recurrent Networks 655 
+(a) 
+(b) 
+Figure 1: Representing objects by dynamical attractors. (a) Discrete attractors. 
+(b) Continuous attractors. 
+Learning by pattern completion can be understood from both dynamical and sta- 
+tistical perspectives. Since the completion task requires a large basin of attraction 
+around each memory, spurious fixed points are suppressed. The completion task 
+also leads to a formulation of unsupervised learning as the regression problem of 
+estimating functional dependences between variables in the sensory input. 
+Density estimation, rather than regression, is the dominant formulation of unsuper- 
+vised learning in stochastic neural networks like the Boltzmann machine[2]. Density 
+estimation has the virtue of suppressing spurious fixed points automatically, but it 
+also has the serious drawback of being intractable for many network architectures. 
+Regression is a more tractable, but nonetheless powerful, alternative to density 
+estimation. 
+In a number of recent neurobiological models, continuous attractors have been used 
+to represent continuous quantities like eye position-[3], direction of reaching[4], head 
+direction[5], and orientation of a visual stimulus[6]. Along with these models, the 
+present work is part of a new paradigm for neural computation based on continuous 
+attractors. 
+1 DISCRETE VERSUS CONTINUOUS ATTRACTORS 
+Figure 1 depicts two ways of representing objects as attractors of a recurrent neural 
+network dynamics. The standard way is to represent each object by an attractive 
+fixed point[1], as in Figure la. Recall of a memory is triggered by a sensory input, 
+which sets the initial conditions. The network dynamics converges to a fixed point, 
+thus retrieving a memory. If different instantiations of one object lie in the same 
+basin of attraction, they all trigger retrieval of the same memory, resulting in the 
+many-to-one map required for invariant recognition. 
+In Figure lb, each object is represented by a continuous manifold of fixed points. 
+A one-dimensional manifold is shown, but generally the attractor should be mul- 
+tidimensional, and is parametrized by the instantiation or pose parameters of the 
+object. For example, in visual object recognition, the coordinates would include the 
+viewpoint from which the object is seen. 
+The reader should be cautioned that the term continuous attractor is an idealiza- 
+tion and should not be taken too literally. In real networks, a continuous attractor 
+is only approximated by a manifold in state space along which drift is very slow. 
+This is illustrated by a simple example, a descent dynamics on a trough-shaped 
+energy landscape[3]. If the bottom of the trough is perfectly level, it is a line of 
+fixed points and an ideal continuous attractor of the dynamics. However, any slight 
+imperfections cause slow drift along the line. This sort of approximate continuous 
+attractor is what is found in real networks, including those trained by the learning 
+656 H. S. Seung 
+(a) hidden layer (b) 
+visible layer 
+Figure 2: (a) Recurrent network. (b) Feedforward autoencoder. 
+algorithms to be discussed below. 
+2 DYNAMICS OF MEMORY RETRIEVAL 
+The preceding discussion has motivated the idea of representing pattern manifolds 
+by continuous attractors. This idea will be further developed with the simple net- 
+work shown in Figure 2a, which consists of a visible layer zl E /m and a hidden 
+layer z2 E /n2. The architecture is recurrent, containing both bottom-up con- 
+nections (the n2 x nl matrix W2) and top-down connections (the nl x n2 matrix 
+W2). The vectors bl and b2 represent the biases of the neurons. The neurons have 
+a rectification nonlinearity [z] + -- max{z, 0}, which acts on vectors component by 
+component. 
+There are many variants of recurrent network dynamics: a convenient choice is the 
+following discrete-time version, in which updates of the hidden and visible layers 
+alternate in time. After the visible layer is initialized with the input vector x (0), 
+the dynamics evolves as 
+x2(t) = + [vxl(t- 1)]+, (1) 
+x(t) = + + . 
+If memories are stored as attractors, iteration of this dynamics can be regarded as 
+memory retrieval. 
+Activity circulates around the feedback loop between the two layers. One iteration 
+of this loop is the map xl(t- 1) - x2(t) - x(t). This single iteration is equiv- 
+alent to the feedforward architecture of Figure 2b. In the case where the hidden 
+layer is smaller than the visible layers, this architecture is known as an autoen- 
+coder network[7]. Therefore the recurrent network dynamics (1) is equivalent to 
+repeated iterations of the feedforward autoencoder. This is just the standard trick 
+of unfolding the dynamics of a recurrent network in time, to yield an equivalent 
+feedforward network with many layers[7]. Because of the close relationship between 
+the recurrent network of Figure 2a and the autoencoder of Figure 2b, it should not 
+be surprising that learning algorithms for these two networks are also related, as 
+will be explained below. 
+3 LEARNING TO RETAIN PATTERNS 
+Little trace of an arbitrary input vector x (0) remains after a few time steps of the 
+dynamics (1). However, the network can retain some input vectors in short-term 
+memory as reverberating patterns of activity. These correspond to fixed points of 
+the dynamics (1); they are patterns that do not change as activity circulates around 
+the feedback loop. 
+Learning Continuous Attractors in Recurrent Networks 657 
+This suggests a formulation of learning as the optimization of the network's ability to 
+retain examples in short-term memory. Then a suitable cost function is the squared 
+difference Ix (T) - x (0)l 2 between the example pattern x (0) and the network's 
+short-term memory x (T) of it after T time steps. Gradient descent on this cost 
+function can be done via backpropagation through time[7]. 
+If the network is trained with patterns drawn from a continuous family, then it can 
+learn to perform the short-term memory task by developing a continuous attractor 
+that lies near the examples it is trained on. When the hidden layer is smaller than 
+the visible layer, the dimensionality of the attractor is limited by the size of the 
+hidden layer. 
+For the case of a single time step (T = 1), training the recurrent network of Figure 
+2a to retain patterns is equivalent to training the autoencoder of Figure 2b by 
+minimizing the squared difference between its input and output layers, averaged 
+over the examples[8]. From the information theoretic perspective, the small hidden 
+layer in Figure 2b acts as a bottleneck between the input and output layers, forcing 
+the autoencoder to learn an efficient encoding of the input. 
+For the special case of a linear network, the nature of the learned encoding is 
+understood completely. Then the input and output vectors are related by a simple 
+matrix multiplication. The rank of the matrix is equal to the number of hidden 
+units. The average distortion is minimized when this matrix becomes a projection 
+operator onto the subspace spanned by the principal components of the examples[9]. 
+From the dynamical perspective, the principal subspace is a continuous attractor 
+of the dynamics (1). The linear network dynamics converges to this attractor in 
+a single iteration, starting from any initial condition. Therefore we can interpret 
+principal component analysis and its variants as methods of learning continuous 
+attractors[10]. 
+4 LEARNING TO COMPLETE PATTERNS 
+Learning to retain patterns in short-term memory only works properly for architec- 
+tures with a 

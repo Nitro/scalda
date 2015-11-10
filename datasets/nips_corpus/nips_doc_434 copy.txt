@@ -1,0 +1,157 @@
+Bayesian Model Comparison and Backprop Nets 
+David J.C. MacKay* 
+Computation and Neural Systems 
+California Institute of Technology 139-74 
+Pasadena CA 91125 
+mackayras. phy. cam. a�. uk 
+Abstract 
+The Bayesian model comparison framework is reviewed, and the Bayesian 
+Occam's razor is explained. This framework can be applied to feedforward 
+networks, making possible (1) objective comparisons between solutions 
+using alternative network architectures; (2) objective choice of magnitude 
+and type of weight decay terms; (3) quantified estimates of the error bars 
+on network parameters and on network output. The framework also gen- 
+erates a measure of the effective number of parameters determined by the 
+data. 
+The relationship of Bayesian model comparison to recent work on pre- 
+diction of generalisation ability (Guyon el ai., 1992, Moody, 1992) is dis- 
+cussed. 
+1 BAYESIAN INFERENCE AND OCCAM'S RAZOR 
+In science, a central task is to develop and compare models to account for the data 
+that are gathered. Typically, two levels of inference are involved in the task of 
+data modelling. At the first level of inference, we assume that one of the models 
+that we invented is true, and we fit that model to the data. Typically a model 
+includes some free parameters; fitting the model to the data involves inferring what 
+values those parameters should probably take, given the data. This is repeated for 
+each model. The second level of inference is the task of model comparison. Here, 
+*Current address: Darwin College, Cambridge CB3 9EU, U.K. 
+839 
+840 MacKay 
+we wish to compare the models in the light of the data, and assign some sort of 
+preference or ranking to the alternatives. 1 
+For example, consider the task of interpolating a noisy data set. The data set 
+could be interpolated using a splines model, polynomials, or feedforward neural 
+networks. At the first level of inference, we find for each individual model the best 
+fit interpolant (a process sometimes known as 'learning'). At the second level of 
+inference we want to rank the alternative models and state for our particular data 
+set that, for example, 'splines are probably the best interpolation model', or 'if the 
+interpolant is modelled as a polynomial, it should probably be a cubic', or 'the best 
+neural network for this data set has eight hidden units'. 
+Model comparison is a difficult task because it is not possible simply to choose the 
+model that fits the data best: more complex models can always fit the data better, 
+so the maximum likelihood model choice leads us inevitably to implausible over- 
+parameterised models which generalise poorly. 'Occam's razor' is the principle that 
+states that unnecessarily complex models should not be preferred to simpler ones. 
+Bayesian methods automatically and quantitatively embody Occam's razor (Gull, 
+1988, Jeffreys, 1939), without the introduction of ad hoc penalty terms. Complex 
+models are automatically self-penalising under Bayes' rule. 
+Let us write down Bayes' rule for the two levels of inference described above. As- 
+sume each model 7/i has a vector of parameters w. A model is defined by its 
+functional form and two probability distributions: a 'prior' distribution P(w17/i ) 
+which states what values the model's parameters might plausibly take; and the pre- 
+dictions P(DIw,7'li ) that the model makes about the data D when its parameters 
+have a particular value w. Note that models with the same parameterisation but 
+different priors over the parameters are therefore defined to be different models. 
+1. Model fitting. At the first level of inference, we assume that one model 7'/i 
+is true, and we infer what the model's parameters w might be given the data D. 
+Using Bayes' rule, the posterior probability of the parameters w is: 
+In words: 
+P(w I D, 7ti ) = p( DiTt i ) (1) 
+Likelihood x Prior 
+Posterior = 
+Evidence 
+It is common to use gradient-based methods to find the maximum of the posterior, 
+which defines the most probable value for the parameters, wv; it is then common 
+to summarise the posterior distribution by the value of wv, and error bars on 
+these best fit parameters. The error bars are obtained from the curvature of the 
+posterior; writing the Hessian A = -VV log P(w[D,7'li) and Taylor-expanding the 
+log posterior with Aw = w -- wp, 
+P(wlD, 7'li ) -- P(w,ID, 7'li) exp (-� Aw T AAw) (2) 
+Note that both levels of inference are distinct from decision theory. The goal of infer- 
+ence is, given a defined hypothesis space and a particular data set, to assign probabilities 
+to hypotheses. Decision theory chooses between alternative actions on the basis of these 
+probabilities so as to minimise the expectation of a 'loss function'. 
+Bayesian Model Comparison and Backprop Nets 841 
+Figure 1: The Occam factor 
+This figure shows the quantities that determine the Occam factor for a hypothesis 7/i haw 
+in[[ a single parameter w. The prior distribution (dotted line) for the parameter has width 
+AUw. The posterior distribution (solid line) has a single peak at wv with characteristic 
+AW 
+width Aw. The Occam factor is 
+we see that the posterior can be locally approximated as a gaussian with covariance 
+matrix (error bars) A -1. 
+2. Model comparison. At the second level of inference, we wish to infer which 
+model is most plausible given the data. The posterior probability of each model is: 
+Notice that the objective data-dependent term P(DIT/i ) is the evidence for 
+which appeared as the normalising constant in (1). The second term, P(7'{i), is a 
+'subjective' prior over our hypothesis space. Assuming that we have no reason to 
+assign strongly differing priors P(7'{i) to the alternative models, models 7'{i are 
+ranked by evaluating the evidence. 
+This concept is very general: the evidence can be evaluated for parametric and 
+'non-parametric' models alike; whether our data modelling task is a regression 
+problem, a classification problem, or a density estimation problem, the evidence 
+is the Bayesian's transportable quantity for comparing alternative models. In all 
+these cases the evidence naturally embodies Occam's razor, as we will now see. The 
+evidence is the normalising constant for equation (1): 
+(4) 
+posterior 
+For many problems, including interpolation, it is common for the 
+P(wlD,Tti ) cr P(DIw,7'li)P(w17ti ) to have a strong peak at the most probable 
+parameters wp (figure 1). Then the evidence can be approximated by the height 
+of the peak of the integrand P(DIw,Tti)P(w17ti ) times its width, Aw: 
+(5) 
+, _ , , , 
+Evidence ' Best fit likelihood Occam factor 
+Thus the evidence is found by taking the best fit likelihood that the model can 
+achieve and multiplying it by an 'Occam factor' (Gull, 1988), which is a term with 
+magnitude less than one that penalises 7/i for having the parameter w. 
+842 MacKay 
+Interpretation of the Occam factor 
+The quantity Aw is the posterior uncertainty in w. Imagine for simplicity that 
+the prior P(w17/i ) is uniform on some large interval A�w (figure 1), so that 
+P(w,17'[i) = -; then 
+Aw 
+Occam factor = -- 
+AO w ' 
+i.e. the ratio of the posterior accessible volnine of 7/i's parameter space to 
+the prior accessible volume (Gull, 1988, Jeffreys, 1939). The log of the Occam 
+factor can be interpreted as the amount of information we gain about the model 
+when the data arrive. 
+Typically, a complex or flexible model with many parameters, each of which is free 
+to vary over a large range A�w, will be penalised with a larger Occam factor than 
+a simpler model. The Occam factor also penalises models which have to be finely 
+tuned to fit the data. Which model achieves the greatest evidence is determined 
+by a trade-off between minimising this natural complexity measure and minimising 
+the data misfit. 
+Occam factor for several parameters 
+If w is k-dimensional, and if the posterior is well approximated by a gaussian, the 
+Occam factor is given by the determinant of the gaussJan's covariance matrix: 
+P(DITti) ,. P(DIwr, Hi) P(wr17ti)(2r)}/det-�A 
+Evidence _ Best fit likelihood Occam factor 
+(6) 
+where A = -VV log P(w[D, Tti), the Hessian which we already evaluated when we 
+calculated the error bars on wp. As the amount of data collected, N, increases, 
+this gaussian approximation is expected to become increasingly accurate on account 
+of the central limit theorem. 
+Thus Bayesian model selection is a simple extension of maximum likelihood model 
+selection: the evidence is obtained by multiplying the best fit likelihood 
+by the Occam factor. To evaluate the Occam factor all we need is the Hessian 
+A, if the gaussian approximation is good. Thus the Bayesian method of model 
+comparison by evaluating the evidence is computationally no more demanding than 
+the task of finding for each model the best fit parameters and their error bars. 
+2 THE EVIDENCE FOR NEURAL NETWORKS 
+Neural network learning procedures include a host of control parameters such as 
+the number of hidden units and weight decay rates. These parameters are difficult 
+to set because there is an Occam's razor problem: if we just set the parameters 
+so as to miniraise the error on the training set, we would be led to over-complex 
+and under-regularised models which over-fit the data. Figure 2a illustrates this 
+problem by showing the test error versus the training error of a hundred networks 
+of varying complexity all trained on the same interpolation problem. 
+Bayesian Model Comparison and Backprop Nets 843 
+Of course if we had unlimited resources, we could compare these networks by mea- 
+suring the error on an unseen test set or by similar cross-validation techniques. 
+However these techniques may require us to devote a large amount of data to the 
+test set, and may be computationally demanding. If there are several parameters 
+like weight decay rates, it is preferable if they can be optimised on line. 
+Using the Bayesian framework, it is possible for all our data to have a say in both the 
+model fitting and

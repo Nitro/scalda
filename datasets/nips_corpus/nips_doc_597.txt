@@ -1,0 +1,158 @@
+A Hybrid Neural Net System for 
+State-of-the-Art Continuous Speech Recognition 
+G. Zavaliagkos 
+Northeastern University 
+Boston MA 02115 
+Y. Zhao 
+BBN Systems and Technologies 
+Cambridge, MA 02138 
+R. Schwartz 
+BBN Systems and Technologies 
+Cambridge, MA 02138 
+J. Makhoul 
+BBN Systems and Technologies 
+Cambridge, MA 02138 
+Abstract 
+Untill recently, state-of-the-art, large-vocabulary, continuous speech 
+recognition (CSR) has employed Hidden Markov Modeling (HMM) 
+to model speech sounds. In an attempt to improve over HMM we 
+developed a hybrid system that integrates HMM technology with neu- 
+ral networks. We present the concept of a Segmental Neural Net 
+(SNN) for phonetic modeling in CSR. By taking into account all the 
+frames of a phonetic segment simultaneously, the SNN overcomes the 
+well-known conditional-independence limitation of HIVIMs. In several 
+speaker-independent experiments with the DARPA Resource Manage- 
+ment corpus, the hybrid system showed a consistent improvement in 
+performance over the baseline HIVIM system. 
+1 INTRODUCTION 
+The current state of the art in continuous speech recognition (CSR) is based on the use 
+of hidden Markov models (HIVIM) to model phonemes in context. Two main reasons 
+for the popularity of HMMs are their high performance, in terms of recognition accu- 
+racy, and their computational efficiency However, the limitations of HIVIMs in modeling 
+the speech signal have been known for some time. Two such limitations are (a) the 
+conditional-independence assumption, which prevents a HIVIM from taking full advan- 
+704 
+A Hybrid Neural Net System for State-of-the-Art Continuous Speech Recognition 705 
+tage of the correlation that exists among the frames of a phonetic segment, and (b) the 
+awkwardness with which segmental features can be incorporated into HMM systems. We 
+have developed the concept of Segmental Neural Nets (SNN) to overcome the two HMM 
+limitations just mentioned for phonetic modeling in speech. A segmental neural net is a 
+neural network that attempts to recognize a complete phonetic segment as a single unit, 
+rather than a sequence of conditionally independent frames. 
+Neural nets are known to require a large amount of computation, especially for training. 
+Also, there is no known efficient search technique for finding the best scoring segmen- 
+tation with neural nets in continuous speech. Therefore, we have developed a hybrid 
+SNN/HMM system that is designed to take full advantage of the good properties of both 
+methods. The two methods are integrated through a novel use of the N-best (multiple 
+hypotheses) paradigm developed in conjunction with the BYBLOS system at BBN [1]. 
+2 SEGMENTAL NEURAL NET MODELING 
+There have been several recent approaches to the use of neural nets in CSR. The SNN 
+differs from these approaches in that it attempts to recognize each phoneme by using all 
+the frames in a phonetic segment simultaneously to perform the recognition. By looking 
+at a whole phonetic segment at once, we are able to take advantage of the correlation that 
+exists among hames of a phonetic segments, thus ameliorating the limitations of HMMs. 
+segment score 
+neural 
+network 
+warping 
+phonetic segment : 
+; 
+Figure 1: The SNN model samples the frames and produces a single segment score. 
+The structure of a typical SNN is shown in Figure 1. The input to the network is a fixed 
+length representation of the speech segment. This input is scored by the network. If the 
+network was trained to minimize a mean square error (MSE) or a relative entropy distor- 
+tion measure, the output of the network will be an estimate of the posterior probability 
+P((71z) of the phonetic class (7 given the segment z [2, 3]. This property of the SNN 
+allows a natural extension to CSR: We segment the utterance into phonetic segments, 
+and score each one of them seperately. The score of the utterance is simply the product 
+of the scores of the individual segments. 
+706 Zavaliagkos, Zhao, Schwartz, and Makhoul 
+The procedure described above requires the availability of some form of phonetic seg- 
+mentation of the speech. We describe in Section 3 how we use the HMM to obtain 
+likely candidate segmentations. Here, we shall assume that a phonetic segmentation has 
+been made available and each segment is represented by a sequence of frames of speech 
+features. The actual number of such frames in a phonetic segment is variable. However, 
+for input to the neural network, we need a fixed length representation. Therefore, we 
+have to convert the variable number of flames in each segment to a fixed number of 
+frames. We have considered two approaches to cope with this problem: time sampling 
+and Discrete Cosine Transform (DC'r). 
+In the first approach, the requisite time warping is performed by a quasi-linear sampling 
+of the feature vectors comprising the segment to a fixed number of frames (5 in our 
+system). For example, in a 17-frame phonetic segment, we use frames 1, 5, 9, 13, and 17 
+as input to the SNN. The second approach uses the Discrete Cosine Transform (DCT). 
+The DCT can be used to represent the frame sequence of a segment as follows. Consider 
+the sequence of cepstral features across a segment as a time sequence and te its DCT. 
+For an m frame segment, this transform will result in a set of m DCT coefficients for 
+each feature. Truncate this sequence to its first few coefficients (the more coefficients 
+, the more precise the representation). To keep the number of features the same as in 
+the quasi-linear sampling, we use only five coefficients. If the input segment has less 
+than five frames, we initially interpolate in time so that a five-point DCT is possible. 
+Compared to the quasi-linear sampling, DCT has the advantage of using information 
+from all input frames. 
+Duration: Because of the time warping function, the SNN score for a segment is inde- 
+pendent of the duration of the segment. In order to provide duration information to the 
+SNN, we constructed a simple durational model. For each phoneme, a histogram was 
+made of segment durations in the training data. This histogram was then smoothed by 
+convolving with a triangular window, and probabilities falling below a floor level were 
+reset to that level. The duration score was multiplied by the neural net score to give an 
+overall segment score. 
+3 THE N-BEST RESCORING PARADIGM 
+Our hybrid system is based on the N-best rescoring paradigm [1], which allows us to 
+design and test the SNN with little regard to the usual problem of searching for the 
+segmentation when dealing with a large vocabulary speech recognition system. 
+Figure 2 illusrates the hybrid system. Each utterance is decoded using the BBN BYBLOS 
+system [4]. The decoding is done in two steps: First the N-best recognition is performed, 
+producing a list of the candidate N best-scoring sentence hypotheses. In this stage, a 
+relatively simple HMM is used for computation purposes. The length of the N-best list 
+is chosen to be long enough to almost always include the correct answer. The second 
+step is the HMM rescoring, where a more sophisticated HMM is used. The recognition 
+process may stop at this stage, selecting the top scoring utterance of the list (HMM 1-best 
+output). 
+To incorporate the SNN in the N-best paradigm, we use the HMM system to generate 
+a segmentation for each N-best hypothesis, and the SNN to generate a score for the 
+hypothesis using the HMM segmentation. The N-best list may be reordered based on 
+A Hybrid Neural Net System for State-of-the-Art Continuous Speech Recognition 707 
+SNN scores alone. In this case the recognition process stops by selecting the top scoring 
+utterance of the rescored list (NN 1-best output). 
+N-Best HMM 
+Recognition 
+N-Best 
+List 
+N-best Segmental 
+HMM 
+Rescoring Labels and Neural Net 
+Segmentation Rescoring 
+HMM SNN 
+Scores Scores 
+HMM SNN 
+1-best 1-best 
+Combine Scores 
+and Reorder List 
+Hybrid SNN/HMM 
+Top Choice 
+Figure 2: Schematic diagram of the hybrid SNN/HMM system 
+The last stage in the hybrid system is to combine several scores for each hypothesis, 
+such as SNN score, HMM score, grammar score, and the hypothesized number of words 
+and phonemes. (The number of words and phoneroes are included because they serve 
+the same purpose as word and phoneme insertion penalties in a HMM CSR system.) We 
+form a composite score by taking a linear combination of the individual scores. The 
+linear combination is determined by selecting the weights that give the best performance 
+over a development test set. These weights can be chosen automatically [5]. After we 
+have rescored the N-Best list, we can reorder it according to the new composite scores. 
+If the CSR system is required to output just a single hypothesis, the highest scoring 
+hypothesis is chosen (hybrid SNN/HMM top choice in Figure 2). 
+4 SNN TRAINING 
+The training of the phonetic SNNs is done in two steps. In the first training step, we 
+segment all of the training utterances into phonetic segments using the HMM models and 
+708 Zavaliagkos, Zhao, Schwartz, and Makhoul 
+the utterance transcriptions. Each segment then serves as a positive example of the SNN 
+output corresponding to the phonetic label of the segment and as a negative example for 
+all the other phonetic SNN outputs (we are using a total of 53 phonetic outputs). We call 
+this training method 1.best training. 
+The SNN is trained using the log-error distortion measure [6], which is an extension 
+of the relative entropy measure to an M-class problem. To ensure that the outputs are 
+in fact probabilities, we use a sigmoidal nonlinearity to restrict their range in [0, 1] and 
+an output normalization layer to make them sum to one. The models are initialized by 
+removing the siglnoids and using the MSE measure. Then we reinstate the sigraoids and 
+proceed with four iterations of a quasi-Newton [7] error minimization algorithm. For the 
+adopted error measure, when the neural net non-linearity is the usual s

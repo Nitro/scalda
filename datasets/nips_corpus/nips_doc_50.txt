@@ -1,0 +1,178 @@
+358 
+LEARNING REPRESENTATIONS BY RECIRCULATION 
+Geoffrey E. Hinton 
+Computer Science and Psychology Departments, University of Toronto, 
+Toronto M5S 1A4, Canada 
+James L. McClelland 
+Psychology and Computer Science Departments, Carnegie-Mellon University, 
+Pittsburgh, PA 15213 
+ABSTRACT 
+We describe a new learning procedure for networks that contain groups of non- 
+linear units arranged in a closed loop. The aim of the learning is to discover codes 
+that allow the activity vectors in a visible group to be represented by activity 
+vectors in a hidden group. One way to test whether a code is an accurate 
+representation is to try to reconstruct the visible vector from the hidden vector. The 
+difference between the original and the reconstructed visible vectors is called the 
+reconstruction error, and the learning procedure aims to minimize this error. The 
+learning procedure has two passes. On the first pass, the original visible vector is 
+passed around the loop, and on the second pass an average of the original vector and 
+the reconstructed vector is passed around the loop. The learning procedure changes 
+each weight by an amount proportional to the product of the presynaptic activity 
+and the difference in the post-synaptic activity on the two passes. This procedure is 
+much simpler to implement than methods like back-propagation. Simulations in 
+simple networks show that it usually converges rapidly on a good set of codes, and 
+analysis shows that in certain restricted cases it performs gradient descent in the 
+squared reconstruction error. 
+INTRODUCTION 
+Supervised gradient-descent learning procedures such as back-propagation I 
+have been shown to construct interesting internal representations in hidden units 
+that are not part of the input or output of a connectionist network. One criticism of 
+back-propagation is that it requires a teacher to specify,the desi[,,ed output vectors. It 
+is possible to dispense with the teacher in the case of'encoder' networks 2 in which 
+the desired output vector is identical with the input vector (see Fig. 1). The purpose 
+of an encoder network is to learn good codes in the intermediate, hidden units. If 
+for, example, there are less hidden units than input units, an encoder network will 
+perform data-compression 3. It is also possible to introduce other kinds of constraints 
+on the hidden units, so we can view an encoder network as a way of ensuring that the 
+input can be reconstructed from the activity in the hidden units whilst also making 
+This research was supported by contract N00014-86-K-00167 from the Office of Naval Research 
+and a grant from the Canadian National Science and Engineering Research Council. Geoffrey Hinton 
+is a fellow of the Canadian Institute for Advanced Research. We thank Mike Franzini, Conrad 
+Galland and Geoffrey Goodhill for helpful discussions and help with the simulations. 
+� American Institute of Physics 1988 
+359 
+the hidden units satisfy some other constraint. 
+A second criticism of back-propagation is that it is neurally iraplausible (and 
+hard to implement in hardware) because it requires all the connections to be used 
+backwards and it requires the units to use different input-output functions for the 
+forward and backward passes. Recirculation is designed to overcome this second 
+criticism in the special case of encoder networks. 
+output units 
+t 
+[ hidden units [ 
+input units 
+Fig. 1. A diagram of a three layer encoder network that learns good codes using 
+back-propagation. On the forward pass, activity flows from the input units in the 
+bottom layer to the output units in the top layer. On the backward pass, error- 
+derivatives flow from the top layer to the bottom layer. 
+Instead of using a separate group of units for the input and output we use the 
+very same group of visible units, so the input vector is the initial state of this group 
+and the output vector is the state after information has passed around the loop. The 
+difference between the activity of a visible unit before and after sending activity 
+around the loop is the derivative of the squared reconstruction error. So, if the 
+visible units are linear, we can perform gradient descent in the squared error by 
+changing each of a visible unit's incoming weights by an amount proportional to the 
+product of this difference and the activity of the hidden unit from which the 
+connection emanates. So learning the weights from the hidden units to the output 
+units is simple. The harder problem is to learn the weights on connections coming 
+into hidden units because there is no direct specification of the desired states of these 
+units. Back-propagation solves this problem by back-propagating error-derivatives 
+from the output units to generate error-derivatives for the hidden units. 
+Recirculation solves the problem in a quite different way that is easier to implement 
+but much harder to analyse. 
+360 
+THE RECIRCULATION PROCEDURE 
+We introduce the recirculation procedure by considering a very simple 
+architecture in which there is just one group of hidden units. Each visible unit has a 
+directed connection to every hidden unit, and each hidden unit has a directed 
+connection to every visible unit. The total input received by a unit is 
+xj = . YiWji - 9j 
+(1) 
+where Yi is the state of the i th unit, wji is the weight on the connection from the i th to 
+the jh unit and 0j is the threshold of the fh unit. The threshold term can be 
+eliminated by giving every unit an extra input connection whose activity level is 
+fixed at 1. The weight on this special connection is the negative of the threshold, and 
+it can be learned in just the same way as the other weights. This method of 
+implementing thresholds will be assumed throughout the paper. 
+The functions relating inputs to outputs of visible and hidden units are smooth 
+monotonic functions with bounded derivatives. For hidden units we use the logistic 
+function: 
+1 (2) 
+YJ = - +e-Xj 
+Other smooth monotonic functions would serve as well. For visible units, our 
+mathematical analysis focuses on the linear case in which the output equals the total 
+input, though in simulations we use the logistic function. 
+We have already given a verbal description of the learning role for the hidden- 
+to-visible connections. The weight, wij, from the ./h hidden unit to the i th visible 
+unit is changed as follows: 
+Awq = e yj(1 ) [Yi(O)-Yi(2)] (3) 
+where Yi(O) is the state of the i th visible unit at time 0 and Yi(2) is its state at time 2 
+after activity has passed around the loop once. The rule for the visible-to-hidden 
+connections is identical: 
+Awji = eYi(2) [y./(1)-y.t(3)] 
+(4) 
+where yj(1) is the state of the jth hidden unit at time 1 (on the first pass around the 
+loop) and yi{3) is its state at time 3 (on the second pass around the loop). Fig. 2 
+shows the network exploded in time. 
+In general, this role for changing the visible-to-hidden connections does not 
+perform steepest descent in the squared reconstruction error, so it behaves differently 
+from back-propagation. This raises two issues: Under what conditions does it work, 
+and under what conditions does it approximate steepest descent? 
+361 
+time = 3 
+time = 0 time = 2 
+Fig. 2. A diagram showing the states of the visible and hidden units exploded in 
+time. The visible units are at the bottom and the hidden units are at the top. Time 
+goes from left to right. 
+CONDITIONS UNDER WHICH RECIRCULATION 
+APPROXIMATES GRADIENT DESCENT 
+For the simple architecture shown in Fig. 2, the recirculation learning procedure 
+changes the visible-to-hidden weights in the direction of steepest descent in the 
+squared reconstruction error provided the following conditions hold: 
+1. The visible units are linear. 
+2. The weights are symmetrical (i.e. wji=wij for all i,j). 
+3. The visible units have high regression. 
+Regression means that, after one pass around the loop, instead of setting the 
+activity of a visible unit, i, to be equal to its current total input, xi(2), as determined 
+by Eq 1, we set its activity to be 
+Yi(2) = 3Yi(O ) + (1-3)xi(2) (5) 
+where the regression, 3, is close to 1. Using high regression ensures that the visible 
+units only change state slightly so that when the new visible vector is sent around the 
+loop again on the second pass, it has very similar effects to the first pass. In order to 
+make the learning rule for the hidden units as shnilar as possible to the rule for the 
+visible units, we also use regression in computing the activity of the hidden units on 
+the second pass 
+yj(3) = 3yj(1) + (1-X)((x(3)) 
+(6) 
+For a given input vector, the squared reconstruction error, E, is 
+1 
+E =  [yt:(2)-yt:(O)] 2 
+For a hidden unit, j, 
+362 
+0� ayg2) Og2) 
+Oyt,(2) axg2) ayj(1) 
+-- -  [yk(2)-y(0)] y[(2) wkj 
+k 
+(7) 
+where 
+dyg2) 
+yt'(2) - -- 
+dxk(2) 
+For a visible-to-hidden weight wji 
+E E 
+ivji - yf (1) Yi(O) iyj( l'-- 
+So, using Eq 7 and the assumption that wkj=wjl c for all k,j 
+- y/'(1) yi(0) [ yk(2) y(2) wik-  yk(0) y[(2) wid 
+k k 
+The assumption that the visible units are linear (with a gradient of 1) means that 
+for all k, y/i(2) = 1. So using Eq 1 we have 
+E 
+i)wj i - h'(1) Yi(O) [ xj( 3 )-xj(1)] 
+(8) 
+Now, with sufficiently high regression, we can assume that the states of units 
+only change slightly with time so that 
+1 
+yf (1) [x.(3)-xj(1)]  <(xj(3)) - c(xj(1)) - (1- 30 [yj(3) - yj(1)] 
+and Yi(O) = yi(2) 
+So by substituting in Eq 8 we get 
+E 1 
+i)wfi - ( 1 - 3.) yi(2)[yj(3)- yj(1)] 
+(9) 
+An interesting property of Eq 9 is that it does not contain a term for the gradient 
+of the input-output function of unit j so recirculation learning can be applied even 
+when unit j uses an unknown non-linearity. To do back-propagation it is necessary to 
+know the gradient of the non-linearity, but recirculation measures the gradient by 
+measuring the effect of a small difference in input, so the term yj(3)-yj(1) implicitly 
+contains the gradient. 
+363 
+A

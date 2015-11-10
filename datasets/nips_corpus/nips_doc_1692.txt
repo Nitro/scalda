@@ -1,0 +1,166 @@
+Monte Carlo POMDPs 
+Sebastian Thrun 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+We present a Monte Carlo algorithm for learning to act in partially observable 
+Markov decision processes (POMDPs) with real-valued state and action spaces. 
+Our approach uses importance sampling for representing beliefs, and Monte Carlo 
+approximation for belief propagation. A reinforcement learning algorithm, value 
+iteration, is employed to learn value functions over belief states. Finally, a sample- 
+based version of nearest neighbor is used to generalize across states. Initial 
+empirical results suggest that our approach works well in practical applications. 
+1 Introduction 
+POMDPs address the problem of acting optimally in partially observable dynamic environ- 
+ment [6]. In POMDPs, a learner interacts with a stochastic environment whose state is only 
+partially observable. Actions change the state of the environment and lead to numerical 
+penalties/rewards, which may be observed with an unknown temporal delay. The learner's 
+goal is to devise a policy for action selection that maximizes the reward. Obviously, the 
+POMDP framework embraces a large range of practical problems. 
+Past work has predominately studied POMDPs in discrete worlds [ 1 ]. Discrete worlds have 
+the advantage that distributions over states (so-called belief states) can be represented 
+exactly, using one parameter per state. The optimal value function (for finite planning 
+horizon) has been shown to be convex and piecewise linear [10, 14], which makes it 
+possible to derive exact solutions for discrete POMDPs. 
+Here we are interested in POMDPs with continuous state and action spaces, paying tribute 
+to the fact that a large number of real-world problems are continuous in nature. In general, 
+such POMDPs are not solvable exactly, and little is known about special cases that can be 
+solved. This paper proposes an approximate approach, the MC-POMDP algorithm, which 
+can accommodate real-valued spaces and models. The central idea is to use Monte Carlo 
+sampling for belief representation and propagation. Reinforcement learning in belief space 
+is employed to learn value functions, using a sample-based version of nearest neighbor 
+for generalization. Empirical results illustrate that our approach finds to close-to-optimal 
+solutions efficiently. 
+2 Monte Carlo POMDPs 
+2.1 Preliminaries 
+POMDPs address the problem of selection actions in stationary, partially observable, con- 
+trollable Markov chains. To establish the basic vocabulary, let us define: 
+� State. At any point in time, the world is in a specific state, denoted by :c. 
+Monte Carlo POMDPs 1065 
+� Action. The agent can execute actions, denoted a. 
+� Observation. Through its sensors, the agent can observe a (noisy) projection of the 
+world's state. We use o to denote observations. 
+� Reward. Additionally, the agent receives rewards/penalties, denoted R  . To 
+simplify the notation, we assume that the reward is part of the observation. More 
+specifically, we will use R(o) to denote the function that extracts the reward from 
+the observation. 
+Throughout this paper, we use the subscript t to refer to a specific point in time (e.g., st 
+refers to the state at time t). 
+POMDPs are characterized by three probability distributions: 
+1. The initial distribution, '(x) :-- Pr(zo), specifies the initial distribution of states at 
+time t -- 0. 
+2. The next state distribution,/_t(z I a,) := Pt(oct - vc [ at_l '- a, vct_l -- 
+describes the likelihood that action a, when executed at state , leads to state . 
+3. The perceptual distribution, v(o [ ) := Pt(or = o[ct - ), describes the likeli- 
+hood of observing o when the world is in state 
+A history is a sequence of states and observations. For simplicity, we assume that actions 
+and observations are alternated. We use dt to denote the history leading up to time t: 
+dt :- {ot, at-l,Ot-l, at-2,...,ao, oo} (1) 
+The fundamental problem in POMDPs is to devise a policy for action selection that maxi- 
+mizes reward. A policy, denoted 
+cr � d > a (2) 
+is a mapping from histories to actions. Assuming that actions are chosen by a policy or, 
+each policy induces an expected cumulative (and possibly discounted by a discount factor 
+? _< 1) reward, defined as 
+: s (3) 
+Here E[ ] denotes the mathematical expectation. The POMDP problem is, thus, to find a 
+policy or* that maximizes J, i.e., 
+or* -- argmax J (4) 
+o' 
+2.2 Belief States 
+To avoid the difficulty of learning a function with unbounded input (the history can be 
+arbitrarily long), it is common practice to map histories into belief states, and learn a 
+mapping from belief states to actions instead [10]. 
+Formally, a belief state (denoted 0) is a probability distribution over states conditioned on 
+past actions and observations: 
+Ot- Pr(xt I dt) - Pr(xt I ot,at_l,...,oo) (5) 
+Belief are computed incrementally, using knowledge of the POMDP's defining distributions 
+', p, and ,. Initially 
+00 : r 
+For t > O, we obtain 
+Ot+l = Pr(xt+l l ot+l,at,...,oo) 
+= o Pr(ot+l 
+= o Pr(ot+l 
+= o Pr(Ot+l 
+(6) 
+(7) 
+(8) 
+o0) -r(xt+l I at,..., o0) 
+zt+) f Pr(zt+l l at,...,oo, zt) Pr(zt l at,...,oo) dzt (9) 
+ct+) j Pr(oet+l l at,ct) Ot dzt (10) 
+1066 $. Thrun 
+0.2 
+lllllllllNIllllllllllllllllllllll IIIIlll II � II I I 
+2 4 6 8 10 12 
+2 4 $ 8 10 12 
+Figure 1: Sampling: (a) Likelihood-weighted sampling and (b) importance sampling. At the bottom 
+of each graph, samples are shown that approximate the function f shown at the top. The height of 
+the samples illustrates their importance factors. 
+Here a denotes a constant normalizer. The derivations of (8) and (10) follow directly from 
+the fact that the environment is a stationary Markov chain, for which future states and 
+observations are conditionally independent from past ones given knowledge of the state. 
+Equation (9) is obtained using the theorem of total probability. 
+Armed with the notion of belief states, the policy is now a mapping from belief states 
+(instead of histories) to actions: 
+o':0 >a (11) 
+The legitimacy of conditioning a on 0, instead of d, follows directly from the fact that the 
+environment is Markov, which implies that 0 is all one needs to know about the past to 
+make optimal decisions. 
+2.3 Sample Representations 
+Thus far, we intentionally left open how belief states 0 are represented. In prior work, state 
+spaces have been discrete. In discrete worlds, beliefs can be represented by a collection 
+of probabilities (one for each state), hence, beliefs can be represented exactly. Here were 
+are interested in real-valued state spaces. In general, probability distributions over real- 
+valued spaces possess infinitely many dimensions, hence cannot be represented on a digital 
+computer. 
+The key idea is to represent belief states by sets of (weighted) samples drawn from the 
+belief distribution. Figure 1 illustrates two popular schemes for sample-based approxima- 
+tion: likelihood-weighted sampling, in which samples (shown at the bottom of Figure la) 
+are drawn directly from the target distribution (labeled f in Figure la), and importance 
+sampling, where samples are drawn from some other distribution, such as the curve labeled 
+# in Figure lb. In the latter case, samples z are annotated by a numerical importance factor 
+f(z) (12) 
+p(x) = g(x) 
+to account for the difference in the sampling distribution, g, and the target distribution f 
+(the height of the bars in Figure 1 b illustrates the importance factors). Importance sampling 
+requires that f > 0 - g > 0, which will be the case throughout this paper. Obviously, both 
+sampling methods generate approximations only. Under mild assumptions, they converge 
+ with N denoting the sample set size [16]. 
+to the target distribution at a rate of , 
+In the context of POMDPs, the use of sample-based representations gives rise to the 
+following algorithm for approximate belief propagation (c.f., Equation (10)): 
+Algorithm particle_filter(Or, at, Or+  ): 
+Ot+ = 0 
+do N times: 
+draw random state zt from Ot 
+Monte Carlo POMDPs 1067 
+sample xt+, according to(xt+, [ at, xt) 
+set importance factor p( z t + l ) -- v ( ot + , l z t + , ) 
+add (zt+,,p(zt+,)) toot+, 
+normalize all p(zt+,)  Or+, so that -p(zt+,) = 1 
+return Ot + , 
+This algorithm converges to (10) for arbitrary models /, ,, and r and arbitrary belief 
+distributions 0, defined over discrete, continuous, or mixed continuous-discrete state and 
+action spaces. It has, with minor modifications, been proposed under names like particle 
+filters [13], condensation algorithm [5], survival of the fittest [8], and, in the context of 
+robotics, Monte Carlo localization [4]. 
+2.4 Projection 
+In conventional planning, the result of applying an action at at a state zt is a distribution 
+Pr(zt+,, Rt+, I at, zt) over states zt+, and rewards Rt+, at the next time step. This 
+operation is called projection. In POMDPs, the state zt is unknown. Instead, one has to 
+compute the result of applying action at to a belief state Or. The result is a distribution 
+Pt(Or+,, Rt+, I at, Or) over belief states Or+, and rewards Rt+,. Since belief states them- 
+selves are distributions, the result of a projection in POMDPs is, technically, a distribution 
+over distributions. 
+The projection algorithm is derived as follows. Using total probability, we obtain: 
+Pr(0t+,,/t+, l at,Or) - Pr(Ot+,,Rt+, l at,dr) (13) 
+,Pr(Ot+,,tt+, I ot+,,at,dt) Pt(or+, l at,dr) dot+, (14) 
+(,) (**) 
+The term (,) has already been derived in the previous section (c.f., Equation (10)), under 
+the observation that the reward/t+, is trivially computed from the observation 
+The second term, (**), is obtained by integrating out the unknown variables, zt+, and zt, 
+and by once again exploiting the Markov property: 
+Pr(ot+t l at,dt) -' / Pr(ot+, I Xt+l) Pr(xt+, [ at,dt) dzt+, (15) 
+= / Pt(or+, I zt+,) / Pr(zt+, I zt,at) Pr(zt Idt)dzt dzt+(i16) 
+This leads to the foll

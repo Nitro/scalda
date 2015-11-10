@@ -1,0 +1,166 @@
+Separating Style and Content 
+Joshua B. Tenenbaum 
+Dept. of Brain and Cognitive Sciences 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+j btpsyche. mir. edu 
+William T. Freeman 
+MERL, Mitsubishi Electric Res. Lab. 
+201 Broadway 
+Cambridge, MA 02139 
+freeman,toefl. corn 
+Abstract 
+We seek to analyze and manipulate two factors, which we call style 
+and content, underlying a set of observations. We fit training data 
+with bilinear models which explicitly represent the two-factor struc- 
+ture. These models can adapt easily during testing to new styles or 
+content, allowing us to solve three general tasks: extrapolation of a 
+new style to unobserved content; classification of content observed 
+in a new style; and translation of new content observed in a new 
+style. For classification, we embed bilinear models in a probabilistic 
+framework, Separable Mixture Models (SMMs), which generalizes 
+earlier work on factoffal mixture models [7, 3]. Significant per- 
+formance improvement on a benchmark speech dataset shows the 
+benefits of our approach. 
+I Introduction 
+In many pattern analysis or synthesis tasks, the observed data are generated from 
+the interaction of two underlying factors which we will generically call style and 
+content. For example, in a character recognition task, we might observe different 
+letters in different fonts (see Fig. 1); with handwriting, different words in different 
+writing styles; with speech, different phonemes in different accents; with visual 
+images, the faces of different people under different lighting conditions. 
+Such data raises a number of learning problems. Extracting a hidden two-factor 
+structure given only the raw observations has received significant attention [7, 3], 
+but unsupervised factorial learning of this kind has yet to prove tractable for our 
+focus: real-world data with subtly interacting factors. We work in a more supervised 
+setting, where labels for style or content may be available during training or testing. 
+Figure 1 shows three problems we want to solve. Given a labelled training set of 
+observations in multiple styles, we want to extrapolate a new style to unobserved 
+content classes (Fig. la), classify content observed in a new style (Fig. lb), and 
+translate new content observed in a new style (Fig. lc). 
+This paper treats these problems in a common framework, by fitting the training 
+data with a separable model that can easily adapt during testing to new styles or 
+content classes. We write an observation vector in style s and content class c as 
+yC. We seek to fit these observations with some model 
+yC = f(a  , b; W), (1) 
+where a particular functional form of f is assumed. We must estimate parameter 
+vectors a  and b  describing style s and content c, respectively, and W, parameters 
+Separating Style and Content 663 
+Extrapolation 
+Classification 
+ABCDE 
+ABCDE 
+A B C O E b'alnlng mt  
+ABODE 
+A B C ? ? [noomlle 
+ABODE 
+A B C D E 
+A BiC DE 
+A BC DE 
+ED C B A 
+(a) (b) (c) 
+Translation 
+RBCnE ?? ? 
+ABCDE 
+A BC DE 
+ABODE?? ? 
+? ?FGH 
+Figure 1: Given observations of content (letters) in different styles (fonts), we want to 
+extrapolate, classify, and translate observations from a new style or content class. 
+for f that are independent of style and content but govern their interaction. In terms 
+of Fig. 1 (and in the spirit of [8]), the model represents what the elements of each 
+row have in common independent of column (a ), what the elements of each column 
+have in common independent of row (be), and what all elements have in common 
+independent of row and column (W). With these three modular components, we 
+can solve problems like those illustrated in Fig. 1. For example, we can extrapolate 
+a new style to unobserved content classes (Fig. la) by combining content and 
+interaction parameters learned during training with style parameters estimated from 
+available data in the new style. 
+2 Bilinear models 
+We propose to separate style and content using bilinear models - two-factor models 
+that are linear in either factor when the other is held constant. These simple 
+models are still complex enough to model subtle interactions of style and content. 
+The empirical success of linear models in many pattern recognition applications 
+with single-factor data (e.g. eigenface models of faces under varying identity 
+but constant illumination and pose [15], or under varying illumination but constant 
+identity and pose [5] ), makes bilinear models a natural choice when two such factors 
+vary independently across the data set. Also, many of the computationally desirable 
+properties of linear models extend to bilinear models. Model fitting (discussed 
+in Section 3 below) is easy, based on efficient and well-known techniques such as 
+the singular value decomposition (SVD) and the expectation-maximization (EM) 
+algorithm. Model complexity can be controlled by varying model dimensionality to 
+achieve a compromise between reproduction of the training data and generalization 
+during testing. Finally, the approach extends to multilinear models [10], for data 
+generated by three or more interacting factors. 
+We have explored two bilinear models for Eq. 1. In the symmetric model (so called 
+because it treats the two factors symmetrically), we assume f is a bilinear mapping 
+given by 
+=  a  b c 
+YC = a/rWkb� d.-, i j 
+ij 
+The Wi.f ; parameters represent a set of basis functions independent of style and con- 
+tent, which characterize the interaction between these two factors. Observations in 
+style s and content c are generated by mixing these basis functions with coefficients 
+664 J. B. Tenenbaum and W. T. Freeman 
+given by the tensor product of a s and b* vectors. The model exactly reproduces the 
+observations when the dimensionalities of a s and b c equal the number of styles Ns 
+and content classes Nc observed. It finds coarser but more compact representations 
+as these dimensionalities are decreased. 
+Sometimes it may not be practical to represent both style and content with low- 
+dimensional vectors. For example, a linear combination of a few basis styles learned 
+during training may not describe new styles well. We can obtain more flexible, 
+asymmetric bilinear models by letting the basis functions Wij themselves depend 
+on style or content. For example, if the basis functions are allowed to depend on 
+style, the bilinear model from Eq. 2 becomes yC: Y-ij abW}. This simplifies 
+to yC = Y-J Ab, by summing out the i index and identifying Aj -- Y-i a W/. 
+In vector notation, we have 
+yS = ASh , (3) 
+where A s is a matrix of basis functions specific to style s (independent of con- 
+tent), and b  is a vector of coefficients specific to content c (independent of style). 
+Alternatively, the basis functions may depend on content, which gives 
+y= BOa s. (4) 
+Asymmetric models do not parameterize the rendering function f independently of 
+style and content, and so cannot translate across both factors simultaneously (Fig. 
+lc). Further, a matrix representation of style or content may be too flexible and 
+overfit the training data. But if overfitting is not a problem or can be controlled 
+by some additional constraint, asymmetric models may solve extrapolation and 
+classification tasks using less training data than symmetric models. 
+Figure 2 illustrates an example of an asymmetric model used to separate style and 
+content. We have collected a small database of face images, with 11 different people 
+(content classes) in 15 different head poses (styles). The images are 22 x 32 pixels, 
+which we treat as 704-dimensional vectors. A subset of the data is shown in Fig. 
+Fig. 2b schematically depicts an asymmetric bilinear model of the data, with each 
+pose represented by a set of basis vectors APOSe (shown as images) and each person 
+represented by a set of coefficients bPerSOn. To render an image of a particular 
+person in a particular pose, the pose-specific basis vectors are mixed according 
+to the person-specific coefficients. Note that the basis vectors for each pose look 
+like eigenfaces [15] in the appropriate style of each pose. However, the bilinear 
+structure of the model ensures that corresponding basis vectors play corresponding 
+roles across poses (e.g. the first vector holds (roughly) the mean face for that pose, 
+the second may modulate overall head size, the third may modulate head thickness, 
+etc.), which is crucial for adapting to new styles or content classes. 
+3 Model fitting 
+All the tasks shown in Fig. 1 break down into a training phase and a testing phase; 
+both involve some model fitting. In the training phase (corresponding to the first 
+5 rows and columns of Figs. 1a-c), we learn all the parameters of a bilinear model 
+from a complete matrix of observations of N content classes in Ns styles. In the 
+testing phase (corresponding to the final rows of Figs. la,b and the final row and 
+last 3 columns of Fig. lc), we adapt the same model to data in a new style or content 
+class (or both), estimating new parameters for the new style or content, clamping 
+the other parameters. Then new and old parameters are combined to accomplish 
+the desired classification, extrapolation, or translation task. This section focuses on 
+the asymmetric model and its use in extrapolation and classification. Training and 
+Separating Style and Content 665 
+Faces rendered from: 
+y = A p�se bPerson 
+(a) (b) 
+bLinda bTom 
+Figure 2: An illustraton of the asymmetric model, with faces varying in identity and head 
+pose. 
+adaptation procedures for the symmetric model are similar and based on algorithms 
+in [10, 11]. In [2], we describe these procedures and their application to extrapolation 
+and translation tasks. 
+3.1 Training 
+Let nc be the number of observations in style s and content c, and let m 
+be the sum of these observations. Then estimates of A  and b  that minimize the 
+sum-of-squared-errors for the asymmetric model in Eq. 3 can b

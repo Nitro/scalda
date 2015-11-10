@@ -1,0 +1,152 @@
+An Actor/Critic Algorithm that is 
+Equivalent to Q-Learning 
+Robert H. Crites 
+Computer Science Department 
+University of Massachusetts 
+Amherst, MA 01003 
+crit escs .umass. edu 
+Andrew G. Barto 
+Computer Science Department 
+University of Massachusetts 
+Amherst, MA 01003 
+barto,cs .umass. edu 
+Abstract 
+We prove the convergence of an actor/critic algorithm that is equiv- 
+alent to Q-learning by construction. Its equivalence is achieved by 
+encoding Q-values within the policy and value function of the ac- 
+tor and critic. The resultant actor/critic algorithm is novel in two 
+ways: it updates the critic only when the most probable action is 
+executed from any given state, and it rewards the actor using cri- 
+teria that depend on the relative probability of the action that was 
+executed. 
+1 INTRODUCTION 
+In actor/critic learning systems, the actor implements a stochastic policy that maps 
+states to action probability vectors, and the critic attempts to estimate the value of 
+each state in order to provide more useful reinforcement feedback to the actor. The 
+result is two interacting adaptive processes: the actor adapts to the critic, while the 
+critic adapts to the actor. 
+The foundations of actor/critic learning systems date back at least to Samuel's 
+checker program in the late 1950s (Samuel,1963). Examples of actor/critic systems 
+include Barto, Sutton, & Anderson's (1983) ASE/ACE architecture and Sutton's 
+(1990) Dyna-PI architecture. Sutton (1988) notes that the critic in these systems 
+performs temporal credit assignment using what he calls temporal difference (TD) 
+methods. Barto, Sutton, & Watkins (1990) note a relationship between actor/critic 
+402 Robert Crites, Andrew G. Barto 
+architectures and a dynamic programming (DP) algorithm known as policy iteration. 
+Although DP is a collection of general methods for solving Markov decision pro- 
+cesses (MDPs), these algorithms are computationally infeasible for problems with 
+very large state sets. Indeed, classical DP algorithms require multiple complete 
+sweeps of the entire state set. However, progress has been made recently in devel- 
+oping asynchronous, incremental versions of DP that can be run online concurrently 
+with control (Watkins, 1989; Barto et al, 1993). Most of the theoretical results for 
+incremental DP have been for algorithms based on a DP algorithm known as value 
+iteration. Examples include Watkins' (1989) Q-learning algorithm (motivated by 
+a desire for on-line learning), and Bertsekas & Tsitsiklis' (1989) results on asyn- 
+chronous DP (motivated by a desire for parallel implementations). Convergence 
+proofs for incremental algorithms based on policy iteration (such as actor/critic 
+algorithms) have been slower in coming. 
+Williams & Baird (1993) provide a valuable analysis of the convergence of certain 
+actor/critic learning systems that use deterministic policies. They assume that a 
+model of the MDP (including all the transition probabilities and expected rewards) 
+is available, allowing the use of operations that look ahead to all possible next 
+states. When a model is not available for the evaluation of alternative actions, one 
+must resort to other methods for exploration, such as the use of stochastic policies. 
+We prove convergence for an actor/critic algorithm that uses stochastic policies and 
+does not require a model of the MDP. 
+The key idea behind our proof is to construct an actor/critic algorithm that is 
+equivalent to Q-learning. It achieves this equivalence by encoding Q-values within 
+the policy and value function of the actor and critic. By illustrating the way Q- 
+learning appears as an actor/critic algorithm, the construction sheds light on two 
+significant differences between Q-learning and traditional actor/critic algorithms. 
+Traditionally, the critic attempts to provide feedback to the actor by estimating 
+V r, the value function corresponding to the current policy ,r. In our construction, 
+instead of estimating W r, the critic directly estimates the optimal value function 
+V*. In practice, this means that the value function estimate r is updated only 
+when the most Irobable action is executed from any given state. In addition, our 
+actor is provided with more discriminating feedback, based not only on the TD 
+error, but also on the relative probability of the action that was executed. By 
+adding these modifications, we can show that this algorithm behaves exactly like 
+Q-learning constrained by a particular exploration strategy. Since a number of 
+proofs of the convergence of Q-learning already exist (Tsitsiklis, 1994; Jakkola et 
+al, 1993; Watkins & Dayan, 1992), the fact that this algorithm behaves exactly 
+like Q-learning implies that it too converges to the optimal value function with 
+probability one. 
+2 MARKOV DECISION PROCESSES 
+Actor/critic and Q-learning algorithms are usually studied within the Markov de- 
+cision process framework. In a finite MDP, at each discrete time step, an agent 
+observes the state a: from a finite set X, and selects an action a from a finite set 
+A by using a stochastic policy ,r that assigns a probability to each action in A. 
+The agent receives a reward with expected value R(a:, a), and the state at the next 
+An Actor/Critic Algorithm That Is Equivalent to Q-Learning 403 
+time step is y with probability pa(z,y). For any policy r and z E X, let Wr(z) 
+denote the ezpected infinite-horizon discounted return om z ven that the agent 
+uses poficy . Letting rt denote the reward at time t, this is defined : 
+= = 
+where z0 is the initi state, 0  7  1 is a factor used to discount future rewards, 
+and E, is the expectation suming the agent ways uses policy . It is usu to c 
+V  (z) the vaIe of z under . The function V  is the vaIe nction corresponding 
+to . The objective is to find an optim policy, i.e., a policy, *, that mzes 
+the vue of each state z defined by (1). The unique optimaI vaIe nction, V*, is 
+the vue function corresponding to any optim policy. Addition dets on tMs 
+and other types of MDPs can be found in my references. 
+ACTOR/CRITIC ALGORITHMS 
+A generic actor/critic algorithm is as follows: 
+1. Initialize the stochastic policy and the value function estimate. 
+2. From the current state z, execute action a randomly according to the cur- 
+rent policy. Note the next state y, the reward v, and the TD error 
+ = [ + tZ(y)] - t(), 
+where 0 _ '/< I is the discount factor. 
+3. Update the actor by adjusting the action probabilities for state z using the 
+TD error. If e > 0, action a performed relatively well and its probability 
+should be increased. If e < 0, action a performed relatively poorly and its 
+probability should be decreased. 
+4. Update the critic by adjusting the estimated value of state z using the TD 
+where c is the learning rate. 
+5. z ,-- y. Go to step 2. 
+There are a variety of implementations of this generic algorithm in the literature. 
+They differ in the exact details of how the policy is stored and updated. Barto 
+et al (1990) and Lin (1993) store the action probabilities indirectly using param- 
+eters w(z, a) that need not be positive, and need not sum to one. Increasing (or 
+decreasing) the probability of action a in state z is accomplished by increasing (or 
+decreasing) the value of the parameter w(z,a). Sutton (1990) modifies the generic 
+algorithm so that these parameters can be interpreted as action value estimates. 
+He redefines e in step 2 as follows: 
++ fz(y)] _ a). 
+For this reason, the Dyna-PI architecture (Sutton, 1990) and the modified ac- 
+tor/critic algorithm we present below both reward less probable actions more readily 
+because of their lower estimated values. 
+404 Robert Crites, Andrew G. Barto 
+Barto et ai (1990) select actions by adding exponentially distributed random num- 
+bers to each parameter w(z, a) for the current state, and then executing the action 
+with the maximum sum. Sutton (1990) and Lin (1993) convert the parameters 
+w(z, a) into action probabilities using the Boltzmann distribution, where given a 
+temperature T, the probability of selecting action i in state z is 
+e(X,i)/T 
+In spite of the empirical success of these algorithms, their convergence has never 
+been proven. 
+4 Q-LEARNING 
+Rather than learning the values of states, the Q-learning algorithm learns the val- 
+ues of state/action pairs. Q(z,a) is the expected discounted return obtained by 
+performing action a in state z and performing optimally thereafter. Once the Q 
+function has been learned, an optimal action in state z is any action that maximizes 
+Q(z, .). Whenever an action a is executed from state z, the Q-value estimate for 
+that state/action pair is updated as follows: 
+(, a) -- (, a) + r(r,) [r + 7 maxbE.% (y, b) - (a, a)], 
+where a (r,) is the non-negative learning rate used the r, th time action a is executed 
+from state a:. Q-Learning does not specify an exploration mechanism, but requires 
+that all actions be tried infinitely often from all states� In actor/critic learning 
+systems, exploration is fully determined by the action probabilities of the actor. 
+5 A MODIFIED ACTOR/CRITIC ALGORITHM 
+For each value v E , the modified actor/critic algorithm presented below uses an 
+invertible function, H, that assigns a real number to each action probability ratio: 
+Each H must be a continuous, strictly increasing function such that H (1) -- v, 
+and 
+'z = for all z, > 0. 
+One example of such a class of functions is H(z) - T/r(z) + v, v E , for some 
+positive T. This class of functions corresponds to Boltzmann exploration in Q- 
+learning. Thus, a kind of simulated annealing can be accomplished in the modified 
+actor/critic algorithm (as is often done in Q-learning) by gradually lowering the 
+temperature T and appropriately renormalizing the action probabilities. It is 
+also possible to restrict the range of H if bounds on the possible values for a given 
+MDP are known a priori. 
+For a state a:, let 

@@ -1,0 +1,169 @@
+A 
+Convolutional Neural Network 
+Hand Tracker 
+Steven J. Nowlan 
+Synaptics, Inc. 
+2698 Orchard Parkway 
+San Jose, CA 95134 
+nowlan@synaptics.com 
+John C. Platt 
+Synaptics, Inc. 
+2698 Orchard Parkway 
+San Jose, CA 95134 
+platt@synaptics.com 
+Abstract 
+We describe a system that can track a hand in a sequence of video 
+frames and recognize hand gestures in a user-independent manner. 
+The system locates the hand in each video frame and determines 
+if the hand is open or closed. The tracking system is able to track 
+the hand to within -t-10 pixels of its correct location in 99.7% of 
+the flames from a test set containing video sequences from 18 dif- 
+ferent individuals captured in 18 different room environments. The 
+gesture recognition network correctly determines if the hand being 
+tracked is open or closed in 99.1% of the frames in this test set. 
+The system has been designed to operate in real time with existing 
+hardware. 
+I Introduction 
+We describe an image processing system that uses convolutional neural networks to 
+locate the position of a (moving) hand in a video frame, and to track the position of 
+this hand across a sequence of video frames. In addition, for each frame, the system 
+determines if the hand is currently open or closed. The input to the system is a 
+sequence of black and white, 320 by 240 pixel digitized video frames. We designed 
+the system to operate in a user-independent manner, using video frames from indoor 
+scenes with natural clutter and variable lighting conditions. For ease of hardware 
+implementation, we have restricted the system to use only convolutional networks 
+and simple image filtering operations, such as smoothing and frame differencing. 
+902 Steven J. Nowlan, John C. Platt 
+Figure 1: Average over all examples of each of the 10 classes of handwritten digits, 
+after first aligning all of the examples in each class before averaging. 
+Our motivation for investigating the hand tracking problem was to explore the limits 
+of recognition capability for convolutional networks. The structure of convolutional 
+networks makes them naturally good at dealing with translation invariance, and 
+with coarse representations at the upper layers, they are also capable of dealing 
+with some degree of size variation. Convolutional networks lave been successfully 
+applied to machine print OCR (Platt et al, 1992), machine print address block 
+location (Wolf and Platt, 1994), and hand printed OCR (Le Cun et al, 1990; Martin 
+and Rashid, 1992). In each of these problems, convolutional networks perform very 
+well on simultaneously segmenting and recognizing two-dimensional objects. 
+In these problems, segmentation is often the most difficult step, and once accom- 
+plished the classification is simplified. This can be illustrated by examining the 
+average of all of the examples for each class after alignment and scaling. For the 
+case of hand-printed OCR (see Fig. 1), we can see that the average of all of the 
+examples is quite representative of each class, suggesting that the classes are quite 
+compact, once the issue of translation invariance has been dealt with. This compact- 
+ness makes nearest neighbor and non-linear template matching classifiers reasonable 
+candidates for good performance. 
+If you perform the same trick of aligning and averaging the open and closed hands 
+from our training database of video sequences, you will see a quite different result 
+(Fig. 2). The extreme variability in hand orientations in both the open and closed 
+cases means that the class averages, even after alignment, are only weakly char- 
+acteristic of the classes of open and closed hands. This lack of clean structure in 
+the class average images uggested that hand tracking is a challenging recognition 
+problem. This paper examines whether convolutional networks are extendable to 
+hand tracking, and hence possibly to other problems where classification remains 
+difficult even after segmentation and alignment. 
+2 System Architecture 
+The overall architecture of the system is shown in Fig. 3. There are separate hand 
+tracking and gesture recognition subsystems. For the hand tracking subsystem, 
+each video frame is first sub-sampled and then the previous video frame (stored) is 
+subtracted from the current video frame to produce a difference frame. These dif- 
+ference frames provide a crude velocity signal to the system, since the largest signals 
+in the difference frames tend to occur near objects that are moving (Fig. 5). Inde- 
+pendent predictions of hand locations are made by separate convolutional networks, 
+which look at either the intensity frame or the difference frame. A voting scheme 
+then combines the predictions from the intensity and difference networks along with 
+predictions based on the hand trajectory computed from 3 previous frames. 
+A Convolutional Neural Network Hand Tracker 903 
+Figure 2: Average over all examples of open and closed hands from the database of 
+raining video sequences, after first aligning all of the examples in each class before 
+averaging. 
+Previous . Difference 
+Subsampled ..r I .. Difference 
+Video Frame _. Subtraction I  Frame 
+Current .j 
+Video -] Subsamp 
+Frame 
+Intensity 
+Hand Locator 
+Network 
+Hand Locator 
+Network 
+Position Hypotheses 
+Cropping Network 
+:> Is Hand Open? 
+Position in 
+Previous Frames 
+.1 I 
+ProcedureJ 
+Hand Position 
+Figure 3: Architecture of object recognition system for hand tracking and open- 
+versus-closed hand identification. 
+904 Steven J. Nowlan, John C. Platt 
+O Output 
+\ 8x8x10 Convolutional Window  ,?,' Subsampling Layer 
+10 Subsampling Layer 5 
+3x3 Window 
+10 5 [ Hidden Layer 
+26x26 Convolutional Window 
+/ /;oo 
+Input / Input 
+8O 100 
+Figure 4: Network architectures. The network on the left will find a hand in either 
+an intensity or difference low-resolution image. The output of the left network is 
+a single convolutional image for encoding the presence of the hand at a location. 
+The network on the right recognizes whether the hand is open or closed in a full 
+resolution image. The output of the right network is a single value that identifies 
+whether the hand is open or closed. 
+3x3 Window 
+Hidden Layer 
+8x8 Convolutional Window 
+The gesture recognition subsystem takes a 100 by 100 pixel full resolution subimage 
+of the current video frame as input. The position of this subimage is centered 
+around the location output by the hand-tracking subsystem, thus the performance 
+of the gesture recognition subsytem is dependent on the success of the tracking 
+subsystem. A single convolutional network looks at this intensity subimage and 
+indicates if the hand contained in the image is open or closed. 
+The tracking and gesture recognition subsystems were trained separately, and will 
+be described in detail in the following subsections. 
+2.1 Hand Tracking 
+The intensity pathway of the hand tracking subsystem takes the original video im- 
+ages subsampled to 1/4 their original resolution (Fig. 5). The network architecture 
+used to locate the hand position is a fully convolutional network with one hidden 
+layer, a subsampling layer, and an output layer (Fig. 4). The output layer con- 
+tains a single convolutional unit, which when active above threshold indicates the 
+(possible) presence of the hand at that location. 
+The difference image pathway of the hand tracking system subtracts the previous 
+subsampled video image from the current subsampled video image, and uses these 
+1/4 resolution difference images as input (Fig. 5). The network used to locate the 
+hand location in the difference pathway is identical in structure to that used for 
+hand location in the intensity pathway (Fig. 4). 
+The intensity and difference hand location networks were trained independently to 
+A Convolutional Neural Network Hand Tracker 905 
+Figure 5: Sample video frames used by the hand tracking subsystem. The upper 
+frames are used by the intensity pathway. The lower frames are corresponding 
+difference images used by the difference pathway. The white cross indicates the 
+position of the hand predicted by the network. 
+locate the position of the hand in each training frame to within +10 pixels (at full 
+resolution). The details of training and the performance of the trained networks 
+is discussed in the following section (see Table 1). In order to provide adequate 
+overall tracking performance, it was necessary to combine information from both 
+hand location networks, using a voting scheme. This voting scheme also takes 
+advantage of the fact that we are attempting to track a smoothly moving object, 
+by using information from the estimated position in previous frames to predict the 
+position of the hand in the current frame. 
+A simple rule based scheme is used to combine the predictions of hand location from 
+the different sources. We first predict the current position of the hand based on a 
+trajectory computed from 3 previous frames, and construct a plausible bounding 
+box centered at this position. This bounding box represents about one third of the 
+original image. We next find all above threshold network responses from both the 
+intensity and difference networks. If there is a strong response from both of the 
+networks in a similar spatial location, we choose that location. Otherwise, we use 
+the location of the strongest response from the difference network. If there are no 
+above threshold responses from the difference network, we use the response from the 
+intensity network. If there are no above threshold responses from either network, 
+we use the location predicted by the trajectory from previous frames. All thresholds 
+used in this voting scheme are estimated from the training/cross-validation set. 
+2.2 Recognition of Open versus Closed Hands 
+The gesture recognition subsystem takes as input a 100 pixel by 100 pixel piece 
+of the original video frame, centered at the location output by the hand tracking 
+subsystem (and usually not centered on the hand 

@@ -1,0 +1,157 @@
+Correlates of Attention in a Model of 
+Dynamic Visual Recognition* 
+Rajesh P. N. Rao 
+Department of Computer Science 
+University of Rochester 
+Rochester, NY 14627 
+rao@cs. rochester. edu 
+Abstract 
+Given a set of objects in the visual field, how does the the visual system learn 
+to attend to a particular object of interest while ignoring the rest? How are 
+occlusions and background clutter so effortlessly discounted for when rec- 
+ognizing a familiar object? In this paper, we attempt to answer these ques- 
+tions in the context of a Kalman filter-based model of visual recognition that 
+has previously proved useful in explaining certain neurophysiological phe- 
+nomena such as endstopping and related extra-classical receptive field ef- 
+fects in the visual cortex. By using results from the field of robust statistics, 
+we describe an extension of the Kalman filter model that can handle multiple 
+objects in the visual field. The resulting robust Kalman filter model demon- 
+strates how certain forms of attention can be viewed as an emergent prop- 
+erty of the interaction between top-down expectations and bottom-up sig- 
+nals. The model also suggests functional interpretations of certain attention- 
+related effects that have been observed in visual cortical neurons. Exper- 
+imental results are provided to help demonstrate the ability of the model 
+to perform robust segmentation and recognition of objects and image se- 
+quences in the presence of varying degrees of occlusions and clutter. 
+1 INTRODUCTION 
+The human visual system possesses the remarkable ability to recognize objects despite the 
+presence of distractors and occluders in the field of view. A popular suggestion is that an at- 
+tentional spotlight mediates this ability to preferentially process a relevant object in a given 
+scene (see [5, 9] for reviews). Numerous models have been proposed to simulate the control of 
+this focus of attention [10, 11, 15]. Unfortunately, there is inconclusive evidence for the ex- 
+istence of an explicit neural mechanism for implementing an attentional spotlight in the visual 
+*This research was supported by NIH/PHS research grant 1-P41-RR09283. I am grateful to Dana 
+Ballard for many useful discussions and suggestions. Author's current address: The Salk Institute, CNL, 
+10010 N. Torrey Pines Road, La Jolla, CA 92037. E-mail: <ao$alk. edu. 
+Correlates of Attention in a Model of Dynamic Visual Recognition 81 
+cortex. Thus, an important question is whether there are alternate neural mechanisms which 
+don't explicitly use a spotlight but whose effects can nevertheless be interpreted as attention. 
+In other words, can attention be viewed as an emergent property of a distributed network of 
+neurons whose primary goal is visual recognition? 
+In this paper, we extend a previously proposed Kalman filter-based model of visual recognition 
+[13, 12] to handle the case of multiple objects, occlusions, and clutter in the visual field. We 
+provide simulation results suggesting that certain forms of attention can be viewed as an emer- 
+gent property of the interaction between bottom-up signals and top-down expectations during 
+visual recognition. The simulation results demonstrate how attention can be switched be- 
+tween different objects in a visual scene without using an explicit spotlight of attention. 
+2 A KALMAN FILTER MODEL OF VISUAL RECOGNITION 
+We have previously introduced a hierarchical Kalman filter-based model of visual recognition 
+and have shown how this model can be used to explain neurophysiological effects such as end- 
+stopping and neural response suppression during free-viewing of natural images [ 12, 13]. The 
+Kalman filter [7] is essentially a linear dynamical system that attempts to mimic the behavior 
+of an observed natural process. At any time instant t, the filter assumes that the internal state 
+of the given natural process can be represented as a k x 1 vector r(t). Although not directly 
+accessible, this internal state vector is assumed to generate an n x 1 measurable and observable 
+output vector I(t) (for example, an image) according to: 
+I(t) = Ur(t) + n(t) (1) 
+where U is an n x k generatire (or measurement) rnatr/x, and n(t) is a Gaussian stochastic 
+noise process with mean zero and a covadance matrix given by E = E[nn T] (E denotes the 
+expectation operator and T denotes transpose). 
+In order to specify how the internal state r changes with time, the Kalman filter assumes that 
+the process of interest can be modeled as a Gauss-Markov random process [1]. Thus, given 
+the state r(t - 1) at time instant t - 1, the next state r(t) is given by: 
+r(t) = Vr(t- 1) + m(t- 1) (2) 
+where V is the state transition (orprediction) rnatr/x and m is white Gaussian noise with mean 
+ -- E[m] and covariance II -- E[(m - )(m - )T]. 
+Given the generafive model in Equation 1 and the dynamics in Equation 2, the goal is to op- 
+timally estimate the current internal state r(t) using only the measurable inputs I(t). An op- 
+timizafion function whose minimization yields an estimate of r is the weighted least-squares 
+criterion: 
+J = (I- Ur)rS- (I- Ur) + (r- )rM-X(r_ ) (3) 
+where (t) is the mean of the state vector before measurement of the input data I(t) and M = 
+E[(r - )(r - )T] is the corresponding covariance matrix. It is easy to show [1] that J is 
+simply the sum of the negative log-likelihood of generating the data I given the state r, and 
+the negative log of the prior probability of the state r. Thus, minimizing J is equivalent to 
+maximizing the posterior probability p(r[I) of the state r given the input data. 
+The optimization function J can be minimized by setting os 
+ -- 0 and solving for the minimum 
+value ? of the state r (note that F equals the mean of r after measurement of I). The resultant 
+Kalman filter equation is given by: 
+F(t) = (t) + N(t)UTS(t)-(I(t)-U(t)) (4) 
+= VF(t- 1) + m(t- 1) (5) 
+where N(t) = (UTE(t)-iU + M(t)-i) - is a normalization matrix that maintains the 
+covariance of the state r after measurement of I. The matrix M, which is the covariance before 
+82 R. P. N. Rao 
+measurement of I, is updated as M(t) = VN(t - 1)V ' + II(t - 1). Thus, the Kalman filter 
+predicts one step into the future using Equation 5, obtains the next sensory input I(t), and then 
+corrects its prediction (t) using the sensory residual error (I(t) - U(t)) and the Kalman 
+gain N(t)U ' E(t)-l. This yields the corrected estimate F(t) (Equation 4), which is then used 
+to make the next state prediction (t + 1). 
+The measurement (or generarive) matrix U and the state transition (or prediction) matrix V 
+used by the Kalman filter together encode an internal model of the observed dynamic pro- 
+cess. As suggested in [13], it is possible to learn an internal model of the input dynamics 
+from observed data. Let u and v denote the vectorized forms of the matrices U and V re- 
+spectively. For example, the n x k generative matfix U can be collapsed into an nk x I vector 
+u = [U  U2... un] '' where U i denotes the ith row of U. Note that (I - Ur) = (I - Ru) 
+where R is the n x nk matrix given by: 
+r T 0 ... 0 ] 
+0 r T ... 0 
+0 ... 0 r T 
+(6) 
+By minimizing an optimization function similar to J [ 13], one can derive a Kalman filter-like 
+learning rule for the generative matrix U: 
+= + Nu(t)R(t)rZ(t)-l(I(t) - -aNu(t)(t) (7) 
+where (t) - 6(t - 1), N,(t) - (N,(t - 1) - + + and I is the 
+nk x nk identity matrix. The constant a determines the decay rate of . 
+As in the case of U, an estimate of the prediction matrix V can be obtained via the following 
+learning rule for v [13]: 
+(t) = V(t) + N(t)(t) TM(t) - [r(t + 1) - (t + 1)] - 3N(t)V(t) (8) 
+' 1  T 1 1 
+whereV(t)=v(t-1),Nv(t)= (Nv(t-1)- +R(t M(t)-R(t)+/I)- andRisakxk  
+ T T 
+matrix analogous to R (Equation 6) but with r = r . The constant/ determines the decay 
+rate for v while I denotes the k 2 x k 2 identity matrix. Note that in this case, the estimate of V is 
+corrected using the prediction residual error (r (t + 1) -g(t + 1)), which denotes the difference 
+between the actual state and the predicted state. One unresolved issue is the specification of 
+values for r(t) (comprising R(t)) in Equation 7 and r(t + 1) in Equation 8. The Expectation- 
+Maximization (EM) algorithm [4] suggests that in the case of static stimuli (g(t) = (t - 
+1)), one may use r(t) = F which is the converged optimal state estimate for the given static 
+input. In the case of dynamic stimuli, the EM algorithm prescribes r(t) = (tlN ), which is 
+the optimal temporally smoothed state estimate [ 1] for time t (_< N), given input data for each 
+of the time instants 1,..., N. Unfortunately, the smoothed estimate requires knowledge of 
+future inputs and is computationally quite expensive. For the experimental results, we used 
+the on-line estimates (t) when updating the matrices U and V during training. 
+3 ROBUST KALMAN FILTERING 
+The standard derivation of the Kalman filter minimizes Equation 3 but unfortunately does not 
+specify how the covariance E is to be obtained. A common choice is to use a constant matrix 
+or even a constant scalar. Making E constant however reduces the Kalman filter estimates to 
+standard least-squares estimates, which are highly susceptible to outliers or gross errors i.e. 
+data points that lie far away from the bulk of the observed or predicted data [6]. For example, 
+in the case where I represents an input image, occlusions and clutter will cause many pixels in 
+I to deviate significantly from corresponding pixels in the predicted image Ur. The problem 
+Correlates of Attention in a Model of Dynamic VsuaI Recognition 83 
+Sensory 
+Residual 
+I- ltd 
+Input I =  
+Inhibition 
+Gating [ Feedforward 
+Matrix = Matrix 
+G U w 
+Itd=U 
+Top-Down Prediction 
+of Expected Input 
+Feedback 
+Matrix 
+u 
+Normalization 
+N 
+Robust 
+Kalman Filter 
+Estimate 
+A 
+Predicted State  
+Prediction 
+Matrix 
+v 
+Figure 1: Recurrent Network Implementation of the Robust Kalman Filt

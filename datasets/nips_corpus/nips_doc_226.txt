@@ -1,0 +1,138 @@
+Discovering the Structure of a Reactive Environment by Exploration 439 
+Discovering the Structure of a Reactive Environment 
+by Exploration 
+Michael C. Mozer 
+DeparUnent of Computer Science 
+and Institute of Cognitive Science 
+University of Colorado 
+Boulder, CO 80309-0430 
+Jonathan Bachtach 
+Department of Computer 
+and Information Science 
+University of Massachusetts 
+Amherst, MA 01003 
+ABSTRACT 
+Consider a robot wandering around an unfamiliar environmere, performing ac- 
+tions and sensing the resulting environmental states. The robot's task is to con- 
+struct an internal model of its environment, a model that will allow it to predict 
+the consequences of its actions and to deumnine what sequences of actions to 
+take to reach particular goal states. Rivest and Schapire (19879., 1987b; 
+Schapire, 1988) have studied this problem and have designed a symbolic algo- 
+rithm to strategically explore and infer the structure of finite state environ- 
+ments. The heart of this algorithm is a clever representation of the environment 
+called an update graph. We have developed a connectionist implementation of 
+the update graph using a highly-specialized network architecture. With back 
+propagation learning and a uivial exploration strategy -- choosing random 
+tions -- the connectiordst network can outperform the Rivest and Schapire al- 
+gorithm on simple problems. The network has the additional strength that it 
+can accommodate stochastic environments. Perhaps the greatest virtue of the 
+connectiordst appwach is that it suggests generalizations of the update graph 
+representation that do not arise from a traditional, symbolic perspective. 
+1 INTRODUCTION 
+Consider a robot placed in an unfamiliar environment. The robot is allowed to wander 
+around the environment, perfimning actions and sensing the resulting environmental 
+states. With sufficient exploration, the robot should be able to conslruct an internal 
+model of the environment, a model that will allow it to predict the consequences of its ac- 
+tions and to determine what sequence of actions must be taken to reach a particular goal 
+state. In this paper, we describe a counectionist network that accomplishes this task, 
+based on a representation of finite-state automata developed by Rivest and Schapire 
+440 Mozer and Bachrach 
+(1987a, 1987b; Schapire, 1988). 
+The environments we wish to consider can be modeled by a finite-state automaton (FSA). 
+In each environment, the robot has a set of discrete actions it can execute to move from 
+one environmental state to another. At each environmental state, a set of binary-valued 
+sensations can be detected by the robot. To illustrate the concepts and methods in our 
+work, we use as an extended example a simple environment, the n-room world (from 
+Rivest and Schapire). The n-room world consists of n rooms arranged in a circular 
+chain. Each room is connected to the two adjacent rooms. In each room is a light bulb 
+and light switch. The robot can sense whether the light in the room where it currently 
+stands is on or off. The robot has three possible actions: move to the next room down 
+the chain (D), move to the next room up the chain (cl), and toggle the light switch in the 
+current room (T). 
+2 MODELING THE ENVIRONMENT 
+If the FSA corresponding to the n-room world is known, the sensory consequences of 
+any sequence of actions can be predicted. Further, the FSA can be used to determine a 
+sequence of actions to take to obtain a certain goal state. Although one might try 
+developing an algorithm to learn the FSA directly, there are several arguments against 
+doing so (Schapire, 1988). Most important is that the FSA often does not capture s'uc- 
+ture inherent in the environment. Rather than trying to learn the FSA, Rivest and 
+Schapire suggest learning another representation of the environment called an update 
+graph. The advantage of the update graph is that in environments with regularities, the 
+number of nodes in the update graph can be much smaller than in the FSA (e.g., 2n 
+versus 2 for the n-room world). Rivest and Schapire's formal definition of the update 
+graph is based on the notion of tests that can be performed on the environment, and the 
+equivalence of different tests. In this section, we present an alternative, more intuitive 
+view of the update graph that facilitates a connectionist interpretation. 
+Consider a three-room world. To model this environment, the essential knowledge re- 
+quired is the status of the lights in the current room (CUR), the next room up from the 
+current room (UP), and the next room down from the current room (DOWN). Asstune the 
+update graph has a node for each of these environmental variables. Further assume that 
+each node has an associated value indicating whether the light in the particular room is 
+on or off. 
+If we know the values of the variables in the current environmental state, what will their 
+new values be after taking some action, say J? When the robot moves to the next room 
+up, the new value of CUR becomes the previous value of UP; the new value of DOWN be- 
+comes the previous value of CUR; and in the three-room world, the new value of UP be- 
+comes the previous value of DOWN. As depicted in Figure la, this action thus results in 
+shifting values around in the three nodes. This makes sense because moving up does not 
+affect the status of any light, but it does alter the robot's position with respect to the three 
+rooms. Figure lb shows the analogous flow of information for the action D. Finally, the 
+action T should cause the status of the current room's light to be complemented while the 
+other two rooms remain unaffected (Figure lc). In Figure ld, the three sets of links from 
+Figures la-c have been superimposed and have been labeled with the appropriate action. 
+One final detail: The Rivest and Schapire update graph formalism does not make use of 
+the complementafion link. To avoid it, each node may be split into two values, one 
+Discovering the Structure of a Reactive Environment by Exploration 441 
+representing the status of a room and the other its complement (Figure l e). Toggling 
+thus involves exchanging the values of CUR and CUR. Just as the values of CUR, UP, and 
+DOWN must be shifted for the actions U and D, so must their complements. 
+Given the update graph in Figure le and the value of each node for the current environ- 
+mental state, the result of any sequence of actions can be predicted simply by shifting 
+values around in the graph. Thus, as far as predicting the input/output behavior of the en- 
+vironment is concerned, the update graph serves the same purpose as the FSA. 
+A defining and nonobvious (from the current description) property of an update graph is 
+that each node has exactly one incoming link for each action. We call this the one- 
+input-per-action constraint. For example, CUR gets input from CUR for the action T, 
+from UP for U, and from DOWN for D. 
+(a) 
+(b) 
+(c) 
+T 
+U (d) D 
+(e) 
+Figure 1: (a) Links between nodes indicating the desired information flow on performing the action U. CUR 
+represents that status of the llghts in the current room, UP the status of the llghts in the next room up, and DOWN 
+the status of the tights in the next room down. (b) Links between nodes indicating the desired information flow 
+on performing the action D. (c) Links between nodes indicating the desired information flow on performing the 
+action T. The - on the tink frc, n CUR to itself indicates that the value must be complemented. (d) Links 
+from the three separate actions superimposed and labeled by the action. (e) The complementation link can be 
+avoided by adding a set of nodes that represent the complements of the orighud set. This is the update graph for 
+a three-room world. 
+442 Mozer and Bachrach 
+3 THE RIVEST AND SCHAPIRE ALGORITHM 
+Rivest and Schapire have developed a symbolic algorithm (hereafter, the RS algorithm) to 
+strategically explore an environment and learn its update graph representation. The RS 
+algorithm formulates explicit hypotheses about regularities in the environment and tests 
+these hypotheses one or a relatively small number at a time. As a result, the algorithm 
+may not make full use of the environmental feedback obtained. It thus seems worthwhile 
+to consider alternative approaches that could allow more efficient use of the environmen- 
+tal feedback, and hence, more efficient learning of the update graph. We have taken con- 
+necfionist approach, which has shown quite promising results in preliminary experiments 
+and suggests other significant benefits. We detail these benefits below, but must first 
+describe the basic approach. 
+4 THE UPDATE GRAPH AS A CONNECTIONIST NETWORK 
+How might we turn the update graph into a connectionist network? Start by assuming 
+one unit in a network for each node in the update graph. The activity level of the unit 
+represents the truth value associated with the update graph node. Some of these units 
+serve as outputs of the network. For example, in the three-room world, the output of 
+the network is the unit that represents the status of the current room. In other environ- 
+ments, there may several sensations in which case there will be several output units. 
+What is the analog of the labeled links in the update graph? The labels indicate that 
+values are to be sent down a link when a particular action occurs. In connecfionist terms, 
+the links should be gated by the action. To elaborate, we might include a set of units that 
+represent the possible actions; these units act to mulfiplicatively gate the flow of activity 
+between units in the update graph. Thus, when a particular action is to be performed, the 
+corresponding action unit is activated, and the connections that are gated by this action 
+become enabled. If the action units form a local representation, i.e., only one is active at 
+a time, exactly one set of connections is enabled at a time. Consequently, the gated con- 
+necfion

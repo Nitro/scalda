@@ -1,0 +1,188 @@
+Boosting Algorithms as Gradient Descent 
+Llew Mason 
+Research School of Information 
+Sciences and Engineering 
+Australian National University 
+Canberra, ACT, 0200, Australia 
+Imason @syseng. anu. edu. au 
+Jonathan Baxter 
+Research School of Information 
+Sciences and Engineering 
+Australian National University 
+Canberra, ACT, 0200, Australia 
+Jonathan. Baxter@anu. edu. au 
+Peter Bartlett 
+Research School of Information 
+Sciences and Engineering 
+Australian National University 
+Canberra, ACT, 0200, Australia 
+Peter. Bartlett@anu. edu. au 
+Marcus Frean 
+Department of Computer Science 
+and Electrical Engineering 
+The University of Queensland 
+Brisbane, QLD, 4072, Australia 
+marcusf@elec. uq. edu. au 
+Abstract 
+We provide an abstract characterization of boosting algorithms as 
+gradient decsent on cost-functionals in an inner-product function 
+space. We prove convergence of these functional-gradient-descent 
+algorithms under quite weak conditions. Following previous theo- 
+retical results bounding the generalization performance of convex 
+combinations of classifiers in terms of general cost functions of the 
+margin, we present a new algorithm (DOOM II) for performing a 
+gradient descent optimization of such cost functions. Experiments 
+on several data sets from the UC Irvine repository demonstrate 
+that DOOM II generally outperforms AdaBoost, especially in high 
+noise situations, and that the overfitting behaviour of AdaBoost is 
+predicted by our cost functions. 
+I Introduction 
+There has been considerable interest recently in voting methods for pattern classi- 
+fication, which predict the label of a particular example using a weighted vote over 
+a set of base classifiers [10, 2, 6, 9, 16, 5, 3, 19, 12, 17, 7, 11, 8]. Recent theoretical 
+results suggest that the effectiveness of these algorithms is due to their tendency 
+to produce large margin classifiers [1, 18]. Loosely speaking, if a combination of 
+classifiers correctly classifies most of the training data with a large margin, then its 
+error probability is small. 
+In [14] we gave improved upper bounds on the misclassification probability of a 
+combined classifier in terms of the average over the training data of a certain cost 
+function of the margins. That paper also described DOOM, an algorithm for di- 
+rectly minimizing the margin cost function by adjusting the weights associated with 
+Boosting Algorithms as Gradient Descent 513 
+each base classifier (the base classifiers are suppiled to DOOM). DOOM exhibits 
+performance improvements over AdaBoost, even when using the same base hypothe- 
+ses, which provides additional empirical evidence that these margin cost functions 
+are appropriate quantities to optimize. 
+In this paper, we present a general class of algorithms (called AnyBoost) which 
+are gradient descent algorithms for choosing linear combinations of elements of an 
+inner product function space so as to minimize some cost functional. The normal 
+operation of a weak learner is shown to be equivalent to maximizing a certain inner 
+product. We prove convergence of AnyBoost under weak conditions. In Section 3, 
+we show that this general class of algorithms includes as special cases nearly all 
+existing voting methods. In Section 5, we present experimental results for a special 
+case of AnyBoost that minimizes a theoretically-motivated margin cost functional. 
+The experiments show that the new algorithm typically outperforms AdaBoost, and 
+that this is especially true with label noise. In addition, the theoretically-motivated 
+cost functions provide good estimates of the error of AdaBoost, in the sense that 
+they can be used to predict its overfitting behaviour. 
+2 AnyBoost 
+Let (x, y) denote examples from X x Y, where X is the space of measurements 
+(typically X C_ IR N ) and Y is the space of labels (Y is usually a discrete set or some 
+subset of IR). Let  denote some class of functions (the base hypotheses) mapping 
+X - Y, and lin () denote the set of all linear combinations of functions in . Let 
+l, ) be an inner product on lin (), and 
+C' lin () -  
+a cost functional on lin (). 
+Our aim is to find a function F E lin () minimizing C(F). We will proceed 
+iteratively via a gradient descent procedure. 
+Suppose we have some F E lin () and we wish to find a new f   to add to F 
+so that the cost C(F + el) decreases, for some small value of e. Viewed in function 
+space terms, we are asking for the direction f such that C(F + el) most rapidly 
+decreases. The desired direction is simply the negative of the functional derivative 
+of C at F, -VC(F), where: 
+OC(F + al) ,=o 
+VC(F)(x) := Oc ' (1) 
+where 1 is the indicator function of x. Since we are restricted to choosing our new 
+function f from , in general it will not be possible to choose f = -VC(F), so 
+instead we search for an f with greatest inner product with -VC(F). That is, we 
+should choose f to maximize -/VC(F), f). This can be motivated by observing 
+that, to first order in e, C(F + el) = C(F) + e (VC(F), f) and hence the greatest 
+reduction in cost will occur for the f maximizing -/VC(F), 
+For reasons that will become obvious later, an algorithm that chooses f attempting 
+to maximize -/VC(F), f) will be described as a weak learner. 
+The preceding discussion motivates Algorithm I (AnyBoost), an iterative algorithm 
+for finding linear combinations F of base hypotheses in  that minimize the cost 
+functional C(F). Note that we have allowed the base hypotheses to take values in 
+an arbitrary set Y, we have not restricted the form of the cost or the inner product, 
+and we have not specified what the step-sizes should be. Appropriate choices for 
+514 L. Mason, J. Baxter, P Bartlett andM. Frean 
+these things will be made when we apply the algorithm to more concrete situations. 
+Note also that the algorithm terminates when - (VC(Ft), ft+l) _ O, i.e when the 
+weak learner � returns a base hypothesis ft+l which no longer points in the downhill 
+direction of the cost function C(F). Thus, the algorithm terminates when, to first 
+order, a step in function space in the direction of the base hypothesis returned by 
+� would increase the cost. 
+Algorithm I � AnyBoost 
+Require: 
+� An inner product space (A', (,)) containing functions mapping from X to 
+some set Y. 
+� A class of base classifiers  C A'. 
+� A differentiable cost functional U: lin () - 1. 
+� A weak learner �(F) that accepts F E lin () and returns f E  with a 
+large value of - (VC(F), f). 
+Let Fo(x):= O. 
+fort:=OtoTdo 
+Let f/q-1 :----�(Ft). 
+if - (VU(Ft),ft+i) 5 0 then 
+return Ft. 
+end if 
+Choose Wt+l. 
+Let Ft+l :---- Ft + Wtq-lfiq-1 
+end for 
+return FT+i. 
+3 A gradient descent view of voting methods 
+We now restrict our attention to base hypotheses f   mapping to Y = (+1), 
+and the inner product 
+(F,G) I  
+:= - F(xi)a(xi) (2) 
+m 
+i=1 
+for all F, G  lin (), where S = {Xl, yl),..., (x,, y,)} is a set of training examples 
+generated according to some unknown distribution 7) on X x Y. Our aim now is to 
+find F  lin () such that Pr(,u)v sgn (F(x))  y is minimal, where sgn (F(x)) = 
+-1 if F(x) < 0 and sgn (F(x)) = 1 otherwise. In other words, sgn F should minimize 
+the misclassification probability. 
+The margin of F: X - R on example (x, y) is defined as yF(x). Consider margin 
+cost-functionals defined by 
+m 
+1 
+c(F) := - 
+m 
+i=1 
+where c: R - R is any differentiable real-valued function of the margin. With these 
+definitions, a quick calculation shows: 
+ra 
+1 
+- (VC(F), f) = rn 2 yYif(xi)c'(yiF(xi)). 
+i=1 
+Since positive margins correspond to examples correctly labelled by sgn F and neg- 
+ative margins to incorrectly labelled examples, any sensible cost function of the 
+Boosting Algorithms as Gradient Descent 515 
+Table 1: Existing voting methods viewed as AnyBoost on margin cost functions. 
+Algorithm Cost function Step size 
+AdaBoost [9] e -yF() Line search 
+ARC-X4 [2] (1 - yF(x))  1It 
+ConfidenceBoost [19] e -yF(z) Line search 
+LogitBoost [12] ln(1 q- e -yF(z)) Newton-Raphson 
+margin will be monotonically decreasing. Hence -c'(yiF(xi)) will always be posi- 
+tive. Dividing through by - Eim__l c'(yiF(xi)), we see that finding an f maximizing 
+- (VC(F), f) is equivalent to finding an f minimizing the weighted error 
+y D(i) where D(i):= 
+i: 
+c'(yir(xi)) 
+Eim=l c'(yiF(xi)) 
+for i = 1,... ,m. 
+Many of the most successful voting methods are, for the appropriate choice of margin 
+cost function c and step-size, specific cases of the AnyBoost algorithm (see Table 3). 
+A more detailed analysis can be found in the full version of this paper [15]. 
+4 Convergence of AnyBoost 
+In this section we provide convergence results for the AnyBoost algorithm, under 
+quite weak conditions on the cost functional C. The prescriptions given for the 
+step-sizes wt in these results are for convergence guarantees only: in practice they 
+will almost always be smaller than necessary, hence fixed small steps or some form 
+of line search should be used. 
+The following theorem (proof omitted, see [15]) supplies a specific step-size for 
+AnyBoost and characterizes the limiting behaviour with this step-size. 
+Theorem 1. Let C: lin () - ll be any lower bounded, Lipschitz differentiable 
+cost functional (that is, there exists L  0 such that I]VC(F)-VC(F)II 
+for all F,F  E lin ()). Let Fo, F1,... be the sequence of combined hypotheses 
+generated by the AnyBoost algorithm, using step-sizes 
+(VC(Ft),ft+l) (3) 
+Wtq- 1 := Lllf+111 
+Then AnyBoost either halts on round T with -(7C(FT), fTq-1) _ O, Or C(Ft) 
+converges to some finite value C*, in which case limt_, IVC(Ft), ft+i) -- O. 
+The next theorem (proof omitted, see [15]) shows that if the weak learner can 
+always find the best weak hypothesis ft E  on each round of AnyBoost, and if 
+the cost functional C is convex, then any accumulation point F of the sequence 
+(Ft) generated by AnyBoost with the step sizes (3) is a global minimum of the 
+cost. For ease of exposition, we have assumed that rath

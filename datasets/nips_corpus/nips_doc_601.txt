@@ -1,0 +1,142 @@
+Learning Cellular Automaton Dynamics 
+with Neural Networks 
+N H Wulff*and J A Hertz$ 
+CONNECT, the Niels Bohr Institute and Nordira 
+Blegdamsvej 17, DK-2100 Copenhagen O, Denmark 
+Abstract 
+We have trained networks of E-II units with short-range connec- 
+tions to simulate simple cellular automata that exhibit complex or 
+chaotic behaviour. Three levels of learning are possible (in decreas- 
+ing order of difficulty): learning the underlying automaton rule, 
+learning asymptotic dynamical behaviour, and learning to extrap- 
+olate the training history. The levels of learning achieved with and 
+without weight sharing for different automata provide new insight 
+into their dynamics. 
+1 INTRODUCTION 
+Neural networks have been shown to be capable of learning the dynamical behaviour 
+exhibited by chaotic time series composed of measurements of a single variable 
+among many in a complex system [1, 2, 3]. In this work we consider instead cellular 
+automaton arrays (CA)[4], a class of many-degree-of-freedom systems which exhibits 
+very complex dynamics, including universal computation. We would like to know 
+whether neural nets can be taught to imitate these dynamics, both locally and 
+globally. 
+One could say we are turning the usual paradigm for studying such systems on 
+its head. Conventionally, one is given the rule by which each automaton updates 
+its state, and the (nontrivial) problem is to find what kind of global dynamical 
+*Present address: NEuroTech A/S, Copenhagen, Denmark 
+lAddress until October 1993: Laboratory of Neuropsychology, NIMH, Bethesda MD 
+20892. cmaih hcrtznordita.dk 
+631 
+632 Wulff and Hertz 
+behaviour results. Here we suppose that we are given the history of some CA, and 
+we would like, if possible, to find the rule that generated it. 
+We will see that a network can have different degrees of success in this task, de- 
+pending on the constraints we place on the learning. Furthermore, we will be able 
+to learn something about the dynamics of the automata themselves from knowing 
+what level of learning is possible under what constraints. 
+This note reports some preliminary investigations of these questions. We study 
+only the simplest automata that produce chaotic or complex dynamic behaviour. 
+Nevertheless, we obtain sone nontrivial results which lead to interesting conjectures 
+for future investigation. 
+A CA is a lattice of formal computing units, each of which is characterized by a 
+state variable Si(t), where i labels the site in the lattice and t is the (digital) time. 
+Every such unit updates itself according to a particular rule or function f( ) of its 
+own state and that of the other units in its local neighbourhood. The rule is the 
+same for all units, and the updatings of all units are simultaneous. 
+Different models are characterized by the nature of the state variable (e.g. binary, 
+continuous, vector, etc), the dimensionality of the lattice, and the choice of neigh- 
+bouthood. In the two cases we study here, the neighbourhoods are of size N = 3, 
+consisting of the unit itself and its two immediate neighbouts on a chain, and 
+N: 9, consisting of the unit itself and its 8 nearest neighbouts on a square lattice 
+(the 'Moore neighbourhood'). We will consider only binary units, for which we take 
+Si(t) -- +1. Thus, if the neighbourhood (including the unit itself) includes N sites, 
+f( ) is a Boolean function on the N-hypercube. There are 2 2such functions. 
+Wolfram [4] has divided the rules for such automata further into three classes: 
+1. Class 1: rules that lead to a uniform state. 
+2. Class 2: rules that lead to simple stable or periodic patterns. 
+3. Class 3: rules that lead to chaotic patterns. 
+4. Class 4: rules that lead to complex, long-lived transient patterns. 
+Rules in the fourth class lie near (in a sense not yet fully understood [5]) a critical 
+boundary between classes 2 and 3. They lead eventually to asymptotic behaviour 
+in class 2 (or possibly 3); what distinguishes them is the length of the transient. It 
+is classes 3 and 4 that we are interested in here. 
+More specifically, for class 3 we expect that after the (short) initial transients, the 
+motion is confined to some sort of attractor. Different attractors may be reached 
+for a given rule, depending on initial conditions. For such systems we will focus 
+on the dynamics on these attractors, not on the short transients. We will want to 
+know what we can learn from a given history about the attractor characterizing it, 
+about the asymptotic dynamics of the system generally (i.e. about all attractors), 
+and, if possible, about the underlying rule. 
+For class 4 CA, in contrast, only the transients are of interest. Different initial 
+conditions will give rise to very different transient histories; indeed, this sensitivity 
+is the dynamical basis for the capability for universal computation that has been 
+Learning Cellular Automaton Dynamics with Neural Networks 633 
+proved for some of these systems. Here we will want to know what we can learn 
+frmn a portion of such a history about its future, as well as about the underlying 
+rule. 
+2 REPRESENTING A CA AS A NETWORK 
+Any Boolean function of N arguments can be implemented by a Yl,-H unit of order 
+P < N with a threshold activation function, i.e. there exist weights w �. � � such 
+that 
+f(S,S2...Sv)=sgn  w �. � � $jSj...Sjv (1) 
+The indices j run over the sites in the neighbourhood (1 to N) and zero, which 
+labels a constant formal bias unit S0 = 1. Because the updating rule we are looking 
+for is the same for the entire lattice, the weight w je doesn't depend on i. Fur- 
+thermore, because of the discrete nature of the outp[, the weights that implement 
+a given rule are not unique; rather, there is a region of weight space for each rule. 
+Although we could work with other architectures, it is natural to study networks 
+with the same structure as the CA to be simulated. We therefore make a lattice 
+of formal E-H neurons with short-range connections, which update themselves 
+according to 
+(t+ 1) =g [ . wj...jv(t)...,v(t)] , (2) 
+In these investigations, we have assumed that we know a priori what the relevant 
+neighbourhood size is, thereby fixing the connectivity of the network. At the end of 
+the day, we will take the limit where the gain of the activation function g becomes 
+infinite. However, during learning we use finite gain and continuous-valued units. 
+We know that the order P of our E-H units need not be higher than the neigh- 
+bourhood size N. However, in most cases a smaller P will do. More precisely, a 
+network with any P > N can in principle (i.e. given the right learning algorithm 
+and sucient training examples) implement almost all possible rules. This is an 
+ymptotic result for large N but is already quite accurate for N = 3, where only 
+two of the 256 possible rules are not implementable by a second-order unit, and 
+N = 5, where we found from simple learning experiments that 99.87% of 10000 
+randomly-chosen rules could be implemented by a third-order unit. 
+3 LEARNING 
+Having chosen a suitable value of P, we can begin our main task: training the 
+network to simulate a CA, with the training examples {S(t) --} $(t + 1)} taken 
+from a particular known history. 
+The translational invariance of the CA suggests that weight sharing is appropriate 
+in the learning algorithm. On the other hand, we can imagine situations in which 
+we did not possess a priori knowledge that the CA rule was the same for all units, 
+634 Wulff and Hertz 
+or where we only had access to the automaton state in one neighbourhood. This 
+case is analogous to the conventional time series extrapolation paradigm, where 
+we typically only have access to a few variables in a large system. The difference 
+is that here the accessible variables are binary rather than continuous. In these 
+situations we should or are constrained to learn without each unit having access to 
+error information at other units. In what follows we will perform the training both 
+with and without weight sharing. The differences in what can be learned in the two 
+cases will give interesting information about the CA dynamics being simulated. 
+Most of our results are for chaotic (class 3) CA. For these systems, this training 
+history is taken after initial transients have died out. Thus many of the 2 v possible 
+examples necessary to specify the rule at each site may be missing from the training 
+set, and it is possible that our training procedure will not result in the network 
+learning the underlying rule of the original system. It might instead learn another 
+rule that coincides with the true one on the training examples. This is even more 
+likely if we are not using weight sharing, because then a unit at one site does not 
+have access to examples from the training history at other sites. 
+However, we may relax our demand on the network, asking only that it evolve 
+exactly like the original system when it is started in a configuration the original 
+system could be in after transients have died out (i.e. on an attractor of the original 
+system). Thus we are restricting the test set in a way that is fairer to the network, 
+given the instruction it has received. 
+Of course, if the CA has more than one attractor, several rules which yield the 
+same evolution on one attractor need not do so on another one. It is therefore 
+possible that a network can learn the attractor of the training history (i.e. will 
+simulate the original system correctly on a part of the history subsequent to the 
+training sequence) but will not be found to evolve correctly when tested on data 
+from another attractor. 
+For class 4 automata, we cannot formulate the distinctions between different levels 
+of learning meaningfully in terms of attractors, since the object of interest is the 
+transient portion of the history. Nevertheless, we can still ask whether a network 
+trained on part of the transient can learn the full rule, whether it can

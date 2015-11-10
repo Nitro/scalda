@@ -1,0 +1,163 @@
+An Analog Neural Network Inspired by 
+Fractal Block Coding 
+Fernando J. Pineda 
+The Applied Physics Laboratory 
+The Johns Hopkins University 
+Johns Hokins Road 
+Laurel, MD 20723-6099 
+Andreas G. Andreou 
+Dept. of Electrical & Computer 
+Engineering 
+The Johns Hopkins University 
+34th & Charles St. 
+Baltimore, MD 21218 
+Abstract 
+We consider the problem of decoding block coded data, using a physical 
+dynamical system. We sketch out a decompression algorithm for fractal 
+block codes and then show how to implement a recurrent neural 
+network using physically simple but highly-nonlinear, analog circuit 
+models of neurons and synapses. The nonlinear system has many fixed 
+points, but we have at our disposal a procedure to choose the parameters 
+in such a way that only one solution, the desired solution, is stable. As 
+a partial proof of the concept, we present experimental data from a 
+small system a 16-neuron analog CMOS chip fabricated in a 2m analog 
+p-well process. This chip operates in the subthreshold regime and, for 
+each choice of parameters, converges to a unique stable state. Each state 
+exhibits a qualitatively fractal shape. 
+1. INTRODUCTION 
+Sometimes, a nonlinear approach is the simplest way to solve a linear problem. This is 
+true when computing with physical dynamical systems whose natural operations are 
+nonlinear. In such cases it may be expensive, in terms of physical complexity, to 
+linearize the dynamics. For example in neural computation active ion channels have 
+highly non linear input-output behaviour (see Hille 1984). Another example is 
+796 Fernando Pineda, Andreas G. Andreou 
+subthreshold CMOS VLSI technology 1. In both examples the physics that governs the 
+operation of the active devices, gives rise to gain elements that have exponential transfer 
+characteristics. These exponentials result in computing structures with non-linear 
+dynamics. It is therefore worthwhile, from both scientific and engineering perspectives, to 
+investigate the idea of analog computation by highly non-linear components. 
+This paper, explores an approach for solving a specific linear problem with analog 
+circuits that have nonlinear transfer functions. The computational task considered here is 
+that of fractal block code decompression (see e.g. Jacquin, 1989). 
+The conventional approach to decompressing fractal codes is essentially an excercise in 
+solving a high-dimenional sparse linear system of equations by using a relaxation 
+algorithm. The relaxation algorithm is performed by iteratively applying an affine 
+transformation to a state vector. The iteration yields a sequence of state vectors that 
+converges to a vector of decoded data. The approach taken in this paper is based on the 
+observation that one can construct a physically-simple nonlinear dyanmical system whose 
+unique stable fixed point coincides with the solution of the sparse linear system of 
+equations. 
+In the next section we briefly summarize the basic ideas behind fractal block coding. This 
+is followed by a description of an analog circuit with physically-simple nonlinear 
+neurons. We show how to set the input voltages for the network so that we can program 
+the position of the stable fixed point. Finally, we present experimental results obtained 
+from a test chip fabricated in a 2mm CMOS process. 
+2. FRACTAL BLOCK CODING IN A NUTSHELL 
+Let the N-dimensional state vector ! represent a one dimensional curve sampled on N 
+points. An affine transformation of this vector is simply a transformation of the form I' 
+= WI+B, where W is an NxN -element matrix and B is an N-component vector. This 
+f (o) (n) 
+transformation can be iterated to produce a sequence o vectors I .... ,I . The sequence 
+converges to a umque final state I that s ndependent of the mtal state I � if the 
+maximum eigenvalue ;tmx of the matrix W satisfies ;[max <1. The uniqueness of the final 
+state implies that to transmit the state I* to a receiver, we can either transmit I* directly, 
+or we can transmit W and B and let the receiver perform the iteration to generate I*. In 
+the latter case we say that W and B constitute an encoding of the state I*. For this 
+encoding to be useful, the amount of data needed to transmit W and B must be less than 
+the amount of data needed to transmit I* This is the case when W and B are sparse and 
+parameterized and when the total number of bits needed to transmit these parameters is 
+less than the total number of bits needed to transmit the uncompressed state I* 
+Fractal block coding is a special case of the above approach. It amounts to choosing a 
+lWe consider subthreshold analog VLSI., (Mead 1989; Andreou and Boahen, 1994). A 
+simple subthreshold model is 7 = Io (nfet) exp(rVgb)(exp(-Vsb)-exp(-vdb) ) for 
+NFETS w (rrf, t ) 18 
+, here : - 0.67 and I, = 9.7 x 10- A. The voltage differences Vg b, 
+,Vsb, and Vdb are in units of the thermal voltaee,Vth= 0.025V. We use a corresponding 
+the from L, - t(PfeD 
+expression for PFETs of as - 'o exp(- rVg b)(exp(vsb ) - exp(vdb )) where 
+I? fet) = 3.8x 10-18A. 
+An Analog Neural Network Inspired by Fractal Block Coding 797 
+� i ' WLI2i+l + bL 
+blocked structure for the matrix W. This structure forces large-scale features to be mapped 
+into small-scale features. The result is a steady state I* that represents a curve with self 
+similar (actually self affine) features. As a concrete example of such a structure, consider 
+the following transformation of the state I. 
+for O_< i < N 1 
+2 
+(1) 
+N 
+= --<i<N-1 
+IP i WRI2i-N + bR for 2 - - 
+This transformation has two blocks. The transformation of the first N/2 components of I 
+depend on the parameters WL and b L while the transformation of the second N/2 
+components depend on the parameters WR, and b R . Consequently just four parameters 
+completely specify this transformation. This transformation can be expressed as a single 
+affine transformation as follows: 
+rI' o 
+I' N/2-1 
+I' N/2 
+w L  ri o b L 
+bL 
+-' WL IN/2-1 + (2) 
+WR IN/2 bR 
+The top and bottom halves of I' depend on the odd and even components of ! 
+respectively. This subsampling causes features of size 1 to be mapped into features of 
+size//2. A subsampled copy of the state I with transformed intensities is copied into the 
+top half of I'. Similarly, a subsampled copy of the state I with transformed intensities is 
+copied into the bottom half of I'. If this transformation is iterated, the sequence of 
+transformed vectors will converge provided the eigenvalues determined by WL and WR are 
+all less than one (i.e. WL and WR < 1). 
+Although this toy example has just four free parameters and is thus too trivial to be 
+useful for actual compression applications, it does suffice to generate state vectors with 
+fractal properties since at steady state, the top and bottom halves of I' differ from the 
+entire curve by an affine transformation. 
+In this paper we will not describe how to solve the inverse problem which consists of 
+finding a parameterized affine transformation that produces a given final state T. We 
+note, however, that it is a special (and simpler) case of the recurrent network training 
+problem, since the problem is linear, has no hidden units and has only one fixed point. 
+The reader is refered to (Pineda, 1988) or. for a least squares algorithm in the context of 
+neural nets or to (Monroe and Dudbridge, 1992) for a least squares algorithm in the 
+context of coding. 
+3. A CMOS NEURAL NETWORK MODEL 
+Now that we have described the salient aspects of the fractal decompression problem, we 
+turn to the problem of implementing an analog neural network whose nonlinear dynamics 
+converges to the same fixed point as the linear system. Nonlinearity arises because we 
+798 Fernando Pineda, Andreas G. Andreou 
+make no special effort to linearize the gain elements (controlled conductances and 
+transconductances) of the implementation medium. In this section we first describe a 
+simple neuron. Then we analyze the dynamics of a network composed of such neurons. 
+Finally we describe how to program the fixed point in the actual physical network. 
+3.1 The analog Neuron 
+W&0woulOn>like to create a neuron model that calculates the transformation 
+I = al + b. Consider the circuit shown in figure 1. This has three functional 
+sections which compute by adding and subtracting currents and. where voltages are log 
+coded; this is the essence of the current-mode aproach in circuit design (Andreou et. al. 
+1994). The first section, receives an input voltage from a presynaptic neuron, converts it 
+into a current I(in), and multiplies it by a weight a. The second section adds and subtracts 
+the bias current b. The last section converts the output current into an output voltage and 
+transmits it to the. next neuron in the network. Since the transistors have exponential 
+transfer characteristics, this voltage is logarithmically coded. 
+The parameters a and b are set by external voltages. The parameter a, is set by a single 
+external voltage Va while the bias parameter b = b'-) - b(+]is set by two external voltages 
+v/,{+) and v,_{_). Two voltages are used for b to account for both positive and negative 
+bias values since b(-)>O and b( + )>O . 
+'-- I 
+I 
+(oul I I 
+,, 
+(out) 
+)v 
+Figure 1. The analog neuron has three sections. 
+To derive the dynamical equations of the neuron, it is neccesary to add up all the currents 
+and invoke Kirchoffs current law, which requires that 
+I (�ut) - aI (in) + b � - b � = I c . (3) 
+If we now assume a simple subthreshold model for the behavior of the FET's and PFETs 
+in the neuron, we can obtain the following expression for the current across the 
+capacitor: 
+Q dl (�ut) 
+I (�ut d---- = Ic (4) 
+An Analog Neural Network Inspired by Fractal Block Coding 799 
+where Q = C/tCVth determines the characteristic time scale of the neuron 2. It immediately 
+follows from the last two expressions that the dynamics of a single neuron is determined 
+by the equation 
+Q dI(�Ut) - l(�Ut)(l (�ut) al 

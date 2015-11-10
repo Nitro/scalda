@@ -1,0 +1,150 @@
+266 Zemel, Mozer and Hinton 
+TRAFFIC: Recognizing Objects Using 
+Hierarchical Reference Frame Transformations 
+Richard S. Zemel 
+Computer Science Dept. 
+University of Toronto 
+Toronto, ONT M5S 1A4 
+Michael C. Mozer 
+Computer Science Dept. 
+University of Colorado 
+Boulder, CO 80309-0430 
+Geoffrey E. Hinton 
+Computer Science Dept. 
+University of Toronto 
+Toronto, ONT M5S 1A4 
+ABSTRACT 
+We describe a model that can recognize two-dimensional shapes in 
+an unsegmented image, independent of their orientation, position, 
+and scale. The model, called TRAFFIC, efficiently represents the 
+structural relation between an object and each of its component 
+features by encoding the fixed viewpoint-invariant transformation 
+from the feature's reference frame to the object's in the weights of a 
+connectionist network. Using a hierarchy of such transformations, 
+with increasing complexity of features at each successive layer, the 
+network can recognize multiple objects in parallel. An implemen- 
+tation of TRAFFIC is described, along with experimental results 
+demonstrating the network's ability to recognize constellations of 
+stars in a viewpoint-invariant manner. 
+1 INTRODUCTION 
+A key goal of machine vision is to recognize familiar objects in an unsegmented 
+image, independent of their orientation, position, and scale. Massively parallel 
+models have long been used for lower-level vision tasks, such as primitive feature 
+extraction and stereo depth. Models addressing higher-level vision have generally 
+been restricted to pattern matching types of problems, in which much of the inherent 
+complexity of the domain has been eliminated or ignored. 
+The complexity of object recognition stems primarily from the difficult search re- 
+quired to find the correspondence between features of candidate objects and image 
+TRAFFIC: Recognizing Objects 267 
+features. Images contain spurious features, which do not correspond to any object 
+features; objects in an image may have missing or occluded features; and noisy 
+measurements make it impossible to align object features to image features ex- 
+actly. These problems are compounded in realistic domains, where images are not 
+segmented and normalized and the number of candidate objects is large. 
+In this paper, we present a structured, general model of object recognition - called 
+TRAFFIC (a loose acronym for transforming feature instances) - that addresses 
+these difficult problems through a combination of strategies. First, we directly build 
+constraints on the spatial relationships between features of an object directly into 
+the architecture of a connectionist network. We thereby limit the space of possible 
+matches by constructing only plausible assignments of image features to objects. 
+Second, we embed this construction into a hierarchical architecture, which allows 
+the network to handle unsegmented, non-normalized images, and also allows for a 
+wide range of candidate objects. Third, we allow TRAFFIC to discover the critical 
+spatial relationships among features through training on examples of the target 
+objects in various poses. 
+2 MODEL HIGHLIGHTS 
+The following sections outline the three fundamental aspects of TRAFFIC. For a 
+more complete discussion of the details of TRAFFIC, see (Zemel, 1989). 
+2.1 ENCODING STRUCTURAL RELATIONS 
+The first key aspect of TRAFFIC concerns its encoding and use of the fixed spatial 
+relations between a rigid object and each of its component features. If we assume 
+that each feature has an intrinsic reference frame, then for a rigid object and a 
+particular feature of that object, there is a fixed viewpoint-independent transfor- 
+mation from the feature's reference frame to the object's. This transformation can 
+be used to predict the object's reference frame from the feature's. To recognize 
+objects, TRAFFIC takes advantage of the fact that all features of the same object 
+will predict the identical reference frame for that object (the viewpoint consistency 
+constraint (Lowe, 1987)). 
+Each reference frame transformation can be expressed as a matrix multiplication 
+that is efficiently implemented in a connectionist network. Consider a two-layer 
+network, with one layer containing units representing particular features, the other 
+containing units representing objects. For two-dimensional shapes, each feature is 
+described by a set of four instantiation units. These real-valued units represent 
+the parameter values associated with the feature: (x,y)-position, orientation, and 
+scale. The objects have a set of instantiation units as well. The units representing 
+particular features are connected to the units representing each object containing 
+that feature, thereby assigning each feature-object pair its own set of weighted 
+connections. The fixed matrix that describes the transformation from the feature's 
+intrinsic reference frame to the object's can be directly implemented in the set of 
+weights connecting the instantiation units of the feature and the object. 
+268 Zemel, Mozer and Hinton 
+We can describe any instantiation, or any transformation between instantiations, as 
+a vector of four parameters. Let Pi! -- (xi!, Yi!, ci!, $i!) specify the reference frame 
+of the feature with respect to the image, where xi! and Yi! represent the coordinates 
+of the feature origin relative to the image frame, ci! and si! represent the scale and 
+angle of the feature frame w.r.t. the image frame. Rather than encoding these 
+values directly, ci! represents the product of the scale and the cosine of the angle, 
+while si! represesents the product of the scale and the sine of the angle.  Let 
+- (xio, yio, cio, sio), specify the reference frame of the object with respect to the 
+image. Finally, let P!o -- (x!o, Y!o, c!o, s!o) specify the transformation from the 
+reference frame of the object to that of the feature. 
+Each of these sets of parameters can be placed into a transformation matrix which 
+converts points in one reference frame to points in another. We can express Pi! as 
+the matrix T/y, a transformation from the feature frame to the image frame: 
+ci! si! 
+--si! ci! Yi! 
+0 0 I 
+Likewise, we can express P!o as the matrix T!o, a transformation from the object 
+to feature frame, and Pio as T/o, a transformation from the object to image frame. 
+Because T!o is fixed for a given feature-object pair and T/! is derived from the image, 
+T/o can easily be computed by composing these two transforms: T/o = T/!T!o. 
+The four parameters underlying T/o can then be extracted, which results in the 
+following four equations for Pio: 
+xio = ci!x!o + si!y!o + 
+yio -- -si!x!o + ci!y!o + yi! 
+cio : ci!C!o -- si!S!o 
+$io = Ci!Sfo C 8i!C!o 
+This transformation is easily implemented in a network by connecting the units 
+representing Pi! to the units representing Pio with the appropriate weights (Figure 
+1). In this manner, TRAFFIC directly encodes the reference frame transformation 
+from a feature to an object in the connections from the set of units representing 
+the feature's reference frame to units representing the object's frame. The speci- 
+fication of an object's reference frame can therefore be derived directly from each 
+of its component features on the basis of the structural relationship between the 
+feature and the object. Because each feature of an object should predict the same 
+reference frame parameters for the object, we can determine whether the object is 
+really present in the image by checking to see if the various features make identical 
+1 We represent angles by their sines and cosines to avoid the discontinuities involved in repre- 
+senting orientation by a single number and to eliminate the non-linear step of computing sin 
+from tif. Note that we represent the four degrees of freedom in the instantiation parameters using 
+four units; a neurally plausible extension to this scheme which does not require single units with 
+arbitrary precision could allocate a pool of units to each of these parameters. 
+TRAFFIC: Recognizing Objects 269 
+1 Cfo Sfo Cfo 
+X if 
+Figure 1: The matrix T. to is a fixed coordinate transformation from the reference 
+frame of feature f to the reference frame of object o. This figure shows how 
+can be built into the weights connecting the object-instantiation units and the 
+feature-inst antiation units. 
+predictions. In Section 2.3 we discuss how the object instantiation is formed in 
+cases where the object parameters predicted by the features do not agree perfectly. 
+2.2 FEATURE ABSTRACTION HIERARCHY 
+TRAFFIC recursively extends the notion of reference frame transformations be- 
+tween features and objects in a hierarchical architecture. It is impractical to hope 
+that any network will be able to directly map low-level input features to complex 
+objects. The input features must be simple enough to be easily extracted from 
+images without relying on sophisticated segmentation and interpretation. If they 
+are simple, however, they will be unable to uniquely predict the object's reference 
+frame, since a complex object may contain many copies of a single simple feature. 
+To address this problem, we adopt a hierarchical approach, introducing several 
+layers of intermediate features between the input and output layers. In each layer, 
+several features are grouped together to form an 'object' in the layer above; this 
+'object' then serves as a feature for 'objects' in the next layer. The lowest layer 
+contains simple features, such as edges and various corner types. The objects to be 
+recognized appear at the top of the hierarchy - the output layer of the network. 
+This composition hierarchy builds up a description of objects by selectively grouping 
+sets of features, forming an increasingly abstract set of features. The power of this 
+representation comes in the sharing of a set of features in one layer by objects in 
+the layer above. 
+To represent multiple features of the same type simultaneously, we carve up the 
+image into spatially-co

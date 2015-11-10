@@ -1,0 +1,159 @@
+Generating Accurate and Diverse 
+Members of a Neural-Network Ensemble 
+David W. Opitz 
+Computer Science Department 
+University of Minnesota 
+Duluth, MN 55812 
+opitz@d.umn.edu 
+Jude W. Shavlik 
+Computer Sciences Department 
+University of Wisconsin 
+Madison, WI 53706 
+shavlik@cs.wisc.edu 
+Abstract 
+Neural-network ensembles have been shown to be very accurate 
+classification techniques. Previous work has shown that an effec- 
+tive ensemble should consist of networks that are not only highly 
+correct, but ones that make their errors on different parts of the 
+input space as well. Most existing techniques, however, only in- 
+directly address the problem of creating such a set of networks. 
+In this paper we present a technique called ADDEMUP that uses 
+genetic algorithms to directly search for an accurate and diverse 
+set of trained networks. ADDEMUP works by first creating an ini- 
+tial population, then uses genetic operators to continually create 
+new networks, keeping the set of networks that are as accurate as 
+possible while disagreeing with each other as much as possible. Ex- 
+periments on three DNA problems show that ADDEMUP is able to 
+generate a set of trained networks that is more accurate than sev- 
+eral existing approaches. Experiments also show that ADDEMUP 
+is able to effectively incorporate prior knowledge, if available, to 
+improve the quality of its ensemble. 
+I Introduction 
+Many researchers have shown that simply combining the output of many classifiers 
+can generate more accurate predictions than that of any of the individual classi- 
+tiers (Clemen, 1989; Wolpert, 1992). In particular, combining separately trained 
+neural networks (commonly referred to as a neural-network ensemble) has been 
+demonstrated to be particularly successful (Alpaydin, 1993; Drucker et al., 1994; 
+Hansen and Salamon, 1990; Hashem et al., 1994; Krogh and Vedelsby, 1995; 
+Maclin and Shavlik, 1995; Pertone, 1992). Both theoretical (Hansen and Sala- 
+mon, 1990; Krogh and Vedelsby, 1995) and empirical (Hashem et al., 1994; 
+536 D.W. OPITZ, J. W. SHAVLIK 
+Maclin and Shavlik, 1995) work has shown that a good ensemble is one where 
+the individual networks are both accurate and make their errors on different parts 
+of the input space; however, most previous work has either focussed on combining 
+the output of multiple trained networks or only indirectly addressed how we should 
+generate a good set of networks. We present an algorithm, ADDEMUP (Accurate 
+and Diverse Ensemble-Maker giving United Predictions), that uses genetic algo- 
+rithms to generate a population of neural networks that are highly accurate, while 
+at the same time having minimal overlap on where they make their error. 
+Traditional ensemble techniques generate their networks by randomly trying differ- 
+ent topologies, initial weight settings, parameters settings, or use only a part of the 
+training set in the hopes of producing networks that disagree on where they make 
+their errors (we henceforth refer to diversity as the measure of this disagreement). 
+We propose instead to actively search for a good set of networks. The key idea be- 
+hind our approach is to consider many networks and keep a subset of the networks 
+that minimizes our objective function consisting of both an accuracy and a diversity 
+term. In many domains we care more about generalization performance than we 
+do about generating a solution quickly. This, coupled with the fact that computing 
+power is rapidly growing, motivates us to effectively utilize available CPU cycles by 
+continually considering networks to possibly place in our ensemble. 
+ADDEMUP proceeds by first creating an initial set of networks, then continually 
+produces new individuals by using the genetic operators of crossover and mutation. 
+It defines the overall fitness of an individual to be a combination of accuracy and 
+diversity. Thus ADDEMUP keeps as its population a set of highly fit individuals that 
+will be highly accurate, while making their mistakes in a different part of the input 
+space. Also, it actively tries to generate good candidates by emphasizing the current 
+population's erroneous examples during backpropagation training. Experiments 
+reported herein demonstrate that ADDEMUP is able to generate an effective set of 
+networks for an ensemble. 
+2 The Importance of an Accurate and Diverse Ensemble 
+Figure 1 illustrates the basic framework of a neural-network ensemble. Each network 
+in the ensemble (network I through network N in this case) is first trained using 
+the training instances. Then, for each example, the predicted output of each of 
+these networks (oi in Figure 1) is combined to produce the output of the ensemble 
+(5 in Figure 1). Many researchers (Alpaydin, 1993; Hashem et al., 1994; Krogh 
+and Vedelsby, 1995; Mani, 1991) have demonstrated the effectiveness of combining 
+schemes that are simply the weighted average of the networks (i.e., 5 - ieN wi.o 
+and ieN wi - 1), and this is the type of ensemble we focus on in this paper. 
+Hansen and Salamon (1990) proved that for a neural-network ensemble, if the av- 
+erage error rate for a pattern is less than 50% and the networks in the ensemble are 
+independent in the production of their errors, the expected error for that pattern 
+can be reduced to zero as the number of networks combined goes to infinity; how- 
+ever, such assumptions rarely hold in practice. Krogh and Vedelsby (1995) later 
+proved that if diversity I Di of network i is measured by: 
+= - 0�)] 2, (1) 
+x 
+then the ensemble generalization error (/) consists of two distinct portions: 
+(2) 
+Krogh and Vedelsby referred to this term as ambiguity. 
+Generating Accurate and Diverse Members of a Neural-network Ensemble 53 7 
+e� ensemble output 
+I combine network outputs I 
+'o, -To. 
+Inetwork 1 [ ]network 21 ' {network N! 
+input 
+Figure 1: A neural-network ensemble. 
+where 1) = i wi . Di and 7 = i wi . Ei (Ei is the error rate of network i and the 
+wi's sum to 1). What the equation shows then, is that we want our ensemble to 
+consist of highly correct networks that disagree as much as possible. Creating such 
+a set of networks is the focus of this paper. 
+3 The ADDEMUP Algorithm 
+Table 1 summarizes our new algorithm, ADDEMUP, that uses genetic algorithms 
+to generate a set of neural networks that are accurate and diverse in their classi- 
+fications. (Although ADDEMUP currently uses neural networks, it could be easily 
+extended to incorporate other types of learning algorithms as well.) ADDEMUP 
+starts by creating and training its initial population of networks. It then creates 
+new networks by using standard genetic operators, such as crossover and mutation. 
+ADDEMUP trains these new individuals, emphasizing examples that are misclassified 
+by the current population, as explained below. ADDEMUP adds these new networks 
+to the population then scores each population members with the fitness function: 
+Fitnessi = Accuracyi +  Diversityi = (1 - Ei) +  Di, 
+(3) 
+where X defines the tradeoff between accuracy and diversity. Finally, ADDEMUP 
+prunes the population to the N most-fit members, which it defines to be i current 
+ensemble, then repeats this process. 
+We define our accuracy term, 1 - Ei, to be network i's validation-set accuracy (or 
+training-set accuracy if a validation set is not used), and we use Equation I over 
+this validation set to calculate our diversity term Di. We then separately normalize 
+each term so that the values range from 0 to 1. Normalizing both terms allows X to 
+have the same meaning across domains. Since it is not always clear at what value 
+one should set X, we have therefore developed some rules for automatically setting 
+X. First, we never change X if the ensemble error  is decreasing while we consider 
+new networks; otherwise we change X if one of following two things happen: (1) 
+population error/ is not increasing and the population diversity D is decreasing; 
+diversity seems to be under-emphasized and we increase X, or (2)  is increasing 
+and D is not decreasing; diversity seems to be over-emphasized and we decrease X. 
+(We started X at 0.1 for the results in this paper.) 
+A useful network to add to an ensemble is one that correctly classifies as many 
+examples as possible while making its mistakes primarily on examples that most 
+538 D.W. OPITZ, J. W. SHAVLIK 
+Table 1: The ADDEMUP algorithm. 
+GOAL: Genetically create an accurate and diverse ensemble of networks. 
+1. Create and train the initial population of networks. 
+2. Until a stopping criterion is reached: 
+(a) Use genetic operators to create new networks. 
+(b) Train the new networks using Equation 4 and add them to the popu- 
+lation. 
+(c) Measure the diversity of each network with respect to the current pop- 
+ulation (see Equation 1). 
+(d) Normalize the accuracy scores and the diversity scores of the individual 
+networks. 
+(e) Calculate the fitness of each population member (see Equation 3). 
+(f) Prune the population to the N fittest networks. 
+(g) Adjust  (see the text for an explanation). 
+(h) Report the current population of networks as the ensemble. Combine 
+the output of the networks according to Equation 5. 
+of the current population members correctly classify. We address this during back- 
+propagation training by multiplying the usual cost function by a term that measures 
+the combined population error on that example: 
+Cost 
+kT 
+t(k) 
+[t(k) - a(k)] 2, (4) 
+where t(k) is the target and a(k) is the network activation for example k in the 
+training set T. Notice that since our network is not yet a member of the ensemble, 
+b(k) and/ are not dependent on our network; our new term is thus a constant when 
+calculating the derivatives during backpropagation. We normalize t(k) -b(k) by the 
+ensemble error  so that the average value of our new term is around 1 regardless of 
+the correctness of the ensemble. This is especially important with highly accurate 
+populations, since tk - 6(k) will be close 

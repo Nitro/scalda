@@ -1,0 +1,167 @@
+Glove-TalkII: Mapping Hand Gestures to 
+Speech Using Neural Networks 
+S. Sidney Fels 
+Department of Computer Science 
+University of Toronto 
+Toronto, ON, M5S 1A4 
+ssfels@ai.toronto.edu 
+Geoffrey Hinton 
+Department of Computer Science 
+University of Toronto 
+Toronto, ON, M5S 1A4 
+hinton@ai.toronto.edu 
+Abstract 
+Glove-TalklI is a system which translates hand gestures to speech 
+through an adaptive interface. Hand gestures are mapped contin- 
+uously to 10 control parameters of a parallel formant speech syn- 
+thesizer. The mapping allows the hand to act as an artificial vocal 
+tract that produces speech in real time. This gives an unlimited 
+vocabulary in addition to direct control of fundamental frequency 
+and volume. Currently, the best version of Glove-TalklI uses sev- 
+eral input devices (including a CyberGlove, a ContactGlove, a 3- 
+space tracker, and a foot-pedal), a parallel formant speech synthe- 
+sizer and 3 neural networks. The gesture-to-speech task is divided 
+into vowel and consonant production by using a gating network 
+to weight the outputs of a vowel and a consonant neural network. 
+The gating network and the consonant network are trained with 
+examples from the user. The vowel network implements a fixed, 
+user-defined relationship between hand-position and vowel sound 
+and does not require any training examples from the user. Volume, 
+fundamental frequency and stop consonants are produced with a 
+fixed mapping from the input devices. One subject has trained to 
+speak intelligibly with Glove-TalklI. He speaks slowly with speech 
+quality similar to a text-to-speech synthesizer but with far more 
+natural-sounding pitch variations. 
+844 S. Sidney Fels, Geoffrey Hinton 
+1 Introduction 
+There are many different possible schemes for converting hand gestures to speech. 
+The choice of scheme depends on the granularity of the speech that you want to 
+produce. Figure 1 identifies a spectrum defined by possible divisions of speech based 
+on the duration of the sound for each granularity. What is interesting is that in 
+general, the coatset the division of speech, the smaller the bandwidth necessary 
+for the user. In contrast, where the granularity of speech is on the order of artic- 
+ulatory muscle movements (i.e. the artificial vocal tract [AVT]) high bandwidth 
+control is necessary for good speech. Devices which implement this model of speech 
+production are like musical instruments which produce speech sounds. The user 
+must control the timing of sounds to produce speech much as a musician plays 
+notes to produce music. The AVT allows unlimited vocabulary, control of pitch 
+and non-verbal sounds. Glove-TalkII is an adaptive interface that implements an 
+AVT. 
+Translating gestures to speech using an AVT model has a long history beginning in 
+the late 1700's. Systems developed include a bellows-driven hand-varied resonator 
+tube with auxiliary controls (1790's [9]), a rubber-moulded skull with actuators for 
+manipulating tongue and jaw position (1880's [1]) and a keyboard-footpedal inter- 
+face controlling a set of linearly spaced bandpass frequency generators called the 
+Voder (1940 [3]). The Voder was demonstrated at the World's Fair in 1939 by oper- 
+ators who had trained continuously for one year to learn to speak with the system. 
+This suggests that the task of speaking with a gestural interface is very difficult and 
+the training times could be significantly decreased with a better interface. Glove- 
+TalklI is implemented with neural networks which allows the system to learn the 
+user's interpretation of an articulatory model of speaking. 
+This paper begins with an overview of the whole Glove-TalklI system. Then, each 
+neural network is described along with its training and test results. Finally, a 
+qualitative analysis is provided of the speech produced by a single subject after 100 
+hours of speaking with Glove-TalklI. 
+Artificial 
+Vocal Tract Phoneme Finger Syllable Word 
+(AVT) Generator Spelling Generator Generator 
+I I I I I 
+10-30 100 130 200 600 
+Approximate time per gesture (rnsec) 
+Figure 1' Spectrum of gesture-to-speech mappings based on the granularity of 
+speech. 
+2 Overview of Glove-TalklI 
+The G]ove-TalklI system converts hand gestures to speech, based on a gesture-to- 
+formant model. The gesture vocabulary is based on a vocal-articulator model of 
+the hand. By dividing the mapping tasks into independent subtasks, a substantial 
+reduction in network size and training time is possible (see [4]). 
+Figure 2 illustrates the whole Glove-TalklI system. Important features include the 
+GIove-TalkH 845 
+Contact 
+Switches 
+P 
+Right Hand data 
+x, y, z 10 flex angles. 
+roll, p.ih. yaw . 4 abduction ang 
+every wo c. am thumb and pinki_% re, at/on 
+... - ' ' wst pitch and yaw 
+..- ' every 1/100 second 
+_ V/C Decision 
+Nwk 
+_ Vowel 
+Netwk 
+_ Consonant 
+Ntw I 
+Function 
+Figure 2: Block diagram of Glove-TalklI: input from the user is measured by the 
+Cyberglove, polhemus, keyboard and foot pedal, then mapped using neural net- 
+works and fixed functions to formant parameters which drive the parallel formant 
+synthesizer [8]. 
+three neural networks labeled vowel/consonant decision (V/C), vowel, and conso- 
+nant. The V/C network is trained on data collected from the user to decide whether 
+he wants to produce a vowel or a consonant sound. Likewise, the consonant network 
+is trained to produce consonant sounds based on user-generated examples based on 
+an initial gesture vocabulary. In contrast, the vowel network implements a fixed 
+mapping between hand-positions and vowel phonemes defined by the user. Nine 
+contact points measured on the user's left hand by a ContactGlove designate the 
+nine stop consonants (B, D, G, J, P, T, K, CH, NG), because the dynamics of such 
+sounds proved too fast to be controlled by the user. The foot pedal provides a 
+volume control by adjusting the speech amplitude and this mapping is fixed. The 
+fundamental frequency, which is related to the pitch of the speech, is determined by 
+a fixed mapping from the user's hand height. The output of the system drives 10 
+control parameters of a parallel formant speech synthesizer every 10 msec. The 10 
+control parameters are: nasal amplitude (ALF), first, second and third formant fre- 
+quency and amplitude (F1, A1, F2, A2, F3, A3), high frequency amplitude (AHF), 
+degree of voicing (V) and fundamental frequency (F0). Each of the control param- 
+eters is quantized to 6 bits. 
+Once trained, Glove-TalklI can be used as follows: to initiate speech, the user 
+forms the hand shape of the first sound she intends to produce. She depresses the 
+foot pedal and the sound comes out of the synthesizer. Vowels and consonants 
+of various qualities are produced in a continuous fashion through the appropriate 
+co-ordination of hand and foot motions. Words are formed by making the correct 
+motions; for example, to say hello the user forms the h sound, depresses the 
+foot pedal and quickly moves her hand to produce the e sound, then the 'T' sound 
+and finally the o sound. The user has complete control of the timing and quality 
+of the individual sounds. The articulatory mapping between gestures and speech 
+846 S. Sidney Fels, Geoffrey Hinton 
+Figure 3: Hand-position to Vowel Sound 
+Mapping. The coordinates are specified 
+relative to the origin at the sound A. The 
+X and Y coordinates form a horizontal 
+plane parallel to the floor when the user is 
+sitting. The 11 cardinal phoneme targets 
+are determined with the text-to-speech 
+synthesizer. 
+..W 
+Y() 
+is decided a priori. The mapping is based on a simplistic articulatory phonetic 
+description of speech [5]. The X,Y coordinates (measured by the polhemus) are 
+mapped to something like tongue position and height x producing vowels when the 
+user's hand is in an open configuration (see figure 2 for the correspondence and 
+table 1 for a typical vowel configuration). Manner and place of articulation for 
+non-stop consonants are determined by opposition of the thumb with the index 
+and middle fingers as described in table 1. The ring finger controls voicing. Only 
+static articulatory configurations are used as training points for the neural networks, 
+and the interpolation between them is a result of the learning but is not explicitly 
+trained. Ideally, the transitions should also be learned, but in the text-to-speech 
+formant data we use for training [6] these transitions are poor, and it is very hard 
+to extract formant trajectories from real speech accurately. 
+2.1 The Vowel/Consonant (V/C) Network 
+The V/C network decides, on the basis of the current configuration of the user's 
+hand, to emit a vowel or a consonant sound. For the quantitative results reported 
+here, we used a 10-5-1 feed-forward network with sigmoid activations [7]. The 10 
+inputs are ten scaled hand parameters measured with a Cyberglove: 8 flex angles 
+(knuckle and middle joints of the thumb, index, middle and ring fingers), thumb 
+abduction angle and thumb rotation angle. The output is a single number repre- 
+senting the probability that the hand configuration indicates a vowel. The output 
+of the V/C network is used to gate the outputs of the vowel and consonant net- 
+works, which then produce a mixture of vowel and consonant formant parameters. 
+The training data available includes only user-produced vowel or consonant sounds. 
+The network interpolates between hand configurations to create a smooth but fairly 
+rapid transition between vowels and consonants. 
+For quantitative analysis, typical training data consists of 2600 examples of con- 
+sonant configurations (350 approximants, 1510 fricatives [and aspirant], and 740 
+nasals) and 700 examples of vowel configurations. The consonant examples were 
+obtained from training data collected for the consonant network by an expert user. 
+The vowel examples were collected from the user by requiring him to move his hand 
+in vowel configurations for a specified amount of ti

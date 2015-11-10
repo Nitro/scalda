@@ -1,0 +1,157 @@
+Interior Point Implementations of 
+Alternating Minimization Training 
+Michael Lemmon 
+Dept. of Electrical Engineering 
+University of Notre Dame 
+Notre Dame, IN 46556 
+lemmon@maddog.ee.nd.edu 
+Peter T. Szymanski 
+Dept. of Electrical Engineering 
+University of Notre Dame 
+Notre Dame, IN 46556 
+pszymans@maddog.ee.nd.edu 
+Abstract 
+This paper presents an alternating minimization (AM) algorithm 
+used in the training of radial basis function and linear regressor 
+networks. The algorithm is a modification of a small-step interior 
+point method used in solving primal linear programs. The algo- 
+rithm has a convergence rate of O(v/-dL) iterations where n is a 
+measure of the network size and L is a measure of the resulting 
+solution's accuracy. Two results are presented that specify how 
+aggressively the two steps of the AM may be pursued to ensure 
+convergence of each step of the alternating minimization. 
+I Introduction 
+In recent years, considerable research has investigated the use of alternating min- 
+imization (AM) techniques in the supervised training of radial basis function 
+networks. AM techniques were first introduced in soft-competitive learning 
+gorithms[1]. This training procedure was later shown to be closely related to 
+Expectation-Maximization algorithms used by the statistical estimation commu- 
+nity[2]. Alternating minimizations search for optimal network weights by breaking 
+the search into two distinct minimization problems. A given network performance 
+functional is extremalized first with respect to one set of network weights and then 
+with respect to the remaining weights. These learning procedures have found ap- 
+plications in the training of local expert systems [3], and in Boltzmann machine 
+training [4]. More recently, convergence rates have been derived by viewing the AM 
+5 70 Michael Lemmon, Peter T. Szymanski 
+method as a variable metric algorithm [5]. 
+This paper examines AM as a perturbed linear programming (LP) problem. Recent 
+advances in the application of barrier function methods to LP problems have re- 
+sulted in the development of path following or interior point (IP) algorithms [6]. 
+These algorithms are characterized by a fast convergence rate that scales in a sub- 
+linear manner with problem size. This paper shows how a small-step IP algorithm 
+for solving a primal LP problem can be modified into an AM training procedure.. 
+The principal results of the paper are bounds on how aggressively the legs of the 
+alternating minimization can be pursued so that the AM algorithm maintains the 
+sublinear convergence rate characteristic of its LP counterpart and so that both legs 
+converge to an optimal solution. 
+2 Problem Statement 
+Consider a function approximation problem where a stochastic approximator learns 
+a mapping f: lR N - lR. The approximator computes a predicted output, 0 E lR, 
+given the input z E lR N. The prediction is computed using a finite set of M 
+regressors. The rn h regressor is characterized by the pair (Om,m)  lR N x lR N 
+(m - 1,..., M). The output of the rn h regressor, 0m  lR, in response to an input, 
+z  lR N is given by the linear function 
+9m =0mz. (1) 
+The m *' regressor (m = 1,...,M) has an associated radial basis function (RBF) 
+with parameter vector Wm  IR N. The m t' RBF weights the contribution of the 
+m t' output in computing 0 and is defined as a normal probability density function 
+Q(mlz) =km exp(-r-2 [[Om - zll 2) (2) 
+where km is a normalizing constant. The set of all weights or gating probabilities is 
+denoted by Q. The parameterization of the m t' regressor is Om= (oTto ,WTm)T  IR 2N 
+(m - 1,..., M) and the parameterization of the set of M linear regressors is 
+e = (3) 
+The preceding stochastic approximator can be viewed as a neural network. The 
+network consists of M + 1 neurons. M of the neurons are agent neurons while the 
+other neuron is referred to as a gating neuron. The rn *h alent neuron is parame- 
+terized by Ore, the first element of the pair Om- (OTm,WTm) '' (m = 1, ...,M). The 
+agent neurons receive as input, the vector z 6 lR N. The output of the rn ta agent 
+neuron in response to an input z is 0m = 0Tin z (m = 1,..., M). The gating neuron is 
+parameterized by the conditional gating probabilities, Q. The gating probabilities 
+are defined by the set of vectors, & = {wl,..., WM}. The gating neuron receives the 
+agent neurons' outputs and the vector z as its input. The gating neuron computes 
+the network's output, 0, as a hard (4) or soft (5) choice 
+0- 0m; m = arg max Q(mlz ) (4) 
+m=l,...,M 
+.0 = E'v-:I g(mlz).O.,., (5) 
+M 
+Q(mlz) 
+Interior Point Implementations of Alternating Minimization Training 571 
+The network will be said to be optimal with respect to a training set T = {(zi, Yi): 
+Yi -- f(zi), i -- 1,..., R} if a mean square error criterion is minimized. Define the 
+square output error of the rn th agent neuron to be em(Zi) -- (Yi -- oTmzi) 2 and the 
+square weighting or classifier error of the rn th RBF to be cm(zi) = IIw,-zill 2. Let 
+the combined square approximation error of the rn ta neuron be dm (zi) = eem (Zi) + 
+cCm(Zi) and let the average square approximation error of the network be 
+M R 
+d(Q, O, T): y. y.'.p(zi)Q(mlzi)dm(zi ). (6) 
+m--1 i----1 
+Minimizing (6) corresponds to minimizing both the output error in the M linear 
+regressors and the classifier error in assigning inputs to the M regressors_. Since T 
+is a discrete set and the Q are gating probabilities, the minimization of d(Q, O, T) 
+is constrained so that Q is a valid conditional probability mass function over the 
+training set, T. 
+Network training can therefore be viewed as a constrained optimization problem. 
+In particular, this optimization problem can be expressed in a form very similar 
+to conventional LP problems. The following notational conventions are adopted to 
+highlight this connection. Let x  IP MR be the gating neuron's weight vector where 
+x = (Q(llzx),..., Q(llzn), 
+(7) 
+Let O = (oT,aT) T  lR 2N denote the parameter vectors associated with the m  
+regressor and define the cost vector conditioned on O - (oT,..., Ot) T as 
+c(O) = (p(Zl)dl(Zl),...,p(zn)dl(Zn),p(z2)d2(z2),...,p(zi)dm(zi),...) T (8) 
+With this notation, the network training problem can be stated as follows, 
+minimize c(O)x 
+with respect to x, O (9) 
+subject to Ax - b, x > 0 
+where b = (1,..., 1)   lB, n, A = [Inxn' Inxn]  IR nxMn, and x >_ 0 implies 
+xi >_ 0 for i = 1,...,MR. 
+One approach for solving this problem is to break up the optimization into two 
+steps. The first step involves minimizing the above cost functional with respect to 
+x assuming a fixed O. This is the Q-update of the algorithm. The second leg of the 
+algorithm minimizes the functional with respect to O assuming fixed x. This leg 
+is called the O-update. Because the proposed optimization alternates between two 
+different subsets of weights, this training procedure is often referred to as alternating 
+minimization. Note that the Q-update is an LP problem while the O-update is a 
+quadratic programming problem. Consequently, the AM training procedure can be 
+viewed as a perturbed LP problem. 
+3 Proposed Training Algorithm 
+The preceding section noted that network training can be viewed as a perturbed 
+LP problem. This observation is significant for there exist very efficient LP solvers 
+5 72 Michael Lemmon, Peter T. Szymanski 
+based on barrier function methods used in non-linear optimization. Recent advances 
+in path following or interior point (IP) methods have developed LP solvers which 
+exhibit convergence rates which scale in a sublinear way with problem size [6]. This 
+section introduces a modification of a small-step primal IP algorithm that can be 
+used for neural network training. The proposed modification is later shown to 
+preserve the computational efficiency enjoyed by its LP counterpart. 
+To see how such a modification might arise, we first need to examine path following 
+LP solvers. Consider the following LP problem. 
+minimize cTx 
+with respect to x  lR (10) 
+subject to Ax=b,x_>0 
+This problem can be solved by solving a sequence of augmented optimization prob- 
+lems arising from the primal parameterization of the LP problem. 
+minimize O(k)cTx(k) - Y'-i log x? ) 
+with respect to x (k) 6 IR n (11) 
+subject to Ax � = b, x() _> 0 
+where a() > 0 (k = 1,..., K) is a finite length, monotone increasing sequence of 
+real numbers. x*(a()) denotes the solution for the kth optimization problem in 
+the sequence and is referred to as a central point. The locus of all points, x* (c �) 
+where a() >_ 0 is called the central path. The augmented problem takes the original 
+LP cost function and adds a logarithmic barrier which keeps the central point away 
+from the boundaries of the feasible set. As a increases, the effect of the barrier 
+is decreased, thereby allowing the ktn central point to approach the LP problem's 
+solution in a controlled manner. 
+Path following (IP) methods solve the LP problem by approximately solving 
+the sequence of augmented problems shown in (11). The parameter sequence, 
+c(�), c0),..., a(K), is chosen to be a monotone increasing sequence so that the 
+central points, x*(a(k)), of each augmented optimization approach the LP solution 
+in a monotone manner. It has been shown that for specific choices of the c sequence, 
+that the sequence of approximate central points will converge to an e-neighborhood 
+of the LP solution after a finite number of iterations. For primal IP algorithms, the 
+required condition is that successive approximations of the central points lie within 
+the region of quadratic convergence for a scaling steepest descent (SSD) algorithm 
+[6]. In particular, it has been shown that if the ktn approximating solution is suffi- 
+ciently close to the k t central point and if c (+1) = c()(1 + U/v/ ) where u _ 0.1 
+controls the distance between successive central points, then the closeness to the 
+(k + 1) st

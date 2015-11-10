@@ -1,0 +1,133 @@
+KODAK IMAGELINK TM OCR 
+Alphanumeric Handprint Module 
+Alexander Shustorovich and Christopher W. Thrasher 
+Business Imaging Sys _tem, Eastman Kodak Company, Rochester, NY 14653-5424 
+ABSTRACT 
+This paper describes the Kodak Imagelink TM OCR alphanumeric 
+handprint module. There are two neural network algorithms at its 
+cc: the first network is trained to find individual characters in an 
+alphammea'ic field, while the secxmd oe performs the classification. 
+Both networks we uained on Gabor projections of the original 
+pixel images, which reintired in high reccL2n_. ition rates and greater 
+noiso immunity. Compared to its purely mme� cotrate. art 
+(Shustxvich and Thrasher, 1995), this version of the system hos a 
+siEnificant applicatic specie postprocessing module. The system 
+has beta implemented in specialized parallel hardware, which allows 
+it to run at 80 charlsec]board. It has been irtts!iod at the Driver and 
+Vehicle L Agency (DVLA) in the United Kingdom, and its 
+overall stwss rate ex__,,.ls 96% (character level without rejects), 
+which tran.glates into 85% field rate. ff approimt_ely 20% of the 
+fields are rejected, the system achieves 99.8% character and 99.5% 
+field success rate. 
+1 INTRODUCTION 
+The system we describe below was designed to process alphanumeric fields extracted 
+from forms. The ms_jor assumptions were that (1) the form layout and definition allows 
+the system to captree the field image with a single line of ch0racters, (2) the 
+characters are handprinted capital letters and mmerals, with possible addition of 
+several special characters, and (3) the characters may occasimolly touch, but generally 
+they do not overlap. We also assrune that some additional informsfion about the 
+contents of the field is available to assist in the process of disambiguation. Otherwise, 
+it is virtually 'unpossible to distinguish not only between O and zero, but also I 
+and one, Z and two, S and five, etc. 
+A good example of such an applicatkm is the processing of vehicle registration forms 
+at the Driver and Vehicle Licensing Agency (DVLA) in the United Kingdom. The 
+alphAmmedc field in question contains a license plate. There are 29 allowed patterns 
+of character combinations, fram two to seven characters long. For example, 
+A999AAA is a valid license, whereas A9A9A9 is not (here A stands for any 
+alpha character, 9 - for any numeric character). In addition, every field hos a 
+KODAK IMAGELINK TM OCR Alphanumeric Handprint Module 779 
+control character box on the right. This control charactor is computed as a ainder 
+of the integer division by 37 of a linear combination of mmedc values of the 
+characters in the main field. Ambiguous characters, namely O , I  and S are 
+,n, ot allowed in the role of the control character, so they are replaced here by  + 
+� and / (not a very good choice, and the 37th character used is the o/ ,,'. To 
+make things more complicated, sometimes the control character is not available at the 
+moment of filing the form (at a local post c/rice), and this lack of knowledge is 
+indicated by putting an asterisk instead. Later we will discuss possible ways to use this 
+additional informs_tion in an application specific postprocessing module. 
+2 SEGMENTATION AND ALTERNATIVE APPROACHES 
+The most challenging problem for h_dprint OCR is finding individual characters in a 
+field. A m_mber of approaches to this problem can be fonnd in the literattue, the two 
+most common being (1) se.tnn_ent_afion (Gupta et al., 1993, as an example of a recent 
+publication), and (2) combined segmentation and recoEn. ition (Keeler and Rnmelhart, 
+1992). 
+The segmentation approach has difficulty separating touchi characters, and recently 
+the consensus of practitioners in the field started shifting towards combined 
+segmentation and recognition. In this scheme, the algorithm moves a window of a 
+certain width along the field� and confidence values of competing classification 
+hypoth are used (sometimes with a separate centered/noncenlexed node) to decide 
+if the window is positioned on top of a character. In the Saccade system (Martin et al., 
+1993), for example, the neural network was trained not only to recognize choracters in 
+the center of the moving window (and whether there is a character centered in the 
+window), but also to make corrective jnmps (saccades) to the nearest character and, 
+after classification, to the next character. 
+Still another variation on the theme is an arrangement when the classification window 
+is duplicated with one- or several-pixel shifts along the field (Benjio et al., 1994). 
+Then the outputs of the classifiers serve as input for a postprocessing module (in this 
+paper, a Hidden Markov Model) used to decide which of the multitude of process 
+windows act_lly have centered characters in them. 
+All these approaches have deficiencies. As we mentioned earlier, touching characllrs 
+are difficult for autonomous segmentera. The moving (and jnmping) window with a 
+single cememdMtered node ends to miss Ilarrow characters and sometimes to 
+duplicate wide ones. The replication of a classifier together with postproce,ssing ends 
+to be qule expensive computationally. 
+3 POSITIONING NETWORK 
+To do the positioning, we decided to introduce an array of output nnits correding 
+to successive pixels in the middle portion of the window. These nodes signal if a 
+center ('Ireart) of a character lies at the corresponding positions. Because the 
+precision with which a h-man operator can mark the eh_racter heart is low (usjolly 
+within one or two pixels at be,sO, the target activations of three consecutive nodes are 
+set to one if there is a character heart at a pixel position conv.,sponding to the middle 
+node. The rest of the target activations are set to zero. 
+The network is then trained to produce bnmps of activation indicating the character 
+hearts. Two bnffer regions on the left and on the right of the window (pixels without 
+corre output nodes) are necessary to allow all or most of the character 
+centered at each of the output node positions to fit inside the window. The 
+replacement of a single centerexoncentered node by an array allows us to average 
+output activations, generated by different window shifts, while conv..sIxmding to the 
+same position. This additional procedure allows us to slide the window several pixels 
+780 A. SHUSTOROVICH, C. W. THRASHER 
+at a time: the appropriate step is a trade-off between the processing speed and the 
+required level of robusmess. The final procedure involves thresholding of the 
+activation-wave and the estimation of the predicted character position as the center of 
+mass of the activation-bubble. The resulting algorithm is very effective: touching 
+characters do not present significant problems, and only abnormally wide characters 
+sometimes fool the system into false alarms. 
+The system works with preprocessed images. Each field is divided into subfields of 
+disconnected gronps of characters. These subfields are size-norms_lized to a height of 
+20 pixels. After that they are reassembled into a single field again, with 6 pixel gaps 
+between them. Two blank rows are added both along the top and the bottom of the 
+recombined field as preferred by the Gabor projection technique (Shustorovich, 1994). 
+In our current system, the input nodes of a sliding window are organized in a 24 x 36 
+array. The first, intermediary, layer of the network implements the Gabor projections. 
+It has 12 x 12 local receptive fields (LRFs) with fixed preccmputed weights. The step 
+between LRFs is 6 pixels in both directions. We work with 16 Gabor basis fimctiom 
+with cirojlar Gaussian envelopes centered within each LRF; they are both sine and 
+cosine wavelets in four orientaticm and two sizes. All 16 projections frem each LRF 
+constitute the input to a colnmn of 20 hidden vnits, thus the second (first trainable) 
+hidden layer is organized in a three-dimensional array 3 x 5 x 20. The third hidden 
+layer of the network also has local receptive fields, they are three-dlmensimal 2 x 2 x 
+20 with the step 1 x 1 x 0. The vnits in the third hidden layer are also duplicated 20 
+times, thus this layer is organized in a three-dimensional array 2 x 4 x 20. The fourth 
+hidden layer has 60 vnits fully connected to the third layer. Finally, the output layer 
+has 12 _mits, also fully connected to the fourth layer. 
+The network was trained using a variant of the Back-Propagation algorithm. Both 
+training and testing sets were drawn from the field data collected at DVLA. The 
+training set contained approimat-ely 60,000 characters from 8,000 fields, and about 
+5,000 characters from 650 fields were used for testing. On this test set, more than 
+92% of all character hearts were found within 1-pixel precision, and only 0.4% were 
+missed by more than 4 pixels. 
+4 CLASSIFICAON NETWORK 
+The structure of the classification network resembles that of the posi llgtwork. 
+The Gabor projection layer works in exactly the same way, but the window size is 
+._'maller, only 24 x 24 pixels. We chose this size because after height normalization to 
+20 pixels, only occasionally the characters are wider than 24 pixels. Widening the 
+window complicates tr 'aming: it imxeases the dimensionlity of the input while 
+providing information, mostly about irrelevant_ pieces of adjacent characters. As a 
+result, the second layer is organized as a 3 x 3 x 20 array of Units with LRFs and 
+shared weights, the third is a 2 x 2 x 20 array of onits with LRFs, alld there are 37 
+output units fully connected to the 80 onits in the third layer. The nnmber of output 
+.nits in this variant of our system has been determined by the intended application. It 
+was necessary to recognize uppercase le_.___ers. numerals. and also five special 
+characters. namely plus (+). minus (-), slash (/). percent (%), and aslerisk (*). Since 
+additional information was available for

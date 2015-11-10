@@ -1,0 +1,137 @@
+Support Vector Method for Novelty Detection 
+Bernhard Schilkopf*, Robert Williamson�, 
+Alex Smola�, John Shawe-Taylor t, John Platt* 
+* Microsoft Research Ltd., 1 Guildhall Street, Cambridge, UK 
+� Department of Engineering, Australian National University, Canberra 0200 
+t Royal Holloway, University of London, Egham, UK 
+* Microsoft, 1 Microsoft Way, Redmond, WA, USA 
+bsc/jplatt@microsoft.com, Bob. Williamson/Alex. Smola@anu.edu.au, john@dcs.rhbnc.ac.uk 
+Abstract 
+Suppose you are given some dataset drawn from an underlying probabil- 
+ity distribution P and you want to estimate a simple subset $ of input 
+space such that the probability that a test point drawn from P lies outside 
+of $ equals some a priori specified v between 0 and 1. 
+We propose a method to approach this problem by trying to estimate a 
+function f which is positive on $ and negative on the complement. The 
+functional form of f is given by a kernel expansion in terms of a poten- 
+tially small subset of the training data; it is regularized by controlling the 
+length of the weight vector in an associated feature space. We provide a 
+theoretical analysis of the statistical performance of our algorithm. 
+The algorithm is a natural extension of the support vector algorithm to 
+the case of unlabelled data. 
+1 INTRODUCTION 
+During recent years, a new set of kernel techniques for supervised learning has been devel- 
+oped [8]. Specifically, support vector (SV) algorithms for pattern recognition, regression 
+estimation and solution of inverse problems have received considerable attention. There 
+have been a few attempts to transfer the idea of using kernels to compute inner products 
+in feature spaces to the domain of unsupervised learning. The problems in that domain 
+are, however, less precisely specified. Generally, they can be characterized as estimating 
+functions of the data which tell you something interesting about the underlying distribu- 
+tions. For instance, kernel PCA can be characterized as computing functions which on the 
+training data produce unit variance outputs while having minimum norm in feature space 
+[4]. Another kernel-based unsupervised learning technique, regularized principal mani- 
+folds [6], computes functions which give a mapping onto a lower-dimensional manifold 
+minimizing a regularized quantization error. Clustering algorithms are further examples of 
+unsupervised learning techniques which can be kernelized [4]. 
+An extreme point of view is that unsupervised learning is about estimating densities. 
+Clearly, knowledge of the density of P would then allow us to solve whatever problem 
+can be solved on the basis of the data. The present work addresses an easier problem: it 
+Support Vector Method for Novelty Detection 583 
+proposes an algorithm which computes a binary function which is supposed to capture re- 
+gions in input space where the probability density lives (its support), i.e. a function such 
+that most of the data will live in the region where the function is nonzero [5]. In doing so, 
+it is in line with Vapnik's principle never to solve a problem which is more general than the 
+one we actually need to solve. Moreover, it is applicable also in cases where the density 
+of the data's distribution is not even well-defined, e.g. if there are singular components. 
+Part of the motivation for the present work was the paper [ 1 ]. It turns out that there is a 
+considerable amount of prior work in the statistical literature; for a discussion, cf. the full 
+version of the present paper [3]. 
+2 ALGORITHMS 
+We first introduce terminology and notation conventions. We consider training data 
+x,..., x 6 X, where � 6 N is the number of observations, and X is some set. For 
+simplicity, we think of it as a compact subset of 11 N . Let  be a feature map X --> F, 
+i.e. a map into a dot product space F such that the dot product in the image of � can be 
+computed by evaluating some simple kernel [8] 
+k(x,y) = (rI,(x). rI,(y)), 
+(1) 
+such as the Gaussian kernel 
+k(x, y) = e -tlx-yl12/c. (2) 
+Indices i and j are understood to range over 1,..., � (in compact notation: i, j E [�]). 
+Bold face greek letters denote �-dimensional vectors whose components are labelled using 
+normal face typeset. 
+In the remainder of this section, we shall develop an algorithm which returns a function 
+f that takes the value + 1 in a small region capturing most of the data points, and -1 
+elsewhere. Our strategy is to map the data into the feature space corresponding to the 
+kernel, and to separate them from the origin with maximum margin. For a new point x, the 
+value f(x) is determined by evaluating which side of the hyperplane it falls on, in feature 
+space. Via the freedom to utilize different types of kernel functions, this simple geometric 
+picture corresponds to a variety of nonlinear estimators in input space. 
+To separate the data set from the origin, we solve the following quadratic program: 
+l llwll2 q_ 1 
+min  7 -i i - P (3) 
+w6 F, 6lt t,p6R 
+subject to (w. (xi)) _> p- (i, (i > 0. (4) 
+Here, v E (0, 1) is a parameter whose meaning will become clear later. Since nonzero slack 
+variables i are penalized in the objective function, we can expect that if w and p solve this 
+problem, then the decision function f(x) -- sgn((w � rI,(x)) - p) will be positive for most 
+examples xi contained in the training set, while the SV type regularization term ][w[I will 
+still be small. The actual trade-off between these two goals is controlled by v. Deriving the 
+dual problem, and using (1), the solution can be shown to have an SV expansion 
+f(x)=sgn(i oik(xi,x)-p) (5) 
+(patterns xi with nonzero ai are called SVs), where the coefficients are found as the solu- 
+tion of the dual problem: 
+min 1 1 
+Ot  E OziOzjk(xi' xj ) subjectto0_<ai_<, EOzi----1. (6) 
+ij i 
+584 B. SchOlkopf, R. C. V'lliamson, .4. d. Smola, d. Shawe-Taylor and d.C. Platt 
+This problem can be solved with standard QP routines. It does, however, possess features 
+that sets it apart from generic QPs, most notably the simplicity of the constraints. This can 
+be exploited by applying a variant of SMO developed for this purpose [3]. 
+The offset p can be recovered by exploiting that for any cti which is not at the upper or 
+lower bound, the corresponding pattern xi satisfies p = (w. (xi)) = y'j ctjk(x, xi). 
+Note that if v approaches 0, the upper boundaries on the Lagrange multipliers tend to infin- 
+ity, i.e. the second inequality constraint in (6) becomes void. The problem then resembles 
+the corresponding hard margin algorithm, since the penalization of errors becomes infinite, 
+as can be seen from the primal objective function (3). It can be shown that if the data set 
+is separable from the origin, then this algorithm will find the unique supporting hyperplane 
+with the properties that it separates all data from the origin, and its distance to the origin is 
+maximal among all such hyperplanes [3]. If, on the other hand, v approaches 1, then the 
+constraints alone only allow one solution, that where all cti are at the upper bound 1/(v�). 
+In this case, for kernels with integral 1, such as normalized versions of (2), the decision 
+function corresponds to a thresholded Parzen windows estimator. 
+To conclude this section, we note that one can also use balls to describe the data in feature 
+space, close in spirit to the algorithms of [2], with hard boundaries, and [7], with soft 
+margins. For certain classes of kernels, such as Gaussian RBF ones, the corresponding 
+algorithm can be shown to be equivalent to the above one [3]. 
+3 THEORY 
+In this section, we show that the parameter v characterizes the fractions of SVs and outliers 
+(Proposition 1). Following that, we state a robustness result for the soft margin (Proposition 
+2) and error bounds (Theorem 5). Further results and proofs are reported in the full version 
+of the present paper [3]. We will use italic letters to denote the feature space images of the 
+corresponding patterns in input space, i.e. a:i := (xi). 
+Proposition 1 Assume the solution of(4) satisfies p  O. The following statements hold: 
+(i) u is an upper bound on the fraction of outliers. 
+(ii) u is a lower bound on the fraction of SVs. 
+(iii) Suppose the data were generated independently from a distribution P(x) which does 
+not contain discrete components. Suppose, moreover, that the kernel is analytic and non- 
+constant. With probability 1, asymptotically, v equals both the fraction of SVs and the 
+fraction of outliers. 
+The proof is based on the constraints of the dual problem, using the fact that outliers must 
+have Lagrange multipliers at the upper bound. 
+Proposition 2 Local movements of outliers parallel to w do not change the hyperplane. 
+We now move on to the subject of generalization. Our goal is to bound the probability 
+that a novel point drawn from the same underlying distribution lies outside of the estimated 
+region by a certain margin. We start by introducing a common tool for measuring the 
+capacity of a class  of functions that map 2C to 5L 
+Definition 3 Let (X, d) be a pseudo-metric space,  let A be a subset of X and e > O. A 
+set B C_ X is an e-cover for A if, for every a  A, there exists b  B such that d(a, b) _< e. 
+The e-covering number of A, 3fa(e, A), is the minimal cardinality of an e-cover for A (if 
+there is no such finite cover then it is defined to be c). 
+I i.e. with a distance function that differs from a metric in that it is only semidefinite 
+Support Vector Method for Novelty Detection 585 
+The idea is that B should be finite but approximate all of A with respect to the pseudometric 
+d. We will use the l distance over a finite sample X = (a:l,..., a:t) for the pseudo- 
+metric in the space of functions, dx(f,g) = maxi[t] If(xi) - g(xi)l. Let f(e, if, �) = 
+suPx6xt fax (e, if). Below, logarithms are to base 2. 
+Theorem 4 Consider any distribution P on 3J and any 0  ll Suppose Xl,..., X� are 
+generated i.i.d. from P. Then 

@@ -1,0 +1,163 @@
+Empirical Entropy Manipulation for 
+Real-World Problems 
+Paul Viola; Nicol N. Schraudolph, Terrence J. Sejnowskl 
+Computational Neurobiology Laboratory 
+The Salk Institute for Biological Studies 
+10010 North Torrey Pines Road 
+La Jolla, CA 92037-1099 
+viola@salk.edu 
+Abstract 
+No finite sample is sufficient to determine the density, and therefore 
+the entropy, of a signal directly. Some assumption about either the 
+functional form of the density or about its smoothness is necessary. 
+Both amount to a prior over the space of possible density functions. 
+By far the most common approach is to assume that the density 
+has a parametric form. 
+By contrast we derive a differential learning rule called EMMA 
+that optimizes entropy by way of kernel density estimation. En- 
+tropy and its derivative can then be calculated by sampling from 
+this density estimate. The resulting parameter update rule is sur- 
+prisingly simple and efficient. 
+We will show how EMMA can be used to detect and correct cor- 
+ruption in magnetic resonance images (MRI). This application is 
+beyond the scope of existing parametric entropy models. 
+Introduction 
+Information theory is playing an increasing role in unsupervised learning and visual 
+processing. For example, Linsker has used the concept of information maximization 
+to produce theories of development in the visual cortex (Linsker, 1988). Becker and 
+Hinton have used information theory to motivate algorithms for visual processing 
+(Becker and Hinton, 1992). Bell and Sejnowski have used information maximization 
+*Author to whom correspondence should be addressed. Current address: M.I.T., 545 
+Technology Square, Cambridge, MA 02139. 
+852 P. VIOLA, N. N. SCHRAUDOLPH, T. J. SEJNOWSKI 
+to solve the cocktail party or signal separation problem (Bell and Sejnowski, 
+1995). In order to simplify analysis and implementation, each of these techniques 
+makes specific assumptions about the nature of the signals used, typically that the 
+signals are drawn from some parametric density. In practice, such assumptions are 
+very inflexible. 
+In this paper we will derive a procedure that can effectively estimate and manip- 
+ulate the entropy of a wide variety of signals using non-parametric densities. Our 
+technique is distinguished by is simplicity, flexibility and efficiency. 
+We will begin with a discussion of principal components analysis (PCA) as an exam- 
+ple of a simple parametric entropy manipulation technique. After pointing out some 
+of PCA's limitation, we will then derive a more powerful non-parametric entropy 
+manipulation procedure. Finally, we will show that the same entropy estimation 
+procedure can be used to tackle a difficult visual processing problem. 
+1.1 Parametric Entropy Estimation 
+Typically parametric entropy estimation is a two step process. We are given a 
+parametric model for the density of a signal and a sample. First, from the space 
+of possible density functions the most probable is selected. This often requires a 
+search through parameter space. Second, the entropy of the most likely density 
+function is evaluated. 
+Parametric techniques can work well when the assumed form of the density matches 
+the actual data. Conversely, when the parametric assumption is violated the result- 
+ing algorithms are incorrect. The most common assumption, that the data follow the 
+Gaussian density, is especially restrictive. An entropy maximization technique that 
+assumes that data is Gaussian, but operates on data drawn from a non-Gaussian 
+density, may in fact end up minimizing entropy. 
+1.2 Example: Principal Components Analysis 
+There are a number of signal processing and learning problems that can be formu- 
+lated as entropy maximization problems. One prominent example is principal com- 
+ponent analtsis (PCA). Given a random variable X, a vector v can be used to define 
+a new random variable, Y, - X.v with variance Var(Y) = E[(X �  - [X-])]. 
+The principal component  is the unit vector for which Var() is maximized. 
+In practice neither the density of X nor Y, is known. The projection variance is 
+computed from a finite sample, A, of points from X, 
+Var(Y,)  ar(Y,)  S[(X. - S[X. ])] , (1) 
+where Var (Y,) and [-] are shorthand for the empirical variance and mean eval- 
+uated over A. Oja has derived an elegant on-line rule for learning  when presented 
+with a sample of X (Oja, 1982). 
+Under the assumption that X is Gaussian is is easily proven that  has maximum 
+entropy. Moreover, in the absence of noise, , contains mimal information about 
+X. However, when X is not Gaussian  is generally not the most informative 
+projection. 
+2 Estimating Entropy with Parzen Densities 
+We will now derive a general procedure for manipulating and estimating the entropy 
+of a random variable from a sample. Given a sample of a random variable X, we can 
+Empirical Entropy Manipulation for Real-world Problems 853 
+construct another random variable Y = F(X, v). The entropy, h(Y), is a function of 
+v and can be manipulated by changing v. The following derivation assumes that Y is 
+a vector random variable. The joint entropy of a two random variables, h(Wx, W), 
+can be evaluated by constructing the vector random variable, Y - [W1, W9.] T and 
+evaluating h(Y). 
+Rather than assume that the density has a parametric form, whose parameters are 
+selected using maximum likelihood estimation, we will instead use Parzen window 
+density estimation (Duda and Hart, 1973). In the context of entropy estimation, the 
+Parzen density estimate has three significant advantages over maximum likelihood 
+parametric density estimates: (1) it can model the density of any signal provided 
+the density function is smooth; (2) since the Parzen estimate is computed directly 
+from the sample, there is no search for parameters; (3) the derivative of the entropy 
+of the Parzen estimate is simple to compute. 
+The form of the Parzen estimate constructed from a sample A is 
+1 
+P*(y,A): NA  R(y- yA): [R(y-- y)] , (2) 
+yA6A 
+where the Parzen estimator is constructed with the window function R(.) which 
+integrates to 1. We will assume that the Parzen window function is a Gaussian 
+density function. This will simplify some analysis, but it is not necessary. Any 
+differenttable function could be used. Another good choice is the Cauchy density. 
+Unfortunately evaluating the entropy integral 
+h(Y)  -E[logP*(Y,A)] = - logP*(y,A)dy 
+is inordinately difficult. This integral can however be approximated as a sample 
+mean: 
+a(r) a*(r) = -.[log A)] (3) 
+where Es[ ] is the sample mean taken over the sample B. The sample mean 
+converges toward the true expectation at a rate proportional to 1/x/- (Ns is 
+the size of B). To reiterate, two samples can be used to estimate the entropy of a 
+density: the first is used to estimate the density, the second is used to estimate the 
+entropy x. We call h*(Y) the EMMA estimate of entropy a. 
+One way to extremize entropy is to use the derivative of entropy with respect to v. 
+This may be expressed as 
+I 
+ys6B 
+1 dl 
+A7 s   Wy(ys,y.a) vvDo(ys- 
+ys6B y6A 
+(4) 
+, 
+where -- (6) 
+- ' 
+Dp(y) =- yrb-Xy, and gp(y) is a multi-dimensional Gaussian with covariance b. 
+Wy(yx, y) is an indicator of the degree of match between its arguments, in a soft 
+Using a procedure akin to leave-one-out cross-validation a single sample can be used 
+for both purposes. 
+aEMMA is a random but pronounceable subset of the letters in the words Empirical 
+entropy Manipulation and Analysis. 
+854 P. VIOLA, N. N. SCHRAUDOLPH, T. J. SEJNOWSKI 
+sense. It will approach one if y is significantly closer to y2 than any element of A. 
+To reduce entropy the parameters v are adjusted such that there is a reduction in 
+the average squared distance between points which W indicates are nearby. 
+2.1 Stochastic Maximization Algorithm 
+Both the calculation of the EMMA entropy estimate and its derivative involve a 
+double summation. As a result the cost of evaluation is quadratic in sample size: 
+O(N.4NB). While an accurate estimate of empirical entropy could be obtained by 
+using all of the available data (at great cost), a stochastic estimate of the entropy 
+can be obtained by using a random subset of the available data (at quadratically 
+lower cost). This is especially critical in entropy manipulation problems, where the 
+derivative of entropy is evaluated many hundreds or thousands of times. Without 
+the quadratic savings that arise from using smaller samples entropy manipulation 
+would be impossible (see (Viola, 1995) for a discussion of these issues). 
+2.2 Estimating the Covariance 
+In addition to the learning rate , the covariance matrices of the Parzen window 
+functions, g0, are important parameters of EMMA. These parameters may be cho- 
+sen so that they are optimal in the maximum likelihood sense. For simplicity, we 
+assume that the covariance matrices are diagonal,  = DIAG(cr:,r::,...). Follow- 
+ing a derivation almost identical to the one described in Section 2 we can derive an 
+equation analogous to (4), 
+d h,(y) _ l 
+ba 
+where [y] is the kth component of the vector y. The optimal, or most likely, 
+ minimizes h*(Y). In practice both  and  are adjusted simultaneously; for 
+example, while  is adjusted to maximize h' (Y), $ is adjusted to minimize h' (Y). 
+3 Principal Components Analysis and Information 
+As a demonstration, we can derive a parameter estimation rule akin to principal 
+components analysis that truly maximizes information. This new EMMA based 
+component analysis (ECA) manipulates the entropy of the random variable Y = 
+X.v under the constraint that [v[ = 1. For any given value ofv the entropy of Y can 
+be estimated from two samples of X as: h*(Y,) = --EB[logE,4[g,(aB .v -- at. v)]], 
+where b is the variance of the Parzen window function. Moreover we can estimate 
+the derivative of entropy: 
+d h,(y,)_ I 
+B A 
+where y = z � v and Y8 = z8 � v. The derivative may be decomposed into parts 
+w

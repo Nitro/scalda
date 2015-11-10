@@ -1,0 +1,153 @@
+A Reinforcement Learning Algorithm 
+in Partially Observable Environments 
+Using Short-Term Memory 
+Nobuo Suematsu and Akira Hayashi 
+Faculty of Computer Sciences 
+Hiroshima City University 
+3-4-10zuka-higashi, Asaminami-ku, Hiroshima 731-3194 Japan 
+{ suematsu,akira} @ im.hirosh ima-cu.ac.jp 
+Abstract 
+We describe a Reinforcement Learning algorithm for partially observ- 
+able environments using short-term memory, which we call BLHT. Since 
+BLHT learns a stochastic model based on Bayesian Learning, the over- 
+fitting problem is reasonably solved. Moreover, BLHT has an efficient 
+implementation. This paper shows that the model learned by BLHT con- 
+verges to one which provides the most accurate predictions of percepts 
+and rewards, given short-term memory. 
+1 INTRODUCTION 
+Research on Reinforcement Learning (RL) prob- 
+lem for partially observable environments is gain- 
+ing more attention recently. This is mainly because 
+the assumption that perfect and complete perception 
+of the state of the environment is available for the 
+learning agent, which many previous RL algorithms 
+require, is not valid for many realistic environments. 
+model-free 
+Worl--' POMDP 
+Figure 1: Three approaches 
+One of the approaches to the problem is the model-free approach (Singh et al. 1995; 
+Jaakkola et al. 1995) (arrow a in the Fig. l) which gives up state estimation and uses 
+memory-less policies. We can not expect the approach to find a really effective policy when 
+it is necessary to accumulate information to estimate the state. Model based approaches are 
+superior in these environments. 
+A popular model based approach is via a Partially Observable Markov Decision Process 
+(POMDP) model which represents the decision process of the agent. In Fig. 1 the approach 
+is described by the route from World to Policy through POMDP. The approach has 
+two serious difficulties. One is in the learning of POMDPs (arrow b in Fig. 1). Abe and 
+1060 N. Suematsu and A. Hayashi 
+Warmuth (1992) shows that learning of probabilistic automata is NP-hard, which means 
+that learning of POMDPs is also NP-hard. The other difficulty is in finding the optimal 
+policy of a given POMDP model (arrow c in Fig. l). Its PSAPCE-hardness is shown in 
+Papadimitriou and Tsitsiklis (1987). Accordingly, the methods based on this approach 
+(Chrisman 1992; McCallum 1993), will not scale well to large problems. 
+The approach using short-term memory is computationally more tractable. Of course we 
+can construct environments in which long-term memory is essential. However, in many 
+environments, because of their stochasticity, the significance of the past information de- 
+creases exponentially fast as the time goes. In such environments, memories of moderate 
+length will work fine. 
+McCallurn (1995) proposes utile suffix memory (USM) algorithm. USM uses a tree 
+structure to represent short-term memories with variable length. USM's model learning is 
+based on a statistical test, which requires time and space proportional to the learning steps. 
+This makes it difficult to adapt USM to the environments which require long learning steps. 
+USM suffers from the overfitting problem which is a difficult problem faced by most of 
+model based learning methods. USM may overfit or underfit up to the significance level 
+used for the statistical test and we can not know its proper level in advance. 
+In this paper, we introduce an algorithm called BLHT (Suematsu et al. 1997), in which the 
+environment is modeled as a history tree model (HTM), a stochastic model with variable 
+memory length. Although BLHT shares the tree structured representation of short-term 
+memory with USM, the computational time required by BLHT is constant in each step and 
+BLHT copes with environments which require large learning steps. In addition, because 
+BLHT is based on Bayesian Learning, the overfitting problem is solved reasonably in it. A 
+similar version of HTMs was introduced and has been used for learning of Hidden Markov 
+Models in Ron et al. (1994). In their learning method, a tree is grown in a similar way with 
+USM. If we try to adapt it to our RL problem, it will face the same problems with USM. 
+This paper shows that the HTM learned by BLHT converges to the optimal one in the 
+sense that it provides the most accurate predictions of percepts and rewards, given short- 
+term memory. BLHT can learn a HTM in an efficient way (arrow d in Fig. 1). And since 
+HTMs compose a subset of Markov Decision Processes (MDPs), it can be efficiently solved 
+by Dynamic Programming (DP) techniques (arrow e in Fig. 1). So, we can see BLHT as an 
+approach to follow an easy way from World to Policy which goes around POMDP. 
+2 THE POMDP MODEL 
+The decision process of an agent in a partially observable environment can be formulated 
+as a POMDP. Let the finite set of states of the environment be ,S, the finite set of agent's 
+actions be .A, and the finite set of all possible percepts be 27. Let us denote the probability 
+of and the reward for making transition from state 8 to 8' using action a by Ps, Isa and 
+respectively. We also denote the probability of obtaining percept i after a transition from 
+to 8' using action a by Oilsa,. Then, a POMDP model is specified by (,S, .A, 27, , (9, 
+xo), where  = {Ps'lsa I 8,8'  q,a  4} , (.9 = {Oilsas'J8,8'  q,a  4, i  27}, 
+= {Was, IS, S'  ,S, a  .A}, and xo = (x� . x � ) is the probability distribution of 
+the initial state. 
+We denote the history of actions and percepts of the agent till time t, (..., at-2, it-1, at-1, 
+it) by Dr. If the POMDP model, M = ($, 4, 27, 7 , (,9, 142, a:i) is given, one can compute 
+the belief state, a:t = (a:t .. a: t ) from Dt which is the state estimation at time t. 
+ �  slSl_l ' 
+We denote the mapping from histories to belief states defined by POMDP model M by 
+XM('), that is, a:t = XM(Dt). The belief state at is the most precise state estimation 
+and it is known to be the sufficient statistics for the optimal policy in POMDPs (Bertsekas 
+1987). It is also known that the stochastic process {a:t, t _> 0} is an MDP in the continuous 
+An RL Algorithm in Partially Observable Environments Using Memory 1061 
+_ 
+space, , =_ {(x, dots, XlSl_x) ] xx,..., XlSl_x > O, zj-_x xj (_ 1). 
+3 BAYESIAN LEARNING OF HISTORY TREE MODELS (BLHT) 
+In this section, we summarize our RL algorithm for partially observable environments, 
+which we call BLHT (Suematsu et al. 1997). 
+3.1 HISTORY TREE MODELS 
+BLHT is Bayesian Learning on a hypothesis space which is composed of predictive models, 
+which we call History Tree Models (HTMs). Given short-term memory, a HTM provides 
+the probability disctribution of the next percept and the expected immediate reward for 
+each action. A HTM is represented by a tree structure called a history tree and parameters 
+given for each leaf of the tree. 
+A history tree h associates history Dt with a leaf as follows. Starting from the root of h, 
+we check the most recent percept, it and follow the appropriate branch and then we check 
+the action at- and follow the appropriate branch. This procedure is repeated till we reach 
+a leaf. We denote the reached leaf by ,kh(Dt) and the set of leaves of h by 
+Each leaf 1  �h has parameters Oilla and Wla. Oilla denotes the probability of observing 
+i at time t + I when h(Dt) = I and the last action at was a. COla denotes the expected 
+immediate reward for performing a when h(Dt) = 1. Let Oh = {Oilla I i  25,1  
+1 2  it 
+a b  at-1 
+1 2 1 2 ( it-t 
+Figure 2: (a) A three-state environment, in which the agent receives percept ! in state ! and 
+percept 2 in states 2a and 2b. (b) A history tree which can represent the environment. 
+Fig. 2 shows a three-state environment (a) and a history tree which can represent the 
+environment (b). We can construct a HTM which is equivalent with the environment by 
+setting appropriate parameters in each leaf of the history tree. 
+3.2 BAYESIAN LEARNING 
+BLHT is designed as Bayesian Learning on the hypothesis space, 7, which is a set of 
+history trees. First we show the posterior probability of a history tree h   given history 
+Dr. To derive the posterior probability we set the prior density of Oh as 
+t�(Ohlh) '-- H H Kla H 
+ilia 
+l� a.A iZ 
+where Kta is the normalization constant and oeilla is a hyper parameter to specify the prior 
+density. Then we can have the posterior probability of h, 
+P(hlDt,7-l) = ctP(h17-I ) H H Kl, Hiez F(N//, + Ctilla ) 
+16 � t a 6 .A r ( N [a 'Jr' Ol l a ) ' (1) 
+where ct is the normalization constant, F(.) is the gamma function, Nitll a is the number 
+of times i is observed after executing a when h(Dt,) = 1 in the history Dr, Nlra = 
+5-iez NitIra, and Olla '-' Ei6Z ilia' 
+Next, we show the estimates of the parameters. We use the average of Oilla with its posterior 
+1062 N. Suematsu and A. Hayashi 
+density as the estimate, lla' which is expressed as 
+N t 
+]la '-- ilia q- oilla 
+Nlra q- Oq a 
+Wl, is estimated just by accumulating rewards received after executing a when ha (Dr) -- l, 
+and dividing it by the number of times a was performed when t (Dr) = l, N[,. That is, 
+1 
+-- 
+Ia Nlra 
+where tt� is the k-th occurrence of execution of a when An (Dr) = I. 
+3.3 LEARNING ALGORITHM 
+In principle, by evaluating Eq.(1) for all h  7-/, we can extract the MAP model. However, 
+it is often impractical, because a proper hypothesis space 7-/is very large when the agent has 
+little prior knowledge concerning the environment. Fortunately, we can design an efficient 
+learning algorithm by assuming that the hypothesis space, 7-/, is the set of pruned trees of a 
+large history tree ht and the ratio of prior probabilities of a history tree h and h' obtained 
+by pruning off subtree Ah from h is given by a known function q(Ah) l 
+We define function g(hlDt, 7-t) by taking logarithm of the R.H.S. of Eq.(1) without the 
+normalization constant, which can be rewritten as 
+g(hlr>t, = log P(hl) + (2) 
+lEt 
+where 
+YI

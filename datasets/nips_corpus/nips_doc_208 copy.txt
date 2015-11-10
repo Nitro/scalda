@@ -1,0 +1,143 @@
+566 Atlas, Cohn and Ladner 
+Training Connectionist Networks with 
+Queries and Selective Sampling 
+Les Atlas 
+Dept. of E.E. 
+David Cohn 
+Dept. of C.S. &: E. 
+Richard Ladner 
+Dept. of C.S. &: E. 
+M.A. EI-Sharkawi, R.J. Marks II, M.E. Aggoune, and D.C. Park 
+Dept. of E.E. 
+University of Washington, Seattle, WA 98195 
+ABSTRACT 
+Selective sampling is a form of directed search that can greatly 
+increase the ability of a connectionist network to generalize accu- 
+rately. Based on information from previous batches of samples, a 
+network may be trained on data selectively sampled from regions 
+in the domain that are unknown. This is realizable in cases when 
+the distribution is known, or when the cost of drawing points from 
+the target distribution is negligible compared to the cost of label- 
+ing them with the proper classification. The approach is justified 
+by its applicability to the problem of training a network for power 
+system security analysis. The benefits of selective sampling are 
+studied analytically, and the results are confirmed experimentally. 
+I Introduction: Random Sampling vs. Directed Search 
+A great deal of attention has been applied to the problem of generalization based 
+on random samples drawn from a distribution, frequently referred to as learning 
+from examples. Many natural learning learning systems however, do not simply 
+rely on this passive learning technique, but instead make use of at least some form 
+of directed search to actively examine the problem domain. In many problems, 
+directed search is provably more powerful than passively learning from randomly 
+given examples. 
+Training Connectionist Networks with Queries and Selective Sampling 567 
+Typically, directed search consists of membership queries, where the learner asks for 
+the classification of specific points in the domain. Directed search via membership 
+queries may proceed simply by examining the information already given and deter- 
+mining a region of uncertainty, the area in the domain where the learner believes 
+mis-classification is still possible. The learner then asks for examples exclusively 
+from that region. 
+This paper discusses one form of directed search: selective sampling. In Section 2, 
+we describe theoretical foundations of directed search and give a formal definition 
+of selective sampling. In Section 3 we describe a neural network implementation 
+of this technique, and we discuss the resulting improvements in generalization on a 
+number of tasks in Section 4. 
+2 Learning and Selective Sampling 
+For some arbitrary domain learning theory defines a concept as being some subset of 
+points in the domain. For example, if our domain is 2, we might define a concept 
+as being all points inside a region bounded by some particular rectangle. 
+A concept class is simply the set of concepts in some description language. 
+A concept class of particular interest for this paper is that defined by neural network 
+architectures with a single output node. Architecture refers to the number and types 
+of units in a network and their connectivity. The configuration of a network specifies 
+the weights on the connections and the thresholds of the units x 
+A single-output architecture plus configuration can be seen as a specification of 
+a concept classifier in that it classtries the set of all points producing a network 
+output above some threshold value. Similarly, an architecture may be seen as a 
+specification of a concept class. It consists of all concepts classified by configurations 
+of the network that the learning rule can produce (figure 1). 
+Figure 1: A network architecture as a concept class specification 
+2.1 Generalization and formal learning theory 
+An instance, or training example, is a pair (z,f(z)) consisting of a point z in 
+the domain, usually drawn from some distribution 7 >, along with its classification 
+1 For the purposes of this discussion, a neural network will be considered to be a feedforward 
+network of neuron-like components that compute a weighted sum of their inputs and modify 
+that sum with a sigrnoidal transfer function. The methods described, however should be equally 
+applicable to other, more general classifiers as well. 
+568 Atlas, Cohn and Ladner 
+according to some target concept f. A concept c is consistent with an instance 
+(z, f(z)) if c(z) = f(z), that is, if the concept produces the same classification of 
+point z as the target. The error(c, f, 79) of a concept c, with respect to a target 
+concept f and a distribution 79, is the probability that c and f will disagree on a 
+random sample drawn from 79. 
+The generalization problem, is posed by formal learning theory as: for a given 
+concept class C, an unknown target f, and an arbitrary error rate e, how many 
+samples do we have to draw from an arbitrary distribution 7 ) in order to find a 
+concept c  C such that error(c, f, 7 )) _ e with high confidence? This problem 
+has been studied for neural networks in (Baum and I-Iaussler, 1989) and (I-Iaussler, 
+2.2 7(S), the region of uncertainty 
+If we consider a concept class C and a set S  of rn instances, the classification of 
+some regions of the domain may be implicitly determined; all concepts in C that 
+are consistent with all of the instances may agree in these parts. What we are 
+interested in here is what we define to be the region of uncertainty: 
+7($ ') = {x '3c,c2 e C, cx,c2 are consistent with all s e $, and cx(x)  c(x)). 
+For an arbitrary distribution 7 9, we can define a measure on the size of this region as 
+a = Pr[x e R(S)]. In an incremental learning procedure, as we classify and train 
+on more points, a will be monotonically non-increasing. A point that falls outside 
+R(S m) will leave it unchanged; a point inside will further restrict the region. Thus, 
+a is the probability that a new, random point from 7 ) will reduce our uncertainty. 
+A key point is that since R(S ) serves as an envelope for consistent concepts, it 
+also bounds the potential error of any consistent hypothesis we choose. If the error 
+of our current hypothesis is �, then � _ . Since we have no basis for changing 
+our current hypothesis without a contradicting point, e is also the probability of an 
+additional point reducing our error. 
+2.3 Selective sampling is a directed search 
+Consider the case when the cost of drawing a point from our distribution is small 
+compared to the cost of finding the point's proper classification. Then, after training 
+on n instances, if we have some inexpensive method of testing for membership in 
+7(S), we can filter points drawn from our distribution, selecting, classifying and 
+training on only those that show promise of improving our representation. 
+Mathematically, we can approximate this filtering by defining a new distribution 79 
+that is zero outside 7(S), but maintains the relative distribution of 79. Since the 
+next sample from 79 would be guaranteed to land inside the region, it would have, 
+with high confidence, the effect of at least 1/a samples drawn from 79. 
+The filtering process can be applied iteratively. Start out with the distribution 
+790, = 79. Inductively, train on n samples chosen from 79i, to obtain a new region 
+Training Connectionist Networks with Queries and Selective Sampling 569 
+of uncertainty, R(Si,'), and define from it Pi+t, = P'i,. The total number of 
+training points to calculate 7>i,n is rn = in. 
+Selective sampling can be contrasted with random sampling in terms of efficiency. 
+In random sampling, we can view training as a single, non-selective pass where 
+n = rn. As the region of uncertainty shrinks, so does the probability that any given 
+additional sample will help. The efficiency of the samples decreases with the error. 
+By filtering out useless samples before committing resources to them, as we can do 
+in selective sampling, the efficiency of the samples we do classify remains high. In 
+the limit where n = 1, this regimen has the effect of querying: each sample is taken 
+from a region based on the cumulative information from all previous samples, and 
+each one will reduce the size of 7(S). 
+3 Training Networks with Selective Sampling 
+A leading concern in connectionist research is how to achieve good generalization 
+with a limited number of samples. This suggests that selective sampling, properly 
+implemented, should be a useful tool for training neural networks. 
+3.1 A nKive neural network querying algorithm 
+Since neural networks with real-valued outputs are generally trained to within some 
+tolerance (say, less than 0.1 for a zero and greater than 0.9 for a one), one is tempted 
+to use the part of the domain between these limits as T(S ) (figure 2). 
+Figure 2: The region of uncertainty captured by a nai've neural network 
+The problem with applying this naive approach to neural networks is that when 
+training, a network tends to become overly confident in regions that are still 
+unknown. The T(S ) chosen by this method will in general be a very small subset 
+of the true region of uncertainty. 
+3.2 Version-space search and neural networks 
+Mitchell (1978) describes a learning procedure based on the partial-ordering in 
+generality of the concepts being learned. One maintains two sets of plausible hy- 
+potheses: S and G. S contains all most specific concepts consistent with present 
+information, and G contains all consistent most general concepts. The version 
+space, which is the set of all plausible concepts in the class being considered, lies 
+570 Atlas, Cohn and Ladner 
+between these two bounding sets. Directed search proceeds by examining instances 
+that fall in the difference of S and G. Specifically, the search region for a version- 
+space search is equal to {UsAg : s  $,g  G}. If an instance in this region 
+proves positive, then some s in $ will have to generalize to accommodate the new 
+information; if it proves negative, some g in G will have to be modified to exclude 
+it. In eit

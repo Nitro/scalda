@@ -1,0 +1,165 @@
+Approximating Posterior Distributions 
+in Belief Networks using Mixtures 
+Christopher M. Bishop 
+Neil Lawrence 
+Neural Computing Research Group 
+Dept. Computer Science & Applied Mathematics 
+Aston University 
+Birmingham, B4 7ET, U.K. 
+Tommi Jaakkola 
+Michael I. Jordan 
+Center for Biological and Computational Learning 
+Massachusetts Institute of Technology 
+79 Amherst Street, E10-243 
+Cambridge, MA 02139, U.S.A. 
+Abstract 
+Exact inference in densely connected Bayesian networks is computation- 
+ally intractable, and so there is considerable interest in developing effec- 
+tive approximation schemes. One approach which has been adopted is to 
+bound the log likelihood using a mean-field approximating distribution. 
+While this leads to a tractable algorithm, the mean field distribution is as- 
+sumed to be factorial and hence unimodal. In this paper we demonstrate 
+the feasibility of using a richer class of approximating distributions based 
+on mixtures of mean field distributions. We derive an efficient algorithm 
+for updating the mixture parameters and apply it to the problem of learn- 
+ing in sigmoid belief networks. Our results demonstrate a systematic 
+improvement over simple mean field theory as the number of mixture 
+components is increased. 
+1 Introduction 
+Bayesian belief networks can be regarded as a fully probabilistic interpretation of feed- 
+forward neural networks. Maximum likelihood learning for Bayesian networks requires 
+the evaluation of the likelihood function P(VIO ) where V denotes the set of instantiated 
+(visible) variables, and 0 represents the set of parameters (weights and biases) in the net- 
+work. Evaluation of P(VIO ) requires summing over exponentially many configurations of 
+Approximating Posterior Distributions in Belief Networks Using Mixtures 417 
+the hidden variables H, and is computationally intractable except for networks with very 
+sparse connectivity, such as trees. One approach is to consider a rigorous lower bound on 
+the log likelihood, which is chosen to be computationally tractable, and to optimize the 
+model parameters so as to maximize this bound instead. 
+If we introduce a distribution Q(H), which we regard as an approximation to the true 
+posterior distribution, then it is easily seen that the log likelihood is bounded below by 
+or'[Q] = E Q(H)ln Q(H) (1) 
+The difference between the true log likelihood and the bound given by (1) is equal to the 
+Kullback-Leibler divergence between the true posterior distribution P(HIV) and the ap- 
+proximation Q(H). Thus the correct log likelihood is reached when Q(H) exactly equals 
+the true posterior. The aim of this approach is therefore to choose an approximating distri- 
+bution which leads to computationally tractable algorithms and yet which is also flexible so 
+as to permit a good representation of the true posterior. In practice it is convenient to con- 
+sider parametrized distributions, and then to adapt the parameters to maximize the bound. 
+This gives the best approximating distribution within the particular parametric family. 
+1.1 Mean Field Theory 
+Considerable simplification results if the model distribution is chosen to be factorial over 
+the individual variables, so that Q(H) = I-Ii Q(hi), which gives meanfieM theory. Saul 
+et al. (1996) have applied mean field theory to the problem of learning in sigmoid belief 
+networks (Neal, 1992). These are Bayesian belief networks with binary variables in which 
+the probability of a particular variable Si being on is given by 
+P(Si=l,pa(Si))=r(EJoSj+bi ) (2) 
+where a(z) -- (1 + e-Z) - is the logistic sigmoid function, pa(Si) denote the parents of 
+Si in the network, and Jij and bi represent the adaptive parameters (weights and biases) 
+in the model. Here we briefly review the framework of Saul et al. (1996) since this forms 
+the basis for the illustration of mixture modelling discussed in Section 3. The mean field 
+distribution is chosen to be a product of Bernoulli distributions of the form 
+Q(H) = II - (3) 
+i 
+in which we have introduced mean-field parameters/i. Although this leads to considerable 
+simplification of the lower bound, the expectation over the log of the sigmoid function, 
+arising from the use of the conditional distribution (2) in the lower bound (1), remains 
+intractable. This can be resolved by using variational methods (Jaakkola, 1997) to find a 
+lower bound on f'(Q), which is therefore itself a lower bound on the true log likelihood. 
+In particular, Saul et al. (1996) make use of the following inequality 
+<ln[1 + ez']) < i<zi) + ln(e -f'z' + e (-f')z') (4) 
+where zi is the argument of the sigmoid function in (2), and ( ) denotes the expectation with 
+respect to the mean field distribution. Again, the quality of the bound can be improved by 
+adjusting the variational parameter i. Finally, the derivatives of the lower bound with 
+respect to the Jij and bi can be evaluated for use in learning. In summary, the algorithm 
+involves presenting training patterns to the network, and for each pattern adapting the tti 
+and i to give the best approximation to the true posterior within the class of separable 
+distributions of the form (3). The gradients of the log likelihood bound with respect to the 
+model parameters Jij and bi can then be evaluated for this pattern and used to adapt the 
+parameters by taking a step in the gradient direction. 
+418 C. M. Bishop, N. Lawrence, T. Jaakkola and M. I. Jordan 
+2 Mixtures 
+Although mean field theory leads to a tractable algorithm, the assumption of a completely 
+factorized distribution is a very strong one. In particular, such representations can only ef- 
+fectively model posterior distributions which are uni-modal. Since we expect multi-modal 
+distributions to be common, we therefore seek a richer class of approximating distribu- 
+tions which nevertheless remain computationally tractable. One approach (Saul and Jordan, 
+1996) is to identify a tractable substructure within the model (for example a chain) and then 
+to use mean field techniques to approximate the remaining interactions. This can be effec- 
+tive where the additional interactions are weak or are few in number, but will again prove 
+to be restrictive for more general, densely connected networks. We therefore consider an 
+alternative approach t based on mixture representations of the form 
+M 
+Qni,,(H) = E 
+m----1 
+(5) 
+in which each of the components Q(Hlra) is itself given by a mean-field distribution, for 
+example of the form (3) in the case of sigmoid belief networks. Substituting (5) into the 
+lower bound (1) we obtain 
+')r'[Qmix] ---- E a,W[Q(HIm)] + I(m, H) 
+(6) 
+where I(m, H) is the mutual information between the component label ra and the set of 
+hidden variables H, and is given by 
+I(m,H) = E E amQ(H[m)In Q(Hlm) 
+r 
+(7) 
+The first term in (6) is simply a convex combination of standard mean-field bounds and 
+hence is no greater than the largest of these and so gives no useful improvement over a 
+single mean-field distribution. It is the second term, i.e. the mutual information, which 
+characterises the gain in using mixtures. Since I(m, H) _> 0, the mutual information 
+increases the value of the bound and hence improves the approximation to the true posterior. 
+2.1 Smoothing Distributions 
+As it stands, the mutual information itself involves a summation over the configurations 
+of hidden variables, and so is computationally intractable. In order to be able to treat it 
+efficiently we first introduce a set of 'smoothing' distributions R(Hlm), and rewrite the 
+mutual information (7) in the form 
+I(m,H) 
+(8) 
+It is easily verified that (8) is equivalent to (7) for arbitrary R(H[m). We next make use of 
+the following inequality 
+-lnz >_ -Az +lnA + 1 (9) 
+there we outline the key steps. A more detailed discussion can be found in Jaakkola and Jordan 
+(1997). 
+Approximating Posterior Distributions in Belief Networks Using Mixtures 419 
+to replace the logarithm in the third term in (8) with a linear function (conditionally on 
+the component label m). This yields a lower bound on the mutual information given by 
+I(ra, H) >_ Ix(ra, H)where 
+Ix(ra, H) = E EamQ(Hlra) lnR(Hlra)- Ealna 
+m {r} m 
+- E Am E R(Hlm)Qmix(H) + E am lnAm + 1. (10) 
+m {r} m 
+With Ix(m, H) substituted for I(ra, H) in (6) we again obtain a rigorous lower bound on 
+the true log likelihood given by 
+x[Qmix(H)] -- E amY[Q(Slm)] + Ix(ra, S). (11) 
+m 
+The summations over hidden configurations {H} in (10) can be performed analytically if 
+we assume that the smoothing distributions R(Hlra ) factorize. In particular, we have to 
+consider the following two summations over hidden variable configurations 
+ER(H[m)Q(H[k) 
+ Q(Hlm)lnR(Hlm) 
+{} 
+= II R(hilm)Q(hilk) de_f rs,Q(m, k) 
+i h 
+=   Q(hilra)lnR(hil m) deal H(qlIRIm ). 
+i h 
+(12) 
+(13) 
+We note that the left hand sides of (12) and (13) represent sums over exponentially many 
+hidden configurations, while on the right hand sides these have been re-expressed in terms 
+of expressions requiring only polynomial time to evaluate by making use of the factoriza- 
+tion of R(HIm ). 
+It should be stressed that the introduction of a factorized form for the smoothing distribu- 
+tions still yields an improvement over standard mean field theory. To see this, we note that 
+if R(H[ra) = const. for all { H, ra } then I (ra, H) = 0, and so optimization over R(H[ra) 
+can only improve the bound. 
+2.2 Optimizing the Mixture Distribution 
+In order to obtain the tightest bound within the class of approximating distributions, we can 
+maximize the bound with respect to the component mean-field distributions Q (H Ira ), the 
+mixing coefficients am, the smoothing distributions R(H Ira) and the variational parame- 
+ters Am, and we consider each of these in turn. 
+We will assume that the choice of a single mean field distribution leads to a tractable lower 
+bound, so that the equations 
+OYr[Q] 
+= const (14) 
+aQ(hj) 
+can be solved efficiently 2. Since I)(ra, H) in (10) 

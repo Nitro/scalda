@@ -1,0 +1,148 @@
+Bayesian model selection for Support 
+Vector machines, Gaussian processes and 
+other kernel classifiers 
+Matthias Seeger 
+Institute for Adaptive and Neural Computation 
+University of Edinburgh 
+5 Forrest Hill, Edinburgh EH1 2QL 
+seeger@dai. ed. ac. uk 
+Abstract 
+We present a variational Bayesian method for model selection over 
+families of kernels classifiers like Support Vector machines or Gaus- 
+sian processes. The algorithm needs no user interaction and is able 
+to adapt a large number of kernel parameters to given data without 
+having to sacrifice training cases for validation. This opens the pos- 
+sibility to use sophisticated families of kernels in situations where 
+the small standard kernel classes are clearly inappropriate. We 
+relate the method to other work done on Gaussian processes and 
+clarify the relation between Support Vector machines and certain 
+Gaussian process models. 
+I Introduction 
+Bayesian techniques have been widely and successfully used in the neural networks 
+and statistics community and are appealing because of their conceptual simplicity, 
+generality and consistency with which they solve learning problems. In this paper 
+we present a new method for applying the Bayesian methodology to Support Vector 
+machines. We will briefly review Gaussian Process and Support Vector classification 
+in this section and clarify their relationship by pointing out the common roots. 
+Although we focus on classification here, it is straightforward to apply the methods 
+to regression problems as well. In section 2 we introduce our algorithm and show 
+relations to existing methods. Finally, we present experimental results in section 3 
+and close with a discussion in section 4. 
+Let X be a measure space (e.g. X = IR a ) and D = (J,t) - ((x,t),..., 
+(xn, tn)), xi  X, ti 6 (-1,+1) a noisy i.i.d. sample from a latent function 
+y: X -  where P(tly ) denotes the noise distribution. Given further points x. we 
+wish to predict t. so as to minimize the error probability P(t]x., D), or (more diffi- 
+cult) to estimate this probability. Generarive Bayesian methods attack this problem 
+by placing a stochastic process prior P(y(.)) over the space of latent functions and 
+604 M. Seeger 
+then compute posterior and predictive distributions P(y[D), P(y,[x,, D) as 
+P(y[D)- P(D[y)P(y), 
+P(O) (1) 
+P(y,]D,x,) - f P(y, ly)P(y]D)dy 
+where y - (y(xi))i, y, - y(x,), the likelihood P(DlY) - rli P(ti]y) and P(D) is 
+a normalization constant. P(tlx,,D ) can then be obtained by averaging P(t[y,) 
+over P(y, lx,, D). Gaussian process (GP) or spline smoothing models use a Gaus- 
+sian process prior on y(.) which can be seen as function of X into a set of random 
+variables such that for each finite X C X the corresponding variables are jointly 
+Gaussian (see [15] for an introduction). A GP is determined by a mean function  
+x  E [y(x)] and a positive definite covariance kernel K(x,). Gaussian process 
+classification (GPC) amounts to specifying available prior knowledge by choosing 
+a class of kernels K(x, x]),   O, where  is a vector of hyperparameters, and a 
+hyperprior P(). Usually, these choices are guided by simple attributes of y(-) such 
+as smoothness, trends, differentiability, but more general approaches to kernel de- 
+sign have also been considered [5]. For 2-class classification the most common noise 
+distribution is the binomial one where P(t]y) - a(ty), a(u) - (1 + exp(-u)) - the 
+logistic function, and y is the logit log(P(+ l[x)/P(-l[x)) of the target distribution. 
+For this noise model the integral in (1) is not analytically tractable, but a range 
+of approximative techniques based on Laplace approximations [16], Markov chain 
+Monte Carlo [7], variational methods [2] or mean field algorithms [8] are known. 
+We follow [16]. The Laplace approach to GPC is to approximate the posterior 
+P(ylD,) by the Gaussian distribution N(,7/-) where  - argmaxP(ylD, ) 
+is the posterior mode and 7/ - VVy(-logP(y[D, 8)), evaluated at . Then it 
+is easy to show that the predictive distribution is Gaussian with mean 
+and variance k. -k(x.)lg-k(x.) where/C is the covariance matrix (K(xi, xj))ij, 
+k(.) = (K(xi,-))i, k. = K(x., x.) and the prime denotes transposition. The final 
+discriminant is therefore a linear combination of the K(xi, .). 
+The discriminative approach to the prediction problem is to choose a loss function 
+g(t,y), being an approximation to the misclassification loss 2 I(ty_o} and then to 
+search for a discriminant y(.) which minimizes E[g(t,y(x.))] for the points x. of 
+interest (see [14]). Support Vector classification (SVC) uses the e-insensitive loss 
+(SVC loss) g(t,y) - [1- ty]+, [u]+ - uI(_o} which is an upper bound on the 
+misclassification loss, and a reproducing kernel Hilbert space (RKHS) with kernel 
+K(x,[) as hypothesis space for y(-). Indeed, Support Vector models and the 
+Laplace method for Gaussian processes are special cases of spline smoothing models 
+in RKHS where the aim is to minimize the functional 
+g(ti,Yi) + A[[Y(')[[C (2) 
+i1 
+where I1' [[K denotes the norm of the RKHS. It can be shown that the minimizer of 
+(2) can be written as k(-)]C- where/t maximizes 
+- g(ti,yi) - AyIC-y. (3) 
+i----1 
+All these facts can be found in [13]. Now (3) is, up to terms not depending on y, 
+the log posterior in the above GP framework if we choose g(t, y) - - log P(t[y) and 
+W.l.o.g. we only consider GPs with mean function 0 in what follows. 
+2I denotes the indicator function of the set A C 
+Bayesian Model Selection for Support Vector Machines 605 
+absorb A into 0. For the SVC loss, (3) can be transformed into a dual problem via 
+y = ICcp, where c is a vector of dual variables, which can be efficiently solved using 
+quadratic programming techniques. [12] is an excellent reference. 
+Note that the SVC loss cannot be written as the negative log of a noise distribution, 
+so we cannot reduce SVC to a special case of a Gaussian process classification 
+model. Although a generarive model for SVC is given in [11], it is easier and less 
+problematic to regard SVC as efficient approximation to a proper Gaussian process 
+model. Various such models have been proposed (see [8],[4]). In this work, we 
+simply normalize the SVC loss pointwise, i.e. use a Gaussian process model with 
+the normalized $VC loss g(t,y) = [1 - ty]+ + log Z(y), Z(y) = exp(-[1 - y]+) + 
+exp(-[1 + y]+). Note that g(t, y) is a close approximation of the (unnormalized) 
+SVC loss. The reader might miss the SVM bias parameter which we dropped here 
+for clarity, but it is straightforward to apply this semiparametric extension to GP 
+models too 3. 
+2 A variational method for kernel classification 
+The real Bayesian way to deal with the hyperparameters 0 is to average 
+P(y. lx.,D,O) over the posterior P(OID ) in order to obtain the predictive dis- 
+tribution P(y. lx.,D). This can be approximated by Markov chain Monte Carlo 
+methods [7], [16] or simply by P(y.[x.,D,),  = argmaxP(OlD). The latter 
+approach, called maximum a-posteriori (MAP), can be justified in the limit of large 
+n and often works well in practice. The basic challenge of MAP is to calculate the 
+evidence 
+P(D[O)=fP(D,y[O)dy=/exp(-g(ti,Yi))N(y[O,]g(O))dy. (4) 
+i=1 
+Our plan is to attack (4) by a variational approach. Let P be a density from a 
+model class F chosen to approximate the posterior P(ylD, 0). Then: 
+-logP(D,O) = - f P(y)log (P(D'yIO)P_ (y)) dy 
+k P(ult), O)P(U) 
+(S) 
+where we call F(P, 0) = Ep[- log U10)] +EpOog P(U)] the variational free en- 
+ergy. The second term in (5) is the well-known Kullback-Leibler divergence between 
+/5 and the posterior which is nonnegative and equals zero iff P(y) = P(ylD, O) 
+almost everywhere with respect to the distribution P. Thus, F is an upper bound 
+on -logP(D[O), and changing (P, 0) to decrease F enlarges the evidence or de- 
+creases the divergence between the posterior and its approximation, both being 
+favourable. This idea has been introduced in [3] as ensemble learning 4 and has 
+been successfully applied to MLPs [1]. The latter work also introduced the model 
+class r we use here, namely the class of Gaussians with mean t and factor-analyzed 
+covariance Z = 7)+ Y--1 c5c}, 7) diagonal with positive elements*. Hinton and 
+aThis is the random effects model with improper prior of [13], p.19, and works by 
+placing a flat improper prior on the bias parameter. 
+4We average different discriminants (given by y) over the ensemble/5. 
+*Although there is no danger of overfitting, the use of full covariances would render the 
+optimization more difficult, time and memory consuming. 
+606 M. Seeger 
+van Camp [3] used diagonal covariances which would be M = 0 in our setting. By 
+choosing a small M, we are able to track the most important correlations between 
+the components in the posterior using O(Mn) parameters to represent/5. 
+Having agreed on F, the criterion F and its gradients with respect to 0 and the 
+parameters of/5 can easily and efficiently be computed except for the generic term 
+(6) 
+a sum of one-dimensional Gaussian expectations which are, depending on the ac- 
+tual g, either analytically tractable or can be approximated using a quadrature 
+algorithm. For example, the expectation for the normalized SVC loss can be de- 
+composed into expectations over the (unnormalized) SVC loss and over log Z(y) (see 
+end of section 1). While the former can be computed analytically, the latter expec- 
+tation can be handled by replacing log Z(y) by a piecewise defined tight bound such 
+that the integral can be solved analytically. For the GPC loss (6) cannot be solved 
+analytically and was in our experiments approximated by Gaussian quadrature. 
+We can optimize F using a nested loop algorithm as follows. In the inner loop we 
+run an optimizer to minimize F w.r.t. /5 for fixed 0. We used a conjugate gradients 
+optimizer since the number of parameters of/5 is rather large. The outer loop is 
+an optimizer minimizing F w.r.t. 0, and we 

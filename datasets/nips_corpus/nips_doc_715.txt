@@ -1,0 +1,148 @@
+GDS: Gradient Descent Generation of 
+Symbolic Classification Rules 
+Reinhard Blasig 
+Kaiserslautern University, Germany 
+Present address: Siemens AG, ZFE ST SN 41 
+81730 M/inchen, Germany 
+Abstract 
+Imagine you have designed a neural network that successfully learns 
+a complex classification task. What are the relevant input features 
+the classifier relies on and how are these features combined to pro- 
+duce the classification decisions? There are applications where a 
+deeper insight into the structure of an adaptive system and thus 
+into the underlying classification problem may well be as important 
+as the system's performance characteristics, e.g. in economics or 
+medicine. GDS  is a backpropagation-based training scheme that 
+produces networks transformable into an equivalent and concise 
+set of IF-THEN rules. This is achieved by imposing penalty terms 
+on the network parameters that adapt the network to the expressive 
+power of this class of rules. Thus during training we simultaneously 
+minimize classification and transformation error. Some real-world 
+tasks demonstrate the viability of our approach. 
+I Introduction 
+This paper deals with backpropagation networks trained to perform a classification 
+task on Boolean or real-valued data. Given such a classification task in most cases 
+it is not too difficult to devise a network architecture that is capable of learning 
+the input-output relation as represented by a number of training examples. Once 
+training is finished one has a black box which often does a quite good job not 
+ Gradient Descent Symbolic Rule Generation 
+1093 
+1094 Blasig 
+only on the training patterns but also on some previously unseen test patterns. A 
+good generalization performance indicates that the network has grasped part of the 
+structure inherent in the classification task. The net has figured out which input 
+features are relevant to make a classification decision and which are not. It has also 
+modelled the way the relevant features have to be combined in order to produce the 
+classifying output. In many applications it is important to get an understanding of 
+this information hidden inside the neural network. Not only does this help to create 
+or verify a domain theory, the analysis of this information may also serve human 
+experts to determine, when and in what way the classifier will fail. 
+In order to explicate the network's implicit information, we transform it into a 
+set of rules. This idea is not new, cf. (Saito and Nakano, 1988), (Bochereau and 
+Bourgine, 1990), (Y. Hayashi, 1991) and (Towell and Shavlik, 1992). In contrast to 
+these approaches, which extract rules after BP-training is finished, we apply penalty 
+terms during training to adapt the network's expressive power to that of the rules 
+we want to generate. Consequently the net will be transformable into an equivalent 
+set of rules. 
+Due to their good comprehensibility we restrict the rules to be of the form IF 
+< premise > THEN < conclusion >, where the premise as well as the conclusion 
+are Boolean expressions. To actually make the transformation two problems have 
+to be solved: 
+� Neural nets are well known for their distributed representation of informa- 
+tion; so in order to transform a net into a concise and comprehensible rule 
+set one has to find a way of condensing this information without substan- 
+tially changing it. 
+� In the case of backpropagation networks a continuous activation function 
+determines a node's output depending on its activation. However, the dy- 
+namic of this function has no counterpart in the context of rule-based de- 
+scriptions. 
+We address these problems by introducing a penalty function Ep, which we add to 
+the classification error E� yielding the total backpropagation error 
+ET = ED + A � Ep. (1) 
+2 The Penalty Term 
+The term Ep is intended to have two effects on the network weights. First, by 
+a weight decay component it aims at reducing network complexity by pushing a 
+(hopefully large) fraction of the weights to 0. The smaller the net, the more concise 
+the rules describing its behavior will be. As a positive side effect, this component will 
+tend to act as a form of Occam's razor: simple networks are more likely to exhibit 
+good generalization than complex ones. Secondly, the penalty term should minimize 
+the error caused by transforming the network into a set of rules. Adopting the 
+common approach that each non-input neuron represents one rule, there would be 
+no transformation error if the neurons' activation function were threshold functions; 
+the Boolean node output would then indicate, whether the conclusion is drawn or 
+not. But since backpropagation neurons use continuous activation functions like 
+GDS: Gradient Descent Generation of Symbolic Classification Rules 1095 
+y = tanh(x) to transform their activation value x into the output value y, we are 
+left with the difficulty of interpreting the continuous output of a neuron. Thus our 
+penalty term will be designed to produce a high penalty for those neurons of the 
+backpropagation net, whose behavior cannot be well approximated by threshold 
+neurons, because their activation values are likely to fall into the nonsaturated 
+region of the tanh-function . 
+Figure 1: We regard Ixl > a with lyl = I tanh(x)l > 0.9 as the regions, where a 
+sigmoidal neuron can be approximated by a threshold neuron. The nonsaturated 
+region is marked by the dashed box. 
+For a better understanding of our penalty term one has to be aware of the fact 
+that IF-THEN rules with a Boolean premise and conclusion are essentially Boolean 
+functions. It can easily be shown that any such function can be calculated by a 
+network of threshold neurons provided there is one (sufficiently large) hidden layer. 
+This is still true if we restrict connection weights to the values {-1, 0, 1} and node 
+thresholds to be integers (Hertz, Krogh and Palmer, 1991). In order to transfer this 
+scenario to nets with sigmoidal activation functions and having in mind that the 
+activation values of the sigmoidal neurons should always exceed :1:3 (see figure 1), 
+we require the nodes' biases to be odd multiples of :1:3 and the weights wii to obey 
+oj e {-6, 0, 6}. (2) 
+We shortly comment on the practical problem that sometimes bias values as large 
+as 4'6mi (mi being the fan-in of node i) may be necessary to implement certain 
+Boolean functions. This may slow down or even block the learning process. A simple 
+solution to this problem is to use some additional input units with a constant output 
+of +1. If the connections to these units are also subject to the penalty function Ep, 
+it is sufficient to restrict the bias values to 
+bl e {-3, 3}. (3) 
+2We have to point out that the conversion of sigmoidal neurons to threshold neurons 
+will reduce the net's computational power: there are Boolean functions which can be 
+computed by a net of sigmoidal neurons, but which exceed the capacity of a threshold 
+net of the same topology (Maass, Schnitger and Sontag, 1991). Note that the objective 
+to use threshold units is a consequence of the decision to search for rules of the type IF 
+< premise > THEN < conclusion >. A failure of the net to simultaneously minimize 
+both parts of the error measure may indicate that other rule types are more adequate to 
+handle the given classification task. 
+1096 Blasig 
+Now we can define penalty functions that push the biases and weights to the desired 
+values. Obviously E, (the bias penalty) and Ew (the weight penalty) have to be 
+different: 
+Eb(bi) = 13-[b,[I (4) 
+Ew(wji) = { 16-lwj11 for Iwil _> o 
+Iwagl for Iwagl < O 
+(5) 
+The parameter O determines whether a weight should be subject to decay or pushed 
+to attain the value 6 (or -6 respectively). Figure 2 displays the graphs of the penalty 
+functions. 
+-3-.0 I .0  -6.0 -0] 0 w 6.0- 
+Figure 2: The penalty functions Eb and E. 
+The value of O is chosen with the objective that only those weights should exceed 
+this value, which almost certainly have to be nonzero to solve the given classification 
+task. Since we initialize the network with weights uniformly distributed in the 
+interval [-0.5, 0.5], O = 1.5 works well at the beginning of the training process. The 
+penalty term then has the effect of a pure weight decay. When learning proceeds 
+and the weights converge, we can slowly reduce the value of O, because superfluous 
+weights will already have decayed. So after each sequence of 100 training patterns, 
+say, we decrease O by a factor of 0.995. 
+Observation shows that weights which once exceeded the value of O quickly reach 
+6 or -6 and that there are relatively few cases where a large weight is reduced 
+again to a value smaller than O. Accordingly, the number of weights in {-6, 6} 
+successively grows in the course of learning, and the criterion to stop training thus 
+influences the number of nonzero weights. 
+The end of training is determined by means of cross validation. However, we do 
+not examine the cross validation performance of the trained net, but that of the 
+corresponding rule set. This is accomplished by calculating the performance of the 
+original net with all weights and biases replaced by their optimal values according 
+to (2) and (3). 
+The weighting factor A of the penalty term (see equation 1) is critical for good 
+learning performance. We pursued the strategy to start learning with A = 0, so 
+that the network parameters first move into a region where the classification error 
+is small. If this error falls below a prespecified tolerance level L, A is incremented 
+by 0.001. The factor A goes down by the same amount, when the error grows larger 
+GDS: Gradient Descent Generation of Symbolic Classification Rules 1097 
+than L a. By adjusting the weighting factor every 100 training patterns we keep the 
+classification error close to the tolerance level. The choice of L of course depends on 
+the learning task. As a heuristic, L should be slightly larger than the classificatio

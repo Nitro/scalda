@@ -1,0 +1,182 @@
+Lipreading by neural networks: 
+Visual preprocessing, learning 
+and sensory integration 
+Gregory J. Wolff 
+Ricoh California Research Center 
+2882 Sand Hill Road Suite 115 
+Menlo Park, CA 94025-7022 
+wolff@crc.ricoh.com 
+K. Venkatesh Prasad 
+Ricoh California Research Center 
+2882 Sand Hill Road Suite 115 
+Menlo Park, CA 94025-7022 
+prasad@crc.ricoh.com 
+David G. Stork 
+Ricoh California Research Center 
+2882 Sand Hill Road Suite 115 
+Menlo Park, CA 94025-7022 
+stork@crc.ricoh.com 
+Marcus Hennecke 
+Department of Electrical Engineering 
+Mail Code 4055 
+Stanford University 
+Stanford, CA 94305 
+Abstract 
+We have developed visual preprocessing algorithms for extracting 
+phonologically relevant features from the grayscale video image of 
+a speaker, to provide speaker-independent inputs for an automat- 
+ic lipreading (speechreading) system. Visual features such as 
+mouth open/closed, tongue visible/not-visible, teeth visible/not- 
+visible, and several shape descriptors of the mouth and its motion 
+are all rapidly computable in a manner quite insensitive to lighting 
+conditions. We formed a hybrid speechreading system consisting 
+of two time delay neural networks (video and acoustic) and inte- 
+grated their responses by means of independent opinion pooling 
+-- the Bayesian optimal method given conditional independence, 
+which seems to hold for our data. This hybrid system had an er- 
+ror rate 25% lower than that of the acoustic subsystem alone on a 
+five-utterance speaker-independent task, indicating that video can 
+be used to improve speech recognition. 
+1027 
+1028 Wolff, Prasad, Stork, and Hennecke 
+1 INTRODUCTION 
+Automated speech recognition is notoriously hard, and thus any predictive source 
+of information and constraints that could be incorporated into a computer speech 
+recognition system would be desirable. Humans, especially the hearing impaired, 
+can utilize visual information -- speech reading -- for improved accuracy (Dodd 
+& Campbell, 1987, Sanders & Goodrich, 1971). Speech reading can provide direct 
+information about segments, phoneroes, rate, speaker gender and identity, and sub- 
+tle information for segmenting speech from background noise or multiple speakers 
+(De Filippo & Sims, 1988, Green 85 Miller, 1985). 
+Fundamental support for the use of visual information comes from the complemen- 
+tary nature of the visual and acoustic speech signals. Utterances that are difficult to 
+distinguish acoustically are the easiest to distinguish. visually, and vice versa. Thus, 
+for example /mi/ +- /nil are highly confusable acoustically but are easily distin- 
+guished based on the visual information of lip closure. Conversely,/hi//pi/are 
+highly confusable visually (visemes), but are easily distinguished acoustically by 
+the voice-onset time (the delay between the burst sound and the onset of vocal fold 
+vibration). Thus automatic lipreading promises to help acoustic speech recognition 
+systems for those utterances where they need it most; visual information cannot 
+contribute much information to those utterances that are already well recognized 
+acoustically. 
+1.1 PREVIOUS SYSTEMS 
+The system described below differs from recent speech reading systems. Whereas 
+Yuhas et al. (1989) recognized static images and acoustic spectra for vowel recogni- 
+tion, ours recognizes dynamic consonant-vowel (CV) utterances. Whereas Petajan, 
+Bischoff & Bodoff (1988) used thresholded pixel based representations of speakers, 
+our system uses more sophisticated visual preprocessing to obtain phonologically 
+relevant features. Whereas Pentland and Mase (1989) used optical flow methods 
+for estimating the motion of four lip regions (and used no acoustic subsystem), we 
+obtain several other features from intensity profiles. Whereas Bregler et al. (1993) 
+used direct pixel images, our recognition engine used a far more compressed visual 
+representation; our method of integration, too, was based on statistical properties 
+of our data. We build upon the basic recognizer architecture of Stork, Wolff and 
+Levine (1992), but extend it to grayscale video input. 
+2 VISUAL PREPROCESSING 
+The sheer quantity of image data presents a hurdle to utilizing video information for 
+speech recognition. Our approach to video preprocessing makes use of several simple 
+computations to reduce the large amount of data to a manageable set of low-level 
+image statistics describing the region of interest around the mouth. These statistics 
+capture such features as the positions of the upper and lower lip, the mouth shape, 
+and their time derivatives. The rest of this section describes the computation of 
+these features. 
+Grayscale video images are captured at 30 frames/second with a standard NTSC 
+Lipreading by Neural Networks: Visual Preprocessing, Learning, and Sensory Integration 1029 
+lower upper Io TM 
+upper lip lip hp 
+hp 
+mouth 
+cloed mouth open 
+pixel position pixel position 
+Figure 1: (Left) The central bands of the automatically determined ROI from two frames 
+of the video sequence of the utterance/ba/and their associated luminance profiles along 
+the central marked line. Notice that the lowest valley in this profile changes drastically 
+in intensity as the mouth changes from closed to open. In addition, the linear separation 
+between the peaks adjacent to the lowest valley also increases as the mouth opens. These 
+features are identified on the ROI from a single frame (right). The position, intensity, and 
+temporal variation of these features provide input to our recognizer. 
+camera, and subsampled to give 150 x 150 pixel image sequence. A 64 x 64 pixel 
+region of interest (ROI) is detected and tracked by means of the following operations 
+on the full video images: 
+� Convolve with 3 x 3 pixel low-pass filter 
+� Convolve with 3 x 3 pixel edge detector 
+� Convolve with 3 x 3 pixel low-pass filter 
+� Threshold at 
+� Triangulate eyes with mouth 
+(to remove spatial noise) 
+(to detect edges) 
+(to smooth edges) 
+(to isolate eyes and mouth) 
+(to obtain ROI) 
+We also use temporal coherence in frame-to-frame correlations to reduce the effects 
+of noise in the profile or missing data (such as closed eyes). Within the ROI the 
+phonological features are found by the following steps (see Figure 1): 
+� Convolve with 16 x 16 pixel low-pass filter 
+� Extract a vertical intensity profile 
+� Extract a horizontal intensity profile 
+� Locate and label intensity peaks and valleys 
+� Calculate interframe peak motion 
+(to remove noise) 
+(mouth height) 
+(mouth width) 
+(candidates for teeth, tongue) 
+(speed estimates) 
+Video preprocessing tasks, including temporal averaging, are usually complicated 
+because they require identifying corresponding pixels across frames. We circumvent 
+this pixel correspondence problem by matching labeled features (such as intensity 
+extrema- peaks and valleys) on successive frames. 
+1030 Wolff, Prasad, Stork, and Hennecke 
+2.1 FEATURES 
+The seventeen video features which serve as input to our recognizer are: 
+� Horizontal separation between the left and right mouth comers 
+� Vertical separation between the top and bottom lips 
+For each of the three vertically aligned positions: 
+� Vertical position: Pv 
+� Intensity value: I 
+� Change in intensity versus time: AI/At 
+For both of the mouth corner positions: 
+� Horizontal position: Pn 
+� Intensity value: I 
+� Change in intensity versus time: AI/At 
+For each speaker, each feature was scaled have a zero mean and unit standard 
+deviation. 
+3 DATA COLLECTION AND NETWORK TRAINING 
+We trained the modified time delay neural network (Waibel, 1989) shown in Figure 2 
+on both the video and acoustic data. (See Stork, Wolff and Levine (1992) for 
+a complete description of the architecture.) For the video only (VO) network, the 
+input layer consists of 24 samples of each of the 17 features, corresponding to roughly 
+0.8 seconds. Each (sigmoidal) hidden unit received signals from a receptive field of 
+17 features for five consecutive frames. Each of the different hidden units (there 
+were 3 for the results reported below) is replicated to cover the entire input space 
+with overlapping receptive fields. The next layer consisted of 5 rows of x-units (one 
+row for each possible utterance), with exponential transfer functions. They received 
+inputs from the hidden units for 11 consecutive frames, thus they indirectly received 
+input from a total of 18 input frames corresponding to roughly 0.6 seconds. The 
+activities of the x-units encode the likelihood that a given letter occurs in that 
+interval. The final layer consists of five p-units (probability units), which encode 
+the relative probabilities of the presence of each of the possible utterances across 
+the entire input window. Each p-unit sums the entire row of corresponding x-units, 
+normalized by the sum over all x-units. (Note that weights from the x-units to 
+the p-units are fixed.) 
+The acoustic only (AO) network shared the same architecture, except that the input 
+consisted of 100 frames (1 second) of 14 reel scale coefficients each, and the x-units 
+received fan in from 25 consecutive hidden units. 
+In the TDNN architecture, weights are shared, i.e., the pattern of input-to-hidden 
+weights is forced to be the same at each interval. Thus the total number of inde- 
+pendent weights in this VO network is 428, and 593 for the AO network. 
+These networks were trained using Backpropagation to minimize the 
+Leibler distance (cross-entropy) between the targets and outputs, 
+E _= D(t l] P) =  ti ln( t/ 
+i Pi)' (1) 
+Here the target probability is i for the target category, and 0 for all other categories. 
+In this case Equation i simplifies to E = -ln(pc) where c is the correct category. 
+Kullback- 
+Lipreading by Neural Networks: Visual Preprocessing, Learning, and Sensory Integration 1031 
+71 
+Outputs for utterance ma3 
+'-'c- I bada fa la m 
+o 
+o 
+0.8 sec I 5 10 15 20 
+Time 
+Figure 2: Modified time delay neural network architecture (left) and unit a

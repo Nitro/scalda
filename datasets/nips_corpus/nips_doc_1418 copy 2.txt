@@ -1,0 +1,157 @@
+Stacked Density Estimation 
+Padhraic Smyth * 
+Information and Computer Science 
+University of California, Irvine 
+CA 92697-3425 
+smythe�cs. uci. edu 
+David Wolpert 
+NASA Ames Research Center 
+Caelum Research 
+MS 269-2, Mountain View, CA 94035 
+dhwptolemy. are. nasa. gov 
+Abstract 
+In this paper, the technique of stacking, previously only used for 
+supervised learning, is applied to unsupervised learning. Specifi- 
+cally, it is used for non-parametric multivariate density estimation, 
+to combine finite mixture model and kernel density estimators. Ex- 
+perimental results on both simulated data and real world data sets 
+clearly demonstrate that stacked density estimation outperforms 
+other strategies such as choosing the single best model based on 
+cross-validation, combining with uniform weights, and even the sin- 
+gle best model chosen by cheating by looking at the data used 
+for independent testing. 
+1 Introduction 
+Multivariate probability density estimation is a fundamental problem in exploratory 
+data analysis, statistical pattern recognition and machine learning. One frequently 
+estimates density functions for which there is little prior knowledge on the shape 
+of the density and for which one wants a flexible and robust estimator (allowing 
+multimodality if it exists). In this context, the methods of choice tend to be finite 
+mixture models and kernel density estimation methods. For mixture modeling, 
+mixtures of Gaussian components are frequently assumed and model choice reduces 
+to the problem of choosing the number k of Gaussian components in the model 
+(Titterington, Smith and Makov, 1986) For kernel density estimation, kernel 
+shapes are typically chosen from a selection of simple unimodal densities such as 
+Gaussian, triangular, or Cauchy densities, and kernel bandwidths are selected in a 
+data-driven manner (Silverman 1986; Scott 1994). 
+As argued by Draper (1996), model uncertainty can contribute significantly to pre- 
+*Also with the Jet Propulsion Laboratory 525-3660, California Institute of Technology, 
+Pasadena, CA 91109 
+Stacked Density Estimation 669 
+dictive error in estimation. While usually considered in the context of supervised 
+learning, model uncertainty is also important in unsupervised learning applications 
+such as density estimation. Even when the model class under consideration contains 
+the true density, if we are only given a finite data set, then there is always a chance 
+of selecting the wrong model. Moreover, even if the correct model is selected, there 
+will typically be estimation error in the parameters of that model. These difficulties 
+are summarized by writing 
+M 
+(1) 
+where f is a density, D is the data set, M is a model, and OM is a set of values for 
+the parameters for model M. The posterior probability P(M ] D) reflects model 
+uncertainty, and the posterior P(OM I D,M) reflects uncertainty in setting the 
+parameters even once one knows the model. Note that if one is privy to P(M, OM), 
+then Bayes' theorem allows us to write out both of our posteriors explicitly, so that 
+we explicitly have P(f I D) (and therefore the Bayes-optimal density) given by 
+a weighted average of the fM,ox. (See also Escobar and West (1995)). However 
+even when we know P(M, OM), calculating the combining weights can be difficult. 
+Thus, various approximations and sampling techniques are often used, a process 
+that necessarily introduces extra error (Chickering and Heckerman 1997). More 
+generally, consider the case of mis-specified models where the model class does not 
+include the true model, so our presumption for P(M, OM) is erroneous. In this case 
+often one should again average. 
+Thus, a natural approach to improving density estimators is to consider empirically- 
+driven combinations of multiple density models. There are several ways to do this, 
+especially if one exploits previous combining work in supervised learning. For exam- 
+ple, Ormontreit and Tresp (1996) have shown that bagging (uniformly weighting 
+different parametrizations of the same model trained on different bootstrap sam- 
+ples), originally introduced for supervised learning (Breiman 1996a), can improve 
+accuracy for mixtures of Gaussians with a fixed number of components. Another 
+supervised learning technique for combining different types of models is stacking 
+(Wolpert 1992), which has been found to be very effective for both regression and 
+classification (e.g., Breiman (1996b)). This paper applies stacking to density esti- 
+mation, in particular to combinations involving kernel density estimators together 
+with finite mixture model estimators. 
+2 Stacked Density Estimation 
+2.1 Background on Density Estimation with Mixtures and Kernels 
+Consider a set of d real-valued random variables X = {X1,..., X a} Upper case 
+symbols denote variable names (such as X j) and lower-case symbols a particular 
+value of a variable (such as xJ). x_ is a realization of the vector variable X. f(x-) 
+is shorthand for f(X = x-) and represents the joint probability distribution of X. 
+D = {x-1,.-.,x-v} is a training data set where each sample x_i, 1 < i < N is an 
+independently drawn sample from the underlying density function f(x__). 
+A commonly used model for density estimation is the finite mixture model with k 
+components, defined as: 
+k 
+fk(x-) = (2) 
+j=l 
+670 P. Smyth and D. Wolpert 
+k 
+where j=x aj -- 1. The component gj'S are usually relatively simple unimodal 
+densities such as Gaussians. Density estimation with mixtures involves finding the 
+locations, shapes, and weights of the component densities from the data (using 
+for example the Expectation-Maximization (EM) procedure). Kernel density esti- 
+mation can be viewed as a special case of mixture modeling where a component 
+is centered at each data point, given a weight of l/N, and a common covariance 
+structure (kernel shape) is estimated from the data. 
+The quality of a particular probabilistic model can be evaluated by an appropriate 
+scoring rule on independent out-of-sample data, such as the test set log-likelihood 
+(also referred to as the log-scoring rule in the Bayesian literature). Given a test 
+data set D tt, the test log likelihood is defined as 
+1�gf(Dt'tlf(x-)) = E 1�gf(x-i) (3) 
+This quantity can play the role played by classification error in classification or 
+squared error in regression. For example, cross-validated estimates of it can be 
+used to find the best number of clusters to fit to a given data set (Smyth, 1996). 
+2.2 Background on Stacking 
+Stacking can be used either to combine models or to improve a single model. In 
+the former guise it proceeds as follows. First, subsamples of the training set are 
+formed. Next the models are all trained on one subsample and resultant joint 
+predictive behavior on another subsample is observed, together with information 
+concerning the optimal predictions on the elements in that other subsample. This 
+is repeated for other pairs of subsamples of the training set. Then an additional 
+(stacked) model is trained to learn, from the subsample-based observations, the 
+relationship between the observed joint predictive behavior of the models and the 
+optimal predictions. Finally, this learned relationship is used in conjunction with 
+the predictions of the individual models being combined (now trained on the entire 
+data set) to determine the full system's predictions. 
+2.3 Applying Stacking to Density Estimation 
+Consider a set of M different density models, fm (x_), 1 < m < M. In this paper each 
+of these models will be either a finite mixture with a fixed number of component 
+densities or a kernel density estimate with a fixed kernel and a single fixed global 
+bandwidth in each dimension. (In general though no such restrictions are needed.) 
+The procedure for stacking the M density models is as follows: 
+Partition the training data set D v times, exactly as in v-fold cross valida- 
+tion (we use v = 10 throughout this paper), and for each fold: 
+(a) Fit each of the M models to the training portion of the partition of D. 
+(b) Evaluate the likelihood of each data point in the test partition of D, 
+for each of the M fitted models. 
+2. After doing this one has M density estimates for each of N data points, 
+and therefore a matrix of size N x M, where each entry is fm (_E/), the 
+out-of-sample likelihood of the ruth model on the ith data point. 
+3. Use that matrix to estimate the combination coefficients {fix,..., tim } that 
+maximize the log-likelihood at the points x__ i of a stacked density model of 
+Stacked Density Estimation 671 
+the form: 
+M 
+fstacked (x--) - E tim fro(X__). 
+m-'l 
+Since this is itself a mixture model, but where the fm(x__i) are fixed, the EM 
+algorithm can be used to (easily) estimate the fin. 
+Finally, re-estimate the parameters of each of the rn component density 
+models using all of the training data D. The stacked density model is then 
+the linear combination of those density models, with combining coefficients 
+given by the fin. 
+3 Experimental Results 
+In our stacking experiments M = 6: three triangular kernels with bandwidths of 
+0.1, 0.4, and 1.5 of the standard deviation (of the full data set) in each dimension, 
+and three Gaussian mixture models with k = 2, 4, and 8 components. This set of 
+models was chosen to provide a reasonably diverse representational basis for stack- 
+ing. We follow roughly the same experimental procedure as described in Breiman 
+(1996b) for stacked regression: 
+Each data set is randomly split into training and test partitions 50 times, 
+where the test partition is chosen to be large enough to provide reasonable 
+estimates of out-of-sample log-likelihood. 
+The following techniques are run on each training partition: 
+1. Stacking: The stacked combination of the six constituent models. 
+2. Cross-Validation: The single best model as indicated by the max- 
+imum likelihood score of the M - 6 single models in the N x M 
+cross-validated table of likelihood scor

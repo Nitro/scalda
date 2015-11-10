@@ -1,0 +1,156 @@
+Dynamic Modelling of Chaotic Time Series with 
+Neural Networks 
+Jose C. Principe, Jyh-Ming Kuo 
+Computational NeuroEngineering Laboratory 
+University of Florida, Gainesville, FL32611 
+prineipe@synapse.ee.ufi.edu 
+Abstract 
+This paper discusses the use of artificial neural networks for dynamic 
+modelling of time series. We argue that multistep prediction is more 
+appropriate to capture the dynamics of the underlying dynamical system, 
+because it constrains the iterated model. We show how this method can be 
+implemented by a recurrent ANN trained with trajectory learning. We also 
+show how to select the trajectory length to train the iterated predictor for the 
+case of chaotic time series. Experimental results corroborate the proposed 
+method. 
+1.0 Introduction 
+The search for a model of an experimental time series has been an important problem 
+in science. For a long time the linear model was almost exclusively used to describe 
+the system that produced the time series [1], but recently nonlinear models have also 
+been proposed to replace the linear ones [2]. Lapedes and Farbet [3] showed how 
+artificial neural networks (ANNs) can be used to identify the dynamics of the 
+unknown system that produced the time series. He simply used a multilayer 
+perceptton to predict the next point in state space, and trained this topology with 
+backpropagation. This paper explores more complex neural topologies and training 
+methods with the goal of improving the quality of the identification of the dynamical 
+system, and to understand better the issues of dynamic modelling with neural 
+networks which are far from being totally understood. 
+According to Takens' embedding theorem, a map F: R TM + 1  R2m + 1 exists that 
+transforms the current reconstructed state  (t) to the next state  (t + 1), i.e. 
+9(t+ 1) = F(9(t)) (1) 
+312 Jose Principe, Jyh-Ming Kuo 
+or 
+x(t+ 1) 
+(t+ 1 -2m 
+where m is the estimated dimension of the unknown dynamical system (I). Note that 
+the map contains several trivial (nonlinear) filters and a predictor. The predictive 
+mapping F-: R 2m + 1 ._> R can be expressed as 
+x(t+ l) = (2) 
+where  (t) = [x (t - 2m)...x (t - 1) x (t) ] r. This is actually the estimated nonlinear 
+autoregressive model of the input time series. The existence of this predictive model 
+lays a theoretical basis for dynamic modelling in the sense that we can build from a 
+vector time series a model to approximate the mapping F -. If the conditions of 
+Takens embedding theorem are met, this mapping captures some of the properties of 
+the unknown dynamical system (I) that produced the time series [7]. 
+Presently one still does not have a capable theory to guarantee if the predictor has 
+successfully identified the original model (I). The simple point by point comparison 
+between the original and predicted time series used as goodness of fit for non-chaotic 
+time series breaks down for chaotic ones [5]. Two chaotic time series can be very 
+different pointwise but be produced by the same dynamical system (two trajectories 
+around the same attractor). The dynamic invariants (correlation dimension, Lyapunov 
+exponents) measure global properties of the attractor, so they should be used as the 
+rule to decide about the success of dynamic modelling. Hence, apragmatic approach 
+in dynamic modelling is to seed the predictor with a point in state space, feed the 
+output to its input as an autonomous system, and create a new time series. If the 
+dynamic invariants computed from this time series match the ones from the original 
+time series, then we say that dynamic modelling was successful [5]. The long term 
+behavior of the autonomous predictive model seems to be the key factor to find out if 
+the predictor identified the original model. This is the distinguishing factor between 
+prediction of chaotic time series and dynamic modelling. The former only addresses 
+the instantaneous prediction error, while the latter is interested in long term behavior. 
+In order to use this theory, one needs to address the choices of predictor 
+implementation. Due to the universal mapping characteristics of multilayer 
+perceptrons (MLPs) and the existence of well established learning rules to adapt the 
+MLP coefficients, this type of network appears as an appropriate choice [3]. However, 
+one must realize that the MLP is a static mapper, and in dynamic modelling we are 
+dealing with time varying signals, where the past of the signal contains vital 
+information to describe the mapping. The design considerations to select the neural 
+network topology are presented elsewhere [4]. We just would like to say that the MLP 
+has to be enhanced with short term memory mechanisms, and that the estimation of 
+the correlation dimension should be used to set the size of the memory layer. The 
+main goal of the paper is to establish the methodology to efficiently train neural 
+networks for dynamic modelling. 
+Dytamic Modelling of Chaotic Time Series with Nettral Networks 313 
+2. Iterated versus Single Step Prediction. 
+From eqn. 2 it seems that the resulting dynamic model F can be obtained through 
+single step prediction. This has been the conventional way to handle dynamic 
+modelling [2],[3]. The predictor is adapted by minimizing the error 
+L 
+~.L 
+E =  dist(x(i+ 1)-F (It(i))) (3) 
+i=2rn+l 
+where L is the length of the time series, x(i) is the i th data sample, F is the map 
+developed by the predictor and distO is a distance measure (normally the L2 norm). 
+Notice that the training to obtain the mapping is done independently from sample to 
+sample, i.e. 
+~.L 
+x(i+l) = F ((i))+51 
+~l 
+x(i+j) = F ((i+j-1))+% 
+where Sj are the instantaneous prediction errors, which are minimized during 
+training. Notice that the predictor is being optimized under the assumption that the 
+previous point in state space is known without error. 
+The problem with this approach can be observed when we iterate the predictor as an 
+autonomous system to generate the time series samples. If one wants to produce two 
+samples in the future from sample i the predicted sample i+l needs to be utilized to 
+generate sample i+2. The predictor was not optimized to do this job, because during 
+training the true i+l sample was assumed known. As long as 51 is nonzero (as will be 
+always the case for nontrivial problems), errors will accumulate rapidly. Single step 
+prediction is more associated with extrapolation than with dynamic modelling, which 
+requires the identification of the unique mapping that produces the time series. 
+When the autonomous system generates samples, past values are used as inputs to 
+generate the following samples, which means that the training should constrain also 
+the iterates of the predictive mapping. Putting it in a simple way, we should train the 
+predictor in the same way we are going to use it for testing (i.e. as an autonomous 
+system). 
+We propose multistep prediction (or trajectory learning) as the way to constrain the 
+iterates of the mapping developed by the predictor. Let us define 
+k 
+E =  dist(x(i+ 1)-(i+ 1)) (4) 
+i=2rn+ l 
+where k is the number of prediction steps (length of the trajectory) and  (i + 1) is an 
+estimate of the predictive map 
+~.L 
+(i+l) = F (�(i-2m),...,�(i)) (5) 
+314 Jose Principe, Jyh-Ming Kuo 
+with 
+2(i) 
+x(i) O<i<2m 
+F (x(i-2m- 1),...,x(i- 1)) i>2m 
+Equation (5) states that i (i) 
+(for i>2m), i.e. 
+i(i+ 1) = (�(� 
+is the i-2m iterate of the predictive part of the map 
+~� ~� l-2rn 
+(...F ((2m))))) = (F ((2m))) (6) 
+Hence, minimizing the criterion expressed by equation (4) an optimal multistep 
+predictor is obtained. The number of constraints that are imposed during learning is 
+associated with k, the number of prediction steps, which corresponds to the number 
+of iterations of the map. The more iterations, the less likely a sub-optimal solution is 
+found, but note that the training time is being proportionally increased. In a chaotic 
+time series there is a more important consideration that must be brought into the 
+picture, the divergence of nearby trajectories, as we are going to see in a following 
+section. 
+3. Multistep prediction with neural networks 
+Figure 1 shows the topology proposed in [4] to identify the nonlinear mapping. 
+Notice that the proposed topology is a recurrent neural network, with a global 
+feedback loop. This topology was selected to allow the training of the predictor in the 
+same way as it will be used in testing, i.e. using the previous network outputs to 
+predict the next point. This recurrent architecture should be trained with a mechanism 
+that will constrain the iterates of the map as was discussed above. Single step 
+prediction does not fit this requirement. 
+With multistep prediction, the model system can be trained in the same way as it is 
+used in testing. We seed the dynamic net with a set of input samples, disconnect the 
+input and feed back the predicted sample to the input for k steps. The mean square 
+error between the predicted and true sample at each step is used as the cost function 
+(equation (4)). If the network topology was feedforward, batch learning could be used 
+to train the network, and static backpropagation applied to train the net. However, as 
+a recurrent topology is utilized, a learning paradigm such as backpropagation through 
+time (BPTr) or real time recurrent learning (RTRL) must be utilized [6]. The use of 
+these training methods should not come as a surprise since we are in fact fitting a 
+trajectory over time, so the gradients are time varying. This learning method is 
+sometimes called trajectory learning in the recurrent learning literature [6]. A 
+criterion to select the length of the trajectory k will be presented below. 
+The procedure described above must be repeated for several different segments of the 
+time series. For each new training segment, 2m+l samples of the original time series 
+are used to seed the predictor. To ease the training we suggest that successive train

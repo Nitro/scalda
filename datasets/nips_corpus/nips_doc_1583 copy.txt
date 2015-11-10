@@ -1,0 +1,161 @@
+Multiple Paired Forward-Inverse Models 
+for Human Motor Learning and Control 
+Masahiko Haruno* 
+mharuno(_ hip. at r. co.j p 
+Daniel M. Wolpert t 
+wolpert@hera.ucl.ac.uk 
+Mitsuo Kawato * 
+kawato(hip.atr.co.jp 
+*ATR Human Information Processing Research Laboratories 
+2-2 Hikaridai, Seika-cho, Soraku-gun, Kyoto 619-02, Japan. 
+tSobell Department of Neurophysiology, Institute of Neurology, 
+Queen Square, London WCIN 3BG, United Kingdom. ' 
+Dynamic Brain Project, ERATO, JST, Kyoto, Japan. 
+Abstract 
+Humans demonstrate a remarkable ability to generate accurate and 
+appropriate motor behavior under many different and often uncertain 
+emqronmental conditions. This paper describes a new modular ap- 
+proach to human motor learning and control, based on multiple pairs of 
+inverse (controller) and forward (predictor) models. This architecture 
+simultaneously learns the multiple inverse models necessary for control 
+as well as how to select the inverse models appropriate for a given envi- 
+ronment. Simulations of object manipulation demonstrates the ability 
+to learn multiple objects, appropriate generalization to novel objects 
+and the inappropriate activation of motor programs based on visual 
+cues, followed by on-line correction, seen in the size-weight illusion. 
+1 Introduction 
+Given the multitude of contexts within which we must act, there are two qualitatively 
+distinct strategies to motor control and learning. The first is to use a single controller 
+which would need to be highly complex to allow for all possible scenarios. If this 
+controller were unable to encapsulate all the contexts it would need to adapt every 
+time the context of the movement changed before it could produce appropriate motor 
+commands this would produce transient and possibly large performance errors. Al- 
+ternatively, a modular approach can be used in which multiple controllers co-exist, with 
+each controller suitable for one or a small set of contexts. Such a modular strategy has 
+been introduced in the mixture of experts architecture for supervised learning [6]. 
+This architecture comprises a set of expert networks and a gating network which per- 
+forms classification by combining each expert's output. These networks are trained 
+simultaneously so that the gating network splits the input space into regions in which 
+particular experts can specialize. 
+To apply such a modular strategy to motor control two problems nust be solved. First 
+32 M. Haruno, D. M. Wolpert and M. Kawato 
+how are the set of inverse models (controllers) learned to cover thc contexts which 
+might be experienced the module learning problem. Second, given a set of inverse 
+modules (controllers) how are the correct subset selected for the current context- 
+the module selection problem. From human psychophysical data we know that such 
+a selection process must be driven by two distinct processes; feedforward switching 
+based on sensory signals such as the perceived size of an object, and switching based 
+on feedback of the outcome of a movement. For example, on picking up a object 
+which appears heavy, feedforward switching may activate controllers responsible for 
+generating a large motor impulse. However, feedback processes, based on contact with 
+the object, can indicate that it is in fact light thereby switching control to inverse 
+models appropriate for a light object. 
+In the context of motor control and learning, Gomi and Kawato [4] combined the 
+feedback-error-learning [7] approach and the mixture of experts architecture to learn 
+multiple inverse models for different manipulated objects. They used both the visual 
+shapes of the manipulated objects and intrinsic signals, such as somatosensory feedback 
+and efference copy of the motor command, as the inputs to the gating network. Using 
+this architecture it was quite difficult to acquire multiple inverse models. This difficulty 
+arose because a single gating network needed to divide up, based solely on control error, 
+the large input space into complex regions. Furthermore, Gomi and Kawato's model 
+could not demonstrate feedforward controller selection prior to movement execution. 
+Here we describe a model of human motor control which addresses these problems and 
+can solve the module learning and selection problems in a computationally coherent 
+manner. The basic idea of the model is that the brain contains multiple pairs (mod- 
+ules) of forward (predictor) and inverse (controller) models (MPFIM) [10]. Within each 
+module, the forward and inverse models are tightly coupled both during their acquisi- 
+tion and use, in which the forward models deternfine the contribution (responsibility) 
+of each inverse model's output to the final motor command. This architecture can 
+simultaneously learn the multiple inverse models necessary for control as well as how 
+to select the inverse models appropriate for a given environment in both a feedforward 
+and a feedback manner. 
+2 Multiple paired forward-inverse models 
+contextual 
+sgnal 
+ellerence copy 
+of motor 
+command 
+desired arm 
+tralectory 
+predictor 
+Forward 
+Model 
+Model 
+actual arm tralectoJ 
+feedforward 
+motor 
+Feedback : feedback motor command / 
+controller ', 
+Figure 1: A schematic diagram showing how MPFIM architecture is used to control 
+arm movement while manipulating different objects. Parenthesized numbers in the 
+figure relate to the equations in the text. 
+Multiple Paired Forward-Inverse Models for Human Motor Learning and Control 33 
+2.1 Motor learning and feedback selection 
+Figure 1 illustrates how the MPFIM architecture can be used to learn and control 
+arm movements when the hand manipulates different objects. Central to the multiple 
+paired forward-inverse model is the notion of dividing up experience using predictive 
+forward models. We consider n undifferentiated forward models which each receive the 
+current state, xt, and motor command, ut, as input. The output of the ith forward 
+model is :+, the prediction of the next state at time t 
+= o(w, xt, 
+(1) 
+where w are the parameters of a function approximator  (e.g. neural network weights) 
+used to model the forward dynamics. These predicted next states are compared to the 
+actual next state to provide the responsibility signal which represents the extent to 
+which each forward model presently accounts for the behavior of the systmn. Based on 
+the prediction errors of the forward models, the responsibility signal, h, for the i-th 
+forward-inverse model pair (module) is calculated by the soft-max function 
+where xt is the true state of the system and rr is a scaling constant. The soft-max 
+transforms the errors using the exponential function and then normalizes these values 
+across the modules, so that the responsibilities lie between 0 and 1 and sum to I over 
+the modules. Those forward models which capture the current behavior, and therefore 
+produce small prediction errors, will have high responsibilities . The responsibilities 
+are then used to control the learning of the forward models in a competitive manner, 
+with those models with high responsibilities receiving proportionally more of their error 
+signal than modules with low responsibility. The competitive learning among forward 
+models is similar in spirit to annealed competition of experts architecture [9]. 
+(3) 
+For each' forward model there is a paired inverse model whose inputs are the desired 
+next state x+ and the current state xt. The ith inverse model produces a motor 
+command u as output 
+i 
+Xt+l , 
+(4) 
+where ct} are the parameters of sone function approximator . 
+The total motor command is the summation of the outputs from these inverse models 
+using the responsibilities, hJ, to weight the contributions. 
+i=1 i=1 
+Once again, the responsibilities are used to weight the learning of each inverse model. 
+This ensures that inverse models learns only when their paired forward models make 
+accurate predictions. Although for supervised learning the desired control command 
+u is needed (but is generally not available), we can approximate (u - u}) with the 
+feedback motor command signal uy [7]. 
+Because selecting modules can be regarded as a hidden state estimation problem, an 
+alternative way to determine appropriate forward models is to use the EM algorithm [3]. 
+34 M. Hamno, D. M. Wolpert and M. Kawato 
+ i du. i 
+� ' gut it * ' __ 
+(6) 
+In summary, the responsibility signals are used in three ways--first to gate the learning 
+of the forward models (Equation 3), second to gate the learning of the inverse models 
+(Equation 6), and third to gate the contribution of the inverse models to the final motor 
+command (Equation 5). 
+2.2 Multiple responsibility predictors: Feedforward selection 
+While the system described so far can learn multiple controllers and switch between 
+them based on prediction errors, it cannot provide switching before a motor command 
+has been generated and the consequences of this action evaluated. To allow the system 
+to switch controllers based on contextual information, we introduce a new component, 
+the responsibility predictor (RP). The input to this module, Yt, contains contextual 
+sensory information (Figure 1) and each RP produces a prediction of its own module's 
+responsibility 
+, = r/(?j, y). (7) 
+These estimated responsibilities can then be compared to the actual responsibilities 
+generated from the responsibility estimator. These error signals are used to update the 
+weights of the RP by supervised learning. 
+Finally a mechanism is required to combine the responsibility estimates derived from 
+the feedforward RP and from the forward models' prediction errors derived from 
+feedback. We determine the final value of responsibility by using Bayes rule; mul- 
+tiplying the transformed feedback errors e -Ix'-;12/ff2 by the feedforward responsibil- 
+ity A and then normalizing across the modules within the responsibility estimator: 
+n At e 
+The estimates of the responsibilities produ

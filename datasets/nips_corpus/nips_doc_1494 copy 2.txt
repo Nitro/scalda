@@ -1,0 +1,169 @@
+Gradient Descent 
+Reinforcement 
+for General 
+Learning 
+Leemon Baird 
+leemoncs.cmu.edu 
+www.cs.cmu.edu/-leemon 
+Computer Science Department 
+5000 Forbes Avenue 
+Carnegie Mellon University 
+Pittsburgh, PA 15213-3891 
+Andrew Moore 
+awmcs.cmu.edu 
+www.cs.cmu.edu/-awm 
+Computer Science Department 
+5000 Forbes Avenue 
+Carnegie Mellon University 
+Pittsburgh, PA 15213-3891 
+Abstract 
+A simple learning rule is derived, the VAPS algorithm, which can 
+be instantiated to generate a wide range of new reinforcement- 
+learning algorithms. These algorithms solve a number of open 
+problems, define several new approaches to reinforcement learning, 
+and unify different approaches to reinforcement learning under a 
+single theory. These algorithms all have guaranteed convergence, 
+and include modifications of several existing algorithms that were 
+known to fail to converge on simple MDPs. These include Q- 
+learning, SARSA, and advantage learning. In addition to these 
+value-based algorithms it also generates pure policy-search 
+reinforcement-learning algorithms, which learn optimal policies 
+without learning a value function. In addition, it allows policy- 
+search and value-based algorithms to be combined, thus unifying 
+two very different approaches to reinforcement learning into a 
+single Value and Policy Search (VAPS) algorithm. And these 
+algorithms converge for POMDPs without requiring a proper belief 
+state. Simulations results are given, and several areas for future 
+research are discussed. 
+1 CONVERGENCE OF GREEDY EXPLORATION 
+Many reinforcement-learning algorithms are known that use a parameterized 
+function approximator to represent a value function, and adjust the weights 
+incrementally during learning. Examples include Q-learning, SARSA, and 
+advantage learning. There are simple MDPs where the original form of these 
+algorithms fails to converge, as summarized in Table 1. For the cases with ], the 
+algorithms are guaranteed to converge under reasonable assumptions such as 
+Gradient Descent for General Reinforcement Learning 969 
+Table 1. Current convergence results for incremental, value-based RL algorithms. 
+Residual algorithms changed every X in the first two columns to x/. 
+The new algorithms proposed in this taper change evei y X to a x/. 
+-  Fixed ' Fixel I Usually- 
+distribution distr'ution I greedy 
+(on-policy) distribution 
+Lookup table 
+Markov Averager  ' 
+chain Linear 
+Nonlinear 
+Lookup table 
+MDP Averager 
+Linear . ' 
+Nonlinear 
+Lookup table 
+POMDP Averager 
+Nonlinear ?,1.(5:   ]   - 
+=convergence guaranteed 
+X=counterexample is known that either diverges or oscillates between the 
+best and worst possible policies. 
+decaying learning rates. For the cases with X, there are known counterexamples 
+where it will either diverge or oscillate between the best and worst possible policies, 
+which have very-different values. This can happen even with infinite training time 
+and slowly-decreasing learning rates (Baird, 95, Gordon, 96). Each X in the first 
+two columns can be changed to a /and made to converge by using a modified form 
+of the algorithm, the residual form (Baird 95). But this is only possible when 
+learning with a fixed training distribution, and that is rarely practical. For most 
+large problems, it is useful to explore with a policy that is usually-greedy with 
+respect to the current value function, and that changes as the value function changes. 
+In that case (the rightmost column of the chart), the current convergence guarantees 
+are not very good. One way to guarantee convergence in all three columns is to 
+modify the algorithm so that it is performing stochastic gradient descent on some 
+average error function, where the average is weighted by state-visitation frequencies 
+for the current usually-greedy policy. Then the weighting changes as the policy 
+changes. It might appear that this gradient is difficult to compute. Consider Q- 
+learning exploring with a Boltzman distribution that is usually greedy with respect 
+to the learned Q function. It seems difficult to calculate gradients, since changing a 
+single weight will change many Q values, changing a single Q value will change 
+many action-choice probabilities in that state, and changing a single action-choice 
+probability may affect the frequency with which every state in the MDP is visited. 
+Although this might seem difficult, it is not. Surprisingly, unbiased estimates of the 
+gradients of visitation distributions with respect to the weights can be calculated 
+quickly, and the resulting algorithms can put a x / in every case in Table I. 
+2 DERIVATION OF THE VAPS EQUATION 
+Consider a sequence of transitions observed while following a particular stochastic 
+policy on an MDP. Let st ={Xo,Uo,Ro, xl,ul,Rl, ... Xt-l,Ut-l,Rt-l, xt,ut,Rt} be the 
+sequence of states, actions, and reinforcements up to time t, where performing 
+action u, in state x, yields reinforcement R, and a transition to state X,+l. The 
+970 L. Baird and A. W. Moore 
+stochastic policy may be a function of a vector of weights w. Assume the MDP has 
+a single start state named x0. If the MDP has terminal states, and x, is a terminal 
+state, then X,+l:X0. Let St be the set of all possible sequences from time 0 to t. Let 
+e(st) be a given error function that calculates an error on each time step, such as the 
+squared Bellman residual at time t, or some other error occurring at time t. If e is a 
+function of the weights, then it must be a smooth function of the weights. Consider 
+a period of time starting at time 0 and ending with probability P(endlst) after the 
+sequence st occurs. The probabilities must be such that the expected squared period 
+length is finite. Let B be the expected total error during that period, where the 
+expectation is weighted according to the state-visitation frequencies generated by 
+the given policy: 
+B =  P(period ends at time T after trajectory s r )-' e(s, ) (1) 
+= '  e(s, )P(s, ) (2) 
+1=0 stag t 
+where: 
+P(st) : P(ut I s,)P(Rt I st)I-[ P(u, I s,)P(R, I s,)P(s,+, I s,)l) - P(end l s,)] 
+,=o (3) 
+Note that on the first line, for a particular st, the error e(st) will be added in to B 
+once for every sequence that starts with st. Each of these terms will be weighted by 
+the probability of a complete trajectory that starts with st. The sum of the 
+probabilities of all trajectories that start with st is simply the probability of st being 
+observed, since the period is assumed to end eventually with probability one. So the 
+second line equals the first. The third line is the probability of the sequence, of 
+which only the P(u, lx,) factor might be a function of w. If so, this probability must 
+be a smooth function of the weights and nonzero everywhere. The partial derivative 
+of B with respect to w, a particular element of the weight vector w, is: 
+c3 B= ,_-0 ,s e(s,) P(s,)+e(s,)P(s,) z [P(u_, [s_, (4) 
+1=0 3tGSt 
+e(s, ) + e(s, )  ln(e(u ,_, Is,_, ) 
+J=l 
+(5) 
+Space here is limited, and it may not be clear from the short sketch of this 
+derivation, but summing (5) over an entire period does give an unbiased estimate of 
+B, the expected total error during a period. An incremental algorithm to perform 
+stochastic gradient descent on B is the weight update given on the left side of Table 
+2, where the summation over previous time steps is replaced with a trace Tt for each 
+weight. This algorithm is more general than previously-published algorithms of this 
+form, in that e can be a function of all previous states, actions, and reinforcements, 
+rather than just the current reinforcement. This is what allows VAPS to do both 
+value and policy search. 
+Every algorithm proposed in this paper is a special case of the VAPS equation on 
+the left side of Table 2. Note that no model is needed for this algorithm. The only 
+probability needed in the algorithm is the policy, not the transition probability from 
+the MDP. This is stochastic gradient descent on B, and the update rule is only 
+correct if the observed transitions are sampled from trajectories found by following 
+Gradient Descent for General Reinforcement Learning 97] 
+Table 2. The general VAPS algorithm (left), and several instantiations of it (right). 
+This single algorithm includes both value-based and policy-search approaches and 
+their combination, and ;ives guaranteed convergence in ever), case. 
+Aw, =-a[,e(s,) + e(s,)T,] 
+ ln(P(u,, I s,_,)) 
+AT, =  _ 
+= 'E2[R,_, + 7Q(x, u,)-Q(x,_ u,_] 
+e ,s ( s , ) � , , 
+e c-te ..... g ( s , ) =  ,- + r max Q( x , , u) - Q( x ,_ , u,_ 
+R,_ + y m A(x,, u) -  A(x,_,, u,_ ) ] 
+' + 
+ev,,,_,,e,,,o, (s,) = 7 m 7V - 
+the current, stochastic policy. Both e and P should be smooth functions of w, and 
+for any given w vector, e should be bounded. The algorithm is simple, but actually 
+generates a large class of different algorithms depending on the choice of e and 
+when the trace is reset to zero. For a single sequence, sampled by following the 
+current policy, the sum of Aw along the sequence will give an unbiased estimate of 
+the true gradient, with finite variance. Therefore, during learning, if weight updates 
+are made at the end of each trial, and if the weights stay within a bounded region, 
+and the learning rate approaches zero, then B will converge with probability one. 
+Adding a weight-decay term (a constant times the 2-norm of the weight vector) onto 
+B will prevent weight divergence for small initial learning rates. There is no 
+guarantee that a global minimum will be found when using general function 
+approximators, but at least it will converge. This is true for backprop as well. 
+3 INSTANTIATING THE VAPS ALGORITHM 
+Many reinforcement-learning algorithms are value-based; they try to learn a value 
+function that satisfies the Bellman equation. Examples are Q-learning, which learns 
+a value function, actor-critic algorithms, which learn a value function and the policy 
+which is greedy with respect to it, and TD(

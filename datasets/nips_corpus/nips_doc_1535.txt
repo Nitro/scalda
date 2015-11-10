@@ -1,0 +1,141 @@
+A Randomized Algorithm for Pairwise Clustering 
+Yoram Gdalyahu, Daphna Weinshall, Michael Werman 
+Institute of Computer Science, The Hebrew University, 91904 Jerusalem, Israel 
+{yoram,daphna,werman} @cs.huji.ac.il 
+Abstract 
+We present a stochastic clustering algorithm based on pairwise sim- 
+ilarity of datapoints. Our method extends existing deterministic 
+methods, including agglomerative algorithms, min-cut graph algo- 
+rithms, and connected components. Thus it provides a common 
+framework for all these methods. Our graph-based method differs 
+from existing stochastic methods which are based on analogy to 
+physical systems. The stochastic nature of our method makes it 
+more robust against noise, including accidental edges and small 
+spurious clusters. We demonstrate the superiority of our algorithm 
+using an example with 3 spiraling bands and a lot of noise. 
+I Introduction 
+Clustering algorithms can be divided into two categories: those that require a vec- 
+torial representation of the data, and those which use only pairwise representation. 
+In the former case, every data item must be represented as a vector in a real normed 
+space, while in the second case only pairwise relations of similarity or dissimilar- 
+ity are used. The pairwise information can be represented by a weighted graph 
+G(V, E): the nodes V represent data items, and the positive weight wij of an edge 
+(i, j) representing the amount of similarity or dissimilarity between items i and j. 
+The graph G might not be a complete graph. In the rest of this paper wij represents 
+a similarity value. 
+A vectorial representation is very convenient when one has either an explicit or 
+an implicit parametric model for the data. An implicit model means that the 
+data distribution function is not known, but it is assumed, e.g., that every cluster 
+is symmetrically distributed around some center. An explicit model specifically 
+describes the shape of the distribution (e.g., Gaussian). In these cases, if a vectorial 
+representation is available, the clustering procedure may rely on iterative estimation 
+of means (e.g., [2, 8]). 
+In the absence of a vectorial representation, one can either try to embed the graph 
+of distances in a vector space, or use a direct pairwise clustering method. The 
+A Randomized Algorithm for Pairwise Clustering 425 
+embedding problem is difficult, since it is desirable to use a representation that is 
+both low dimensional and has a low distortion of distances [6, 7, 3]. Moreover, even 
+if such embedding is achieved, it can help to cluster the data only if at least an 
+implicit parametric model is valid. Hence, direct methods for pairwise clustering 
+are of great value. 
+One strategy of pairwise clustering is to use a similarity threshold 0, remove edges 
+with weight less than 0, and identify the connected components that remain as 
+clusters. A transformation of weights may precede the thresholding  . The physically 
+motivated transformation in [1] uses a granular magnet model and replaces weights 
+by spin correlations. Our algorithm is similar to this model, see Section 2.4. 
+A second pairwise clustering strategy is used by agglomerative algorithms [2], which 
+start with the trivial partition of N points into N clusters of size one, and continue 
+by subsequently merging pairs of clusters. At every step the two clusters which 
+are most similar are merged together, until the similarity of the closest clusters is 
+lower than some threshold. Different similarity measures between clusters distin- 
+guish between different agglomerative algorithms. In particular, the single linkage 
+algorithm defines the similarity between clusters as the maximal similarity between 
+two of their members, and the complete linkage algorithm uses the minimal value. 
+A third strategy of pairwise clustering uses the notion of cuts in a graph. A cut 
+(A,B) in a graph G(V,E) is a partition of V into two disjoint sets A and B. The 
+capacity of the cut is the sum of weights of all edges that cross the cut, namely: 
+c(A, B) = 5-ieA,jeB Wij. Among all the cuts that separate two marked vertices, 
+the minimal cut is the one which has minimal capacity. The minimal cut clustering 
+algorithm [11] divides the graph into components using a cascade of minimal cuts 2. 
+The normalized cut algorithm [9] uses the association of A (sum of weights incident 
+on A) and the association of B to normalize the capacity c(A, B). In contrast with 
+the easy min-cut problem, the problem of finding a minimal normalized cut (Ncut) 
+is NP-hard, but with certain approximations it reduces to a generalized eigenvalue 
+problem [9]. 
+Other pairwise clustering methods include techniques of non parametric density es- 
+timation [4] and pairwise deterministic annealing [3]. However, the three categories 
+of methods above are of special importance to us, since our current work provides a 
+common framework for all of them. Specifically, our new algorithm may be viewed 
+as a randomized version of an agglomerative clustering procedure, and in the same 
+time it generalizes the minimal cut algorithm. It is also strongly related to the 
+physically motivated granular magnet model algorithm. By showing the connection 
+between these methods, which may seem very different at a first glance, we provide 
+a better understanding of pairwise clustering. 
+Our method is unique in its stochastic nature while provenly maintaining low com- 
+plexity. Thus our method performs as well as the aforementioned methods in easy 
+cases, while keeping the good performance in difficult cases. In particular, it is 
+more robust against noise and pathological configurations: (i) A minimal cut algo- 
+rithm is intuitively reasonable since it optimizes so that as much of the similarity 
+For example, the mutual'neighborhood clustering algorithm [10] substitutes the edge 
+weight w, 3 with a new weight w3 = m + n where i is the m th nearest neighbor of j and j 
+is the n th nearest neighbor of i. 
+2The reader who is familiar with flow theory may notice that this algorithm also belongs 
+to the first category of methods, as it is equivalent to a weight transformation followed by 
+thresholding. The weight transformation replaces w 0 by the maximal flow between i and 
+j. 
+426 Y. Gdalyahu, D. Weinshall and M. Werman 
+weight remains within the parts of the clusters, and as little as possible is wasted 
+between the clusters. However, it tends to fail when there is no clean separation 
+into 2 parts, or when there are many small spurious parts due, e.g., to noise. Our 
+stochastic approach avoids these problems and behaves more robustly. (ii) The 
+single linkage algorithm deals well with chained data, where items in a cluster are 
+connected by transitive relations. Unfortunately the deterministic construction of 
+chains can be harmful in the presence of noise, where a few points can make a 
+bridge between two large clusters and merge them together. Our algorithm in- 
+herits the ability to cluster chained data; at the same time it is robust against such 
+noisy bridges as long as the probability to select all the edges in the bridge remains 
+small. 
+2 Stochastic pairwise clustering 
+Our randomized clustering algorithm is constructed of two main steps: 
+1. Stochastic partition of the similarity graph into rparts (by randomized 
+agglomeration). For each partition index r(r= N... 1): 
+(a) for every pair of points, the probability that they remain in the same 
+part is computed; 
+(b) the weight of the edge between the two points is replaced by this prob- 
+ability; 
+(c) clusters are formed using connected components and threshold of 0.5. 
+This is described in Sections 2.1 and 2.2. 
+2. Selection of proper r values, which reflect interesting structure in our 
+problem. This is described in Section 2.3. 
+2.1 The similarity transformation 
+At each level r, our algorithm performs a similarity transformation followed by 
+thresholding. In introducing this process, our starting point is a generalization of 
+the minimal cut algorithm; then we show how this generalization is obtained by the 
+randomization of a single linkage algorithm. 
+First, instead of considering only the minimal cuts, let us induce a probability 
+distribution on the set of all cuts. We assign to each cut a probability which 
+decreases with increasing capacity. Hence the minimal cut is the most probable cut 
+in the graph, but it does not determine the graph partition on its own. 
+As a second generalization to the min-cut algorithm we consider multi-way cuts. 
+An r-way cut is a partition of G into r connected components. The capacity of an 
+r-way cut is the sum of weights of all edges that connect different components. In 
+the rest of this paper we may refer to r-way cuts simply as cuts. 
+Using the distribution induced on r-way cuts, we apply the following family of 
+weight transformations. The weight wij is replaced by the probability that nodes i 
+� r This transformation 
+and j are in the same side of a random r-way cut wij - Pij' 
+is defined for every integer r between 1 and N. 
+Since the number of cuts in a graph is exponentially large, one must ask whether 
+p[4 is computable. Here the decaying rate of the cut probability plays an essential 
+roe. The induced probability is found to decay fast enough with the capacity, hence 
+Pij is dominated by the low capacity cuts. Thus, since there exists a polynomial 
+A Randomized Algorithm for Pairwise Clustering 42 7 
+bound on the number of low capacity cuts in any graph [5], the problem becomes 
+computable. 
+This strong property suggests a sampling scheme to estimate the pairing probabil- 
+ities. Assume that a sampling tool is available, which generates cuts according to 
+their probability. Under this condition, a sample of polynomial size is sufficient to 
+r 'S, 
+estimate the Pij 
+The sampling tool that we use is called the contraction algorithm [5]. Its discovery 
+led to an efficient probabilistic algorithm for the minimal cut proble

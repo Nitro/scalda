@@ -1,0 +1,168 @@
+Regularizing AdaBoost 
+Gunnar Rtsch, Takashi Onoda Klaus R. Miiller 
+GMD FIRST, Rudower Chaussee 5, 12489 Berlin, Germany 
+{raetsch, onoda, klaus}@first.gmd.de 
+Abstract 
+Boosting methods maximize a hard classification margin and are 
+known as powerful techniques that do not exhibit overfitting for low 
+noise cases. Also for noisy data boosting will try to enforce a hard 
+margin and thereby give too much weight to outliers, which then 
+leads to the dilemma of non-smooth fits and overfitting. Therefore 
+we propose three algorithms to allow for soft margin classification 
+by introducing regularization with slack variables into the boosting 
+concept: (1) AdaBoostreg and regularized versions of (2) linear 
+and (3) quadratic programming AdaBoost. Experiments show the 
+usefulness of the proposed algorithms in comparison to another soft 
+margin classifier: the support vector machine. 
+1 Introduction 
+Boosting and other ensemble methods have been used with success in several ap- 
+plications, e.g. OCR [13, 8]. For low noise cases several lines of explanation have 
+been proposed as candidates for explaining the well functioning of boosting meth- 
+ods. (a) Breiman proposed that during boosting also a bagging effect takes place 
+[3] which reduces the variance and effectively limits the capacity of the system and 
+(b) Freund et al. [12] show that boosting classifies with large margins, since the 
+error function of boosting can be written as a function of the margin and every 
+boosting step tries to minimize this function by maximizing the margin [9, 11]. 
+Recently, studies with noisy patterns have shown that boosting does indeed overfit 
+on noisy data, this holds for boosted decision trees [10], RBF nets [11] and also 
+other kinds of classifiers (e.g. [7]). So it is clearly a myth that boosting methods 
+will not overfit. The fact that boosting is trying to maximize the margin, is exactly 
+also the argument that can be used to understand why boosting must necessarily 
+overfit for noisy patterns or overlapping distributions and we give asymptotic argu- 
+ments for this statement in section 3. Because the hard margin (smallest margin in 
+the trainings set) plays a central role in causing overfitting, we propose to relax the 
+hard margin classification and allow for misclassifications by using the soft margin 
+classifier concept that has been applied to support vector machines successfully [5]. 
+*permanent address: Communication & Information Research Lab. CRIEPI, 2-11-1 
+Iwado kita, Komae-shi, Tokyo 201-8511, Japan. 
+Regularizing A daBoost 565 
+Our view is that the margin concept is central for the understanding of both sup- 
+port vector machines and boosting methods. So far it is not clear what the optimal 
+margin distribution should be that a learner has to achieve for optimal classification 
+in the noisy case. For data without noise a hard margin might be the best choice. 
+However, for noisy data there is always the trade-off in believing in the data or 
+mistrusting it, as the very data point could be an outlier. In general (e.g. neural 
+network) learning strategies this leads to the introduction of regularization which 
+reflects the prior that we have about a problem. We will also introduce a regu- 
+larization strategy (analogous to weight decay) into boosting. This strategy uses 
+slack variables to achieve a soft margin (section 4). Numerical experiments show 
+the validity of our regularization approach in section 5 and finally a brief conclusion 
+is given. 
+2 AdaBoost Algorithm 
+Let {hi(x): t = 1,..., T} be an ensemble of T hypotheses defined on input vector 
+x and c = [Cl... CT] their weights satisfying ct > 0 and Icl = Y'4 ct = 1. In the 
+binary classification case, the output is one of two class labels, i.e. ht(x) - 4-1. 
+The ensemble generates the label which is the weighted majority of the votes: 
+sgn(Etc, n,(x)). In order to train this ensemble of T hypotheses {h,(x)} and 
+�, several algorithms have been proposed: bagging, where the weighting is simply 
+ct - 1IT [2] and AdaBoost/Arcing, where the weighting scheme is more compli- 
+cated [12]. In the following we give a brief description of AdaBoost/Arcing. We use 
+a special form of Arcing, which is equivalent to AdaBoost [4]. In the binary classi- 
+fication case we define the margin for an input-output pair zi = (xi, Yi), i = 1,..., l 
+by 
+T 
+rag(z,, c) = y, E c,h,(x,), (1) 
+which is between -1 and 1, if Icl = 1. The correct class is predicted, if the margin 
+at z is positive. When the positivity of the margin value increases, the decision 
+correctness becomes larger. AdaBoost maximizes the margin by (asymptotically) 
+minimizing a function of the margin m#(zi, c) [9, 11] 
+l 
+g(b) = Z exp {- I-mg(zi, c) } , (2) 
+i=1 
+where b = [b...bT] and Ibl = Et b, (starting from b = 0). Note that bt is the 
+unnormalized weighting of the hypothesis ht, whereas c is simply a normalized 
+version of b, i.e. c = b/lb I. In order to find the hypothesis ht the learning examples 
+zi are weighted in each iteration t with wt(zi). Using a bootstrap on this weighted 
+sample we train ht; alternatively a weighted error function can be used (e.g. weighted 
+MSE). The weights wt(zi) are computed according to 1 
+wt(zi) = t exp{-lbt-11rag(zi'ct-1)/2} 
+yj=z exp {-Ibt_lmg(z, Ct_l)/2 } 
+(a) 
+l 
+and the training error et of ht is computed as et = Ei=i wt(zi)I(yi  ht (xi)), where 
+I(true) = I and I(false) = 0. For each given hypothesis ht we have to find a weight 
+bt, such that #(b) is mifiimized. One can optimize this parameter by a line search 
+This direct way for computing the weights is equivalent to the update rule of AdaBoost. 
+566 G. Ritsch, T. Onoda and K.-R. Mailer 
+or directly by analytic minimization [4], which gives bt = log(1 - et) - log et. 
+Interestingly, we can write 
+Og(bt_ ) / Omg(zi, bt-x) (4) 
+Y'-j=x Og(bt_x )/Omg(zj, bt_ ) 
+as a gradient of g(bt-1) with respect to the margins. The weighted minimization 
+with wt(zi) will give a hypothesis ht which is an approximation to the best possible 
+hypothesis h i that would be obtained by minimizing # directly. Note that, the 
+weighted minimization (bootstrap, weighted LS) will not necessarily give h* 
+t, even 
+if et is minimized [11]. AdaBoost is therefore an approximate gradient descent 
+method which minimizes g asymptotically. 
+3 Hard margins 
+A decrease of g(c, Ibl) := g(b) is predominantly achieved by improvements of the 
+margin mg(zi, c). If the margin mg(zi, c) is negative, then the error g(c, Ibl) takes 
+clearly a big value, which is additionally amplified by Ibl . So, AdaBoost tries to 
+decrease the negative margin efficiently to improve the error g(c, 
+Now, let us consider the asymptotic case, where the number of iterations and 
+therefore also Ibl take large values [9]. In this case, when the values of all 
+mg(zi, c), i = 1,..-, l, are almost the same but have small differences, these differ- 
+ences are amplified strongly in g(c, Ibl). Obviously the function g(c, Ib[) is asymp- 
+totically very sensitive to small differences between margins. Therefore, the margins 
+mg(zi, c) of the training patterns from the margin area (boundary area between 
+classes) should asymptotically converge to the same value. From Eq. (3), when 
+lb[ takes a very big value, AdaBoost learning becomes a hard competition case: 
+only the pattern with smallest margin will get high weights, the other patterns are 
+effectively neglected in the learning process. In order to confirm that the above 
+reasoning is correct, Fig. i shows margin distributions after 104 AdaBoost itera- 
+tions for a toy example [9] at different noise levels generated by uniform distribution 
+U(0.0, a 2) (left). From this figure, it becomes apparent that the margin distribution 
+asymptotically makes a step at a fixed size of the margin for training patterns which 
+are in the margin area. In previous studies [9, 11] we observed that those patterns 
+exhibit a large overlap to support vectors in support vector machines. The numeri- 
+cal results support our theoretical asymptotic analysis. The property of AdaBoost 
+to produce a big margin area (no pattern in the area, i.e. a hard margin), will not 
+always lead to the best generalization ability (cf. [5, 11]). This is especially true, 
+09 
+0.8 
+.0.7 
+.o. 
+0.5 
+o. 
+0. 
+0.1 
+0 
+0 
+).23 
+225 
+).22 
+215 
+).21 
+205 
+0.2 
+0.2 0.4 0.6 0.8 0.195 
+stability 
+10 0 10  10 2 10 3 10 4 
+1.5 
+0.5 
+o 
+0.5 
+-1 
+1.5 
+0.5 
+I 1.5 2 2.5 
+Figure 1: Margin distributions for AdaBoost (left) for different noise levels (a 2 = 
+0%(dotted), 9%(dashed), 16%(solid)) with fixed number of RBF-centers for the base hy- 
+pothesis and typical overfitting behaviour in the generalization error as a function of the 
+number of iterations (middle) and a typical decision line (right) generated by AdaBoost 
+using RBF networks in the case with noise (here: 30 centers and a 2 = 16%; smoothed) 
+Regularizing AdaBoost 567 
+if the training patterns have classification or input noise. In our experiments with 
+noisy data, we often observed that AdaBoost made overfitting (for a high number 
+of boosting iterations). Fig. I (middle) shows a typical overfitting behaviour in the 
+generalization error for AdaBoost: after only 80 boosting iterations the best gen- 
+eralization performance is already achieved. Quinlan [10] and Grove et al. [7] also 
+observed overfitting and that the generalization performance of AdaBoost is often 
+worse than that of the single classifier, if the data has classification noise. 
+The first reason for overfitting is the increasing value of Ibl: noisy patterns (e.g. bad 
+labelled) can asymptotically have an unlimited influence to the decision line lead- 
+ing to overfitting (cf. Eq. (3)). Another reason is the classification with a hard 
+margin, which also means that all training patterns will asymptotically be correctly 
+classified (without any capacity limitation!). In the presence of noise this will cer- 
+tainly be not the right concept, because the best

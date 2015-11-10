@@ -1,0 +1,143 @@
+Graphical Models for Recognizing 
+Human Interactions 
+Nuria M. Oliver, Barbara Rosario and Alex Pentland 
+20 Ames Street, E15-384C, 
+Media Arts and Sciences Laboratory, MIT 
+Cambridge, MA 02139 
+{nuria, rosario, sandy)@media.mit.edu 
+Abstract 
+We describe a real-time computer vision and machine learning sys- 
+tem for modeling and recognizing human actions and interactions. 
+Two different domains are explored: recognition of two-handed 
+motions in the martial art 'Tai Chi', and multiple-person interac- 
+tions in a visual surveillance task. Our system combines top-down 
+with bottom-up information using a feedback loop, and is formu- 
+lated with a Bayesian framework. Two different graphical models 
+(HMMs and Coupled HMMs) are used for modeling both individual 
+actions and multiple-agent interactions, and CHMMs are shown to 
+work more efficiently and accurately for a given amount of train- 
+ing. Finally, to overcome the limited amounts of training data, 
+we demonstrate that 'synthetic agents' (Alife-style agents) can be 
+used to develop flexible prior models of the person-to-person inter- 
+actions. 
+I INTRODUCTION 
+We describe a real-time computer vision and machine learning system for modeling 
+and recognizing human behaviors in two different scenarios: 112)) complex, two- 
+handed action recognition in the martial art of Tai Chi and detection and 
+recognition of individual human behaviors and multiple-person interactions in a 
+visual surveillance task. In the latter case, the system is particularly concerned 
+with detecting when interactions between people occur, and classifying them. 
+Graphical models, such as Hidden Markov Models (HMMs) [6] and Coupled Hid- 
+den Markov Models (CHMMs) [3, 2], seem appropriate for modeling and, classify- 
+ing human behaviors because they offer dynamic time warping, a well-understood 
+training algorithm, and a clear Bayesian semantics for both individual (HMMs) 
+and interacting or coupled (CHMMs) generative processes. A major problem with 
+this data-driven statistical approach, especial.ly when modeling rare or anomalous 
+behaviors, is the limited number of training examples. A major emphasis of our 
+work, therefore, is on efficient Bayesian integration of both prior knowledge with 
+evidence from data. We will show that for situations involving multiple indepen- 
+dent (or partially independent) agents the Coupled HMM approach generates much 
+better results than traditional HMM methods. 
+In addition, we have developed a synthetic agent or Alife modeling environment for 
+building and training flexible a priori models of various behaviors using software 
+agents. Simulation with these software agents yields synthetic data that can be 
+used to train prior models. These prior models can then be used recursively in a 
+Bayesian framework to fit real behavioral data. 
+Graphical Models for Recognizing Human Interactions 925 
+This synthetic agent approach is a straightforward and flexible method for devel- 
+oping prior models, one that does not require strong analytical assumptions to be 
+made about the form of the priors 1. In addition, it has allowed us to develop ro- 
+bust models even when there are only a few examples of some target behaviors. In 
+our experiments we have found that by combining such synthetic priors with lim- 
+ited real data we can easily achieve very high accuracies at recognition of different 
+human-to-human interactions. 
+The paper is structured as follows: section 2 presents an overview of the system, 
+the statistical models used for behavior modeling and recognition are described in 
+section 3. Section 4 contains experimental results in two different real situations. 
+Finally section 5 summarizes the main conclusions and our future lines of research. 
+2 VISUAL INPUT 
+We have experimented using two different types of visual input. The first is a real- 
+time, self-calibrating 3-D stereo blob tracker (used for the Tai Chi scenario) [1], and 
+the second is a real-time blob-tracking system [5] (used in the visual surveillance 
+task). In both cases an Extended Kalman filter (EKF) tracks the blobs' location, 
+coarse shape, color pattern, and velocity. This information is represented as a 
+low-dimensional, parametric probability distribution function (PDF) composed of 
+a mixture of Gaussians, whose parameters (sufficient statistics and mixing weights 
+for each of the components) are estimated using Expectation Maximization (EM). 
+This visual input module detects and tracks moving objects -- body parts in Tai 
+Chi and pedestrians in the visual surveillance task -- and outputs a feature vector 
+describing their motion, heading, and spatial relationship to all nearby moving 
+objects. These output feature vectors constitute the temporally ordered stream 
+of data input to our stochastic state-based behavior models. Both HMMs and 
+CHMMs, with varying structures depending on the complexity of the behavior, are 
+used for classifying the observed behaviors. 
+Both top-down and bottom-up flows of information are continuously managed and 
+combined for each moving object within the scene. The Bayesian graphical models 
+offer a mathematical framework for combining the observations (bottom-up) with 
+complex behavioral priors (top-down) to provide expectations that will be fed back 
+to the input visual system. 
+3 VISUAL UNDERSTANDING VIA GRAPHICAL 
+MODELS: HMMs and CHMMs 
+Statistical directed acyclic graphs (DAGs) or probabilistic inference networks (PINs 
+hereafter) can provide a computationally efficient solution to the problem of time 
+series analysis and modeling. HMMs and some of their extensions, in particular 
+CHMMs, can be viewed as a particular and simple case of temporal PIN or DAG. 
+Graphically Markov Models are often depicted 'rolled-out in time'as Probabilistic 
+Inference Networks, such as in figure 1. PINs present important advantages that are 
+relevant to our problem: they can handle incomplete data as well as uncertainty; 
+they are trainable and easier to avoid overfitting; they encode causality in a natural 
+way; there are algorithms for both doing prediction and probabilistic inference; 
+they offer a framework for combining prior knowledge and data; and finally they 
+are modular and parallelizable. 
+Traditional HMMs offer a probabilistic framework for modeling processes that have 
+structure in time. They offer clear Bayesian semantics, efficient algorithms for state 
+and parameter estimation, and they automatically perform dynamic time warping. 
+An HMM is essentially a quantization of a system's configuration space into a 
+small number of discrete states, together with probabilities for transitions between 
+1Note that our priors have the same form as our posteriors, namely, they are graphical 
+models. 
+926 N. M. Oliver, B. Rosario and A. Pentland 
+o 
+om 
+Figure 1: Graphical representation of a HMM and a CHMM rolled-out in time 
+states. A single finite discrete variable indexes the current state of the system. Any 
+information about the history of the process needed for future inferences must be 
+reflected in the current value of this state variable. 
+However many interesting real-life problems are composed of multiple interacting 
+processes, and thus merit a compositional representation of two or more variables. 
+This is typically the case for systems that have structure both in time and space. 
+With a single state variable, Markov models are ill-suited to these problems. In 
+order to model these interactions a more complex architecture is needed. 
+Extensions to the basic Markov model generally increase the memory of the sys- 
+tem (durational modeling), providing it with compositional state in time. We are 
+interested in systems that have compositional state in space, e.g., more than one 
+simultaneous state variable. It is well known that the exact solution of extensions 
+of the basic HMM to 3 or more chains is intractable. In those cases approximation 
+techniques are needed ([7, 4, 8, 9]). However, it is also known that there exists an 
+exact solution for the case of 2 interacting chains, as it is our case [7, 2]. 
+We therefore use two Coupled Hidden Markov Models (CHMMs) for modeling two 
+interacting processes, whether they are separate body parts or individual humans. 
+In this architecture state chains are coupled via matrices of conditional probabilities 
+modeling causal (temporal) influences between their hidden state variables. The 
+graphical representation of CHMMs is shown in figure 1. From the graph it can be 
+seen that for each chain, the state at time t depends on the state at time t - i in 
+both chains. The influence of one chain on the other is through a causal link. 
+In this paper we compare performance of HMMs and CHMMs for maximum a 
+posteriori (MAP) state estimation. We compute the most likely sequence of states 
+ within a model given the observation sequence O = {o,..., on}. This most likely 
+sequence is obtained by  = argrnaxsP(SlO ). 
+In the case of HMMs the posterior state sequence probability P(SIO ) is given by 
+T 
+P(SIO) = Pp(o) IIp,(o,)P,l,_  (1) 
+where S = {a,..., aN} is the set of discrete states, st G S corresponds to the 
+state at time t. Pilj -' P*,=a,l,--% is the state-to-state transition probability (i.e. 
+probability of being in state ai at time t given that the system was in state aj at 
+time t - 1). In the following we will write them as P*I-' Pi -' P=a, = P are 
+the prior probabilities for the initial state. Finally pi(ot) -' p=a,(Ot) = p(ot) are 
+the output probabilities for each state 2. 
+For CHMMs we need to introduce another set of probabilities, PI'_, which cor- 
+2The output probability is the probability of observing o, given state a, at time t 
+Graphical Models for Recognizing Human Interactions 92 7 
+respond to the probability of state st at time t in one chain given that the other 
+chain -denoted hereafter by superscript / - was in state s_ at time t - 1. These 
+new probabilities express the causal i

@@ -1,0 +1,150 @@
+Continuous Speech Recognition by 
+Linked Predictive Neural Networks 
+Joe Tebelskis, Alex Waibel, Bojan Petek, and Otto Schmidbauer 
+School of Computer Science 
+Carnegie Mellon University 
+Pittsburgh, PA 15213 
+Abstract 
+We present a large vocabulary, continuous speech recognition system based 
+on Linked Predictive Neural Networks (LPNN's). The system uses neu- 
+ral networks as predictors of speech frames, yielding distortion measures 
+which are used by the One Stage DTW algorithm to perform continuous 
+speech recognition. The system, already deployed in a Speech to Speech 
+Translation system, currently achieves 95%, 58%, and 39% word accuracy 
+on tasks with perplexity 5, 111, and 402 respectively, outperforming sev- 
+eral simple HMMs that we tested. We also found that the accuracy and 
+speed of the LPNN can be slightly improved by the judicious use of hidden 
+control inputs. We conclude by discussing the strengths and weaknesses 
+of the predictive approach. 
+1 INTRODUCTION 
+Neural networks are proving to be useful for difficult tasks such as speech recogni- 
+tion, because they can easily be trained to compute smooth, nonlinear, nonpara- 
+metric functions from any input space to output space. In speech recognition, the 
+function most often computed by networks is classificalion, in which spectral frames 
+are mapped into a finite set of classes, such as phonemes. In theory, classification 
+networks approximate the optimal Bayesian discriminant function [1], and in prac- 
+tice they have yielded very high accuracy [2, 3, 4]. However, integrating a phoneme 
+classifier into a speech recognition system is nontrivial, since classification decisions 
+tend to be binary, and binary phoneme-level errors tend to confound word-level 
+hypotheses. To circumvent this problem, neural network training must be carefully 
+integrated into word level training [1, 5]. An alternative function which can be corn- 
+199 
+200 Tebelskis, Waibel, Petek, and Schmidbauer 
+puted by networks is prediction, where spectral frames are mapped into predicted 
+spectral frames. This provides a simple way to get non-binary distortion measures, 
+with straightforward integration into a speech recognition system. Predictive net- 
+works have been used successfully for small vocabulary [6, 7] and large vocabulary 
+[8, 9] speech recognition systems. In this paper we describe our prediction-based 
+LPNN system [9], which performs large vocabulary continuous speech recognition, 
+and which has already been deployed within a Speech to Speech Translation system 
+[10]. We present our experimental results, and discuss the strengths and weaknesses 
+of the predictive approach. 
+2 LINKED PREDICTIVE NEURAL NETWORKS 
+The LPNN system is based on canonical phoneme models, which can be logically 
+concatenated in any order (using a linkage pattern) to create templates for dif- 
+ferent words; this makes the LPNN suitable for large vocabulary recognition. 
+Each canonical phoneme is modeled by a short sequence of neural networks. The 
+number of nets in the sequence, N >= 1, corresponds to the granularity of the 
+phoneme model. These phone modeling networks are nonlinear, multilayered, feed- 
+forward, and predictive in the sense that, given a short section of speech, the 
+networks are required to extrapolate the raw speech signal, rather than to classify 
+it. Thus, each predictive network produces a time-varying model of the speech 
+signal which will be accurate in regions corresponding to the phoneme for which 
+that network has been trained, but inaccurate in other regions (which are better 
+modeled by other networks). Phonemes are thus recognized indirectly, by virtue 
+of the relative accuracies of the different predictive networks in various sections of 
+speech. Note, however, that phonemes are not classified at the frame level. Instead, 
+continuous scores (prediction errors) are accumulated for various word candidates, 
+and a decision is made only at the word level, where it is finally appropriate. 
+2.1 TRAINING AND TESTING ALGORITHMS 
+The purpose of the training procedure is both (a) to train the networks to become 
+better predictors, and (b) to cause the networks to specialize on different phonemes. 
+Given a known training utterance, the training procedure consists of three steps: 
+1. Forward Pass: All the networks make their predictions across the speech sam- 
+ple, and we compute the Euclidean distance matrix of prediction errors between 
+predicted and actual speech frames. (See Figure 1.) 
+2. Alignment Step: We compute the optimal time-alignment path between the 
+input speech and corresponding predictor nets, using Dynamic Time Warping. 
+3. Backward Pass: Prediction error is backpropagated into the networks according 
+to the segmentation given by the alignment path. (See Figure 2.) 
+Hence backpropagation causes the nets to become better predictors, and the align- 
+ment path induces specialization of the networks for different phonemes. 
+Testing is performed using the One Stage algorithm [11], which is a classical exten- 
+sion of the Dynamic Time Warping algorithm for continuous speech. 
+Continuous Speech Recognition by Linked ledictive Neural Networks 201 
+phoneme a 
+predictors 
+� � � � : prediction errors 
+!I!I _. ,' �eec,,,n't 
+phoneme b 
+predictors 
+Figure 1: The forward pass during training. Canonical phonemes are modeled by 
+sequences of N predictive networks, shown as triangles (here N=3). Words are 
+represented by linkage patterns over these canonical phoneme models (shown in 
+the area above the triangles), according to the phonetic spelling of the words. Here 
+we are training on the word ABA. In the forward pass, prediction errors (shown 
+as black circles) are computed for all predictors, for each frame of the input speech. 
+As these prediction errors are routed through the linkage pattern, they fill a distance 
+matrix (upper right). 
+A B A 
+Figure 2: The backward pass during training. After the DTW alignment path has 
+been computed, error is backpropagated into the various predictors responsible for 
+each point along the alignment path. The backpropagated error signal at each such 
+point is the vector difference between the predicted and actual frame. This teaches 
+the networks to become better predictors, and also causes the networks to specialize 
+on different phonemes. 
+202 Tebelskis, Waibel, Petek, and Schmidbauer 
+3 RECOGNITION EXPERIMENTS 
+We have evaluated the LPNN system on a database of continuous speech recorded 
+at GMU. The database consists of 204 English sentences using a vocabulary of 402 
+words, comprising 12 dialogs in the domain of conference registration. Training 
+and testing versions of this database were recorded in a quiet office by multiple 
+speakers for speaker-dependent experiments. Recordings were digitized at a sam- 
+pling rate of 1� KHz. A Hamming window and an FFT were computed, to produce 
+1� melscale spectral coefficients every 10 msec. In our experiments we used 40 
+context-independent phoneme models (including one for silence), each of which had 
+a �-state phoneme topology similar to the one used in the SPIGOS system [12]. 
+11 ILIOU I0 ITHIz IndiFds Imltylo IF hds IF IEnldsl I IN IF I-TTs ....... 
+hfthe$1: HiLLO IS TXIS  FFICE FOR T COHFERENCE (e: 17.G) 
+tzad phz: $ 14 EH L 014 IHZ t( IH $ 14H O F H 5 FER 14H KNFRHNS $ 
+Figure 3: Actual and predicted spectrograms. 
+Figure 3 shows the result of testing the LPNN system on a typical sentence. The 
+top portion is the actual spectrogram for this utterance; the bottom portion shows 
+the frame-by-frame predictions made by the networks specified by each point along 
+the optimal alignment path. The similarity of these two spectrograms indicates that 
+the hypothesis forms a good acoustic model of the unknown utterance (in fact the 
+hypothesis was correct in this case). In our speaker-dependent experiments using 
+two males speakers, our system averaged 95%, 58%, and 39% word accuracy on 
+tasks with perplexity 5, 111, and 402 respectively. 
+In order to confirm that the predictive networks were making a positive contribu- 
+tion to the overall system, we performed a set of comparisons between the LPNN 
+and several pure HMM systems. When we replaced each predictive network by a 
+univariate Gaussian whose mean and variance were determined analytically from 
+the labeled training data, the resulting HMM achieved 44% word accuracy, com- 
+pared to 60% achieved by the LPNN under the same conditions (single speaker, 
+perplexity 111). When we also provided the HMM with delta coefficients (which 
+were not directly available to the LPNN), it achieved 55%. Thus the LPNN was 
+outperforming each of these simple HMMs. 
+Continuous Speech Recognition by Linked Predictive Neural Networks 203 
+4 HIDDEN CONTROL EXPERIMENTS 
+In another series of experiments, we varied the LPNN architecture by introducing 
+hidden control inputs, as proposed by Levin [7]. The idea, illustrated in Figure 4, 
+is that a sequence of independent networks is replaced by a single network which is 
+modulated by an equivalent number of hidden control input bits that distinguish 
+the state. 
+II I I 
+I I 
+Sequence of 
+Predictive Networks 
+I I 
+Hidden Control 
+Network 
+Figure 4: A sequence of networks corresponds to a single Hidden Control network. 
+A theoretical advantage of hidden control architectures is that they reduce the 
+number of free parameters in the system. As the number of networks is reduced, each 
+one is exposed to more training data, and - up to a certain point - generalization 
+may improve. The system can also run faster, since partial results of redundant 
+forward pass computations can be saved. (Notice, however, that the total number 
+of forward passes is unchanged.) Finally, the savings in memory can be significant. 
+In our experiments, we found that by replacing 2-state phoneme models by equiva- 
+lent Hidden Control networks, recognition accuracy improved slightly and the sys

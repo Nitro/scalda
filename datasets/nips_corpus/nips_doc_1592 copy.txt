@@ -1,0 +1,150 @@
+Evolving Learnable Languages 
+Bradley Tonkes 
+Dept of Comp. Sci. and Elec. Engineering 
+University of Queensland 
+Queensland, 4072 
+Australia 
+btonkes @csee. uq. edu. au 
+Alan Blair 
+Department of Computer Science 
+University of Melbourne 
+Parkville, Victoria, 3052 
+Australia 
+blair@cs.mu. oz. au 
+Janet Wiles 
+Dept of Comp. Sci. and Elec. Engineering 
+School of Psychology 
+University of Queensland 
+Queensland, 4072 
+Australia 
+janetw@csee. uq. edu. au 
+Abstract 
+Recent theories suggest that language acquisition is assisted by the 
+evolution of languages towards forms that are easily learnable. In 
+this paper, we evolve combinatorial languages which can be learned 
+by a recurrent neural network quickly and from relatively few ex- 
+amples. Additionally, we evolve languages for generalization in 
+different worlds, and for generalization from specific examples. 
+We find that languages can be evolved to facilitate different forms 
+of impressive generalization for a minimally biased, general pur- 
+pose learner. The results provide empirical support for the theory 
+that the language itself, as well as the language environment of a 
+learner, plays a substantial role in learning: that there is far more 
+to language acquisition than the language acquisition device. 
+I Introduction: Factors in language learnability 
+In exploring issues of language learnability, the special abilities of humans to learn 
+complex languages have been much emphasized, with one dominant theory based 
+on innate, domain-specific learning mechanisms specifically tuned to learning hu- 
+man languages. It has been argued that without strong constraints on the learning 
+mechanism, the complex syntax of language could not be learned from the sparse 
+data that a child observes [1]. More recent theories challenge this claim and em- 
+phasize the interaction between learner and environment [2]. In addition to these 
+two theories is the proposal that rather than language-savvy infants, languages 
+themselves adapt to human learners, and the ones that survive are infant-friendly 
+languages [3-5]. To date, relatively few empirical studies have explored how such 
+adaptation of language facilitates learning. Hare and Elman [6] demonstrated that 
+Evolving Learnable Languages 67 
+classes of past tense forms could evolve over simulated generations in response to 
+changes in the frequency of verbs, using neural networks. Kirby [7] showed, using 
+a symbolic system, how compositional languages are more likely to emerge when 
+learning is constrained to a limited set of examples. Batali [8] has evolved recurrent 
+networks that communicate simple structured concepts. 
+Our argument is not that humans are general purpose learners. Rather, current 
+research questions require exploring the nature and extent of biases that learners 
+bring to language learning, and the ways in which languages exploit those biases 
+[2]. Previous theories suggesting that many aspects of language were unlearnable 
+without strong biases are gradually breaking down as new aspects of language are 
+shown to be learnable with much weaker biases. Studies include the investigation 
+of how languages may exploit biases as subtle as attention and memory limitations 
+in children [9]. A complementary study has shown that general purpose learners 
+can evolve biases in the form of initial starting weights that facilitate the learning 
+of a family of recursive languages [10]. 
+In this paper we present an empirical paradigm for continuing the exploration of fac- 
+tors that contribute to language learnability. The paradigm we propose necessitates 
+the evolution of languages comprising recursive sentences over symbolic strings -- 
+languages whose sentences cannot be conveyed without combinatorial composition 
+of symbols drawn from a finite alphabet. The paradigm is not based on any specific 
+natural language, but rather, it is the simplest task we could find to illustrate the 
+point that languages with compositional structure can be evolved to be learnable 
+from few sentences. The simplicity of the communication task allows us to analyze 
+the language and its generalizability, and highlight the nature of the generalization 
+properties. 
+We start with the evolution of a recursive language that can be learned easily from 
+five sentences by a minimally biased learner. We then address issues of robust 
+learning of evolved languages, showing that different languages support generaliza- 
+tion in different ways. We also address a factor to which scant regard has been 
+paid, namely that languages may evolve not just to their learners, but also to be 
+easily generalizable from a specific set of concepts. It seems almost axiomatic that 
+learning paradigms should sample randomly from the training domain. It may be 
+that human languages are not learnable from random sentences, but are easily gen- 
+eralizable from just those examples that a child is likely to be exposed to in its 
+environment. In the third series of simulations, we test whether a language can 
+adapt to be learnable from a core set of concepts. 
+2 A paradigm for exploring language learnability 
+We consider a simple language task in which two recurrent neural networks try to 
+communicate a concept represented by a point in the unit interval, [0, 1] over a 
+symbolic channel. An encoder network sends a sequence of symbols (thresholded 
+outputs) for each concept, which a decoder network receives and processes back into 
+a concept (the framework is described in greater detail in [11]). For communication 
+to be successful, the decoder's output should approximate the encoder's input for 
+all concepts. 
+The architecture for the encoder is a recurrent network with one input unit and 
+five output units, and with recurrent connections from both the output and hidden 
+units back to the hidden units. The encoder produces a sequence of up to five 
+symbols (states of the output units) taken from E = {A, ..., J}, followed by the $ 
+symbol, for each concept taken from [0, 1]. To encode a value x  [0, 1], the network 
+68 B. Tonkes, A. Blair and J. Wiles 
+ C A E A 
+B C B A ICAIB[ A I E  E E 
+/A'xA IAIIIII AIA A/IX 
+BCAEA EC[BABBABBABABOABCBCA 
+II IIII ITI I I I I I I I I ITI I I I I I ITI I I I I I 
+CE B A 
+ C BC E E A C BC A 
+CAEBAECBAEBCABAECBAEBC 
+Figure 1: Hierarchical decomposition of the language produced by an encoder, with 
+the first symbols produced appearing near the root of the tree. The ordering of 
+leaves in the tree represent the input space, smaller inputs being encoded by those 
+sentences on the left. The examples used to train the best decoder found during 
+evolution are highlighted. The decoder must generalize to all other branches. In 
+order to learn the task, the decoder must generalize systematically to novel states 
+in the tree, including generalizing to symbols in different positions in the sequence. 
+(Figure 2 shows the sequence of states of a successful decoder.) 
+is presented with a sequence of inputs (x, 0, 0, ..). At each step, the output units 
+of the network assume one of eleven states: all zero if no output is greater than 
+0.5 (denoted by $); or the saturation of the two highest activations at 1.0 and the 
+remainder at 0.0 (denoted by A = [1,1, 0, 0, 0] through J = [0, 0, 0, 1, 1]). If the zero 
+output is produced, propagation is halted. Otherwise propagation continues for up 
+to five steps, after which the output units assume the zero ($) state. 
+The decoder is a recurrent network with 5 input units and a single output, and a 
+recurrent hidden layer. Former work [11] has shown that due to conflicting con- 
+straints of the encoder and decoder, it is easier for the decoder to process strings 
+which are in the reverse order to those produced by the encoder. Consequently, 
+the input to the decoder is taken to be the reverse of the output from the decoder, 
+except for $, which remains the last symbol. (For clarity, strings are written in 
+the order produced by the encoder.) Each input pattern presented to the decoder 
+matches the output of the encoder -- either two units are active, or none are. The 
+network is trained with backpropagation through time to produce the desired value, 
+x, on presentation of the final symbol in the sequence ($). 
+A simple hill-climbing evolutionary strategy with a two-stage evaluation function 
+is used to evolve an initially random encoder into one which produces a language 
+which a random decoder can learn easily from few examples. The evaluation of an 
+encoder, mutated from the current champion by the addition of Gaussian noise 
+to the weights, is performed against two criteria. (1) The mutated network must 
+produce a greater variety of sequences over the range of inputs; and (2) a decoder 
+with initially small random weights, trained on the mutated encoder's output, must 
+yield lower sum-squared error across the entire range of inputs than the champion. 
+Each mutant encoder is paired with a single decoder with initially random weight- 
+s. If the mutant encoder-decoder pair is more successful than the champion, the 
+mutant becomes champion and the process is repeated. Since the encoder's input 
+space is continuous and impossible to examine in its entirety, the input range is 
+approximated with 100 uniformly distributed examples from 0.00 to 0.99. The final 
+output from the hill-climber is the language generated by the best encoder found. 
+Evolving Learnable Languages 69 
+2.1 Evolving an easily learnable language 
+Humans learn from sparse data. In the first series of simulations we test whether 
+a compositional language can be evolved that learners can reliably and effectively 
+learn from only five examples. From just five training examples, it seems unrea- 
+sonable to expect that any decoder would learn the task. The task is intentionally 
+hard in that a language is restricted to sequences of discrete symbols with which 
+it must describe a continuous space. Note that simple linear interpolation i

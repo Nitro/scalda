@@ -1,0 +1,147 @@
+Learning Fuzzy Rule-Based Neural 
+Networks for Control 
+Charles M. Higgins and Rodney M. Goodman 
+Department of Electrical Engineering, 116-81 
+California Institute of Technology 
+Pasadena, CA 91125 
+Abstract 
+A three-step method for function approximation with a fuzzy sys- 
+tem is proposed. First, the membership functions and an initial 
+rule representation are learned; second, the rules are compressed 
+as much as possible using information theory; and finally, a com- 
+putational network is constructed to compute the function value. 
+This system is applied to two control examples: learning the truck 
+and trailer backer-upper control system, and learning a cruise con- 
+trol system for a radio-controlled model car. 
+1 Introduction 
+Function approximation is the problem of estimating a function from a set of ex- 
+amples of its independent variables and function value. If there is prior knowledge 
+of the type of function being learned, a mathematical model of the function can be 
+constructed and the parameters perturbed until the best match is achieved. How- 
+ever, if there is no prior knowledge of the function, a model-free system such as a 
+neural network or a fuzzy system may be employed to approximate an arbitrary 
+nonlinear function. A neural network's inherent parallel computation is efficient 
+for speed; however, the information learned is expressed only in the weights of the 
+network. The advantage of fuzzy systems over neural networks is that the informa- 
+tion learned is expressed in terms of linguistic rules. In this paper, we propose a 
+method for learning a complete fuzzy system to approximate example data. The 
+membership functions and a minimal set of rules are constructed automatically from 
+the example data, and in addition the final system is expressed as a computational 
+350 
+Learning Fuzzy Rule-Based Neural Networks for Control 351 
+E N 
+-5.0 -1.0 0 1.0 5.0 
+Variable Value 
+Pos 
+Figure 1: Membership function example 
+(neural) network for efficient parallel computation of the function value, combining 
+the advantages of neural networks and fuzzy systems. The proposed learning algo- 
+rithm can be used to construct a fuzzy control system from examples of an existing 
+control system's actions. 
+Hereafter, we will refer to the function value as the output variable, and the inde- 
+pendent variables of the function as the input variables. 
+2 Fuzzy Systems 
+In a fuzzy system, a function is expressed in terms of membership functions and 
+rules. Each variable has membership functions which partition its range into over- 
+lapping classes (see figure 1). Given these membership functions for each variable, 
+a function may be expressed by making rules from the input space to the output 
+space and smoothly varying between them. 
+In order to simplify the learning of membership functions, we will specify a number 
+of their properties beforehand. First, we will use piecewise linear membership func- 
+tions. We will also specify that membership functions are fully overlapping; that is, 
+at any given value of the variable the total membership sums to one. Given these 
+two properties of the membership functions, we need only specify the positions of 
+the peaks of the membership functions to completely describe them. 
+We define a fuzzy rule as if y then X, where y (the condition side) is a conjunction 
+in which each clause specifies an input variable and one of the membership func- 
+tions associated with it, and X (the conclusion side) specifies an output variable 
+membership function. 
+3 Learning a Fuzzy System from Example Data 
+There are three steps in our method for constructing a fuzzy system: first, learn the 
+membership functions and an initial rule representation; second, simplify (compress) 
+the rules as much as possible using information theory; and finally, construct a 
+computational network with the rules and membership functions to calculate the 
+function value given the independent variables. 
+352 Higgins and Goodman 
+3.1 Learning the Membership Functions 
+Before learning, two parameters must be specified. First, the maximum allowable 
+RMS error of the approximation from the example data; second, the maximum 
+number of membership functions for each variable. The system will not exceed 
+this number of membership functions, but may use fewer if the error is reduced 
+sufficiently before the maximum number is reached. 
+3.1.1 Learning by Successive Approximation to the Target Function 
+The following procedure is performed to construct membership functions and a set 
+of rules to approximate the given data set. All of the rules in this step are cell- 
+based, that is, they have a condition for every input variable; there is a rule for 
+every combination of input variables (cell). 
+We begin with input membership functions at input extrema. The closest example 
+point to each corner of the input space is found and a membership function for 
+the output is added at its value at the corner point. The initial rule set contains 
+a rule for each corner, specifying the closest output membership function to the 
+actual value at that corner. 
+We now find the example point with the greatest RMS error from the current model 
+and add membership functions in each variable at that point. Next, we construct 
+a new set of rules to approximate the function. Constructing rules simply means 
+determining the output membership function to associate with each cell. While 
+constructing this rule set, we also add any output membership functions which are 
+needed. The best rule for a given cell is found by finding the closest example point 
+to the rule (recall each rule specifies a point in the input space). If the output 
+value at this point is too far from the closest output membership function value, 
+this output value is added as a new output membership. After this addition has 
+been made, if necessary, the closest output membership function to the value at the 
+closest point is used as the conclusion of the rule. At this point, if the error threshold 
+has been reached or all membership functions are full, we exit. Otherwise, we go 
+back to find the point with the greatest error from the model and iterate again. 
+3.2 Simplifying the Rules 
+In order to have as simple a fuzzy system as possible, we would like to use the min- 
+imum possible number of rules. The initial cell-based rule set can be compressed 
+into a minimal set of rules; we propose the use of an information-theoretic algorithm 
+for induction of rules from a discrete data set [1] for this purpose. The key to the 
+use of this method is the interpretation of each of the original rules as a discrete 
+example. The rule set becomes a discrete data set which is input to a rule-learning 
+algorithm. This algorithm learns the best rules to describe the data set. 
+There are two components of the rule-learning scheme. First, we need a way to tell 
+which of two candidate rules is the best. Second, we need a way to search the space 
+of all possible rules in order to find the best rules without simply checking every 
+rule in the search space. 
+Learning Fuzzy Rule-Based Neural Networks for Control 353 
+3.2.1 Ranking Rules 
+Smyth and Goodman[2] have developed an information-theoretic measure of rule 
+value with respect to a given discrete data set. This measure is known as the 
+j-measure; defining a rule as ify then X, the j-measure can be expressed as follows: 
+j(Xly) - p(Xly)og2 ) + p(.ly)og2 p(�) j 
+[2] also suggests a modified rule measure, the J-measure: 
+J(Xly) = p(y)j(Xly) 
+This measure discounts rules which are not as useful in the data set in order to 
+remove the effects of noise or randomness. The probabilities in both measures 
+are computed from relative frequencies counted in the given discrete data set. 
+Using the j-measure, examples wi be combined only when no error is caused in the 
+prediction of the data set. The J-measure, on the other hand, will combine examples 
+even if some prediction ability of the data is lost. If we simply use the j-measure 
+to compress our original rule set, we don't get significant compression. However, 
+we can only tolerate a certain margin of error in prediction of our original rule set 
+and maintain the same control performance. In order to obtain compression, we 
+wish to allow some error, but not so much as the J-measure will create. We thus 
+propose the following measure, which allows a gradual variation of the amount of 
+noise tolerance: 
+1 - e 
+L(Xly)--f(p(y),a)j(Xly ) where f(z,oO= l_e_  
+The parameter a may be set at 0 + to obtain the J-measure since f(x, 0 +) -- x or 
+at o<> to obtain the j-measure, since f(x, o<>) - 1 (x  0). Any value of a between 
+0 and o<> will result in an amount of compression between that of the J-measure 
+and the j-measure; thus if we are able to tolerate some error in the prediction of 
+the original rule set, we can obtain more compression than the j-measure could give 
+us, but not as much as the J-measure would require. We show an example of the 
+variation of a for the truck backer-upper control system in section 4.1. 
+3.2.2 Searching for the Best Rules 
+In [1], we presented an efficient method for searching the space of all possible rules to 
+find the most representative ones for discrete data sets. The basic idea is that each 
+example is a very specific (and quite perfect) rule. However, this rule is applicable 
+to only one example. We wish to generalize this very specific rule to cover as many 
+examples as possible, while at the same time keeping it as correct as possible. The 
+goodness-measures shown above are just the tool for doing this. If we calculate the 
+goodness of all the rules generated by removing a single input variable from the 
+very specific rule, then we will be able to tell if any of the slightly more general 
+rules generated from this rule are better. If so, we take the best and continue in this 
+manner until no more general rule with a higher goodness exists. When we have 
+

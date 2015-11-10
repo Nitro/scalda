@@ -1,0 +1,158 @@
+Predicting Weather Using a Genetic Memory 455 
+Predicting Weather Using a Genetic Memory: a Combi- 
+nation of Kanerva's Sparse Distributed Memory with 
+Holland's Genetic Algorithms 
+David Rogers 
+Research Institute for Advanced Computer Science 
+MS 230-5, NASA Ames Research Center 
+Moffett Field, CA 94035 
+ABSTRACT 
+Kanerva's sparse distributed memory (SDM) is an associative-memo- 
+ry model based on the mathematical properties of high-dimensional 
+binary address spaces. Holland's genetic algorithms are a search tech- 
+nique for high-dimensional spaces inspired by evolutionary processes 
+of DNA. Genetic Memory is a hybrid of the above two systems, 
+in which the memory uses a genetic algorithm to dynamically recon- 
+figure its physical storage locations to reflect correlations between 
+the stored addresses and data. For example, when presented with 
+raw weather station data, the Genetic Memory discovers specific fea- 
+tures in the weather data which correlate well with upcoming rain, 
+and reconfigures the memory to utilize this information effectively. 
+This architecture is designed to maximize the ability of the system 
+to scale-up to handle real-world problems. 
+INTRODUCTION 
+The future success of neural networks depends on an ability to scale-up from 
+small networks and low-dimensional toy problems to networks of thousands or mil- 
+lions of nodes and high-dimensional real-world problems. (The dimensionality of a 
+problem refers to the number of variables needed to describe the problem domain.) 
+Unless neural networks are shown to be scalable to real-world problems, they will 
+likely remain restricted to a few specialized applications. 
+Scaling-up adds two types of computational demands to a system. First, there is a 
+linear increase in computational demand proportional to the increased number of vari- 
+ables. Second, there is a greater, nonlinear increase in computational demand due to 
+456 Rogers 
+the number of interactions that can occur between the variables. This latter effect is 
+primarily responsible for the difficulties encountered in scaling-up many systems. 
+In general, it is difficult to scale-up a system unless it is specifically designed to 
+function well in high-dimensional domains. 
+Two systems designed to function well in high-dimensional domains are Kanerva's 
+sparse distributed memory (Kanerva, 1988) and Holland's genetic algorithms 
+(Holland, 1986). I hypothesized that a hybrid of these two systems would preserve 
+this ability to operate well in high-dimensional environments, and offer grater func- 
+tionality than either individually. I call this hybrid Genetic Memory. To test its 
+capabilities, I applied it to the problem of forecasting rain from local weather data. 
+Kanerva's sparse distributed memory (SDM) is an associative-memory model based 
+on the mathematical properties of high-dimensional binary address spaces. It can be 
+represented as a three-layer neural-network with an extremely large number of 
+nodes (1,000,000+) in the middle layer. In its standard formulation, the connec- 
+tions between the input layer and the hidden layer (the input representation used by 
+the system) are fLxed, and learning is done by changing the values of the connections 
+between the hidden layer and the output layer. 
+Holland's genetic algorithms are a search technique for high-dimensional spaces in- 
+spired by evolutionary processes of DNA. Members of a set of binary strings com- 
+petes for the opportunity to recombine. Recombination is done by selecting two 
+successful members of the population to be the parents. A new string is created 
+by splicing together pieces of each parent. Finally, the new string is placed into the 
+set, and some unsuccessful older string removed. 
+Genetic Memory is a hybrid of the above two systems. In this hybrid, a genetic al- 
+gorithm is used to reconfigure the connections between the input layer and the hid- 
+den layer. The connections between the hidden layer and the output layer are 
+changed using the standard method for a sparse distributed memory. The success 
+of an input representation is determined by how well it reflects correlations be- 
+tween addresses and data, using my previously presented work on statistical predic- 
+tion (Rogers, 1988). Thus, we have two separate learning algorithms in the two lev- 
+els. The memory uses the genetic algorithm to dynamically reconfigure its input 
+representation to beuer reflect correlations between collections of input variables 
+and the stored data. 
+I applied this Genetic Memory architecture to the problem of predicting rain given 
+only local weather features such as the air pressure, the cloud cover, the month, the 
+temperature, etc. The weather data contained 15 features, sampled every 4-hours 
+over a 20-year period on the Australian coast. I coded each state into a 256-bit ad- 
+dress, and stored at that address a single bit which denoted whether it rained in the 4 
+hours following that weather state. I allowed the genetic algorithm to reconfigure 
+the memory while it scanned the file of weather states. 
+The success of this procedure was measured in two ways. First, once the training 
+was completed, the Genetic Memory was better at predicting rain than was the stan- 
+dard sparse distributed memory. Second, I had access to the input representations 
+discovered by the Genetic Memory and could view the specific combinations of fea- 
+tures that predicted rain. Thus, unlike many neural networks, the Genetic Memory 
+allows the user to inspect the internal representations it discovers during training. 
+Predicting Weather Using a Genetic Memory 457 
+Reference Address 
+I �1�1�1�11� I 
+1101100111 
+1010101010 
+0000011110 
+0011011001 
+1011101100 
+0010101111 
+1101101101 
+0100000110 
+0110101001 
+1011010110 
+1100010111 
+1111110011 
+Location 
+Addresses 
+Radius Input Data 
+Data 
+Counters 
+Sums-3 -5-3 5 
+mhodat0 { { { { { { { { { 
+Output Data 0 0 0 1 
+Figure 1: Structure of a Sparse Distributed Memory 
+SPARSE DISTRIBUTED MEMORY 
+Sparse distributed memory can be best illustrated as a variant of random-access mem- 
+ory (RAM). The structure of a twelve-location SDM with ten-bit addresses and 
+ten-bit data is shown in figure 1. 
+A memory location is a row in this figure. The location addresses are set to random 
+addresses. The data counters are initialized to zero. All operations begin with ad- 
+dressing the memory; this entails f'mding the Hamming distance between the refer- 
+ence address and each of the location addresses. If this distance is less than or equal 
+to the Hamming radius, the select-vector entry is set to 1, and that location is 
+termed selected. The ensemble of such selected locations is called the selected set. 
+Selection is noted in the figure as non-gray rows. A radius is chosen so that only a 
+small percentage of the memory locations are selected for a given reference address. 
+When writing to the memory, all selected counters beneath elements of the input da- 
+ta equal to 1 are incremented, and all selected counters beneath elements of the input 
+data equal to 0 are decremented. This completes a write operation. When reading 
+from the memory, the selected data counters are summed columnwise into the regis- 
+ter sums. If the value of a sum is greater than or equal to zero, we set the corre- 
+sponding bit in the output data to 1; otherwise, we set the bit in the output data to 
+O. (When reading, the contents of the input data are ignored.) 
+458 Rogers 
+This example makes clear that a datum is distributed over the data counters of the se- 
+lected locations when writing, and that the datum is reconstructed during reading by 
+averaging the sums of these counters. However, depending on what additional data 
+were written into some of the selected locations, and depending on how these data 
+correlate with the original data, the reconstruction may contain noise. 
+The SDM model can also be described as a fully-connected three-layer feed-forward 
+neural network. In this model, the location addresses are the weights between the 
+input layer and the hidden units, and the data counters are the weights between the 
+hidden units and the output layer. Note that the number of hidden-layer nodes (at 
+least 1,000 and possibly up to 1,000,000) is much larger than is commonly used for 
+artificial neural networks. It is unclear how well standard algorithms, such as back- 
+propagation, would perform with such a large number of units in the hidden layer. 
+HOLLAND'S GENETIC ALGORITHMS 
+Genetic Algorithms are a search technique for high-dimensional spaces inspired by 
+the evolutionary processes of DNA. The domain of a genetic algorithm is a popula- 
+tion of fixed-length binary strings and a fitness function, which is a method for evalu- 
+ating the fitness of each of the members. We use this fitness function to select two 
+highly-ranked members for recombination, and one lowly-ranked member for re- 
+placement. (The selection may be done either absolutely, with the best and worst 
+members always being selected, or probabilisticly, with the members being chosen 
+proportional to their fitness scores.) 
+The member selected as bad is removed from the population. The two members se- 
+lected as good are then recombined to create a new member to take its place in the 
+population. In effect, the genetic algorithm is a search over a high-dimensional 
+space for strings which are highly-rated by the fitness function. 
+The process used to create new members of the population is called crossover. In a 
+crossover, we align the two good candidates end-to-end and segment them at one or 
+more crossover-points. We then create a new string by starting the transcription of 
+bits at one of the parent strings, and switching the transcription to the other parent 
+at the crossover-points. This new string is placed into the population, taking the 
+place of the poorly-rated member. 
+First parent 
+Second parent 
+New member 
+Figure 2: Crossover of two binary strings 

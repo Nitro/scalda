@@ -1,0 +1,152 @@
+Reinforcement Learning in Markovtan and 
+Non-Markovian Environments 
+Jrgen Schmidhuber 
+Institut f/Jr Informatik 
+Technische Universitt Miinchen 
+Arcistr. 21, 8000 Mfinchen 2, Germany 
+schmidhu@tumult.informatik.tu-muenchen.de 
+Abstract 
+This work addresses three problems with reinforcement learning and adap- 
+tive neuro-control: 1. Non-Markovian interfaces between learner and en- 
+vironment. 2. On-line learning based on system realization. 3. Vector- 
+valued adaptive critics. An algorithm is described which is based on system 
+realization and on two interacting fully recurrent continually running net- 
+works which may learn in parallel. Problems with parallel learning are 
+attacked by 'adaptive randomness'. It is also described how interacting 
+model/controller systems can be combined with vector-valued 'adaptive 
+critics' (previous critics have been scalar). 
+I INTRODUCTION 
+At a given time, an agent with a non-Markovian interface to its environment cannot 
+derive an optimal next action by considering its current input only. The algorithm 
+described below differs from previous reinforcement algorithms in at least some 
+of the following issues: It has a potential for on-line learning and non-Markovian 
+environments, it is local in time and in principle it allows arbitrary time lags be- 
+tween actions and ulterior consequences; it does not care for something like episode- 
+boundaries, it allows vector-valued reinforcement, it is based on two interacting fully 
+recurrent continually running networks, and it tries to construct a full environmental 
+model- thus providing complete 'credit assignment paths' into the past. 
+We dedicate one or more conventional input units (called pain and pleasure units) 
+for the purpose of reporting the actual reinforcement to a fully recurrent control 
+network. Pain and pleasure input units have time-invariant desired values. 
+5OO 
+Reinforcement Learning in Markovtan and Non-Markovian Environments 501 
+We employ the IID-Algorithm (Robinson and Fallside, 1987) for training a fully 
+recurrent model network to model the relationships between environmental inputs, 
+output actions of an agent, and corresponding pain or pleasure. The model network 
+(e.g. (Werbos, 1987)(Jordan, 1988)(Robinson and Fallside, 1989)) in turn allows 
+the system to compute controller gradients for 'minimizing pain' and 'maximizing 
+pleasure'. Since reinforcement gradients depend on 'credit assignment paths' leading 
+'backwards through the environment', the model network should not only predict the 
+pain and pleasure units but also the other input units. 
+The quantity to be minimized by the model network is ,,i(Yi(t)- Yiprea(t)) 2, 
+where yi(t) is the activation of the ith input unit at time t, and yiprea(t) is the 
+model's prediction of the activation of the ith input unit at time t. The quantity 
+to be minimized by the controller is t,i(ci - ri(t)) , where ri(t) is the activation 
+of the ith pain or pleasure input unit at time t and ci is its desired activation for 
+all times. t ranges over all (discrete) time steps. Weights are changed at each time 
+step. This relieves dependence on 'episode boundaries'. Here the assumption is 
+that the learning rates are small enough to avoid instabilities (Williams and Zipser, 
+1989). 
+There are two versions of the algorithm: the sequential version and the parallel 
+version. With the sequential version, the model network is first trained by providing 
+it with randomly chosen examples of sequences of interactions between controller 
+and environment. Then the model's weights are fixed to their current values, and 
+the controller begins to learn. With the parallel version both the controller and the 
+model learn concurrently. One advantage of the parallel version is that the model 
+network focusses only on those parts of the environmental dynamics with which 
+the controller typically is confronted. Another advantage is the applicability to 
+changing environments. Some disadvantages of the parallel version are listed next. 
+1. Imperfect model networks. The model which is used to compute gradient in- 
+formation for the controller may be wrong. However, if we assume that the model 
+network always finds a zero-point of its error function, then over time we can expect 
+the control network to perform gradient descent according to a perfect model of the 
+visible parts of the real world. 1.A: The assumption that the model network can 
+always find a zero-point of its error function is not valid in the general case. One 
+of the reasons is the old problem of local minima, for which this paper does not 
+suggest any solutions. 1.B: (Jordan, 1988) notes that a model network does not 
+need to be perfect to allow increasing performance of the control network. 
+�. Instabilities. One source of instability could arise if the model network 'forgets' 
+information about the environmental dynamics because the activities of the con- 
+troller push it into a new sub-domain, such that the weights responsible for the old 
+well-modeled sub-domain become over-written. 
+3. Deadlock. Even if the model's predictions are perfect for all actions executed by 
+the controller, this does not imply that the algorithm will always behave as desired. 
+Let us assume that the controller enters a local minimum relative to the current state 
+of an imperfect model network. This relative minimum might cause the controller 
+to execute the same action again and again (in a certain spatio-temporal context), 
+while the model does not get a chance to learn something about the consequences 
+of alternative actions (this is the deadlock). 
+502 Schmidhuber 
+The sequential version lacks the flavor of on-line learning and is bound to fail as soon 
+as the environment changes significantly. We will introduce 'adaptive randomness' 
+for the controller outputs to attack problems of the parallel version. 
+2 THE ALGORITHM 
+The sequential version of the algorithm can be obtained in a straight-forward man- 
+ner from the description of the parallel version below. At every time step, the 
+parallel version is performing essentially the same operations: 
+In step I of the main loop of the algorithm, actions to be performed in the external 
+world are computed. These actions are based on both current and previous inputs 
+and outputs. For all new activations, the corresponding derivatives with respect to 
+all controller weights are updated. In step 2 actions are executed in the external 
+world, and the effects of the current action and/or previous actions may become 
+visible. In step 3 the model network sees the last input and the current output of 
+the controller at the same time. The model network tries to predict the new input 
+without seeing it. Again the relevant gradient information is computed. In step 4 
+the model network is updated in order to better predict the input (including pleasure 
+and pain) for the controller. The weights of the control network are updated in order 
+to minimize the cumulative differences between desired and actual activations of the 
+pain and pleasure units. 'Teacher forcing' (Williams and Zipser, 1989) is used in the 
+model network (although there is no teacher besides the environment). The partial 
+derivatives of the controller's inputs with respect to the controller's weights are 
+approximated by the partial derivatives of the corresponding predictions generated 
+by the model network. 
+Notation (the reader may find it convenient to compare with (Williams and Zipser, 
+1989)): C is the set of all non-input units of the control network, A is the set of 
+its output units, I is the set of its 'normal' input units, P is the set of its pain and 
+pleasure units, M is the set of all units of the model network, 0 is the set of its 
+output units, Op C 0 is the set of all units that predict pain or pleasure, WM is the 
+set of variables for the weights of the model network, We is the set of variables for 
+the weights of the control network, yk. is the variable for the updated activation 
+of the kth unit from M t3 C t91 t3 P, yko,a is the variable for the last value of 
+wij is the variable for the weight of the directed connection from unit j to unit i. 
+is the tfronecker-delta, which is 1 for i k and 0 otherwise,  is the variable 
+-- Pij   , 
+Oy,.  is the variable which 
+which gives the current (approcimated) value of oto , Pijo,a 
+gives the last value of pij,. Ilk 6 P then ck is k 's desired activation for all times, 
+if k  I t3 P, then kpred is the unit from 0 which predicts k. a� is the learning 
+rate for the control network, aM is the learning rate for the model network. 
+] It9 P ]=] 0 ], ] Op I=1P [. Each unit in I t3 Pt3 A has one forward connection to 
+each unit in Mt3C, each unit in M is connected to each other unit in M, each unit 
+in C is connected to each other unit in C. Each weight variable of a connection 
+leading to a unit in M is said to belong to WM, each weight variable of a connection 
+leading to a unit in C is said to belong to We. For each weight wij  WM there 
+are pied-values for all k  M, for each weight wij  We there are piti-values for all 
+k  M t3 C t3 1 t3 P. The parallel version of the algorithm works as follows: 
+Reinforcement Learning in Markovtan and Non-Markovian Environments 503 
+INITIALIZATION: 
+V Wij  WM J Wc: Wij random, � possible k: k - 0, k - 0 
+- Pt joia Pij, ' 
+Y k 6 MUC ' Ykod  O,y,  O. 
+V k  I O P ' Set Yod according to the cuent environment, y,  O. 
+UNTIL TERMINATION CRITERION IS REACHED: 
+1 
+1. 
+l+e- Z wijYJoid 
+, W : 
+k k 
+2. Ezecute all actions based on activations of units in A. Update the environment. 
+� i 6 I U P: Set Yi,, according to environment. 
+1 
+3. �i6M'yi,,,- 
+l+e- Zj 
+Y Wij  WM O WC, k  M:  
+ -- Wk IPijoa 
+V k 6 M : yoa y., V wij 6 Wc U WM �  
+ ' Pijoa  
+.  Wij  WM' Wij Wij + ffM elvP(Y.,. x 
+ -- Ykpredoa }Pt joia ' 
+x kpred 
+V wij  Wc: wij  wij  ac r(c - Y,}Pijoa ' 
+kpred 
+V k  I O P: Yoa  Y

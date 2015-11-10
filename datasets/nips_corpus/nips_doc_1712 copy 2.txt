@@ -1,0 +1,152 @@
+Approximate inference algorithms for two-layer 
+Bayesian networks 
+Andrew Y. Ng 
+Computer Science Division 
+UC Berkeley 
+Berkeley, CA 94720 
+ang @ cs. berkeley. edu 
+Michael I. Jordan 
+Computer Science Division and 
+Department of Statistics 
+UC Berkeley 
+Berkeley, CA 94720 
+jordan @ cs. berkeley. edu 
+Abstract 
+We present a class of approximate inference algorithms for graphical 
+models of the QMR-DT type. We give convergence rates for these al- 
+gorithms and for the Jaakkola and Jordan (1999) algorithm, and verify 
+these theoretical predictions empirically. We also present empirical re- 
+sults on the difficult QMR-DT network problem, obtaining performance 
+of the new algorithms roughly comparable to the Jaakkola and Jordan 
+algorithm. 
+1 Introduction 
+The graphical models formalism provides an appealing framework for the design and anal- 
+ysis of network-based learning and inference systems. The formalism endows graphs with 
+a joint probability distribution and interprets most queries of interest as marginal or con- 
+ditional probabilities under this joint. For a fixed model one is generally interested in the 
+conditional probability of an output given an input (for prediction), or an input conditional 
+on the output (for diagnosis or control). During learning the focus is usually on the like- 
+lihood (a marginal probability), on the conditional probability of unobserved nodes given 
+observed nodes (e.g., for an EM or gradient-based algorithm), or on the conditional proba- 
+bility of the parameters given the observed data (in a Bayesian setting). 
+In all of these cases the key computational operation is that of marginalization. There are 
+several methods available for computing marginal probabilities in graphical models, most 
+of which involve some form of message-passing on the graph. Exact methods, while viable 
+in many interesting cases (involving sparse graphs), are infeasible in the dense graphs that 
+we consider in the current paper. A number of approximation methods have evolved to treat 
+such cases; these include search-based methods, loopy propagation, stochastic sampling, 
+and variational methods. 
+Variational methods, the focus of the current paper, have been applied successfully to a 
+number of large-scale inference problems. In particular, Jaakkola and Jordan (1999) de- 
+veloped a variational inference method for the QMR-DT network, a benchmark network 
+involving over 4,000 nodes (see below). The variational method provided accurate ap- 
+proximation to posterior probabilities within a second of computer time. For this difficult 
+534 A. Y. Ng and M. I. dordan 
+inference problem exact methods are entirely infeasible (see below), loopy propagation 
+does not converge to correct posteriors (Murphy, Weiss, & Jordan, 1999), and stochastic 
+sampling methods are slow and unreliable (Jaakkola & Jordan, 1999). 
+A significant step forward in the understanding of variational inference was made by Kearns 
+and Saul (1998), who used large deviation techniques to analyze the convergence rate of 
+a simplified variational inference algorithm. Imposing conditions on the magnitude of the 
+weights in the network, they established a O(v/log N/N) rate of convergence for the error 
+of their algorithm, where N is the fan-in. 
+In the current paper we utilize techniques similar to those of Kearns and Saul to derive a 
+new set of variational inference algorithms with rates that are faster than O(v/log N/N). 
+Our techniques also allow us to analyze the convergence rate of the Jaakkola and Jordan 
+(1999) algorithm. We test these algorithms on an idealized problem and verify that our 
+analysis correctly predicts their rates of convergence. We then apply these algorithms to 
+the difficult the QMR-DT network problem. 
+2 Background 
+2.1 The QMR-DT network 
+The QMR-DT (Quick Medical Reference, Decision-Theoretic) network is a bipartite graph 
+with approximately 600 top-level nodes di representing diseases and approximately 4000 
+lower-level nodes f5 representing findings (observed symptoms). All nodes are binary- 
+valued. Each disease is given a prior probability P(di -- 1), obtained from archival data, 
+and each finding is parameterized as a noisy-OR model: 
+where ri is the set of parent diseases for finding fi, and where the parameters 0ij are 
+obtained from assessments by medical experts (see Shwe, et al., 1991). 
+Letting zi = Oio + YjE Oid, we have the following expression for the likelihoodl: 
+i----1 i=1 jl 
+(1) 
+where the sum is a sum across the approximately 26�� configurations of the diseases. Note 
+that the second product, a product over the negative findings, factorizes across the diseases 
+ds; these factors can be absorbed into the priors P(d) and have no significant effect on the 
+complexity of inference. It is the positive findings which couple the diseases and prevent 
+the sum from being distributed across the product. 
+Generic exact algorithms such as the junction tree algorithm scale exponentially in the 
+size of the maximal clique in a moralized, triangulated graph. Jaakkola and Jordan (1999) 
+found cliques of more than 150 nodes in QMR-DT; this rules out the junction tree algo- 
+rithm. Heckerman (1989) discovered a factorization specific to QMR-DT that reduces the 
+complexity substantially; however the resulting algorithm still scales exponentially in the 
+number of positive findings and is only feasible for a small subset of the benchmark cases. 
+In this expression, the factors P(dj) are the probabilities associated with the (parent-less) disease 
+nodes, the factors (1 - e -z ) are the probabilities of the (child) finding nodes that are observed to be 
+in their positive state, and the factors e- z are the probabilities of the negative findings. The resulting 
+product is the joint probability P(f, d), which is marginalized to obtain the likelihood P(f). 
+Approximate Inference Algorithms for Two-Layer Bayesian Networks 535 
+2.2 The Jaakkola and Jordan (J J) algorithm 
+Jaakkola and Jordan (1999) proposed a variational algorithm for approximate inference in 
+the QMR-DT setting. Briefly, their approach is to make use of the following variational 
+inequality: 
+I - e -zl <_ e 'izi--ci , 
+where ci is a deterministic function of )q. This inequality holds for arbitrary values of 
+the free variational parameter Ai. Substituting these variational upper bounds for the 
+probabilities of positive findings in Eq. (1), one obtains a factorizable upper bound on the 
+likelihood. Because of the factorizability, the sum across diseases can be distributed across 
+the joint probability, yielding a product of sums rather than a sum of products. One then 
+minimizes the resulting expression with respect to the variational parameters to obtain the 
+tightest possible variational bound. 
+2.3 The Kearns and Saul (KS) algorithm 
+A simplified variational algorithm was proposed by Kearns and Saul (1998), whose main 
+goal was the theoretical analysis of the rates of convergence for variational algorithms. In 
+their approach, the local conditional probability for the finding fi is approximated by its 
+value at a point a small distance i above or below (depending on whether upper or lower 
+bounds are desired) the mean input E[zi]. This yields a variational algorithm in which the 
+values i are the variational parameters to be optimized. Under the assumption that the 
+weights Oij are bounded in magnitude by r/N, where r is a constant and N is the number 
+of parent (disease) nodes, Kearns and Saul showed that the error in likelihood for their 
+algorithm converges at a rate of O(x/log N/N). 
+3 Algorithms based on local expansions 
+Inspired by Kearns and Saul (1998), we describe the design of approximation algorithms 
+for QMR-DT obtained by expansions around the mean input to the finding nodes. Rather 
+than using point approximations as in the Kearns-Saul (KS) algorithm, we make use of 
+Taylor expansions. (See also Plefka (1982), and Barber and van de Laar (1999) for other 
+perturbational techniques.) 
+Consider a generalized QMR-DT architecture in which the noisy-OR model is replaced by a 
+general function b(z): 11 --> [0, 1] having uniformly bounded derivatives, i.e., Ib(i) (z)l < 
+B i. Define F(z1,... ,ZK) -- H/K=i (�(zi)) fl H/K=i (1- )(zi)) 1-fl so that the likelihood 
+can be written as 
+P(f) = E{z,}[F(zl,...,ZK)]. (2) 
+N 
+Also define/i = E[zi] = Oio + Ej=i OoP(dJ = 1). 
+A simple mean-field-like approximation can be obtained by evaluating F at the mean values 
+/i: 
+P(f)  F(i,... ,K). (3) 
+We refer to this approximation as MF(0). 
+Expanding the function F to second order, and defining ci -- zi - Ii, we have: 
+K I K K 
+P(f) = E{,,} F()+ E Fil()cixq- .1 E E Fili2()ili2 q- 
+t. i:1 i1=1 i=1 
+1 K K K __> 
+- E E E Zili2i$( *)ili2i$ (4) 
+i1=1 i2=1 ia=l 
+536 A. Y. Ng and M. I. dordan 
+where the subscripts on F represent derivatives. Dropping the remainder term and bringing 
+the expectation inside, we have the MF(2) approximation: 
+1 K K 
+P(f)  F() +    Fili2()E[ili2] 
+i1=1 i2-1 
+More generally, we obtain a MF(i) approximation by carrying out a Taylor expansion to 
+i-th order. 
+3.1 Analysis 
+In this section, we give two theorems establishing convergence rates for the MF(i) family 
+of algorithms and for the Jaakkola and Jordan algorithm. As in Kearns and Saul (1998), 
+our results are obtained under the assumption that the weights are of magnitude at most 
+O(1/N) (recall that N is the number of disease nodes). For large N, this assumption of 
+weak interactions implies that each zi will be close to its mean value with high probability 
+(by the law of large numbers), and thereby gives justification to the use of local expansions 
+for the probabilities of the findings. 
+Due to space constraints, the detailed proofs of the theorems given in this section are de- 
+ferred to the long version of this paper, and we will instead only sketch the intuitions for 
+the proofs here. 
+Theorem 1 Let K (the number offin

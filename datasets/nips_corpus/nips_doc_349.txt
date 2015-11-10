@@ -1,0 +1,162 @@
+Basis-Function Trees as a Generalization of Local 
+Variable Selection Methods for Function 
+Approximation 
+Terence D. Sanger 
+Dept. Electrical Engineering and Computer Science 
+Massachusetts Institute of Technology, E25-534 
+Cambridge, MA 02139 
+Abstract 
+Local variable selection has proven to be a powerful technique for ap- 
+proximating functions in high-dimensional spaces. It is used in several 
+statistical methods, including CART, ID3, C4, MARS, and others (see the 
+bibliography for references to these algorithms). In this paper I present 
+a tree-structured network which is a generalization of these techniques. 
+The network provides a framework for understanding the behavior of such 
+algorithms and for modifying them to suit particular applications. 
+I INTRODUCTION 
+Function approximation on high-dimensional spaces is often thwarted by a lack of 
+sufficient data to adequately fill the space, or lack of sufficient computational 
+resources. The technique of local variable selection provides a partial solution to 
+these problems by attempting to approximate functions locally using fewer than the 
+complete set of input dimensions. 
+Several algorithms currently exist which take advantage of local variable selection, 
+including AID (Morgan and Sonquist, 1963, Sonquist e al., 1971), k-d Trees (Bent- 
+ley, 1975), ID3 (Quinlan, 1983, Schlimmer and Fisher, 1986, Sun et al., 1988), 
+CART (Breiman et al., 1984), C4 (Quinlan, 1987), and MARS (Friedman, 1988), 
+as well as closely related algorithms such as GMDH (Ivakhnenko, 1971, Ikeda et 
+al., 1976, Barron e al., 1984) and SONN (Tenorio and Lee, 1989). Most of these 
+algorithms use tree structures to represent the sequential incorporation of increas- 
+ing numbers of input variables. The differences between these techniques lie in the 
+representation ability of the networks they generate, and the methods used to grow 
+and prune the trees. In the following I will show why trees are a natural structure 
+700 
+Basis-Function Trees as a Generalization of Local Variable Selection Methods 701 
+for these techniques, and how all these algorithms can be seen as special cases of a 
+general method I call Basis Function Trees. I will also propose a new algorithm 
+called an LMS tree which has a simple and fast network implementation. 
+2 SEPARABLE BASIS FUNCTIONS 
+Consider approximating a scalar function f(x) of d-dimensional input x by 
+L 
+f(xt,... ,Xd) -.  CiO'i(X, ... ,Xd) (1) 
+i--1 
+where the ri's are a finite set of nonlinear basis functions, and the ci's are constant 
+coefficients. If the r i's are separable functions we can assume without loss of gener- 
+ality that there exists a finite set of scalar-input functions {4n}nN=t (which includes 
+the constant function), such that we can write 
+= (2) 
+where xp is the p'th component of x, q,. (xp) is a scalar function of scalar input xp, 
+and r is an integer from 1 to N specifying which function b is chosen for the p'th 
+dimension of the i'th basis function ri. 
+If there are d input dimensions and N possible scalar functions bn, then there are 
+N a possible basis functions ri. If d is large, then there will be a prohibitively 
+large number of basis functions and coefficients to compute. This is one form of 
+Bellman's curse of dimensionality (Bellman, 1961). The purpose of local variable 
+selection methods is to find a small basis which uses products of fewer than d of 
+the bn's. If the bn's are local functions, then this will select different subsets of the 
+input variables for different ranges of their values. Most of these methods work by 
+incrementally increasing both the number and order of the separable basis functions 
+until the approximation error is below some threshold. 
+3 TREE STRUCTURES 
+Polynomials have a natural representation as a tree structure. In this representation, 
+the output of a subtree of a node determines the weight from that node to its parent. 
+For example, in figure 1, the subtree computes its output by summing the weights 
+a and b multiplied by the inputs x and y, and the result ax + by becomes the weight 
+from the input x at the first layer. The depth of the tree gives the order of the 
+polynomial, and a leaf at a particular depth p represents a monomial of order p 
+which can be found by taking products of all inputs on the path back to the root. 
+Now, if we expand equation 1 to get 
+L 
+f(x,,...,Xd) '  Ci,.l(x,)...,.j(Xd) (3) 
+i=1 
+we see that the approximation is a polynomial in the terms r; (xp). So the approx- 
+702 Sanger 
+x(ax+by) +cy+dz 
++by 
+x y 
+Figure 1: Tree representation of the polynomial ax 2 + bxy + cy + dz. 
+imation on separable basis functions can be described as a tree where the inputs 
+are the one-dimensional functions qn(xp), as in figure 2. 
+Most local variable selection techniques can be described in this manner. The 
+differences in representation abilities of the different networks are determined by 
+the choice of the one-dimensional basis functions bn. Classification algorithms such 
+as CART, AID, C4, or ID3 use step-functions so that the resulting approximation 
+is piecewise constant. MARS uses a cubic spline basis so that the result is piecewise 
+cubic. 
+I propose that these algorithms can be extended by considering many alternate 
+bases. For example, for bandlimited functions the Fourier basis may be useful, for 
+which qn(xp) = sin(nxp) for n odd, and cos(nxp) for n even. Alternatively, local 
+Gausstans may be used to approximate a radial basis function representation. Or 
+the bits of a binary input could be used to perform Boolean operations. I call the 
+class of all such algorithms Basis Function Trees to emphasize the idea that the 
+basis functions are arbitrary. 
+It is important to realize that Basis Function Trees are fundamentally different 
+from the usual structure of multi-layer neural networks, in which the result of a 
+computation at one layer provides the data input to the next layer. In these tree 
+algorithms, the result of a computation at one layer determines the weights at the 
+next layer. Lower levels control the behavior of the processing at higher levels, but 
+the input data never traverses more than a single level. 
+4 WEIGHT LEARNING AND TREE GROWING 
+In addition to the choice of basis functions, one also has a choice of learning algo- 
+rithm. Learning determines both the tree structure and the weights. 
+There are many ways to adjust the weights. Since the entire network is equivalent 
+to a single-layer network described by (1), The mean-squared output error can 
+be minimized either directly using pseudo-inverse techniques, or iteratively using 
+Basis-Function Trees as a Generalization of Local Variable Selection Methods 703 
+output 
+x 
+Figure 2: Tree representation of an approximation over separable basis functions. 
+recursive least squares (Ljung and Soderstrom, 1983) or the Widrow-Hoff LMS 
+algorithm (Widrow and Hoff, 1960). Iterative techniques are often less robust and 
+can take longer to converge than direct techniques, but they do not require storage 
+of the entire data set and can adapt to nonstationary input distributions. 
+Since the efficiency of local variable selection methods will depend on the size of 
+the tree, good tree growing and pruning algorithms are essential for performance. 
+Tree-growing algorithms are often called splitting rules, and the choice of rule 
+should depend on the data set as well as the type of basis functions. AID and 
+the Regression Tree method in CART split below the leaf with maximum mean- 
+squared prediction error. MARS tests all possible splits by forming the new trees 
+and estimating a generalized cross-validation criterion which penalizes both for 
+output error and for increasing tree size. This method is likely to be more noise- 
+tolerant, but it may also be significantly slower since the weights must be re-trained 
+for every subtree which is tested. Most methods include a tree-pruning stage which 
+attempts to reduce the size of the final tree. 
+5 LMS TREES 
+I now propose a new member of the class of local variable selection algorithms which 
+I call an LMS Tree (Sanger, 1991, Sanger, 1990a, Sanger, 1990b). LMS Trees can 
+use arbitrary basis functions, but they are characterized by the use of a recursive 
+algorithm to learn the weights as well as to grow new subtrees. 
+The LMS tree will be built using one dimension of the input at a time. The ap- 
+proximation to f(xt,..., xa) using only the first dimension of the input is given 
+by 
+N 
+f(x, ...,Xd)  J;(x) =  a,,(x). (4) 
+704 Sanger 
+I use the Widrow-Hoff LMS learning rule (Widrow and Hoff, 1960) to minimize the 
+mean-squared approximation error based on only the first dimension: 
+Aon -' rl(f(xz , ...,xa)- f(xz))qbn(xz) 
+(5) 
+where /is a rate term, and Ac,, is the change in the weight c, made in response 
+to the current value of xl. After convergence, j(xl) is the best approximation to 
+f based on linear combinations of 5t(xt),..., qN(Xt), and the expected value of 
+the weight change E[Ac,] will be zero. However, there may still be considerable 
+variance of the weight changes, so that E[(Ac,) 2]  0. The weight change variance 
+indicates that there is pressure to increase or decrease the weights for certain 
+input values, and it is related to the output error by 
+N 
+2] 
+N ) E[(f- f)] > max 
+min, --n= n(xl) - -- n 
+(6) 
+(Sanger, 1990b). So the output error will be zero if and only if E[(Acn) ] = 0 for 
+all n. 
+We can decrease the weight change variance by using another network based on 
+x2 to add a variable term to the weight c% with largest variance, so that the new 
+network is given by 
+( N ) 
+nr! m= 1 
+(7) 
+Aa becomes the error term used to train the second-level weights a,m, so that 
+Aar,m - Aar4m(X). In general, the weight change at any layer in the tree is 
+the error term for the layer below, so that 
+= (8) 
+where the root of the recursion is AaO = /(f(x, ... ,xa)- j), and cO is a constan

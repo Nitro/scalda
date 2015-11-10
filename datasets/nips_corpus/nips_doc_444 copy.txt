@@ -1,0 +1,146 @@
+Merging Constrained Optimisation with 
+Deterministic Annealing to Solve 
+Combinatorially Hard Problems 
+Paul Stolorz* 
+Santa Fe Institute 
+1660 Old Pecos Trail, Suite A 
+Santa Fe, NM 87501 
+ABSTRACT 
+Several parallel analogue algorithms, based upon mean field theory (MFT) 
+approximations to an underlying statistical mechanics formulation, and re- 
+quiring an externally prescribed annealing schedule, now exist for finding 
+approximate solutions to difficult combinatorial optimisation problems. 
+They have been applied to the Travelling Salesman Problem (TSP), as 
+well as to various issues in computational vision and cluster analysis. I 
+show here that any given MFT algorithm can be combined in a natural 
+way with notions from the areas of constrained optimisation and adaptive 
+simulated annealing to yield a single homogenous and efficient parallel re- 
+laxation technique, for which an externally prescribed annealing schedule 
+is no longer required. The results of numerical simulations on 50-city and 
+100-city TSP problems are presented, which show that the ensuing algo- 
+rithms are typically an order of magnitude faster than the MFT algorithms 
+alone, and which also show, on occasion, superior solutions as well. 
+I INTRODUCTION 
+Several promising parallel analogue algorithms, which can be loosely described by 
+the term deterministic annealing, or mean field theory (MFT) annealing, have 
+*also at Theoretical Division and Center for Nonlinear Studies, MSB213, Los Alamos 
+National Laboratory, Los Alamos, NM 87545. 
+1025 
+1026 Stolorz 
+recently been proposed as heuristics for tackling difficult combinatorial optimisation 
+problems [1, 2, 3, 4, 5, 6, 7]. However, the annealing schedules must be imposed 
+externally in a somewhat ad hoc manner in these procedures (although they can be 
+made adaptive to a limited degree [8]). As a result, a number of authors [9, 10, 11] 
+have considered the alternative analogue approach of Lagrangian relaxation, a form 
+of constrained optimisation due originally to Arrow [12], as a different means of 
+tackling these problems. The various alternatives require the introduction of a new 
+set of variables, the Lagrange multipliers. Unfortunately, these usually lead in turn 
+to either the inclusion of expensive penalty terms, or the consideration of restricted 
+classes of problem constraints. The penalty terms also tend to introduce unwanted 
+local minima in the objective function, and they must be included even when the 
+algorithms are exact [13, 10]. These drawbacks prevent their easy application to 
+large-scale combinatorial problems, containing 100 or more variables. 
+In this paper I show that the technical features of analogue mean field approxi- 
+mations can be merged with both Lagrangian relaxation methods, and with the 
+broad philosophy of adaptive annealing without, importantly, requiring the large 
+computational resources that typically accompany the Lagrangian methods. The 
+result is a systematic procedure for crafting from any given MFT algorithm a sin- 
+gle parallel homogeneous relaxation technique which needs no externally prescribed 
+annealing schedule. In this way the computational power of the analogue heuris- 
+tics is greatly enhanced. In particular, the Lagrangian framework can be used to 
+construct an efficient adaptation of the elastic net algorithm [2], which is perhaps 
+the most promising of the analogue heuristics. The results of numerical experi- 
+ments are presented which display both increased computational efficiency, and on 
+occasion, better solutions (avoidance of some local minima) over deterministic an- 
+nealing. Also, the qualitative mechanism at the root of this behaviour is described. 
+Finally, I note that the apparatus can be generalised to a procedure that uses several 
+multipliers, in a manner that roughly parallels the notion of different temperatures 
+at different physical locations in the simulated annealing heuristic. 
+2 DETERMINISTIC ANNEALING 
+The deterministic annealing procedures consist of tracking the local minimum of an 
+objective function of the form 
+= 
+(1) 
+where _x represents the analogue variables used to describe the particular problem at 
+hand, and T _> 0 (initially chosen large) is an adjustable annealing, or temperature, 
+parameter. As T is lowered, the objective function undergoes a qualitative change 
+from a convex to a distinctly non-convex function. Provided the annealing shedule 
+is slow enough, however, it is hoped that the local minimum near T = 0 is a close 
+approximation to the global solution of the problem. 
+The function S(_x) represents an analogue approximation [5, 4, 7] to the entropy of 
+an underlying discrete statistical physics system, while F(_x) approximates its free 
+energy. The underlying discrete system forms the basis of the simulated annealing 
+heuristic [14]. Although a general and powerful technique, this heuristic is an inher- 
+ently stochastic procedure which must consider many individual discrete tours at 
+Merging Constrained Optimisation with Deterministic Annealing 1027 
+each and every temperature T. The deterministic annealing approximations have 
+the advantage of being deterministic, so that an approximate solution at a given 
+temperature can be found with much less computational effort. In both cases, 
+however, the complexity of the problem under consideration shows up in the need 
+to determine with great care an annealing schedule for lowering the temperature 
+parameter. 
+The primary contribution of this paper consists in pursuing the relationship between 
+deterministic annealing and statistical physics one step further, by making explicit 
+use of the fact that due to the statistical physics embedding of the deterministic 
+annealing procedures, 
+S(,,) - O as T - 0 (2) 
+where _x,i, is the local minimum obtained for the parameter value T. This de- 
+ceptively simple observation allows the consideration of the somewhat different ap- 
+proach of Lagrange multiplier methods to automatically determine a dynamics for 
+T in the analogue heuristics, using as a constraint the vanishing of the entropy 
+function at zero temperature. This particular fact has not been explicitly used in 
+any previous optimisation procedures based upon Lagrange multipliers, although it 
+is implicit in the work of [9]. Most authors have focussed instead on the syntactic 
+constraints contained in the function U(E) when incorporating Lagrange multipli- 
+ers. As a result the issue of eliminating an external annealing schedule has not been 
+directly confronted. 
+3 LAGRANGE MULTIPLIERS 
+Multiplier methods seek the critical points of a Lagrangian function 
+F(_, ) = V(_)- S(_) (a) 
+where the notation of (1) has been retained, in accordance with the philosophy 
+discussed above. The only difference is that the parameter T has been replaced by 
+a variable , (the Lagrange multiplier), which is to be treated on the same basis 
+as the variables __x. By definition, the critical points of F(_x, ,) obey the so-called 
+Kuhn-Tucker conditions 
+V�F(x_,A) = 0 = V�U(_.x) - AV=$(_.x) (4) 
+= 0 = 
+Thus, at any critical point of this function, the constraint S(__x) = 0 is satisfied. This 
+corresponds to a vanishing entropy estimate in (1). Hopefully, in addition, U(_x) is 
+minimised, subject to the constraint. 
+The difficulty with this approach when used in isolation is that finding the critical 
+points of F(_x, ,) entails, in general, the minimisation of a transformed uncon- 
+strained function, whose set of local minima contains the critical points of F as 
+a subset. This transformed function is required in order to ensure an algorithm 
+which is convergent, because the critical points of F(_x,,) are saddle points, not 
+local minima. One well-known way to do this is to add a term $2(_x) to (3), giving 
+an augmented Lagrangian with the same fixed points as (3), but hopefully with 
+better convergence properties. Unfortunately, the transformed function is invari- 
+ably more complicated than F(_.x,,), typically containing extra quadratic penalty 
+1028 $tolorz 
+terms (as in the above case), which tend to convert harmless saddle points into 
+unwanted local minima. It also leads to greater computational overhead, usually 
+in the form of either second derivatives of the functions U(_x) and S(_x), or of ma- 
+trix inversions [13, 10] (although see [11] for an approach which minimises this 
+overhead). For large-scale combinatorial problems such as the TSP these disadvan- 
+tages become prohibitive. In addition, the entropic constraint functions occurring 
+in deterministic annealing tend to be quite complicated nonlinear functions of the 
+variables involved, often with peculiar behaviour near the constraint condition. In 
+these cases (the Hopfield/Tank method is an example) a term quadratic in the en- 
+tropy cannot simply be added to (3) in a straightforward way to produce a suitable 
+augmented Lagrangian (of course, such a procedure is possible with several of the 
+terms in the internal energy U(_x)). 
+4 COMBINING BOTH METHODS 
+The best features of each of the two approaches outlined above may be retained by 
+using the following modification of the original first-order Arrow technique: 
+, = -V.P(_,) = -V.V(_) + V.S(_) (5) 
+;x = +v#(_,A) = -s(_) + 
+where P(__x, A) is a slightly modified free energy function given by 
+!(_x, A) = U(_x)- AS(x) + clnA (6) 
+In these expressions, c > 0 is a constant, chosen small on the scale of the other pa- 
+rameters, and characterises the sole, inexpensive, penalty requirement. It is needed 
+purely in order to ensure that A remain positive. In fact, in the numerical experi- 
+ment that I will present, this penalty term for A was not even used - the algorithm 
+was simply terminated at a suitably small value of A. 
+The reason for insisting upon A > 0, in contrast to most first-order relaxation meth- 
+ods, is that it ensures that the free energy objective function is bounded below with 
+respect to the _x v

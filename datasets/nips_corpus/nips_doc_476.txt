@@ -1,0 +1,149 @@
+Green's Function Method for Fast On-line Learning 
+Algorithm of Recurrent Neural Networks 
+Guo-Zheng Sun, Hsing-Hen Chen and Yee-Chun Lee 
+Institute for Advanced Computer Studies 
+Laboratory for Plasma Research, 
+University of Maryland 
+College Park, MD 20742 
+Abstract 
+The two well known learning algorithms of recurrent neural networks are 
+the back-propagation (Rumelhart & eL al., Werbos) and the forward propa- 
+gation (Williams and Zipset). The main drawback of back-propagation is its 
+off-line backward path in time for error cumulation. This violates the on-line 
+requirement in many practical applications. Although the forward propaga- 
+tion algorithm can be used in an on-line manner, the annoying drawback is 
+the heavy computation load required to update the high dimensional sensitiv- 
+ity matrix (O(N) operations for each time step). Therefore, to develop a fast 
+forward algorithm is a challenging task. In this paper wl proposed a forward 
+learning algorithm which is one order faster (only O(N �) operations for each 
+time step) than the sensitivity matrix algorithm. The basic idea is that instead 
+of integrating the high dimensional sensitivity dynamic equation we solve 
+forward in time for its Green's function to avoid the redundant computations, 
+and then update the weights whenever the error is to be corrected. 
+A Numerical example for classifying state trajectories using a recurrent 
+network is presented. It substantiated the faster speed of the proposed algo- 
+rithm than the Williams and Zipser's algorithm. 
+I. Introduction. 
+In order to deal with sequential signals, recurrent neural networks are often put forward as a 
+useful model. A particularly pressing issue concerning recurrent networks is the search for an 
+efficient on-line training algorithm. Error back-propagation  (Rumeihart, Hinton, and 
+Williams[l]) was originally proposed to handle feedforward networks. This method can be ap- 
+plied to train recurrent networks if one unfolds the time sequence of mappings into a multilayer 
+feed-forward net, each layer with identical weights. Due to the nature of backward path, it is 
+basically an off-line method. Pineda [2] generalized it to recurrent networks with hidden neu- 
+rons. However, he is mostly interested in time-independent fixed point type of behaviors. Pearl- 
+mutter [3] proposed a scheme to learn temporal txajectories which involves equations to be 
+solved backward in time. It is essentially a generalized version of error back-propagation to the 
+problem of learning a target state txajectory. The viable on-line method to date is the RTRL 
+(Real Time Recurrent Learning) algorithm (Williams and Zipsex [4]), which propagates a sen- 
+333 
+334 Sun, Chen, and Lee 
+sitivity matrix forward in time. The main drawback of this algorithm is its high cost of compu- 
+tation. It needs O(N 4) number of operations per time step. Therefore, a faster (less than O(N 4) 
+operations) on-line algorithm appears to be desirable. 
+Toomarian and Barhen [5] proposed an O(N 2) on-line algorithm. They derived the same 
+equations as Pearlmutter's back-propagation using adjoint-operator approach. They then tried 
+to convert the backward path into a forward path by adding a Delta function to its source term. 
+But this is not correct. The problem is not merely because it precludes straightforward numer- 
+ical implementation as they acknowledged later [6]. Even in theory, the result is not correct. 
+The mistake is in their using a not well defined equity of the Delta function integration. Briefly 
+I tl � (t- tf)f(t) dt = f(tf) is not right if the function fit) is discontin- 
+speaking, the equity to 
+uous at t = t? The value of the left-side integral depends on the distribution of function fit) and 
+therefore is not uniquely defined. If we deal with the discontinuity carefully by splitting time 
+interval from t o to {finto two segments: t o to e and tfe to 9and let � --) 0, we will find out 
+that adding a Delta function to the source term does not affect the basic property of the adjoint 
+equation. Namely, it still has to be solved backward in time. 
+Recently, Toomarian and Barhen [6] modified their adjoint-operator approach and proposed 
+an alternative O(N ') on-line training algorithm. Although, in nature, their result is very similar 
+to what we presented in this paper, it will be seen that our approach is more straightforward and 
+can be easily implemented numerically. 
+Schmidhuber[7] proposed an O(N ') algorithm which is a combination of back propagation 
+(within each data block of size N) and forward propagation (between blocks). It is therefore not 
+truly an on-line algorithm. 
+Sun, Chen and Lee [8] studied this problem, using a more general approach - variational ap- 
+proach, in which a constrained optimization problem with Lagrangian multipliers was consid- 
+ered. The dynamic equation of the Lagrangian multiplier was derived, which is exactly the 
+same as adjoint equation[5]. By taking advantage of linearity of this equation an O(N ') on-line 
+algorithm was derived. But, the numerical implementation of the algorithm, especially the nu- 
+merical instabilities are not addressed in the paper. 
+In this paper we will present a new approach to this problem - the Green's function method. 
+The advantages of the this method are the simple mathematical formulation and easy numerical 
+implementation. One numerical example of trajectory classification is presented to substantiate 
+the faster speed of the proposed algorithm. The numerical results are benchmarked with Wil- 
+liams and Zipser's algorithm. 
+II. Green's Function Approach. 
+(a) Definition of the Problem 
+Consider a fully recurrent network with neural activity represented by an N-dimensional vec- 
+tor x(t). The dynamic equations can be written in general as a set of first order differential equa- 
+tions: 
+.(t) = F(x(t),w,I(t)) (1) 
+where w is a matrix representing the set of weights and all other adjustable parameters, I(t) is a 
+vector representing the neuron units clamped by external input signals at time t. For a simple 
+network connected by first order weights the nonlinear function F may look like 
+F(x(t),w,I(t)) = -x(t) +g(w.x) +I(t) (2) 
+where the scaler function g(u) could be, for instance, the Sigmoid function g(u) = 1/(l+e' u). 
+Suppose that part of the state neurons {x i I i  M} are measurable and part of neurons {x i I i  
+Green's Function Method for Fast On-line Learning Algorithm of Recurrent Neural Networks 335 
+H} are hidden. For the measurable units we may have desired output  (t). In order to train 
+the network, an objective functional (or an error measure functional) is often given to be 
+tz 
+E(x,) = Ie(x(t),(t) )dt (3) 
+to 
+where functional E depends on weights w implicitly through the measurable neurons {x i I i  
+M}. A typical error function is 
+2 (4) 
+e(x(t),2(t)) = (x(t)-2(t)) 
+The gradient descent learning is to modify the weights according to 
+E_ ;?x i}x 
+A wo w ' a-' dt. (5) 
+t o 
+In order o evaluate the integral in Eq. (5) one needs to know both e/rw and x/rw. The 
+function 
+first term can be easily obtained by taking derivative of the given error 
+e (x (t), J (t)). For the second term one needs to solve the differential equation 
+(6) 
+which is easily derived by taking derivative of Eq.(1) with respect to w. The well known for- 
+ward algorithm of recurrent networks [4] is to solve Equation (6) forward in time and make the 
+weight correction at the end (t = ) of the input sequence. (This algorithm was developed inde- 
+pendently by several researchers, but due to the page limitation we could not refer all related 
+papers and now simply call it Williams and Zipset' s algorithm) The on-line learning is to make 
+weight correction whenever an error Is to be corrected during the input sequence 
+Aw(t) = -rl (ff---ex � -  (7) 
+The proof of convergence of on-line learning algorithm will be addressed elsewhere. 
+The main drawback of this forward algorithm is that it requires 0(3/4 ) operations per time 
+step to update the matrix )x/Ow. Our goal of the Green's function approach is to find an on- 
+line algorithm which requires less computation load. 
+(b). Green's Function Solution 
+First let us analyze the computational complexity when integrating Eq. (6) directly. Rewrite 
+Eq. (6) as 
+i)x F 
+�. -- - (8) 
+i)w 
+where the linear operator L is defined as L - d F 
+dt x 
+Two types of redundancy will be seen from Eq. (8). First, the operator L does not depend on w 
+explicitly, which means that what we did in solving for )x/Ow is to repeatedly solve the iden- 
+tical differential equation for each components ofw. This is redundant. It is especially wasteful 
+when higher order connection weights are used. The second redundancy is in the special form 
+of F/tOw for neural computations where the same activity function (say, Sigmoid function) is 
+336 Sun, Chen, and Lee 
+used for every neuron, so that 
+F 
+- g' (wkt.xt)8i x i (9) 
+where �/is the Kronecker delta function. It is seen from Eq. (9) that among N 3 components of 
+this third order tensor most of them, N2(N- 1), are zero (when k  i) and need not to be computed 
+repeatedly. In the original forward learning scheme, we did not pay attention to this redundan- 
+cy. 
+Our Green' s function approach is able to avoid the redundancy by solving for the low dimen- 
+sional Green's function. And then we construct the solution of Eq. (8) by the dot product of F/ 
+)w with the Green's function, which can in turn be reduced to a scaler product due to Eq. (9). 
+The Green' s function of the operator L is defined as a dual time tensor function G(t-x) which 
+satisfies the following equation 
+d F 
+G(t-x)-i} x .G(t-x) = �(t-x) (10) 
+It is well known that, if the solution of Eq. (10) is known, the solution of the original equation 
+Eq. (6) (or (8)) can be constructed using the source term }F/tOw through the integral 
+(t) = I (GO-x) .-(x))dx (11) 
+t o 
+To find the Green's function solut

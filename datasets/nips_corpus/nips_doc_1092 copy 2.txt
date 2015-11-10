@@ -1,0 +1,135 @@
+Using the Future to Sort Out the 
+Present: Rankprop and Multitask 
+Learning for Medical Risk Evaluation 
+Rich Caruana Shumeet Baluja and Tom Mitchell 
+School of Computer Science, Carnegie Mellon University, Pittsburgh, PA 15213 
+(caruana, baluja, mitchell)@cs.cmu.edu 
+Abstract 
+A patient visits the doctor; the doctor reviews the patient's history, 
+asks questions, makes basic measurements (blood pressure, ...), and 
+prescribes tests or treatment. The prescribed course of action is 
+based on an assessment of patient risk--patients at higher risk are 
+given more and faster attention. It is also sequential--it is too 
+expensive to immediately order all tests which might later be of 
+value. This paper presents two methods that together improve 
+the accuracy of backprop nets on a pneumoni'a risk assessment 
+problem by 10-50%. Rankprop improves on backpropagation with 
+sum of squares error in ranking patients by risk. Multitask learning 
+takes advantage of future lab tests available in the training set, but 
+not available in practice when predictions must be made. Both 
+methods are broadly applicable. 
+I Background 
+There are 3,000,000 cases of pneumonia each year in the U.S., 900,000 of which 
+are admitted to the hospital for treatment and testing. Most pneumonia patients 
+recover given appropriate treatment, and many can be treated effectively without 
+hospitalization. Nonetheless, pneumonia is serious: 100,000 of those hospitalized 
+for pneumonia die from it, and many more are at elevated risk if not hospitalized. 
+1.1 The Problem 
+A primary goal of medical decision making is to accurately, swiftly, and econom- 
+ically identify patients at high risk from diseases like pneumonia so they may be 
+hospitalized to receive aggressive testing and treatment; patients at low risk may be 
+more comfortably, safely, and economically treated at home. Note that the diagno- 
+960 R. CARUANA, S. BALUJA, T. MITCHELL 
+sis of pneumonia has already been made; the goal is not to determine the illness, but 
+how much risk the illness poses to the patient. Some of the most Useful tests for do- 
+ing this require hospitalization and will be available only if preliminary assessment 
+indicates it is warranted. Low risk patients can safely be treated as outpatients and 
+can often be identified using measurements made prior to admission. 
+The problem considered in this paper is to learn to rank pneumonia patients ac- 
+cording to their probability of mortality. We present two learning methods that 
+combined outperform standard backpropagation by 10-50% in identifying groups 
+of patients with least mortality risk. These methods are applicable to domains 
+where the goal is to rank instances according to a probability function and where 
+useful attributes do not become available until after the prediction must be made. 
+In addition to medical decision making, this class includes problems as diverse as 
+investment analysis in financial markets and autonomous vehicle navigation. 
+1.2 The Pneumonia Database 
+The Medis Pneumonia Database [6] contains 14,199 pneumonia cases collected from 
+78 hospitals in 1989. Each patient in the database was diagnosed with pneumonia 
+and hospitalized. 65 measurements are available for most patients. These include 
+30 basic measurements typically acquired prior to hospitalization such as age, sex, 
+and pulse, and 35 lab results such as blood counts or gases not available until after 
+hospitalization. The database indicates how long each patient was hospitalized and 
+whether the patient lived or died. 1,542 (10.9%) of the patients died. 
+1.3 The Performance Criterion 
+The Medis database indicates which patients lived or died. The most useful decision 
+aid for this problem would predict which patients will live or die. But this is too 
+difficult. In practice, the best that can be achieved is to estimate a probability 
+of death (POD) from the observed symptoms. In fact, it is sufficient to learn to 
+rank patients by POD so lower risk patients can be discriminated from higher risk 
+patients. The patients at least risk may then be considered for outpatient care. 
+The performance criterion used by others working with the Medis database [4] is the 
+accuracy with which one can select a prespecified fraction of the patient population 
+that do not die. For example, given a population of 10,000 patients, find the 20% 
+of this population at least risk. To do this we learn a risk model and a threshold 
+for this model that allows 20% of the population (2000 patients) to fall below it. If 
+30 of the 2000 patients below this threshold died, the error rate is 30/2000 = 0.015. 
+We say that the error rate for FOP 0.20 is 0.015 for this model (FOP stands for 
+fraction of population). In this paper we consider FOPs 0.1, 0.2, 0.3, 0.4, and 0.5. 
+Our goal is to learn models and model thresholds, such that the error rate at each 
+FOP is minimized. Models with acceptably low error rates might then be employed 
+to help determine which patients do not require hospitalization. 
+2 Methodology 
+The Medis database is unusually large, with over 14K training patterns. Because we 
+are interested in developing methods that will be effective in other domains where 
+databases of this size are not available, we perform our experiments using small 
+training sets randomly drawn from the 14K patterns and use the remaining patterns 
+as test sets. For each method we run ten trials. For each trial we randomly sample 
+2K patterns from the 14K pool for training. The 2K training sample is further split 
+into a 1K backprop set used to train the net and a 1K halting set used to determine 
+Rankprop and Multitask Learning for Medical Risk Evaluation 961 
+when to halt training. 1 Once the network is trained, we run the 1K halt set through 
+the model again to find the threshold that passes 10%, 20%, 30%, 40%, and 50% of 
+the halt set. The performance of the model is evaluated on the 12K unused patterns 
+by determining how many of the cases that fall below threshold in this test set die. 
+This is the error rate for that model at that FOP. 
+3 The Traditional Approach: SSE on 0/1 Targets 
+Sections 3-5 present three neural net approaches to pneumonia risk prediction. This 
+section presents the standard approach: using backpropagation on sum of squares 
+errors (SSE) with 0=lives/l=dies to predict mortality. This works well if early 
+stopping is used to prevent overfitting. Section 4 presents rankprop (SSE on ranks 
+instead of 0/1 targets). Pankprop, which learns to rank patients by risk instead 
+of directly predicting mortality, works better. Section 5 uses multitask learning 
+(MTL) to benefit from tests in the database that in practice will not be available 
+until after deciding to admit the patient. Rankprop with MTL works even better. 
+The straightforward approach to this problem is to use backprop to train a net to 
+learn to predict which patients live or die, and then use the real-valued predictions of 
+this net to sort patients by risk. This net has 30 inputs, i for each of the observed 
+patient measurements, a hidden layer with 8 units 2, and a single output trained 
+with O-lived, 1=died. 3 Given an infinite training set, a net trained this way should 
+learn to predict the probability of death for each patient, not which patients live or 
+die. In the real world, however, where we rarely have an infinite number of training 
+cases, a net will overtrain and begin to learn a very nonlinear function that outputs 
+values near 0/1 for cases in the training set, but which does not generalize well. In 
+this domain it is critical to use early stopping to halt training before this happens. 
+Table I shows the error rates of nets trained with SSE on 0/1 targets for the five 
+FOPs. Each entry is the mean of ten trials. The first entry in the table indicates 
+that on average, in the 10% of the test population predicted by the nets to be at 
+least risk, 1.4% died. We do not know the best achievable error rates for this data. 
+Table 1: Error Rates of SSE on 0/1 Targets 
+Error Rate .0140 .0190 .0252 .0340 .0421 
+4 Using Rankprop to Rank Cases by Risk 
+Because the goal is to find the fraction of the population least likely to die, it is 
+sufficient just to learn to rank patients by risk. Rankprop learns to rank patients 
+without learning to predict mortality. Rankprop is short for backpropagation 
+using sum of squares errors on estimated ranks. The basic idea is to sort the 
+training set using the target values, scale the ranks from this sort (we scale uniformly 
+to [0.25,0.75] with sigmoid output units), and use the scaled ranks as target values 
+for standard backprop with SSE instead of the 0/1 values in the database. 
+1performance at different FOPs sometimes peaks at different epochs. We hlt training 
+separately for each FOP in all the experiments to insure this does not confound results. 
+2To make comparisons between methods fair, we first found hidden layer sizes and 
+learning parameters that performed well for each method. 
+3Different representations such as 0.15/0.85 and different error metrics such as cross 
+entropy did not perform better than SSE on 0/1 targets. 
+962 R. CARUANA, S. BALUJA, T. MITCHELL 
+Ideally, we'd rank the training set by the true probabilities of death. Unfortunately, 
+all we know is which patients lived or died. In the Medis database, 89% of the target 
+values are O's and 11�-/0 are 1's. There are many possible sorts consistent with these 
+values. Which sort should backprop try to fit? It is the large number of possible 
+sorts of the training set that makes backpropagating ranks challenging. Rankprop 
+solves this problem by using the net model as it is being learned to order the training 
+set when target values are tied. In this database, where there are many ties because 
+there are only two target values, finding a proper ranking of the training set is a 
+serious problem. Rankprop learns to adjust the target ranks of the training set at 
+the s

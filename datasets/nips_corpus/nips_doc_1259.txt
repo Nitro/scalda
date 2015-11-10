@@ -1,0 +1,170 @@
+Ordered Classes and Incomplete Examples 
+in Classification 
+Mark Mathieson 
+Department of Statistics, University of Oxford 
+1 South Parks Road, Oxford OX 1 3TG, UK 
+E-mail: mathies @stats.ox.ac.uk 
+Abstract 
+The classes in classification tasks often have a natural ordering, and the 
+training and testing examples are often incomplete. We propose a non- 
+linear ordinal model for classification into ordered classes. Predictive, 
+simulation-based approaches are used to learn from past and classify fu- 
+ture incomplete examples. These techniques are illustrated by making 
+prognoses for patients who have suffered severe head injuries. 
+1 Motivation 
+Jennett et al. (1979) reported data on patients with severe head injuries. For each patient 
+some of the information in Table 1 was available shortly after injury. The objective is to 
+predict the degree of recovery attained within six months as measured by outcomo. This 
+problem exhibits two characteristics that are common in classification tasks: allocation of 
+examples into classes which have a natural ordering, and learning from past and classifying 
+future incomplete examples. 
+2 A Flexible Model for Ordered Classes 
+The Bayes decision rule (see, for example, Ripley, 1996) depends on the loss L(j, k) in- 
+curred in assigning to class k an object belonging to class j. When better information is 
+unavailable, for unordered or nominal classes we treat every mis-classification as equally 
+serious: L(j, k) is 0 when j = k and 1 otherwise. For ordered classes, when the K classes 
+are numbered from 1 to K in their natural order, a better default choice is L(j, k) =l J - k [. 
+A class is then given support by its position in the ordering, and the Bayes rule will some- 
+times assign patterns to classes that do not have maximum posterior probability to avoid 
+making a serious error. 
+Ordered Classes and Incomplete Examples in Classification 
+Table 1: Definition of variables with proportion missing. 
+Variable Definition 
+551 
+Missing % 
+age 
+emv 
+motor 
+change 
+eye 
+pupils 
+outcome 
+Age in decades (1=0-9, 2=10-19 .... ,8=70+). 0 
+Measure of eye, motor and verbal response to stimulation (1-7). 41 
+Motor response patterns for all limbs (1-7). 33 
+Change in neurological function over the first 24 hours (-1,0,+1). 78 
+Eye indicant. 1 (bad), 2 (impaired), 3 (good). 65 
+Pupil reaction to light. 1 (non-reacting), 2 (reacting). 30 
+Recovery after six months based on Glasgow Outcome Scale. 0 
+1 (dead/vegetative), 2 (severe disability), 3 (moderate/good recovery). 
+If the classes in a classification problem are ordered the ordering should also be reflected 
+in the probability model. Methods for nominal tasks can certainly be used for ordinal 
+problems, but an ordinal model should have a simpler parameterization than comparable 
+nominal models, and interpretation will be easier. Suppose that an example represented by 
+a row vector X belongs to class C = C(X). To make the Bayes-optimal classification it 
+is sufficient to know the posterior probabilities p(C = k ] X = x). The ordinal logis- 
+tic regression (OLR) model for K ordered classes models the cumulative posterior class 
+probabilities p(C < k I X = x) by 
+p(CkIX:x) ] 
+log 1 - p(C k I X = x) = - 
+k = 1,... ,K- 1, 
+(1) 
+for some function r/. We impose the constraints bx < ... < tK-1 on the cut-points to 
+ensure that p(C < k [ X = x) increases with k. If bo = -c and K =  then (1) gives 
+p(C = k I X = x) = a( - V(x)) - a(_ - V(x)) k = 1,... ,K 
+where a(x) = 1/(1 + e-=). McCullagh (1980) proposed line OLR where (x) = x. 
+e posterior probabilities depend on the patterns x only through V, and high values of 
+V (x) cogespond to higher predicted classes (Figure 1 a). is can be useful for intereting 
+the fitted model. However, line OLR is rather inflexible since the decision boundies e 
+always pallel hypedlanes. Depmres from lineity can be accommodated by allowing 
+V to be a non-line function of e feature space. We extend OLR to non-line ordinal 
+logistic regression (NOLR) by letting V(x) be the single line output of a feed-forwd 
+neural network with input vector x, having skip-layer connections and sigmoid gsfer 
+functions in the hidden layer (Figure lb). en for weights wij and biases bj we have 
+io jo ij 
+where ij denotes e sum over i such at node i is connected to node j, and node 
+o is the single output node. e usual output-unit bias is incoorated in the cut-points. 
+Observe that OLR is the special case of NOLR with no hidden nodes. Alough e network 
+component of NOLR is a universal approximator the NOLR model cnot approximate all 
+probability densities gbily well (unlike 'softmax', e most similg nominal method). 
+e likelihood for the cut-points � = (�,... , �K-) and network pameters w given a 
+aining set T = {(xi, ci)  i = 1,... , n} ofn coectly classified exmples is 
+n n 
+= lid = H (2) 
+552 M. Mathieson 
+ p( 1 I eta) 
+...... p( 2 I eta) 
+...... p( 3 1 eta) 
+.... p( 4 1 eta) 
+--- p(5 I eta) // 
+,,, // ',, / 
+...4d  ......... .. // //',, 
+-io 
+ork output 
+age (years) 
+Figure 1: (a) p(k [ r/) plotted against r/ for an OLR model with K = 5 classes and qb = 
+(-7, -6, -3, -1). (b) The network output r/(a:) from a NOLR model used to predict chartgo given 
+all other variables (except ore:como) predicts that young patients with high omv score are likely to 
+improve over first 24 hours. While ago and omv are varied, other variables are fixed. Dark shading 
+denotes low values of r/(a:). The Bayes decision boundaries are shown for loss L(j, k) =[ j - k I. 
+If we estimate the classifier by substituting the maximum likelihood estimates we must 
+maximize (2) whilst constraining the cut-points to be increasing (Mathieson, 1996). To 
+avoid over-fitting we regularize both by weight decay (which is equivalent to putting inde- 
+pendent Gaussian priors on the network weights) and by imposing independent Gamma pri- 
+ors on the differences between adjacent cut-points. The minimand is now - log �(w, tp) + 
+AD(w) + E(tp; t, a) with hyperparameters A > 0, t, a (to be chosen by cross-validation, 
+2 and 
+for example, or averaged over under a Bayesian scheme) where D(w) 
+K-1 
+E(tp) = E [t(bi - bi-) + (1 - a) log(bi - bi_)]. 
+i=2 
+3 Classification and Incomplete Examples 
+We now consider simulation-based methods for training diagnostic paradigm classifiers 
+from incomplete examples, and classifying future incomplete examples. To avoid mod- 
+elling the missing data we assume that the missing data mechanism is independent of the 
+missing values given the observed values (missing at random) and that the missing data and 
+data generation mechanisms are independent (ignorable) (Little & Rubin, 1987). This as- 
+sumption is rarely true but is usually less damaging than adopting crude at/hoc approaches 
+to missing values. 
+3.1 Learning from Incomplete Examples 
+The training set is 'T = {(x',ci) I i = 1,... ,n} where x',x are the observed and 
+unobserved parts of the ith example, which belongs to class ci. Define A '� = {x' [ 
+i = 1,..., n} and A' = {x}' I i = 1,..., n}, and use � to denote all the classes, so 
+7- = (A '�, �). We assume that � is fully observed. Under the diagnostic paradigm (which 
+includes logistic regression and its non-linear and ordinal variants such as 'softmax' and 
+Ordered Classes and Incomplete Examples in Classification 553 
+NOLR) we model p(c I x) by p(c [ x; O) giving the conditional likelihood 
+= I � IIp� 
+�(0) ---- II p(ci I xi, o _ o 
+i=1 i=1 i=1 (3) 
+when the examples are independent. The model for p(c [ x) contains no information about 
+p(x) and so we construct a model for p(x ' ] x �) separately using T (Section 3.2). Once we 
+can sample x}'l,... , x}' m from p(x ] x', ci) a Monte Carlo approximation for �(0) based 
+on the last expression of (3) by averaging over repeated imputations of the missing values 
+in the training set (Little & Rubin, 1987, and earlier): 
+o  
+log�(O) mlog p(ci I xi,xo;O � 
+j=1i----1 
+(4) 
+Existing algorithms for finding maximum likelihood estimates for 0 allow maximization of 
+the individual summands in (4) with respect to 0, but in general the software will require 
+extensive modification in order to maximize the average. This problem can be avoided if 
+we approximate the arithmetic average over the imputations by a geometric one so that 
+t(O)  I-Ij I-Iip(ci I x',xj;0) . Now the log-posterior averages over the log ofthe 
+likelihoods of the completed training sets, so standard estimation algorithms can be used 
+on a training set formed by pooling all completions of the training set, giving each weight 
+1  has been made, where we define 
+1/m. The approximation log  Yd P9 m  Y'd logp 
+o u 1 1 
+pj(O) = I-Iip(ci I x,,%;o), although in fact log  ydp 9 >  yd logp9 everywhere. 
+Suppose that the p are well approximated by some function p for the region of interest in 
+the parameter space. Then in this region 
+log __1 Ep j I -'logpj  E Pi-P I (Pi-P)(Pj -P) 
+rt 2-m  2m 2 E p2 
+m J J i i,j 
+(5) 
+and so the approximation will be reasonable when the imputed values have little effect 
+on the likelihood of the completed training sets. Note that the approximation cannot be 
+improved by increasing m; (5) does not tend to zero as m  c. The relative effects on 
+the likelihood of making this approximation and the Monte Carlo approximation (4) will 
+be problem specific and dependent on m. 
+The predictive approach (Ripley, 1996, for example) incorporates uncertainty in 0 by esti- 
+mating p(c I x) as/5(c I x) = lEolT-P(C I x; 0). Changing the order of integration gives 
+n 
+/5(C I z) = /p(C Ix; O)p(O I T)dO or/p(c Ix; O)p(O)n ]EX'lx,p(ci I x, x; o)dO 
+i=1 
+= x.xo fp� I x;O)p(O) IIp�, I (6) 
+i=1 
+This justifies applying standard techniques for complete data to build a separate classifier 
+using each completed training set, and then averaging the posterior class probabilities that 
+they predict. The integral over 0 in (6) will usually require

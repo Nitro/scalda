@@ -1,0 +1,153 @@
+Robust Learning of Chaotic Attractors 
+Rembrandt Bakker* 
+Chemical Reactor Engineering 
+Delft Univ. of Technology 
+r. bakke r @ strn. tude l fi. nl 
+Jaap C. Schouten 
+Chemical Reactor Engineering 
+Eindhoven Univ. of Technology 
+J. C. Schouten @ rue. nl 
+Marc-Olivier Coppens 
+Chemical Reactor Engineering 
+Delft Univ. of Technology 
+coppens @ stm. tudelfi. nl 
+Floris Takens 
+Dept. Mathematics 
+University of Groningen 
+F. Takens @ math. rug. nl 
+C. Lee Giles 
+NEC Research Institute 
+Princeton NJ 
+giles @research. nj. nec. corn 
+Cor M. van den B!eek 
+Chemical Reactor Engineering 
+Delft Univ. of Technology 
+vdbleek@ stm. tudelfi. nl 
+Abstract 
+A fundamental problem with the modeling of chaotic time series data is that 
+minimizing short-term prediction errors does not guarantee a match 
+between the reconstructed attractors of model and experiments. We 
+introduce a modeling paradigm that simultaneously learns to short-term 
+predict and to locate the outlines of the attractor by a new way of nonlinear 
+principal component analysis. Closed-loop predictions are constrained to 
+stay within these outlines, to prevent divergence from the attractor. Learning 
+is exceptionally fast: parameter estimation for the 1000 sample laser data 
+from the 1991 Santa Fe time series competition took less than a minute on 
+a 166 MHz Pentium PC. 
+1 Introduction 
+We focus on the following objective: given a set of experimental data and the assumption that 
+it was produced by a deterministic chaotic system, find a set of model equations that will 
+produce a time-series with identical chaotic characteristics, having the same chaotic attractor. 
+The common approach consists of two steps: (1) identify a model that makes accurate short- 
+term predictions; and (2) generate a long time-series with the model and compare the 
+nonlinear-dynamic characteristics of this time-series with the original, measured time-series. 
+Principe et al. [1] found that in many cases the model can make good short-term predictions 
+but does not team the chaotic attractor. The method would be greatly improved if we could 
+minimize directly the difference between the reconstructed attractors of the model-generated 
+and measured data, instead of minimizing prediction errors. However, we cannot reconstruct 
+the attractor without first having a prediction model. Until now research has focused on how 
+to optimize both step 1 and step 2. For example, it is important to optimize the prediction 
+horizon of the model [2] and to reduce complexity as much as possible. This way it was 
+possible to team the attractor of the benchmark laser time series data from the 1991 Santa Fe 
+*DelftChemTech, Chemical Reactor Engineering Lab, Julianalaan 136, 2628 BL, Delft, The 
+Netherlands; http://www.cpt. stm.tudelft.nl/cpt/cre/research/bakker/. 
+880 R. Bakker, d.C. Schouten, M.-O. Coppens, E Takens, C. L. Giles and C. M. v. d. Bleek 
+time series competition. While training a neural network for this problem, we noticed [3] that 
+the attractor of the model fluctuated from a good match to a complete mismatch from one 
+iteration to another. We were able to circumvent this problem by selecting exactly that model 
+that matches the attractor. However, after carrying out more simulations we found that what 
+we neglected as an unfortunate phenomenon [3] is really a fundamental limitation of current 
+approaches. 
+An important development is the work of Principe et al. [4] who use Kohonen Self Organizing 
+Maps (SOMs) to create a discrete representation of the state space of the system. This creates 
+a partitioning of the input space that becomes an infrastructure for local (linear) model 
+construction. This partitioning enables to verify if the model input is near the original data (i.e., 
+detect if the model is not extrapolating) without keeping the training data set with the model. 
+We propose a different partitioning of the input space that can be used to (i) learn the outlines 
+of the chaotic attractor by means of a new way of nonlinear Principal Component Analysis 
+(PCA), and (ii) enforce the model never to predict outside these outlines. The nonlinear PCA 
+algorithm is inspired by the work of Kambhatla and Leen [5] on local PCA: they partition the 
+input space and perform local PCA in each region. Unfortunately, this introduces 
+discontinuities between neighboring regions. We resolve them by introducing a hierarchical 
+partitioning algorithm that uses fuzzy boundaries between the regions. This partitioning closely 
+resembles the hierarchical mixtures of experts of Jordan and Jacobs [6]. 
+In Sec. 2 we put forward the fundamental problem that arises when trying to learn a chaotic 
+attractor by creating a short-term prediction model. In Sec. 3 we describe the proposed 
+partitioning algorithm. In Sec. 4 it is outlined how this partitioning can be used to learn the 
+outline of the attractor by defining a potential that measures the distance to the attractor. In Sec. 
+5 we show modeling results on a toy example, the logistic map, and on a more serious 
+problem, the laser data from the 1991 Santa Fe time series competition. Section 6 concludes. 
+2 The attractor learning dilemma 
+Imagine an experimental system with a chaotic attractor, and a time-series of noise-free 
+measurements taken from this system. The data is used to fit the parameters of the model 
+fit.  = F(fft, 't- ,'-', t-m) where F is a nonlinear function,  contains its adjustable parameters 
+and m is a positive constant. What happens if we fit the parameters  by nonlinear least 
+squares regression? Will the model be stable, i.e., will the closed-loop long term prediction 
+converge to the same attractor as the one represented by the measurements? 
+Figure 1 shows the result of a test by Diks et al. [7] that compares the difference between the 
+model and measured attractor. The figure shows that while the neural network is trained to 
+predict chaotic data, the model quickly 
+converges to the measured attractor 
+(S=0), but once in a while, from one 
+iteration to another, the match between 
+the attractors is lost. 
+To understand what causes this 
+instability, imagine that we try to fit the 
+parameters of a model t. = d + B 't 
+while the real system has a point 
+attractor, = , where  is the state of 
+the system and  its attracting value. 
+Clearly, measurements taken from this 
+system contain no information to 
+20' 
+?'n 
+0 8oo0 
+training progress [co Rerati0ns] 
+Figure 1: Diks test monitoring curve for a neural 
+network model trained on data from an 
+experimental chaotic pendulum [3]. 
+Robust Learning of Chaotic Attractors 881 
+estimate both d and B. If we fit the model parameters with non-robust linear least squares, B 
+may be assigned any value and if its largest eigenvalue happens to be greater than zero, the 
+model will be unstable! 
+For the linear model this problem has been solved a long time ago with the introduction of 
+singular value decomposition. There still is a need for a nonlinear counterpart of this technique, 
+in particular since we have to work with very flexible models that are designed to fit a wide 
+variety of nonlinear shapes, see for example the early work of Lapedes and Farber [8]. It is 
+akeady common practice to control the complexity of nonlinear models by pruning or 
+regularization. Unfortunately, these methods do not always solve the attractor learning 
+problem, since there is a good chance that a nonlinear term explains a lot of variance in one 
+part of the state space, while it causes instability of the attractor (without affecting the one-step- 
+ahead prediction accuracy) elsewhere. In Secs. 3 and 4 we will introduce a new method for 
+nonlinear principal component analysis that will detect and prevent unstable behavior. 
+3. The split and fit algorithm 
+The nonlinear regression procedure of this section will form the basis of the nonlinear principal 
+component algorithm in Sec. 4. It consists of (i) a partitioning of the input space, (ii) a local 
+linear model for each region, and (iii) fuzzy boundaries between regions to ensure global 
+smoothness. The partitioning scheme is outlined in Procedure 1: 
+Procedure 1: Partitioning the input space 
+1) Start with the entire set Z of input data 
+2) Determine the direction of largest variance of Z: perform a singular value 
+decomposition of Z into the product UZ-'V r and take the eigenvector (column 
+of V) with the largest singular value (on the diagonal of Z-'). 
+3) Split the data in two subsets (to be called: clusters) by creating a plane 
+perpendicular to the direction of largest variance, through the center of 
+gravity of Z. 
+4) Next, select the cluster with the largest sum squared error to be split next, 
+and recursively apply 2-4 until a stopping criteria is met. 
+Figures 2 and 3 show examples of the partitioning. The disadvantage of dividing regression 
+problems into localized subproblems was pointed out by Jordan and Jacobs [6]: the spread of 
+the data in each region will be much smaller than the spread of the data as a whole, and this 
+will increase the variance of the model parameters. Since we always split perpendicular to the 
+direction of maximum variance, this problem is minimized. 
+The partitioning can be written as a binary tree, with each non-terminal node being a split and 
+each terminal node a cluster. Procedure 2 creates fuzzy boundaries between the clusters. 
+Procedure 2. Creating fuzzy boundaries 
+1) An input ' enters the tree at the top of the partfioning tree. 
+2) The Euclidean distance to the splitting hyperplane is divided by the 
+bandwidth fl of the split, and passed through a sigmoidal function with range 
+[0,1]. This results in 's share erin the subset on 's side of the splitting 
+plane. The share in the other subset is 1-a. 
+3) The previous step is carded out for all non-terminal nodes of the tree. 
+882 R. Bakker, J. C. Schouten, M.-O. Coppens, E Takens, C. L. Giles and C. M. v. d. Bleek 
+4) The membership #c of ff to subset (termin

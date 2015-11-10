@@ -1,0 +1,168 @@
+Reinforcement Learning based on 
+Oneline EM Algorithm 
+Masa-aki Sato l 
+iATR Human Information Processing Research Laboratories 
+Seika, Kyoto 619-0288, Japan masaaki@hip.atr.co.jp 
+Shin Ishii $t 
+:Nara Institute of Science and Technology 
+Ikoma, Nara 630-0101, Japan ishii@is.aist-nara.ac.jp 
+Abstract 
+In this article, we propose a new reinforcement learning (RL) 
+method based on an actor-critic architecture. The actor and 
+the critic are approximated by Normalized Gaussian Networks 
+(NGnet), which are networks of local linear regression units. The 
+NGnet is trained by the on-line EM algorithm proposed in our pre- 
+vious paper. We apply our RL method to the task of swinging-up 
+and stabilizing a single pendulum and the task of balancing a dou- 
+ble pendulum near the upright position. The experimental results 
+show that our RL method can be applied to optimal control prob- 
+lems having continuous state/action spaces and that the method 
+achieves good control with a small number of trial-and-errors. 
+1 INTRODUCTION 
+Reinforcement learning (RL) methods (Barto et al., 1990) have been successfully 
+applied to various Markov decision problems having finite state/action spaces, such 
+as the backgammon game (Tesauro, 1992) and a complex task in a dynamic envi- 
+ronment (Lin, 1992). On the other hand, applications to continuous state/action 
+problems (Werbos, 1990; Doya, 1996; Sofge & White, 1992) are much more difficult 
+than the finite state/action cases. Good function approximation methods and fast 
+learning algorithms are crucial for successful applications. 
+In this article, we propose a new RL method that has the above-mentioned two 
+features. This method is based on an actor-critic architecture (Barto et al., 1983), 
+although the detailed implementations of the actor and the critic are quite differ- 
+Reinforcement Learning Based on On-Line EM Algorithm 1053 
+ent from those in the original actor-critic model. The actor and the critic in our 
+method estimate a policy and a Q-function, respectively, and are approximated by 
+Normalized Gaussian Networks (NGnet) (Moody & Darken, 1989). The NGnet is a 
+network of local linear regression units. The model softly partitions the input space 
+by using normalized Gaussian functions, and each local unit linearly approximates 
+the output within its partition. As pointed out by Sutton (1996), local models such 
+as the NGnet are more suitable than global models such as multi-layered percep- 
+trons, for avoiding serious learning interference in on-line RL processes. The NGnet 
+is trained by the on-line EM algorithm proposed in our previous paper (Sato & 
+Ishii, 1998). It was shown that this on-line EM algorithm is faster than a gradient 
+descent algorithm. In the on-line EM algorithm, the positions of the local units 
+can be adjusted according to the input and output data distribution. Moreover, 
+unit creation and unit deletion are performed according to the data distribution. 
+Therefore, the model can be adapted to dynamic environments in which the input 
+and output data distribution changes with time (Sato & Ishii, 1998). 
+We have applied the new RL method to optimal control problems for deterministic 
+nonlinear dynamical systems. The first experiment is the task of swinging-up and 
+stabilizing a single pendulum with a limited torque (Doya, 1996). The second 
+experiment is the task of balancing a double pendulum where a torque is applied 
+only to the first pendulum. Our RL method based on the on-line EM algorithm 
+demonstrated good performances in these experiments. 
+2 NGNET AND ON-LINE EM ALGORITHM 
+In this section, we review the on-line EM algorithm for the NGnet proposed in our 
+previous paper (Sato & Ishii, 1998). The NGnet (Moody & Darken, 1989), which 
+transforms an N-dimensional input vector x to a D-dimensional output vector y, is 
+defined by the following equations. 
+gI denotes the number of units, and the prime (') denotes a transpose. Gi(x) is 
+an N-dimensional Gaussian function, which has an N-dimensional center/ and an 
+(N x N)-dimensional covariance matrix E. lVi and bi are a (D x N)-dimensional lin- 
+ear regression matrix and a D-dimensional bias vector, respectively. Subsequently, 
+we use notations l _= (H,b) and 2 -- (x', 1). 
+The NGnet can be interpreted as a stochastic model, in which a pair of an input and 
+an output, (x, y), is a stochastic event. For each event, a unit index i ( {1, ..., M} 
+is assumed to be selected, which is regarded as a hidden variable. The stochastic 
+model is defined by the probability distribution for a triplet (x, y, i), which is called 
+a cmnplete event: 
+P(x,y, ilO ): 
+x exp )- -- 
+i ] 
+2o;. (Y - . 
+(2) 
+Here, 0 -- {/i, i, rr, 1' l i: 1,...,M} is a set of model parameters. We can easily 
+prove that the expectation value of the output y for a given input x, i.e., E[ylx] = 
+1054 M. Sato and S. lshii 
+f yP(ylx, O)dy, is identical to equation (1). Namely, the probability distribution (2) 
+provides a stochastic model for the NGnet. 
+From a set of T events (observed data) (X,Y) _= {(x(t),y(t)) I t: 1,...,T}, the 
+model parameter 0 of the stochastic model (2) can be determined by the maximum 
+likelihood estimation method, in particular, by the EM algorithm (Dempster et al., 
+1977). The EM algorithm repeats the following E- and M-steps. 
+E (Estimation) step: Let 0 be the present estimator. By using 0, the posterior 
+probability that the i-th unit is selected for (x(t),y(t)) is given as 
+M 
+P(ilx(t),y(t),O ): P(x(t),y(t),il)/ Y P(x(t),y(t),jlO). 
+j=l 
+(3) 
+M (Maximizatipn) step' Using the posterior probability (3), the expected log- 
+likelihood L(OIO, X, Y) for the complete events is defined by 
+T 
+L(01,X,Y ) = y Y P(ilx(t),y(t),O)logP(x(t),y(t),ilO) � 
+t----1 i=1 
+(4) 
+Since an increase of L(010, X, Y) implies an increase of the log-likelihood for the ob- 
+served data (X, Y) (Dempster et al., 1977), L(OIO, X , Y) is maximized with respect 
+to 0. A solution of the necessity condition OL/00 = 0 is given by (Xu et al., 1995) 
+(Sa) 
+(5b) 
+(5c) 
+(5d) 
+where (')i denotes a weighted mean with respect to the posterior probability (3) 
+and it is defined by 
+I T 
+{f(x,y)),(T) --  y f(x(t),y(t))P(ilx(t),y(t),b ). 
+t=l 
+(6) 
+The EM algorithm introduced above is based on batch learning (Xu et al., 1995), 
+namely, the parameters are updated after seeing all of the observed data. We 
+introduce here an on-line version (Sato & Ishii, 1998) of the EM algorithm. Let 
+O(t) be the estimator after the t-th observed data (x(t),y(t)). In this on-line EM 
+algorithm, the weighted mean (6) is replaced by 
+T T 
+<< f(x,y) >>i (T) _-- rl(T ) Z( H 
+t:l s:t+l 
+X(s))f(x(t),y(t))P(ilx(t),y(t),O(t- 1)). (7) 
+The parameter A(t) E [0, 1] is a discount factor, which is introduced for forgetting 
+T T 
+the effect of earlier inaccurate estimator. r/(T) _= (t=l(1-I:t+ A(s))) -x is a nor- 
+malization coefficient and it is iteratively calculated by r/(t) = (1 + A(t)/rl(t- 1)) - . 
+The modified weighted mean << � >>i can be obtained by the step-wise equation: 
+<< f(x,y) >>i (t) =<< f(x,y) >>i (t- 1) 
++rl(t) [f(x(t),y(t))Pi(t)- << f(x,y) >>i (t - 1)], 
+(8) 
+Reinforcement Learning Based on On-Line EM Algorithm 1055 
+where Pi(t) = P(ilx(t),y(t),O(t - 1)). Using the modified weighted mean, the new 
+parameters are obtained by the following equations. 
+1 [,i(t- 1)- Pi(t),i(t- 1)&(t)5'(t),i(t- 1) (9a) 
+f\i(t) = 1 - (t) (1/r/(t) - 1) + Pi(t)'(t),i(t - 1)(t) 
+Ii(t) :<< x >i (t)/<< 1 >i (t) (9b) 
+[(t) = (t- 1) + v(t)g(t)(y(t) - i(t- 1)&(t))&'(t)i(t) (9c) 
+1 [<< [y[2 > (t)- Tr (�i(t)<< &y' >>i (t))] /<< 1 > (t), (9d) 
+where i(t)  [<< ' >>i]-. E?(t) can be obtained from the following relation 
+with i(t). 
+( S:i (t) --s:l(t)i(t) ). (10) 
+fki(t) << 1 >i (t): _,i(t)El(t ) 1 + 'i(t)ES(t)i(t) 
+It can be proved that this on-line EM algorithm is equivalent to the stochastic 
+approximation for finding the maximum likelihood estimator, if the time course of 
+the discount factor ,(t) is given by 
+X(t) t-T 1 - (1 - a)/(at + b), (11) 
+where a (1 > a > 0) and b are constants (Sato & Ishii, 1998). 
+We also employ dynamic unit manipulation mechanisms in order to efficiently allo- 
+cate the units (Sato & Ishii, 1998). The probability P(x(t),y(t),ilO(t-1))indicates 
+how probable the i-th unit produces the datum (x(t), y(t)) with the present param- 
+eter O(t - 1). If the probability for every unit is less than some threshold value, a 
+new unit is produced to account for the new datum. The weighted mean << I >>i (t) 
+indicates how much the i-th unit has been used to account for the data until t. If 
+the mean becomes less than some threshold value, this unit is deleted. 
+In order to deal with a singular input distribution, a regularization for E?(t) is 
+introduced as follows. 
+E?(t) = [(<< xx' >>i (t)- Ii(t)lfi(t) << 1 >>i (t) (12a) 
++ c << Ai 2 >>i (t)Iv) / << 1 >>i (t)] - 
+<< A. >>i (t)---- (<< Ix] 2 >>i (t)- [/i(t)l 2 << 1 >>i (t)) /_N, (12b) 
+where Iv is the (N x N)-dimensional identity matrix and c is a small constant. The 
+corresponding i (t) can be calculated in an on-line manner using a similar equation 
+to (9a) (Sato & Ishii, 1998). 
+3 REINFORCEMENT LEARNING 
+In this section, we propose a new RL method based on the on-line EM algorithm 
+described in the previous section. In the following, we consider optimal control prob- 
+lems for deterministic nonlinear dynamical systems having continuous state/action 
+spaces. It is assumed that there is no knowledge of the controlled system. An 
+actor-critic architecture .(Barto et a1.,1983) is used for the learning system. In the 
+original actor-critic model, the actor and the critic approximated the probability 
+of each action and the value function, respectively, and were trained by using the 
+TD-error. The actor and the critic in our RL method are different from those in 
+the original model as explained later. 
+1056 M. Sato and S. Ishii 
+For the current state, xc(t), of the controlled system, the actor

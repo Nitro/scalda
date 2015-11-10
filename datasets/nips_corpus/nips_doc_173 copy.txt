@@ -1,0 +1,154 @@
+29 
+FAST LEARNING IN 
+MULTI-RESOLUTION HIERARCHIES 
+John Moody 
+Yale Computer Science, P.O. Box 2158, New Haven, CT 06520 
+Abstract 
+A class of fast, supervised learning algorithms is presented. They use lo- 
+cal representations, hashing, aild multiple scales of resolution to approximate 
+functions which are piece-wise continuous. Inspired by Albus's CMAC model, 
+the algorithms learn orders of magnitude more rapidly than typical imple- 
+mentations of back propagation, while often achieving comparable qualities of 
+generalization. Furthermore, unlike most traditional function approximation 
+methods, the algorithms are well suited for use in real time adaptive signal 
+processing. Unlike simpler adaptive systems, such as linear predictive cod- 
+ing, the adaptive linear combinet, and the Kalman filter, the new algorithms 
+are capable of efficiently capturing the structure of complicated non-linear 
+systems. As an illustration, the algorithm is applied to the prediction of a 
+chaotic timeseries. 
+1 Introduction 
+A variety of approaches to adaptive information processing have been developed 
+by workers in disparate disciplines. These include the large body of literature on 
+approximation and interpolation techniques (curve and surface fitting), the linear, 
+real-time adaptive signal processing systems (such as the adaptive linear combiner 
+and the Kalman filter), and most recently, the reincarnation of non-linear neural 
+network models such as the multilayer perceptron. 
+Each of these methods has its strengths and weaknesses. The curve and surface 
+fitting techniques are excellent for off-line data analysis, but are typically not formu- 
+lated with real-time applications in mind. The linear techniques of adaptive signal 
+processing and adaptive control are well-characterized, but are limited to applica- 
+tions for which linear descriptions are appropriate. Finally, neural network learning 
+models such as back propagation have proven extremely versatile at learning a wide 
+variety of non-linear mappings, but tend to be very slow computationally and are 
+not yet well characterized. 
+The purpose of this paper is to present a general description of a class of su- 
+pervised learning algorithms which combine the ability of the conventional curve 
+30 Mdy 
+fitting and multilayer perceptron methods to precisely learn non-linear mappings 
+with the speed and flexibility required for real-time adaptive application domains. 
+The algorithms are inspired by a simple, but often overlooked, neural network 
+model, Albus's Cerebellar Model Articulation Controller (CMAC) [2,1], and have 
+a great deal in common with the standard techniques of interpolation and approx- 
+imation. The algorithms learn from examples, generalize well, and can perform 
+efficiently in real time. Furthermore, they overcome the problems of precision and 
+generalization which limit the standard CMAC model, while retaining the CMAC's 
+speed. 
+2 System Description 
+The systems are designed to rapidly approximate mappings g � a7 -. 7 from multi- 
+dimensional input spaces   $inrt, t to multidimensional output spaces ff  $ot, trt, t. 
+The algorithms can be applied to any problem domain for which a metric can be de- 
+fined on the input space (typically the Euclidean, Hamming, or Manhattan metric) 
+and for which the desired learned mapping is (to a close approximation) piece-wise 
+continuous. (Discontinuities in the desired mapping, such as those at classifica- 
+tion boundaries, are approximated continuously.) Important general classes of such 
+problems include approximation of real-valued functions 7 n - 7 rn (such as those 
+found in signal processing), classification problems 7  -* B m (such as phoneme 
+classification), and boolean mapping problems B -. B  (such as the NETtalk 
+problem [20]). Here, 7 are the reals and B is {0, 1}. This paper focuses on real- 
+valued mappings; the formulation and application of the algorithms to boolean 
+problem domains will be presented elsewhere. 
+In order to specify the complete learning system in detail, it is easiest to start 
+with simple special cases and build the description from the bottom up-  
+2.1 A Simple Adaptive Module 
+The simplest special case of the general class under consideration is described as 
+follows. The input space is overlayed with a lattice of points � a local function 
+value or weight � is assigned to every possible lattice point. The output of the 
+system for a given input is: 
+(1) 
+where NO (a) is a neighborhood function for the 3 ta lattice point such that NO = 1 
+if 0 is the lattice point closest to the input vector a7 and NO = 0 otherwise. 
+More generally, the neighborhood functions N can overlap and the sum in equa- 
+tion (1) can be replaced by an average. This results in a greater ability to generalize 
+when training data is sparse, but at the cost of losing fine detail. 
+Fast Learning in Multi-Resolution Hierarchies  31 
+Learning is accomplished by varying the  to minimize the squared error of 
+the system output on a set of training data: 
+1 Z(idesired 
+= - , 
+i 
+(2) 
+where the sum is over all exemplars { i, i desired } in the training set. The de- 
+termination of 17 is easily formulated as a real time adaptive algorithm by using 
+gradient descent to minimize an instantaneous estimate E(t) of the error: 
+dV __dZ(0 
+dt =-rr dV 
+(3) 
+2.2 Saving Memory with Hashing: The CMAC 
+The approach of the previous section encounters serious difficulty when the dimen- 
+sion of the input space becomes large and the distribution of data in the input space 
+becomes highly non-uniform. In such cases, allocating a separate function value for 
+each possible lattice point is extremely wasteful, because the majority of lattice 
+points will have no training data within a local neighborhood. 
+As an example, suppose that the input space is four dimensional, but that all 
+input data lies on a fuzzy two dimensional subspace. (Such a situation [projected 
+onto 3-dimensions] is shown in figure [2A].) Furthermore, suppose that the input 
+space is overlayed with a rectangular lattice with K nodes per dimension. The 
+complete lattice will contain K 4 nodes, but only O(K ) of those nodes will have 
+training data in their local neighborhoods Thus, only O(K ) of the weights V will 
+have any meaning. The remaining O(K 4) weights will be wasted. (This assumes 
+that the lattice is not too fine. If K is too large, then only O(P) of the lattice points 
+will have training data nearby, where P is the number of training data.) 
+An alternative approach is to have only a small number of weights and to allo- 
+cate them to only those regions of the input space which are populated with training 
+data. This allocation can be accomplished by a dimensionality-reducing mapping 
+from a virtual lattice in the input space onto a lookup table of weights or function 
+values. In the absence of any a priori information about the distribution of data in 
+the input space, the optimal mapping is a random mapping, for example a universal 
+hashing function [8]. The random nature of such a function insures that neighbor- 
+hood relationships in the virtual lattice are not preserved. The average behavior 
+of an ensemble of universal hashing functions is thus to access all elements of the 
+lookup table with equal probability, regardless of the correlations in the input data. 
+The many-to-one hash function can be represented here as a matrix H 'p of O's 
+and 1's with one I per column, but many 1's per row. With this notation, the 
+system response function is: 
+T N 
+z-'() = Z Z Ir nr/ N(T ) (4) 
+r=l fi=l 
+32 Moody 
+A Hash Table B 
+'- Resolution  
+L 
+Figure 1: (A) A simple CMAC module. (B) The computation of errors for a multi- 
+resolution hierarchy. 
+The CMAC model of Albus is obtained when a distributed representation of 
+the input space is used and the neighborhood functions N() are overlapping. 
+In this case, the sum over 3 is replaced by an average. Note that, as specified 
+by equation (4), hash table collisions are not resolved. This introduces collision 
+noise, but the effect of this noise is reduced by 1/v/B), where B is the number 
+of neighborhood functions which respond to a given input. Collision noise can be 
+completely eliminated if standard collision resolution techniques are used. 
+A few comments should be made about efficiency. In spite of the costly formal 
+sums in equation (4), actual implementations of the algorithm are extremely fast. 
+The set of non-zero N (Z) on the virtual lattice, the hash function value for each 
+vertex, and the set of corresponding lookup table values r given by the hash 
+function are easily determined on the fly. The entire hash function H rts is never 
+pre-computed, the sum over the index 3 is limited to a few lattice points neighboring 
+the input Z, and since each lattice point is associated with only one lookup table 
+value, the formal sum over r disappears. 
+The CMAC model is shown schematically in figure [1A]. 
+2.3 
+Interpolation: Neighborhood Functions with Graded 
+Pesponse 
+One serious problem with the formulations discussed so far is that the neighborhood 
+functions are constant in their regions of support. Thus, the system response is dis- 
+continuous over neighborhood boundaries. This problem can be easily remedied by 
+using neighborhood functions with graded response in order to perform continuous 
+interpolation between lattice points. 
+Fast Learning in Multi-Resolution Hierarchies  33 
+The normalized system response function is then: 
+The functions R ( are the graded neighborhood response functions associated 
+with each lattice point �. They are intended to have local support on the'input 
+space Sinrut, thus being non-zero only in a local neighborhood of their associated 
+lattice point /. Each function R/(a) attains its maximum value at lattice point 
+/ and drops off monotonically to zero as the distance Ila - xl increases. Note 
+that R is not ne

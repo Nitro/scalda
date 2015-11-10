@@ -1,0 +1,154 @@
+Markov processes on curves for 
+automatic speech recognition 
+Lawrence Saul and Mazin Rahim 
+AT&T Labs -- Research 
+Shannon Laboratory 
+180 Park Ave E-171 
+Florham Park, NJ 07932 
+{lsaul, maz in} eresearch. att. tom 
+Abstract 
+We investigate a probabilistic framework for automatic speech 
+recognition based on the intrinsic geometric properties of curves. 
+In particular, we analyze the setting in which two variables--one 
+continuous (a), one discrete (s)--evolve jointly in time. We sup- 
+pose that the vector a traces out a smooth multidimensional curve 
+and that the variable s evolves stochastically as a function of the 
+arc length traversed along this curve. Since arc length does not 
+depend on the rate at which a curve is traversed, this gives rise 
+to a family of Markov processes whose predictions, Pr[sla], are 
+invariant to nonlinear warpings of time. We describe the use of 
+such models, known as Markov processes on curves (MPCs), for 
+automatic speech recognition, where a are acoustic feature trajec- 
+tories and s are phonetic transcriptions. On two tasks--recognizing 
+New Jersey town names and connected alpha-digits--we find that 
+MPCs yield lower word error rates than comparably trained hidden 
+Markov models. 
+1 Introduction 
+Variations in speaking rate currently present a serious challenge for automatic 
+speech recognition (ASR) (Siegler & Stern, 1995). It is widely observed, for example, 
+that fast speech is more prone to recognition errors than slow speech. A related ef- 
+fect, occurring at the phoneme level, is that consonants are more frequently botched 
+than vowels. Generally speaking, consonants have short-lived, non-stationary acous- 
+tic signatures; vowels, just the opposite. Thus, at the phoneme level, we can view 
+the increased confusability of consonants as a consequence of locally fast speech. 
+752 L. Saul and M. Rahim 
+s(t) = s l 
+: : s(t) = s3 
+START = 
+x(t) END 
+t= 
+Figure 1: Two variables--one continuous (a), one discrete (s)--evolve jointly in 
+time. The trace of s partitions the curve of :r into different segments whose bound- 
+aries occur where s changes value. 
+In this paper, we investigate a probabilistic framework for ASR that models vari- 
+ations in speaking rate as arising from nonlinear warpings of time (Tishby, 1990). 
+Our framework is based on the observation that acoustic feature vectors trace out 
+continuous trajectories (Ostendorf et al, 1996). We view these trajectories as mul- 
+tidimensional curves whose intrinsic geometric properties (such as arc length or 
+radius) do not depend on the rate at which they are traversed (do Carmo, 1976). 
+We describe a probabilistic model whose predictions are based on these intrinsic 
+geometric properties and--as such--are invariant to nonlinear warpings of time. 
+The handling of this invariance distinguishes our methods from traditional hidden 
+Markov models (HMMs) (Rabiner & Juang, 1993). 
+The probabilistic models studied in this paper are known as Markov processes on 
+curves (MPCs). The theoretical framework for MPCs was introduced in an earlier 
+paper (Saul, 1997), which also discussed the problems of decoding and parameter 
+estimation. In the present work, we report the first experimental results for MPCs 
+on two difficult benchmark problems in ASR. On these problems--recognizing New 
+Jersey town names and connected alpha-digits--our results show that MPCs gen- 
+erally match or exceed the performance of comparably trained HMMs. 
+The organization of this paper is as follows. In section 2, we review the basic 
+elements of MPCs and discuss important differences between MPCs and HMMs. In 
+section 3, we present our experimental results and evaluate their significance. 
+2 Markov processes on curves 
+Speech recognizers take a continuous acoustic signal as input and return a sequence 
+of discrete labels representing phonemes, syllables, or words as output. Typically 
+the short-time properties of the speech signal are summarized by acoustic feature 
+vectors. Thus the abstract mathematical problem is to describe a multidimensional 
+trajectory {x(t)lt E [0, r]} by a sequence of discrete labels ss2 ...s. As shown in 
+figure 1, this is done by specifying consecutive time intervals such that s(t) = sk 
+for t E [tk_ , t] and attaching the labels s to contiguous arcs along the trajectory. 
+To formulate a probabilistic model of this process, we consider two variables--one 
+continuous (a), one discrete (s)--that evolve jointly in time. Thus the vector a 
+traces out a smooth multidimensional curve, to each point of which the variable s 
+attaches a discrete label. 
+Markov processes on curves are based on the concept of arc length. After reviewing 
+how to compute arc lengths along curves, we introduce a family of Markov processes 
+whose predictions are invariant to nonlinear warpings of time. We then consider 
+the ways in which these processes (and various generalizations) differ from HMMs. 
+Markov Processes on Curves for Automatic Speech Recognition 753 
+2.1 Arc length 
+Let g(a) define a D x D matrix-valued function over :r C T�D. If #(a) is everywhere 
+non-negative definite, then we can use it as a metric to compute distances along 
+curves. In particular, consider two nearby points separated by the infinitesimal 
+vector da. We define the squared distance between these two points as: 
+d� 2 : daTg(a) da. (1) 
+Arc length along a curve is the non-decreasing function computed by integrating 
+these local distances. Thus, for the trajectory a(t), the arc length between the 
+points a(t) and a(t2) is given by: 
+t (2) 
+-- i dt , 
+where : d 
+=  [:r(t)] denotes the time derivative of :r. Note that the arc length defined 
+by eq. (2) is invariant under reparameterizations of the trajectory, :r(t) --> :r(f(t)), 
+where f(t) is any smooth monotonic function of time that maps the interval [tx, t2] 
+into itself. 
+In the special case where g(a) is the identity matrix, eq. (2) reduces to the standard 
+definition of arc length in Euclidean space. More generally, however, eq. (1) defines 
+a non-Euclidean metric for computing arc lengths. Thus, for example, if the metric 
+g(:r) varies as a function of a, then eq. (2) can assign different arc lengths to the 
+trajectories :r (t) and :r (t) + a0, where a0 is a constant displacement. 
+2.2 States and lifelengths 
+We now return to the problem of segmentation, as illustrated in figure 1. We refer 
+to the possible values of s as states. MPCs are conditional random processes that 
+evolve the state variable s stochastically as a function of the arc length traversed 
+along the curve of a. In MPCs, the probability of remaining in a particular state 
+decays exponentially with the cumulative arc length traversed in that state. The 
+signature of a state is the particular way in which it computes arc length. 
+To formalize this idea, we associate with each state i the following quantities: (i) 
+a feature-dependent matrix gi(ze) that can be used to compute arc lengths, as in 
+eq. (2); (ii) a decay parameter Ai that measures the probability per unit arc length 
+that s makes a transition from state i to some other state; and (iii) a set of transition 
+probabilities aij, where aij represents the probability that--having decayed out of 
+state/--the variable s makes a transition to state j. Thus, aij defines a stochastic 
+transition matrix with zero elements along the diagonal and rows that sum to one: 
+aii -- 0 and .j aij -- 1. A Markov process is defined by the set of differential 
+equations: 
+I 1 
+dt ' 
+where Pi(t) denotes the (forward) probability that s is in state i at time t, based 
+on its history up to that point in time. The right hand side of eq. (3) consists of 
+two competing terms. The first term computes the probability that s decays out 
+of state i; the second computes the probability that s decays into state i. Both 
+terms are proportional to measures of arc length, making the evolution of Pi along 
+the curve of :r invariant to nonlinear warpings of time. The decay parameter, 
+controls the typical amount of arc length traversed in state i; it may be viewed as 
+754 L. Saul and M. Rahim 
+an inverse lifetime or--to be more precise--an inverse lifelength. The entire process 
+is Markovian because the evolution of Pi depends only on quantities available at 
+time t. 
+2.3 Decoding 
+Given a trajectory (t), the Markov process in eq. (3) gives rise to a conditional 
+probability distribution over possible segmentations, s(t). Consider the segmenta- 
+tion in which s(t) takes the value sk between times tk_ and t, and let 
+_d 
+denote the arc length traversed in state s. By integrating eq. (3), one can show that 
+the probability of remaining in state s decays exponentially with the arc length 
+Thus, the conditional probability of the overall segmentation is given by: 
+Pr[s, 1 ] =  s e -x' '  ass+, (5) 
+k=l k=0 
+where we have used s0 and sn+ to denote the saR and END states of the Markov 
+process. The first product in eq. (5) multiplies the probabilities that ea& segment 
+traverses exactly its observed arc length. The second product multiplies the prob- 
+abilities for transitions between states sk and sk+. The leading factors of , are 
+included to normalize each state's distribution over observed arc lengths. 
+There are many important quantities that can be computed from the distribution, 
+Pr[sl ]. Of particular interest for ASR is the most probable segmentation: s* () = 
+argmax,, { lner[s, fiji}. As described elsewhere (Saul, 1997), this maximization 
+can be performed by discretizing the time axis and applying a dynamic programming 
+procedure. The resulting algorithm is similar to the Viterbi procedure for maximum 
+likelihood decoding (Rabiner & Juang, 1993). 
+2.4 Parameter estimation 
+The parameters {hi, aij, #i(a)} in MPCs are estimated from training data to max- 
+imize the log-likelihood of target segmentations. In our preliminary experiments 
+with MPCs, we estimated only the metric par

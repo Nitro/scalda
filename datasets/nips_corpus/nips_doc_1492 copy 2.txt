@@ -1,0 +1,154 @@
+Exploiting generative models in 
+discriminative classifiers 
+Tommi S. Jaakkola* 
+MIT Artificial Intelligence Laboratorio 
+545 Technology Square 
+Cambridge, MA 02139 
+David Haussler 
+Department of Computer Science 
+University of California 
+Santa Cruz, CA 95064 
+Abstract 
+Generative probability models such as hidden Markov models pro- 
+vide a principled way of treating missing information and dealing 
+with variable length sequences. On the other hand, discriminative 
+methods such as support vector machines enable us to construct 
+flexible decision boundaries and often result in classification per- 
+formance superior to that of the model based approaches. An ideal 
+classifier should combine these two complementary approaches. In 
+this paper, we develop a natural xvay of achieving this combina- 
+tion by deriving kernel functions for use in discriminative methods 
+such as support vector machines from generative probability mod- 
+els. We provide a theoretical justification for this combination as 
+well as demonstrate a substantial improvement in the classification 
+performance in the context of DNA and protein sequence analysis. 
+1 Introduction 
+Speech, vision, text and biosequence data can be difficult to deal with in the context 
+of simple statistical classification problems. Because the examples to be classified 
+are often sequences or arrays of variable size that may have been distorted in par- 
+ticular ways, it is common to estimate a generative model for such data, and then 
+use Bayes rule to obtain a classifier from this model. Hoxvever. many discrimina- 
+tive methods, which directly estimate a posterior probability for a class label (as 
+in Gaussian process classifiers [5]) or a discriminant function for the class label 
+(as in support vector machines [6]) have in other areas proven to be superior to 
+Corresponding author. 
+488 T. S. Jaakkola and D. Haussler 
+generative models for classification problems. The problem is that there has been 
+no systematic way to extract features or metric relations between examples for use 
+with discriminative methods in the context of difficult data types such as those 
+listed above. Here we propose a general method for extracting these discriminatory 
+features using a generative model. Vile the features xve propose are generally 
+applicable, they are most naturally suited to kernel methods. 
+2 Kernel methods 
+Here we provide a brief introduction to kernel methods; see, e.g., [6] [5] for more 
+details. Suppose now that xve have a training set of examples X and corresponding 
+binary labels S, (:kl). In kernel methods. as we define them. the label for a nexv 
+example X is obtained from a xveighted sum of the training labels. The weighting of 
+each training label S consists of two parts: 1) the overall importance of the example 
+X, as summarized xvith a coefficient , and 2) a measure of pairwise similarity 
+between between X, and X, expressed in ternIs of a kernel function K(X, X). The 
+predicted label  for the new example X is derived from the following rule: 
+sign ( 
+We note that this class of kernel methods also includes probabilistic classifiers, in 
+which case the above rule refers to the label with the maximum probability. The 
+free parameters in the classification rule are the coefficients h, and to some degree 
+also the kernel function /4. To pin down a particular kernel method. two things 
+need to be clarified. First, we must define a classification loss. or equivalently, the 
+optimization problem to solve to determine appropriate values for the coefficients 
+h. Slight variations in the optimization problem can take us from support vector 
+machines to generalized linear models. The second and the more important issue is 
+the choice of the kernel function the main topic of this paper. We begin with a 
+brief illustration of generalized linear models as kernel methods. 
+2.1 Generalized linear models 
+For concreteness we consider tiere only logistic regression models. while emphasizing 
+that the ideas are applicable to a larger class of models 1. In logistic regression 
+models, the probability of the label S given the example X and a parameter vector 
+ is given by 2 
+(slx. o): (so x ) (2) 
+xvhere or(z) : (1 + e-) - is the logistic function. To control the complexity of 
+the model xvhen the number of training examples is small we can assign a prior 
+distribution P(O) over the parameters. We assume here that the prior is a zero 
+mean Gaussian with a possibly full covariance matrix E. The maximum a posteriori 
+(MAP) estimate for the paraneters 0 given a training set of examples is found by 
+Specifically. it applies to all generalized linear models whose transfer functions are 
+log-concave. 
+2Here we assume that the constant +1 is appended to every feature vector X so that 
+an adjustable bias term is included in the inner product OrX. 
+Exploiting Generative Models in Discriminative Classifiers 489 
+maximizing the foilroving penalized log-likelihood: 
+1 
+-,1og P(S, IX,,O) + log P(O ) : 
+I I 
+(3) 
+where the constant c does not depend on 0. It is straightforward to shoxv. simply 
+by taking the gradient with respect to the parameters, that the solution to this 
+(concave) maximization problem can be written as 3 
+- SAEX where A- 0 
+- ' Oz log or(z) 
+(4) 
+.Note that the coefficients h, appear as weights on tile training examples as in the 
+definition of tile kernel methods. Indeed. inserting the above solution back into the 
+conditional probability model gives 
+(5) 
+By identifying K(X,. X) = X,rEX and noting that the label with tile maximum 
+probability is the one that has the same sign as the sum in the argument. this gives 
+the decision rule (1). 
+Through the above derivation, we have written the primal parameters 0 in terms 
+of the dual coefficients 2,4 Consequently. the penalized log-likelihood function can 
+be also written entirely in terms of 2,: the resulting likelihood finction specifies 
+how the coefficients are to be optinfized. This optimization problem has a unique 
+solution and can be put into a generic form. Also, the form of the kernel fimction 
+that establishes the connection between the logistic regression model and a kernel 
+classifier is rather specific, i.e.. has the inner product. form N(X,. X) -- XfEX. 
+However. as long as tile examples here can be replaced with feature vectors derived 
+from the examples, this form of the kernel function is the most general. We discuss 
+this further in tile next section. 
+3 The kernel function 
+For a general kernel function to be valid. roughly speaking it only needs to be pos- 
+itive semi-definite (see e.g. [7]). According to the Mercer's theorem. any such valid 
+kernel function admits a representation as a simple inner product between suitably 
+defined feature vectors, i.e.. K(X,, Xg) = .. o.�. where tile feature vectors come 
+from some fixed mapping X - Ox. For example. in the previous section the kernel 
+function had the form X,XXg, which is a simple inner product for the transformed 
+1 . 
+feature vector 0.� = XX. 
+Specifying a simple inner product in the feature space defines a Euclidean met- 
+tic space. Consequently. the Euclidean distances between the feature vectors are 
+obtained directly from the kernel function: xvith the shorthand notation I' = 
+3This corresponds to a Legendre transformation of the loss fimctions log rr(z). 
+4This is possible for all those 0 that could arise as solutions to the maxinmn penalized 
+likelihood problem: in other words, for all relevant 0. 
+490 T. S. Jaakkola and D. Haussler 
+K(Xi, Xj) we get IlOx, - 0x, [I 2 = K,i - 2K,j + Kjj. In addition to defining the 
+metric structure in the feature space, the kernel defines a pseudo metric in the orig- 
+inal example space through D(Xi,X) = 110x -Oxl]. Thus the kernel embodies 
+prior assumptions about the metric relations between the original examples. No 
+systematic procedure has been proposed for finding kernel functions, let alone find- 
+ing ones that naturally handle variable length examples etc. This is the topic of the 
+next section. 
+4 
+Kernels from generative probability models: the Fisher 
+kernel 
+The key idea here is to derive the kernel function from a generarive probability 
+model. We arrive at the same kernel function from two different perspectives, that 
+of enhancing the discriminative power of the model and from an attempt to find 
+a natural comparison between examples induced by the generarive model. Both of 
+these ideas are developed in more detail in the longer version of this paper[4]. 
+We have seen in the previous section that defining the kernel function automatically 
+implies assumptions about metric relations between the examples. We argue that 
+these metric relations should be defined directly from a generative probability model 
+P(X[19). To capture the generarive process in a metric between examples we use 
+the gradient space of the generarive model. The gradient of the log-likelihood with 
+respect to a parameter describes how that parameter contributes to the process of 
+generating a particular example . This gradient space also naturally preserves all 
+the structural assumptions that the model encodes about the generation process. 
+To develop this idea more generally, consider a parametric class of models P(XI19), 
+19 c (3. This class of probability models defines a Riemannian manifold _/llo with 
+a local metric given by the Fisher information matrix 6 I, where I = Ex{UxU.}, 
+Ux = V0 log P(XIO), and the expectation is over P(X[19) (see e.g. [1]). The gradient 
+of the log-likelihood, Ux, is called the Fisher score, and plays a fundamental role in 
+our development. The local metric on AIo defines a distance between the current 
+model P(X[19) and a nearby model P(XI19+5 ). This distance is given by D(19, 19+5) = 
+-}5TI5, which also approximates the KL-divergence between the two models for a 
+sufficiently small 5. 
+The Fisher score Ux = 70 log P(X[O) maps an example X into a feature vec

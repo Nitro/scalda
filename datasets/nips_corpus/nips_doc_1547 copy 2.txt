@@ -1,0 +1,159 @@
+Learning multi-class dynamics 
+A. Blake, B. North and M. Isard 
+Department of Engineering Science, University of Oxford, Oxford OX1 3P J, UK. 
+Web: http://www.robots.ox.ac.uk/,-vdg/ 
+Abstract 
+Standard techniques (eg. Yule-Walker) are available for learning 
+Auto-Regressive process models of simple, directly observable, dy- 
+namical processes. When sensor noise means that dynamics are 
+observed only approximately, learning can still been achieved via 
+Expectation-Maximisation (EM) together with Kalman Filtering. 
+However, this does not handle more complex dynamics, involving 
+multiple classes of motion. For that problem, we show here how 
+EM can be combined with the CONDENSATION algorithm, which 
+is based on propagation of random sample-sets. Experiments have 
+been performed with visually observed juggling, and plausible dy- 
+namical models are found to emerge from the learning process. 
+I Introduction 
+The paper presents a probabilistic framework for estimation (perception) and classi- 
+fication of complex time-varying signals, represented as temporal streams of states. 
+Automated learning of dynamics is of crucial importance as practical models may 
+be too complex for parameters to be set by hand. The framework is particularly 
+general, in several respects, as follows. 
+1. Mixed states: each state comprises a continuous and a discrete component. 
+The continuous component can be thought of as representing the instantaneous 
+position of some object in a continuum. The discrete state represents the current 
+class of the motion, and acts as a label, selecting the current member from a set of 
+dynamical models. 
+2. Multi-dimensionality: the continuous component of a state is, in general, 
+allowed to be multi-dimensional. This could represent motion in a higher dimen- 
+sional continuum, for example, two-dimensional translation as in figure 1. Other 
+examples include multi-spectral acoustic or image signals, or multi-channel sensors 
+such as an electro-encephalograph. 
+390 A. Blake, B. North and M. Isard 
+Figure 1: Learning the dynamics of juggling. Three motion classes, emerging 
+from dynamical learning, turn out to correspond accurately to ballistic motion (mid 
+grey), catch/throw (light grey) and carry (dark grey). 
+3. Arbitrary order: each dynamical system is modelled as an Auto-Regressive 
+Process (ARP) and allowed to have arbitrary order (the number of time-steps of 
+memory that it carries.) 
+4. Stochastic observations: the sequence of mixed states is hidden not 
+observable directly, but only via observations, which may be multi-dimensional, 
+and are stochastically related to the continuous component of states. This aspect is 
+essential to represent the inherent variability of response of any real signal sensing 
+system. 
+Estimation for processes with properties 2,3,4 has been widely discussed both in 
+the control-theory literature as estimation and Kalman filtering (Gelb, 1974) 
+and in statistics as forecasting (Brockwell and Davis, 1996). Lee/rning of models 
+with properties 2,3 is well understood (Gelb, 1974) and once learned can be used 
+to drive pattern classification procedures, as in Linear Predictive Coding (LPC) in 
+speech analysis (Rabiner and Bing-Hwang, 1993), or in classification of EEG signals 
+(Pardey et al., 1995). When property 4 is added, the learning problem becomes 
+harder (Ljung, 1987) because the training sets are no longer observed directly. 
+Mixed states (property 1) allow for combining perception with classification. Allow- 
+ing properties 2,4, but restricted to a 0th order ARP (in breach of property 3), gives 
+Learning Multi-Class Dynamics 391 
+Hidden Markov Models (HMM) (Rabiner and Bing-Hwang, 1993), which have been 
+used effectively for visual classification (Bregler, 1997). Learning HMMs is accom- 
+plished by the Baum-Welch algorithm, a form of Expectation-Maximisation (EM) 
+(Dempster et al., 1977). Baum-Welch learning has been extended to graphical- 
+models of quite general topology (Lauritzen, 1996). In this paper, graph topology 
+is a simple chain-pair as in standard HMMs, and the complexity of the problem lies 
+elsewhere -- in the generality of the dynamical model. 
+Generally then, restoring non-zero order to the ARPs (property 3), there is no exact 
+algorithm for estimation. However the estimation problem can be solved by random 
+sampling algorithms, known variously as bootstrap filters (Gordon et al., 1993), 
+particle filters (Kitagawa, 1996), and CONDENSATION (Blake and Isard, 1997). Here 
+we show how such algorithms can be used, with EM, in dynamical learning theory 
+and experiments (figure 1). 
+2 Multi-class dynamics 
+Continuous dynamical systems can be specified in terms of a continuous state vector 
+xt G T N . In machine vision, for example, xt represents the parameters of a time- 
+varying shape at time t. Multi-class dynamics are represented by appending to the 
+continuous state vector xt, a discrete state component Yt to make a mixed state 
+Xt = 
+Yt ' 
+where yt G 32 = {1,...,Ny} is the discrete component of the state, drawn from 
+a finite set of integer labels. Each discrete state represents a class of motion, for 
+example stroke, rest and shade for a hand engaged in drawing. 
+Corresponding to each state yt - Y there is a dynamical model, taken to be a 
+Markov model of order K y that specifies pi(xtlxt_,... Xt-K). A linear-Gaussian 
+Markov model of order K is an Auto-Regressive Process (ARP) defined by 
+K 
+xt =  A xt_ + d + Bwt 
+k=l 
+in which each wt is a vector of Nx independent random At(0, 1) variables and wt, 
+wt, are independent for t  tt. The dynamical parameters of the model are 
+� deterministic parameters A, -42,..., AK 
+� stochastic parameters B, which are multipliers for the stochastic process wt, 
+and determine the coupling of noise wt into the vector valued process xt. 
+For convenience of notation, let 
+A=(A A ... A ). 
+Each state y G 32 has a set {A y, B y, d y} of dynamical parameters, and the goal is 
+to learn these from example trajectories. Note that the stochastic parameter B y 
+is a first-class part of a dynamical model, representing the degree and the shape 
+of uncertainty in motion, allowing the representation of an entire distribution of 
+possible motions for each state y. In addition, and independently, state transitions 
+are governed by the transition matrix for a 1st order Markov chain: 
+P(Yt = Y'IYt- = Y) = My,y,. 
+392 ,4. Blake, B. North and M. Isard 
+Observations zt are assumed to be conditioned purely on the continuous part x of 
+the mixed state, independent of yt, and this maintains a healthy separation between 
+the modelling of dynamics and of observations. Observations are also assumed to 
+be independent, both mutually and with respect to the dynamical process. The 
+observation process is defined by specifying, at each time t, the conditional density 
+p(ztIxt ) which is taken to be Gaussian in experiments here. 
+3 Maximum Likelihood learning 
+When observations are exact, maximum likelihood estimates (MLE) for dynami- 
+cal parameters can be obtained from a training sequence X ... Xc of mixed states. 
+The well known Yule-Walker formula approximates MLE (Gelb, 1974; Ljung, 1987), 
+but generalisations are needed to allow for short training sets (small T), to include 
+stochastic parameters B, to allow a non-zero offset d (this proves essential in ex- 
+periments later) and to encompass multiple dynamical classes. 
+The resulting MLE learning rule is as follows. 
+1 
+AY y: ft. oy, d y: (Ro y - AYRY), C y = 
+TY -- Ky 
+1 
+ry- xy ( o,o - 
+where (omitting the Y superscripts for clarity) C = BB - and 
+fro = ( ' o,K ), R = 
+(Rx ), 
+and the first-order moments Ri and (offset-invariant) autocorrelations li,j, for each 
+class y, are given by 
+---- Xt--i ,3 ,3 
+1 
+where 
+Z * * ' * Z 
+� ,3 xt_ixt_ j , Ty={t'y t =y}-- 1. 
+Yt:Y t:yt:y 
+The MLE for the transition matrix M is constructed from relative frequencies as: 
+Ty,y, where Ty,y, - {t ' Y-i = Y, Y = Y'). 
+My,y,: Yy'Ey Ty,y, 
+4 Learning with stochastic observations 
+To allow for stochastic observations, direct MLE is no longer possible, but an EM 
+learning algorithm can be formulated. Its M-step is simply the MLE estimate of 
+the previous section. It might be thought that the E-step should consist simply of 
+computing expectations, for instance �[xtIZxT], (where 2 = (z,... ,zt) denotes a 
+sequence of observations) and treating them as training values x. This would be 
+incorrect however because the log-likelihood function/2 for the problem is not linear 
+in the x but quadratic. Instead, we need expectations 
+Learning Multi-Class Dynamics 393 
+conditioned on the entire training set Z T of observations, given that � is linear 
+in the Ri, Ri,j etc. (Shumway and Stoffer, 1982). These expected values of auto- 
+correlations and frequencies are to be used in place of actual autocorrelations and 
+frequencies in the learning formulae of section 3. The question is, how to compute 
+them. In the special case 32 = {1} of single-class dynamics, and assuming a Gaussian 
+observation density, exact methods are available for computing expected moments, 
+using Kalman and smoothing filters (Gelb, 1974), in an augmented state filter 
+(North and Blake, 1998). For multi-class dynamics, exact computation is infeasi- 
+ble, but good approximations can be achieved based on propagation of sample sets, 
+using CONDENSATION. 
+Forward sampling with backward chaining 
+For the purposes of learning, an extended and generalised form of the CONDEN- 
+SATION algorithm is required. The generalisations allow for mixed states, arbi- 
+trary order for the ARP, and backward-chaining of samples. In backward chaining, 
+sample-sets for successive times are built up and stored together with a complete 
+state history back to time t - 0. The extended CONDENSATION algorithm is given 
+in figure 2. Note that the algorithm needs to be initialised. This requires that the 
+Yo and (X � , k - 0, K TM - 1)

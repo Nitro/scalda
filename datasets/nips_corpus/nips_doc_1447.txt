@@ -1,0 +1,139 @@
+Finite-Sample Convergence Rates for 
+Q-Learning and Indirect Algorithms 
+Michael Kearns and Satinder Singh 
+AT&T Labs 
+180 Park Avenue 
+Florham Park, NJ 07932 
+{ mkear ns, bavej a} @research. at t. com 
+Abstract 
+In this paper, we address two issues of long-standing interest in the re- 
+inforcement learning literature. First, what kinds of performance guar- 
+antees can be made for Q-learning after only a finite number of actions? 
+Second, what quantitative comparisons can be made between Q-learning 
+and model-based (indirect) approaches, which use experience to estimate 
+next-state distributions for off-line value iteration? 
+We first show that both Q-learning and the indirect approach enjoy 
+rather rapid convergence to the optimal policy as a function of the num- 
+ber of state transitions observed. In particular, on the order of only 
+(Nlog(1/e)/e2)(log(N) + loglog(I/e)) transitions are sufficient for both 
+algorithms to come within e of the optimal policy, in an idealized model 
+that assumes the observed transitions are well-mixed throughout an 
+N-state MDP. Thus, the two approaches have roughly the same sample 
+complexity. Perhaps surprisingly, this sample complexity is far less than 
+what is required for the model-based approach to actually construct a good 
+approximation to the next-state distribution. The result also shows that 
+the amount of memory required by the model-based approach is closer to 
+N than to N 2. 
+For either approach, to remove the assumption that the observed tran- 
+sitions are well-mixed, we consider a model in which the transitions are 
+determined by a fixed, arbitrary exploration policy. Bounds on the number 
+of transitions required in order to achieve a desired level of performance 
+are then related to the stationary distribution and mixing time of this 
+policy. 
+1 Introduction 
+There are at least two different approaches to learning in Markov decision processes: 
+indirect approaches, which use control experience (observed transitions and payoffs) 
+to estimate a model, and then apply dynamic programming to compute policies from 
+the estimated model; and direct approaches such as Q-learning [2], which use control 
+Convergence Rates for Q-Learning and Indirect Algorithms 997 
+experience to directly learn policies (through value functions) without ever explicitly 
+estimating a model. Both are known to converge asymptotically to the optimal pol- 
+icy [1, 3]. However, little is known about the performance of these two approaches 
+after only a finite amount of experience. 
+A common argument offered by proponents of direct methods is that it may require 
+much more experience to learn an accurate model than to simply learn a good policy. 
+This argument is predicated on the seemingly reasonable assumption that an indirect 
+method must first learn an accurate model in order to compute a good policy. On 
+the other hand, proponents of indirect methods argue that such methods can do 
+unlimited off-line computation on the estimated model, which may give an advantage 
+over direct methods, at least if the model is accurate. Learning a good model may 
+also be useful across tasks, permitting the computation of good policies for multiple 
+reward functions [4]. To date, these arguments have lacked a formal framework for 
+analysis and verification. 
+In this paper, we provide such a framework, and use it to derive the first finite-time 
+convergence rates (sample size bounds) for both Q-learning and the standard indirect 
+algorithm. An important aspect of our analysis is that we separate the quality of the 
+policy generating experience from the quality of the two learning algorithms. In 
+addition to demonstrating that both methods enjoy rather rapid convergence to the 
+optimal policy as a function of the amount of control experience, the convergence rates 
+have a number of specific and perhaps surprising implications for the hypothetical 
+differences between the two approaches outlined above. Some of these implications, 
+as well as the rates of convergence we derive, were briefly mentioned in the abstract; 
+in the interests of brevity, we will not repeat them here, but instead proceed directly 
+into the technical material. 
+2 MDP Basics 
+Let M be an unknown N-state MDP with A actions. We use P(ij) to denote the 
+probability of going to state j, given that we are in state i and execute action a; 
+and _R4(i ) to denote the reward received for executing a from i (which we assume is 
+fixed and bounded between 0 and 1 without loss of generality). A policy r assigns 
+an action to each state. The value of state i under policy r, V(i), is the expected 
+discounted sum of rewards received upon starting in state i and executing r forever: 
+V(i) = E=[r + 7r2 + 72r3 + '], where rt is the reward received at time step t 
+under a random walk governed by r from start state i, and 0 <_ '< 1 is the discount 
+factor. It is also convenient to define values for state-action pairs (i,a)' Q4(i, a)= 
+-R4(i) + 7 -,j P (ij) V (j). The goal of learning is to approximate the optimal policy 
+r* that maximizes the value at every state; the optimal value function is denoted Q4. 
+Given Q, we can compute the optimal policy as r*(i): argmaxa{Q4(i,a)}. 
+If M is given, value iteration can be used to compute a good approximation to the 
+optimal value function. Setting our initial guess as Qo(i,a) = 0 for all (i,a), we 
+iterate as follows: 
+Qt+(i,a) : t4(i ) + 7E[Pi(ij)�(j)] (1) 
+J 
+where we define �(j) = max,{Qt(j,b)}. It can be shown that after e iterations, 
+<_ Given any approximation Q to Q4 we can com- 
+pute the greedy approximation r to the optimal policy r* as r(i) -- argmax a {Q(i, a) }. 
+998 M. Kearns and S. Singh 
+The Parallel Sampling Model 
+In reinforcement learning, the transition probabilities P4(ij) are not given, and a 
+good policy must be learned on the basis of observed experience (transitions) in M. 
+Classical convergence results fc;r algorithms such as Q-learning [1] implicitly assume 
+that the observed experience is generated by an arbitrary exploration policy r, and 
+then proceed to prove convergence to the optimal policy if r meets certain mini- 
+mal conditions -- namely, r must try every state-action pair infinitely often, with 
+probability 1. This approach conflares two distinct issues: the quality of the explo- 
+ration policy r, and the quality of reinforcement learning algorithms using experience 
+generated by rr. In contrast, we choose to separate these issues. If the exploration 
+policy never or only very rarely visits some state-action pair, we would like to have 
+this reflected as a factor in our bounds that depends only on rr; a separate factor 
+depending only on the learning algorithm will in turn reflect how efficiently a partic- 
+ular learning algorithm uses the experience generated by rr. Thus, for a fixed r, all 
+learning algorithms are placed on equal footing, and can be directly compared. 
+There are probably various ways in which this separation can be accomplished; we 
+now introduce one that is particularly clean and simple. We would like a model of 
+the ideal exploration policy -- one that produces experiences that are well-mixed, 
+in the sense that every state-action pair is tried with equal frequency. Thus, let us 
+define a parallel sampling subroutine PS(M) that behaves as follows: a single call to 
+PS(M) returns, for every state-action pair (i,a), a random next state j distributed 
+according to P(ij). Thus, every state-action pair is executed simultaneously, and 
+the resulting N x A next states are reported. A single call to PS(M) is therefore really 
+simulating N x A transitions in M, and we must be careful to multiply the number 
+of calls to PS(M) by this factor if we wish to count the total number of transitions 
+witnessed. 
+What is PS(M) modeling? It is modeling the idealized exploration policy that man- 
+ages to visit every state-action pair in succession, without duplication, and without 
+fail. It should be intuitively obvious that such an exploration policy would be optimal, 
+from the viewpoint of gathering experience everywhere as rapidly as possible. 
+We shall first provide an analysis, in Section 5, of both direct and indirect reinforce- 
+ment learning algorithms, in a setting in which the observed experience is generated 
+by calls to PS(M). Of course, in any given MDP M, there may not be any exploration 
+policy that meets the ideal captured by PS(M) -- for instance, there may simply be 
+some states that are very difficult for any policy to reach, and thus the experience 
+generated by any policy will certainly not be equally mixed around the entire MDP. 
+(Indeed, a call to PS(M) will typically return a set of transitions that does not even 
+correspond to a trajectory in M.) Furthermore, even if PS(M) could be simulated 
+by some exploration policy, we would like to provide more general results that ex- 
+press the amount of experience required for reinforcement learning algorithms under 
+any exploration policy (where the amount of experience will, of course, depend on 
+properties of the exploration policy). 
+Thus, in Section 6, we sketch how one can bound the amount of experience required 
+under any r in order to simulate calls to PS(M). (More detail will be provided in a 
+longer version of this paper.) The bound depends on natural properties of r, such as 
+its stationary distribution and mixing time. Combined with the results of Section $, 
+we get the desired two-factor bounds discussed above: for both the direct and indirect 
+approaches, a bound on the total number of transitions required, consisting of one 
+factor that depends only on the algorithm, and another factor that depends only on 
+the exploration policy. 
+Convergence Rates for Q-Learning and Indirect Algorithms 999 
+4 The Learning Algorithms 
+We now explicitly state the two reinforcement learning algorithms we shall analyze 
+and compare. In keeping with the separation between algorithm

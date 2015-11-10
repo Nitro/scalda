@@ -1,0 +1,151 @@
+Bayesian Map Learning in Dynamic 
+Environments 
+Kevin P. Murphy 
+Computer Science Division 
+University of California 
+Berkeley, CA 94720-1776 
+murphyk @cs. berkeley. edu 
+Abstract 
+We consider the problem of learning a grid-based map using a robot 
+with noisy sensors and actuators. We compare two approaches: 
+online EM, where the map is treated as a fixed parameter, and 
+Bayesian inference, where the map is a (matrix-valued) random 
+variable. We show that even on a very simple example, online EM 
+can get stuck in local minima, which causes the robot to get lost 
+and the resulting map to be useless. By contrast, the Bayesian 
+approach, by maintaining multiple hypotheses, is much more ro- 
+bust. We then introduce a method for approximating the Bayesian 
+solution, called Rao-Blackwellised particle filtering. We show that 
+this approximation, when coupled with an active learning strategy, 
+is fast but accurate. 
+I Introduction 
+The problem of getting mobile robots to autonomously learn maps of their envi- 
+ronment has been widely studied (see e.g., [9] for a collection of recent papers). 
+The basic difficulty is that the robot must know exactly where it is (a problem 
+called localization), so that it can update the right part of the map. However, to 
+know where it is, the robot must already have a map: relying on dead-reckoning 
+alone (i.e., integrating the motor commands) is unreliable because of noise in the 
+actuators (slippage and drift). 
+One obvious solution is to use EM, where we alternate between estimating the 
+location given the map (the E step), and estimating the map given the location 
+(the M step). Indeed, this approach has been successfully used by several groups 
+[8, 11, 12]. However, in all of these works, the trajectory of the robot was specified 
+by hand, and the map was learned off-line. For fully autonomous operation, and to 
+cope with dynamic environments, the map must be learned online. 
+We consider two approaches to online learning: online EM, and Bayesian inference, 
+1016 K. P. Murphy 
+a b c 
+Figure 1: (a) The POMDP represented as a graphical model. Lt is the location, 
+Me(i) is the label of the i'th grid cell, At is the action, and Zt is the observation. 
+Dotted circles denote variables that EM treats as parameters. (b) A one-dimensional 
+grid with binary labels (white = 0, black = 1). (c) A two-dimensional grid, with 
+four labels (closed doors, open doors, walls, and free space). 
+where we treat the map as a random variable. In Section 3, we show that the 
+Bayesian approach can lead to much better results than online EM; unfortunately, 
+it is computationally intractable, so in Section 4, we discuss an approximation based 
+on Rao-Blackwellised particle filtering. 
+2 The model 
+We now precisely define the model that we will use in this paper; it is similar to, but 
+much simpler than, the occupancy grid model in [12]. The map is defined to be a 
+grid, where each cell has a label which represents what the robot would see at that 
+point. More formally, the map at time t is a vector of discrete random variables, 
+Mr(i)  {1,...,No), where I _< i < NL. Of course, the map is not observed 
+directly, and nor is the robot's location, Lt  {1,..., NL). What is observed is 
+Zt  {1,...,No), the label of the cell at the robot's current location, and At  
+{1,...,NA), the action chosen by the robot just before time t. The conditional 
+independence assumptions we are making are illustrated in Figure l(a). We start 
+by considering the very simple one-dimensional grid shown in Figure l(b), where 
+there are just two actions, move right (-+) and move left (--), and just two labels, 
+off (0) and on (1). This is sufficiently small that we can perform exact Bayesian 
+inference. Later, we will generalize to two dimensions. 
+The prior for the location is a delta function with all its mass on the first (left-most) 
+cell, independent of A1. The transition model for the location is as follows. 
+Pr(Lt - j]Lt-1 - i, At --Y) -- 1 - Pa 
+1 
+0 
+ifj=i+l,j(N 
+if j =i,j 
+ifj=i- 
+otherwise 
+where Pa is the probability of a successful action, i.e., 1 - Pa is the probability that 
+the robot's wheels slip. There is an analogous equation for the case when At -{--. 
+Note that it is not possible to pass through the rightmost cell; the robot can use 
+this information to help localize itself. 
+The prior for the map is a product of the priors for each cell, which are uniform. 
+(We could model correlation between neighboring cells using a Markov Random 
+Field, although this is computationally expensive.) The transition mot[el for the 
+map is a product of the transition models for each cell, which are defined as follows: 
+Bayesian Map Learning in Dynamic Environments 1 O17 
+the probability that a 0 becomes a 1 or vice versa is Pc (probability of change), and 
+hence the probability that the cell label remains the same is 1 - 
+Finally, the observation model is 
+Pr(Zt = k[Mt = (ml,... ,mNL),Lt -- i) = { Po if mi = k 
+I - po otherwise 
+where Po is the probability of a succesful observation, i.e., 1 - Po is the probability 
+of a classification error. Another way of writing this, that will be useful later, is to 
+introduce the dummy deterministic variable, Z, which has the following distribu- 
+tion: Pr(Z = klMt = (ml,... ,mNL),Lt = i) = 5(k, mi), where 5(a,b) - 1 if a = b 
+and is 0 otherwise. Thus Z acts just like a multiplexer, selecting out a component 
+of Mt as determined by the gate Lt. The output of the multiplexer is then passed 
+through a noisy channel, which flips bits with probability 1 -po, to produce Zt. 
+3 Bayesian learning compared to EM 
+For simplicity, we assume that the parameters po, Pa and Pc, are all known. (In this 
+section, we use Po = 0.9, Pa ---- 0.8 and Pc = 0, so the world is somewhat slippery, 
+but static in appearance.) The state estimation problem is to compute the belief 
+state Pr(Lt, Mtlyl:t), where Yt = (Zt, At) is the evidence at time t; this is equiv- 
+alent to performing online inference in the graphical model shown in Figure l(a). 
+Unfortunately, even though we have assumed that the components of Mt are a pri- 
+ori independent, they become correlated by virtue of sharing a common child, Zt. 
+That is, since the true location of the robot is unknown, all of the cells are possible 
+causes of the observation, and they compete to explain the data. Hence all of 
+the hidden variables become coupled, and the belief state has size O(NL2r). 
+If the world is static (i.e., Pc = 0), we can treat M as a fixed, but unknown, 
+parameter; this can then be combined with the noisy sensor model to define an 
+HMM with the following observation matrix: 
+B(i,k) deaf Pr(Zt = kilt - i;M) =  Pr(Zt = k[Z = j)5(M(i),j) 
+We can then learn B using EM, as in [8, 11, 12]. (We assume for now that the HMM 
+transition matrix is independent of the map, and encodes the known topology of 
+the grid, i.e., the robot can move to any neighboring cell, no matter what its label 
+is. We will lift this restriction in the 2D example. 
+We can formulate an online version of EM as follows. We use fixed-lag smoothing 
+with a sliding window of length W, and compute the expected sufficient statis- 
+tics (ESS) for the observation matrix within this window as follows: Or(i, k) = 
+t 
+'-r=t-W:Z,=k Lrlt(i)' where Llt(i) = Pr(Lr = ilYx:t). We can compute L using 
+the forwards-backwards algorithm, using Lt_W_Xlt_ 1 as the prior. (The initial con- 
+dition is  = r, where r is the (known) prior for L0.) Thus the cost per time step is 
+O(2WN). In the M step, we normalize each row of Ot + d x Or-x, where 0 < d < 1 
+is a decay constant, to get the new estimate of B. We need to downweight the 
+previous ESS since they were computed using out-of-date parameters; in addition, 
+exponential forgetting allows us to handle dynamic environments. [1] discuss some 
+variations on this algorithm. 
+1018 K. P. Murphy 
+b c d 
+Figure 2: (a) The full joint posterior on P(Mt[Yl:t). 0 and 255, on the axis into the 
+page, represent the maps where every cell is off and every cell is on, respectively; the 
+mode at t - 16 is for map 171, which corresponds to the correct pattern 01010101. 
+(b-d) Estimated map. Light cells are more likely to contains Os, so the correct 
+pattern should have light bars in the odd rows. (b) The marginals of the exact 
+joint. (c) Online EM. (d) Offline EM. 
+As the window length increases, past locations are allowed to look at more and 
+more future data, and hence their estimates become more accurate; however, the 
+space and time requirements increase. Nevertheless, there are occasions when even 
+the maximum window size (i.e., looking all the way back to - - 0) will perform 
+poorly, because of the greedy hill-climbing nature of EM. For a simple example of 
+this, consider the environment shown in Figure l(b). Suppose the robot starts in 
+cell 1, keeps going right until it comes to the end of the corridor, and then heads 
+back home. Suppose further that there is a single slippage error at t -- 4, so the 
+actual path and observation sequence of the robot is as follows: 
+t I 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 
+Lt I 2 3 4 4 5 6 7 8 7 6 5 4 3 2 1 
+Zt 0 I 0 I I 0 I 0 I 0 I 0 I 0 I 0 
+To study the effect of this sequence, we computed Pr(Mt, Ltlyl:t) by applying the 
+junction tree algorithm to the graphical model in Figure l(a). We then marginalized 
+out Lt to compute the posterior P(Mt): see Figure 2(a). At t = 1, there are 27 
+modes, corresponding to all possible bit patterns on the unobserved cells. At each 
+time step, the robot thinks it is moving one step to the right. Hence at t = 8, the 
+robot thinks it is in cell 8, and observes 0. When it tries to move right it knows 
+it will remain in cell 8 (since the robot knows where the boundaries are). Hence at 
+t = 9, it is almost 70% confident that it is in cell 8. At t = 9, it observes a 1, which 
+contradicts its previous observation of 0. There are two possible explanations: this 
+is a sensor

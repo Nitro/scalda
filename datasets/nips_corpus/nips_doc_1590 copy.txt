@@ -1,0 +1,151 @@
+Leveraged Vector Machines 
+Yoram Singer 
+Hebrew University 
+singer@cs.huj i. ac. il 
+Abstract 
+We describe an iterative algorithm for building vector machines used in 
+classification tasks. The algorithm builds on ideas from support vector 
+machines, boosting, and generalized additive models. The algorithm can 
+be used with various continuously differential functions that bound the 
+discrete (0-1) classification loss and is very simple to implement. We test 
+the proposed algorithm with two different loss functions on synthetic and 
+natural data. We also describe a norm-penalized version of the algorithm 
+for the exponential loss function used in AdaBoost. The performance of 
+the algorithm on natural data is comparable to support vector machines 
+while typically its running time is shorter than of SVM. 
+1 Introduction 
+Support vector machines (SVM) [1, 13] and boosting [10, 3, 4, 1 l] are highly popular and 
+effective methods for constructing linear classifiers. The theoretical basis for SVMs stems 
+from Vapnik's seminal on learning and generalization [12] and has proved to be of great 
+practical usage. The first boosting algorithms [10, 3], on the other hand, were developed 
+to answer certain fundamental questions about PAC-learnability [6]. While mathemati- 
+cally beautiful, these algorithms were rather impractical. Later, Freund and Schapire [4] 
+developed the AriaBoost algorithm, which proved to be a practically useful meta-learning 
+algorithm. AriaBoost works by making repeated calls to a weak learner. On each call the 
+weak learner generates a single weak hypothesis, and these weak hypotheses are combined 
+into an ensemble called strong hypothesis. Recently, Schapire and Singer [11] studied a 
+simple generalization of AriaBoost in which a weak-hypothesis can assign a real-valued 
+confidence to each prediction. Even more recently, Friedman, Hastie, and Tibshirani [5] 
+presented an alternative view of boosting from a statistical point of view and also described 
+a new family of algorithms for constructing generalized additive models of base learners 
+in a similar fashion to AriaBoost. The work of Friedman, Hastie, and Tibshirani generated 
+lots of attention and motivated research in classification algorithms that employ various 
+loss functions [8, 7]. 
+In this work we combine ideas from the research mentioned above and devise an alternative 
+approach to construct vector machines for classification. As in SVM, the base predictors 
+that we use are Mercer kernels. The value of a kernel evaluated at an input pattern, i.e., 
+the dot-product between two instances embedded in a high-dimensional space, is viewed 
+as a real-valued prediction. We describe a simple extension to additive models in which the 
+prediction of a base-learner is a linear transformation of a given kernel. We then describe 
+an iterative algorithm that greedily adds kernels. We derive our algorithm using the expo- 
+nential loss function used in AriaBoost and the loss function used by Friedman, Hastie, and 
+Tibshirani [5] in LogitBoost. For brevity we call the resulting classifiers boosted vector 
+machines (BVM) and logistic vector machines (LVM). We would like to note in passing 
+Leveraged Vector Machines 611 
+that the resulting algorithms are not boosting algorithms in the PAC sense. For instance, 
+the weak-learnability assumption that the weak-learner can always find a weak-hypothesis 
+is violated. We therefore adopt the terminology used in [2] and call the resulting classifiers 
+leveraged vector machines. 
+The leveraging procedure we give adopts the chunking technique from SVM. After present- 
+ing the basic leveraging algorithms we compare their performance with SVM on synthetic 
+data. The experimental results show that the leveraged vector machines achieve similar 
+performance to SVM and often the resulting vector machines are smaller than the ones 
+obtained by SVM. The experiments also demonstrate that BVM is especially sensitive to 
+(malicious) label noise while LVM seems to be more insensitve. We also describe a simple 
+norm-penalized extension of BVM that provides a partial solution to overfitting in the p- 
+resence of noise. Finally, we give results of experiments performed with natural data from 
+the UCI repository and conclude. 
+2 Preliminaries 
+Let $ = ((Xl, y),..., (Xm, Ym)) be a sequence of training examples where each instance 
+xi belongs to a domain or instance space A', and each label Yi is in {-1, +1}. (The 
+methods described in this paper to build vector machines and SVMs can be extended to 
+solve multiclass problems using, for instance, error correcting output coding. Such methods 
+are beyond the scope of this paper and will be discussed elsewhere). For convenience, we 
+will use i to denote (Yi + 1)/2 E {0, 1}. 
+As is boosting, we assume access to a weak or base learning algorithm which accepts as 
+input a weighted sequence of training examples $. Given such input, the weak learner 
+computes a weak (or base) hypothesis h. In general, h has the form h: X - 11. We 
+interpret the sign of h(x) as the predicted label (-1 or +1) to be assigned to instance x, 
+and the magnitude Ih(x) l as the confidence in this prediction. 
+To build vector machines we use the notion of confidence-rated predictions, take for base 
+hypotheses sample-based Mercer kernels [13], and define the confidence (i.e., the magni- 
+tude of prediction) of a base learner to be the value of its dot-product with another instance. 
+The sign of the prediction is set to be the label of the corresponding instance. Formally, 
+for each base hypothesis h there exist (xj,yj)  S such that h(x) = yjK(xj,x) and 
+K(u,v) defines an inner product in a feature space: K(u,v) = E�=l akJk(tt)bk(V). 
+We denote the function induced by an instance label pair (x j, yj) with a kernel K by 
+ckj (x) = yjK(xj, x). Our goal is to find a classifier f(x), called a strong hypothesis in the 
+context of boosting algorithms, of the form f(x) = y'tT=l atht (x) + , such that the signs 
+of the predictions of the classifier should agree, as much as possible, with the labels of the 
+training instances. 
+The leverage algorithm we describe maintains a distribution D over {1,..., m}, i.e., over 
+the indices of $. This distribution is simply a vector of non-negative weights, one weight 
+per example and is an exponential function of the classifier f which is built incrementally, 
+1 m 
+D(i) = exp(-yif(xi)) where Z= Zexp(-yif(xi)). (1) 
+i----1 
+For a random function g of the input instances and the labels, we denote the sample ex- 
+pectation of g according to D by ED(g) - Eim=l D(i)g(xi, Yi). We also use this notation 
+to denote the expectation of matrices of random functions. We will convert a confidence- 
+rated classifier f into a randomized predictor by using the soft-max function and denote it 
+by P(xi) where 
+exp(f(xi)) 1 
+P(xi) = exp(f(xi)) +exp(-f(xi)) - 1 +exp(-2f(xi)) (2) 
+612 Y. Sin�r 
+3 The leveraging algorithm 
+The basic procedure to construct leveraged vector machines builds on ideas from [ 11, $] by 
+extending the prediction to be a linear function of the base classifiers. The algorithm works 
+in rounds, constructing a new classifier ft from the previous one ft-1 by adding a new 
+base hypothesis ht to the current classifier, ft. Denoting by Dt and Pt+l the distribution 
+and probability given by Eqn. (1) and Eqn. (2) using ft and ft+l, the algorithm attempts to 
+minimize either the exponential function that arise in AdaBoost: 
+exp(-yift(xi)) =  exp(-yi(ft-l(Xi) + atht(xi) +/t)) 
+i----1 
+Dt(i) exp (-yi(atht(xi) +/t)), 
+m 
+or the logistic loss 
+(3) 
+function: 
+L - -'log(1 +exp(-2yift(xi))) (4) 
+i----1 
+m 
+Z log (1 + exp (-2yi(ft- (xi) + atht(xi) +/t))) 
+i=1 
+m 
+-- Z (i log(Pt+1(xi)) + (1 - i)log(1 - Pt+l(Xi))) � 
+i----1 
+and for L 
+We initialize fo(x) to be zero everywhere and run the procedure for a predefined num- 
+ber of rounds T. The final classifier is therefore fT(x) = E=l(atht(x) +/t) = 
+/ + E=i atht(x) where / = Et/t � We would like to note parenthetically that it 
+is possible to use other loss functions that bound the 0-1 (classification) loss (see for in- 
+stance [8]). Here we focus on the above loss functions, L and Z. Fixing ft- and ht, these 
+functions are convex in at and/t which guarantees, under mild conditions (details omitted 
+due to lack of space), the uniqueness of at and fit. 
+On each round we look for the current base hypothesis ht that will reduce the loss function 
+(Z or L) the most. As discussed before, each input instance xj defines a function �j (x) 
+and is a candidate for ht (x). In general, there is no close form solution for Eqn. (3) and (5) 
+and finding a and/ for each possible input instance is time consuming. We therefore use a 
+quadratic approximation for the loss functions. Using the quadratic approximation, for each 
+�j we can find a and/ analytically and calculate the reduction in the loss function. Let 
+VZ (oz oz r 
+- - (-'d, oZ ) be the column vectors of the partial derivatives 
+o,o) andVL o: o: r 
+of Z and L w.r.t a and/ (fixing ft-1 and ht). Similarly, let V2Z and 72L be the 2 x 2 
+matrices of second order derivatives of Z and L with respect to a and/. Then, quadratic 
+approximation yields that (o 6/)T = (V2Z)- V'Z and (o 6/)T = (V2L)-I VL. On 
+each round t we maintain a distribution Dt which is defined from ft as given by Eqn. (1) 
+and conditional class probability estimates Pt (xi) as given by Eqn. (2). Solving the linear 
+equation above for a and/ for each possible instance is done by setting ht (x) - c)j (x), 
+we get for Z 
+(Otj [ ( 32' J )]-IED,[y( J )] , (6) 
+---- [ED, [P(1-P)( g} g}; )]]-1 ED,[(-P)( J )] 
+(7) 
+= (5) 
+Leveraged Vector Machines 613 
+Figure 1: Comparison of the test error as 
+a function of number of leveraging rounds 
+when using full numerical search for c and 
+r, a one-step numerical search based on a 
+quadratic approximation of the loss function, 
+and a one-step search with chun

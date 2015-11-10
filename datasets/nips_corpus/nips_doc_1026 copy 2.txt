@@ -1,0 +1,153 @@
+Generalization in Reinforcement 
+Learning: Successful Examples Using 
+Sparse Coarse Coding 
+Richard S. Sutton 
+University of Massachusetts 
+Amherst, MA 01003 USA 
+rchcs. =mass. edu 
+Abstract 
+On large problems, reinforcement learning systems must use parame- 
+terized function approximators such as neural networks in order to gen- 
+eralize between similar situations and actions. In these cses there are 
+no strong theoretical results on the accuracy of convergence, and com- 
+putational results have been mixed. In particular, Boyan and Moore 
+reported at last year's meeting a series of negative results in attempting 
+to apply dynamic programming together with function approximation 
+to simple control problems with continuous state spaces. In this paper, 
+we present positive results for all the control tasks they attempted, and 
+for one that is significantly larger. The most important differences are 
+that we used sparse-coarse-coded function approximators (CMACs) 
+whereas they used mostly global function approximators, and that we 
+learned online whereas they learned offiine. Boyan and Moore and 
+others have suggested that the problems they encountered could be 
+solved by using actual outcomes (rollouts), as in classical Monte 
+Carlo methods, and as in the TD(),) algorithm when ), = 1. However, 
+in our experiments this always resulted in substantially poorer perfor- 
+mance. We conclude that reinforcement learning can work robustly 
+in conjunction with function approximators, and that there is little 
+justification at present for avoiding the case of general ). 
+I Reinforcement Learning and Function Approximation 
+Reinforcement learning is a broad class of optimal control methods based on estimating 
+value functions from experience, simulation, or search (Barto, Bradtke & Singh, 1995; 
+Sutton, 1988; Watkins, 1989). Many of these methods, e.g., dynamic programming 
+and temporal-difference learning, build their estimates in part on the basis of other 
+Generalization in Reinforcement Learning 1039 
+estimates. This may be worrisome because, in practice, the estimates never become 
+exact; on large problems, parameteri,ed function approximators such as neural net- 
+works must be used. Because the estimates are imperfect, and because they in turn 
+are used as the targets for other estimates, it seems possible that the ultimate result 
+might be very poor estimates, or even divergence. Indeed some such methods have 
+been shown to be unstable in theory (Baird, 1995; Gordon, 1995; Tsitsiklis & Van Roy, 
+1994) and in practice (Boyan & Moore, 1995). On the other hand, other methods have 
+been proven stable in theory (Sutton, 1988; Dayan, 1992) and very effective in practice 
+(Lin, 1991; Tesauro, 1992; Zhang & Dietterich, 1995; Crites & Barto, 1996). What are 
+the key requirements of a method or task in order to obtain good performance? The 
+experiments in this paper are part of narrowing the answer to this question. 
+The reinforcement learning methods we use are variations of the sarsa algorithm (Rum- 
+mery & Niranjan, 1994; Singh & Sutton, 1996). This method is the same as the TD(),) 
+algorithm (Sutton, 1988), except applied to state-action pairs instead of states, and 
+where the predictions are used as the basis for selecting actions. The learning agent 
+estimates action-values, Q'(s,a), defined as the expected future reward starting in 
+state s, taking action a, and thereafter following policy r. These are estimated for 
+all states and actions, and for the policy currently being followed by the agent. The 
+policy is chosen dependent on the current estimates in such a way that they jointly 
+improve, ideally approaching an optimal policy and the optimal action-values. In our 
+experiments, actions were selected according to what we call the e-greedy policy. Most 
+of the time, the action selected when in state s was the action for which the estimate 
+((s, a) was the largest (with ties broken randomly). However, a small fraction, e, of the 
+time, the action was instead selected randomly uniformly from the action set (which 
+was always discrete and finite). There are two variations of the sarsa algorithm, one 
+using conventional accumulate traces and one using replace traces (Singh & Sutton, 
+1996). This and other details of the algorithm we used are given in Figure 1. 
+To apply the sarsa algorithm to tasks with a continuous state space, we combined 
+it with a sparse, coarse-coded function approximator known as the CMAC (Albus, 
+1980; Miller, Gordon & Kraft, 1990; Watkins, 1989; Lin & Kim, 1991; Dean et al., 
+1992; Tham, 1994). A CMAC uses multiple overlapping tilings of the state space to 
+produce a feature representation for a final linear mapping where all the learning takes 
+place. See Figure 2. The overall effect is much like a network with fixed radial basis 
+functions, except that it is particularly efficient computationally (in other respects one 
+would expect RBF networks and similar methods (see Sutton & Whitehead, 1993) to 
+work just as well). It is important to note that the tilings need not be simple grids. 
+For example, to avoid the curse of dimensionality, a common trick is to ignore some 
+dimensions in some tilings, i.e., to use hyperplanar slices instead of boxes. A second 
+major trick is hashing--a consistent random collapsing of a large set of tiles into 
+a much smaller set. Through hashing, memory requirements are often reduced by 
+large factors with little loss of performance. This is possible because high resolution is 
+needed in only a small fraction of the state space. Hashing frees us from the curse of 
+dimensionality in the sense that memory requirements need not be exponential in the 
+number of dimensions, but need merely match the real demands of the task. 
+2 Good Convergence on Control Problems 
+We applied the sarsa and CMAC combination to the three continuous-state control 
+problems studied by Boyan and Moore (1995): 2D gridworld, puddle world, and moun- 
+tain car. Whereas they used a model of the task dynamics and applied dynamic pro- 
+gramming backups offiine to a fixed set of states, we learned online, without a model, 
+and backed up whatever states were encountered during complete trials. Unlike Boyan 
+1040 R.S. SIYION 
+1. Initially: w,(f) :- q�, e,(f) :-0, Va E Actions, Vf  EMAC-tiles. 
+2. Start of Trial: s := random-state(); 
+F := features(s); 
+a :- e-greedy-policF). 
+3. Eligibility Traces: eb(f) :-- )eb(f), �b, � f; 
+3a. Accumulate algorithm: e,(f):-e,(f) + 1, �f E F. 
+3b. Replace algorithm: e,(f) := 1, eb(f) := 0, �f E F, �b  a. 
+4. Environment Step: 
+Take action a; observe resultant reward, r, and next state, s'. 
+5. Choose Next Action: 
+F' :- features(s'), unless s' is the terminal state, then F' :-- 0; 
+a' :- e-greedy-policy( F'). 
+6. Learn: wb(f) :-- wb(f) + [r + Efr' w, - Efr w]eb(f), �b, � f . 
+7. Loop: a :- a'; s :- s'; F := F'; if s' is the terminal state, go to 2; else go to 3. 
+Figure 1: The sarsa algorithm for finite-horizon (trial based) tasks. The function e- 
+greedy-policy(F) returns, with probability e, a random action or, with probability 1 -e, 
+computes '-lr w for each action a and returns the action for which the sum is 
+largest, resolving any ties randomly. The function features(s) returns the set of CMAC 
+tiles corresponding to the state s. The number of tiles returned is the constant c. Qo, 
+a, and ) are scalar parameters. 
+Tiling #1 
+Tiling #2 
+Dimension #1 
+Figure 2: CMACs involve multiple overlapping tilings of the state space. Here we show 
+two 5 x 5 regular tilings offset and overlaid over a continuous, two-dimensional state 
+space. Any state, such as that shown by the dot, is in exactly one tile of each tiling. A 
+state's tiles are used to represent it in the sarsa algorithm described above. The tilings 
+need not be regular grids such as shown here. In particular, they are often hyperplanar 
+slices, the number of which grows sub-exponentially with dimensionality of the space. 
+CMACs have been widely used in conjunction with reinforcement learning systems 
+(e.g., Watkins, 1989; Lin & Kim, 1991; Dean, Basye & Shewchuk, 1992; Tham, 1994). 
+Generalization in Reinforcement Learning 1041 
+and Moore s we found robust good performance on all tasks. We report here results for 
+the puddle world and the mountain car, the more difficult of the tasks they considered. 
+Training consisted of a series of trials, each starting from a randomly selected non- 
+goal state and continuing until the goal region was reached. On each step a penalty 
+(negative reward) of -1 was incurred. In the puddle-world task, an additional penalty 
+was incurred when the state was within the puddle regions. The details are given in 
+the appendix. The 3D plots below show the estimated cost-to-goal of each state, i.e., 
+^ 
+max, Q(s, a). In the puddle-world task, the CMACs consisted of 5 tilings, each 5 x 5, 
+as in Figure 2. In the mountain-car task we used 10 tilings, each 9 x 9. 
+Puddle World Learned State Values 
+ T G�al /// 
+/ 
+oo 
+Figure 3: The puddle task and the cost-to-goal function learned during one run. 
+Mountain 
+Car Goal 
+ / Trial 
+/ 
+/// 
+..p 
+O$tt/o  
+O $ ttlo 
+� /// 
+46, 104 120 
+Figure 4: The mountain-car task and the cost-to-goal function learned during one run. 
+The engine is too weak to accelerate directly up the slope; to reach the goal, the car 
+must first move away from it. The first plot shows the value function learned before 
+the goal was reached even once. 
+We also experimented with a larger and more difficult task not attempted by Boyan and 
+Moore. The acrobot is a two-link under-actuated robot (Figure 5) roughly analogous 
+to a gymnast swinging on a highbar (Dejong & Spong, 1994; Spong & Vidyasagar, 
+1989). The first joint (corresponding to the gymnast's hands on the bar) cannot exert 
+1042 R.S. SUTTON 
+The object is to swing the endpoint (the feet) above the bar by an amount equal to 
+one of the links. As in the mountain-car task, there a

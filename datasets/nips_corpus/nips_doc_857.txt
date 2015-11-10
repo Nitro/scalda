@@ -1,0 +1,136 @@
+Coarse-to-Fine Image Search Using Neural 
+Networks 
+Clay D. Spence, John C. Pearson, and Jim Bergen 
+National Information Display Laboratory 
+P.O. Box 8619 
+Princeton, NJ 08543-8619 
+cspence@ sarnoff. com 
+John_Pearson @ maca. sarnoff. com 
+jbergen@sarnoff. com 
+Abstract 
+The efficiency of image search can be greatly improved by using a 
+coarse-to-fine search strategy with a multi-resolution image representa- 
+tion. However, if the resolution is so low that the objects have few dis- 
+tinguishing features, search becomes difficult. We show that the 
+performance of search at such low resolutions can be improved by using 
+context information, i.e., objects visible at low-resolution which are not 
+the objects of interest but are associated with them. The networks can be 
+given explicit context information as inputs, or they can learn to detect 
+the context objects, in which case the user does not have to be aware of 
+their existence. We also use Integrated Feature Pyramids, which repre- 
+sent high-frequency information at low resolutions. The use of multi- 
+resolution search techniques allows us to combine information about the 
+appearance of the objects on many scales in an efficient way. A natural 
+fom of exemplar selection also arises from these techniques. We illus- 
+trate these ideas by training hierarchical systems of neural networks to 
+find clusters of buildings in aerial photographs of farmland. 
+1 INTRODUCTION 
+Coarse-to-fine image search is a general technique for improving the efficiency of any 
+search algorithm. (Burt, 1988a and b; Burt et al., 1989). One begins by searching a low- 
+resolution (coarse-scale) version of the image, typically obtained by constructing an image 
+982 Clay D. Spence, John C. Pearson, Jim Bergen 
+pyramid (Butt and Adelson, 1983). Since this version is smaller than the original, there are 
+far fewer pixels to be processed and the search is correspondingly faster. To improve the 
+certainty of detection and refine the location estimates, the search process is repeated at 
+higher resolution (finer scale), but only in those regions-of-interest (ROls) which were 
+identified at lower resolution as likely to contain one of the objects to be found, thus 
+greatly reducing the actual area to be searched. This process is repeated at successively 
+higher resolutions until sufficient certainty and precision is achieved or the original image 
+has been searched. 1 
+These pyramid techniques scale well with image size and can quickly process large 
+images, but the relatively simple, hand-tuned pattern recognition components that are typ- 
+ically used limit their accuracy. Neural networks provide a complementary set of tech- 
+niques, since they can learn complex patterns, but they don't scale well with image size. 
+We have developed a Hybrid Pyramid/Neural Network (HPNN) system that combines the 
+two techniques so as to leverage their strengths and compensate for their weaknesses. 
+A novel benefit of combining pyramids and neural networks is the potential for automati- 
+cally learning to use context information, by which we mean any visible characteristics of 
+the object's surroundings which tend to distinguish it from other objects. Examples of 
+context information which might be useful in searching aerial photographs for man-made 
+objects are the proximity of roads and terrain type. Pyramids provide the ability to detect 
+context in a low-resolution image representation, which is necessary for efficient process- 
+ing of large regions of the image. Neural networks provide the ability to discover context 
+of which we may be unaware, and to learn the relevance of the context to detection, the 
+dependence of detection probability on distance from a context object, etc. Context can 
+help to narrow the search region at low resolutions and improve the detection performance 
+since it is, by definition, relevant information. Of course, the usefulness of the idea will be 
+different for each problem. 
+Context can be explicitly provided, e.g., in the form of a road map. As mentioned above, a 
+neural net may also learn to exploit some context which is not explicitly provided, but 
+must be inferred from the image data. If there is such context and the network's architec- 
+ture and input features are capable of exploiting it, it should learn to do so even if we use 
+ordinary training methods that do not explicitly take context into account. 
+We currently implement these functions in a hierarchical sequence of ordinary feed-for- 
+ward networks with sigmoidal units, one network at each resolution in an image pyramid 
+(Fig. 1). Each network receives some features extracted from a window in the image, and 
+its output is interpreted as the probability of finding one of the searched-for objects in the 
+center of the window. The network is scanned over all ROIs in this manner. (At the lowest 
+resolution there is one ROI, which is the entire image.) 
+The networks are trained one at a time, starting at the lowest resolution. Context is made 
+available to networks at higher resolutions by giving them information from the lower-res- 
+olution networks as additional inputs, which we will call context inputs. These could be 
+I Several authors have investigated multi-scale processing of one-dimensional signals with neural 
+networks, e.g., Mozer (1994) and Burr and Miyata (1993) studied music composition. Burr and 
+Miyata use sub-sampling as in a pyramid decomposition. Images differ somewhat from music in that 
+there are primitive features at all scales (limited by the sampling rate and image size), whereas the 
+average frequency spectrum of music over a long time span doesn't seem likely to be meaningful. 
+The original paper on pyramid image representation is (Butt and Adelson, 1983). 
+Coarse-To-Fine Image Search Using Neural Networks 983 
+High-Resolution 
+,eso,m,on Fe..ature s /  Targe. t. 
+L Context Information 
+Control of Search Region 
+Low-Resolution 
+Features 
+Figure 1. A Hierarchical Search System that Exploits Context. 
+taken from either the hidden units or output units of the lower-resolution networks. By 
+training the networks in sequence starting at low resolution, we can choose to train the 
+higher-resolution networks in the ROIs selected by the lower-resolution networks, thus 
+providing a simple means of exemplar selection. This coarse-to-fine training is often use- 
+ful, since many problems have relatively few positive examples per image, but because of 
+the size of the image there are an enormous number of more-or-less redundant negative 
+examples. 
+2 AN EXAMPLE PROBLEM 
+To demonstrate these ideas we applied them to the problem of finding clusters of buildings 
+in aerial photographs of a rural area. Since buildings are almost always near a road, roads 
+are context objects associated with buildings. We approached the problem in two ways to 
+demonstrate different capabilities. First, we trained systems of networks with explicitl x 
+provided context in the form of road maps, in order to demonstrate the possible benefits. ' 
+Second, we trained systems without explicitly-provided context, in order to show that the 
+context could be learned. 
+2.1 EXPLICIT CONTEXT 
+For comparison purposes, we trained one network to search a high-resolution image 
+directly, with no explicit context inputs and no inputs from other networks. To demon- 
+strate the effect of learned context on search we trained a second system with no explicit 
+2 It would be surprising if this extra information didn't help, since we know it is relevant. For 
+many applications digitized maps will be available, so demonstrating the possible performance ben- 
+efit is still worth-while. 
+984 Clay D. Spence, John C. Pearson, Jim Bergen 
+context provided to the nets, but each received inputs from all of the networks at lower 
+resolutions. These inputs were simply the outputs of those lower-resolution networks. To 
+demonstrate the benefit of explicitly provided context, we trained a third system with both 
+context inputs from lower-resolution networks and explicit context in the form of a road 
+map of the area, which was registered with the image. 
+2.1.1 Features 
+To preserve some distinguishing features at a given low resolution, we extracted simple 
+features at various resolutions and represented them at the lower resolution. The low-reso- 
+lution representations were constructed by reducing the feature images with the usual 
+blur-and-sub-sample procedure used to construct a Gaussian pyramid (Burt and Adelson, 
+1983). The features should not be too computationally expensive to extract, otherwise the 
+efficiency benefit of coarse-m-fine search would be canceled. 
+The features used as inputs to the neural nets in the building-search systems were simple 
+measures of the spatial image energy in several frequency bands. We constructed these 
+feature images by building the Laplacian pyramid of the image 3 and then taking the abso- 
+lute values of the pixels in each image in the pyramid. We then constructed a Gaussian 
+pyramid of each of these images, to provide versions of them at different resolutions. A 
+neural net searching a given resolution received in. put from each energy image derived 
+from the same resolution and all higher resolutions.'* 
+Binary road-map images were constructed from the digitized aerial photographs. They 
+were reduced in resolution by first performing a binary blur of the image and then sub- 
+sampling it by two in each dimension. In the binary blur procedure each pixel is set to one 
+if any of its nearest neighbors were road pixels before blurring. This is repeated to get road 
+maps at each resolution. To give the networks a rough measure of distance to a road, we 
+gave the nets inputs from linearly-blurred versions of the road maps, which were made by 
+expanding even lower-resolution versions of the road map with the same linear expand 
+operation used in constructing the Laplacian pyramid. These blurred road maps are there- 
+for

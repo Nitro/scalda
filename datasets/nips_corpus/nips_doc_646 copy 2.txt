@@ -1,0 +1,167 @@
+Network Structuring And Training Using 
+Rule-based Knowledge 
+Volker Tresp 
+Siemens AG 
+Central Research 
+Otto-Hahn-Ring 6 
+8000 Miinchen 83, Germany 
+Jiirgen Hollatz* 
+Institut fiir Informatik 
+TU M/inchen 
+Arcisstrate 21 
+8000 Miinchen 2, Germany 
+Subutai Ahmad 
+Siemens AG 
+Central Research 
+Otto-Hahn-Ring 6 
+8000 Miinchen 83, Germany 
+Abstract 
+We demonstrate in this paper how certain forms of rule-based 
+knowledge can be used to prestructure a neural network of nor- 
+malized basis functions and give a probabilistic interpretation of 
+the network architecture. We describe several ways to assure that 
+rule-based knowledge is preserved during training and present a 
+method for complexity reduction that tries to minimize the num- 
+ber of rules and the number of conjuncts. After training the refined 
+rules are extracted and analyzed. 
+1 INTRODUCTION 
+Training a network to model a high dimensional input/output mapping with only a 
+small amount of training data is only possible if the underlying map is of low com- 
+plexity and the network, therefore, can be of low complexity as well. With increasing 
+*Mail address: Siemens AG, Central Research, Otto-Hahn-Ring 6, 8000 Mfinchen 83. 
+871 
+872 Tresp, Hollatz, and Ahmad 
+network complexity, parameter variance increases and. the network prediction be- 
+comes less reliable. This predicament can be solved if we manage to incorporate 
+prior knowledge to bias the network as it was done by RSscheisen, Hofmann and 
+Tresp (1992). There, prior knowledge was available,in the form of an algorithm 
+which summarized the engineering knowledge accumulated over many years. Here, 
+we consider the case that prior knowledge is available in the form of a set of rules 
+which specify knowledge about the input/output mapping that the network has to 
+learn. This is a very common occurrence in industrial and medical applications 
+where rules can be either given by experts or where rules can be extracted from the 
+existing solution to the problem. 
+The inclusion of prior knowledge has the additional advantage that if the network 
+is required to extrapolate into regions of the input space where it has not seen any 
+training data, it can rely on this prior knowledge. Furthermore, in many on-line 
+control applications, the network is required to make reasonable predictions right 
+from the beginning. Before it has seen sufficient training data it has to rely primarily 
+on prior knowledge. 
+This situation is also typical for human learning. If we learn a new skill such 
+as driving a car or riding a bicycle, it would be disastrous to start without prior 
+knowledge about the problem. Typically, we are told some basic rules, which we 
+try to follow in the beginning, but which are then refined and altered through 
+experience. The better our initial knowledge about a problem, the faster we can 
+achieve good performance and the less training is required (Towel, Shavlik and 
+Noordewier, 1990). 
+2 FROM KNOWLEDGE TO NETWORKS 
+We consider a neural network y = A/'A/'(x) which makes a prediction about the state 
+of y G  given the state of its input x G . We assume that an expert provides 
+information about the same mapping in terms of a set of rules. The premise of a 
+rule specifies the conditions on x under which the conclusion can be applied. This 
+region of the input space is formally described by a basis function hi(x). Instead 
+of allowing only binary values for a basis function (1: premise is valid, 0: premise 
+is not valid), we permit continuous positive values which represent the certainty or 
+weight of a rule given the input. 
+We assume that the conclusion of the rule can be described in form of a mathemat- 
+ical expression, such as conclusioni: the output is equal to wi(x) where wi(x) is a 
+function of the input (or a subset of the input) and can be a constant, a polynomial 
+or even another neural network. 
+Since several rules can be active for a given state of the input, we define the output 
+of the network to be a weighted average of the conclusions of the active rules where 
+the weighting factor is proportional to the activity of the basis function given the 
+input 
+y(x) = = 
+b(x ) (1) 
+This is a very general concept since we still have complete freedom to specify the 
+form of the basis function b,(x) and the conclusion wi(x). f hi(x) and wi(x) are 
+Network Structuring And Training Using Rule-based Knowledge 873 
+described by neural networks themselves, there is a close relationship with the 
+adaptive mixtures of local experts (Jacobs, Jordan, Nowlan and Hinton, 1991). On 
+the other hand, if we assume that the basis function can be approximated by a 
+multivariate Gaussian 
+1 (zj -- ]lij) 2 
+b,(x) = exp[- % 1, (2) 
+J 
+and if the wi are constants, we obtain the network of normalized basis functions 
+which were previously described by Moody and Darken (1989) and $pecht (1990). 
+In some cases the expert might want to formulate the premise as simple logical 
+expressions. As an example, the rule 
+IF [((Xl '* a) AND (x4 , b)] OR (x2 , c) THEN y = d x x  
+is encoded as 
+I (1 -- a)  + (4 -- b) 2 i (x - c) 2 ] 
+premisei � hi(x) = exp[- tr  ] + exp[- 2 tr  
+conclusioni � wi(x) = d x x 2. 
+This formulation is related to the fuzzy logic approach of Tagaki and Sugeno (1992). 
+3 PRESERVING THE RULE-BASED KNOWLEDGE 
+Equation 1 can be implemented as a network of normalized basis functions jffifinit 
+which describes the rule-based knowledge and which can be used for prediction. 
+Actual training data can be used to improve network performance. We consider 
+four different ways to ensure that the expert knowledge is preserved during training. 
+Forget. We use the data to adapt jfjfinit with gradient descent (we typically adapt 
+all parameters in the network). The sooner we stop training, the more of the initial 
+expert knowledge is preserved. 
+Freeze. We freeze the parameters in the initial network and introduce a new basis 
+function whenever prediction and data show a large deviation. In this way the 
+network learns an additive correction to the initial network. 
+Correct. Whereas normal weight decay penalizes the deviation of a parameter from 
+zero, we penalize a parameter if it deviates from its initial value q?it 
+1 y.(qj _initx2 
+= - (3) 
+where he q is  generic network prmeer. 
+Internal teacher. We formulate  penMy in erms of he mpping rher hn in 
+erms of he prmeers 
+Ep =  (init(x) -- (x))2dx. 
+This h the advantage that we do not have to specify priors on relatively unintu- 
+itive network parameters. Instead, the prior directly reflects the certainty that we 
+874 Tresp, Hollatz, and Ahmad 
+associate with the mapping of the initialized network which can often be estimated. 
+RSscheisen, Hofmann and Tresp (1992) estimated this certainty from problem spe- 
+cific knowledge. We can approximate the integral in Equation 3 numerically by 
+Monte-Carlo integration which leads to a training procedure where we adapt the 
+network with a mixture of measured training data and training data artificially gen- 
+erated by A/'A/'init(x) at randomly chosen inputs. The mixing proportion directly 
+relates to the weight of the penalty, c (RSscheisen, Hofmann and Tresp, 1992). 
+4 COMPLEXITY REDUCTION 
+After training the rules can be extracted again from the network but we have to 
+ensure that the set of rules is as concise as possible, otherwise the value of the 
+extracted rules is limited. We would like to find the smallest number of rules that 
+can still describe the knowledge sufficiently. Also, the network should be encouraged 
+to find rules with the smallest number of conjuncts, which in this case means that 
+a basis function is only dependent on a small number of input dimensions. 
+We suggest the following pruning strategy for Gaussian basis functions. 
+1. Prune basis functions. Evaluate the relative weight of each basis function at its 
+center wi = bi(li)/j bj (li) which is a measure of its importance in the network. 
+Remove the unit with the smallest wi. Figure I illustrates the pruning of basis 
+functions. 
+2. Prune conjuncls. Successively, set the largest crij equal to infinity, effectively 
+removing input j from basis function i. 
+Sequentially remove basis functions and conjuncts until the error increases above a 
+threshold. Retrain after a unit or a conjunct is removed. 
+5 A PROBABILISTIC INTERPRETATION 
+One of the advantages of our approach is that there is a probabilistic interpretation 
+of the system. In addition, if the expert formulates his or her knowledge in terms 
+of probability distributions then a number of useful properties can be derived (it is 
+natural here to interpret probability as a subjective degree of belief in an event.). 
+We assume that the system can be in a number of states si which are unobservable. 
+Formally, each of those hidden states corresponds to a rule. The prior probability 
+that the system is in state si is equal to P(si). Assuming that the system is in state 
+si there is a probability distribution P(x, ylsi) that we measure an input vector x 
+and an output y and 
+P(x, y) = P(x, yls, ) P(s,) = P(ylx, si) P(xls,) P(s,). 
+i i 
+(4) 
+For every rule the expert specifies the probability distributions in the last sum. Let's 
+consider the case that P(x, ylsi ) = P(xlsi ) P(ylsi) and that P(xlsi ) and P(ylsi) 
+can be approximated by Gaussians. In this case Equation 4 describes a Gaussian 
+mixture model. For every rule, the expert has to specify 
+Network Structuring And Training Using Rule-based Knowledge 875 
+A 
+F 
+20 units 5 units 
+Figure 1:80 values of a noisy sinusoid (A) are presented as training data to a 
+network of 20 (Cauchy) basis functions, (hi(x) = ni [1+ -'.j (xj -/aij)2/o'j]-2). (B) 
+shows how this network also tries to approximate the noise in the data. (D) shows 
+the basis functions hi(x) and (F) the normalized basis functions bi(x)/'.j bj(x). 
+Pruning reduces the network architecture to 5 units placed at the extrema of the 
+sinusoid (basi

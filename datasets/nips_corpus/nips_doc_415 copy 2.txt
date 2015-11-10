@@ -1,0 +1,157 @@
+Language Induction by Phase Transition 
+in Dynamical Recognizers 
+Jordan B. Pollack 
+Laboratory for AI Research 
+The Ohio State University 
+Columbus, OH 43210 
+pollack@cis.ohio-state.edu 
+Abstract 
+A higher order recurrent neural network architecture learns to recognize and 
+generate languages after being trained on categorized exemplars. Studying 
+these networks from the perspective of dynamical systems yields two 
+interesting discoveries: First, a longitudinal examination of the learning 
+process illustrates a new form of mechanical inference: Induction by phase 
+transition. A small weight adjustment causes a bifurcation in the limit 
+behavior of the network. This phase transition corresponds to the onset of the 
+network's capacity for generalizing to arbitrary-length strings. Second, a 
+study of the automata resulting from the acquisition of previously published 
+languages indicates that while the architecture is NOT guaranteed to find a 
+minimal finite automata consistent with the given exemplars, which is an 
+NP-Hard problem, the architecture does appear capable of generating non- 
+regular languages by exploiting fractal and chaotic dynamics. I end the paper 
+with a hypothesis relating linguistic generafive capacity to the behavioral 
+regimes of non-linear dynamical systems. 
+1 Introduction 
+I expose a recurrent high-order back-propagation network to both positive and negative 
+examples of boolean strings, and report that although the network does not find the 
+minimal-description finite state automata for the languages (which is NP-Hard (Angluin, 
+1978)), it does induction in a novel and interesting fashion, and searches through a 
+hypothesis space which, theoretically, is not constrained to machines of finite state. These 
+results are of import to many related neural models currently under development, e.g. 
+(Elman, 1990; Giles et al., 1990; Servan-Schreiber et al., 1989), and relates ultimately to 
+the question of how linguistic capacity can arise in nature. 
+Although the transitions among states in a finite-state automata are usually thought of as 
+being fully specified by a table, a transition function can also be specified as a 
+mathematical function of the current state and the input. It is known from (McCulloch & 
+Pitts, 1943) that even the most elementary modeling assumptions yield finite-state 
+619 
+620 Pollack 
+control, and it is worth reiterating that any network with the capacity to compute arbitrary 
+boolean functions (say, as logical sums of products) lapedes farber how nets ], white 
+hornik .], can be used recurrently to implement arbitrary finite state machines. 
+From a different point of view, a recurrent network with a state evolving across k units 
+can be considered a k-dimensional discrete-time continuous-space dynamical [.ystem, 
+with a precise initial condition, zt,(O), and a state space in Z, a subspace of R . The 
+governing function, F, is parameterized by a set of weights, W, and merely computes the 
+next state from the current state and input, yj(t), a finite sequence of patterns 
+representing tokens from some alphabet Y: 
+zk(t + 1) = Fw(zk(t), yj(t)) 
+If we view one of the dimensions of this system, say Za, as an acceptance dimension, 
+we can define the language accepted by such a Dynamical Recognizer as all strings of 
+input tokens evolved from the precise initial state for which the accepting dimension of 
+the state is above a certain threshold. In network terms, one output unit would be 
+subjected to a threshold test after processing a sequence of input patterns. 
+The first question to ask is how can such a dynamical system be constructed, or taught, to 
+accept a particular language? The weights in the network, individually, do not correspond 
+directly to graph transitions or to phrase structure rules. The second question to ask is 
+what sort of generative power can be achieved by such systems? 
+2 The Model 
+To begin to answer the question of learning, I now present and elaborate upon my earlier 
+work on Cascaded Networks (Pollack, 1987), which were used in a recurrent fashion to 
+learn parity, depth-limited parenthesis balancing, and to map between word sequences 
+and proposition representations (Pollack, 1990a). A Cascaded Network is a well- 
+controlled higher-order connectionist architecture to which the back-propagation 
+technique of weight adjustment (Rumelhart et al., 1986) can be applied. Basically, it 
+consists of two subnetworks: The function network is a standard feed-forward network; 
+with or without hidden layers. However, the weights are dynamically computed by the 
+linear context network, whose outputs are mapped in a 1:1 fashion to the weights of the 
+function net. Thus the input pattern to the context network is used to multiplex the the 
+function computed, which can result in simpler learning tasks. 
+When the outputs of the function network are used as inputs to context network, a system 
+can be built which learns to produce specific outputs for variable-length sequences of 
+inputs. Because of the multiplicative connections, each input is, in effect, processed by a 
+different function. Given an initial context, z(O), and a sequence of inputs, 
+ydJ(t), t= 1...n, the network computes a sequence of state vectors, zi(t), t= 1...n by 
+ynamically changing the set of weights, wij(t). Without hidden units the forward pass 
+computation is: 
+wij(t) = Y' wij z(t-1) 
+k 
+zi(t) = g(Y' wij(t) yj(t)) 
+J 
+Language Induction by Phase ansition in Dynamical Recognizers 621 
+where g is the usual sigmoid function used in back-propagation system. 
+In previous work, I assumed that a teacher could supply a consistent and generalizable 
+desired-state for each member of a large set of strings, which was a significant 
+overconstraint. In learning a two-state machine like parity, this did not matter, as the 1-bit 
+state fully determines the output. However, for the case of a higher-dimensional system, 
+we know what the final output of a system should be, but we don't care what its state 
+should be along the way. 
+Jordan (1986) showed how recurrent back-propagation networks could be trained with 
+don't care conditions. If there is no specific preference for the value of an output unit 
+for a particular training example, simply consider the error term for that unit to be 0. 
+This will work, as long as that same unit receives feedback from other examples. When 
+the don't-cares line up, the weights to those units will never change. My solution to this 
+problem involves a backspace, unrolling the loop only once: After propagating the errors 
+determined on only a subset of the weights from the acceptance unit za: 
+3E 
+3zaj(n) 
+- (Za(n) - da) Za(n) (1 - Za(n)) yj(n) 
+3E 3E 
+3Wajk 3Waj(rt ) 
+The error on the remainder of the weights 
+from the penultimate time step: 
+zk(n-1) 
+3E 
+, i ; a ) is calculated using values 
+3E 3E 3E 
+3zk(n-1) - 3waj 3waj(n) 
+3E 3E 
+3wij(n-1) - 3zi(n-1) Yi(n-1) 
+3E 3E 
+z(n-2) 
+3wijt 3wij(n-1) 
+This is done, in batch (epoch) style, for a set of examples of varying lengths. 
+3 Induction as Phase Transition 
+In initial studies of learning the simple regular language of odd parity, I expected the 
+recognizer to merely implement exclusive or with a feedback link. It tums out that this 
+is not quite enough. Because termination of back-propagation is usually defined as a 20% 
+error (e.g. logical 1 is above 0.8) recurrent use of this logic tends to a limit point. In 
+other words, mere separation of the exemplars is no guarantee that the network can 
+recognize parity in the limit. Nevertheless, this is indeed possible as illustrated by 
+illustrated below. In order to test the limit behavior of a recognizer, we can observe its 
+response to a very long characteristic string. For odd parity, the string 1' requires an 
+alternation of responses. 
+A small cascaded network composed of a 1-2 function net and a 2-6 context net 
+622 Pollack 
+(requiring 18 weights) was was trained on odd parity of a small set of strings up to length 
+5. At each epoch, the weights in the network were saved in a file� Subsequently, each 
+configuration was tested in its response to the first 25 characteristic strings. In figure 1, 
+each vertical column, corresponding to an epoch, contains 25 points between 0 and 1. 
+Initially, all strings longer than length 1 are not distinguished. From cycle 60-80, the 
+network is improving at separating finite strings. At cycle 85, the network undergoes a 
+bffurcation, where the small change in weights of a single epoch leads to a phase 
+transition from a limit point to a limit cycle.  This phase transition is so adaptive to the 
+classification task that the network rapidly exploits it. 
+0,8' 
+0.6' 
+0.4 
+0.2 � 
+I I I I 
+50 100 150 200 
+Figure 1: 
+A bifurcation diagram showing the response of the parity-learner to the first 
+25 characteristic strings over 200 epochs of training. 
+I wish to stress that this is a new and very interesting form of mechanical induction, and 
+reveals that with the proper perspective, non-linear connectionist networks are capable of 
+much more complex behavior than hill-climbing. Before the phase transition, the 
+machine is in principle not capable of performing the serial parity task; after the phase 
+transition it is. The similarity of leaming through a flash of insight to biological change 
+through a punctuated evolution is much more than coincidence. 
+4 Benchmarking Results 
+Tomita (1982) performed elegant experiments in inducing finite automata from positive 
+and negative evidence using hillclimbing in the space of 9-state automata. Each case was 
+defined by two sets of boolean strings, accepted by and rejected by the regular languages 
+ For the simple low dimensional dynamical systems usually studied, the mob or control parameter for 
+such a bifurcation diagram is a scalar variable; here the control parameter is the entixc 32-D vector of 
+weights in the network, and back-propagation tums the knobl 
+Lang

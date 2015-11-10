@@ -1,0 +1,152 @@
+Neural Network On-Line Learning Control 
+of Spacecraft Smart Structures 
+Dr. Christopher Bowman 
+Ball Aerospace Systems Group 
+P.O. Box 1062 
+Boulder, CO 80306 
+Abstract 
+The overall goal is to reduce spacecraft weight, volume, and cost by on- 
+line adaptive non-linear control of flexible structural components. The 
+objective of this effort is to develop an adaptive Neural Network (NN) 
+controller for the Ball C-Side lm x 3m antenna with embedded actuators 
+and the RAMS sensor system. A traditional optimal controller for the 
+major modes is provided perturbations by the NN to compensate for 
+unknown residual modes. On-line training of recurrent and feed-forward 
+NN architectures have achieved adaptive vibration control with 
+unknown modal variations and noisy measurements. On-line training 
+feedback to each actuator NN output is computed via Newton's method 
+to reduce the difference between desired and achieved antenna positions. 
+1 ADAPTIVE CONTROL BACKGROUND 
+The two traditional approaches to adaptive control are 1) direct control (such as performed 
+in direct model reference adaptive controllers) and 2) indirect control (such as performed by 
+explicit self-tuning regulators). Direct control techniques (e.g. model-reference adaptive 
+contrvl) provide good stability however are susceptible to noise. Whereas indirect control 
+technJ. ques (e.g. explicit self-tuning regulators) have low noise susceptibility and good 
+convergenc. e rate. However they require more control effort and have worse stability and 
+are less robust to mismodeling. NNs synergistically augment traditional adaptive control 
+techniques by providing improved mismodeling robustness both adaptively on-line for 
+time-varying dynamics as well as in a learned control mode at a slower rate. 
+The NN control approaches which correspond to direct and indirect adaptive control are 
+commonly known as reverse and forward modeling, respectively. More specifically, a NN 
+which maps the plant state and its desired performance to the control command is called 
+an inverse model, a NN mapping both the current plant state and control to the next state 
+and its performance is called the forward model. 
+When given a desired performapce and the current state, the inverse model generates the 
+control, see Figure 1. The actual performance is observed and is used to train/update the 
+inverse model. A significant probletn occurs when the desired and achieved performance 
+differ greatly since the model near the desired state is not changed. This condition is 
+corrected by adding random noise to the control outputs so as to extend the state space 
+303 
+304 Bowman 
+being explored. However, this correction has the effect of slowing the learning and 
+reducing broadband stability. 
+ Current state 
+peffolce )_ measurements 
+Train  
+Ne,,ugtl'Controller Filters Y 
+I 
+Previous conlxols and state measurements 
+Figure 1: Direct Adaptive Control Using Inverse Modeling Neural Network Controller 
+Desired 
+Performanc 
+Tminin Er I 
+Feedbrk Current and 
+I Nonlinear taxx ] 
+Sffuctures 
+Tratn B 
+t  ' State 
+I' 
+I ,r,t 
+INpC 
+ovions 
+mm 
+Se/I Mmemen 
+Y 
+Previous conU'ols and state measurements 
+Figure 2: Dual (Indirect and Direct) Adaptive Control Using Forward Modeling Neural 
+Network State Predictor To Aid Inverse Model Convergence 
+For forward modeling the map from the current control and state to the resulting state and 
+performance is learned, see Figure 2. For cases where the performance is evaluated at a 
+future time (i.e. distal in time), a pxedicfive critic [Barto and Sutton, 1989] NN model is 
+learned. In both cases the Jacobian of this performance can be computed to itemfively 
+generate the next control action. However, this differentiating of the critic NN for back- 
+propagation training of the controller network is very slow and in some cases steers the 
+searching the wrong direction due to initial erroneous forward model estimates. As the NN 
+adapts itself the performance flattens which results in the slow halting of learning at an 
+Neural Network On-Line Learning Control of Spacecraft Smart Structures 305 
+unacceptable solution. Adding noise to the controllet's output [Jordan and Jacobs, 1990] 
+breaks the redundancy but forces the critic to predict the effects of future noise. This 
+problem has been solved by using a separately trained intermediate plant model to predict 
+the next state from the prior state and control while having an independent predictor model 
+generate the performance evaluation from the plant model predicted state [Werbos, 1990] 
+and [Brody, 1991]. The result is a 50-100 fold learning speed improvement over 
+reinforcement training of the forward model controller NN. 
+However, this method still relies on a good forward model to incrementally train the 
+inverse model. These incremental changes can still lead to undesirable solutions. For 
+control systems which follow the stage 1, 2 or 3 models given in [Narendra, 1991) the 
+control can be analytically computed from a forward-only model. For the most general, 
+non-linear (stage 4) systems, an alternative is the memory-based forward model [Moore, 
+1992]. Using only a forward NN model, a direct hill-climbing or Newton's method search 
+of candidate actions can be applied until a control decision is reached. The resulting state 
+and its performance are used for on-line training of the forward model. Judicial random 
+control actions are applied to improve behavior only where the forward model error is 
+predicted to be large (e.g. via cross-valjclafion). Also using robust regression, experiences 
+can be deweighted according to their quality and their age. The high computational burden 
+of these cross-validation techniques can be reduced by parallel on-line processing 
+providing the policyparameters for fast on-line NN control. 
+For control problems which are distal in time and space, a hybrid of these two forward- 
+modeling approaches can be used. Namely, a NN plant model is added which is trained 
+off-line in real-time and updated as necessary at a slower rate than the on-line forward 
+model which predicts performance based upon the current plant model. This slower rate 
+trained forward-model NN supports learned control (e.g. via numerical inversion) whereas 
+the on-line forward model provides the faster response adaptive control. Other NN control 
+techniques such as using a Hopfield net to solve the optimal-control quadratic- 
+programming problem or the supervised training of ART 1I off-line with adaptive 
+vigilance for on-line pole placement have been proposed. However, their on-line 
+robusmess appears limited due to their sensitivity to a priori parameter assumptions. 
+A forward model NN which augments a traditional controller for unmodeled modes and 
+unforeseen situations is presented in the following section. Performance results for both 
+feed-forward and current leaming versions are compared in Section 3. 
+2 RESIDUAL FORWARD MODEL NEURAL NETWORK 
+(RFM-NN) CONTROLLER 
+A type of forward model NN which acts as a residual mode f'fiter to support a reduced-order 
+model (ROM) traditional optimal state controller has been evaluated, see Figure 3. The 
+ROM determines the control based upon its model coordinate approximate representation 
+of the structure. Model coordinates are obtained by a transformation using known primary 
+vibration modes, [Young, 1990]. The wansformation operator is a set of eigenvectors 
+(mode shapes) generated by finite element modeling. The ROM controller is traditionally 
+augmented by a residual-mode f'tlter (RMF). Ball's RFM-NN Ball's RFM-NN replaces the 
+RMF in order to better capture the mismodeled, unmodeled and changing modes. 
+The objective of the RFM-NN is to provide ROM controller with ROM derivative state 
+perturbations, so that the ROM controls the structure as desired by the user. The RFM- 
+NN is trained on-line using scored supervised feedback to generate these desired ROM 
+state perturbations. The scored supervised training provides a score for each perturbation 
+output based upon the measured position of the structure. The measured deviations, Y*(0, 
+from the desired structure position are convened to errors in the estimated ROM state 
+using the ROM. transformation. Specifically, the training score, S(t), for each ROM 
+derivative state 5oN (t) is expressed in the following discrete equation: 
+S(t) = BNY * (t) - 
+where N(t) -[AN + BNGN - KNCN 1)+ KNY(t- 1) 
+306 Bowman 
+Figure 3: Residual Forward Model Neural Network Adaptive Controller Replaces 
+Traditional Residual Mode Filter 
+Newton's method is then applied to find e  n_(.0 ROM state pe_rte_ rbations which zero 
+the score. First, the score is smoothed, S(t) =-S(t - 1) + (1 - 6)S(t) and the neural 
+network output is smoothed similarly. Second, Newton's method computes the 
+adjustments needed to zero the scores, 
+A(Bi.(t)) = -(t)(Bi. (t)- Bi. (t- 1)) / [(t)- (t- 1)] 
+= -s(t) (if either difference = 0) 
+Third, the NN is trained, iT(t + 1) = tY.A((t)) + Bis(t) with the appropriate 
+learning rate, ct (e.g. approximation to inverse of largest eigenvalue of the Hessian 
+weight matrix). 
+3 RFM-NN ON-LINE LEARNING RESULTS 
+Both feed-forward and recurrent RFM-NNs have been incoq)orated into an interactive 
+simulation of Bali's Conlrol-Stmcture Interaction Demonstration Experiment (C-SIDE) 
+see Figure 4. This lm x 3m lightweight antenna facesheet has 8 embedded actuators plus 
+three auxiliary input actthators and uses 8 remote angular measurement sensors (RAMS) 
+plus 4 displacement and 3 velocity auxiliary sensors. In order to evaluate the on-line 
+performance of the RFM-NNs the ROM controller was given insufficient and partially 
+incorrect modes. The ROM without the RFM-NN grew unstable (i.e. greater than 10 
+millimeter C-SIDE displacements) in 13 seconds. The initial feed-forward RFM-NN used 
+8 sensor and 6 ROM state feedback estimate inputs as well as 5 hidden units and 3 ROM 
+velocity state p

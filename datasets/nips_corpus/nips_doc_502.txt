@@ -1,0 +1,172 @@
+HARMONET: A Neural Net for Harmonizing 
+Chorales in the Style of J.S.Bach 
+Hermann Hild Johannes Feulner Wolfram Menzel 
+hhild@ira. uka. de j ohannes@ira.uka. de menzel@ ira. uka. de 
+Institut fiir Logik, Komplexitit und Deduktionssysteme 
+Am Fasanengarten 5 
+Universitit Karlsruhe 
+W-7500 Karlsruhe 1, Germany 
+Abstract 
+HARMONET, a system employing connectionist networks for music pro- 
+cessing, is presented. After being trained on some dozen Bach chorales 
+using error backpropagation, the system is capable of producing four-part 
+chorales in the style of J.S.Bach, given a one-part melody. Our system 
+solves a musical real-world problem on a performance level appropriate 
+for musical practice. HARMONET's power is based on (a) a new coding 
+scheme capturing musically relevant information and (b) the integration of 
+backpropagation and symbolic algorithms in a hierarchical system, com- 
+bining the advantages of both. 
+1 INTRODUCTION 
+Neural approaches to music processing have been previously proposed (Lischka, 
+1989) and implemented (Mozer, 1991)(Todd, 1989). The promise neural networks 
+offer is that they may shed some light on an aspect of human creativity that doesn't 
+seem to be describable in terms of symbols and rules. Ultimately what music is (or 
+isn't) lies in the eye (or ear) of the beholder. The great composers, such as Bach 
+or Mozart, learned and obeyed quite a number of rules, e.g. the famous prohibition 
+of parallel fifths. But these rules alone do not suffice to characterize a personal 
+or even historic style. An easy test is to generate music at random, using only 
+267 
+268 Hild, Feulner, and Menzel 
+A Chorale Melody 
+Bach's Chorale Harmoniza- 
+tion 
+Figure 1' The beginning of the chorale melody Jesu, meine Zuversicht and its 
+harmonization by J.S.Bach 
+schoolbook rules as constraints. The result is error free but aesthetically offensive. 
+To overcome this gap between obeying rules and producing music adhering to an 
+accepted aesthetic standard, we propose HARMONET, which integrates symbolic 
+algorithms and neural networks to compose four part chorales in the style of J.S. 
+Bach (1685 - 1750), given the one part melody. The neural nets concentrate on 
+the creative part of the task, being responsible for aesthetic conformance to the 
+standard set by Bach in nearly 400 examples. Original Bach Chorales are used 
+as training data. Conventional algorithms do the bookkeeping tasks like observing 
+pitch ranges, or preventing parallel fifths. HARMONET's level of performance 
+approaches that of improvising church organists, making it applicable to musical 
+practice. 
+2 TASK DEFINITION 
+The process of composing an accompaniment for a given chorale melody is called 
+chorale harmonization. Typically, a chorale melody is a plain melody often 
+harmonized to be sung by a choir. Correspondingly, the four voices of a chorale 
+harmonization are called soprano (the melody part), alto, tenor and bass. Figure 1 
+depicts an example of a chorale melody and its harmonization by J.S.Bach. For 
+centuries, music students have been routinely taught to solve the task of chorale 
+harmonization. Many theories and rules about dos and don'ts have been de- 
+veloped. However, the task of HARMONET is to learn to harmonize chorales from 
+example. Neural nets are used to find stylisticly characteristic harmonic sequences 
+and ornamentations. 
+HARMONET: A Neural Net for Harmonizing Chorales 269 
+3 SYSTEM OVERVIEW 
+Given a set of Bach chorales, our goal is to find an approximation ] of the quite com- 
+plex function x f which maps chorale melodies into their harmonization as demon- 
+strated by J.S.Bach on almost 400 examples. In the following sections we propose 
+a decomposition of f into manageable subfunctions. 
+3.1 TASK DECOMPOSITION 
+The learning task is decomposed along two dimensions: 
+Different levels of abstractions. The chord skeleton is obtained if eighth 
+and sixteenth notes are viewed as omitable ornamentations. Furthermore, if the 
+chords are conceived as harmonies with certain attributes such as inversion or 
+characteristic dissonances, the chorale is reducible to its harmonic skeleton, a 
+thoroughbass-like representation (Figure 2). 
+Locality in time. The accompaniment is divided into smaller parts, each of which 
+is learned independently by looking at some local context, a window. Treating 
+small parts independently certainly hurts global consistency. Some of the depen- 
+dencies lost can be regained if the current decision window additionally considers 
+the outcome of its predecessors (external feedback). Figure 3 shows two consecutive 
+windows cut out from the harmonic skeleton. 
+To harmonize a chorale, HARMONET starts by learning the harmonic skeleton, 
+which then is refined to the chord skeleton and finally augmented with ornamenting 
+quavers (Figure 4, left side). 
+3.2 THE HARMONIC SKELETON 
+Chorales have a rich harmonic structure, which is mainly responsible for their mu- 
+sical appearance. Thus generating a good harmonic skeleton is the most important 
+of HARMONET's subtasks. HARMONET creates a harmonic sequence by sweep- 
+ing through the chorale melody and determining a harmony for each quarter note, 
+considering its local context and the previously found harmonies as input. 
+At each quarterbeat position t, the following information is extracted to form one 
+training example: 
+St--1 8t 8t+l 
+Ht-2 Ht-1 pr ] Neural , Ht 
+Net 
+! at t at I at I 
+The target to be learned (the harmony H at position t) is marked by the box. 
+The input consists of the harmonic context to the left (the external feedback H-a, 
+H-2 and H_) and the melodic context (pitches s_, st and s+). phr contains 
+XTo be sure, f is not a function but a relation, since there are many 'qegal accompa- 
+niments for one melody. For simplicity, we view f as a function. 
+270 Hild, Feulner, and Menzel 
+Chord Skeleton 
+2 
+T T Tp DP3+ Tp Tp3DP 4 
+Harmonic Skeleton 
+Figure 2: The chord and the harmonic skeleton of the chorale from figure 1. 
+information about the relative position of t to the beginning or end of a musical 
+phrase. strt is a boolean value indicating whether st is a stressed quarter. A 
+harmony Ht has three components: Most importantly, the harmonic function relates 
+the key of the harmony to the key of the piece. The inversion indicates the bass 
+note of the harmony. The characteristic dissonances are notes which do not directly 
+belong to the harmony, thus giving it additional tension. 
+The coding of pitch is decisive for recognizing musically relevant regularities in 
+the training examples. This problem is discussed in many places (Shepard, 1982) 
+(Mozer, 1991). We developed a new coding scheme guided by the harmonic neces- 
+sities of homophonic music pieces: A note s is represented as the set of harmonic 
+functions that contain s, as shown below: 
+Fct;. T D S Tp Sp Dp DD DP TP d Vtp SS 
+C 1 0 1 1 0 0 0 0 0 0 0 0 
+D 0 1 0 0 1 0 1 0 0 1 1 
+. . . 
+T, D, $, Tp etc. are standard musical abbreviations to denote harmonic functions. 
+The resulting representation is distributed with respect to pitch. However, it is local 
+with respect to harmonic functions. This allows the network to anticipate future 
+harmonic developments even though there cannot be a lookahead for harmonies yet 
+uncomposed. 
+Besides the 12 input units for each of the pitches st-, st, St+l, we need 12+5+3 = 
+HARMONET: A Neural Net for Harmonizing Chorales 271 
+T T 
+TpHkt + 1 
+T T Tp DPa. 
+Figure 3: The harmonic skeleton broken into local windows. The harmony Ht, 
+determined at quarterbeat position t, becomes part of the input of the window at 
+position t + 1. 
+20 input units for each of the 3 components of the harmonies Ht-a, Ht-2 and Ht_, 
+9 units to code the phrase information phrt and 1 unit for the stress sift. Thus our 
+net has a total of 3 � 12 + 3 � 20 + 9 + 1 = 106 input units and 20 output units. We 
+used one hidden layer with 70 units. 
+In a more advanced version (Figure 4, right side), we use three nets (N1, N2, N3) 
+in parallel, each of which was trained on windows of different size. The harmonic 
+function for which the majority of these three nets votes is passed to two subsequent 
+nets (N4, NS) determining the chord inversion and characteristic dissonances of the 
+harmony. Using windows of different sizes in parallel employs statistical information 
+to solve the problem of chosing an appropriate window size. 
+3.3 THE CHORD SKELETON 
+The task on this level is to find the two middle parts (alto and tenor) given the 
+soprano $ of the chorale melody and the harmony H determined by the neural 
+nets. Since H includes information about the chord inversion, the pitch of the bass 
+(modulo its octave) is already given. The problem is tackled with a generate and 
+test approach: Symbolic algorithms select a best chord out of the set of all 
+chords consistent with the given harmony H and common chorale constraints. 
+3.4 QUAVER ORNAMENTATIONS 
+In the last subtask, another net is taught how to add ornamenting eighths to the 
+chord skeleton. The output of this network is the set of eighth notes (if any) by 
+which a particular chord Ct can be augmented. The network's input describes the 
+local context of Ct in terms of attributes such as the intervals between Ct and Ct+, 
+voice leading characteristics, or the presence of eighths in previous chords. 
+272 Hild, Feulner, and Menzel 
+Chorale Melody 
+Determine Harmonies 
+T T TpDPs 
+Expand Harmonies to Chords 
+Insert Eighth Notes 
+Harmonized Chorale 
+T 
+T Tp ? 
+Harmonic 
+unction 
+N4 Inversion 
+Characteristic 
+Dionances 
+Figure 4: Left side: Overall structure of HARMONET. Right side: A more special- 
+ized architecture with parallel and sequential nets (see text). 
+4 PERFORMANCE 
+HARMONET was trained separately on two sets of Bach chorales, each containing 
+20 chorales in major and minor keys, respectively. By passing the chorales through 
+a window as explained above, each set amounted to approx. 1000 tr

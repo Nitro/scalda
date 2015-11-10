@@ -1,0 +1,166 @@
+Recognition-based Segmentation 
+of On-line Hand-printed Words 
+M. Schenkel*, H. Weissman, I. Guyon, C. Nohl, D. Henderson 
+AT&T Bell Laboratories, Holmdel, NJ 07733 
+* Swiss Federal Institute of Technology, CH-8092 Zfirich 
+Abstract 
+This paper reports on the performance of two methods for 
+recognition-based segmentation of strings of on-line hand-printed 
+capital Latin characters. The input strings consist of a time- 
+ordered sequence of X-Y coordinates, punctuated by pen-lifts. The 
+methods were designed to work in run-on mode where there is no 
+constraint on the spacing between characters. While both methods 
+use a neural network recognition engine and a graph-algorithmic 
+post-processor, their approaches to segmentation are quite differ- 
+ent. The first method, which we call INSEG (for input segmen- 
+tation), uses a combination of heuristics to identify particular pen- 
+lifts as tentative segmentation points. The second method, which 
+we call OUTSEG (for output segmentation), relies on the empiri- 
+cally trained recognition engine for both recognizing characters and 
+identifying relevant segmentation points. 
+I INTRODUCTION 
+We address the problem of writer independent recognition of hand-printed words 
+from an 80,000-word English dictionary. Several levels of difficulty in the recognition 
+of hand-printed words are illustrated in figure 1. The examples were extracted from 
+our databases (table 1). Except in the cases of boxed or clearly spaced characters, 
+segmenting characters independently of the recognition process yields poor recogni- 
+tion performance. This has motivated us to explore recognition-based segmentation 
+techniques. 
+723 
+724 Schenkel, Weissman, Guyon, Nohl, and Henderson 
+Table 1: Databases used for training and testing. DB� contains words one 
+to five letters long, but only four and five letter words are constrained to be legal 
+English words. DB$ contains legal English words of any length from an 80,000 word 
+dictionary. 
+uppercase data pad training test set approx. # 
+database nature used set size size of donors 
+DB1 boxed letters AT&T 9000 1500 250 
+DB� short words Grid 8000 1000 400 
+DB3 English words Wacom 600 25 
+(a) boxed 
+(b) spaced 
+(c) pen-lifts 
+(d) connected 
+Figure 1: Examples of styles that can be found in our databases: 
+(a) DB1; (b) DB2; (c), (d) DB2 and DB3. The line thickness or darkness is 
+alternated at each pen-lift. 
+The basic principle of recognition-based segmentation is to present to the recognizer 
+many tentative characters. The recognition scores ultimately determine the string 
+segmentation. We have investigated two different recognition-based segmentation 
+methods which differ in their definition of the tentative characters, but have very 
+similar recognition engines. 
+The data collection device provides pen trajectory information as a sequence of 
+(x, y) coordinates at regular time intervals (10-15 ms). We use a preprocessing 
+technique which preserves this information by keeping a finely sampled sequence of 
+feature vectors along the pen trajectory (Guyon et al. 1991, Weissman et al. 1992). 
+The recognizer is a Time Delay Neural Network (TDNN) (Lang and Hinton 1988, 
+Waibel et al. 1989, Guyon et al. 1991). There is one output per class, in this case 
+26 outputs, providing a score for all the capital letters of the Latin alphabet. 
+The critical step in the segmentation process is the postprocessing which disentan- 
+gles various word hypotheses using the character recognition scores provided by the 
+TDNN. For this purpose, we use conventional dynamic programming algorithms. 
+In addition we use a dictionary that checks the solution and returns a list of simi- 
+lar legal words. The best word hypotheses, subject to this list, is again chosen by 
+dynamic programming algorithms. 
+Recognition-based segmentation relies on the recognizer to give low confidence 
+Recognition-based Segmentation of On-line Hand-printed Words 725 
+scores for wrong tentative characters corresponding to a segmentation mistake. Rec- 
+ognizers trained only on valid characters usually perform poorly on such a task. 
+We use segmentation-driven training techniques which allow the training of wrong 
+tentative characters, produced by the segmentation engine itself, as negative exam- 
+ples. This additional training has reduced our error rates by more than a factor of 
+two. 
+In section 2 we describe the INSEG method which uses tentative characters delin- 
+eated by heuristic segmentation points. It is expected to be most appropriate for 
+hand-printed capital letters since nearly all writers separate these letters by pen-lifts. 
+This method was inspired by a similar technique used for Optical Character Recog- 
+nition (OCR) (Burges et al. 1992). In section 3 we present an alternative method, 
+OUTSEG, which expects the recognition engine to learn empirically (learning by 
+examples) both to recognize characters and to identify relevant segmentation points. 
+This second method bears similarities with the OCR methods proposed by Matan 
+et al. (1991) or Keeler et al. (1991). In section 4 we compare the two methods and 
+present experimental results. 
+2 SEGMENTATION IN INPUT SPACE 
+Figure 2 shows the different steps of the INSEG process. Module 1 is used to define 
+tentative characters delineated by tentative cuts (spaces or pen-lifts). The 
+tentative characters are then handed to module 2 which performs the preprocessing 
+and the scoring of the characters with a TDNN. The recognition results are then 
+gathered into an interpretation graph. In module 3 the best path through that 
+graph is found with the Viterbi algorithm. 
+''  'i...11.lt_ stroke 
+detector 
+& grouper 
+I tiiii:;1111:i. 1:111ii!; ' ::-'. prpess�r I 0 
+0-1 & 
+0-2 1-3 
+tentative characters  
+'-I best path 
+search 
+graph R E E F 
+Figure 2: Processing steps of the INSEG method. 
+726 Schenkel, Weissman, Guyon, Nohl, and Henderson 
+In figure 3 we show a simplified representation of an interpretation graph built by our 
+system. Each tentative character (denoted i, j)) has a double index: the tentative 
+cut i at the character starting point and the tentative cut j at the character end 
+point. We denote by Xi,j) the node associated to the score of letter X for the 
+tentative character i, j). A path through the graph starts at a node X0, .) and 
+ends at a node Y., m), where 0 is the word starting point and m the last pen-lift. 
+In between, only transitions of the kind X., i) - Yi, .) are allowed to prevent 
+character overlapping. 
+To avoid searching through too complex a graph, we need to perform some pruning. 
+The spatial relationship between strokes is used to discard unlikely tentative cuts. 
+For instance, strokes with a large horizontal overlap are bundled. The remaining 
+tentative characters are then grouped in different ways to form alternative tentative 
+characters. Tentative characters separated by a large horizontal spatial interval are 
+never considered for grouping. 
+Figure 3' Graph obtained with the input segmentation method. 
+The grey shading in each box indicates the recognition scores (the darker, 
+stronger the recognition score and the higher the recognition confidence). 
+the 
+In table 2 we present the results obtained with the TDNN recognizer used by 
+Guyon et al. (1991), with 4 convolutional layers and 6,252 weights. Characters 
+are preprocessed individually, which provides the network with a fixed dimension 
+input. 
+3 SEGMENTATION IN OUTPUT SPACE 
+In contrast with INSEG, the OUTSEG method does not rely on human designed 
+segmentation hints: the neural network learns both recognition and segmentation 
+features from examples. 
+Recognition-based Segmentation of On-line Hand-printed Words 727 
+Tentative characters are produced simply in that a window is swept over the input 
+sequence in small steps. At each step the content of the window is taken to be a 
+tentative character. Successive characters usually overlap considerably. 
+(x) 
+o 
+;::? :- : 
+012 . . . m 
+time (i) 
+Figure 4: TDNN outputs of the OUTSEG system. 
+The grey curve indicates the best path through the graph, using duration modeling. 
+The word LOOP was correctly recognized in spite of the ligatures which prevent 
+segmentation on the basis of pen-lifts. 
+In figure 4, we show the outputs of our TDNN recognizer when the word LOOP 
+is processed. The main matrix is a simplified representation of our interpre- 
+tation graph. Tentative character numbers i (i  {1,2,...,m}), run along the 
+time direction. Each column contains the scores of all possible interpretations 
+X (X  C A, B, C,..., Z, nil}) of a given tentative character. The bottom line is the 
+nil interpretation score which approximates the probability that the present input 
+is not a character (meaningless character): P(nil{i}linput ) - 1 - (P(A{i}linput) q- 
+P(B{i}linput) + ... + P(Z{i}linput)) 
+The connections between nodes reflect a model of character durations. A simple 
+way of enforcing duration is to allow only the following transitions: 
+X{i} --, X{i + 1}, 
+nil{i} --, nil{i+ 1}, 
+X{i} --* nil{i+ 1}, 
+nil{i} --, X{i + 1}, 
+where X stands for a certain letter. A character interpretation can be followed by 
+728 Schenkel, Weissman, Guyon, Nohl, and Henderson 
+the same interpretation but cannot be followed immediately by another character 
+interpretation: they must be separated by nil. This permits distinguishing between 
+letter duration and letter repetition (such as the double O in our example). The 
+best path in the graph is found by the Viterbi algorithm. 
+In fact, this simple pattern of connections corresponds to a Markov model of du- 
+ration, with exponential decay. We implemented a slightly fancier model which 
+allows the generation of any duration distribution (Weissman et al. 1992) to help 
+prevent character omission or insertion. In our experiments, we selected two Poisson 
+distributions to model character and the nil-class duration respectively. 
+We use a TDNN rec

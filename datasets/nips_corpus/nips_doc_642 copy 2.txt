@@ -1,0 +1,155 @@
+A Practice Strategy for Robot Learning 
+Control 
+Terence D. Sanger 
+Department of ElectricME Engineering and Computer Science 
+Massachusetts Institute of Technology, room E25-534 
+Cambridge, MA 02139 
+tdsai.mit.edu 
+Abstract 
+Trajectory Extension Learning is a new technique for Learning 
+Control in Robots which assumes that there exists some parameter 
+of the desired trajectory that can be smoothly varied from a region 
+of easy solvability of the dynamics to a region of desired behavior 
+which may have more difficult dynamics. By gradually varying the 
+parameter, practice movements remain near the desired path while 
+a Neural Network learns to approximate the inverse dynamics. For 
+example, the average speed of motion might be varied, and the in- 
+verse dynamics can be bootstrapped from slow movements with 
+simpler dynamics to fast movements. This provides an example of 
+the more general concept of a Practice Strategy in which a se- 
+quence of intermediate tasks is used to simplify learning a complex 
+task. I show an example of the application of this idea to a real 
+2-joint direct drive robot arm. 
+1 INTRODUCTION 
+The most general definition of Adaptive Control is one which includes any controller 
+whose behavior changes in response to the controlled system's behavior. In practice, 
+this definition is usually restricted to modifying a small number of controller pa- 
+rmeters in order to maintain system stability or global asymptotic stability of the 
+errors during execution of a single trajectory (Sastry and Bodson 1989, for review). 
+Learning Control represents a second level of operation, since it uses Adaptive Con- 
+335 
+336 Sanger 
+trol to modify parameters during repeated performance trials of a desired trajectory 
+so that future trials result in greater accuracy (Arimoto et aI. 1984). In this paper 
+I present a third level called a Practice Strategy, in which Learning Control is 
+applied to a sequence of intermediate trajectories leading ultimately to the true 
+desired trajectory. I claim that this can significantly increase learning speed and 
+make learning possible for systems which would otherwise become unstable. 
+1.1 LEARNING CONTROL 
+During repeated practice of a single desired trajectory, the actual trajectory followed 
+by the robot may be significantly different. Many Learning Control algorithms 
+modify the commands stored in a sequence memory to minimize this difference 
+(Atkeson 1989, for review). However the performance errors are usually measured 
+in a sensory coordinate system, while command corrections must be made in the 
+motor coordinate system. If the relationship between these two coordinate sys- 
+tems is not known, then command corrections might be in the wrong direction and 
+inadvertently worsen performance. However, if the practice trajectory is close to 
+the desired trajectory, then the errors will be small ad the relationship between 
+command and sensory errors can be approximated by the system JacobJan. 
+An alternative to a stored command sequence is to use a Neural Network to learn an 
+approximation to the inverse dynamics in the region of interest (Sanner and Slotine 
+1992, Yabuta and Yamada 1991, Atkeson 1989). In this case, the commands and 
+results from the actual movement are used as training data for the network, ad 
+smoothness properties are assumed such that the error on the desired trajectory 
+will decrease. However, a significant problem with this method is that if the actual 
+practice trajectory is far from the desired trajectory, then its inverse dynamics 
+information will be of little use in training the inverse dynamics for the desired 
+trajectory. In fact, the network may achieve perfect approximation on the actual 
+trajectory while still making significant errors on the desired trajectory. In this 
+case, learning will stop (since the training error is zero) leading to the phenomenon 
+of learning lock-up (An et aI. 1988). So whether Learning Control uses a sequence 
+memory or a Neural Network, learning may proceed poorly if large errors are made 
+during the initial practice movements. 
+1.2 PRACTICE STRATEGIES 
+I define a practice strategy as a sequence of trajectories such that the first element 
+in the sequence is any previously learned trajectory, and the last element in the 
+sequence is the ultimate desired trajectory. A well designed practice strategy will 
+result in a seqence for which learning control of the trajectory for any particular step 
+is simplified if prior steps have already been learned. This will occur if learning of 
+prior trajectories reduces the initial performance error for subsequent trajectories, 
+so that a network will be less likely to experience learning lock-up. 
+One example of a practice strategy is a three-step sequence in which the interme- 
+diate step is a set of independently executable subtasks which partition the desired 
+trajectory into discrete pieces. Another example is a multi-step sequence in which 
+intermediate steps are a set of trajectories which are somehow related to the de- 
+sired trajectory. In this paper I present a multi-step sequence which gradually 
+A Practice Strategy for Robot Learning Control 337 
+Figure 1: Training signals for network learning. 
+transforms some known trajectory into the desired trajectory by varying a single 
+parameter. This method has the advantage of not requiring detailed knowledge of 
+the task structure in order to break it up into meaningful subtasks, and conditions 
+for convergence can be stated explicitly. It has a close relationship to Continuation 
+Methods for solving differential equations, and can be considered to be a particular 
+application of the Banach Extension Theorem. 
+2 METHODS 
+As in (Sanger 1992), we need to specify 4 aspects of the use of a neural network 
+within a control system: 
+1. the networks' function in the control system, 
+2. the network learning algorithm which modifies the connection weights, 
+3. the training signals used for network learning, and 
+4. the practice strategy used to generate sample movements. 
+The network's function is to learn the inverse dynamics of an equilibrium-point con- 
+trolled plant (Shadmehr 1990). The LMS-tree learning algorithm trains the network 
+(Sanger 1991b, Sanger 1991a). The training signals are determined from the ac- 
+tual practice data using either Actual Trajectory Training or Desired Trajectory 
+Training, as defined below. And the practice strategy is Trajectory Extension 
+Learning, in which a parameter of the movement is gradually modified during 
+training. 
+338 Sanger 
+2.1 TRAINING SIGNALS 
+Figure 1 shows the general structure of the network and training signals. A desired 
+trajectory y is fed into the network N to yield an estimated command fl. This 
+command is then applied to the plant P, where the subscript indicates that the 
+plant is parameterized by the variable a. Although the true command u which 
+achieves y is unknown, we do know that the estimated command  produces 9, so 
+these signals are used for training by comparing the network response to  given by 
+ = N to the known value  and subtracting these to yield the training error . 
+Normally, network training would use this error signal to modify the network output 
+for inputs near 9, and I refer to this as Actual Trajectory Training. However, if 
+ is far from y then no change in response may occur at y and this may lead even 
+more quickly to learning lock-up. Therefore an alternative is to use the error  to 
+train the network output for inputs near y. I refer to this as Desired Trajectory 
+Training, and in the figure it is represented by the dotted arrow. 
+The following discussion will summarize the convergence conditions and theorems 
+presented in (Sanger 1992). 
+Define 
+nu -' ve(x))u = u - 
+to be an operator which maps commands into command errors for states x on the 
+desired trajectory. Similarly, let 
+map commands into command errors for states  on the actual trajectory. 
+Convergence depends upon the following assumptions: 
+AI: The plant P is smooth and invertible with respect to both the state x and the 
+input u with Lipschitz constants ks and ku, and it has stable zero-dynamics. 
+A2: The network N is smooth with Lipschitz constant ks. 
+A3: Network learning reduces the error in response to a pair (y, 
+A4: The change in network output in response to training is smooth with Lipschitz 
+constant 
+AS: There exists a smoothly controllable parameter a such that an inverse dy- 
+namics solution is available at c = c0, and the desired performance occurs 
+when c = 
+A6: The change in command required to produce a desired output after any change 
+in c is bounded by the change in c multiplied by a constant k,. 
+AT: The change in plant response for any fixed input is bounded by the change in 
+a multiplied by a constant 
+Under assumptions A1-A3 we can prove convergence of Desired Trajectory Training: 
+Theorem 1: 
+If there exists a kn such that 
+A Practice Strategy for Robot Learning Control 339 
+then if the learning rate 0 < ? <_ 1, 
+I}Rn+lull < (1 -- ? q- 
+If kR < 1 and '7 <_ 1, then the network output  approaches the correct command 
+Under assumptions A1-A4, we can prove convergence of Actual Trajectory Training: 
+Theorem 2: 
+If there exists a k, 
+such that 
+[IRn=- kall < Ilk- 
+then if the learning rate 0 < ? < 1, 
+2.2 TRAJECTORY EXTENSION LEARNING 
+Let a be some modifiable parameter of the plant such that for c = s0 there exists 
+a simple inverse dynamics solution, and we seek a solution when c - ca. For ex- 
+ample, if the plant uses Equilibrium Point Control (Shadmehr 1990), then at low 
+speeds the inverse dynamics behave like a perfect servo controller yielding desired 
+trajectories without the need to solve the dynamics. We can continue to train a 
+learning controller as the average speed of movement (c 0 is gradually increased. 
+The inverse dynamics learned at one speed provide an approximation to the inverse 
+dynamics f

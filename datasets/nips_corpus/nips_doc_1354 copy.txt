@@ -1,0 +1,179 @@
+The Canonical Distortion Measure in Feature 
+Space and 1-NN Classification 
+Jonathan Baxter'and Peter Bartlett 
+Department of Systems Engineering 
+Australian National University 
+Canberra 0200, Australia 
+(ion,bartlett} syseng.anu.edu.au 
+Abstract 
+We prove that the Canonical Distortion Measure (CDM) [2, 3] is the 
+optimal distance measure to use for 1 nearest-neighbour (1-NN) classifi- 
+cation, and show that it reduces to squared Euclidean distance in feature 
+space for function classes that can be expressed as linear combinations 
+of a fixed set of features. PAC-like bounds are given on the sample- 
+complexity required to learn the CDM. An experiment is presented in 
+which a neural network CDM was learnt for a Japanese OCR environ- 
+ment and then used to do 1-NN classification. 
+1 INTRODUCTION 
+Let X be an input space, P a distribution on X,  a class of functions mapping X into Y 
+(called the environment), Q a distribution on  and o- a function o-: Y x Y --> [0, M]. 
+The Canonical Distortion Measure (CDM) between two inputs z, z' is defined to be: 
+p(a:, z t) --/: r(f(c),f(xt))dQ(f). (1) 
+Throughout this paper we will be considering real-valued functions and squared loss, so 
+Y = 12 and o-(y, y') :-- (t - y'):. The CDM was introduced in [2, 3], where it was 
+analysed primarily from a vector quantization perspective. In particular, the CDM was 
+proved to be the optimal distortion measure to use in vector quantization, in the sense of 
+producing the best approximations to the functions in the environment . In [3] some 
+experimental results were also presented (in a toy domain) showing how the CDM may be 
+learnt. 
+The purpose of this paper is to investigate the utility of the CDM as a classification tool. 
+In Section 2 we show how the CDM for a class of functions possessing a common feature 
+'The first author was supported in part by EPSRC grants #K70366 and #K70373 
+246 J. Baxter and P Bartlett 
+set reduces, via a change of variables, to squared Euclidean distance in feature space. A 
+lemma is then given showing that the CDM is the optimal distance measure to use for 1- 
+nearest-neighbour (1-NN) classification. Thus, for functions possessing a common feature 
+set, optimal 1-NN classification is achieved by using squared Euclidean distance in feature 
+space. 
+In general the CDM will be unknown, so in Section 4 we present a technique for learning 
+the CDM by minimizing squared loss, and give PAC-like bounds on the sample-size re- 
+quired for good generalisation. In Section 5 we present some experimental results in which 
+a set of features was learnt for a machine-printed Japanese OCR environment, and then 
+squared Euclidean distance was used to do 1-NN classification in feature space. The exper- 
+iments provide strong empirical support for the theoretical results in a difficult real-world 
+application. 
+2 THE CDM IN FEATURE SPACE 
+Suppose each f E Y' can be expressed as a linear combination of a fixed set of features 
+ :'- (d,-.-, dk). That is, for all f  Y', there exists w := (w,..., wk) such that 
+f : W � (I) -- E/k=l Wii. In this case the distribution Q over the environment Y' is a 
+distribution over the weight vectors w. Measuring the distance between function values by 
+o-(y, y') := (y - y,)2 the CDM (1) becomes: 
+p(x, x'): [w. w � dO(w): 
+(2) 
+where W = fw w'w dQ(w). is a k x k matrix. Making the change of variable � -+ 
+� v/-, we have p(x, z') = - � Thus,the assumption that the functions in 
+the environment can be expressed as linear combinations of a fixed set of features means 
+that the CDM is simply squared Euclidean distance in a feature space related to the original 
+by a linear transformation. 
+3 1-NN CLASSIFICATION AND THE CDM 
+Suppose the environment Y' consists of classifiers, i.e. {0, 1}-valued functions. Let f be 
+some function in Y' and z := (x, f(x)),..., (xr,, f(x)) a training set of examples of 
+f. In 1-NN classification the classification of a novel x is computed by f(x*) where a? = 
+argminx,d(x, xi)), i.e. the classification of  is the classification of the nearest training 
+point to x under some distance measure d. If both f and x are chosen at random, the 
+expected misclassification error of the 1-NN scheme using d and the training points x :-- 
+(x,...,x) is 
+er(x, d) :-- Ig.rlgx If(x) - f(x*)]  , (3) 
+where x* is the nearest neighbour to x from {x,..., x,,}. The following lemma is now 
+immediate from the definitions. 
+Lemma 1. For all sequences x = (z,..., zr, ), er(x, d) is rninirnized if d is the CDM p. 
+Remarks. Lemma 1 combined with the results of the last section shows that for function 
+classes possessing a common feature set, optimal 1-NN classification is achieved by using 
+squared Euclidean distance in feature space. In Section 5 some experimental results on 
+Japanese OCR are presented supporting this conclusion. 
+The property of optimality of the CDM for 1-NN classification may not be stable to small 
+perturbations. That is, if we learn an approximation # to p, then even if Ex x x (# (x, x') - 
+The Canonical Distortion Measure in Feature Space and 1-NN Classification 247 
+p(z, x')): is small it may not be the case that 1-NN classification using # is also small. 
+However, one can show that stability is maintained for classifier environments in which 
+positive examples of different functions do not overlap significantly (as is the case for the 
+Japanese OCR environment of Section 5, face recognition environments, speech recogni- 
+tion environments and so on). We are currently investigating the general conditions under 
+which stability is maintained. 
+4 LEARNING THE CDM 
+For most environments encountered in practice (e.g speech recognition or image recogni- 
+tion), p will be unknown. In this section it is shown how p may be estimated or learnt using 
+function approximation techniques (e.g. feedforward neural networks). 
+4.1 SAMPLING THE ENVIRONMENT 
+To learn the CDM p, the learner is provided with a class of functions (e.g. neural networks) 
+1 where each #  1 maps X x X --> [0, M]. The goal of the learner is to find a g such 
+that the error between # and the CDM p is small. For the sake of argument this error will 
+be measured by the expected squared loss: 
+err,(g) := Exxx [g(x,x') - p(x,x')] 2 , 
+(4) 
+where the expectation is with respect to P:. 
+Ordinarily the learner would be provided with training data in the form (z, z', p(z, z')) 
+and would use this data to minimize an empirical version of (4). However, p is unknown 
+so to generate data of this form p must be estimated for each training pair x, x'. Hence to 
+generate training sets for learning the CDM, both the distribution Q over the environment 
+.g and the distribution P over the input space X must be sampled. So let f := (f .... , f,) 
+be m i.i.d. samples from W according to Q and let x :: (z,..., z,, ) be n i.i.d. samples 
+from X according to P. For any pair xi, xj an estimate ofp(xi, xj) is given by 
+p(3Ci,Cj) :'-- __ EO'(fk(3Ci),fk(3Cj)). 
+k--1 
+(5) 
+This gives n(n - 1)/2 training triples, 
+{(xi,xj,15(xi,xj)),l <_ i < j _< n), 
+which can be used as data to generate an empirical estimate ofer, (#): 
+�rx,f(g) '- n(n- 1) 
+[g(xi, )(xi, 2 . 
+(6) 
+Only r,(n - 1)/2 of the possible r, 2 training triples are used because the functions #  1 
+are assumed to akeady be symmetric and to satisfy #(x, z) = 0 for all z (if this is not 
+the case then set ' (x, x') := (g(x, x') + #(x', x))/2 if x - x' and #'(x, x) = 0 and use 
+G' := {#': # E G} instead). 
+In [3] an experiment was presented in which G was a neural network class and (6) was 
+minimized directly by gradient descent. In Section 5 we present an alternative technique 
+in which a set of features is first learnt for the environment and then an estimate of p in 
+feature space is constructed explicitly. 
+248 J. Baxter and P. Bartlett 
+4.2 UNIFORM CONVERGENCE 
+We wish to ensure good generalisation from a # minimizing eSx,f, in the sense that (for 
+small s, 5), 
+Pr{x,f'sup[�rx,f(#)-ert(#)l >s} <5, 
+The following theorem shows that this occurs if both the number of functions m and the 
+number of input samples n are sufficiently large. Some exotic (but nonetheless benign) 
+measurability restrictions have been ignored in the statement of the theorem. In the state- 
+mefft of the theorem, A/'(e, 1) denotes the smallest e-cover of 1 under the L(P ) norm, 
+where {#,..., gv } is an e-cover of G if for all # E G there exists gi such that I Ii -11 _< s. 
+Theorem 2. Assume the range of the functions in the environment .T' is no more than 
+[-V/-B-, V/-B-] and in the class  ('used to approximate the CDM) is no more than 
+[0, v/-']. For all s > 0 and O < 5 _< 1, if 
+32B 4 4 
+m _> s--- T- log  (7) 
+and 
+then 
+n > s logA/'(s, {) + log 512B2 
+_ e--- 5-- + log (8) 
+Pr x,f: sup �rx,f(g)-err(g) > s < 5. (9) 
+Proof For each g  6, define 
+2 
+rx(g) :-- r(r- 1) E [q(xi,xj)- p(xi,xj)] 2 . (10) 
+l<i<j<n 
+If for any x = (xx,..., x,), 
+Pr f' sup14rx,f(g)-rx(g)[ >  _< , (ll) 
+gG 
+and 
+{ 
+Pr x: suplrx(g)-er(g)l >  _< , (12) 
+then by the triangle inequality (9) will hold. We treat (11) and (12) separately. 
+Equation (11). To simplify the notation let gij, ij and pij denote g( xi, x j), )(xi, xj ) and 
+p( xi , x j) respectively. Now, 
+2 
+I4r:,f(g)- r,,(g)]- n(n- 1) 
+2 
+ (p - p)(eg - ) - p) 
+l_i(j_n 
+4B 
+n(n - 1) 
+Eox(f) - -- 
+, 
+k=l 
+The Canonical Distortion Measure in Feature Space and 1-NN Classification 249 
+where x' 3 r -+ [0, 4B ] is defined by 
+4/9 
+x(f) '- n(n- 1) Z (f(xi)- f(xj)) -'2. 
+Thus, 
+Pr f: suplYrx,f(#)- �rx(#)l > < Pr f: E:vx(f) - 1__ x(f,) >  
+g -- /T/ k=l 
+which is < 2 exp (-rns2/(32B4)) by Hoeffding's inequaliW. Seging this less th 5/2 
+gives the bound on m in theorem 2. 
+Equation (12). Without loss of generaliW, suppose that n is even. e trick here is to split 
+the sum over all pairs (xi, xj) (with i < j) appeng in the debition of e(g) into a 
+double sum: 
+- 
+- 
+1 2 
+, 
+'= j=l 
+where for each i : 1,..., n

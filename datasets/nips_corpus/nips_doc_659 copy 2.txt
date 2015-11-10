@@ -1,0 +1,154 @@
+Unsupervised Discrimination of Clustered Data 
+via Optimization of Binary Information Gain 
+Nicoi N. Schraudoiph 
+Computer Science & Engr. Dept. 
+University of California, San Diego 
+La Jolla, CA 92093-0114 
+nici @ cs. ucsd. edu 
+Terrence J. Sejnowski 
+Computational Neurobiology Laboratory 
+The Salk Institute for Biological Studies 
+San Diego, CA 92186-5800 
+tsejnowski @ ucsd. edu 
+Abstract 
+We present the information-theoretic derivation of a learning algorithm 
+that clusters unlabelled data with linear discriminants. In contrast to 
+methods that try to preserve information about the input patterns, we 
+maximize the information gained from observing the output of robust 
+binary discriminators implemented with sigmoid nodes. We derive a local 
+weight adaptation rule via gradient ascent in this objective, demonstrate 
+its dynamics on some simple data sets, relate our approach to previous 
+work and suggest directions in which it may be extended. 
+1 INTRODUCTION 
+Unsupervised learning algorithms may perform useful preprocessing functions by pre- 
+serving some aspects of their input while discarding others. This can be quantified as 
+maximization of the information the network's output carries about those aspects of the 
+input that are deemed important. 
+(Linsker, 1988) suggests maximal preservation of information about all aspects of the input. 
+This Infomax principle provides for optimal reconstruction of the input in the face of noise 
+and resource limitations. The 1-max algorithm (Becker and Hinton, 1992), by contrast, 
+focusses on coherent aspects of the input, which are extracted by maximizing the mutual 
+information between networks looking at different patches of input. 
+Our work aims at recoding clustered data with adaptive discriminants that selectively 
+emphasize gaps between clusters while collapsing patterns within a cluster onto near- 
+499 
+500 Schraudolph and Sejnowski 
+identical output representations. We achieve this by maximizing information gain  
+the information gained through observation of the network's outputs under a probabilistic 
+interpretation. 
+2 STRATEGY 
+Consider a node that performs a weighted summation on its inputs ' and squashes the 
+resulting net input y through a sigmoid function f: 
+1 
+z = f(y), where f(y)- I + e-Y 
+and y = 3.'. (1) 
+Such a sigmoid node can be regarded as a soft discriminant: with a large enough weight 
+vector, the output will essentially be binary, but smaller weights allow for the expression of 
+varying degrees of confidence in the discrimination. 
+To make this notion more precise, consider y a random variable with bimodai distribution, 
+namely an even mixture of two Gaussian distributions. Then if their means equal + half 
+their variance, z is the posterior probability for discriminating between the two source 
+distributions (Anderson, 1972). 
+This probabilitstic interpretation of z can be used to design a learning algorithm that seeks 
+such bimodal projections of the input data. In particular, we search for highly informa- 
+tive discriminants by maximizing the information gained about the binary discrimination 
+through observation of z. This binary information gain is given by 
+AH(z)=H()-H(z), 
+(2) 
+where H(z) is the entropy of z under the above interpretation, and/: is an estimate of z 
+based on prior knowledge. 
+3 RESULTS 
+3.1 THE ALGORITHM 
+In the Appendix, we present the derivation of a learning algorithm that maximizes binary 
+information gain by gradient ascent. The resulting weight update rule is 
+Az oc f'(y) ' (y - .O), (3) 
+where .O, the estimated net input, must meet certain conditions x (see Appendix). The weight 
+change dictated by (3) is thus proportional to the product of three factors: 
+� the derivative of the sigmoid squashing function, 
+� the presynaptic input ', and 
+� the diftbrence between actual and anticipated net input. 
+x In what follows, we have successfully used estimators that merely approximate these conditions. 
+Unsupervised Discrimination of Clustered Data via Optimization of Binary Information Gain 501 
+Ai =  AH(z) 
+1.00 
+0.50 
+0.00 
+-0.50 
+-1.00 
+-4.00 -2.00 0.00 2.00 4.00 
+Figure 1: Phase plot of A/against net input /for ) = {-3, -2,... 3). See text for details. 
+3.2 SINGLE NODE DYNAMICS 
+For a single, isolated node, we use (t), the average net input over a batch of input patterns, 
+as estimator for /. The behavior of our algorithm in this setting is best understood from 
+a phase plot as shown in Figure 1, where the change in net input resulting from a weight 
+change according to (3) is graphed against the net input that causes this weight change. 
+Curves are plotted for seven dirtbrent values of 0. The central curve (/) = 0) is identical 
+to that of the straightforward Hebb rule for sigmoid nodes: both positive and negative net 
+inputs are equally amplified until they reach saturation. For non-zero values of , however, 
+the curves become asymmetric: positive  favor negative changes A/and vice versa. For 
+/) = (t), it is easy to see that this will have the eftbct of centering net inputs around zero. 
+The node will therefore converge to a state where its output is one for half of the input 
+patterns, and zero for the other half. Note that this can be achieved by any sufficiently large 
+weight vector, regardless of its direction! However, since simple gradient ascent is both 
+greedy and local in weight space, starting it from small random initial weights is equivalent 
+to a bias towards discriminations that can be made confidently with smaller weight vectors. 
+To illustrate this effect, we have tested a single node running our algorithm on a set of 
+vowel formant frequency data due to (Peterson and Barney, 1952). The most prominent 
+feature of this data is a central gap that separates front from back vowels; however, this 
+feature is near-orthogonal to the principal component of the data and thus escapes detection 
+by standard Hebbian learning rules. 
+Figure 2 shows the initial, intermediate and final phase of this experiment, using a visu- 
+alization technique suggested by (Munro, 1992). Each plot shows the pre-image of zero 
+net input superimposed on a scatter plot of the data set in input space. The two flanking 
+lines delineate the active region where the sigmoid is not saturated, and thus provide an 
+indication of weight vector size. 
+As demonstrated in this figure, our algorithm is capable of proceeding smoothly from a 
+small initial weight vector that responds in principal component direction to a solution 
+which uses a large weight vector in near-orthogonal direction to successfully discriminate 
+between the two data clusters. 
+502 Schraudolph and Sejnowski 
+Figure 2: Single node discovers distinction between front and back vowels in unlabelled data 
+set of 1514 multi-speaker vowel utterances (Peterson and Barney, 1952). Superimposed on 
+a scatter plot of the data are the pre-images of = 0 (solid center line) and y = +1.31696 
+(flanking lines) in input space. Discovered feature is far from principal component direction. 
+3.3 EXTENSION TO A LAYER OF NODES 
+A learning algorithm for a single sigmoid node has of course only limited utility. When 
+extending it to a layer of such nodes, some form of lateral interaction is needed to ensure that 
+each node makes a diftrent binary discrimination. The common technique of introducing 
+lateral competition for activity or weight changes would achieve this only at the cost of 
+severely distorting the behavior of our algorithm. 
+Fortunately our framework is flexible enough to accommodate lateral diftrentiation in a 
+less intrusive manner: by picking an estimator that uses the activity of every other node in 
+the layer to make its prediction, we force each node to maximize its information gain with 
+respect to the entire layer. To demonstrate this technique we use the linear second-order 
+estimator 
+i = (yi) +  (y - (y)) i (4) 
+j# 
+to predict the net input y of the ita node in the layer, where the (.) operator denotes 
+averaging over a batch of input patterns, and ij is the empirical correlation coefficient 
+-- ((Yi -- (Yi))(Yj -- (Yj))) (5) 
+Figure 3 shows a layer of three such nodes adapting to a mixture of three Gaussian dis- 
+tributions, with each node initially picking a diftrent Gaussian to separate from the other 
+two. After some time, all three discriminants rotate in concert so as to further maximize 
+information gain by splitting the input data evenly. Note that throughout this process, the 
+nodes always remain well-diftrentiated from each other. 
+For most initial conditions, however, the course of this experiment is that depicted in 
+Figure 4: two nodes discover a more efficient way to discriminate between the three input 
+clusters, to the detriment of the third. The latecomer repeatedly tries to settle into one of 
+the gaps in the data, but this would result in a high degree of predictability. Thus the node 
+with the shortest weight vector and hence most volatile discriminant is weakened further, 
+its weight vector all but eliminated in an eftctive demonstration of Occam's razor. 
+Unsupervised Discrimination of Clustered Data via Optimization of Binary Information Gain 503 
+Figure 3: Layer of three nodes adapts to a mixture of three Gaussian distributions. In the 
+final state, each node splits the input data evenly. 
+/ 
+Figure 4: Most initial conditions, however, lead to a minimal solution involving only two 
+nodes. The weakest node is crowded out by Occam's razor, its weight vector reduced to 
+near-zero length. 
+4 DISCUSSION 
+4.1 RELATED WORK 
+By maximizing the diftbrence of actual from anticipated response, our algorithm makes 
+binary discriminations that are highly informative with respect to clusters in the input. The 
+weight change in proportion to a difference in activity is reminiscent of the covariance rule 
+(Sejnowski, 1977)but generalizes it in two important respects: 
+� it explicitly incorporates a sigmoid nonlinearity, an

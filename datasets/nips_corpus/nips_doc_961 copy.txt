@@ -1,0 +1,181 @@
+Hierarchical Mixtures of Experts Methodology Applied to 
+Continuous Speech Recognition 
+Ying Zhao, Richard Schwartz, Jason Sroka*,* John Makhoul 
+BBN System and Technologies 
+70 Fawcett Street 
+Cambridge MA 02138 
+Abstract 
+In this paper, we incorporate the Hierarchical Mixtures of Experts (HME) 
+method of probability estimation, developed by Jordan [1], into an HMM- 
+based continuous speech recognition system. The resulting system can be 
+thought of as a continuous-density HMM system, but instead of using gaussian 
+mixtures, the HME system employs a large set of hierarchically organized but 
+relatively small neural networks to perform the probability density estimation. 
+The hierarchical structure is reminiscent of a decision tree except for two 
+important differences: each expert or neural net performs a soft decision 
+rather than a hard decision, and, unlike ordinary decision trees, the parameters 
+of all the neural nets in the HME are automatically trainable using the EM 
+algorithm. We report results on the ARPA 5,000-word and 40,000-word Wall 
+Street Journal corpus using HME models. 
+1 Introduction 
+Recent research has shown that a continuous-density HMM (CD-HMM) system can out- 
+perform a more constrained tied-mixture HMM system for large-vocabulary continuous 
+speech recognition (CSR) when a large amount of training data is available [2]. In other 
+work, the utility of decision trees has been demonstrated in classification problems by 
+using the divide and conquer paradigm effectively, where a problem is divided into a 
+hierarchical set of simpler problems. We present here a new CD-HMM system which 
+**MIT, Cambridge MA 02139 
+860 Ying Zhao, Richard Schwartz, Jason Sroka, John Makhoul 
+has similar properties and possesses the same advantages as decision trees, but has the 
+additional important advantage of having automatically trainable soft decision bound- 
+aries. 
+2 Hierarchical Mixtures of Experts 
+The method of Hierarchical Mixtures of Experts (HME) developed recently by Jordan 
+[1] breaks a large scale task into many small ones by partitioning the input space into 
+a nested set of regions, then building a simple but specific model (local expert) in each 
+region. The idea behind this method follows the principle of divide-and-conquer which 
+has been utilized in certain approaches to classification problems, such as decision trees. 
+In the decision tree approach, at each level of the tree, the data are divided explicitly into 
+regions. In contrast, the HME model makes use of soft splits of the data, i.e., instead of 
+the data being explicitly divided into regions, the data may lie simultaneously in multiple 
+regions with certain probabilities. Therefore, the variance-increasing effect of lopping off 
+distant data in the decision tree can be ameliorated. Furthermore, the hard boundaries 
+in the decision tree are fixed once a decision is made, while the soft boundaries in 
+the HME are parameterized with generalized sigmoidal functions, which can be adjusted 
+automatically using the Expectation-Maximization (EM) algorithm during the splitting. 
+Now we describe how to apply the HME methodology to the CSR problem. For each 
+state of a phonetic HMM, a separate HME is used to estimate the likelihood. The actual 
+HME first computes a posterior probability P(llz, s), the probability of phoneme class 
+l, given the input feature vector z and state s. That probability is then divided by the a 
+priori probability of the phone class I at state s. A one-level HME performs the following 
+computation: 
+c 
+P(ll=, s) = y P(llc,, z, s)P(clz, s) (1) 
+i=1 
+where l = 1,...,/ indicates phoneme class, ci represents a local region in the input space, 
+and C is the number of regions. P(cila, s) can be viewed as a gating network, while 
+P(tlc, , 8) can be viewed as a local expert classifier (expert network) in the region ci 
+[1]. In a two-level HME, each region c/ is divided in turn into C subregions. The term 
+P(llc, , 8) is then computed in a similar manner to equation (1), and so on. If in some 
+of these subregions there are no data available, we back off to the parent network. 
+3 TECHNICAL DETAILS 
+As in Jordan's paper, we use a generalized sigmoidal function to parameterize P(ci[z) 
+as follows: 
+P(clz) =  e T= (2) 
+where z can be the direct input (in a one-layer neural net) or the hidden layer vector (in a 
+two-layer neural net), and vi, i = 1,..., C are weights which need to train. Similarly, the 
+local phoneme classifier in region c./, P(llc, z), can be parameterized with a generalized 
+Mixtures of Experts Applied to Continuous Speech Recognition 861 
+sigmoidal function also: 
+eO � 
+P(llci, z) - eo],= (3) 
+where Oi,j = 1, ...,/., are weights. The whole system consists of two set of parameters: 
+vi, i = 1, ..., C and Oi,j = 1, ..., L, O = {0, v}. All parameters are estimated by using 
+the EM algorithm. 
+The EM is an iterative approach to maximum likelihood estimation. Each iteration of an 
+EM algorithm is composed of two steps: an Expectation (E) step and a Maximization 
+(M) step. The M step involves the maximization of a likelihood function that is redefined 
+in each iteration by the E step. Using the parameterizations in (2) and (3), we obtain the 
+following iterative procedure for computing parameters 0 = {vi, Oji}: 
+1 initialize -(0) and 0 � for i = 1, C, j = 1 L. 
+� 1/i --$  �..   �..  
+2. E-step: In each iteration n, for each data pair (z(t),/(t)), t = 1,..., N, compute 
+P(cilz(t), l(t), 6} ()) 
+= P(cilz(t), v))P(l(t)lci, 
+z(t), 0(t),) (4) 
+k P(cklz(t), v())P(l(t)lc, z(t),n()  
+v!( t ),k ! 
+where i = 1, ..., C. zi(t) () represents the probability of the data t lying in the region 
+i, given the current parameter estimation O (). It will be used as a weight for this data 
+in the region i in the M-step. The idea of soft splitting reflects that these weights are 
+probabilities between 0 and 1, instead of a harddecision 0 or 1. 
+3. M-step: 
+eO)i(t) 
+0 (+l) = max 2: zi(t)()[log 
+(5) 
+(n+l) 
+i=h...,c max E Z zt(t)() log 
+'V i ...' C 
+(6) 
+4. Iterate until Oi, vi converge. 
+The first maximization means fitting a generalized sigmoidal model (3) using the labeled 
+data (z(t), l(t)) and weighting zi(t) (). The second one means fitting a generalized sig- 
+moidal model (2) using inputs z(t) and outputs zi(t) (). The criterion for fitting is the 
+cross-entropy. Typically, the fitting can be solved by the Newton-Raphson method. How- 
+ever, it is quite expensive. Viewing this type of fitting as a multi-class classification task, 
+we developed a technique to invert a generalized sigmoidal function more efficiently, 
+which will be described in the following. 
+A common method in a multi-class classification is to divide the problem into many 
+2-class classifications. However, this method results in a positive and negative training 
+unbalance usually. To avoid the positive and negative training unbalance, the following 
+technique can be used to solve multi-class posterior probabilities simultaneously. 
+Suppose we have a labeled data set, (z(t),/(t)),t = 1, ..., N, where /(t) 6 {1, ...,/,} is 
+the label for t-th data. We use a generalized sigmoidal function to model the posterior 
+862 Ying Zhao, Richard Schwartz, Jason Sroka, John Makhoul 
+probability P(llz ), where l = 1, ...,/ as follows: 
+e0 � 
+Pt(z)= P(llz)= 
+Obviously, since these probabilities sum up to one, we have 
+/-1 
+PL(z) = 1 -- Pt(z). 
+t=l 
+Now, a aining staple z(t) with a class lal l(t) can be intereted 
+ l g l(t) 
+If we define 
+equation (10) implies that 
+(7) 
+(8) 
+(9) 
+O[z = log Pt(z) (10) 
+PL(z) 
+eO � 
+Pt(z) =  eO (11) 
+for l = 1, ..., L with Oz = 0. This expression is the generalized sigmoidal function in 
+(7). This means, we can train parameters in (7) to satisfy Equation (10) from the data. 
+Using a least squares criterion, the objective is 
+min _ [0[ z(t) - log Pt(z(t)) ]2 
+t PL(z(t))] 
+for l = 1, ..., L- 1. Denote a data matrix as 
+z(1) 
+z(2) 
+X .._ 
+z(N) 
+(12) 
+A least squares solution to (12) is 
+(13) 
+for l = 1, ...,/.,, where a = 9(/., - 1). Substituting (13) into (11), we get 
+a =a'(Xa'X)- '](0= =(t) 
+Pt(z) = :z'/o(x'/ox) -I ,, ,(t) (14) 
+k a 
+Equation (13) and (14) are very easy to compute. Basically, we only have to accumulate 
+the matfix XTX and sum z(t) into different classes l = 1, ...,/.,. We can obtain prob- 
+abilities Pt(z) by a single inversion of matrix XTX after a pass through the training 
+data. 
+Mixtures of Experts Applied to Continuous Speech Recognition 863 
+4 Relation to Other Work 
+The work reported here is very different from our previous work utilizing neural nets 
+for CSR. There, a single segmental neural network (SNN) is used to model a complete 
+phonetic segment [3]. Here, each HME estimates the probability density for each state 
+of a phonetic HMM. The work here is more similar to that by Cohen et al. [4], the major 
+difference being that in [4], a single very large neural net is used to perform the probability 
+density modeling. The training of such a large network requires the use of a specialized 
+parallel processing machine, so that the training can be done in a reasonable amount of 
+time. By using the HME method and dividing the problem into many smaller problems, 
+we are able to perform the needed training computation on regular workstations. 
+Most of the previous work on CD-HMM work has utilized mixtures of gaussians to 
+estimate the probability densities of an HMM. Since a'multilayer feedforward neural 
+network is a universal continuous function approximator, we decided to explore the use 
+of neural nets as an alternative approach for continuous density estimation. 
+5 Experimental Results 
+Word Error Rate 
+HMM 7.8 
+SNN 8.5 
+HMM+SNN 7.1 
+HME 7.6 
+HME + HMM 6.8 
+Prior-modified HME + HMM 6.2 
+Table 1: Error Rates for the ARPA WSJ 5K Development Test, Trigram Grammar 
+Word Error Rate 
+HMM 9.5 
+HME + HMM 8.7 
+Table 2: Error Rates for the ARPA WSJ 40K

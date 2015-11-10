@@ -1,0 +1,167 @@
+A Segment-based Automatic Language 
+Identification System 
+Yeshwant K. Muthusamy & Ronald A. Cole 
+Center for Spoken Language Understanding 
+Oregon Graduate Institute of Science and Technology 
+Beaverton OR 97006-1999 
+Abstract 
+We have developed a four-language automatic language identification sys- 
+tem for high-quality speech. The system uses a neural network-based 
+segmentation algorithm to segment speech into seven broad phonetic cat- 
+egories. Phonetic and prosodic features computed on these categories are 
+then input to a second network that performs the language classification. 
+The system was trained and tested on separate sets of speakers of Ameri- 
+can English, Japanese, Mandarin Chinese and Tamil. It currently performs 
+with an accuracy of 89.5% on the utterances of the test set. 
+I INTRODUCTION 
+Automatic language identification is the rapid automatic determination of the lan- 
+guage being spoken, by any speaker, saying anything. Despite several important 
+applications of automatic language identification, this area has suffered from a lack 
+of basic research and the absence of a standardized, public-domain database of 
+languages. 
+It is well known that languages have characteristic sound patterns. Languages have 
+been described subjectively as singsong, rhythmic, guttural, nasal etc. The 
+key to solving the problem of automatic language identification is the detection and 
+exploitation of such differences between languages. 
+We assume that each language in the world has a unique acoustic structure, and that 
+this structure can be defined in terms of phonetic and prosodic features of speech. 
+241 
+242 Muthusamy and Cole 
+Phonetic, or segmental features, include the the inventory of phonetic segments 
+and their frequency of occurrence in speech. Prosodic information consists of the 
+relative durations and amplitudes of sonorant (vowel-like) segments, their spacing 
+in time, and patterns of pitch change within and across these segments. 
+To the extent that these assumptions are valid, languages can be identified auto- 
+matically by segmenting speech into broad phonetic categories, computing segment- 
+based features that capture the relevant phonetic and prosodic structure, and train- 
+ing a classifier to associate the feature measurements with the spoken language. 
+We have developed a language identification system that uses a neural network to 
+segment speech into a sequence of seven broad phonetic categories. Information 
+about these categories is then used to train a second neural network to discriminate 
+among utterances spoken by native speakers of American English, Japanese, Man- 
+darin Chinese and Tamil. When tested on utterances produced by six new speakers 
+from each language, the system correctly identifies the language being spoken 89.5% 
+of the time. 
+2 SYSTEM OVERVIEW 
+The following steps transform an input utterance into a decision about what lan- 
+guage was spoken. 
+Data Capture 
+The speech is recorded using a Sennheiser HMD 224 noise-canceling microphone, 
+low-pass filtered at 7.6 kHz and sampled at 16 kHz. 
+Signal Representations 
+A number of waveform and spectral parameters are computed in preparation for 
+further processing. The spectral parameters are generated from a 128-point discrete 
+Fourier transform computed on a 10 ms Hanning window. All parameters are 
+computed every 3 ms. 
+The waveform parameters consist of estimates of (i) zc8000: the zero-crossing rate 
+of the waveform in a 10 ms window, (ii) ptp700 and ptp8000: the peak-to-peak 
+amplitude of the waveform in a 10 ms window in two frequency bands (0-700 Hz 
+and 0-8000 Hz), and (iii) pitch: the presence or absence of pitch in each 3 ms frame. 
+The pitch estimate is derived from a neural network pitch tracker that locates pitch 
+periods in the filtered (0-700 Hz) waveform [2]. The spectral parameters consist 
+of (i) DFT coefficients, (ii) sda700 and sda8000: estimates of averaged spectral 
+difference in two frequency bands, (iii) sdf: spectral difference in adjacent 9 ms 
+intervals, and (iv) cm1000: the center-of-mass of the spectrum in the region of the 
+first formant. 
+Broad Category Segmentation 
+Segmentation is performed by a fully-connected, feedforward, three-layer neural 
+network that assigns 7 broad phonetic category scores to each 3 ms time frame of 
+the utterance. The broad phonetic categories are: VOC (vowel), FRIC (fricative), 
+A Segment-based Automatic Language Identification System 243 
+STOP (pre-vocalic stop), PRVS (pre-vocalic sonorant), INVS (inter-vocalic sono- 
+rant), POVS (post-vocalic sonorant), and CLOS (silence or background noise). A 
+Viterbi search, which incorporates duration and bigram probabilities, uses these 
+frame-based output activations to find the best scoring sequence of broad phonetic 
+category labels spanning the utterance. The segmentation algorithm is described 
+in greater detail in [3]. 
+Language Classification 
+Language classification is performed by a second fully-connected feedforward net- 
+work that uses phonetic and prosodic features derived from the time-aligned broad 
+category sequence. These features, described below, are designed to capture the 
+phonetic and prosodic differences between the four languages. 
+3 
+FOUR-LANGUAGE HIGH-QUALITY SPEECH 
+DATABASE 
+The data for this research consisted of natural continuous speech recorded in a lab- 
+oratory by 20 native speakers (10 male and 10 female) of each of American English, 
+Mandarin Chinese, Japanese and Tamil. The speakers were asked to speak a total 
+of 20 utterancesl: 15 conversational sentences of their choice, two questions of their 
+choice, the days of the week, the months of the year and the numbers 0 through 10. 
+The objective was to have a mix of unconstrained- and restricted-vocabulary speech. 
+The segmentation algorithm was trained on just the conversational sentences, while 
+the language classifier used all utterances from each speaker. 
+4 NEURAL NETWORK SEGMENTATION 
+4.1 SEGMENTER TRAINING 
+4.1.1 Training and Test Sets 
+Five utterances from each of 16 speakers per language were used to train and test 
+the segmenter. The training set had 50 utterances from 10 speakers (5 male and 5 
+female) from each of the 4 languages, for a total of 200 utterances. The development 
+test set had 10 utterances from a different set of 2 speakers (1 male and I female) 
+from each language, for a total of 40 utterances. The final test set had 20 utterances 
+from yet another set of 4 speakers (2 male and 2 female) from each language for a 
+total of 80 utterances. The average duration of the utterances in the training set 
+was 4.7 secs and that of the test sets was 5.7 secs. 
+4.1.2 Network Architecture 
+The segmentation network was a fully-connected, feed-forward network with 304 
+input units, 18 hidden units and 7 output units. The number of hidden units was 
+determined experimentally. Figure 1 shows the network configuration and the input 
+features. 
+Five speakers in Japanese and one in Tamil provided only 10 utterances each. 
+244 Muthusamy and Cole 
+NEURAL NETWORK SEGMENTATION 
+VOC FRIC CLOS STOP PRVS INVS POVS 
+7 
+OUTPUT 
+UNITS 
+18 
+HIDDEN 
+UNITS 
+304 
+INPUT 
+UNITS 
+I II II II II II II II II I 
+Zero FTP Avge. FTP Avge. Pltr.,h FastChange C-M 64 DFT 
+Crossing 0-70 SD 0-70 0-8000 SD 0-8000 SD 0-70 0-1000 Coefficients 
+30 Samples Each 
+Figure 1: Segmentation Network 
+4.1.3 Feature Measurements 
+The feature measurements used to train the network include the 64 DFT coefficients 
+at the frame to be classified and 30 samples each of zc8000, ptp700, ptp8000, sda 700, 
+sda8000, sdf, pitch and cm1000, for a total of 304 features. These samples were 
+taken from a 330 ms window centered on the frame, with more samples being taken 
+in the immediate vicinity of the frame than near the ends of the window. 
+4.1.4 Hand-labeling 
+Both the training and test utterances were hand-labeled with 7 broad phonetic 
+category labels and checked by a second ]abe]er for correctness and consistency. 
+4.1.5 Coarse Sampling of Frames 
+As it was not computationally feasible to train on every 3 ms frame in each ut- 
+terance, only a few frames were chosen at random from each segment. To ensure 
+approximately equal number of frames from each category, fewer frames were sam- 
+pled from the more frequent categories such as vowels and closures. 
+4.1.6 Network Training 
+The networks were trained using backpropagation with conjugate gradient opti- 
+mization [1]. Training was continued until the performance of the network on the 
+development test set leveled off. 
+A Segment-based Automatic Language Identification System 245 
+4.2 SEGMENTER EVALUATION 
+Segmentation performance was evaluated on the 80-utterance final test set. The 
+segmenter output was compared to the hand-labels for each 3 ms time frame. First 
+choice accuracy was 85.1% across the four languages. When scored on the mid- 
+dle 80% and middle 60% of each segment, the accuracy rose to 86.9% and 88.0% 
+respectively, pointing to the presence of boundary errors. 
+5 LANGUAGE IDENTIFICATION 
+5.1 CLASSIFIER TRAINING 
+5.1.1 Training and Test Sets 
+The training set contained 12 speakers from each language, with 10 or 20 utterances 
+per speaker, for a total of 930 utterances. The development test set contained a 
+different group of 2 speakers per language with 20 utterances from each speaker, for 
+a total of 160 utterances. The final test set had 6 speakers per language, with 10 
+or 20 utterances per speaker, for a total of 440 utterances. The average duration of 
+the utterances in the training set was 5.1 seconds and that of the test sets was 5.5 
+seconds. 
+5.1.2 Feature Development 
+Several passes were needed through the iterative process of feature development 
+and network training before a satisfactory feature set was obtained. Much of the 
+effort was concentrated on statistical and linguistic analysis of the languages with 
+the objective of determining the distinguishing characteristics among them. For 
+ex

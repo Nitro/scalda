@@ -1,0 +1,153 @@
+Reinforcement Learning Algorithm for 
+Partially Observable Markov Decision 
+Problems 
+Tommi Jaakkola 
+tommi@psyche.mit.edu 
+Satinder P. Singh 
+singh@psyche.mit.edu 
+Michael I. Jordan 
+jordan@psyche.mit.edu 
+Department of Brain and Cognitive Sciences, Bid. El0 
+Massachusetts Institute of Technology 
+Cambridge, MA 02139 
+Abstract 
+Increasing attention has been paid to reinforcement learning algo- 
+rithms in recent years, partly due to successes in the theoretical 
+analysis of their behavior in Markov environments. If the Markov 
+assumption is removed, however, neither generally the algorithms 
+nor the analyses continue to be usable. We propose and analyze 
+a new learning algorithm to solve a certain class of non-Markov 
+decision problems. Our algorithm applies to problems in which 
+the environment is Markov, but the learner has restricted access 
+to state information. The algorithm involves a Monte-Carlo pol- 
+icy evaluation combined with a policy improvement method that is 
+similar to that of Markov decision problems and is guaranteed to 
+converge to a local maximum. The algorithm operates in the space 
+of stochastic policies, a space which can yield a policy that per- 
+forms considerably better than any deterministic policy. Although 
+the space of stochastic policies is continuous--even for a discrete 
+action space our algorithm is computationally tractable. 
+346 Tommi Jaakkola, Satinder P. Singh, Michael I. Jordan 
+1 INTRODUCTION 
+Reinforcement learning provides a sound framework for credit assignment in un- 
+known stochastic dynamic environments. For Markov environments a variety of 
+different reinforcement learning algorithms have been devised to predict and control 
+the environment (e.g., the TD(A) algorithm of Sutton, 1988, and the Q-learning 
+algorithm of Watkins, 1989). Ties to the theory of dynamic programming (DP) and 
+the theory of stochastic approximation have been exploited, providing tools that 
+have allowed these algorithms to be analyzed theoretically (Dayan, 1992; Tsitsiklis, 
+1994; Jaakkola, Jordan, &; Singh, 1994; Watkins &; Dayan, 1992). 
+Although current reinforcement learning algorithms are based on the assumption 
+that the learning problem can be cast as Markov decision problem (MDP), many 
+practical problems resist being treated as an MDP. Unfortunately, if the Markov 
+assumption is removed examples can be found where current algorithms cease to 
+perform well (Singh, Jaakkola, & Jordan, 1994). Moreover, the theoretical analyses 
+rely heavily on the Markov assumption. 
+The non-Markov nature of the environment can arise in many ways. The most direct 
+extension of MDP's is to deprive the learner of perfect information about the state 
+of the environment. Much as in the case of Hidden Markov Models (HMM's), the 
+underlying environment is assumed to be Markov, but the data do not appear to be 
+Markovian to the learner. This extension not only allows for a tractable theoretical 
+analysis, but is also appealing for practical purposes. The decision problems we 
+consider here are of this type. 
+The analog of the HMM for control problems is the partially observable Markov 
+decision process (POMDP; see e.g., Monaban, 1982). Unlike HMM's, however, 
+there is no known computationally tractable procedure for POMDP's. The problem 
+is that once the state estimates have been obtained, DP must be performed in 
+the continuous space of probabilities of state occupancies, and this DP process is 
+computationally infeasible except for small state spaces. In this paper we describe 
+an alternative approach for POMDP's that avoids the state estimation problem and 
+works directly in the space of (stochastic) control policies. (See Singh, et al., 1994, 
+for additional material on stochastic policies.) 
+2 PARTIAL OBSERVABILITY 
+A Markov decision problem can be generalized to a POMDP by restricting the state 
+information available to the learner. Accordingly, we define the learning problem as 
+follows. There is an underlying MDP with states $ = {s, s.,..., sN} and transition 
+probability p,,, the probability of jumping from state s to state s t when action a is 
+taken in state s. For every state and every action a (random) reward is provided to 
+the learner. In the POMDP setting, the learner is not allowed to observe the state 
+directly but only via messages containing information about the state. At each time 
+step t an observable message mt is drawn from a finite set of messages according to 
+an unknown probability distribution P(mlst ) . We assume that the learner does 
+ For simplicity we assume that this distribution depends only on the current state. The 
+analyses go through also with distributions dependent on the past states and actions 
+Reinforcement Learning Algorithm for Markov Decision Problems 347 
+not possess any prior information about the underlying MDP beyond the number 
+of messages and actions. The goal for the learner is to come up with a policy--a 
+mapping from messages to actions--that gives the highest expected reward. 
+As discussed in Singh et al. (1994), stochastic policies can yield considerably higher 
+expected rewards than deterministic policies in the case of POMDP's. To make this 
+statement precise requires an appropriate technical definition of expected reward, 
+because in general it is impossible to find a policy, stochastic or not, that maximizes 
+the expected reward for each observable message separately. We take the time- 
+average reward as a measure of performance, that is, the total accrued reward per 
+number of steps taken (Bertsekas, 1987; Schwartz, 1993). This approach requires the 
+assumption that every state of the underlying controllable Markov chain is reachable. 
+In this paper we focus on a direct approach to solving the learning problem. Direct 
+approaches are to be compared to indirect approaches, in which the learner first 
+identifies the parameters of the underlying MDP, and then utilizes DP to obtain the 
+policy. As we noted earlier, indirect approaches lead to computationally intractable 
+algorithms. Our approach can be viewed as providing a generalization of the direct 
+approach to MDP's to the case of POMDP's. 
+3 A MONTE-CARLO POLICY EVALUATION 
+Advantages of Monte-Carlo methods for policy evaluation in MDP's have been re- 
+viewed recently (Barto and Duff, 1994). Here we present a method for calculating 
+the value of a stochastic policy that has the flavor of a Monte-Carlo algorithm. To 
+motivate such an approach let us first consider a simple case where the average re- 
+ward is known and generalize the well-defined MDP value function to the POMDP 
+setting. In the Markov case the value function can be written as (cf. Bertsekas, 
+19S7): 
+N 
+V(s) = lim E E{R(st, ut) - RIsl = s} (1) 
+N-- oo 
+t=l 
+where st and at refer to the state and the action taken at the t ta step respectively. 
+This form generalizes easily to the level of messages by taking an additional expec- 
+tation: 
+v(m): E (v(s)ls m) (2) 
+where s -+ rn refers to all the instances where m is observed in s and E{.Is -- m) 
+is a Monte-Carlo expectation. This generalization yields a POMDP value function 
+given by 
+V(m) = y] P(slm)V(s ) (3) 
+in which P(slm ) define the limit occupancy probabilities over the underlying states 
+for each message m. As is seen in the next section value functions of this type can be 
+used to refine the currently followed control policy to yield a higher average reward. 
+Let us now consider how the generalized value functions can be computed based 
+on the observations. We propose a recursive Monte-Carlo algorithm to effectively 
+compute the averages involved in the definition of the value function. In the simple 
+348 Tommi Jaakkola, Satinder P. Singh, Michael I. Jordan 
+case when the average payoff is known this algorithm is given by 
+x(m) 
+/3,(rn) = (1 Kt-- )7, Pt-x (m) + K,(rn) (4) 
+�(m) = (1 x,(rn) 
++ a,) - R] (5) 
+where x,(rn) is the indicator function for message m, Kt(m) is the number of times 
+m has occurred, and 7t is a discount factor converging to one in the limit. This 
+algorithm can be viewed as recursive averaging of (discounted) sample sequences of 
+different lengths each of which has been started at a different occurrence of message 
+m. This can be seen by unfolding the recursion, yielding an explicit expression for 
+�(m). To this end, let t denote the time step corresponding to the k ta occurrence 
+of message m and for clarity let Rt - R(s, ut) - R for every t. Using these the 
+recursion yields: 
+1 
+�(m) = K,(rn) 
+[ irlt, + rx,x Rt,+x + ... + r,t_t, Rt 
+where we have for simplicity used F:,T to indicate the discounting at the T ta step 
+in the k ta sequence. Comparing the above expression to equation 1 indicates that 
+the discount factor has to converge to one in the limit since the averages in V(s) or 
+V(m) involve no discounting. 
+To address the question of convergence of this algorithm let us first assume a constant 
+discounting (that is, 7t = 7 < 1). In this case, the algorithm produces at best an 
+approximation to the value function. For large K(m) the convergence rate by which 
+this approximate solution is found can be characterized in terms of the bias and 
+variance. This gives Bias{V(m)} or (1- )-l/K(m) and Var{V(m)} or (1- 
+)-'/K(m) where  = E{7 t-t- } is the expected effective discounting between 
+observations. Now, in order to find the correct value function we need an appropriate 
+way of letting 7t --* I in the limit. However, not all such schedules lead to convergent 
+algorithms; setting 7t = I for all t, for example, would not. By making use of the 
+above bounds a feasible schedule guaranteeing a vanishing bias and variance can be 
+found. For instance, since 7 >  we can choose 7(rn) - I - K(m) /4. Much faster 
+schedules are possible to obtain by estimating 9. 
+Let us now revise the algorithm to take into account the fact that the learner in fact 
+has no prior knowledge of the average reward. In this case the true average reward 
+app

@@ -1,0 +1,169 @@
+Using Local Trajectory Optimizers To 
+Speed Up Global Optimization In 
+Dynamic Programming 
+Christopher G. Atkeson 
+Department of Brain and Cognitive Sciences and 
+the Artificial Intelligence Laboratory 
+Massachusetts Institute of Technology, NE43-771 
+545 Technology Square, Cambridge, MA 02139 
+617-253-0788, cga@ai.mit.edu 
+Abstract 
+Dynamic programming provides a methodology to develop planners 
+and controllers for nonlinear systems. However, general dynamic 
+programming is computationally intractable. We have developed 
+procedures that allow more complex planning and control problems 
+to be solved. We use second order local trajectory optimization 
+to generate locally optimal plans and local models of the value 
+function and its derivatives. We maintain global consistency of the 
+local models of the value function, guaranteeing that our locally 
+optimal plans are actually globally optimal, up to the resolution of 
+our search procedures. 
+Learning to do the right thing at each instant in situations that evolve over time is 
+difficult, as the future cost of actions chosen now may not be obvious immediately, 
+and may only become clear with time. Value functions are a representational tool 
+that makes the consequences of actions explicit. Value functions are difficult to 
+learn directly, but they can be built up from learned models of the dynamics of the 
+world and the cost function. This paper focuses on how fast optimizers that only 
+produce locally optimal answers can play a useful role in speeding up the process 
+of computing or learning a globally optimal value function. 
+Consider a system with dynamics Xkq-1 -- f(xk, uk) and a cost function L(xk, uk), 
+663 
+664 Atkeson 
+where x is the state of the system and u is a vector of actions or controls. The sub- 
+script k serves as a time index, but will be dropped in the equations that follow. A 
+goal of reinforcement learning and optimal control is to find a policy that minimizes 
+the total cost, which is the sum of the costs for each time step. One approach to 
+doing this is to construct an optimal value function, V(x). The value of this value 
+function at a state x is the sum of all future costs, given that the system started in 
+state x and followed the optimal policy P(x) (chose optimal actions at each time 
+step as a function of the state). A local planner or controller can choose globally 
+optimal actions if it knew the future cost of each action. This cost is simply the 
+sum of the cost of taking the action right now and the future cost of the state that 
+the action leads to, which is given by the value function. 
+u* -- arg nn (L(x, u) + V(f(x, u))) (1) 
+Value functions are difficult to learn. The environment does not provide training 
+examples that pair states with their optimal cost (x, V(x)). In fact, it seems that the 
+optimal policy depends on the optimal value function, which in turn depends on the 
+optimal policy. Algorithms to compute value functions typically iteratively refine 
+a candidate value function and/or a corresponding policy (dynamic programming). 
+These algorithms are usually expensive. We use local optimization to generate 
+locally optimal plans and local models of the value function and its derivatives. We 
+maintain global consistency of the local models of the value function, guaranteeing 
+that our locally optimal plans are actually globally optimal, up to the resolution of 
+our search procedures. 
+I A SIMPLE EXAMPLE: A PENDULUM 
+In this paper we will present a simple example to make our ideas clear. Figure 1 
+shows a simulated set of locally optimal trajectories in phase space for a pendulum 
+being driven by a motor at the joint from the stable to the unstable equilibrium 
+position. S marks the start point, where the pendulum is hanging straight down, 
+and G marks the goal point, where the pendulum is inverted (pointing straight up). 
+The optimization criteria quadratically penalizes deviations from the goal point 
+and the magnitude of the torques applied. In the three locally optimal trajectories 
+shown the pendulum either swings directly up to the goal (1), moves initially away 
+from the goal and then swings up to the goal (2), or oscillates to pump itself and 
+then swing to the goal (3). In what follows we describe how to find these locally 
+optimal trajectories and also how to find the globally optimal trajectory. 
+2 LOCAL TRAJECTORY OPTIMIZATION 
+We base our local optimization process on dynamic programming within a tube 
+surrounding our current best estimate of a locally optimal trajectory (Dyer and 
+McReynolds 1970, Jacobson and Mayne 1970). We have a local quadratic model 
+of the cost to get to the goal (V) at each time step along the optimal trajectory 
+(assume a time step index k in everything below unless otherwise indicated): 
+lxTVxxx (2) 
+V(x) Vo + + 
+Using Local Trajectory Optimizers to Speed Up Global Optimization 665 
+Figure 1: Locally optimal trajectories for the pendulum swing up task. 
+A locally optimal policy can be computed using local models of the plant (in this 
+case local linear models) at each time step along the trajectory: 
+Xk+l = f(x, u)  Ax + Bu + c (3) 
+and local quadratic models of the one step cost at each time step along the trajec- 
+tory: 
+L(x, u)  -x T qx + -1 urRu + xTSu + tTu (4) 
+2 
+At each point along the trajectory the optimal policy is given by: 
+u �pt = -(R + BZVxxB) -1 x 
+(BzVxAx + SZx + BrV,,c + V,B + t) 
+One can integrate the plant dynamics forward in time based on the above policy, 
+and then integrate the value functions and its first and second spatial derivatives 
+backwards in time to compute an improved value function, policy, and trajectory. 
+For a one step cost of the form: 
+1 
+L(x, .)  (x - xd)  q(x - xd)+ 
+1 (. _ .)r l(. _ .) + (x _ x)s (. - .) 
+the backward sweep takes the following form (in discrete time)' 
+Zx = V A + q(x- xa) 
+Zu = VB + R(u - ua) 
+Z = A r VxA + Q 
+Z,, = BrV,A + S 
+Z = BTVxxB + R 
+K = ZS 1 Z 
+Vk_l ' Z -- Z,K 
+V, , k _ l = Z , , - Z , , K 
+(5) 
+(6) 
+(7) 
+(8) 
+(9) 
+(lO) 
+(11) 
+(12) 
+666 Atkeson 
+3 STANDARD DYNAMIC PROGRAMMING 
+A typical implementation of dynamic programming in continuous state spaces dis- 
+cretizes the state space into cells, and assigns a fixed control action to each cell. 
+Larson's state increment dynamic programming (Larson 1968) is a good example 
+of this type of approach. In Figure 2A we see the trajectory segments produced by 
+applying the constant action in each cell, plotted on a phase space for the example 
+problem of swinging up a pendulum. 
+4 
+USING LOCAL TRAJECTORY OPTIMIZATION 
+WITH DP 
+We want to minimize the number of cells used in dynamic programming by making 
+the cells as large as possible. Combining local trajectory optimization with dynamic 
+programming allows us to greatly reduce the resolution of the grid on which we do 
+dynamic programming and still correctly estimate the cost to get to the goal from 
+different parts of the space. Figure 2A shows a dynamic programming approach 
+in which each cell contains a trajectory segment applied to the pendulum problem. 
+Figure 2B shows our approach, which creates a set of locally optimal trajectories 
+to the goal. By performing the local trajectory optimizations on a grid and forcing 
+adjacent trajectories to be consistent, this local optimization process becomes a 
+global optimization process. Forcing adjacent trajectories to be consistent means 
+requiring that all trajectories can be generated from a single underlying policy. 
+A trajectory can be made consistent with a neighbor by using the neighboring 
+trajectory as an initial trajectory in the local optimization process, or by using the 
+value function from the neighboring trajectory to generate the initial trajectory in 
+the local optimization process. Each grid element stores the trajectory that starts 
+at that point and achieves the lowest cost. 
+The trajectory segments in figure 2A match the trajectories in 2B. Figures 2C and 
+2D are low resolution versions of the same problem. Figure 2C shows that some 
+of the trajectory segments are no longer correct. In Figure 2D we see the locally 
+optimal trajectories to the goal are still consistent with the trajectories in Figure 2B. 
+Using locally optimal trajectories which go all the way to the goal as building blocks 
+for our dynamic programming algorithm allows us to avoid the problem of correctly 
+interpolating the cost to get to the goal function on a sparse grid. Instead, the cost 
+to get to the goal is measured directly on the optimal trajectory from each node to 
+the goal. We can use a much sparser grid and still converge. 
+5 
+ADAPTIVE GRIDS BASED ON CONSTANT COST 
+CONTOURS 
+We can limit the search by growing the volumes searched around the initial and 
+goal states by gradually increasing a cost threshold C a. We will only consider states 
+around the goal that have a cost less than C a to get to the goal and states around 
+the initial state that have a cost less than C a to get from the initial state to that 
+state (Figure 3B). These two regions will increase in size as C a is increased. We stop 
+Using Local Trajectory Optimizers to Speed Up Global Optimization 667 
+A 
+c 
+B 
+D 
+Figure 2: Different dynamic programming techniques (see text). 
+668 Atkeson 
+Figure 3: Volumes defined by a cost threshold. 
+increasing C a as soon as the two regions come into contact. The optimal trajectory 
+has to be entirely within the union of these two regions, and has a cost of 2Ca. 
+Instead of having the initial conditions of the trajectories laid out on a grid over the 
+whole space, the initial conditions are laid out on a grid over the surface separating 
+the inside and the outside surfaces of the volumes described above. The resolution 
+of this grid is adaptively determined by checking whether the value function of one 
+trajectory correctly predicts the cost of a neighboring trajectory. If it does not, 
+additional grid points are added between the inc

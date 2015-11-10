@@ -1,0 +1,153 @@
+Use of Bad Training Data For Better 
+Predictions 
+Tal Grossman 
+Complex Systems Group (T13) and CNLS 
+LANL, MS B213 Los Alamos N.M. 87545 
+Alan Lapedes 
+Complex Systems Group (T13) 
+LANL, MS B213 Los Alamos N.M. 87545 
+and The Santa Fe Institute, Santa Fe, New Mexico 
+Abstract 
+We show how randomly scrambling the output classes of various 
+fractions of the training data may be used to improve predictive 
+accuracy of a classification algorithm. We present a method for 
+calculating the noise sensitivity signature of a learning algorithm 
+which is based on scrambling the output classes. This signature can 
+be used to indicate a good match between the complexity of the 
+classifier and the complexity of the data. Use of noise sensitivity 
+signatures is distinctly different from other schemes to avoid over- 
+training, such as cross-validation, which uses only part of the train- 
+ing data, or various penalty functions, which are not data-adaptive. 
+Noise sensitivity signature methods use all of the training data and 
+are manifestly data-adaptive and non-parametric. They are well 
+suited for situations with limited training data. 
+I INTRODUCTION 
+A major problem of pattern recognition and classification algorithms that learn from 
+a training set of examples is to select the complexity of the model to be trained. 
+How is it possible to avoid an overparameterized algorithm from memorizing 
+the training data? The dangers inherent in over-parameterization are typically 
+343 
+344 Grossman and Lapedes 
+illustrated by analogy to the simple numerical problem of fitting a curve to data 
+points drawn from a simple function. If the fit is with a high degree polynomial then 
+prediction on new points, i.e. generalization, can be quite bad, although the training 
+set accuracy is quite good. The wild oscillations in the fitted function, needed to 
+acheire high training set accuracy, cause poor predictions for new data. When 
+using neural networks, this problem has two basic aspects. One is how to choose 
+the optimal architecture (e.g. the number of layers and units in a feed forward net), 
+the other is to know when to stop training. Of course, these two aspects are related: 
+Training a large net to the highest training set accuracy usually causes overfitting. 
+However, when training is stopped at the correct point (where train-set accuracy 
+is lower), large nets are generalizing as good as, or even better than, small networks 
+(as observed e.g. in Weigend 1994). This prompts serious consideration of methods 
+to avoid overparameterization. Various methods to select network architecture or 
+to decide when to stop training have been suggested. These include: (1) use of 
+a penalty function (c.f. Weigend et al. 1991). (2) use of cross validation (Stone 
+1974). (3) minimum description length methods (Rissanen 1989), or (4) pruning 
+methods (e.g. Le Cun et al. 1990). 
+Although all these methods are effective to various degrees, they all also suffer some 
+forrn of non-optimality: 
+(l) various forms of penalty function have been proposed and results differ between 
+them. Typically, using a penalty function is generally preferable to not using one. 
+However, it is not at all clear that there exists one correct penalty function and 
+hence any given penalty function is usually not optimal. (2) Cross validation holds 
+back part of the training data as a separate valdiation set. It therefore works best in 
+the situation where use of smaller training sets, and use of relatively small validation 
+sets, still allows close approximation to the optimal classifier. This is not likely to 
+be the case in a significantly data-limited regime. (3) MDL methods may be viewed 
+as a form of penalty function and are subject to the issues in point (1) above. (4) 
+pruning methods require training a large net, which can be time consuming, and 
+then de-tuning the large network using penalty functions. The issues expressed 
+in point(I) above apply. 
+We present a new method to avoid overfitting that uses noisy training data where 
+some of the output classes for a fraction of the data are scrambled. We describe 
+how to obtain the noise sensitivity signature of a classifier (with its learning 
+algorithm), which is based on the scrambled data. This new methodology is not 
+computationally cheap, but neither is it prohibitively expensive. It can provide an 
+alternative to methods (1)-(4) above that (i) can test any complexity parameter of 
+any classifying algorithm (i.e. the architecture, the stopping criterion etc.) (ii) uses 
+all the training data, and (iii) is data adaptive, in contrast to fixed penalty/pruning 
+functions. 
+2 A DETAILED DESCRIPTION OF THE METHOD 
+Define a Learning Algorithm L(S, P), as any procedure which produces a classifier 
+f(a:), which is a (discrete) function over a given input space X (a: E X). The input 
+of the learning algorithm L is a Training Set S and a set of parameters P. The 
+training set S is a set of M examples, each example is a pair of an input instance a:i 
+Use of Bad Training Data for Better Predictions 345 
+and the desired output yi associated with it (i = 1..M). We assume that the desired 
+output represents an unknown target function f* which we try to approximate, 
+i.e. yi = ?(zi). The set of parameters P includes all the relevant parameters of the 
+specific learning algorithm and architecture used. When using a feed-forward neural 
+network classifier this set usually includes the size of the network, its connectivity 
+pattern, the distribution of the initial weights and the learning parameters (e.g. 
+the learning rate and momentum term size in usual back-propagation). Some of 
+these parameters determine the complexity of the classifiers produced by the 
+learning algorithm, or the set of functions f that are realizable by L. The number 
+of hidden units in a two layer perceptron, for example, determines the number 
+of free parameters of the model (the weights) that the learning algorithm will fit 
+to the data (the training set). In general, the output of L can be any classifier: 
+a neural network, a decision tree, boolean formula etc. The classifier f can also 
+depend on some random choices, like the initial choice of weights in many network 
+learning algortihm. It can also depend, like in pruning algorithms on any stopping 
+criterion which may also influence its complexity. 
+2.1 PRODUCING f 
+The classification task is given as the training set S. The first step of our method 
+is to prepare a set of noisy, or partially scrambled realizations of S. We define S  
+as one particular such realization, in which for fraction p of the M examples te 
+desired output values (classes) are changed. In this work we consider only binary 
+classification tasks, which means that we choose pM examples at random for which 
+yi  = 1 - yi. For each noise level p and set of n such realizations S (tz = 1..n) is 
+prepared, each with a different random choice of scrambled examples. Practically, 
+8-10 noise levels in the range p = 0.0 - 0.4, with n .- 4 - 10 realizations of S for 
+each level are enough. The second step is to apply the learning algorithm to each 
+of the different S to produce the corresponding classifiers, which are the boolean 
+functions f = L(S, P). 
+2.2 NOISE SENSITIVITY MEASURES 
+Using the set of f, three quantities are measured for each noise level p: 
+� The average performance on the original (noise free) training set S. We 
+define the average noise-free error as 
+n M 
+1 
+t i 
+And the noise-free pereformance, or score as Q.(p)= 1 - E.(p). 
+� In a similar way, we define the average error on the noisy training-sets S: 
+n M 
+I 
+ i 
+Note that the error of each classifier f is measured on the training set 
+by which it was created. The noisy-set performance is then defined as 
+(p) = _ 
+346 Grossman and Lapedes 
+The average functional distance between classifiers. The functional distance 
+between two classifiers, or boolean functions, d(f, g) is the probability of 
+f(z)  g(a). For a uniform input distribution, it is simply the fraction of 
+the input space X for which f(z)  g(z). In order to approximate this 
+quantity, we can use another set of examples. In contrast with validation 
+set methods, these examples need not be classified, i.e. we only need a set of 
+inputs a, without the target outputs y, so we can usually use an artificial 
+set of rn random inputs. Although, in principle at least, these z instances 
+should be taken from the same distribution as the original task examples. 
+The approximated distance between two classifiers is therefore 
+d(f,g) 1  if(ai ) g(zi) I (3) 
+i 
+We then calculate the average distance, D(p), between the n classifiers f 
+obtained for each noise level p: 
+2 
+D(p) = n(n- 1)  d(f;, i;) (4) 
+3 NOISE SENSITIVITY BEHAVIOR 
+Observing the three quantities Qf(p), Q,(p) and D(p), can we distinguish between 
+an overparametrized classifier and a well tuned one ? Can we use this data in order 
+to choose the best generalizer out of several candidates ? Or to find the right point 
+to stop the learning algorithm L in order to achieve better generalization ? Lets 
+estimate how the plots of Q f, Q, and D rs. p, which we call the Noise Sensitivity 
+Signature (NSS) of the algorithm L, look like in several different scenarios. 
+3.1 D(p) 
+The average functional distance between realizations, D(p), measures the sensitiv- 
+ity of the classifier (or the model) to noise. An over-parametrized architecture is 
+expected to be very sensitive to noise since it is capable of changing its classifica- 
+tion boundary to learn the scrambled examples. Different realizations of the noisy 
+training set will therefore result in different classifiers. 
+On the other hand, an under-parametrized classifier should be stable against at 
+least a small amount of noise. Its classification boundary will not change when 
+a few examples change their class. Note, however, that if the training set is not 
+
