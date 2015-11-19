@@ -2,9 +2,8 @@ package com.nitro.scalda
 
 import breeze.linalg._
 import breeze.numerics._
-import com.nitro.scalda.lemmatizer.StanfordLemmatizer
 import com.nitro.scalda.models.Document
-import com.nitro.scalda.tokenizer.StanfordTokenizer
+import com.nitro.scalda.tokenizer.{StanfordLemmatizer, StanfordTokenizer}
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.IndexedRow
 
@@ -21,7 +20,7 @@ object Utils {
       .toLowerCase()
 
     val words = lemmatizer match {
-      case Some(stanLemma) => stanLemma.lemmatize(cleanText)
+      case Some(stanLemma) => stanLemma.tokenize(cleanText)
       case _               => tokenizer.tokenize(cleanText)
     }
 

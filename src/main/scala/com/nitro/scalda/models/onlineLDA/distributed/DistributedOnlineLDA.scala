@@ -5,8 +5,8 @@ import breeze.numerics._
 import breeze.stats.distributions.Gamma
 import breeze.stats.mean
 import com.nitro.scalda.Utils
-import com.nitro.scalda.lemmatizer.StanfordLemmatizer
 import com.nitro.scalda.models._
+import com.nitro.scalda.tokenizer.StanfordLemmatizer
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.distributed.{ IndexedRow, IndexedRowMatrix }
@@ -128,6 +128,7 @@ object DistributedOnlineLDA extends OnlineLDA {
         Utils.denseMatrix2IndexedRows(lambdaDriver)
       )
     )
+
 
     val lemmatizer = params.lemmatize match {
       case true => Some(StanfordLemmatizer())
