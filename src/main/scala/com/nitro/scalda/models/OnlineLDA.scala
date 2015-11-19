@@ -1,13 +1,24 @@
 package com.nitro.scalda.models
 
+import breeze.linalg.DenseMatrix
+
 trait OnlineLDA {
 
-  type ModelParams = OnlineLDAParams
-
+  type BOWMinibatch
   type MinibatchSStats
+  type LdaModel
+  type Lambda
+  type Minibatch
 
-  type SStats
+  type Gamma = DenseMatrix[Double]
 
-  type TopicMatrix
+
+  def eStep(mb: BOWMinibatch, lambda: Lambda, gamma: Gamma): MinibatchSStats
+
+  def mStep(model: LdaModel, mbSStats: MinibatchSStats): LdaModel
 
 }
+
+
+
+
