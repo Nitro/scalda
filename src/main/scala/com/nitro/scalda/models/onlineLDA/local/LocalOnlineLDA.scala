@@ -7,8 +7,8 @@ import breeze.numerics.{lgamma, abs, exp}
 import breeze.stats.distributions.{Gamma => G}
 import breeze.stats.mean
 import com.nitro.scalda.Utils
-import com.nitro.scalda.lemmatizer.StanfordLemmatizer
 import com.nitro.scalda.models._
+import com.nitro.scalda.tokenizer.StanfordLemmatizer
 
 import scala.util.Try
 

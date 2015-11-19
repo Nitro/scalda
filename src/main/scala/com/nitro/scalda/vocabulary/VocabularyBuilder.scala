@@ -1,9 +1,7 @@
 package com.nitro.scalda.vocabulary
 
 import java.io.File
-import com.nitro.scalda.lemmatizer.StanfordLemmatizer
-import com.nitro.scalda.tokenizer.StanfordTokenizer
-
+import com.nitro.scalda.tokenizer.{StanfordLemmatizer, StanfordTokenizer}
 import scala.io.Source
 import scala.util.matching.Regex
 
@@ -11,8 +9,10 @@ case class WordDocCount(wordCount: Int, docFrequency: Int)
 
 object VocabularyBuilder {
 
-  def apply(minWordCount: Int, minDocFreq: Int) = {
-    new VocabularyBuilder(minWordCount, minDocFreq)
+  def apply(minWordCount: Int,
+            minDocFreq: Int,
+            lem: Boolean = false) = {
+    new VocabularyBuilder(minWordCount, minDocFreq, lem)
   }
 
 }
@@ -22,93 +22,67 @@ object VocabularyBuilder {
  * @param minWordCount minimum total word count for a word to be part of the vocabulary
  * @param minDocFreq minimum document frequency for a word to be part of the vocabulary
  */
-class VocabularyBuilder(minWordCount: Int, minDocFreq: Int) {
+class VocabularyBuilder(minWordCount: Int, minDocFreq: Int, lem: Boolean) {
 
-  val vocabTokenizer = StanfordTokenizer
-  val vocabLemmatizer = StanfordLemmatizer()
-  val stopWords = Source.fromInputStream(getClass.getResourceAsStream("/stop-word-list.txt")).getLines().toSet
+  //If lemmatizer is enabled, tokens are also lemmatized
+  val tokenizer = lem match {
+    case true => StanfordLemmatizer()
+    case _ => StanfordTokenizer
+  }
+
+  //Load set of stop words
+  val stopWords = Source
+    .fromFile("src/main/resources/stop-word-list.txt")
+    .getLines()
+    .toSet
+
+  //regex that matches on tokens containing at least one letter
   val lettersPattern = new Regex("[A-Za-z]")
 
-  def textFileVocab(corpusDirectory: String): Seq[String] = {
+  //create a vocabulary from text files located in some local directory
+  def buildTextFileVocab(corpusDirectory: String): Seq[String] = {
 
-    var wordStats: Map[String, WordDocCount] = Map.empty
-
+    //list files
     val docFiles = new File(corpusDirectory)
       .listFiles()
-      .filter(f => f.getName != ".DS_Store")
+      .filter(f => f.getName != ".DS_Store" && f.getName != ".git")
 
-    var docsProcessed = 0
+    //fold over files, reading them and updating word counts and doc frequencies
+    val wordStats = docFiles
+      .foldLeft(collection.mutable.Map.empty[String, WordDocCount]) { (acc, docFile) =>
 
-    println("beginning word count")
-    //Traverse document files, read => tokenize => bag-of-words => update WordDocCount.
-    docFiles.foreach { doc =>
-
-      if (docsProcessed % 100 == 0) println(s"${docsProcessed} documents counted")
-
-      val content = Source.fromFile(doc, "ISO-8859-1")
+      //read file
+      val content = Source.fromFile(docFile, "ISO-8859-1")
         .getLines()
         .mkString(" ")
 
-      val bow = vocabTokenizer
+      //transform to bag-of-words form via tokenization/lemmatization.
+      // Also remove short and non-alphanumeric words.
+      val bagOfWords = tokenizer
         .tokenize(content)
         .filter(w => !stopWords.contains(w) && lettersPattern.findFirstIn(w).isDefined && w.length > 2)
         .groupBy(identity)
         .mapValues(_.size)
 
-      bow.foreach { wFreq =>
-
-        wordStats.get(wFreq._1) match {
-
+      //update accumulator counts
+      bagOfWords.foreach { wordFreq =>
+        acc.get(wordFreq._1) match {
           case Some(wdc) => {
-
-            wordStats += (wFreq._1 -> wordStats(wFreq._1)
-              .copy(wordCount = wdc.wordCount + wFreq._2, docFrequency = wdc.docFrequency + 1))
+            acc += (wordFreq._1 -> wdc.copy(wordCount = wdc.wordCount + wordFreq._2,
+              docFrequency = wdc.docFrequency + 1))
           }
-
-          case _ => wordStats += (wFreq._1 -> WordDocCount(wFreq._2, 1))
+          case _ => acc += (wordFreq._1 -> WordDocCount(wordFreq._2, 1))
         }
-
       }
 
-      docsProcessed += 1
-
+      acc
     }
 
-    wordStats.keys.foreach(println)
-
-    //map tokens to their lemmatized versions.  Sum token word counts/doc frequencies for tokens that map to the same lemma
-    var lemmaStats = Map.empty[String, WordDocCount]
-
-    println("beginning vocab lemmatization")
-
-    var lemmaCounter = 0
-    wordStats.keys.foreach { token =>
-
-      if (lemmaCounter % 100 == 0) println(s"${lemmaCounter} vocab words lemmatized")
-
-      val lemma = vocabLemmatizer.lemmatize(token)
-
-      lemmaStats.get(lemma.head) match {
-
-        case Some(ldc) => lemmaStats += (lemma.head -> lemmaStats(lemma.head)
-          .copy(
-            wordCount = lemmaStats(lemma.head).wordCount + wordStats(token).wordCount,
-            docFrequency = lemmaStats(lemma.head).docFrequency + wordStats(token).docFrequency
-          ))
-
-        case _ => lemmaStats += (lemma.head -> wordStats(token))
-      }
-
-      lemmaCounter += 1
-
-    }
-
-    //filter according to specs
-    lemmaStats
-      .filter(w => (w._2.wordCount >= minWordCount) && (w._2.docFrequency >= minDocFreq) && !stopWords.contains(w._1) && w._1.length > 2)
+    //filter according to minWordCount, minDocFreq.
+    wordStats
+      .filter(w => w._2.wordCount >= minWordCount && w._2.docFrequency >= minDocFreq)
       .keys
       .toSeq
-
   }
 
 }

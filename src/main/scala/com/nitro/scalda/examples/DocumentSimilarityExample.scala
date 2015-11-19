@@ -1,8 +1,8 @@
 package com.nitro.scalda.examples
 
-import com.nitro.scalda.lemmatizer.StanfordLemmatizer
 import com.nitro.scalda.models.OnlineLDAParams
 import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
+import com.nitro.scalda.tokenizer.StanfordLemmatizer
 
 import scala.io.Source
 

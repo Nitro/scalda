@@ -1,6 +1,6 @@
 package com.nitro.scalda
 
-import com.nitro.scalda.lemmatizer.StanfordLemmatizer
+import com.nitro.scalda.tokenizer.StanfordLemmatizer
 import org.scalatest.{ Matchers, WordSpec }
 
 class StanfordLemmatizerSpec extends WordSpec with Matchers {
@@ -12,7 +12,7 @@ class StanfordLemmatizerSpec extends WordSpec with Matchers {
       val testText = "Today I went to the store.  I also ran to the cinema."
 
       val lemmas = StanfordLemmatizer()
-        .lemmatize(testText)
+        .tokenize(testText)
         .toList
 
       lemmas should equal(List("today", "I", "go", "to", "the", "store", ".", "I", "also", "run", "to", "the", "cinema", "."))

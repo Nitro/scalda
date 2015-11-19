@@ -1,6 +1,7 @@
 package com.nitro.scalda.examples
 
 import java.io.File
+
 import com.nitro.scalda.models.OnlineLDAParams
 import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
 

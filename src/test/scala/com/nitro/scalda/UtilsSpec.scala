@@ -1,7 +1,7 @@
 package com.nitro.scalda
 
-import com.nitro.scalda.lemmatizer.StanfordLemmatizer
 import com.nitro.scalda.models.Document
+import com.nitro.scalda.tokenizer.StanfordLemmatizer
 import org.scalatest.{Matchers, WordSpec}
 
 class UtilsSpec extends WordSpec with Matchers {
