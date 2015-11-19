@@ -4,7 +4,7 @@ import java.io.File
 
 import com.nitro.scalda.models.OnlineLDAParams
 import com.nitro.scalda.models.onlineLDA.distributed.DistributedOnlineLDA
-import org.apache.spark.{ SparkConf, SparkContext }
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
 
 class textFileRDDIterator(corpusDirectory: String, mbSize: Int)(implicit sc: SparkContext) extends Iterator[RDD[String]] {
@@ -57,13 +57,11 @@ object DistributedOnlineLDAExample extends App {
     totalDocs = numDocs)
 
 
-  val ldaModel = new DistributedOnlineLDA(p)
+  val lda = new DistributedOnlineLDA(p)
 
-  ldaModel.inference(myIter)
+  val trainedModel = lda.inference(myIter)
 
-  //val ldaModel = DistributedOnlineLDA.inference(myIter, p)
-
-  //DistributedOnlineLDA.printTopics(ldaModel)
+  lda.printTopics(trainedModel)
 
   sc.stop()
 }

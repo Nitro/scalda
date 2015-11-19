@@ -45,12 +45,11 @@ object LocalOnlineLDA {
  */
 class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
 
+  override type BOWMinibatch = Seq[Document]
   override type MinibatchSStats = MbSStats[DenseMatrix[Double], DenseMatrix[Double]]
-  override type SStats = ModelSStats[DenseMatrix[Double]]
-  override type TopicMatrix = DenseMatrix[Double]
-
-  type BOWMinibatch = Seq[Document]
-  type MinibatchIterator = Iterator[Seq[String]]
+  override type LdaModel = ModelSStats[DenseMatrix[Double]]
+  override type Lambda = DenseMatrix[Double]
+  override type Minibatch = Seq[String]
 
   /**
    * Process a minibatch of documents to infer topic proportions and "intermediate" topics.
@@ -58,10 +57,9 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * @param lambda Parameter that is a function of overall topics learned so far.
    * @return Sufficient statistics from this minibatch.
    */
-  def eStep(mb: BOWMinibatch,
-            lambda: TopicMatrix,
-            gamma: TopicMatrix,
-            perplexity: Boolean = false): MinibatchSStats = {
+  override def eStep(mb: BOWMinibatch,
+                     lambda: Lambda,
+                     gamma: Gamma): MinibatchSStats = {
 
     val numDocs = mb.size
     val eLogBeta = Utils.dirichletExpectation(lambda)
@@ -118,8 +116,8 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * @param mbSStats sufficient statistics from the last minibatch ("intermediate topics").
    * @return An updated model.
    */
-  def mStep(model: SStats,
-            mbSStats: MinibatchSStats): SStats = {
+  override def mStep(model: LdaModel,
+                     mbSStats: MinibatchSStats): LdaModel = {
 
     val rho = math.pow(params.decay + model.numUpdates, -params.learningRate)
 
@@ -134,10 +132,9 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
 
   /**
    * Learn a topic model from a minibatch iterator over a corpus of documents.
-   * @param mbIt Minibatch iterator over a corpus of documents.
    * @return A learned LDA topic model.
    */
-  def inference(mbIt: MinibatchIterator): SStats = {
+  def inference(minibatchIterator: Iterator[Minibatch]): LdaModel = {
 
     //Initialize model settings
     val vocabMapping = Utils.mapVocabId(params.vocabulary)
@@ -156,7 +153,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
     var counter = 0.0
 
     //iterate through each minibatch
-    while (mbIt.hasNext) {
+    while (minibatchIterator.hasNext) {
 
       counter += 1
 
@@ -165,7 +162,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
       }
 
       //put minibatch in BOW form
-      val rawMinibatch = mbIt.next()
+      val rawMinibatch = minibatchIterator.next()
       val bowMinibatch = rawMinibatch.map(doc => Utils.toBagOfWords(doc, vocabMapping, lemmatizer))
 
       val initialGamma = new DenseMatrix[Double](bowMinibatch.size,
@@ -202,8 +199,8 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * @return perplexity value.
    */
   def perplexity(mb: BOWMinibatch,
-                 mbGamma: TopicMatrix,
-                 lambda: TopicMatrix): Double = {
+                 mbGamma: Gamma,
+                 lambda: Gamma): Double = {
 
     val eLogTheta = Utils.dirichletExpectation(mbGamma)
     val eLogBeta = Utils.dirichletExpectation(lambda)
@@ -237,7 +234,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * Print top 10 words by probability from each of the topics of a given topic model.
    * @param model A learned topic model
    */
-  def printTopics(model: SStats): Unit = {
+  def printTopics(model: LdaModel): Unit = {
 
     val reverseVocab = model.vocabMapping.map(_.swap)
     val lambda = model.lambda
@@ -269,7 +266,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * @return The topic proportions for the given document.
    */
   def topicProportions(doc: String,
-                       model: SStats,
+                       model: LdaModel,
                        lemmatizer: Option[StanfordLemmatizer] = None): Array[(Double, Int)] = {
 
     lazy val expElogBeta = exp(Utils.dirichletExpectation(model.lambda))
@@ -300,13 +297,14 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    */
   def documentSimilarity(doc1: String,
                          doc2: String,
-                         model: SStats): Double = {
+                         model: LdaModel): Double = {
 
     val lemmatizer = params.lemmatize match {
       case true => Some(StanfordLemmatizer())
       case _ => None
     }
 
+    //set to zero if small
     val doc1TopicProportions = topicProportions(doc1, model, lemmatizer)
       .map(_._1)
       .map(x => if (x < 0.1) 0.0 else x)
@@ -323,7 +321,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * @param model Model to save.
    * @param saveLocation Save location.
    */
-  def saveModel(model: SStats, saveLocation: String): Unit = {
+  def saveModel(model: LdaModel, saveLocation: String): Unit = {
 
     val fos = new FileOutputStream(new File(saveLocation))
     val oos = new ObjectOutputStream(fos)
@@ -337,7 +335,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * @param saveLocation Location saved.
    * @return Loaded model.
    */
-  def loadModel(saveLocation: String): Try[SStats] = {
+  def loadModel(saveLocation: String): Try[LdaModel] = {
 
     val fis = new FileInputStream(new File(saveLocation))
     loadModel(fis)
@@ -348,10 +346,10 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
    * @param modelIS input stream for model.
    * @return loaded model.
    */
-  def loadModel(modelIS: InputStream): Try[SStats] = {
+  def loadModel(modelIS: InputStream): Try[LdaModel] = {
 
     val ois = new ObjectInputStream(modelIS)
-    Try(ois.readObject().asInstanceOf[SStats])
+    Try(ois.readObject().asInstanceOf[LdaModel])
   }
 
 }
