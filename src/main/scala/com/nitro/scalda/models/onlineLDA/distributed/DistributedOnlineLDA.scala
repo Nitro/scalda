@@ -1,14 +1,16 @@
 package com.nitro.scalda.models.onlineLDA.distributed
 
 import breeze.linalg.DenseMatrix
+import breeze.linalg.sum
 import breeze.numerics._
 import breeze.stats.distributions.Gamma
 import breeze.stats.mean
 import com.nitro.scalda.Utils
 import com.nitro.scalda.models._
 import com.nitro.scalda.tokenizer.StanfordLemmatizer
+import com.nitro.scalda.evaluation.perplexity.Perplexity._
 import org.apache.spark.SparkContext
-import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.linalg.{DenseVector, Vectors}
 import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix}
 import org.apache.spark.rdd.RDD
 
@@ -22,6 +24,13 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   type MatrixRow = Array[Double]
 
+  /**
+   * Perform E-Step on minibatch.
+   * @param mb
+   * @param lambda
+   * @param gamma
+   * @return The sufficient statistics for this minibatch
+   */
   override def eStep(mb: BOWMinibatch,
                      lambda: Lambda,
                      gamma: Gamma): MinibatchSStats = {
@@ -36,6 +45,8 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
           .map { case (wordId, wordCount) => (wordId, (wordCount, docId)) }
     }
 
+
+
     //Join with lambda to get RDD of (wordId, ((wordCount, docId), lambda(wordId),::)) tuples
     val wordIdDocIdCountRow = wordIdDocIdCount
       .join(lambda.rows.map(row => (row.index.toInt, row.vector.toArray)))
@@ -43,17 +54,51 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     //Now group by docID in order to recover documents
     val wordIdCountRow = wordIdDocIdCountRow
       .map { case (wordId, ((wordCount, docId), wordRow)) => (docId, (wordId, wordCount, wordRow)) }
+
+
+    val removedDocId = wordIdCountRow
       .groupByKey()
       .map { case (docId, wdIdCtRow) => wdIdCtRow.toArray }
 
     //Perform e-step on documents as a map, then reduce results by wordId.
-    val topicUpdates = wordIdCountRow
+    val eStepResult = removedDocId
       .map(wIdCtRow => {
       oneDocEStep(
         Document(wIdCtRow.map(_._1), wIdCtRow.map(_._2)),
         gamma,
         wIdCtRow.map(_._3.toArray))
     })
+
+    //collect RDDs and and compute perplexity in driver.  At some point this should be "sparkified" for speed.
+    if (params.perplexity) {
+
+      val usedDocs = wordIdCountRow
+        .map(_._1.toInt)
+        .collect()
+        .toSet
+
+      val localMb = mb.zipWithIndex()
+        .filter { case (doc, id) => usedDocs.contains(id.toInt) }
+        .map(_._1)
+        .collect()
+
+      val localLambda = Utils.rdd2DM(lambda.rows)
+
+      val gammaRDD = eStepResult
+        .zipWithIndex()
+        .map { case (x, idx) => IndexedRow(idx, new DenseVector(x.topicProportions)) }
+
+      val localGamma = Utils.rdd2DM(gammaRDD)
+
+      val score = perplexity(localMb, localGamma, localLambda.t, params)
+
+      val mbWordCt = sum(localMb.flatMap(_.wordCts))
+      val wordScale = (score * localMb.size) / (params.totalDocs * mbWordCt.toDouble)
+
+      println(s"per-word perplexity: ${exp(-wordScale)}")
+    }
+
+    val topicUpdates = eStepResult
       .flatMap(updates => updates.topicUpdates)
       .reduceByKey(Utils.arraySum)
 
@@ -118,6 +163,12 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
   }
 
 
+  /**
+   * Perform m-step by updating the current model with the minibatch sufficient statistics.
+   * @param model
+   * @param mSStats
+   * @return Updated LDA model
+   */
   override def mStep(model: LdaModel,
                      mSStats: MinibatchSStats): LdaModel = {
 
@@ -170,7 +221,12 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     Utils.arraySum(updatedLambda1, updatedLambda2)
   }
 
-
+  /**
+   * Perform inference to learn the LDA model.
+   * @param minibatchIterator
+   * @param sc
+   * @return A trained LDA model.
+   */
   def inference(minibatchIterator: Iterator[RDD[String]])(implicit sc: SparkContext): LdaModel = {
 
     val vocabMapping: Map[String, Int] = params
@@ -215,7 +271,6 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
       val mbSStats = eStep(bowMinibatch, curModel.lambda, gamma)
 
-
       curModel = mStep(curModel.copy(numUpdates = mbProcessed), mbSStats)
 
     }
@@ -259,6 +314,11 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   }
 
+  /**
+   * Convert a distributed online LDA model to a local online LDA model.
+   * @param model
+   * @return
+   */
   def convertToLocal(model: LdaModel): ModelSStats[DenseMatrix[Double]] = {
 
     val localMatrixRows = model

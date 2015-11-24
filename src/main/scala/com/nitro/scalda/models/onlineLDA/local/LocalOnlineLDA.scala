@@ -2,10 +2,11 @@ package com.nitro.scalda.models.onlineLDA.local
 
 import java.io._
 
-import breeze.linalg.{DenseMatrix, sum, Axis}
-import breeze.numerics.{lgamma, abs, exp}
+import breeze.linalg.{DenseMatrix, sum}
+import breeze.numerics.{abs, exp}
 import breeze.stats.distributions.{Gamma => G}
 import breeze.stats.mean
+import com.nitro.scalda.evaluation.perplexity.Perplexity._
 import com.nitro.scalda.Utils
 import com.nitro.scalda.models._
 import com.nitro.scalda.tokenizer.StanfordLemmatizer
@@ -176,7 +177,8 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
       if (params.perplexity) {
         val score = perplexity(bowMinibatch,
           mbSStats.topicProportions,
-          curModel.lambda)
+          curModel.lambda,
+          params)
 
         val mbWordCt = sum(bowMinibatch.flatMap(_.wordCts))
         val wordScale = (score * bowMinibatch.size) / (params.totalDocs * mbWordCt.toDouble)
@@ -191,44 +193,6 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
     curModel
   }
 
-  /**
-   * Minibatch perplexity computation.
-   * @param mb minibatch of wordIds/counts.
-   * @param mbGamma Gamma from e-step applied to this minibatch.
-   * @param lambda current lambda value (not yet updated from this minibatch).
-   * @return perplexity value.
-   */
-  def perplexity(mb: BOWMinibatch,
-                 mbGamma: Gamma,
-                 lambda: Gamma): Double = {
-
-    val eLogTheta = Utils.dirichletExpectation(mbGamma)
-    val eLogBeta = Utils.dirichletExpectation(lambda)
-
-    var perplexityScore = 0.0
-
-    for ((doc, docId) <- mb.zipWithIndex) {
-
-      val eLogThetaDoc = eLogTheta(docId, ::).t
-
-      perplexityScore += sum(
-        doc.wordIds.zip(doc.wordCts).map {
-          case (wordId, wordCt) => Utils.logSumExp(eLogThetaDoc + eLogBeta(::, wordId)) * wordCt.toDouble
-        }
-      )
-
-    }
-
-    perplexityScore += sum(mbGamma.map(el => params.alpha - el) :* eLogTheta)
-    perplexityScore += sum(lgamma(mbGamma) - lgamma(params.alpha))
-    perplexityScore += sum(lgamma(params.alpha * params.numTopics) - lgamma(sum(mbGamma, Axis._1)))
-    perplexityScore *= params.totalDocs / mb.size.toDouble
-    perplexityScore += sum(lambda.map(el => params.eta - el) :* eLogBeta)
-    perplexityScore += sum(lgamma(lambda) - lgamma(params.eta))
-    perplexityScore += sum(lgamma(params.eta * params.vocabulary.size) - lgamma(sum(lambda, Axis._1)))
-
-    perplexityScore
-  }
 
   /**
    * Print top 10 words by probability from each of the topics of a given topic model.

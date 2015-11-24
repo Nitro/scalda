@@ -134,9 +134,12 @@ object DistributedOnlineLDAExample extends App {
     numTopics = numTopics,
     totalDocs = numDocs)
 
-  val ldaModel = DistributedOnlineLDA.inference(myIter, p)
 
-  DistributedOnlineLDA.printTopics(ldaModel)
+  val lda = new DistributedOnlineLDA(p)
+
+  val trainedModel = lda.inference(myIter)
+
+  lda.printTopics(trainedModel)
 
   sc.stop()
 }
