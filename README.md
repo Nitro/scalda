@@ -163,9 +163,7 @@ object TopicProportionsExample extends App {
 
   val myModelTry = lda.loadModel(modelLocation)
 
-  val lemmatizer = StanfordLemmatizer()
-
-  val topicProps = lda.topicProportions(testDoc, myModelTry.get, Some(lemmatizer))
+  val topicProps = lda.topicProportions(testDoc, myModelTry.get)
 
 }
 
