@@ -2,7 +2,7 @@ organization := "com.gonitro.research"
 
 name := "topic_models"
 
-version := "0.7.1"
+version := "0.7.2"
 
 scalaVersion := "2.10.5"
 
