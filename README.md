@@ -20,39 +20,54 @@ To train an LDA model locally you need two things
 * An iterator over minibatches of documents.  A document is simply a ```String``` of the document contents.  A minibatch of documents is therefore an ```IndexedSeq[String]``` where the size of the minibatch is choosen by the user.  Therefore an iterator over minibatches is a ```Iterator[IndexedSeq[String]]```.   How this iterator is created depends on the particular way your documents are stored (i.e. local file system, S3, etc.) therefore it is up to the user to provide this iterator.
 * An ```OnlineLDAParams``` object containing the parameters for the LDA model that you are going to train.
 
-The following is an example taken from the [examples section](https://github.com/Nitro/scalda/blob/master/src/main/scala/com/nitro/scalda/examples/) in this repo.  It creates an iterator over minibatches of documents from the NIPS corpus in this repo's [data sets section](https://github.com/Nitro/scalda/tree/master/datasets).
+The following is an example taken from the [examples section](https://github.com/Nitro/scalda/blob/master/src/main/scala/com/nitro/scalda/examples/) in this repo.It creates an iterator over minibatches of documents from the NIPS corpus in this repo's [data sets section](https://github.com/Nitro/scalda/tree/master/datasets).
 
+NOTE: Assume the following imports in the code below:
 ```scala
-class TextFileIterator(corpusDirectory: String, mbSize: Int) extends Iterator[IndexedSeq[String]] {
+import scala.io._
+import java.io._
+```
 
-  val directoryFile = new File(corpusDirectory)
+First, we create `TextFileIterator`, which is an `Iterator` sub-class that provides minibatches from text files in a local directory.
+```scala
+class TextFileIterator(
+  corpusDirectory: File, 
+  mbSize: Int
+) extends Iterator[IndexedSeq[String]] {
 
-  val fileMinibatches = directoryFile
-    .listFiles()
-    .filter(f => f.getName != ".DS_Store")
-    .grouped(mbSize)
+  private[this] val fileMinibatches = 
+    Option(corpusDirectory.listFiles())
+      .map(_.toSeq)
+      .getOrElse(Seq.empty[File])
+      .filter { f => !f.getName.startsWith(".") }
+      .grouped(mbSize)
 
-  def hasNext = fileMinibatches.hasNext
+  override def hasNext = 
+    fileMinibatches.hasNext
 
-  def next() = {
+  override def next() = {
     println("processing next minibatch...")
     val nextMb = fileMinibatches.next()
-    val stringMb = nextMb.map(f => scala.io.Source.fromFile(f, "ISO-8859-1").getLines.mkString(" "))
+    val stringMb = nextMb.map { f => 
+      Source
+        .fromFile(f, "ISO-8859-1")
+        .getLines
+        .mkString("\n")
+    }
     stringMb.toIndexedSeq
   }
-
 }
 
 object LocalOnlineLDAExample extends App {
 
-  val corpusDirectory = "datasets/nips_corpus"
-  val vocabFile = "datasets/nips_vocab.txt"
+  val corpusDirectory = new File("datasets/nips_corpus")
+  val vocabFile = new File("datasets/nips_vocab.txt")
   val mbSize = 100
   val numTopics = 20
   val numDocs = 6000
-  val myIter = new TextFileIterator(corpusDirectory, mbSize)
-
-  val vocab = scala.io.Source.fromFile(vocabFile).getLines.toList
+  
+  val documents = new TextFileIterator(corpusDirectory, mbSize)
+  val vocab = Source.fromFile(vocabFile).getLines.toSeq
 
   val p = OnlineLDAParams(
     vocabulary = vocab,
@@ -64,16 +79,16 @@ object LocalOnlineLDAExample extends App {
     convergenceThreshold = 0.001,
     numTopics = numTopics,
     totalDocs = numDocs,
-    perplexity = true)
-
+    perplexity = true
+  )
+  
   //create an LDA instance with the given parameters
-  val myLDA = LocalOnlineLDA(p)
+  val lda = LocalOnlineLDA(p)
 
   //train the model with the given minibatch iterator.
-  val ldaModel = myLDA.inference(myIter)
+  val ldaModel = lda.inference(documents)
 }
 ```
-
 
 
 ###Train an LDA Model with Spark
