@@ -2,61 +2,47 @@ package com.nitro.scalda.examples
 
 import java.io.File
 
-import com.nitro.scalda.models.OnlineLDAParams
-import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
+import com.nitro.scalda.models.OnlineLdaParams
+import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLda
 
-class TextFileIterator(corpusDirectory: String, mbSize: Int) extends Iterator[IndexedSeq[String]] {
+object LocalOnlineLdaExample extends App {
 
-  val directoryFile = new File(corpusDirectory)
+  val getArg = getOrElse(args) _
 
-  val fileMinibatches = directoryFile
-    .listFiles()
-    .filter(f => f.getName != ".DS_Store")
-    .grouped(mbSize)
+  val corpusDirectory = new File(getArg(0, "datasets/nips_corpus"))
+  val vocabFile = new File(getArg(1, "datasets/nips_vocab.txt"))
+  val mbSize = getOrElse(args, 2, 100, _.toInt)
+  val numTopics = getOrElse(args, 3, 20, _.toInt)
+  val numDocs = getOrElse(args, 4, 6000, _.toInt)
 
-  def hasNext = fileMinibatches.hasNext
-
-  def next() = {
-
-    println("processing next minibatch...")
-    val nextMb = fileMinibatches.next()
-    val stringMb = nextMb.map(f => scala.io.Source.fromFile(f, "ISO-8859-1").getLines.mkString(" "))
-    stringMb.toIndexedSeq
-
-  }
-
-}
-
-object LocalOnlineLDAExample extends App {
-
-  val corpusDirectory = "datasets/nips_corpus"
-  val vocabFile = "datasets/nips_vocab.txt"
-  val mbSize = 100
-  val numTopics = 20
-  val numDocs = 6000
-  val myIter = new TextFileIterator(corpusDirectory, mbSize)
-
-  val vocab = scala.io.Source.fromFile(vocabFile).getLines.toList
-
-  val p = OnlineLDAParams(
-    vocabulary = vocab,
-    alpha = 1.0 / numTopics,
-    eta = 1.0 / numTopics,
-    decay = 1024,
-    learningRate = 0.7,
-    maxIter = 100,
-    convergenceThreshold = 0.001,
-    numTopics = numTopics,
-    totalDocs = numDocs,
-    perplexity = true
+  log(
+    s"""[LocalOnlineLdaExample]
+       |Corpus directory:  $corpusDirectory
+       |Vocabulary file:   $vocabFile
+       |Minibatch size:    $mbSize
+       |Number of topics:  $numTopics
+       |Corpus size:       $numDocs
+       |-------------------
+     """.stripMargin
   )
 
-  val myLDA = LocalOnlineLDA(p)
+  val lda = LocalOnlineLda(
+    OnlineLdaParams(
+      vocabulary = lines(vocabFile).toIndexedSeq,
+      alpha = 1.0 / numTopics,
+      eta = 1.0 / numTopics,
+      decay = 1024,
+      learningRate = 0.7,
+      maxIter = 100,
+      convergenceThreshold = 0.001,
+      numTopics = numTopics,
+      totalDocs = numDocs,
+      perplexity = true
+    )
+  )
 
-  val ldaModel = myLDA.inference(myIter)
+  val model = lda.inference(new TextFileIterator(corpusDirectory, mbSize))
 
   println("<-------------TOPICS LEARNED--------------->")
-
-  myLDA.printTopics(ldaModel)
-
+  lda.printTopics(model)
 }

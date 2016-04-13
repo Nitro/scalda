@@ -1,44 +1,52 @@
 package com.nitro.scalda.examples
 
-import com.nitro.scalda.models.OnlineLDAParams
-import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
-import com.nitro.scalda.tokenizer.StanfordLemmatizer
+import java.io.File
 
-import scala.io.Source
+import com.nitro.scalda.models.OnlineLdaParams
+import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLda
 
 object DocumentSimilarityExample extends App {
 
-  val doc1Location = args(0)
-  val doc2Location = args(1)
-  val modelLocation = args(2)
-  val vocabFile = args(3)
-  val mbSize = args(4).toInt
-  val numTopics = args(5).toInt
-  val numDocs = args(6).toInt
+  val doc1Location = new File(args(0))
+  val doc2Location = new File(args(1))
+  val modelLocation = new File(args(2))
+  val vocabFile = new File(args(3))
+  val numTopics = args(4).toInt
+  val numDocs = args(5).toInt
 
-  val doc1 = Source.fromFile(doc1Location).getLines().mkString
-  val doc2 = Source.fromFile(doc2Location).getLines().mkString
-
-  val vocab = scala.io.Source.fromFile(vocabFile).getLines.toList
-
-  val p = OnlineLDAParams(
-    vocab,
-    1.0 / numTopics,
-    1.0 / numTopics,
-    1024,
-    0.7,
-    100,
-    0.001,
-    numTopics,
-    numDocs
+  log(
+    s"""[DocumentSimilarityExample]
+       |Document 1 location:      $doc1Location
+       |Document 2 location:      $doc2Location
+       |Saved LDA model location: $modelLocation
+       |Vocabulary file:          $vocabFile
+       |Number of topics:         $numTopics
+       |Corpus size:              $numDocs
+       |--------------------------
+     """.stripMargin
   )
 
-  val lda = LocalOnlineLDA(p)
+  val lda = LocalOnlineLda(
+    OnlineLdaParams(
+      lines(vocabFile).toIndexedSeq,
+      1.0 / numTopics,
+      1.0 / numTopics,
+      1024,
+      0.7,
+      100,
+      0.001,
+      numTopics,
+      numDocs
+    )
+  )
 
-  val myModel = lda.loadModel(modelLocation)
+  val model = lda.loadModel(modelLocation).get
 
-  val lemmatizer = StanfordLemmatizer()
-
-  val docSim12 = lda.documentSimilarity(doc1, doc2, myModel.get)
-
+  val docSim12 = lda.documentSimilarity(
+    text(doc1Location),
+    text(doc2Location),
+    model
+  )
+  println("<---------- DOCUMENT SIMILARITY ----------->")
+  println(docSim12)
 }

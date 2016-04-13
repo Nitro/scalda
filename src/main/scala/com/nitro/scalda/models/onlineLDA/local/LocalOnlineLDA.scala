@@ -13,20 +13,16 @@ import com.nitro.scalda.tokenizer.StanfordLemmatizer
 
 import scala.util.Try
 
-object LocalOnlineLDA {
+object LocalOnlineLda {
 
-  def apply(p: OnlineLDAParams) = {
-    new LocalOnlineLDA(p)
-  }
+  def apply(p: OnlineLdaParams) =
+    new LocalOnlineLda(p)
 
-  //If you are only wanting to infer topic proportions, parameters can be set to default
-  def apply() = {
-
-    println("Warning: No LDA parameters specified so defaults are being used.  This is only advisable for topic " +
-      "proportions inference.")
-
-    val p = OnlineLDAParams(
-      vocabulary = List.empty[String],
+  // If you are only wanting to infer topic proportions,
+  // parameters can be set to default
+  lazy val empty = apply(
+    OnlineLdaParams(
+      vocabulary = IndexedSeq.empty[String],
       alpha = 0.0,
       eta = 0.0,
       decay = 1.0,
@@ -36,18 +32,17 @@ object LocalOnlineLDA {
       numTopics = 0,
       totalDocs = 0
     )
-
-    new LocalOnlineLDA(p)
-  }
+  )
 }
 
 /**
  * Local, non-distributed version of the online LDA algorithm
+ *
  * @param params online LDA parameters.  These are static parameters
  */
-class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
+class LocalOnlineLda(params: OnlineLdaParams) extends OnlineLda {
 
-  override type BOWMinibatch = Seq[Document]
+  override type BowMinibatch = Seq[Document]
   override type MinibatchSStats = MbSStats[DenseMatrix[Double], DenseMatrix[Double]]
   override type LdaModel = ModelSStats[DenseMatrix[Double]]
   override type Lambda = DenseMatrix[Double]
@@ -55,12 +50,13 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
 
   /**
    * Process a minibatch of documents to infer topic proportions and "intermediate" topics.
+   *
    * @param mb Minibatch of documents.
    * @param lambda Parameter that is a function of overall topics learned so far.
    * @return Sufficient statistics from this minibatch.
    */
   override def eStep(
-    mb: BOWMinibatch,
+    mb: BowMinibatch,
     lambda: Lambda,
     gamma: Gamma
   ): MinibatchSStats = {
@@ -74,7 +70,9 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
     val expELogTheta = exp(Utils.dirichletExpectation(gamma))
 
     //iterate through documents in minibatch
-    for ((doc, docId) <- mb.zipWithIndex) {
+    for {
+      (doc, docId) <- mb.zipWithIndex
+    } {
 
       val ids = doc.wordIds
       val cts = DenseMatrix(doc.wordCts.map(_.toDouble))
@@ -116,6 +114,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
 
   /**
    * Step merging overall topics with "intermediate" topics learned from the last minibatch.
+   *
    * @param model current overall topics learned so far.
    * @param mbSStats sufficient statistics from the last minibatch ("intermediate topics").
    * @return An updated model.
@@ -140,6 +139,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
 
   /**
    * Learn a topic model from a minibatch iterator over a corpus of documents.
+   *
    * @return A learned LDA topic model.
    */
   def inference(minibatchIterator: Iterator[Minibatch]): LdaModel = {
@@ -150,35 +150,42 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
     val lambda = new DenseMatrix[Double](
       params.numTopics,
       vocabMapping.size,
-      G(100.0, 1.0 / 100.0).sample(params.numTopics * vocabMapping.size).toArray
+      G(100.0, 1.0 / 100.0)
+      .sample(params.numTopics * vocabMapping.size)
+      .toArray
     )
 
+    val lemmatizer =
+      if (params.lemmatize)
+        Some(StanfordLemmatizer())
+      else
+        None
+
+    // mutable state
+    var counter = 0
     var curModel = ModelSStats[DenseMatrix[Double]](lambda, vocabMapping, 0)
-
-    val lemmatizer = params.lemmatize match {
-      case true => Some(StanfordLemmatizer())
-      case _ => None
-    }
-
-    var counter = 0.0
+    // ^^
 
     //iterate through each minibatch
     while (minibatchIterator.hasNext) {
 
       counter += 1
-
       if (counter % 5 == 0) {
-        println(s"${counter} minibatches processed!")
+        println(s"$counter minibatches processed!")
       }
 
       //put minibatch in BOW form
       val rawMinibatch = minibatchIterator.next()
-      val bowMinibatch = rawMinibatch.map(doc => Utils.toBagOfWords(doc, vocabMapping, lemmatizer))
+      val bowMinibatch = rawMinibatch.map { doc =>
+        Utils.toBagOfWords(doc, vocabMapping, lemmatizer)
+      }
 
       val initialGamma = new DenseMatrix[Double](
         bowMinibatch.size,
         params.numTopics,
-        G(100.0, 1.0 / 100.0).sample(bowMinibatch.size * params.numTopics).toArray
+        G(100.0, 1.0 / 100.0)
+        .sample(bowMinibatch.size * params.numTopics)
+        .toArray
       )
 
       //perform e-step
@@ -208,6 +215,7 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
 
   /**
    * Print top 10 words by probability from each of the topics of a given topic model.
+   *
    * @param model A learned topic model
    */
   def printTopics(model: LdaModel): Unit = {
@@ -216,7 +224,9 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
     val lambda = model.lambda
 
     //iterate through topics and print high probability words
-    for (t <- 0 to lambda.rows - 1) {
+    for {
+      t <- 0 until lambda.rows
+    } {
 
       val topic = lambda(t, ::).t
 
@@ -224,19 +234,19 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
 
       val topTopics = topic
         .toArray
-        .map(prob => prob / normalizer)
+        .map { _ / normalizer }
         .zipWithIndex
-        .sortBy(-_._1)
+        .sortBy { case (prob, _) => -prob }
         .map { case (prob, wordId) => (reverseVocab(wordId), prob) }
         .take(10)
 
-      println(s"Topic #${t}: " + topTopics.toList)
+      println(s"""Topic #$t: ${topTopics.toSeq.mkString(", ")}""")
     }
-
   }
 
   /**
    * Given a document and a topic model, infer the proportions of each topic in the document.
+   *
    * @param doc A document.
    * @param model A learned topic model.
    * @return The topic proportions for the given document.
@@ -269,11 +279,8 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
   }
 
   /**
-   * Compute the similarity between two documents by computing the Euclidean distance between their topic proportions.
-   * @param doc1 Document 1 to compare.
-   * @param doc2 Document 2 to compare.
-   * @param model Model to draw topic proportions.
-   * @return Document similarity value.
+   * Compute the similarity between two documents by computing the Euclidean
+   * distance between their topic proportions.
    */
   def documentSimilarity(
     doc1: String,
@@ -299,40 +306,37 @@ class LocalOnlineLDA(params: OnlineLDAParams) extends OnlineLDA {
   }
 
   /**
-   * Save a learned topic model.
-   * @param model Model to save.
-   * @param saveLocation Save location.
+   * Save a learned topic model. Uses Java object serialization.
    */
-  def saveModel(model: LdaModel, saveLocation: String): Unit = {
-
-    val fos = new FileOutputStream(new File(saveLocation))
-    val oos = new ObjectOutputStream(fos)
-
-    oos.writeObject(model)
-    oos.close()
-  }
+  def saveModel(model: LdaModel, saveLocation: File): Try[Unit] =
+    Try {
+      val oos = new ObjectOutputStream(new FileOutputStream(saveLocation))
+      oos.writeObject(model)
+      oos.close()
+    }
 
   /**
    * Load a saved topic model from save location.
-   * @param saveLocation Location saved.
-   * @return Loaded model.
+   * Uses Java object deserialization.
    */
-  def loadModel(saveLocation: String): Try[LdaModel] = {
-
-    val fis = new FileInputStream(new File(saveLocation))
-    loadModel(fis)
+  def loadModel(saveLocation: File): Try[LdaModel] = {
+    val fis = new FileInputStream(saveLocation)
+    val res = loadModel(fis)
+    fis.close()
+    res
   }
 
   /**
    * Load a saved topic model from an input stream.
+   *
    * @param modelIS input stream for model.
    * @return loaded model.
    */
-  def loadModel(modelIS: InputStream): Try[LdaModel] = {
-
-    val ois = new ObjectInputStream(modelIS)
-    Try(ois.readObject().asInstanceOf[LdaModel])
-  }
+  def loadModel(modelIS: InputStream): Try[LdaModel] =
+    Try {
+      new ObjectInputStream(modelIS)
+        .readObject()
+        .asInstanceOf[LdaModel]
+    }
 
 }
-

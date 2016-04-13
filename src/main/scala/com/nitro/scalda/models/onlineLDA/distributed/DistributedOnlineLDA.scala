@@ -14,9 +14,9 @@ import org.apache.spark.mllib.linalg.{ DenseVector, Vectors }
 import org.apache.spark.mllib.linalg.distributed.{ IndexedRow, IndexedRowMatrix }
 import org.apache.spark.rdd.RDD
 
-class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Serializable {
+class DistributedOnlineLda(params: OnlineLdaParams) extends OnlineLda with Serializable {
 
-  override type BOWMinibatch = RDD[Document]
+  override type BowMinibatch = RDD[Document]
   override type MinibatchSStats = (RDD[(Int, Array[Double])], Int)
   override type LdaModel = ModelSStats[IndexedRowMatrix]
   override type Lambda = IndexedRowMatrix
@@ -26,13 +26,14 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   /**
    * Perform E-Step on minibatch.
+   *
    * @param mb
    * @param lambda
    * @param gamma
    * @return The sufficient statistics for this minibatch
    */
   override def eStep(
-    mb: BOWMinibatch,
+    mb: BowMinibatch,
     lambda: Lambda,
     gamma: Gamma
   ): MinibatchSStats = {
@@ -107,6 +108,7 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   /**
    * Perform the E-Step on one document (to be performed in parallel via a map)
+   *
    * @param doc document from corpus.
    * @param currentTopics topics that have been learned so far
    * @return Sufficient statistics for this minibatch.
@@ -167,6 +169,7 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   /**
    * Perform m-step by updating the current model with the minibatch sufficient statistics.
+   *
    * @param model
    * @param mSStats
    * @return Updated LDA model
@@ -206,6 +209,7 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   /**
    * Merge the rows of the overall topic matrix and the minibatch topic matrix
+   *
    * @param lambdaRow row from overall topic matrix
    * @param updateRow row from minibatch topic matrix
    * @param numUpdates total number of updates
@@ -229,6 +233,7 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   /**
    * Perform inference to learn the LDA model.
+   *
    * @param minibatchIterator
    * @param sc
    * @return A trained LDA model.
@@ -289,6 +294,7 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   /**
    * Print the top 10 words by probability for each topic from a learned topic model
+   *
    * @param model A learned topic model.
    */
   def printTopics(model: LdaModel): Unit = {
@@ -303,11 +309,11 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
       .flatMap(z => z)
 
     val columns = rowRDD.groupByKey()
-    val sortedColumns = columns.sortByKey(true)
+    val sortedColumns = columns.sortByKey(ascending = true)
 
     val normalizedSortedColumns = sortedColumns
-      .map(x => (x._1, x._2, x._2.toList.map(y => y._2).sum))
-      .map(x => (x._1, x._2.toList.map(y => (y._1, y._2 / x._3))))
+      .map(x => (x._1, x._2, x._2.toSeq.map(y => y._2).sum))
+      .map(x => (x._1, x._2.toSeq.map(y => (y._1, y._2 / x._3))))
 
     val top = normalizedSortedColumns
       .map(t => t._2.sortBy(-_._2).take(10))
@@ -324,6 +330,7 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
   /**
    * Convert a distributed online LDA model to a local online LDA model.
+   *
    * @param model
    * @return
    */

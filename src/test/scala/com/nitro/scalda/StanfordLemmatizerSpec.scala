@@ -9,13 +9,11 @@ class StanfordLemmatizerSpec extends WordSpec with Matchers {
 
     "lemmatize sentences correctly" in {
 
-      val testText = "Today I went to the store.  I also ran to the cinema."
+      val testText = "Today I went to the store. I also ran to the cinema."
 
-      val lemmas = StanfordLemmatizer()
-        .tokenize(testText)
-        .toList
+      val lemmas = StanfordLemmatizer().tokenize(testText)
 
-      lemmas should equal(List("today", "I", "go", "to", "the", "store", ".", "I", "also", "run", "to", "the", "cinema", "."))
+      lemmas should equal(Seq("today", "I", "go", "to", "the", "store", ".", "I", "also", "run", "to", "the", "cinema", "."))
     }
 
   }

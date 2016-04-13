@@ -42,44 +42,47 @@ class VocabularyBuilder(minWordCount: Int, minDocFreq: Int, lem: Boolean) {
   val lettersPattern = new Regex("[A-Za-z]")
 
   //create a vocabulary from text files located in some local directory
-  def buildTextFileVocab(corpusDirectory: String): Seq[String] = {
+  def buildTextFileVocab(corpusDirectory: File): Seq[String] = {
 
     //list files
-    val docFiles = new File(corpusDirectory)
-      .listFiles()
-      .filter(f => f.getName != ".DS_Store" && f.getName != ".git")
+    val docFiles =
+      Option(corpusDirectory.listFiles)
+        .map(_.toSeq)
+        .getOrElse(Seq.empty[File])
+        .filter { f => !f.getName.startsWith(".") }
 
     //fold over files, reading them and updating word counts and doc frequencies
     val wordStats = docFiles
-      .foldLeft(collection.mutable.Map.empty[String, WordDocCount]) { (acc, docFile) =>
+      .foldLeft(collection.mutable.Map.empty[String, WordDocCount]) {
+        (acc, docFile) =>
 
-        //read file
-        val content = Source.fromFile(docFile, "ISO-8859-1")
-          .getLines()
-          .mkString(" ")
+          //read file
+          val content = Source.fromFile(docFile, "ISO-8859-1")
+            .getLines()
+            .mkString(" ")
 
-        //transform to bag-of-words form via tokenization/lemmatization.
-        // Also remove short and non-alphanumeric words.
-        val bagOfWords = tokenizer
-          .tokenize(content)
-          .filter(w => !stopWords.contains(w) && lettersPattern.findFirstIn(w).isDefined && w.length > 2)
-          .groupBy(identity)
-          .mapValues(_.size)
+          //transform to bag-of-words form via tokenization/lemmatization.
+          // Also remove short and non-alphanumeric words.
+          val bagOfWords = tokenizer
+            .tokenize(content)
+            .filter(w => !stopWords.contains(w) && lettersPattern.findFirstIn(w).isDefined && w.length > 2)
+            .groupBy(identity)
+            .mapValues(_.size)
 
-        //update accumulator counts
-        bagOfWords.foreach { wordFreq =>
-          acc.get(wordFreq._1) match {
-            case Some(wdc) => {
-              acc += (wordFreq._1 -> wdc.copy(
-                wordCount = wdc.wordCount + wordFreq._2,
-                docFrequency = wdc.docFrequency + 1
-              ))
+          //update accumulator counts
+          bagOfWords.foreach { wordFreq =>
+            acc.get(wordFreq._1) match {
+              case Some(wdc) =>
+                acc += (wordFreq._1 -> wdc.copy(
+                  wordCount = wdc.wordCount + wordFreq._2,
+                  docFrequency = wdc.docFrequency + 1
+                ))
+              case _ =>
+                acc += (wordFreq._1 -> WordDocCount(wordFreq._2, 1))
             }
-            case _ => acc += (wordFreq._1 -> WordDocCount(wordFreq._2, 1))
           }
-        }
 
-        acc
+          acc
       }
 
     //filter according to minWordCount, minDocFreq.

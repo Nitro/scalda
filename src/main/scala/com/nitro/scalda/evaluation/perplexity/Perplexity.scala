@@ -5,12 +5,13 @@ import breeze.numerics._
 import com.nitro.scalda.Utils
 import breeze.linalg.DenseMatrix
 import breeze.linalg.sum
-import com.nitro.scalda.models.{ OnlineLDAParams, Document }
+import com.nitro.scalda.models.{ OnlineLdaParams, Document }
 
 object Perplexity {
 
   /**
    * Minibatch perplexity calculation
+   *
    * @param mb
    * @param mbGamma
    * @param lambda
@@ -21,7 +22,7 @@ object Perplexity {
     mb: Seq[Document],
     mbGamma: DenseMatrix[Double],
     lambda: DenseMatrix[Double],
-    params: OnlineLDAParams
+    params: OnlineLdaParams
   ): Double = {
 
     val eLogTheta = Utils.dirichletExpectation(mbGamma)

@@ -1,13 +1,13 @@
 package com.nitro.scalda
 
 import breeze.linalg.DenseMatrix
-import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
-import com.nitro.scalda.models.{ ModelSStats, Document, OnlineLDAParams }
+import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLda
+import com.nitro.scalda.models.{ ModelSStats, Document, OnlineLdaParams }
 import org.scalatest.{ Matchers, WordSpec }
 
-class LocalOnlineLDASpec extends WordSpec with Matchers {
+class LocalOnlineLdaSpec extends WordSpec with Matchers {
 
-  "LocalOnlineLDA" should {
+  "Local FS based Online LDA" should {
 
     val doc = Document(
       IndexedSeq(0, 1, 2, 3), //ids
@@ -22,10 +22,10 @@ class LocalOnlineLDASpec extends WordSpec with Matchers {
 
     val testGamma = DenseMatrix((0.11, 0.22, 0.11))
 
-    val testVocab = List("hello", "world", "foo", "bar")
+    val testVocab = IndexedSeq("hello", "world", "foo", "bar")
 
     //test parameters
-    val params = OnlineLDAParams(
+    val params = OnlineLdaParams(
       vocabulary = testVocab,
       alpha = 1.0 / 3,
       eta = 1.0 / 3,
@@ -37,7 +37,7 @@ class LocalOnlineLDASpec extends WordSpec with Matchers {
       totalDocs = 5220
     )
 
-    val testLDA = LocalOnlineLDA(params)
+    val testLDA = LocalOnlineLda(params)
 
     "compute the correct E-Step" in {
 

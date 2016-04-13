@@ -2,66 +2,53 @@ package com.nitro.scalda.examples
 
 import java.io.File
 
-import com.nitro.scalda.models.OnlineLDAParams
-import com.nitro.scalda.models.onlineLDA.distributed.DistributedOnlineLDA
+import com.nitro.scalda.models.OnlineLdaParams
+import com.nitro.scalda.models.onlineLDA.distributed.DistributedOnlineLda
 import org.apache.spark.{ SparkConf, SparkContext }
-import org.apache.spark.rdd.RDD
 
-class textFileRDDIterator(corpusDirectory: String, mbSize: Int)(implicit sc: SparkContext) extends Iterator[RDD[String]] {
+object DistributedOnlineLdaExample extends App {
 
-  val directoryFile = new File(corpusDirectory)
-
-  val fileMinibatches = directoryFile
-    .listFiles()
-    .grouped(mbSize)
-
-  def hasNext = fileMinibatches.hasNext
-
-  def next() = {
-
-    val nextMb = fileMinibatches.next()
-    val stringMb = nextMb.map(f => scala.io.Source.fromFile(f, "ISO-8859-1").getLines.mkString)
-
-    sc.parallelize(stringMb)
-  }
-
-}
-
-object DistributedOnlineLDAExample extends App {
-
-  val corpusDirectory = args(0)
-  val vocabFile = args(1)
+  val corpusLoc = new File(args(0))
+  val vocabFile = new File(args(1))
   val mbSize = args(2).toInt
   val numTopics = args(3).toInt
   val numDocs = args(4).toInt
 
-  val conf = new SparkConf()
-    .setAppName("Distributed Online LDA Example")
-    .setMaster("local[3]")
-
-  implicit val sc = new SparkContext(conf)
-
-  val myIter = new textFileRDDIterator(corpusDirectory, mbSize)
-
-  val vocab = scala.io.Source.fromFile(vocabFile).getLines.toList
-
-  val p = OnlineLDAParams(
-    vocabulary = vocab,
-    alpha = 1.0 / numTopics,
-    eta = 1.0 / numTopics,
-    decay = 1024,
-    learningRate = 0.7,
-    maxIter = 100,
-    convergenceThreshold = 0.001,
-    numTopics = numTopics,
-    totalDocs = numDocs
+  log(
+    s"""[DistributedOnlineLdaExample]
+       |Text file corpus directory: $corpusLoc
+       |Vocabulary file:            $vocabFile
+       |Minibatch size:             $mbSize
+       |Number of topics:           $numTopics
+       |Corpus size:                $numDocs
+       |----------------------------
+     """.stripMargin
   )
 
-  val lda = new DistributedOnlineLDA(p)
+  implicit val sc = new SparkContext(
+    new SparkConf()
+      .setAppName("Distributed Online LDA Example")
+      .setMaster("local[3]")
+  )
 
-  val trainedModel = lda.inference(myIter)
+  val lda = new DistributedOnlineLda(
+    OnlineLdaParams(
+      vocabulary = lines(vocabFile).toIndexedSeq,
+      alpha = 1.0 / numTopics,
+      eta = 1.0 / numTopics,
+      decay = 1024,
+      learningRate = 0.7,
+      maxIter = 100,
+      convergenceThreshold = 0.001,
+      numTopics = numTopics,
+      totalDocs = numDocs
+    )
+  )
 
-  lda.printTopics(trainedModel)
+  val model = lda.inference(new TextFileRddIterator(corpusLoc, mbSize))
+
+  println("<-------------TOPICS LEARNED--------------->")
+  lda.printTopics(model)
 
   sc.stop()
 }

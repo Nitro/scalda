@@ -1,31 +1,48 @@
 package com.nitro.scalda.examples
 
-import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
-import com.nitro.scalda.tokenizer.StanfordLemmatizer
+import java.io.File
 
-import scala.io.Source
+import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLda
+import com.nitro.scalda.tokenizer.StanfordLemmatizer
 
 object TopicProportionsExample extends App {
 
-  val modelLocation = args(0)
-  val docLocation = args(1)
+  val modelLocation = new File(args(0))
+  val docLocation = new File(args(1))
 
-  val testDoc = Source.fromFile(docLocation).getLines().mkString
+  log(
+    s"""[TopicProportionsExample]
+       |Saved LDA model location: $modelLocation
+       |Single document location: $docLocation
+       |--------------------------
+     """.stripMargin
+  )
 
-  println(testDoc)
+  val testDoc = text(docLocation)
 
-  val lda = LocalOnlineLDA()
+  log(s"Document text:\n$testDoc\n")
 
-  val myModelTry = lda.loadModel(modelLocation)
+  val lda = LocalOnlineLda.empty
 
-  val myModel = myModelTry.get
+  val model = lda.loadModel(modelLocation).get
 
-  lda.printTopics(myModel)
+  println("<------------ TOPICS LEARNED -------------->")
+  lda.printTopics(model)
 
-  val lemmatizer = StanfordLemmatizer()
+  val topicProps = lda.topicProportions(
+    testDoc,
+    model,
+    Some(StanfordLemmatizer())
+  )
 
-  val topicProps = lda.topicProportions(testDoc, myModel, Some(lemmatizer))
-
-  println(topicProps.toList.sortBy(-_._1))
-
+  println("<----------- TOPIC PROPORTIONS ------------>")
+  println(
+    topicProps
+      .toSeq
+      .sortBy { case (prob, _) => -prob }
+      .map {
+        case (prob, topicIdx) => s"$prob,$topicIdx"
+      }
+      .mkString("\n")
+  )
 }
