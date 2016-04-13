@@ -1,4 +1,6 @@
 package com.nitro.scalda.models
 
-case class Document(wordIds: IndexedSeq[Int],
-                    wordCts: IndexedSeq[Int])
+case class Document(
+  wordIds: IndexedSeq[Int],
+  wordCts: IndexedSeq[Int]
+)

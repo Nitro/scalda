@@ -10,7 +10,8 @@ object CreateVocabulary extends App {
   //Create vocab containing words with minimum word count of 5 and minimum document frequency of 5
   val myVocab = VocabularyBuilder(
     minWordCount = 5,
-    minDocFreq = 5)
+    minDocFreq = 5
+  )
     .buildTextFileVocab(corpusDirectory)
 
   //print each word in vocab

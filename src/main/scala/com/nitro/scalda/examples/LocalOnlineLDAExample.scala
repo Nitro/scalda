@@ -48,7 +48,8 @@ object LocalOnlineLDAExample extends App {
     convergenceThreshold = 0.001,
     numTopics = numTopics,
     totalDocs = numDocs,
-    perplexity = true)
+    perplexity = true
+  )
 
   val myLDA = LocalOnlineLDA(p)
 

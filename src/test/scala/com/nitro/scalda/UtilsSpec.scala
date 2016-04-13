@@ -2,7 +2,7 @@ package com.nitro.scalda
 
 import com.nitro.scalda.models.Document
 import com.nitro.scalda.tokenizer.StanfordLemmatizer
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{ Matchers, WordSpec }
 
 class UtilsSpec extends WordSpec with Matchers {
 
@@ -19,7 +19,8 @@ class UtilsSpec extends WordSpec with Matchers {
         "the" -> 3,
         "store" -> 4,
         "then" -> 5,
-        "movie" -> 6)
+        "movie" -> 6
+      )
 
       val lemmatizer = StanfordLemmatizer()
       val bow = Utils.toBagOfWords(doc, vocabMapping, Some(lemmatizer))

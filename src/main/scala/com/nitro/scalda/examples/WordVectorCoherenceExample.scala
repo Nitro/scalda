@@ -2,9 +2,9 @@ package com.nitro.scalda.examples
 
 import java.io.File
 
-import com.nitro.scalda.evaluation.coherence.{WordVectorCoherence, SparkWord2Vec}
+import com.nitro.scalda.evaluation.coherence.{ WordVectorCoherence, SparkWord2Vec }
 import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{ SparkConf, SparkContext }
 import org.apache.spark.rdd.RDD
 
 import scala.io.Source

@@ -8,7 +8,7 @@ import org.apache.spark.rdd.RDD
 
 object SparkWord2Vec {
 
-  val tokenizer =  StanfordTokenizer
+  val tokenizer = StanfordTokenizer
 
   def learnWordVectors(docs: RDD[String]): Map[String, Array[Float]] = {
 

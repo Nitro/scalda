@@ -10,8 +10,8 @@ import com.nitro.scalda.models._
 import com.nitro.scalda.tokenizer.StanfordLemmatizer
 import com.nitro.scalda.evaluation.perplexity.Perplexity._
 import org.apache.spark.SparkContext
-import org.apache.spark.mllib.linalg.{DenseVector, Vectors}
-import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix}
+import org.apache.spark.mllib.linalg.{ DenseVector, Vectors }
+import org.apache.spark.mllib.linalg.distributed.{ IndexedRow, IndexedRowMatrix }
 import org.apache.spark.rdd.RDD
 
 class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Serializable {
@@ -31,21 +31,21 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
    * @param gamma
    * @return The sufficient statistics for this minibatch
    */
-  override def eStep(mb: BOWMinibatch,
-                     lambda: Lambda,
-                     gamma: Gamma): MinibatchSStats = {
+  override def eStep(
+    mb: BOWMinibatch,
+    lambda: Lambda,
+    gamma: Gamma
+  ): MinibatchSStats = {
 
     val mbSize = mb.count().toInt
 
     val wordIdDocIdCount = mb
       .zipWithIndex()
       .flatMap {
-      case (docBOW, docId) =>
-        docBOW.wordIds.zip(docBOW.wordCts)
-          .map { case (wordId, wordCount) => (wordId, (wordCount, docId)) }
-    }
-
-
+        case (docBOW, docId) =>
+          docBOW.wordIds.zip(docBOW.wordCts)
+            .map { case (wordId, wordCount) => (wordId, (wordCount, docId)) }
+      }
 
     //Join with lambda to get RDD of (wordId, ((wordCount, docId), lambda(wordId),::)) tuples
     val wordIdDocIdCountRow = wordIdDocIdCount
@@ -55,7 +55,6 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     val wordIdCountRow = wordIdDocIdCountRow
       .map { case (wordId, ((wordCount, docId), wordRow)) => (docId, (wordId, wordCount, wordRow)) }
 
-
     val removedDocId = wordIdCountRow
       .groupByKey()
       .map { case (docId, wdIdCtRow) => wdIdCtRow.toArray }
@@ -63,11 +62,12 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     //Perform e-step on documents as a map, then reduce results by wordId.
     val eStepResult = removedDocId
       .map(wIdCtRow => {
-      oneDocEStep(
-        Document(wIdCtRow.map(_._1), wIdCtRow.map(_._2)),
-        gamma,
-        wIdCtRow.map(_._3.toArray))
-    })
+        oneDocEStep(
+          Document(wIdCtRow.map(_._1), wIdCtRow.map(_._2)),
+          gamma,
+          wIdCtRow.map(_._3.toArray)
+        )
+      })
 
     //collect RDDs and and compute perplexity in driver.  At some point this should be "sparkified" for speed.
     if (params.perplexity) {
@@ -105,16 +105,17 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     (topicUpdates, mbSize)
   }
 
-
   /**
    * Perform the E-Step on one document (to be performed in parallel via a map)
    * @param doc document from corpus.
    * @param currentTopics topics that have been learned so far
    * @return Sufficient statistics for this minibatch.
    */
-  def oneDocEStep(doc: Document,
-                  gamma: DenseMatrix[Double],
-                  currentTopics: Array[Array[Double]]): MbSStats[Array[(Int, Array[Double])], Array[Double]] = {
+  def oneDocEStep(
+    doc: Document,
+    gamma: DenseMatrix[Double],
+    currentTopics: Array[Array[Double]]
+  ): MbSStats[Array[(Int, Array[Double])], Array[Double]] = {
 
     val wordIds = doc.wordIds
     val wordCts = DenseMatrix(doc.wordCts.map(_.toDouble))
@@ -122,12 +123,14 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     var gammaDoc = gamma
 
     var expELogThetaDoc = exp(Utils.dirichletExpectation(gammaDoc))
-    val currentTopicsMatrix = new DenseMatrix(currentTopics.size,
+    val currentTopicsMatrix = new DenseMatrix(
+      currentTopics.size,
       params.numTopics,
       currentTopics.flatten,
       0,
       params.numTopics,
-      true)
+      true
+    )
     val expELogBetaDoc = exp(Utils.dirichletExpectation(currentTopicsMatrix.t))
 
     var phiNorm = expELogThetaDoc * expELogBetaDoc + 1e-100
@@ -162,16 +165,16 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     MbSStats(lambdaUpdate, gammaDoc.toArray)
   }
 
-
   /**
    * Perform m-step by updating the current model with the minibatch sufficient statistics.
    * @param model
    * @param mSStats
    * @return Updated LDA model
    */
-  override def mStep(model: LdaModel,
-                     mSStats: MinibatchSStats): LdaModel = {
-
+  override def mStep(
+    model: LdaModel,
+    mSStats: MinibatchSStats
+  ): LdaModel = {
 
     val mbSize = mSStats._2
     val topicUpdates = mSStats._1
@@ -182,23 +185,24 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
       .map(r => (r.index.toInt, r.vector.toArray))
       .leftOuterJoin(topicUpdates)
       .map {
-      case (rowID, (lambdaRow, rowUpdate)) =>
-        IndexedRow(
-          rowID,
-          Vectors.dense(
-            oneDocMStep(lambdaRow,
-              rowUpdate.getOrElse(Array.fill(params.numTopics)(0.0)),
-              model.numUpdates,
-              mbSize)
+        case (rowID, (lambdaRow, rowUpdate)) =>
+          IndexedRow(
+            rowID,
+            Vectors.dense(
+              oneDocMStep(
+                lambdaRow,
+                rowUpdate.getOrElse(Array.fill(params.numTopics)(0.0)),
+                model.numUpdates,
+                mbSize
+              )
+            )
           )
-        )
-    }
+      }
 
     val newTopics = new IndexedRowMatrix(newLambdaRows)
 
     model.copy(lambda = newTopics)
   }
-
 
   /**
    * Merge the rows of the overall topic matrix and the minibatch topic matrix
@@ -208,10 +212,12 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
    * @param mbSize number of documents in the minibatch
    * @return merged row.
    */
-  def oneDocMStep(lambdaRow: MatrixRow,
-                  updateRow: MatrixRow,
-                  numUpdates: Int,
-                  mbSize: Double): MatrixRow = {
+  def oneDocMStep(
+    lambdaRow: MatrixRow,
+    updateRow: MatrixRow,
+    numUpdates: Int,
+    mbSize: Double
+  ): MatrixRow = {
 
     val rho = math.pow(params.decay + numUpdates, -params.learningRate)
 
@@ -238,7 +244,8 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
     val lambdaDriver = new DenseMatrix[Double](
       vocabMapping.size,
       params.numTopics,
-      Gamma(100.0, 1.0 / 100.0).sample(vocabMapping.size * params.numTopics).toArray)
+      Gamma(100.0, 1.0 / 100.0).sample(vocabMapping.size * params.numTopics).toArray
+    )
 
     val lambda = new IndexedRowMatrix(
       sc.parallelize(
@@ -265,9 +272,11 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
       val rawMinibatch = minibatchIterator.next()
       val bowMinibatch = rawMinibatch.map(doc => Utils.toBagOfWords(doc, vocabMapping, lemmatizer))
 
-      val gamma = new DenseMatrix[Double](1,
+      val gamma = new DenseMatrix[Double](
+        1,
         params.numTopics,
-        Gamma(100.0, 1.0 / 100.0).sample(params.numTopics).toArray)
+        Gamma(100.0, 1.0 / 100.0).sample(params.numTopics).toArray
+      )
 
       val mbSStats = eStep(bowMinibatch, curModel.lambda, gamma)
 
@@ -277,7 +286,6 @@ class DistributedOnlineLDA(params: OnlineLDAParams) extends OnlineLDA with Seria
 
     curModel
   }
-
 
   /**
    * Print the top 10 words by probability for each topic from a learned topic model

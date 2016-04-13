@@ -30,7 +30,8 @@ object DocumentSimilarityExample extends App {
     100,
     0.001,
     numTopics,
-    numDocs)
+    numDocs
+  )
 
   val lda = LocalOnlineLDA(p)
 

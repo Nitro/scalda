@@ -4,7 +4,7 @@ import java.io.File
 
 import com.nitro.scalda.models.OnlineLDAParams
 import com.nitro.scalda.models.onlineLDA.distributed.DistributedOnlineLDA
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{ SparkConf, SparkContext }
 import org.apache.spark.rdd.RDD
 
 class textFileRDDIterator(corpusDirectory: String, mbSize: Int)(implicit sc: SparkContext) extends Iterator[RDD[String]] {
@@ -54,8 +54,8 @@ object DistributedOnlineLDAExample extends App {
     maxIter = 100,
     convergenceThreshold = 0.001,
     numTopics = numTopics,
-    totalDocs = numDocs)
-
+    totalDocs = numDocs
+  )
 
   val lda = new DistributedOnlineLDA(p)
 

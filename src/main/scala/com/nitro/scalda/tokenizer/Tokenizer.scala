@@ -6,4 +6,3 @@ trait Tokenizer[T] {
 
 }
 
-

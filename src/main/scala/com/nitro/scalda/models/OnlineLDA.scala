@@ -12,13 +12,9 @@ trait OnlineLDA {
 
   type Gamma = DenseMatrix[Double]
 
-
   def eStep(mb: BOWMinibatch, lambda: Lambda, gamma: Gamma): MinibatchSStats
 
   def mStep(model: LdaModel, mbSStats: MinibatchSStats): LdaModel
 
 }
-
-
-
 

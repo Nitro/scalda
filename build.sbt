@@ -1,13 +1,12 @@
-organization := "com.gonitro.research"
+import com.typesafe.sbt.SbtScalariform
 
-name := "topic_models"
+organization := "com.gonitro"
+name         := "topic_models"
+version      := "0.7.3"
 
-version := "0.7.2"
-
-scalaVersion := "2.10.5"
-
-crossScalaVersions := Seq("2.10.5", "2.11.6")
-javaOptions ++= Seq("-Xmx9G", "-Xms256M")
+scalaVersion       := "2.10.6"
+crossScalaVersions := Seq("2.10.6", "2.11.8")
+javaOptions        ++= Seq("-Xmx9G", "-Xms256M")
 
 libraryDependencies ++= Seq(
   ("org.apache.spark" %% "spark-core" % "1.3.0").
@@ -21,7 +20,7 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.4" % Test,
   "edu.stanford.nlp" % "stanford-corenlp" % "1.3.4" artifacts(Artifact("stanford-corenlp", "models"), Artifact("stanford-corenlp"))
 
-
 )
 
+SbtScalariform.defaultScalariformSettings
 

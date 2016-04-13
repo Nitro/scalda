@@ -2,8 +2,8 @@ package com.nitro.scalda
 
 import breeze.linalg.DenseMatrix
 import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
-import com.nitro.scalda.models.{ModelSStats, Document, OnlineLDAParams}
-import org.scalatest.{Matchers, WordSpec}
+import com.nitro.scalda.models.{ ModelSStats, Document, OnlineLDAParams }
+import org.scalatest.{ Matchers, WordSpec }
 
 class LocalOnlineLDASpec extends WordSpec with Matchers {
 
@@ -34,7 +34,8 @@ class LocalOnlineLDASpec extends WordSpec with Matchers {
       maxIter = 100,
       convergenceThreshold = 0.001,
       numTopics = 3,
-      totalDocs = 5220)
+      totalDocs = 5220
+    )
 
     val testLDA = LocalOnlineLDA(params)
 
@@ -50,7 +51,8 @@ class LocalOnlineLDASpec extends WordSpec with Matchers {
         DenseMatrix(
           (0.004337997523699932, 0.024578067243257937, 0.001775775187582318, 0.009064515117168562),
           (0.0032959055127366158, 0.025017135815613923, 0.5590950723373326, 0.01719131457322387),
-          (4.992366096963564, 1.950404796941128, 0.43912915247508516, 7.973744170309609))
+          (4.992366096963564, 1.950404796941128, 0.43912915247508516, 7.973744170309609)
+        )
       )
 
       mbSStats.topicProportions should equal(
@@ -77,14 +79,14 @@ class LocalOnlineLDASpec extends WordSpec with Matchers {
 
       val newModelSStats = testLDA.mStep(
         model = oldModelSStats,
-        mbSStats = testMbSStats)
+        mbSStats = testMbSStats
+      )
 
       newModelSStats.lambda should equal(DenseMatrix(
         (0.3972803623230393, 1.6965800010534808, 0.27327901193597176, 0.6688533802521014),
         (0.2754473254960829, 1.3070105783689454, 23.229391163361104, 0.8996708276963741),
         (203.36030412227188, 79.75335256242374, 18.068216670222686, 324.7427271499273)
-      )
-      )
+      ))
 
       newModelSStats.numUpdates should equal(5)
 

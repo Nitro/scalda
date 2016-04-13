@@ -2,9 +2,9 @@ package com.nitro.scalda.tokenizer
 
 import java.util.Properties
 
-import edu.stanford.nlp.ling.CoreAnnotations.{LemmaAnnotation, SentencesAnnotation, TokensAnnotation}
+import edu.stanford.nlp.ling.CoreAnnotations.{ LemmaAnnotation, SentencesAnnotation, TokensAnnotation }
 import edu.stanford.nlp.ling.CoreLabel
-import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
+import edu.stanford.nlp.pipeline.{ Annotation, StanfordCoreNLP }
 import edu.stanford.nlp.util.CoreMap
 
 import scala.collection.JavaConversions._
@@ -21,7 +21,6 @@ object StanfordLemmatizer {
     new StanfordLemmatizer(pipeline)
   }
 }
-
 
 //Let's assume that a lemmatizer is just a special case of a tokenizer when the tokens are lemmatized.
 class StanfordLemmatizer(pipeline: StanfordCoreNLP) extends Tokenizer[String] {

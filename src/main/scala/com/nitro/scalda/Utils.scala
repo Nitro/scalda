@@ -3,17 +3,19 @@ package com.nitro.scalda
 import breeze.linalg._
 import breeze.numerics._
 import com.nitro.scalda.models.Document
-import com.nitro.scalda.tokenizer.{StanfordLemmatizer, StanfordTokenizer}
+import com.nitro.scalda.tokenizer.{ StanfordLemmatizer, StanfordTokenizer }
 import org.apache.spark.mllib.linalg
 import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.mllib.linalg.distributed.{IndexedRowMatrix, IndexedRow}
+import org.apache.spark.mllib.linalg.distributed.{ IndexedRowMatrix, IndexedRow }
 import org.apache.spark.rdd.RDD
 
 object Utils {
 
-  def toBagOfWords(text: String,
-                   vocabMapping: Map[String, Int],
-                   lemmatizer: Option[StanfordLemmatizer] = None): Document = {
+  def toBagOfWords(
+    text: String,
+    vocabMapping: Map[String, Int],
+    lemmatizer: Option[StanfordLemmatizer] = None
+  ): Document = {
 
     lazy val tokenizer = StanfordTokenizer
 
@@ -52,7 +54,6 @@ object Utils {
 
   }
 
-
   def rdd2DM(rddRows: RDD[IndexedRow]): DenseMatrix[Double] = {
 
     val localRows = rddRows
@@ -62,7 +63,6 @@ object Utils {
 
     DenseMatrix(localRows: _*)
   }
-
 
   def arraySum(a1: Array[Double], a2: Array[Double]): Array[Double] = {
 
@@ -111,10 +111,10 @@ object Utils {
       .zip(v2)
       .foldLeft(0.0) { (a, i) =>
 
-      val dif = i._1 - i._2
+        val dif = i._1 - i._2
 
-      a + (dif * dif)
-    }
+        a + (dif * dif)
+      }
 
     math.sqrt(sumOfSquareDifference)
   }

@@ -15,9 +15,9 @@ object WordVectorCoherence {
         a + (i._1 * i._2)
       }
 
-      def denominator(v: Array[Float]): Double = v
-        .map(x => x * x)
-        .foldLeft(0.0)(_ + _)
+    def denominator(v: Array[Float]): Double = v
+      .map(x => x * x)
+      .foldLeft(0.0)(_ + _)
 
     numerator / (math.sqrt(denominator(v1)) * math.sqrt(denominator(v2)))
   }
