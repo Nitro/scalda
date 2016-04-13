@@ -12,7 +12,7 @@ class UtilsSpec extends WordSpec with Matchers {
 
       val doc = "I went to the store.  Then I went to the movies."
 
-      val vocabMapping: Map[String, Int] = Map(
+      val vocabMapping = Map(
         "i" -> 0,
         "go" -> 1,
         "to" -> 2,

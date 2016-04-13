@@ -1,7 +1,7 @@
 package com.nitro.scalda.models
 
-case class OnlineLDAParams(
-  vocabulary: List[String],
+case class OnlineLdaParams(
+  vocabulary: IndexedSeq[String],
   alpha: Double,
   eta: Double,
   decay: Double,
@@ -13,4 +13,3 @@ case class OnlineLDAParams(
   lemmatize: Boolean = false,
   perplexity: Boolean = false
 )
-

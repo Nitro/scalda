@@ -1,9 +1,7 @@
 package com.nitro.scalda.evaluation.coherence
 
 import breeze.linalg.{ *, DenseMatrix }
-import com.nitro.scalda.models.{ ModelSStats }
-
-case class TopicCoherence(topic: IndexedSeq[String], coherence: Double)
+import com.nitro.scalda.models.ModelSStats
 
 object WordVectorCoherence {
 
@@ -39,7 +37,7 @@ object WordVectorCoherence {
 
       val topTenWordVectors = topTenWords.map(w => wordVectors(w))
 
-      val allPairs = topTenWordVectors.combinations(2).toList
+      val allPairs = topTenWordVectors.combinations(2).toSeq
 
       val numPairs = allPairs.size
 

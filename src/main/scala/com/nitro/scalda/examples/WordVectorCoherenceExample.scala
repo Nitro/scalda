@@ -3,45 +3,44 @@ package com.nitro.scalda.examples
 import java.io.File
 
 import com.nitro.scalda.evaluation.coherence.{ WordVectorCoherence, SparkWord2Vec }
-import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLDA
+import com.nitro.scalda.models.onlineLDA.local.LocalOnlineLda
 import org.apache.spark.{ SparkConf, SparkContext }
-import org.apache.spark.rdd.RDD
-
-import scala.io.Source
 
 object WordVectorCoherenceExample extends App {
 
-  val modelLocation = args(0)
-  val corpusLocation = args(1)
+  val modelLoc = new File(args(0))
+  val corpusLoc = new File(args(1))
 
-  val conf = new SparkConf()
-    .setAppName("Distributed Online LDA Example")
-    .setMaster("local[3]")
+  log(
+    s"""[WordVectorCoherenceExample]
+       |Previously saved LDA model location: $modelLoc
+       |Text file corpus directory:          $corpusLoc
+       |-------------------------------------
+     """.stripMargin
+  )
 
-  implicit val sc = new SparkContext(conf)
+  val model = LocalOnlineLda.empty.loadModel(modelLoc).get
 
-  def textFiles2RDD(filesDirectory: String)(implicit sc: SparkContext): RDD[String] = {
+  implicit val sc = new SparkContext(
+    new SparkConf()
+      .setAppName("Word Vector Coherence Example")
+      .setMaster("local[3]")
+  )
 
-    val files = new File(filesDirectory).listFiles()
-
-    val filesRDD = sc.parallelize(files)
-
-    filesRDD.map { f =>
-      Source.fromFile(f, "ISO-8859-1").getLines().mkString(" ")
+  val docRDD = sc
+    .parallelize {
+      Option(corpusLoc.listFiles())
+        .map { _.toSeq }
+        .getOrElse(Seq.empty[File])
     }
+    .map { text }
 
-  }
+  val wordVecs = SparkWord2Vec.learnWordVectors(docRDD)
 
-  val lda = LocalOnlineLDA()
+  val topicCoherence = WordVectorCoherence.getTopicCoherence(model, wordVecs)
 
-  lazy val myModel = lda.loadModel(modelLocation)
+  println("<------------ TOPIC COHERENCE ------------->")
+  topicCoherence.foreach { println }
 
-  val docRDD = textFiles2RDD(corpusLocation)
-
-  val wordVectors = SparkWord2Vec.learnWordVectors(docRDD)
-
-  val topicCoherence = WordVectorCoherence.getTopicCoherence(myModel.get, wordVectors)
-
-  topicCoherence.foreach(println)
-
+  sc.stop()
 }

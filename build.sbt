@@ -2,7 +2,7 @@ import com.typesafe.sbt.SbtScalariform
 
 organization := "com.gonitro"
 name         := "topic_models"
-version      := "0.7.3"
+version      := "0.8.0"
 
 scalaVersion       := "2.10.6"
 crossScalaVersions := Seq("2.10.6", "2.11.8")
